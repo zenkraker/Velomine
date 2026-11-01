@@ -1,14 +1,24 @@
 {
   "extraKnownMarketplaces": {
     "ponytail": {
-      "source": { "source": "github", "repo": "DietrichGebert/ponytail" }
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
     },
     "code-graph": {
-      "source": { "source": "github", "repo": "jsnavarroc/code-graph" }
+      "source": {
+        "source": "github",
+        "repo": "jsnavarroc/code-graph"
+      }
     }
   },
   "enabledPlugins": {
     "ponytail@ponytail": true,
     "code-graph@code-graph": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "f=\"$HOME/.claude/ponytail-statusline.sh\"; if [ -f \"$f\" ]; then bash \"$f\"; else echo '[PONYTAIL NOT INSTALLED]'; fi"
   }
 }

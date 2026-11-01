@@ -35,7 +35,7 @@ Every developer working on this project must use the **ponytail** plugin (smalle
 /plugin install ponytail@ponytail
 ```
 
-Do not turn it off for work on this repository. Its hooks need `node` on your PATH. Useful commands: `/ponytail-review` before a PR, `/ponytail-audit` for the whole repo, `/ponytail-debt` to list `shortcut:` comments.
+The project settings also show a `[PONYTAIL]` badge in the status line; it reads `[PONYTAIL NOT INSTALLED]` until the plugin is set up. Do not turn it off for work on this repository. Its hooks need `node` on your PATH. Useful commands: `/ponytail-review` before a PR, `/ponytail-audit` for the whole repo, `/ponytail-debt` to list `shortcut:` comments.
 
 ### Code graph
 
