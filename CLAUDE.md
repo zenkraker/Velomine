@@ -18,6 +18,7 @@ Background documents. Read the relevant one before designing a feature. When a d
 
 | Document | Read it for |
 |----------|-------------|
+| `docs/architecture.md` | System architecture: modules, ingestion pipeline, jobs, data model, API, security, apps |
 | `docs/design/v1-scope-and-architecture.md` | Product scope, feature decisions, tech stack and architecture |
 | `docs/research/endurain-feature-analysis-v0.20.2.md` | What Endurain does, its bugs and gaps, and the ride-ingestion design |
 | `docs/design/brand-directions.html` | Brand: name, colours, type and day/night themes (open in a browser) |

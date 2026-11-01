@@ -8,6 +8,7 @@ Planning. No application code yet. The v1 scope, release plan and open questions
 
 ## Documents
 
+- [Architecture](docs/architecture.md)
 - [v1 scope and architecture](docs/design/v1-scope-and-architecture.md)
 - [Endurain feature analysis (v0.20.2)](docs/research/endurain-feature-analysis-v0.20.2.md)
 - [Brand directions](docs/design/brand-directions.html)
