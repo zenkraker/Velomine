@@ -8,6 +8,22 @@ Self-hosted, cycling-only training platform for clubs and teams. No paywall; eve
 
 These rules apply to every app and project in this repository: server, mobile, web, tools and scripts.
 
+## What belongs in this file
+
+`CLAUDE.md` holds **only invariants**: code, architecture, dependency and tooling rules that stay true for as long as nobody decides otherwise. **Never** put project status here: progress, roadmap position, current release, open questions, to-do lists or "what's done". Those go in `README.md`. When a rule here changes, edit it in place; do not add a history.
+
+## References
+
+Background documents. Read the relevant one before designing a feature. When a document and this file disagree, this file wins.
+
+| Document | Read it for |
+|----------|-------------|
+| `docs/design/v1-scope-and-architecture.md` | Product scope, feature decisions, tech stack and architecture |
+| `docs/research/endurain-feature-analysis-v0.20.2.md` | What Endurain does, its bugs and gaps, and the ride-ingestion design |
+| `docs/design/brand-directions.html` | Brand: name, colours, type and day/night themes (open in a browser) |
+
+**Clean-room rule:** Endurain is AGPL-3.0. Take ideas from it, never code. Do not copy, translate or adapt Endurain source, and do not use the Endurain name or logo.
+
 ## Claude Code setup
 
 ### Ponytail is mandatory
