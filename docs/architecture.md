@@ -152,7 +152,7 @@ erDiagram
 ## 8. API
 
 - REST under `/api/v1`, built with FastEndpoints. Validation with FastEndpoints' built-in validators. Errors as `ProblemDetails`.
-- The OpenAPI document comes from `FastEndpoints.OpenApi`, which uses Microsoft's `Microsoft.AspNetCore.OpenApi`.
+- The OpenAPI document comes from `FastEndpoints.OpenApi`, which uses Microsoft's `Microsoft.AspNetCore.OpenApi`. It is emitted as OpenAPI 3.0, and DTOs stay flat (no `allOf`/`oneOf`, no inheritance), because the Dart generator does not support 3.1 nullability or schema composition.
 - **The Dart client is generated** from that document into `app/lib/core/api/generated/` and never edited by hand. CI regenerates it and fails if the committed copy differs. The generator is chosen in `docs/dependencies/`.
 - A released version is never broken, because phones update late. Breaking changes go to `/api/v2`.
 - Auth: Identity cookie for the web app, bearer tokens for the mobile app, scoped API keys (`X-API-Key`) for tools such as the USB uploader.
@@ -213,7 +213,7 @@ Each needs an evaluation in `docs/dependencies/` and owner approval before use.
 | Need | Library | State |
 |------|---------|-------|
 | Endpoints | FastEndpoints, FastEndpoints.OpenApi | Approved, see `docs/dependencies/APPROVED.md` |
-| Dart client generator | OpenAPI Generator (`dart` target) | Evaluated, awaiting approval |
+| Dart client generator | OpenAPI Generator 7.26.0 (`dart` target) | Evaluated, awaiting approval; server must emit OpenAPI 3.0 |
 | EF Core provider for PostgreSQL | `Npgsql.EntityFrameworkCore.PostgreSQL` | Needs evaluation |
 | Bluetooth LE in Flutter | `universal_ble` or similar | Needs evaluation |
 | Map widget | `flutter_map` | Needs evaluation |
