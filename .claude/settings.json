@@ -5,20 +5,30 @@
         "source": "github",
         "repo": "DietrichGebert/ponytail"
       }
-    },
-    "code-graph": {
-      "source": {
-        "source": "github",
-        "repo": "jsnavarroc/code-graph"
-      }
     }
   },
   "enabledPlugins": {
-    "ponytail@ponytail": true,
-    "code-graph@code-graph": true
+    "ponytail@ponytail": true
   },
   "statusLine": {
     "type": "command",
     "command": "f=\"$HOME/.claude/ponytail-statusline.sh\"; if [ -f \"$f\" ]; then bash \"$f\"; else echo '[PONYTAIL NOT INSTALLED]'; fi"
+  },
+  "permissions": {
+    "allow": [
+      "mcp__codegraph__*"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codegraph prompt-hook"
+          }
+        ]
+      }
+    ]
   }
 }

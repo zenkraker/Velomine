@@ -32,4 +32,4 @@ Follow `docs/architecture.md` and the architecture invariants in `CLAUDE.md`. In
 
 - Record significant decisions as short ADRs in `docs/adr/NNNN-title.md` (context, decision, consequences).
 - Prefer reversible, boring choices. Dependency choices follow the rule in `CLAUDE.md`.
-- To understand an unfamiliar subsystem before changing it, use the `code-graph` skill.
+- To understand an unfamiliar subsystem before changing it, use CodeGraph (`codegraph_explore`, `codegraph_impact`).

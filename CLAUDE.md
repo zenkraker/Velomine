@@ -49,9 +49,18 @@ Every developer working on this project must use the **ponytail** plugin (smalle
 
 The project settings also show a `[PONYTAIL]` badge in the status line; it reads `[PONYTAIL NOT INSTALLED]` until the plugin is set up. Do not turn it off for work on this repository. Its hooks need `node` on your PATH. Useful commands: `/ponytail-review` before a PR, `/ponytail-audit` for the whole repo, `/ponytail-debt` to list `shortcut:` comments.
 
-### Code graph
+### CodeGraph
 
-The **code-graph** plugin is also enabled in `.claude/settings.json` (manual install: `/plugin marketplace add jsnavarroc/code-graph`, then `/plugin install code-graph@code-graph`). Use it to map a subsystem you did not write before you refactor it or change its behaviour.
+Every developer also installs **[CodeGraph](https://github.com/colbymchenry/codegraph)** (MIT). It indexes the code into a local symbol graph and gives Claude MCP tools (`codegraph_explore`, `codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`). The project already wires it up: `.mcp.json` starts the server, `.claude/settings.json` allows its tools and runs its prompt hook, and `.claude/CLAUDE.md` tells Claude when to use it.
+
+One-time setup per machine:
+
+```
+curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+codegraph telemetry off
+```
+
+Then, in the repository: `codegraph init`. The index lives in `.codegraph/`, which is git-ignored. Use CodeGraph before grep or reading files to find code, trace callers and callees, and check what a change affects.
 
 ### Project skills
 
