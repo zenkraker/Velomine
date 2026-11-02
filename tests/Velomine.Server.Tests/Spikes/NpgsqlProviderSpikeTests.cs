@@ -6,31 +6,21 @@ using Npgsql;
 namespace Velomine.Server.Tests.Spikes;
 
 // Checks the conditions in docs/dependencies/npgsql-efcore.md against a real PostgreSQL.
-// Each test gets its own database on the fixture's server.
-public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>, IAsyncLifetime
+// Each test gets its own database on the shared server.
+[Collection("postgres")]
+public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IAsyncLifetime
 {
     private const string Schema = "rides_spike";
     private string dbConnection = "";
-    private string dbName = "";
 
     public async ValueTask InitializeAsync()
     {
-        dbName = "spike_" + Guid.NewGuid().ToString("N");
-        await using var admin = new NpgsqlConnection(postgres.ServerConnection);
-        await admin.OpenAsync();
-        await new NpgsqlCommand($"CREATE DATABASE {dbName}", admin).ExecuteNonQueryAsync();
-        dbConnection = new NpgsqlConnectionStringBuilder(postgres.ServerConnection) { Database = dbName }.ConnectionString;
+        dbConnection = await postgres.CreateDatabaseAsync();
         await using var context = NewContext();
         await context.Database.MigrateAsync();
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        NpgsqlConnection.ClearAllPools();
-        await using var admin = new NpgsqlConnection(postgres.ServerConnection);
-        await admin.OpenAsync();
-        await new NpgsqlCommand($"DROP DATABASE IF EXISTS {dbName} WITH (FORCE)", admin).ExecuteNonQueryAsync();
-    }
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     private SpikeContext NewContext() =>
         new(new DbContextOptionsBuilder<SpikeContext>().UseNpgsql(dbConnection).Options);

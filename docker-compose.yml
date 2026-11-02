@@ -23,6 +23,9 @@ services:
         condition: service_healthy
     environment:
       ConnectionStrings__Velomine: Host=postgres;Database=velomine;Username=velomine;Password=${POSTGRES_PASSWORD:-velomine-dev}
+      # First admin, created on start when the server has none. Change these for anything shared.
+      Velomine__Admin__Email: ${VELOMINE_ADMIN_EMAIL:-admin@velomine.local}
+      Velomine__Admin__Password: ${VELOMINE_ADMIN_PASSWORD:-Velomine-dev-1}
     ports:
       - "${VELOMINE_PORT:-8080}:8080"
     volumes:
