@@ -22,6 +22,9 @@ public sealed class Login(SignInManager<User> signIn) : Endpoint<LoginRequest>
     {
         Post("accounts/login");
         AllowAnonymous();
+        Description(
+            d => d.Accepts<LoginRequest>("application/json").Produces<TokenResponse>(200, "application/json").Produces(204).ProducesProblem(400).Produces(401).Produces(403).Produces(423),
+            clearDefaults: true);
     }
 
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)

@@ -34,6 +34,8 @@ Background documents. Read the relevant one before designing a feature. When a d
 - **Background work runs in the server** as hosted services. PostgreSQL is storage only: no job queues, events or outbox in the database.
 - **One PostgreSQL schema per feature area.**
 - **Don't reinvent the wheel on .NET.** Use what .NET, ASP.NET Core, EF Core and official Microsoft libraries provide; write it yourself only when nothing official fits.
+- **Every endpoint declares what it really accepts and returns** (`Description(...)` in its `Configure()`), because the generated Dart client is only as accurate as the OpenAPI document. After changing an endpoint, run `tools/generate-api-client.sh` and commit the regenerated client.
+- **The web app is served by the server** from `wwwroot`, at the same address as the API (built by the Dockerfile), so its session cookie needs no cross-origin setup.
 - **The Dart API client is generated** from the server's OpenAPI document. Never edit generated files by hand. For the generator only, a community tool is acceptable if it is free, well documented and actively supported; it still needs an evaluation in `docs/dependencies/`.
 
 ## Claude Code setup

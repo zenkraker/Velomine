@@ -1,3 +1,6 @@
 .codegraph/
 bin/
 obj/
+
+# Built into the image or exported by tools/generate-api-client.sh
+src/Velomine.Server/wwwroot/

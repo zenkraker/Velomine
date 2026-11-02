@@ -13,7 +13,7 @@ One Dart codebase ships Android, iOS and the web app. Read `CLAUDE.md` first; it
 - **One codebase, three targets.** Every feature must build and run on Android, iOS and web. Guard platform-only code with `kIsWeb` / `defaultTargetPlatform`, never `dart:io` imports in shared code (breaks web). Bluetooth sensors are mobile-only until a BLE package is approved.
 - **State:** start with `StatefulWidget`, `ValueNotifier`/`ChangeNotifier` + `ListenableBuilder`, and `InheritedWidget`. No state-management package without an evaluation.
 - **Navigation:** `go_router` (flutter.dev) for deep links and web URLs.
-- **API client:** use the client generated from the server's OpenAPI document in `lib/core/api/generated/`. Never edit generated files; regenerate them instead.
+- **API client:** use the client generated from the server's OpenAPI document, the package in `app/packages/velomine_api/`. Never edit generated files; run `tools/generate-api-client.sh` instead. If a call is missing or wrong, fix the endpoint's declaration in the server, not the client.
 - **Widgets:** small, `const` where possible, no business logic in `build`. Reuse existing widgets before adding new ones.
 - **Accessibility:** `Semantics` labels on icon-only buttons, respect text scaling, minimum 48x48 tap targets.
 - **Units and data:** keep SI units (metres, seconds, watts) internally; format only in the UI. Never drop or overwrite a member's activity data silently.
@@ -21,7 +21,7 @@ One Dart codebase ships Android, iOS and the web app. Read `CLAUDE.md` first; it
 ## Checks before commit
 
 ```bash
-dart format --set-exit-if-changed .
+dart format --set-exit-if-changed lib test   # not packages/, which is generated
 flutter analyze
 flutter test
 ```

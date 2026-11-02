@@ -9,8 +9,11 @@ namespace Velomine.Server.Features.Rides;
 
 public sealed class UploadRideRequest
 {
-    /// <summary>A FIT, GPX or TCX file (optionally gzipped).</summary>
-    public IFormFile File { get; set; } = null!;
+    /// <summary>
+    /// A FIT, GPX or TCX file (optionally gzipped). This property only describes the form field in the API document;
+    /// the file itself is read from <c>Files</c> in the handler, so stray text fields cannot break the upload.
+    /// </summary>
+    public required IFormFile File { get; set; }
 
     /// <summary>
     /// Makes retries safe: the same key from the same member with the same file returns the ride from the first try.
@@ -26,7 +29,6 @@ public sealed class UploadRideValidator : Validator<UploadRideRequest>
 {
     public UploadRideValidator()
     {
-        RuleFor(x => x.File).NotNull().Must(f => f.Length > 0).WithMessage("The file is empty.");
         RuleFor(x => x.IdempotencyKey).MaximumLength(128);
     }
 }
@@ -41,15 +43,26 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
     public override void Configure()
     {
         Post("rides/uploads");
-        AllowFileUploads();
+        // The generated Dart client sends a text field named "file" next to the file part. Automatic form binding
+        // would refuse that, so the file is read from Files instead.
+        AllowFileUploads(dontAutoBindFormData: true);
+        Description(d => d.Accepts<UploadRideRequest>("multipart/form-data").Produces<UploadRideResponse>(202).ProducesProblem(400).Produces(401).ProducesProblem(409), clearDefaults: true);
     }
 
     public override async Task HandleAsync(UploadRideRequest req, CancellationToken ct)
     {
+        if (Files.Count != 1 || Files[0].Length == 0)
+        {
+            AddError("Send exactly one file, and it must not be empty.");
+            await Send.ErrorsAsync(400, ct);
+            return;
+        }
+
+        var file = Files[0];
         var userId = User.UserId();
 
         string sha;
-        await using (var content = req.File.OpenReadStream()) sha = await files.SaveAsync(content, ct);
+        await using (var content = file.OpenReadStream()) sha = await files.SaveAsync(content, ct);
 
         if (!string.IsNullOrEmpty(req.IdempotencyKey))
         {
@@ -68,7 +81,7 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
             Status = RideStatus.Processing,
             IdempotencyKey = string.IsNullOrEmpty(req.IdempotencyKey) ? null : req.IdempotencyKey,
             FileSha256 = sha,
-            FileName = SafeName(req.File.FileName),
+            FileName = SafeName(file.FileName),
             UploadedAt = clock.GetUtcNow(),
         };
         db.Rides.Add(ride);

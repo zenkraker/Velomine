@@ -11,14 +11,15 @@ public sealed class ListRidesRequest
     /// <summary>The Next value from the previous page. Omit for the newest rides.</summary>
     public string? Cursor { get; set; }
 
-    public int Limit { get; set; } = 50;
+    /// <summary>How many rides to return, 1 to 200. Default 50.</summary>
+    public int? Limit { get; set; }
 }
 
 public sealed record ListRidesResponse(RideResponse[] Rides, string? Next);
 
 public sealed class ListRidesValidator : Validator<ListRidesRequest>
 {
-    public ListRidesValidator() => RuleFor(x => x.Limit).InclusiveBetween(1, 200);
+    public ListRidesValidator() => RuleFor(x => x.Limit).InclusiveBetween(1, 200).When(x => x.Limit.HasValue);
 }
 
 /// <summary>
@@ -32,6 +33,7 @@ public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest,
     public override async Task HandleAsync(ListRidesRequest req, CancellationToken ct)
     {
         var userId = User.UserId();
+        var limit = req.Limit ?? 50;
         var query = db.Rides.AsNoTracking().Where(r => r.UserId == userId && r.Status != RideStatus.Duplicate);
 
         if (req.Cursor is not null)
@@ -51,10 +53,10 @@ public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest,
         var page = await query
             .OrderByDescending(r => r.StartTime ?? r.UploadedAt)
             .ThenByDescending(r => r.Id)
-            .Take(req.Limit + 1)
+            .Take(limit + 1)
             .ToListAsync(ct);
 
-        var hasMore = page.Count > req.Limit;
+        var hasMore = page.Count > limit;
         if (hasMore) page.RemoveAt(page.Count - 1);
         var last = page.LastOrDefault();
         var next = hasMore && last is not null ? $"{(last.StartTime ?? last.UploadedAt).UtcTicks}:{last.Id}" : null;

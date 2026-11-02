@@ -26,6 +26,7 @@ public sealed class Register(UserManager<User> users, IOptions<AccountsOptions> 
     {
         Post("accounts/register");
         AllowAnonymous();
+        Description(d => d.Accepts<RegisterRequest>("application/json").Produces<RegisterResponse>(201).ProducesProblem(400).Produces(403), clearDefaults: true);
     }
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)

@@ -173,7 +173,8 @@ erDiagram
 
 - REST under `/api/v1`, built with FastEndpoints. Validation with FastEndpoints' built-in validators. Errors as `ProblemDetails`.
 - The OpenAPI document comes from `FastEndpoints.OpenApi`, which uses Microsoft's `Microsoft.AspNetCore.OpenApi`. It is emitted as OpenAPI 3.0, and DTOs stay flat (no `allOf`/`oneOf`, no inheritance), because the Dart generator does not support 3.1 nullability or schema composition.
-- **The Dart client is generated** from that document into `app/lib/core/api/generated/` and never edited by hand. CI regenerates it and fails if the committed copy differs. The generator is chosen in `docs/dependencies/`.
+- **The Dart client is generated** from that document into the package `app/packages/velomine_api/` and never edited by hand. Run `tools/generate-api-client.sh` after changing an endpoint's request or response (the server exports its document without needing a database), and commit the result. CI should regenerate it and fail if the committed copy differs. The generator and its options are in `docs/dependencies/openapi-generator.md`.
+- Every endpoint declares what it really accepts and returns (`Description(...)` in its `Configure()`), because the generated client is only as accurate as the document. Operation names are short (`login`, `uploadRide`).
 - A released version is never broken, because phones update late. Breaking changes go to `/api/v2`.
 - Auth: Identity cookie for the web app, bearer tokens for the mobile app, scoped API keys (`X-API-Key`) for tools such as the USB uploader.
 - Single sign-on: Microsoft's OpenID Connect handler (authorization code with PKCE) signs the browser in through a provider the admin configures; the account is then found, linked by verified email, or created, and a normal Identity cookie session starts. The mobile app's SSO flow (system browser, then a token for the app) comes later.
@@ -197,14 +198,18 @@ One Dart codebase builds Android, iOS and the web app.
 app/
   lib/
     main.dart
-    core/       generated API client, auth, design system, charts, maps, i18n (en, it)
-    features/   rides/, bikes/, wellbeing/, clubs/, sharing/, admin/, upload/, recording/
+    core/       session (sign-in state), theme, formatting; later charts, maps, i18n (en, it)
+    features/   auth/, rides/, admin/; later bikes/, wellbeing/, clubs/, sharing/, recording/
+  packages/
+    velomine_api/   the generated API client (never edited by hand)
   android/      Kotlin recorder service
   ios/          Swift recorder
 ```
 
 - **Design system:** a day theme (Cloud Dancer, deep teal, iron oxide) and a night-ride theme (asphalt, Volt) for recording.
-- **State:** Flutter SDK primitives. **Navigation:** `go_router`.
+- **State:** Flutter SDK primitives (`ChangeNotifier`). **Navigation:** `go_router`, with real URLs on the web.
+- **Web app:** built by the Dockerfile and served by the server itself from `wwwroot`, at the same address as the API. That makes the session cookie work without cross-origin setup, and single sign-on returns to the same site. Any path that is not an API path falls back to `index.html`.
+- **Sign-in state:** the web app keeps its session in the cookie the server sets. Mobile builds hold the bearer token in memory for now; keeping it across restarts needs secure storage, which Flutter does not provide in an official package (needs an evaluation).
 - **Platform split:** recording, Bluetooth and local storage are mobile only. The web app adds drag-and-drop upload and admin screens.
 
 ### Mobile recorder

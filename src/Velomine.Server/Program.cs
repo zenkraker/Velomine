@@ -1,5 +1,8 @@
 using FastEndpoints;
+using FastEndpoints.OpenApi;
+using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides;
@@ -13,9 +16,48 @@ builder.Services.AddHostedService<DatabaseMigrator>(); // first: later startup w
 builder.Services.AddAccounts(builder.Configuration);
 builder.Services.AddRides();
 builder.Services.AddFastEndpoints();
+builder.Services.OpenApiDocument(o =>
+{
+    o.DocumentName = "v1";
+    o.Title = "Velomine";
+    o.Version = "v1";
+    o.ShortSchemaNames = true;
+    // The Dart client generator reads OpenAPI 3.0 (see docs/dependencies/openapi-generator.md).
+    o.ConfigureOpenApi = openApi =>
+    {
+        openApi.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0;
+        // The Idempotency-Key is a header, so it does not belong in the multipart form's schema as well.
+        openApi.AddSchemaTransformer((schema, context, _) =>
+        {
+            if (context.JsonTypeInfo.Type == typeof(UploadRideRequest)) schema.Properties?.Remove("idempotencyKey");
+            return Task.CompletedTask;
+        });
+
+        // "VelomineServerFeaturesAccountsLogin" becomes "login", so the generated Dart methods read well.
+        openApi.AddOperationTransformer((operation, _, _) =>
+        {
+            const string prefix = "VelomineServerFeatures";
+            if (operation.OperationId is { } id && id.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                id = id[prefix.Length..];
+                if (operation.Tags?.FirstOrDefault()?.Name is { } tag && id.StartsWith(tag, StringComparison.Ordinal)) id = id[tag.Length..];
+                operation.OperationId = char.ToLowerInvariant(id[0]) + id[1..];
+            }
+
+            return Task.CompletedTask;
+        });
+    };
+});
 builder.Services.AddHealthChecks();
 
+// Exporting the API document (see below) needs no database and no background work.
+if (builder.IsExportMode()) builder.Services.RemoveAll<IHostedService>();
+
 var app = builder.Build();
+// The Flutter web app is built into wwwroot (see the Dockerfile) and served from the same address as the API,
+// so its session cookie works without any cross-origin setup.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints(c =>
@@ -23,7 +65,12 @@ app.UseFastEndpoints(c =>
     c.Endpoints.RoutePrefix = "api/v1";
     c.Errors.UseProblemDetails();
 });
+app.MapOpenApi(); // /openapi/v1.json
+// An address without a file extension is a page of the web app (the app routes itself, e.g. /rides). Files such as
+// main.dart.js are left to the static file middleware, and API paths that do not exist stay 404.
+app.MapFallbackToFile("{*path:regex(^(?!api/|health|openapi/)[^.]*$)}", "index.html");
 app.MapHealthChecks("/health");
+await app.ExportOpenApiDocsAndExitAsync("v1"); // `--export-openapi-docs true` writes the document and exits, for the client generator
 app.Run();
 
 // Lets the integration tests start the server with WebApplicationFactory<Program>.

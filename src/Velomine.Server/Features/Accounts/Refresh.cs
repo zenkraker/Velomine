@@ -17,6 +17,7 @@ public sealed class Refresh(
     {
         Post("accounts/refresh");
         AllowAnonymous();
+        Description(d => d.Accepts<RefreshRequest>("application/json").Produces<TokenResponse>(200, "application/json").Produces(401), clearDefaults: true);
     }
 
     public override async Task HandleAsync(RefreshRequest req, CancellationToken ct)

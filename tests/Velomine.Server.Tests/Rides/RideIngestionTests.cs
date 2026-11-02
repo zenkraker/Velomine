@@ -220,6 +220,39 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Upload_AsTheGeneratedDartClientSendsIt_Works()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+
+        // The generated client adds a plain text field "file" with the value "file" next to the file part.
+        var form = new MultipartFormDataContent
+        {
+            { new StringContent("file"), "file" },
+            { new ByteArrayContent(Bytes(Gpx(60))), "file", "morning.gpx" },
+        };
+        var response = await member.PostAsync("/api/v1/rides/uploads", form, Ct);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var id = (await response.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
+        Assert.Equal("ready", (await WaitAsync(member, id)).Status);
+    }
+
+    [Fact]
+    public async Task Upload_WithTwoFiles_IsRejected()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var form = new MultipartFormDataContent
+        {
+            { new ByteArrayContent(Bytes(Gpx(60))), "file", "a.gpx" },
+            { new ByteArrayContent(Bytes(Gpx(60))), "file", "b.gpx" },
+        };
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await member.PostAsync("/api/v1/rides/uploads", form, Ct)).StatusCode);
+    }
+
+    [Fact]
     public async Task Upload_WithAnEmptyFile_IsRejected()
     {
         await using var api = await StartAsync();

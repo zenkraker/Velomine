@@ -4,3 +4,8 @@
 .codegraph/
 docs/
 tests/
+app/build/
+app/.dart_tool/
+src/Velomine.Server/wwwroot/
+**/bin/
+**/obj/

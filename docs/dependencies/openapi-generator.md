@@ -47,6 +47,14 @@ No runtime cost beyond `package:http`. Generation takes seconds.
 - Mitigation: keep API types flat (no `allOf`/`oneOf`, no inheritance in DTOs), emit OpenAPI 3.0, and allow one hand-written method for the file upload if the generator cannot do it.
 - Exit: generated code is committed, so the app keeps building if the tool is dropped. Switch to swagger_parser (after evaluating `dio`, `retrofit` and `json_annotation`); only `core/api/` changes.
 
+## Result of the first real use (2026-11-02)
+Generated from the server's actual OpenAPI 3.0 document with 7.26.0 and the three approved options:
+- The multipart ride upload **does** generate: `uploadRide(MultipartFile file, {String? idempotencyKey})`. (An earlier attempt showed no file parameter; the cause was the server's document missing its request bodies, not the generator.)
+- JSON bodies, typed responses, query and header parameters, and the bearer scheme all generate. `useOptional=true` makes optional request fields `Optional<T>`.
+- The generated package needs `http`, `collection`, `meta` and `intl`, all published by `dart.dev` (checked on pub.dev). `intl` is declared `any`; the app pins it.
+- Oddities, harmless: a second `ProblemDetails2` model, and generated `.travis.yml` and `git_push.sh` files, which the script deletes. The script also replaces the generated `analysis_options.yaml` so the app's analyzer skips generated code.
+- Docker Hub rate-limited the sandbox, so the first run used the same 7.26.0 release as a JAR from Maven Central (`OPENAPI_GENERATOR_JAR`); `tools/generate-api-client.sh` supports both.
+
 ## Recommendation
 Approved by the owner on 2026-11-02 (see `APPROVED.md`).
 
