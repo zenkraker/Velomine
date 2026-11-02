@@ -43,8 +43,10 @@ class Session extends ChangeNotifier {
 
   /// Called once at start: find out whether the cookie already holds a session, and whether SSO is offered.
   Future<void> restore() async {
+    // Single sign-on goes through the browser and comes back to the web app. A phone build cannot be handed back
+    // to yet, so only the web app offers it.
     try {
-      sso = await accounts.getSsoInfo();
+      sso = useCookies ? await accounts.getSsoInfo() : null;
     } on Object {
       sso = null;
     }

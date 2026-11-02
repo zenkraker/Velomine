@@ -45,6 +45,13 @@ void main() {
     },
   );
 
+  testWidgets('phone builds do not offer single sign-on yet', (tester) async {
+    server.ssoEnabled = true;
+    await startApp(tester, server.session(useCookies: false));
+
+    expect(find.byKey(const Key('sso')), findsNothing);
+  });
+
   testWidgets('explains why single sign-on sent the visitor back', (
     tester,
   ) async {
