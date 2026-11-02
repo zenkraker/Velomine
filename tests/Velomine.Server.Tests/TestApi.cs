@@ -16,21 +16,33 @@ public sealed class TestApi : IAsyncDisposable
 
     private readonly WebApplicationFactory<Program> factory;
 
-    private TestApi(WebApplicationFactory<Program> factory) => this.factory = factory;
+    private TestApi(WebApplicationFactory<Program> factory, string connectionString, string filesPath)
+    {
+        this.factory = factory;
+        ConnectionString = connectionString;
+        FilesPath = filesPath;
+    }
+
+    public string ConnectionString { get; }
+
+    /// <summary>Where this server keeps uploaded ride files. Removed when the test ends.</summary>
+    public string FilesPath { get; }
 
     public IServiceProvider Services => factory.Services;
 
     public static async Task<TestApi> StartAsync(PostgresFixture postgres, Action<IWebHostBuilder>? configure = null)
     {
         var connection = await postgres.CreateDatabaseAsync();
+        var filesPath = Path.Combine(Path.GetTempPath(), "velomine-tests", Guid.NewGuid().ToString("N"));
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("ConnectionStrings:Velomine", connection);
+            builder.UseSetting("Velomine:FilesPath", filesPath);
             builder.UseSetting("Velomine:Admin:Email", AdminEmail);
             builder.UseSetting("Velomine:Admin:Password", AdminPassword);
             configure?.Invoke(builder);
         });
-        return new TestApi(factory);
+        return new TestApi(factory, connection, filesPath);
     }
 
     /// <summary>A client that keeps cookies and does not follow redirects.</summary>
@@ -57,5 +69,9 @@ public sealed class TestApi : IAsyncDisposable
         return client;
     }
 
-    public ValueTask DisposeAsync() => factory.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await factory.DisposeAsync();
+        if (Directory.Exists(FilesPath)) Directory.Delete(FilesPath, recursive: true);
+    }
 }

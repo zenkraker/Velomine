@@ -1,0 +1,53 @@
+namespace Velomine.Server.Features.Rides;
+
+/// <summary>A ride as the API shows it. Times are UTC; distances in metres, times in seconds, speeds in metres per second.</summary>
+public sealed record RideResponse(
+    Guid Id,
+    string Status,
+    string? Error,
+    Guid? DuplicateOf,
+    string FileName,
+    DateTimeOffset UploadedAt,
+    DateTimeOffset? StartTime,
+    int? UtcOffsetMinutes,
+    string? Device,
+    double? DistanceM,
+    double? ElapsedS,
+    double? MovingS,
+    double? ElevationGainM,
+    double? ElevationLossM,
+    double? AvgSpeedMs,
+    double? MaxSpeedMs,
+    string? SpeedSource,
+    int? AvgPowerW,
+    int? MaxPowerW,
+    int? NormalizedPowerW,
+    int? AvgHeartRate,
+    int? MaxHeartRate,
+    int? AvgCadence)
+{
+    public static RideResponse From(Ride r) => new(
+        r.Id,
+        r.Status.ToString().ToLowerInvariant(),
+        r.Error,
+        r.DuplicateOf,
+        r.FileName,
+        r.UploadedAt,
+        r.StartTime,
+        r.UtcOffsetMinutes,
+        r.Device,
+        r.DistanceM,
+        r.ElapsedS,
+        r.MovingS,
+        r.ElevationGainM,
+        r.ElevationLossM,
+        r.AvgSpeedMs,
+        r.MaxSpeedMs,
+        r.SpeedSource?.ToString().ToLowerInvariant(),
+        r.AvgPowerW,
+        r.MaxPowerW,
+        r.NormalizedPowerW,
+        r.AvgHeartRate,
+        r.MaxHeartRate,
+        r.AvgCadence);
+}

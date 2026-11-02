@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Data;
 
@@ -13,6 +14,10 @@ namespace Velomine.Server.Data;
 public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext> options)
     : IdentityDbContext<User, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<Ride> Rides => Set<Ride>();
+
+    public DbSet<RideStreams> RideStreams => Set<RideStreams>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -26,6 +31,9 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
         builder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
         builder.Entity<IdentityRoleClaim<Guid>>().ToTable("role_claims");
 
+        // Each feature area's entity configurations live in its own folder and name their own schema.
+        builder.ApplyConfigurationsFromAssembly(typeof(VelomineDbContext).Assembly);
+
         SnakeCaseNames(builder);
     }
 
@@ -35,7 +43,11 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
         foreach (var entity in builder.Model.GetEntityTypes())
         {
             foreach (var property in entity.GetProperties())
+            {
+                // A uint concurrency token is PostgreSQL's built-in "xmin" column; Npgsql names it later, so leave it alone.
+                if (property.IsConcurrencyToken && property.ClrType == typeof(uint)) continue;
                 property.SetColumnName(Snake(property.GetColumnName()));
+            }
             foreach (var key in entity.GetKeys())
                 key.SetName(Snake(key.GetName()!));
             foreach (var foreignKey in entity.GetForeignKeys())

@@ -73,15 +73,12 @@ public static class AccountsSetup
     }
 }
 
-/// <summary>On start: apply migrations, make sure the roles exist, create the first admin if configured.</summary>
+/// <summary>On start: make sure the roles exist and create the first admin if configured. Runs after the migrations.</summary>
 public sealed class AccountsStartup(IServiceProvider services, ILogger<AccountsStartup> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await using var scope = services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        await db.Database.MigrateAsync(cancellationToken);
-
         var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         foreach (var role in Roles.All)
             if (!await roles.RoleExistsAsync(role))

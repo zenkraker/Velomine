@@ -4,7 +4,7 @@ Self-hosted, cycling-only training platform for clubs and teams. No paywall; eve
 
 ## Status
 
-Early development. Done so far: the server skeleton, the PostgreSQL data layer with migrations, and accounts (sign up with admin approval, password login with cookie or bearer token, refresh, roles admin/member/coach). Single sign-on with any OpenID Connect provider works and is tested end to end. Next: ride ingestion. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
+Early development. Done so far: the server skeleton, the PostgreSQL data layer with migrations, and accounts (sign up with admin approval, password login with cookie or bearer token, refresh, roles admin/member/coach). Single sign-on with any OpenID Connect provider works and is tested end to end. Ride upload works: FIT, GPX and TCX files (also gzipped) are read in the background into rides with distance, moving time, climbing, speed, power, normalized power, heart rate and cadence. Next: the first Flutter screens. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
 
 ## Run it
 
@@ -13,6 +13,14 @@ docker compose up --build
 ```
 
 Then open http://localhost:8080/health and http://localhost:8080/api/v1/server. The first admin is created on start: `admin@velomine.local` / `Velomine-dev-1` (set `VELOMINE_ADMIN_EMAIL` and `VELOMINE_ADMIN_PASSWORD` to change them; they only apply while no admin exists). New sign-ups wait for an admin to approve them (`POST /api/v1/accounts/users/{id}/approve`); switch that off with `Velomine__Accounts__RequireAdminApproval=false`. Change the port with `VELOMINE_PORT` and the database password with `POSTGRES_PASSWORD` (a `.env` file works). Without Docker: `dotnet run --project src/Velomine.Server`; Tests: `dotnet test --solution Velomine.slnx` (needs Docker: the database tests start a `postgres:17` container with Testcontainers; set `VELOMINE_TEST_POSTGRES` to a server connection string to use an existing PostgreSQL instead).
+
+## Uploading rides
+
+`POST /api/v1/rides/uploads` with a multipart `file` (FIT, GPX or TCX, up to 30 MB) and a bearer token. It answers `202` with the ride id; the file is read in the background, so poll `GET /api/v1/rides/{id}` until `status` is no longer `processing` (`ready`, `failed` with an `error` code such as `corrupt_file` or `not_cycling`, or `duplicate`). Send an `Idempotency-Key` header (the phone sends its own ride id) so a retry returns the same ride. `GET /api/v1/rides` lists your rides newest first (`?limit=` and `?cursor=`), `DELETE /api/v1/rides/{id}` removes a ride and its file. Files are kept as received under `Velomine__FilesPath`, so rides can be read again when a parser improves.
+
+```
+curl -H "Authorization: Bearer $TOKEN" -H "Idempotency-Key: my-ride-1" -F "file=@ride.fit" http://localhost:8080/api/v1/rides/uploads
+```
 
 ## Single sign-on
 

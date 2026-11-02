@@ -738,6 +738,7 @@
         "type": "Project",
         "dependencies": {
           "FastEndpoints": "[8.3.0, )",
+          "Garmin.FIT.Sdk": "[21.218.0, )",
           "Microsoft.AspNetCore.Authentication.OpenIdConnect": "[10.0.14, )",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.14, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )"
@@ -754,6 +755,12 @@
           "FastEndpoints.Messaging": "8.3.0",
           "FluentValidation": "12.1.1"
         }
+      },
+      "Garmin.FIT.Sdk": {
+        "type": "CentralTransitive",
+        "requested": "[21.218.0, )",
+        "resolved": "21.218.0",
+        "contentHash": "LjW8eD+wLXa10Dlf3JZwwJcJL4uM9CG+eVjjKvKGMfvr4su6dFmaLZukHuQKmcR/U2ifi4x1qcEjGDKW4WoaOw=="
       },
       "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
         "type": "CentralTransitive",

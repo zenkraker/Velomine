@@ -112,12 +112,14 @@ sequenceDiagram
 - **Speed source:** each ride records whether speed came from a wheel sensor or GPS. The wheel sensor wins when present.
 - **Privacy defaults and default bike** are copied onto the ride at import, so changing the defaults later never exposes old rides.
 - **Multi-activity FIT:** one file can hold several rides; each becomes its own ride.
-- **Duplicates:** the key is the connector ride id, otherwise the file hash plus the start time (the start time keeps rides from one multi-activity file apart). With no key, a ride with the same start time counts as a duplicate. A likely duplicate is kept hidden and the member is notified.
+- **Duplicates:** the key is the connector ride id, otherwise the file hash plus the start time (the start time keeps rides from one multi-activity file apart). With no key, a ride with the same start time counts as a duplicate. A likely duplicate is kept hidden and the member is notified. *Built so far:* file hash plus start time only, and no notification yet; the same ride exported by two different apps is not caught.
 - **Thumbnail and geocoding** run in the same pass. If the tile server or geocoder is unavailable, the ride stores a next-attempt time and a timer retries (section 6). Reverse geocoding is off by default; the admin picks Nominatim, Photon or their own instance, and its rate limit is respected.
 - **Idempotency:** the `Idempotency-Key` header (the phone sends its local ride id) makes retries safe.
 - **Re-parse:** originals are kept forever, so an admin can re-run ingestion on all rides when a parser improves.
 
 ### Metrics
+
+Built in `Features/Rides/Ingestion/RideMetrics.cs`. A gap between samples longer than `max(30 s, 5 × the median gap)` is a pause, and pauses are left out of moving time, averages and normalized power. Time with speed under 0.5 m/s is stopped, not moving.
 
 Each formula is covered by tests against known values.
 
@@ -163,7 +165,7 @@ erDiagram
 - Instants are `timestamptz` in UTC; a ride also stores its local time zone offset. SI units internally.
 - Keys are `uuid`; rides recorded on the phone keep the phone's id.
 - Rides carry an EF Core concurrency token, so two edits of the same ride can't silently overwrite each other.
-- Streams are the largest data. Their storage format (one array column per stream, or one row per sample) is chosen by measuring before the Rides schema is fixed. Endurain stores one JSON array per stream per ride, which supports the array-column option.
+- Streams are the largest data. **Decided: one row per ride in `rides.ride_streams`, with one PostgreSQL array column per signal** (time, latitude, longitude, altitude, speed, distance, heart rate, power, cadence, temperature), all the same length and aligned by index; a signal the file does not have is null. A 5-hour ride at 1 Hz is about 18,000 samples per signal, read with a single row fetch. Not benchmarked against one row per sample; revisit if queries across many rides need to filter on single samples.
 - A bulk import (v2, Strava export) has one import row with files done and failed, for the progress bar.
 - Export and account deletion are one slice each and cover every schema.
 

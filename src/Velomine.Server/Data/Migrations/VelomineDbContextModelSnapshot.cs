@@ -279,6 +279,203 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("users", "accounts");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("AvgCadence")
+                        .HasColumnType("integer")
+                        .HasColumnName("avg_cadence");
+
+                    b.Property<int?>("AvgHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("avg_heart_rate");
+
+                    b.Property<int?>("AvgPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("avg_power_w");
+
+                    b.Property<double?>("AvgSpeedMs")
+                        .HasColumnType("double precision")
+                        .HasColumnName("avg_speed_ms");
+
+                    b.Property<string>("DedupKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("dedup_key");
+
+                    b.Property<string>("Device")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("device");
+
+                    b.Property<double?>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<Guid?>("DuplicateOf")
+                        .HasColumnType("uuid")
+                        .HasColumnName("duplicate_of");
+
+                    b.Property<double?>("ElapsedS")
+                        .HasColumnType("double precision")
+                        .HasColumnName("elapsed_s");
+
+                    b.Property<double?>("ElevationGainM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("elevation_gain_m");
+
+                    b.Property<double?>("ElevationLossM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("elevation_loss_m");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("error");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("FileSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("file_sha256");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<int?>("MaxHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_heart_rate");
+
+                    b.Property<int?>("MaxPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_power_w");
+
+                    b.Property<double?>("MaxSpeedMs")
+                        .HasColumnType("double precision")
+                        .HasColumnName("max_speed_ms");
+
+                    b.Property<double?>("MovingS")
+                        .HasColumnType("double precision")
+                        .HasColumnName("moving_s");
+
+                    b.Property<int?>("NormalizedPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("normalized_power_w");
+
+                    b.Property<string>("SpeedSource")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("speed_source");
+
+                    b.Property<DateTimeOffset?>("StartTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_time");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<int?>("UtcOffsetMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("utc_offset_minutes");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_rides");
+
+                    b.HasIndex("UserId", "DedupKey")
+                        .HasDatabaseName("ix_rides_user_id_dedup_key");
+
+                    b.HasIndex("UserId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_rides_user_id_idempotency_key");
+
+                    b.HasIndex("UserId", "StartTime")
+                        .HasDatabaseName("ix_rides_user_id_start_time");
+
+                    b.ToTable("rides", "rides");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Rides.RideStreams", b =>
+                {
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.PrimitiveCollection<float?[]>("Altitude")
+                        .HasColumnType("real[]")
+                        .HasColumnName("altitude");
+
+                    b.PrimitiveCollection<short?[]>("Cadence")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("cadence");
+
+                    b.PrimitiveCollection<float?[]>("Distance")
+                        .HasColumnType("real[]")
+                        .HasColumnName("distance");
+
+                    b.PrimitiveCollection<short?[]>("HeartRate")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("heart_rate");
+
+                    b.PrimitiveCollection<double?[]>("Latitude")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("latitude");
+
+                    b.PrimitiveCollection<double?[]>("Longitude")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("longitude");
+
+                    b.PrimitiveCollection<short?[]>("Power")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("power");
+
+                    b.PrimitiveCollection<float?[]>("Speed")
+                        .HasColumnType("real[]")
+                        .HasColumnName("speed");
+
+                    b.PrimitiveCollection<short?[]>("Temperature")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("temperature");
+
+                    b.PrimitiveCollection<double[]>("Time")
+                        .IsRequired()
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("time");
+
+                    b.HasKey("RideId")
+                        .HasName("pk_ride_streams");
+
+                    b.ToTable("ride_streams", "rides");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -334,6 +531,33 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_user_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_rides_users_user_id");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Rides.RideStreams", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithOne("Streams")
+                        .HasForeignKey("Velomine.Server.Features.Rides.RideStreams", "RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ride_streams_rides_ride_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
+                {
+                    b.Navigation("Streams");
                 });
 #pragma warning restore 612, 618
         }
