@@ -72,12 +72,12 @@ app/                             Flutter app (section 9)
 
 | Area | What it holds | Scope |
 |------|---------------|-------|
-| Accounts | Users, roles (admin, member, coach), invites with admin approval, MFA, OIDC login, scoped API keys, profile (weight) | v1; passkeys v2 |
+| Accounts | Users, roles (admin, member, coach), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
 | Clubs | Clubs, members, coaches, share grants per data type and audience, revocation, view log | clubs v1; grants v2 |
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, default bike per ride type, components, wear by km, hours and months | v1; reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
-| Analytics | NP, IF, TSS, TRIMP, manual FTP, totals | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
+| Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year (scope to confirm) | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |
 | Sharing | Share links and the server-rendered share pages | v1 |
 | Notifications | In-app notifications and email | v1 |
@@ -101,7 +101,8 @@ sequenceDiagram
   E->>Q: ride id
   E-->>C: 202 Accepted + ride id
   W->>Q: next ride id
-  W->>S: parse, enrich, dedupe, save streams, thumbnail, geocode, metrics
+  W->>S: hash, parse, apply privacy defaults and default bike, dedupe
+  W->>S: save ride, streams and metrics, thumbnail, geocode, notify
   W->>S: status "ready" (or "failed" with reason)
   C->>E: GET /api/v1/rides/{id} until ready
 ```
@@ -109,19 +110,34 @@ sequenceDiagram
 - **Queue:** a `System.Threading.Channels` channel read by a `BackgroundService`. On startup the service re-queues every ride still in `processing`. The original file is saved before `202` is returned, so a restart never loses a ride.
 - **Parsing:** FIT with `Garmin.FIT.Sdk`; GPX and TCX with the BCL XML APIs, reading every common extension (`gpxtpx:hr`, `cad`, `speed`, `atemp`, `PowerInWatts`).
 - **Speed source:** each ride records whether speed came from a wheel sensor or GPS. The wheel sensor wins when present.
-- **Duplicates:** same connector ride id, or same file hash and start time. A likely duplicate is kept hidden and the member is notified.
+- **Privacy defaults and default bike** are copied onto the ride at import, so changing the defaults later never exposes old rides.
+- **Multi-activity FIT:** one file can hold several rides; each becomes its own ride.
+- **Duplicates:** the key is the connector ride id, otherwise the file hash plus the start time (the start time keeps rides from one multi-activity file apart). With no key, a ride with the same start time counts as a duplicate. A likely duplicate is kept hidden and the member is notified.
+- **Thumbnail and geocoding** run in the same pass. If the tile server or geocoder is unavailable, the ride stores a next-attempt time and a timer retries (section 6). Reverse geocoding is off by default; the admin picks Nominatim, Photon or their own instance, and its rate limit is respected.
 - **Idempotency:** the `Idempotency-Key` header (the phone sends its local ride id) makes retries safe.
 - **Re-parse:** originals are kept forever, so an admin can re-run ingestion on all rides when a parser improves.
+
+### Metrics
+
+Each formula is covered by tests against known values.
+
+- **NP:** the device's NP from the FIT file when present. Otherwise a 30-second rolling average over the power stream resampled to 1 Hz, then the mean of the fourth powers, then the fourth root. (Endurain skips the rolling average, which overstates NP on spiky rides.) IF and TSS come from NP and FTP.
+- **Max speed:** the maximum of 5-sample sliding medians, so one GPS glitch never becomes the max.
+- **Elevation gain and loss:** median filter, then moving average, then the sum of changes above a threshold.
+- **Moving time:** the sum of gaps between samples, skipping pauses and duplicate or out-of-order timestamps.
+- **Zones:** HR zones as percentages of max HR (default 220 − age); power zones from FTP.
 
 ## 6. Background work
 
 All background work runs inside the server as hosted services:
 
 - **Ingestion:** the channel reader above.
-- **Timers** (`PeriodicTimer` in a `BackgroundService`): maintenance reminders, expired share link cleanup, v2 connector polling.
+- **Timers** (`PeriodicTimer` in a `BackgroundService`): thumbnail and geocoding retries (rides whose next-attempt time has passed), maintenance reminders, expired share link cleanup, v2 connector polling.
 - Email goes out from the same process with the configured SMTP server.
 
 Nothing is queued in the database. A timed task recomputes what it needs from the data on each run, so a missed run is simply caught up next time.
+
+**Computed on read, never stored:** component wear (km, hours and months since fitting), goals and weekly/monthly/yearly totals are calculated from the rides when asked for, using each ride's local date and the member's first day of the week. The reminder timer runs the same calculation.
 
 ## 7. Data
 
@@ -146,7 +162,9 @@ erDiagram
 
 - Instants are `timestamptz` in UTC; a ride also stores its local time zone offset. SI units internally.
 - Keys are `uuid`; rides recorded on the phone keep the phone's id.
-- Streams are the largest data. Their storage format (one array column per stream, or one row per sample) is chosen by measuring before the Rides schema is fixed.
+- Rides carry an EF Core concurrency token, so two edits of the same ride can't silently overwrite each other.
+- Streams are the largest data. Their storage format (one array column per stream, or one row per sample) is chosen by measuring before the Rides schema is fixed. Endurain stores one JSON array per stream per ride, which supports the array-column option.
+- A bulk import (v2, Strava export) has one import row with files done and failed, for the progress bar.
 - Export and account deletion are one slice each and cover every schema.
 
 ## 8. API
@@ -160,7 +178,9 @@ erDiagram
 ## 9. Security and privacy
 
 - Every endpoint that returns member data checks: owner, or an active grant for that data type and audience. Admins do not see members' rides or wellbeing.
-- Data seen by anyone other than the owner (share links, club, coach) goes through one privacy function in `Features/Privacy/` that applies privacy zones (saved places, up to 1 mile), start/end trimming and per-stream switches. The owner always sees the full track.
+- Data seen by anyone other than the owner (share links, club, coach) goes through one privacy function in `Features/Privacy/` that applies privacy zones (saved places, up to 1 mile), start/end trimming and per-stream switches. It covers both the summary fields (start time, place, bike, HR, power and cadence values, private notes) and the streams, in one place. The owner always sees the full track.
+- Images on share pages (thumbnails, photos) use signed, expiring URLs from Data Protection (`ITimeLimitedDataProtector`, one purpose per feature). Hiding a map never deletes the file; non-owners just never get a URL for it.
+- Outbound URLs entered by an admin (tile server, OIDC issuer, geocoder, connectors) are refused if they point to private or loopback addresses, unless the admin explicitly allows it.
 - Every non-owner view is logged and visible to the member.
 - Cycle tracking (v2) is encrypted with ASP.NET Core Data Protection, never appears in share links, and has its own grant.
 - Wellbeing and cycle data are health data: explicit consent before first use.
@@ -229,3 +249,4 @@ Each needs an evaluation in `docs/dependencies/` and owner approval before use.
 5. Flutter web for the logged-in web app; server-rendered HTML for share and landing pages.
 6. Original ride files kept forever; FIT as the format recorded on the phone.
 7. Stream storage format (after measuring).
+8. Wear, goals and totals computed on read.

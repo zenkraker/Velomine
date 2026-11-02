@@ -156,9 +156,9 @@ For non-owners, one function clears fields per hide flag (start/end time, city/t
 
 `calculate_user_goals` computes progress on read for each goal, using the member's **local** today and first day of week. Comments in the code record the bug this fixed: with UTC, weekly and monthly progress reset at the wrong time.
 
-## Found in the code but not yet in Velomine's docs
+## Added to the architecture
 
-Worth adding to the architecture when the relevant feature is built:
+These findings are now part of [`docs/architecture.md`](../architecture.md):
 
 1. **Signed, expiring image URLs** for thumbnails and photos on share pages (Data Protection).
 2. **SSRF guard** on every admin-configurable outbound URL.
