@@ -1,0 +1,38 @@
+# Dex: a small OpenID Connect provider for LOCAL DEVELOPMENT ONLY (see docs/dependencies/dex.md).
+# It lets you try single sign-on without any outside account. In production, point
+# Velomine__Sso__Authority at your own provider instead and remove the dex service.
+#
+# Log in at the Velomine sign-in page with:  rider@sso.test / password
+#
+# The issuer must be the same address for your browser and for the Velomine container:
+# the host name dex.localhost reaches Dex's published port from your browser (browsers send
+# *.localhost to your own machine) and is a network alias of Dex inside docker compose.
+issuer: http://dex.localhost:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+oauth2:
+  skipApprovalScreen: true
+
+enablePasswordDB: true
+
+staticClients:
+  - id: velomine
+    name: Velomine
+    secret: velomine-dev-secret
+    redirectURIs:
+      # If you change VELOMINE_PORT in .env, change the port here too.
+      - http://localhost:8080/signin-oidc
+
+staticPasswords:
+  # bcrypt hash of the word "password" (the example hash from Dex's own documentation).
+  - email: rider@sso.test
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: rider
+    name: SSO Rider
+    emailVerified: true
+    userID: 08a8684b-db88-4b73-90a9-3cd1661f5466

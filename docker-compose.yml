@@ -1,6 +1,6 @@
 # Runs the whole stack for local testing:  docker compose up --build
 # Server: http://localhost:8080   (health: /health, API: /api/v1/server)
-# Development defaults only; set real values in a .env file for anything shared.
+# Development defaults only (including the Dex single sign-on test provider); set real values in a .env file for anything shared.
 services:
   postgres:
     image: postgres:17
@@ -16,16 +16,45 @@ services:
       timeout: 3s
       retries: 10
 
+  # Local single sign-on provider for testing; remove it (and the Velomine__Sso__* settings) if you do not need it.
+  dex:
+    image: ghcr.io/dexidp/dex:v2.46.1
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    environment:
+      # The config holds bcrypt hashes with $ characters, so do not expand $VARIABLES in it.
+      DEX_EXPAND_ENV: "false"
+    volumes:
+      - ./deploy/dex/config.yaml:/etc/dex/config.yaml:ro
+    ports:
+      - "127.0.0.1:5556:5556"
+    networks:
+      default:
+        aliases:
+          - dex.localhost
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5556/dex/.well-known/openid-configuration"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   velomine:
     build: .
     depends_on:
       postgres:
+        condition: service_healthy
+      dex:
         condition: service_healthy
     environment:
       ConnectionStrings__Velomine: Host=postgres;Database=velomine;Username=velomine;Password=${POSTGRES_PASSWORD:-velomine-dev}
       # First admin, created on start when the server has none. Change these for anything shared.
       Velomine__Admin__Email: ${VELOMINE_ADMIN_EMAIL:-admin@velomine.local}
       Velomine__Admin__Password: ${VELOMINE_ADMIN_PASSWORD:-Velomine-dev-1}
+      # Single sign-on through the local Dex service above. Any OpenID Connect provider works.
+      Velomine__Sso__Authority: http://dex.localhost:5556/dex
+      Velomine__Sso__ClientId: velomine
+      Velomine__Sso__ClientSecret: velomine-dev-secret
+      Velomine__Sso__DisplayName: Dex (local test)
+      Velomine__Sso__AllowInsecureHttp: "true"
     ports:
       - "${VELOMINE_PORT:-8080}:8080"
     volumes:

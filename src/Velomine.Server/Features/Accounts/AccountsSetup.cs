@@ -1,4 +1,8 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Data;
@@ -7,10 +11,11 @@ namespace Velomine.Server.Features.Accounts;
 
 public static class AccountsSetup
 {
-    public static IServiceCollection AddAccounts(this IServiceCollection services)
+    public static IServiceCollection AddAccounts(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<AccountsOptions>().BindConfiguration("Velomine:Accounts");
         services.AddOptions<AdminBootstrapOptions>().BindConfiguration("Velomine:Admin");
+        services.AddOptions<SsoOptions>().BindConfiguration("Velomine:Sso");
         services.AddSingleton(TimeProvider.System);
 
         // Cookie for the web app, bearer token for the mobile app and tools. The Identity endpoints
@@ -26,8 +31,45 @@ public static class AccountsSetup
             .AddEntityFrameworkStores<VelomineDbContext>()
             .AddSignInManager<VelomineSignInManager>();
         services.AddAuthorization();
+        AddSso(services, configuration.GetSection("Velomine:Sso").Get<SsoOptions>() ?? new SsoOptions());
         services.AddHostedService<AccountsStartup>();
         return services;
+    }
+
+    // The provider's settings are read now because the OpenID Connect handler must be registered at startup.
+    private static void AddSso(IServiceCollection services, SsoOptions sso)
+    {
+        if (!sso.Enabled) return;
+
+        // Identity already provides the short-lived external cookie the provider sign-in lands in.
+        services.AddAuthentication().AddOpenIdConnect(SsoOptions.Scheme, o =>
+        {
+            o.SignInScheme = IdentityConstants.ExternalScheme;
+            o.Authority = sso.Authority;
+            o.ClientId = sso.ClientId;
+            o.ClientSecret = sso.ClientSecret;
+            o.RequireHttpsMetadata = !sso.AllowInsecureHttp;
+            o.ResponseType = OpenIdConnectResponseType.Code;
+            // A plain top-level redirect back (not a cross-site form post), so Lax cookies work on http and https.
+            o.ResponseMode = OpenIdConnectResponseMode.Query;
+            o.CorrelationCookie.SameSite = SameSiteMode.Lax;
+            o.NonceCookie.SameSite = SameSiteMode.Lax;
+            // These cookies are Secure by default, which an http development setup cannot send back. Only relax it there.
+            if (sso.AllowInsecureHttp)
+            {
+                o.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                o.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            }
+
+            o.UsePkce = true;
+            o.GetClaimsFromUserInfoEndpoint = true;
+            o.SaveTokens = false;
+            o.MapInboundClaims = false; // keep the standard claim names: sub, email, name, email_verified
+            o.Scope.Clear();
+            o.Scope.Add("openid");
+            o.Scope.Add("profile");
+            o.Scope.Add("email");
+        });
     }
 }
 

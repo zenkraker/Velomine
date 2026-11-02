@@ -174,6 +174,7 @@ erDiagram
 - **The Dart client is generated** from that document into `app/lib/core/api/generated/` and never edited by hand. CI regenerates it and fails if the committed copy differs. The generator is chosen in `docs/dependencies/`.
 - A released version is never broken, because phones update late. Breaking changes go to `/api/v2`.
 - Auth: Identity cookie for the web app, bearer tokens for the mobile app, scoped API keys (`X-API-Key`) for tools such as the USB uploader.
+- Single sign-on: Microsoft's OpenID Connect handler (authorization code with PKCE) signs the browser in through a provider the admin configures; the account is then found, linked by verified email, or created, and a normal Identity cookie session starts. The mobile app's SSO flow (system browser, then a token for the app) comes later.
 
 ## 9. Security and privacy
 
