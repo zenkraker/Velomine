@@ -30,13 +30,13 @@ PostgreSQL licence (NuGet and GitHub). It is a permissive licence (MIT/BSD style
 ## Platform support
 - .NET: net10.0 (the 10.0.x line); `Npgsql` targets net8.0, net9.0 and net10.0.
 - Flutter: not applicable.
-- Feature support, checked by the spike in `tests/Velomine.Server.Tests/Spikes/NpgsqlProviderSpikeTests.cs` against PostgreSQL 16.15 (all passing):
+- Feature support, checked by the spike in `tests/Velomine.Server.Tests/Spikes/NpgsqlProviderSpikeTests.cs` against PostgreSQL 16.15 and 17 (all passing):
   - `Guid` → `uuid`, `DateTimeOffset` → `timestamptz`, `float[]` → `real[]`, `byte[]` → `bytea`.
   - **Only UTC is accepted for `timestamptz`:** writing a `DateTimeOffset` with a non-zero offset throws (`DbUpdateException` with an inner `ArgumentException`). Code must store UTC and keep the ride's local offset in its own column, as the architecture says.
   - A table in a non-default schema (one schema per feature area) works.
   - `IsRowVersion()` maps to PostgreSQL's `xmin`; a second concurrent save throws `DbUpdateConcurrencyException`.
   - `migrationBuilder.Sql(..., suppressTransaction: true)` runs `CREATE INDEX CONCURRENTLY`, and the index is valid.
-- Not yet checked: PostgreSQL 17 (compose uses 17; the spike ran on 16), and `jsonb`.
+- Not yet checked: `jsonb`.
 
 ## Size and performance
 No Velomine measurements. Widely used in production; the driver is the performance-focused part (prepared statements, binary protocol).

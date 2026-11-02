@@ -6,35 +6,28 @@ using Npgsql;
 namespace Velomine.Server.Tests.Spikes;
 
 // Checks the conditions in docs/dependencies/npgsql-efcore.md against a real PostgreSQL.
-// Set VELOMINE_TEST_POSTGRES to a server connection string without a database,
-// for example "Host=localhost;Port=5432;Username=postgres;Password=...". Otherwise the tests are skipped.
-[TestClass]
-public sealed class NpgsqlProviderSpikeTests
+// Each test gets its own database on the fixture's server.
+public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>, IAsyncLifetime
 {
     private const string Schema = "rides_spike";
-    private static string? serverConnection = Environment.GetEnvironmentVariable("VELOMINE_TEST_POSTGRES");
     private string dbConnection = "";
     private string dbName = "";
 
-    [TestInitialize]
-    public async Task CreateDatabase()
+    public async ValueTask InitializeAsync()
     {
-        if (serverConnection is null) Assert.Inconclusive("VELOMINE_TEST_POSTGRES is not set.");
         dbName = "spike_" + Guid.NewGuid().ToString("N");
-        await using var admin = new NpgsqlConnection(serverConnection);
+        await using var admin = new NpgsqlConnection(postgres.ServerConnection);
         await admin.OpenAsync();
         await new NpgsqlCommand($"CREATE DATABASE {dbName}", admin).ExecuteNonQueryAsync();
-        dbConnection = new NpgsqlConnectionStringBuilder(serverConnection) { Database = dbName }.ConnectionString;
+        dbConnection = new NpgsqlConnectionStringBuilder(postgres.ServerConnection) { Database = dbName }.ConnectionString;
         await using var context = NewContext();
         await context.Database.MigrateAsync();
     }
 
-    [TestCleanup]
-    public async Task DropDatabase()
+    public async ValueTask DisposeAsync()
     {
-        if (serverConnection is null) return;
         NpgsqlConnection.ClearAllPools();
-        await using var admin = new NpgsqlConnection(serverConnection);
+        await using var admin = new NpgsqlConnection(postgres.ServerConnection);
         await admin.OpenAsync();
         await new NpgsqlCommand($"DROP DATABASE IF EXISTS {dbName} WITH (FORCE)", admin).ExecuteNonQueryAsync();
     }
@@ -49,18 +42,18 @@ public sealed class NpgsqlProviderSpikeTests
         return (await new NpgsqlCommand(sql, connection).ExecuteScalarAsync())?.ToString() ?? "";
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ColumnTypes_AreTheOnesTheArchitectureNeeds()
     {
         string Column(string name) => $"select data_type || '/' || udt_name from information_schema.columns where table_schema = '{Schema}' and table_name = 'rides' and column_name = '{name}'";
 
-        Assert.AreEqual("uuid/uuid", await Scalar(Column("Id")));
-        Assert.AreEqual("timestamp with time zone/timestamptz", await Scalar(Column("StartTime")));
-        Assert.AreEqual("ARRAY/_float4", await Scalar(Column("Speed")));
-        Assert.AreEqual("bytea/bytea", await Scalar(Column("Original")));
+        Assert.Equal("uuid/uuid", await Scalar(Column("Id")));
+        Assert.Equal("timestamp with time zone/timestamptz", await Scalar(Column("StartTime")));
+        Assert.Equal("ARRAY/_float4", await Scalar(Column("Speed")));
+        Assert.Equal("bytea/bytea", await Scalar(Column("Original")));
     }
 
-    [TestMethod]
+    [Fact]
     public async Task RoundTrip_KeepsInstantArrayAndBytes()
     {
         var ride = new SpikeRide
@@ -73,17 +66,17 @@ public sealed class NpgsqlProviderSpikeTests
         await using (var write = NewContext())
         {
             write.Rides.Add(ride);
-            await write.SaveChangesAsync();
+            await write.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using var read = NewContext();
-        var loaded = await read.Rides.SingleAsync(r => r.Id == ride.Id);
-        Assert.AreEqual(ride.StartTime, loaded.StartTime);
-        CollectionAssert.AreEqual(ride.Speed, loaded.Speed);
-        CollectionAssert.AreEqual(ride.Original, loaded.Original);
+        var loaded = await read.Rides.SingleAsync(r => r.Id == ride.Id, cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(ride.StartTime, loaded.StartTime);
+        Assert.Equal(ride.Speed, loaded.Speed);
+        Assert.Equal(ride.Original, loaded.Original);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task NonUtcOffset_IsRejected_SoCodeMustStoreUtcAndKeepTheLocalOffsetSeparately()
     {
         await using var context = NewContext();
@@ -95,37 +88,37 @@ public sealed class NpgsqlProviderSpikeTests
             Original = [],
         });
 
-        var error = await Assert.ThrowsExactlyAsync<DbUpdateException>(() => context.SaveChangesAsync());
-        Assert.IsInstanceOfType<ArgumentException>(error.InnerException);
+        var error = await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(TestContext.Current.CancellationToken));
+        Assert.IsType<ArgumentException>(error.InnerException);
     }
 
-    [TestMethod]
+    [Fact]
     public async Task ConcurrentEdits_SecondSaveIsRejected()
     {
         var id = Guid.NewGuid();
         await using (var seed = NewContext())
         {
             seed.Rides.Add(new SpikeRide { Id = id, StartTime = DateTimeOffset.UnixEpoch, Speed = [], Original = [] });
-            await seed.SaveChangesAsync();
+            await seed.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         await using var first = NewContext();
         await using var second = NewContext();
-        var a = await first.Rides.SingleAsync(r => r.Id == id);
-        var b = await second.Rides.SingleAsync(r => r.Id == id);
+        var a = await first.Rides.SingleAsync(r => r.Id == id, cancellationToken: TestContext.Current.CancellationToken);
+        var b = await second.Rides.SingleAsync(r => r.Id == id, cancellationToken: TestContext.Current.CancellationToken);
         a.Original = [1];
         b.Original = [2];
-        await first.SaveChangesAsync();
+        await first.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await Assert.ThrowsExactlyAsync<DbUpdateConcurrencyException>(() => second.SaveChangesAsync());
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => second.SaveChangesAsync(TestContext.Current.CancellationToken));
     }
 
-    [TestMethod]
+    [Fact]
     public async Task MigrationCanCreateIndexConcurrently()
     {
         var valid = await Scalar($"select i.indisvalid from pg_index i join pg_class c on c.oid = i.indexrelid join pg_namespace n on n.oid = c.relnamespace where n.nspname = '{Schema}' and c.relname = 'ix_rides_start_time'");
 
-        Assert.AreEqual("True", valid);
+        Assert.Equal("True", valid);
     }
 }
 

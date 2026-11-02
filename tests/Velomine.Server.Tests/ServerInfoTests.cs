@@ -5,25 +5,22 @@ using Velomine.Server.Features.Server;
 
 namespace Velomine.Server.Tests;
 
-[TestClass]
-public sealed class ServerInfoTests
+public sealed class ServerInfoTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
-    private static readonly WebApplicationFactory<Program> Factory = new();
-
-    [TestMethod]
+    [Fact]
     public async Task ServerInfo_ReturnsNameAndVersion()
     {
-        var info = await Factory.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server");
+        var info = await factory.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
 
-        Assert.AreEqual("Velomine", info?.Name);
-        Assert.IsFalse(string.IsNullOrEmpty(info?.Version));
+        Assert.Equal("Velomine", info?.Name);
+        Assert.False(string.IsNullOrEmpty(info?.Version));
     }
 
-    [TestMethod]
+    [Fact]
     public async Task Health_ReturnsOk()
     {
-        var response = await Factory.CreateClient().GetAsync("/health");
+        var response = await factory.CreateClient().GetAsync("/health", TestContext.Current.CancellationToken);
 
-        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }

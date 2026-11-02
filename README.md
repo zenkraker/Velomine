@@ -12,7 +12,7 @@ Early development. The server skeleton runs (ASP.NET Core + FastEndpoints, healt
 docker compose up --build
 ```
 
-Then open http://localhost:8080/health and http://localhost:8080/api/v1/server. Change the port with `VELOMINE_PORT` and the database password with `POSTGRES_PASSWORD` (a `.env` file works). Without Docker: `dotnet run --project src/Velomine.Server`; run the tests with `dotnet test`. The database tests run when `VELOMINE_TEST_POSTGRES` points at a PostgreSQL server (for example `Host=localhost;Username=postgres;Password=...`) and are skipped otherwise.
+Then open http://localhost:8080/health and http://localhost:8080/api/v1/server. Change the port with `VELOMINE_PORT` and the database password with `POSTGRES_PASSWORD` (a `.env` file works). Without Docker: `dotnet run --project src/Velomine.Server`; Tests: `dotnet test --solution Velomine.slnx` (needs Docker: the database tests start a `postgres:17` container with Testcontainers; set `VELOMINE_TEST_POSTGRES` to a server connection string to use an existing PostgreSQL instead).
 
 ## Documents
 

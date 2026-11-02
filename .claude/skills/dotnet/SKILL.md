@@ -28,4 +28,4 @@ dotnet build -warnaserror
 dotnet test
 ```
 
-Tests: MSTest (Microsoft's test framework; xUnit and NUnit are community libraries), `Microsoft.AspNetCore.Mvc.Testing` for HTTP tests, real PostgreSQL for data tests (see the `postgres` skill), not the EF in-memory provider.
+Tests: xUnit v3 (`xunit.v3`, run with `dotnet test --solution Velomine.slnx` through the Microsoft Testing Platform), `Microsoft.AspNetCore.Mvc.Testing` for HTTP tests, Testcontainers (`PostgresFixture`) for a real PostgreSQL in data tests, not the EF in-memory provider. Bogus is approved for fake data; use a fixed seed and don't assert exact generated values.

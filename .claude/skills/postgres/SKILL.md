@@ -28,5 +28,5 @@ PostgreSQL is the only database. Access goes through EF Core with the Npgsql pro
 
 ## Tests and ops
 
-- Integration tests run against a real PostgreSQL (a container in CI), with migrations applied from scratch.
+- Integration tests run against a real PostgreSQL through `PostgresFixture` (Testcontainers, `postgres:17`), with migrations applied from scratch and one database per test.
 - Document backup/restore for self-hosters with `pg_dump` / `pg_restore`.
