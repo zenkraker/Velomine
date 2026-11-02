@@ -4,7 +4,7 @@ Self-hosted, cycling-only training platform for clubs and teams. No paywall; eve
 
 ## Status
 
-Early development. The server skeleton runs (ASP.NET Core + FastEndpoints, health check, one endpoint) and the whole stack starts with Docker Compose. Database access is waiting for the Npgsql provider to be approved ([evaluation](docs/dependencies/npgsql-efcore.md)). The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
+Early development. The server skeleton runs (ASP.NET Core + FastEndpoints, health check, one endpoint) and the whole stack starts with Docker Compose. The PostgreSQL provider is approved and checked against a real database; the data layer is next. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
 
 ## Run it
 
@@ -12,7 +12,7 @@ Early development. The server skeleton runs (ASP.NET Core + FastEndpoints, healt
 docker compose up --build
 ```
 
-Then open http://localhost:8080/health and http://localhost:8080/api/v1/server. Change the port with `VELOMINE_PORT` and the database password with `POSTGRES_PASSWORD` (a `.env` file works). Without Docker: `dotnet run --project src/Velomine.Server`; run the tests with `dotnet test`.
+Then open http://localhost:8080/health and http://localhost:8080/api/v1/server. Change the port with `VELOMINE_PORT` and the database password with `POSTGRES_PASSWORD` (a `.env` file works). Without Docker: `dotnet run --project src/Velomine.Server`; run the tests with `dotnet test`. The database tests run when `VELOMINE_TEST_POSTGRES` points at a PostgreSQL server (for example `Host=localhost;Username=postgres;Password=...`) and are skipped otherwise.
 
 ## Documents
 
