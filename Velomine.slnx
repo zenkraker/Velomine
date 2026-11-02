@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Velomine.Server/Velomine.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Velomine.Server.Tests/Velomine.Server.Tests.csproj" />
+  </Folder>
+</Solution>

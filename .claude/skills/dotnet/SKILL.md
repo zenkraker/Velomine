@@ -28,4 +28,4 @@ dotnet build -warnaserror
 dotnet test
 ```
 
-Tests: xUnit (or MSTest), `Microsoft.AspNetCore.Mvc.Testing` for HTTP tests, real PostgreSQL for data tests (see the `postgres` skill), not the EF in-memory provider.
+Tests: MSTest (Microsoft's test framework; xUnit and NUnit are community libraries), `Microsoft.AspNetCore.Mvc.Testing` for HTTP tests, real PostgreSQL for data tests (see the `postgres` skill), not the EF in-memory provider.
