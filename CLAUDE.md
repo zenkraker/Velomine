@@ -25,6 +25,16 @@ Background documents. Read the relevant one before designing a feature. When a d
 
 **Clean-room rule:** Endurain is AGPL-3.0. Take ideas from it, never code. Do not copy, translate or adapt Endurain source, and do not use the Endurain name or logo.
 
+## Architecture invariants
+
+- **Keep it simple.** One server, one PostgreSQL database, one file volume. No microservices, brokers, caches or extra services.
+- **Vertical slices.** Server code lives in `Features/<Area>/`, one file per use case (request, response, validation, endpoint, logic). Slices use the `DbContext` directly: no repositories, service layers or mediators.
+- **Endpoints use FastEndpoints**, one endpoint class per slice.
+- **Background work runs in the server** as hosted services. PostgreSQL is storage only: no job queues, events or outbox in the database.
+- **One PostgreSQL schema per feature area.**
+- **Don't reinvent the wheel on .NET.** Use what .NET, ASP.NET Core, EF Core and official Microsoft libraries provide; write it yourself only when nothing official fits.
+- **The Dart API client is generated** from the server's OpenAPI document. Never edit generated files by hand. For the generator only, a community tool is acceptable if it is free, well documented and actively supported; it still needs an evaluation in `docs/dependencies/`.
+
 ## Claude Code setup
 
 ### Ponytail is mandatory

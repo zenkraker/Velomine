@@ -9,14 +9,16 @@ Velomine is self-hosted by clubs and teams, often on one small server run by a v
 
 ## Shape
 
-- **Modular monolith.** One ASP.NET Core server process + one PostgreSQL. No microservices, message brokers, Redis or extra services unless a measured need forces it and the owner agrees.
-- **Modules by feature** (activities, training plans, clubs, members, sharing), each owning its tables and endpoints. Modules talk through plain C# interfaces/services, not through each other's tables.
-- **Layers stay thin:** endpoint -> service (business rules) -> `DbContext`. Add a layer only when a second caller needs it.
-- **Background work:** `BackgroundService` / hosted services with a jobs table in PostgreSQL. No external queue.
+Follow `docs/architecture.md` and the architecture invariants in `CLAUDE.md`. In short:
+
+- **One server process + one PostgreSQL + one file volume.** No microservices, brokers, Redis or extra services. An instance serves up to about 1,000 members; don't design for more.
+- **Vertical slices** in `Features/<Area>/`: one FastEndpoints endpoint per use case, using the `DbContext` directly. No layers, repositories or mediators.
+- **One PostgreSQL schema per feature area.**
+- **Background work** runs in the server: a `Channel<T>` + `BackgroundService` for ingestion, `PeriodicTimer` for scheduled tasks. PostgreSQL is storage only: no jobs table, events or outbox.
 
 ## Contracts
 
-- The server's HTTP API is the only contract between server and Flutter apps. Version it (`/api/v1`), describe it with the built-in OpenAPI support, and never break a released version: mobile apps update late.
+- The server's HTTP API is the only contract between server and Flutter apps. Version it (`/api/v1`), describe it with `FastEndpoints.OpenApi`, generate the Dart client from that document, and never break a released version: mobile apps update late.
 - The server is the source of truth. Mobile may record offline and upload later; uploads must be idempotent (client-generated id) so retries never duplicate an activity.
 - Share pages are public, server-rendered HTML with only the data the member chose to share.
 
