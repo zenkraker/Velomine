@@ -97,6 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Password',
                         helperText: 'At least 10 characters, with a capital letter, a small letter and a digit.',
+                        helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
                       ),
                     ),
                     if (_error != null) ...[

@@ -6,13 +6,80 @@ Self-hosted, cycling-only training platform for clubs and teams. No paywall; eve
 
 Early development. Done so far: the server skeleton, the PostgreSQL data layer with migrations, and accounts (sign up with admin approval, password login with cookie or bearer token, refresh, roles admin/member/coach). Single sign-on with any OpenID Connect provider works and is tested end to end. Ride upload works: FIT, GPX and TCX files (also gzipped) are read in the background into rides with distance, moving time, climbing, speed, power, normalized power, heart rate and cadence. The Flutter web app is in place (sign in with a password, or single sign-on on the web; sign up, list and upload rides, admin approval of new accounts), tested in a real browser against the compose stack. Next: ride detail, bikes and the phone recorder. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
 
-## Run it
+## Run it on your computer
+
+This starts the whole stack with one command: the server, the web app, PostgreSQL, and a small test sign-in provider for trying single sign-on. You do not need .NET, Flutter or PostgreSQL installed.
+
+### What to install
+
+| Install | Why | Notes |
+|---------|-----|-------|
+| **Docker** with Compose v2 | Builds and runs everything | Windows and macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows with the WSL 2 backend). Linux: Docker Engine plus the Compose plugin. The command must work as `docker compose` (with a space), not the old `docker-compose`. |
+| **Git** | To get the code | Any recent version. |
+| **Chrome, Edge or Firefox** | To open the web app | The single sign-on test uses the address `dex.localhost`, which these browsers send to your own machine. Safari is untested. |
+
+Also needed:
+- **About 8 GB of free disk and 4 GB of RAM for Docker.** The first build downloads the .NET SDK, the Flutter SDK and PostgreSQL, and compiles the web app inside Docker.
+- **Internet access for the first build.** It reaches `mcr.microsoft.com`, `ghcr.io`, `docker.io`, `nuget.org`, `pub.dev` and `storage.googleapis.com` (the Flutter SDK). Behind a company proxy, set that up in Docker first.
+- **Free ports 8080 (the app) and 5556 (the test sign-in provider).**
+- **Apple Silicon Macs (arm64):** Flutter only ships a Linux x64 build, so the web build step runs emulated and takes longer. This has not been tried on an arm64 machine; if the build fails there, tell me what it prints.
+
+### Start it
 
 ```
+git clone https://github.com/zenkraker/Velomine.git
+cd Velomine
+git checkout ccr-c5b2810d-ttm8ml
 docker compose up --build
 ```
 
-Then open http://localhost:8080 for the web app (sign in as the admin below), or http://localhost:8080/health and http://localhost:8080/api/v1/server for the API. The first build also compiles the Flutter web app inside the image, which takes a few minutes. The first admin is created on start: `admin@velomine.local` / `Velomine-dev-1` (set `VELOMINE_ADMIN_EMAIL` and `VELOMINE_ADMIN_PASSWORD` to change them; they only apply while no admin exists). New sign-ups wait for an admin to approve them (`POST /api/v1/accounts/users/{id}/approve`); switch that off with `Velomine__Accounts__RequireAdminApproval=false`. Change the port with `VELOMINE_PORT` and the database password with `POSTGRES_PASSWORD` (a `.env` file works). Without Docker: `dotnet run --project src/Velomine.Server` (the web app is then not served; see [app/README.md](app/README.md)); Tests: `dotnet test --solution Velomine.slnx` (needs Docker: the database tests start a `postgres:17` container with Testcontainers; set `VELOMINE_TEST_POSTGRES` to a server connection string to use an existing PostgreSQL instead).
+The first run takes roughly 5 to 10 minutes (later starts take seconds). It is ready when the log shows `Now listening on: http://0.0.0.0:8080`. Then open **http://localhost:8080**.
+
+Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your data; `docker compose down -v` also deletes the data (database and uploaded files), for a fresh start.
+
+### What to try
+
+1. **Sign in as the admin:** `admin@velomine.local` / `Velomine-dev-1`.
+2. **Upload a ride:** press *Upload ride* and choose [docs/samples/sample-ride.gpx](docs/samples/sample-ride.gpx) (a synthetic 12-minute ride), or any FIT, GPX or TCX file from your own bike computer or from Strava or Garmin. The card shows *Reading the file…*, then distance, moving time, climbing, speed, power with normalized power, heart rate and cadence.
+3. **Sign up as someone new:** sign out, choose *Create an account*, and register. The account waits for approval. Sign in as the admin, open *Accounts*, press *Approve*, then sign in as the new person.
+4. **Try single sign-on:** sign out and press *Continue with Dex (local test)*. Log in on the provider's page with `rider@sso.test` / `password`. You come back told that the account is waiting for approval; approve it as the admin (step 3), then repeat the single sign-on and you are in.
+5. **Look at the API:** the description is at http://localhost:8080/openapi/v1.json and the health check at http://localhost:8080/health.
+
+### Settings you can change
+
+Set them in a file named `.env` next to `docker-compose.yml` (for example `VELOMINE_PORT=9090`), or as environment variables.
+
+| Setting | Default | What it does |
+|---------|---------|--------------|
+| `VELOMINE_PORT` | `8080` | The port of the app. If you change it, also change the port in the redirect address in `deploy/dex/config.yaml`, or the single sign-on test breaks. |
+| `POSTGRES_PASSWORD` | `velomine-dev` | The database password. Set it before the first start; the database keeps the old one afterwards. |
+| `VELOMINE_ADMIN_EMAIL`, `VELOMINE_ADMIN_PASSWORD` | `admin@velomine.local`, `Velomine-dev-1` | The first admin. Only used while the server has no admin. |
+| `Velomine__Accounts__RequireAdminApproval` | `true` | Set to `false` to let new accounts in without approval (add it under `environment:` of the `velomine` service). |
+
+The defaults are for trying it out on your own machine only. Do not expose this setup to the internet as it is.
+
+### If something goes wrong
+
+| Problem | What to do |
+|---------|-----------|
+| `port is already allocated` | Something else uses 8080 or 5556. Stop it, or set `VELOMINE_PORT` (see above). |
+| The build fails while downloading | Run it again; it keeps what it already downloaded. Check your internet or proxy settings. |
+| The *Continue with Dex* page cannot be found | Use Chrome, Edge or Firefox. They resolve `dex.localhost` themselves; some other browsers and some tools do not. |
+| The sign-in provider says the redirect address is wrong | You changed `VELOMINE_PORT` without editing `deploy/dex/config.yaml`. |
+| You still see the old app after pulling new code | Run `docker compose up --build` again. |
+| You forgot the admin password | The setting only applies while no admin exists. Run `docker compose down -v` to start over (this deletes the data). |
+| Something else | `docker compose logs -f velomine` shows the server's log; add `postgres` or `dex` for those. |
+
+### If you want to develop, not just run
+
+Not needed for the steps above.
+
+| Install | For |
+|---------|-----|
+| **.NET SDK 10** | Building and testing the server: `dotnet test --solution Velomine.slnx` (the tests also need Docker; they start their own PostgreSQL and test provider). |
+| **Flutter 3.47** (comes with Dart 3.13) | The app: `cd app && flutter test`. Run `flutter doctor` to see what else your target needs (Android Studio for Android, Xcode for iOS). |
+| **Java 11 or newer, or Docker** | Regenerating the API client with `tools/generate-api-client.sh`. |
+| **Claude Code with the ponytail plugin and CodeGraph** | Required for working on this repository; see [CLAUDE.md](CLAUDE.md). |
 
 ## Uploading rides
 

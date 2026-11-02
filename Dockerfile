@@ -1,5 +1,9 @@
+# check=skip=FromPlatformFlagConstDisallowed
+# (The web stage below is pinned to linux/amd64 on purpose; see the comment there.)
 # Web app: Flutter's official release, pinned by version and checksum, on the same Microsoft image as the server build.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS web
+# The Flutter release only exists for Linux x64. Its output is plain web files, so on an Apple Silicon host this one
+# stage runs emulated and the server image is still built and run natively.
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0 AS web
 ARG FLUTTER_VERSION=3.47.9
 ARG FLUTTER_SHA256=25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a
 RUN apt-get update && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
