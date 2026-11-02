@@ -30,9 +30,18 @@ part 'auth/http_bearer_auth.dart';
 part 'optional.dart';
 
 part 'api/accounts_api.dart';
+part 'api/bikes_api.dart';
 part 'api/rides_api.dart';
 part 'api/server_api.dart';
 
+part 'model/bike_detail_response.dart';
+part 'model/bike_response.dart';
+part 'model/component_response.dart';
+part 'model/component_type_response.dart';
+part 'model/create_bike_request.dart';
+part 'model/create_component_request.dart';
+part 'model/list_bikes_response.dart';
+part 'model/list_component_types_response.dart';
 part 'model/list_rides_response.dart';
 part 'model/login_request.dart';
 part 'model/me_response.dart';
@@ -45,8 +54,11 @@ part 'model/register_response.dart';
 part 'model/ride_response.dart';
 part 'model/ride_streams_response.dart';
 part 'model/server_info_response.dart';
+part 'model/set_ride_bike_request.dart';
 part 'model/sso_info_response.dart';
 part 'model/token_response.dart';
+part 'model/update_bike_request.dart';
+part 'model/update_component_request.dart';
 part 'model/upload_ride_response.dart';
 part 'model/user_summary.dart';
 

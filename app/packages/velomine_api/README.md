@@ -74,16 +74,35 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
+*BikesApi* | [**createBike**](doc//BikesApi.md#createbike) | **POST** /api/v1/bikes | 
+*BikesApi* | [**createComponent**](doc//BikesApi.md#createcomponent) | **POST** /api/v1/bikes/{bikeId}/components | 
+*BikesApi* | [**deleteBike**](doc//BikesApi.md#deletebike) | **DELETE** /api/v1/bikes/{id} | 
+*BikesApi* | [**deleteComponent**](doc//BikesApi.md#deletecomponent) | **DELETE** /api/v1/bikes/{bikeId}/components/{id} | 
+*BikesApi* | [**getBike**](doc//BikesApi.md#getbike) | **GET** /api/v1/bikes/{id} | 
+*BikesApi* | [**listBikes**](doc//BikesApi.md#listbikes) | **GET** /api/v1/bikes | 
+*BikesApi* | [**listComponentTypes**](doc//BikesApi.md#listcomponenttypes) | **GET** /api/v1/bikes/component-types | 
+*BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
+*BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
+*BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
 *RidesApi* | [**getRideStreams**](doc//RidesApi.md#getridestreams) | **GET** /api/v1/rides/{id}/streams | 
 *RidesApi* | [**listRides**](doc//RidesApi.md#listrides) | **GET** /api/v1/rides | 
+*RidesApi* | [**setRideBike**](doc//RidesApi.md#setridebike) | **PUT** /api/v1/rides/{id}/bike | 
 *RidesApi* | [**uploadRide**](doc//RidesApi.md#uploadride) | **POST** /api/v1/rides/uploads | 
 *ServerApi* | [**getServerInfo**](doc//ServerApi.md#getserverinfo) | **GET** /api/v1/server | 
 
 
 ## Documentation For Models
 
+ - [BikeDetailResponse](doc//BikeDetailResponse.md)
+ - [BikeResponse](doc//BikeResponse.md)
+ - [ComponentResponse](doc//ComponentResponse.md)
+ - [ComponentTypeResponse](doc//ComponentTypeResponse.md)
+ - [CreateBikeRequest](doc//CreateBikeRequest.md)
+ - [CreateComponentRequest](doc//CreateComponentRequest.md)
+ - [ListBikesResponse](doc//ListBikesResponse.md)
+ - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [MeResponse](doc//MeResponse.md)
@@ -96,8 +115,11 @@ Class | Method | HTTP request | Description
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
+ - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [TokenResponse](doc//TokenResponse.md)
+ - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
+ - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
 

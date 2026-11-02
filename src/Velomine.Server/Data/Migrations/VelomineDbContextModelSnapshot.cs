@@ -279,6 +279,142 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("users", "accounts");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("brand");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<double>("InitialDistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("initial_distance_m");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateOnly?>("PurchasedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("purchased_on");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("WheelCircumferenceMm")
+                        .HasColumnType("integer")
+                        .HasColumnName("wheel_circumference_mm");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bikes");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_bikes_one_default_per_user")
+                        .HasFilter("is_default");
+
+                    b.ToTable("bikes", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BikeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bike_id");
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("brand");
+
+                    b.Property<double?>("ExpectedDistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("expected_distance_m");
+
+                    b.Property<double?>("ExpectedHours")
+                        .HasColumnType("double precision")
+                        .HasColumnName("expected_hours");
+
+                    b.Property<int?>("ExpectedMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("expected_months");
+
+                    b.Property<DateOnly>("InstalledOn")
+                        .HasColumnType("date")
+                        .HasColumnName("installed_on");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("model");
+
+                    b.Property<DateOnly?>("RemovedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("removed_on");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)")
+                        .HasColumnName("type");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bike_components");
+
+                    b.HasIndex("BikeId")
+                        .HasDatabaseName("ix_bike_components_bike_id");
+
+                    b.ToTable("bike_components", "bikes");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
                     b.Property<Guid>("Id")
@@ -301,6 +437,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<double?>("AvgSpeedMs")
                         .HasColumnType("double precision")
                         .HasColumnName("avg_speed_ms");
+
+                    b.Property<Guid?>("BikeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bike_id");
 
                     b.Property<string>("DedupKey")
                         .HasMaxLength(128)
@@ -409,6 +549,9 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_rides");
+
+                    b.HasIndex("BikeId")
+                        .HasDatabaseName("ix_rides_bike_id");
 
                     b.HasIndex("UserId", "DedupKey")
                         .HasDatabaseName("ix_rides_user_id_dedup_key");
@@ -533,8 +676,36 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_user_tokens_users_user_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bikes_users_user_id");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeComponent", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Bikes.Bike", null)
+                        .WithMany("Components")
+                        .HasForeignKey("BikeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bike_components_bikes_bike_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
+                    b.HasOne("Velomine.Server.Features.Bikes.Bike", null)
+                        .WithMany()
+                        .HasForeignKey("BikeId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_rides_bikes_bike_id");
+
                     b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -553,6 +724,11 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ride_streams_rides_ride_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
+                {
+                    b.Navigation("Components");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>

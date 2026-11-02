@@ -183,6 +183,22 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'BikeDetailResponse':
+          return BikeDetailResponse.fromJson(value);
+        case 'BikeResponse':
+          return BikeResponse.fromJson(value);
+        case 'ComponentResponse':
+          return ComponentResponse.fromJson(value);
+        case 'ComponentTypeResponse':
+          return ComponentTypeResponse.fromJson(value);
+        case 'CreateBikeRequest':
+          return CreateBikeRequest.fromJson(value);
+        case 'CreateComponentRequest':
+          return CreateComponentRequest.fromJson(value);
+        case 'ListBikesResponse':
+          return ListBikesResponse.fromJson(value);
+        case 'ListComponentTypesResponse':
+          return ListComponentTypesResponse.fromJson(value);
         case 'ListRidesResponse':
           return ListRidesResponse.fromJson(value);
         case 'LoginRequest':
@@ -207,10 +223,16 @@ class ApiClient {
           return RideStreamsResponse.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
+        case 'SetRideBikeRequest':
+          return SetRideBikeRequest.fromJson(value);
         case 'SsoInfoResponse':
           return SsoInfoResponse.fromJson(value);
         case 'TokenResponse':
           return TokenResponse.fromJson(value);
+        case 'UpdateBikeRequest':
+          return UpdateBikeRequest.fromJson(value);
+        case 'UpdateComponentRequest':
+          return UpdateComponentRequest.fromJson(value);
         case 'UploadRideResponse':
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':

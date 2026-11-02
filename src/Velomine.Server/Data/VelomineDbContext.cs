@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Data;
@@ -17,6 +18,10 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<Ride> Rides => Set<Ride>();
 
     public DbSet<RideStreams> RideStreams => Set<RideStreams>();
+
+    public DbSet<Bike> Bikes => Set<Bike>();
+
+    public DbSet<BikeComponent> BikeComponents => Set<BikeComponent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -36,6 +36,7 @@ class RideResponse {
     required this.avgHeartRate,
     required this.maxHeartRate,
     required this.avgCadence,
+    required this.bikeId,
   });
 
   final String id;
@@ -84,6 +85,8 @@ class RideResponse {
 
   final int? avgCadence;
 
+  final String? bikeId;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -108,7 +111,8 @@ class RideResponse {
     other.normalizedPowerW == normalizedPowerW &&
     other.avgHeartRate == avgHeartRate &&
     other.maxHeartRate == maxHeartRate &&
-    other.avgCadence == avgCadence;
+    other.avgCadence == avgCadence &&
+    other.bikeId == bikeId;
 
   @override
   int get hashCode =>
@@ -135,10 +139,11 @@ class RideResponse {
     (normalizedPowerW == null ? 0 : normalizedPowerW!.hashCode) +
     (avgHeartRate == null ? 0 : avgHeartRate!.hashCode) +
     (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
-    (avgCadence == null ? 0 : avgCadence!.hashCode);
+    (avgCadence == null ? 0 : avgCadence!.hashCode) +
+    (bikeId == null ? 0 : bikeId!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -241,6 +246,11 @@ class RideResponse {
     } else {
       json[r'avgCadence'] = null;
     }
+    if (this.bikeId != null) {
+      json[r'bikeId'] = this.bikeId;
+    } else {
+      json[r'bikeId'] = null;
+    }
     return json;
   }
 
@@ -289,6 +299,8 @@ class RideResponse {
     bool maxHeartRateSetToNull = false,
     int? avgCadence,
     bool avgCadenceSetToNull = false,
+    String? bikeId,
+    bool bikeIdSetToNull = false,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -313,6 +325,7 @@ class RideResponse {
     avgHeartRate: avgHeartRateSetToNull ? null : avgHeartRate ?? this.avgHeartRate,
     maxHeartRate: maxHeartRateSetToNull ? null : maxHeartRate ?? this.maxHeartRate,
     avgCadence: avgCadenceSetToNull ? null : avgCadence ?? this.avgCadence,
+    bikeId: bikeIdSetToNull ? null : bikeId ?? this.bikeId,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -353,6 +366,7 @@ class RideResponse {
         assert(json.containsKey(r'avgHeartRate'), 'Required key "RideResponse[avgHeartRate]" is missing from JSON.');
         assert(json.containsKey(r'maxHeartRate'), 'Required key "RideResponse[maxHeartRate]" is missing from JSON.');
         assert(json.containsKey(r'avgCadence'), 'Required key "RideResponse[avgCadence]" is missing from JSON.');
+        assert(json.containsKey(r'bikeId'), 'Required key "RideResponse[bikeId]" is missing from JSON.');
         return true;
       }());
 
@@ -380,6 +394,7 @@ class RideResponse {
         avgHeartRate: mapValueOfType<int>(json, r'avgHeartRate'),
         maxHeartRate: mapValueOfType<int>(json, r'maxHeartRate'),
         avgCadence: mapValueOfType<int>(json, r'avgCadence'),
+        bikeId: mapValueOfType<String>(json, r'bikeId'),
       );
     }
     return null;
@@ -450,6 +465,7 @@ class RideResponse {
     'avgHeartRate',
     'maxHeartRate',
     'avgCadence',
+    'bikeId',
   };
 }
 

@@ -24,7 +24,8 @@ public sealed record RideResponse(
     int? NormalizedPowerW,
     int? AvgHeartRate,
     int? MaxHeartRate,
-    int? AvgCadence)
+    int? AvgCadence,
+    Guid? BikeId)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -49,5 +50,6 @@ public sealed record RideResponse(
         r.NormalizedPowerW,
         r.AvgHeartRate,
         r.MaxHeartRate,
-        r.AvgCadence);
+        r.AvgCadence,
+        r.BikeId);
 }

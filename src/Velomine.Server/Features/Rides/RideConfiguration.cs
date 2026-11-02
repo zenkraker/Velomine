@@ -22,6 +22,9 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.HasOne(r => r.Owner).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         ride.HasOne(r => r.Streams).WithOne().HasForeignKey<RideStreams>(s => s.RideId).OnDelete(DeleteBehavior.Cascade);
 
+        ride.HasOne<Bikes.Bike>().WithMany().HasForeignKey(r => r.BikeId).OnDelete(DeleteBehavior.SetNull);
+        ride.HasIndex(r => r.BikeId);
+
         ride.HasIndex(r => new { r.UserId, r.IdempotencyKey }).IsUnique();
         ride.HasIndex(r => new { r.UserId, r.DedupKey });
         ride.HasIndex(r => new { r.UserId, r.StartTime });

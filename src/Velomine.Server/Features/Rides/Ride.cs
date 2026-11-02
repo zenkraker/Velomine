@@ -81,6 +81,9 @@ public sealed class Ride
 
     public int? AvgCadence { get; set; }
 
+    /// <summary>The bike ridden. Copied from the member's default bike when the ride is imported; the member can change it.</summary>
+    public Guid? BikeId { get; set; }
+
     /// <summary>PostgreSQL's xmin, so two edits of the same ride cannot silently overwrite each other.</summary>
     public uint Version { get; set; }
 

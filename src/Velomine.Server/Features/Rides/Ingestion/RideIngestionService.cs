@@ -68,6 +68,7 @@ public sealed class RideIngestionService(
 
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
         var used = false;
+        Guid? defaultBike = null;
         string? lastError = null;
         foreach (var file in parsed)
         {
@@ -106,6 +107,8 @@ public sealed class RideIngestionService(
             }
 
             Apply(target, metrics);
+            target.BikeId ??= defaultBike ??= await db.Bikes.AsNoTracking()
+                .Where(b => b.UserId == ride.UserId && b.IsDefault && b.IsActive).Select(b => (Guid?)b.Id).FirstOrDefaultAsync(ct);
             target.Status = RideStatus.Ready;
             target.Streams = ToStreams(file.Samples);
         }
