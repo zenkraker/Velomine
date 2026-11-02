@@ -35,7 +35,9 @@ void main() {
       var started = false;
       await startApp(
         tester,
-        server.session(useCookies: false),
+        server.session(
+          useCookies: true,
+        ), // single sign-on is for the web app, which uses the cookie session
         startSso: () async => started = true,
       );
 
