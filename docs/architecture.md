@@ -210,6 +210,8 @@ app/
 - **State:** Flutter SDK primitives (`ChangeNotifier`). **Navigation:** `go_router`, with real URLs on the web.
 - **Web app:** built by the Dockerfile and served by the server itself from `wwwroot`, at the same address as the API. That makes the session cookie work without cross-origin setup, and single sign-on returns to the same site. Any path that is not an API path falls back to `index.html`.
 - **Sign-in state:** the web app keeps its session in the cookie the server sets. Mobile builds hold the bearer token in memory for now; keeping it across restarts needs secure storage, which Flutter does not provide in an official package (needs an evaluation).
+- **Ride detail:** the numbers, a map and one chart per signal the ride has. Samples come from `GET /api/v1/rides/{id}/streams`, which averages a long ride down to at most 1,500 points (`maxPoints`, up to 5,000) so a 10-hour ride is still a small download. The charts and the map share one selected moment, so moving over a chart moves a marker on the map. Speed is worked out from positions when the file has none.
+- **Map background:** off by default. When an admin sets `Velomine__Map__TileUrl` (and the provider's credit in `Velomine__Map__Attribution`), the server tells clients through `GET /api/v1/server`, and the app loads tiles from that address and shows the credit. With no address the route is drawn alone and no map server is contacted.
 - **Platform split:** recording, Bluetooth and local storage are mobile only. The web app adds drag-and-drop upload and admin screens.
 
 ### Mobile recorder
@@ -244,8 +246,8 @@ Each needs an evaluation in `docs/dependencies/` and owner approval before use.
 | Dart client generator | OpenAPI Generator 7.26.0 (`dart` target) | Approved, see `docs/dependencies/APPROVED.md`; server must emit OpenAPI 3.0 |
 | EF Core provider for PostgreSQL | `Npgsql.EntityFrameworkCore.PostgreSQL` | Needs evaluation |
 | Bluetooth LE in Flutter | `universal_ble` or similar | Needs evaluation |
-| Map widget | `flutter_map` | Needs evaluation |
-| Charts | a chart package, or custom painting | Needs evaluation |
+| Map widget | none: the route is drawn with Flutter's own canvas; map tiles, when an admin sets a tile address, are plain images laid out by our own code (`features/rides/detail/geo.dart`). `flutter_map` would be needed for panning and zooming. | Not needed yet |
+| Charts | none: drawn with Flutter's own canvas (`features/rides/detail/series_chart.dart`) | Not needed |
 | Local storage on mobile | `sqflite`, or plain files | Needs evaluation |
 
 ## 13. Decisions to record as ADRs

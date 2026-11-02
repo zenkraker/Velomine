@@ -4,7 +4,7 @@ Self-hosted, cycling-only training platform for clubs and teams. No paywall; eve
 
 ## Status
 
-Early development. Done so far: the server skeleton, the PostgreSQL data layer with migrations, and accounts (sign up with admin approval, password login with cookie or bearer token, refresh, roles admin/member/coach). Single sign-on with any OpenID Connect provider works and is tested end to end. Ride upload works: FIT, GPX and TCX files (also gzipped) are read in the background into rides with distance, moving time, climbing, speed, power, normalized power, heart rate and cadence. The Flutter web app is in place (sign in with a password, or single sign-on on the web; sign up, list and upload rides, admin approval of new accounts), tested in a real browser against the compose stack. Next: ride detail, bikes and the phone recorder. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
+Early development. Done so far: the server skeleton, the PostgreSQL data layer with migrations, and accounts (sign up with admin approval, password login with cookie or bearer token, refresh, roles admin/member/coach). Single sign-on with any OpenID Connect provider works and is tested end to end. Ride upload works: FIT, GPX and TCX files (also gzipped) are read in the background into rides with distance, moving time, climbing, speed, power, normalized power, heart rate and cadence. The Flutter web app is in place (sign in with a password, or single sign-on on the web; sign up, list and upload rides, admin approval of new accounts), tested in a real browser against the compose stack. Ride detail pages show the route on a map and charts of every signal. Next: bikes and the phone recorder. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
 
 ## Run it on your computer
 
@@ -43,7 +43,8 @@ Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your
 2. **Upload a ride:** press *Upload ride* and choose [docs/samples/sample-ride.gpx](docs/samples/sample-ride.gpx) (a synthetic 12-minute ride), or any FIT, GPX or TCX file from your own bike computer or from Strava or Garmin. The card shows *Reading the file…*, then distance, moving time, climbing, speed, power with normalized power, heart rate and cadence.
 3. **Sign up as someone new:** sign out, choose *Create an account*, and register. The account waits for approval. Sign in as the admin, open *Accounts*, press *Approve*, then sign in as the new person.
 4. **Try single sign-on:** sign out and press *Continue with Dex (local test)*. Log in on the provider's page with `rider@sso.test` / `password`. You come back told that the account is waiting for approval; approve it as the admin (step 3), then repeat the single sign-on and you are in.
-5. **Look at the API:** the description is at http://localhost:8080/openapi/v1.json and the health check at http://localhost:8080/health.
+5. **Open a ride:** press a ride card. The detail page shows the numbers, the route on a map, and a chart for each signal the ride has (elevation, speed, power, heart rate, cadence). Move the mouse over a chart, or touch and drag, to see the values at that moment on every chart and the position on the map. *Delete* removes the ride and its file.
+6. **Look at the API:** the description is at http://localhost:8080/openapi/v1.json and the health check at http://localhost:8080/health.
 
 ### Settings you can change
 
@@ -54,6 +55,7 @@ Set them in a file named `.env` next to `docker-compose.yml` (for example `VELOM
 | `VELOMINE_PORT` | `8080` | The port of the app. If you change it, also change the port in the redirect address in `deploy/dex/config.yaml`, or the single sign-on test breaks. |
 | `POSTGRES_PASSWORD` | `velomine-dev` | The database password. Set it before the first start; the database keeps the old one afterwards. |
 | `VELOMINE_ADMIN_EMAIL`, `VELOMINE_ADMIN_PASSWORD` | `admin@velomine.local`, `Velomine-dev-1` | The first admin. Only used while the server has no admin. |
+| `VELOMINE_MAP_TILE_URL`, `VELOMINE_MAP_ATTRIBUTION` | empty | A map background for the ride map, for example `https://tile.openstreetmap.org/{z}/{x}/{y}.png` and `© OpenStreetMap contributors`. Empty means the route is drawn alone and your browser contacts no map server. Read the tile provider's usage rules first: OpenStreetMap's public servers are for light use only. |
 | `Velomine__Accounts__RequireAdminApproval` | `true` | Set to `false` to let new accounts in without approval (add it under `environment:` of the `velomine` service). |
 
 The defaults are for trying it out on your own machine only. Do not expose this setup to the internet as it is.

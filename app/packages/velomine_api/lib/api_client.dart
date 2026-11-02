@@ -193,8 +193,8 @@ class ApiClient {
           return ProblemDetails.fromJson(value);
         case 'ProblemDetails2':
           return ProblemDetails2.fromJson(value);
-        case 'ProblemDetailsErrorsInner':
-          return ProblemDetailsErrorsInner.fromJson(value);
+        case 'ProblemDetails2ErrorsInner':
+          return ProblemDetails2ErrorsInner.fromJson(value);
         case 'RefreshRequest':
           return RefreshRequest.fromJson(value);
         case 'RegisterRequest':
@@ -203,6 +203,8 @@ class ApiClient {
           return RegisterResponse.fromJson(value);
         case 'RideResponse':
           return RideResponse.fromJson(value);
+        case 'RideStreamsResponse':
+          return RideStreamsResponse.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
         case 'SsoInfoResponse':

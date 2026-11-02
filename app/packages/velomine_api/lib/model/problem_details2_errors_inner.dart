@@ -10,9 +10,9 @@
 
 part of velomine_api;
 
-class ProblemDetailsErrorsInner {
-  /// Returns a new [ProblemDetailsErrorsInner] instance.
-  ProblemDetailsErrorsInner({
+class ProblemDetails2ErrorsInner {
+  /// Returns a new [ProblemDetails2ErrorsInner] instance.
+  ProblemDetails2ErrorsInner({
     this.name = const Optional.present('Error or field name'),
     this.reason = const Optional.present('Error reason'),
     this.code = const Optional.absent(),
@@ -44,7 +44,7 @@ class ProblemDetailsErrorsInner {
   final Optional<String?> severity;
 
   @override
-  bool operator ==(Object other) => identical(this, other) || other is ProblemDetailsErrorsInner &&
+  bool operator ==(Object other) => identical(this, other) || other is ProblemDetails2ErrorsInner &&
     other.name == name &&
     other.reason == reason &&
     other.code == code &&
@@ -59,7 +59,7 @@ class ProblemDetailsErrorsInner {
     (severity == null ? 0 : severity!.hashCode);
 
   @override
-  String toString() => 'ProblemDetailsErrorsInner[name=$name, reason=$reason, code=$code, severity=$severity]';
+  String toString() => 'ProblemDetails2ErrorsInner[name=$name, reason=$reason, code=$code, severity=$severity]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -82,24 +82,24 @@ class ProblemDetailsErrorsInner {
     return json;
   }
 
-  /// Clones this instance of [ProblemDetailsErrorsInner] and returns a new one where some of the
+  /// Clones this instance of [ProblemDetails2ErrorsInner] and returns a new one where some of the
   /// properties have changed.
-  ProblemDetailsErrorsInner copyWith({
+  ProblemDetails2ErrorsInner copyWith({
     Optional<String?>? name,
     Optional<String?>? reason,
     Optional<String?>? code,
     Optional<String?>? severity,
-  }) => ProblemDetailsErrorsInner(
+  }) => ProblemDetails2ErrorsInner(
     name: name ?? this.name,
     reason: reason ?? this.reason,
     code: code ?? this.code,
     severity: severity ?? this.severity,
   );
 
-  /// Returns a new [ProblemDetailsErrorsInner] instance and imports its values from
+  /// Returns a new [ProblemDetails2ErrorsInner] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static ProblemDetailsErrorsInner? fromJson(dynamic value) {
+  static ProblemDetails2ErrorsInner? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
 
@@ -110,7 +110,7 @@ class ProblemDetailsErrorsInner {
         return true;
       }());
 
-      return ProblemDetailsErrorsInner(
+      return ProblemDetails2ErrorsInner(
         name: json.containsKey(r'name') ? Optional.present(mapValueOfType<String>(json, r'name')) : const Optional.absent(),
         reason: json.containsKey(r'reason') ? Optional.present(mapValueOfType<String>(json, r'reason')) : const Optional.absent(),
         code: json.containsKey(r'code') ? Optional.present(mapValueOfType<String>(json, r'code')) : const Optional.absent(),
@@ -120,11 +120,11 @@ class ProblemDetailsErrorsInner {
     return null;
   }
 
-  static List<ProblemDetailsErrorsInner> listFromJson(dynamic json, {bool growable = false,}) {
-    final result = <ProblemDetailsErrorsInner>[];
+  static List<ProblemDetails2ErrorsInner> listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <ProblemDetails2ErrorsInner>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
-        final value = ProblemDetailsErrorsInner.fromJson(row);
+        final value = ProblemDetails2ErrorsInner.fromJson(row);
         if (value != null) {
           result.add(value);
         }
@@ -133,12 +133,12 @@ class ProblemDetailsErrorsInner {
     return result.toList(growable: growable);
   }
 
-  static Map<String, ProblemDetailsErrorsInner> mapFromJson(dynamic json) {
-    final map = <String, ProblemDetailsErrorsInner>{};
+  static Map<String, ProblemDetails2ErrorsInner> mapFromJson(dynamic json) {
+    final map = <String, ProblemDetails2ErrorsInner>{};
     if (json is Map && json.isNotEmpty) {
       json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        final value = ProblemDetailsErrorsInner.fromJson(entry.value);
+        final value = ProblemDetails2ErrorsInner.fromJson(entry.value);
         if (value != null) {
           map[entry.key] = value;
         }
@@ -147,14 +147,14 @@ class ProblemDetailsErrorsInner {
     return map;
   }
 
-  // maps a json object with a list of ProblemDetailsErrorsInner-objects as value to a dart map
-  static Map<String, List<ProblemDetailsErrorsInner>> mapListFromJson(dynamic json, {bool growable = false,}) {
-    final map = <String, List<ProblemDetailsErrorsInner>>{};
+  // maps a json object with a list of ProblemDetails2ErrorsInner-objects as value to a dart map
+  static Map<String, List<ProblemDetails2ErrorsInner>> mapListFromJson(dynamic json, {bool growable = false,}) {
+    final map = <String, List<ProblemDetails2ErrorsInner>>{};
     if (json is Map && json.isNotEmpty) {
       // ignore: parameter_assignments
       json = json.cast<String, dynamic>();
       for (final entry in json.entries) {
-        map[entry.key] = ProblemDetailsErrorsInner.listFromJson(entry.value, growable: growable,);
+        map[entry.key] = ProblemDetails2ErrorsInner.listFromJson(entry.value, growable: growable,);
       }
     }
     return map;

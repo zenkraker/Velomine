@@ -1,11 +1,13 @@
 using System.Reflection;
 using FastEndpoints;
+using Microsoft.Extensions.Options;
 
 namespace Velomine.Server.Features.Server;
 
-public sealed record ServerInfoResponse(string Name, string Version);
+/// <summary>What a client needs to know about this server before anyone signs in.</summary>
+public sealed record ServerInfoResponse(string Name, string Version, string? MapTileUrl, string? MapAttribution);
 
-public sealed class GetServerInfo : EndpointWithoutRequest<ServerInfoResponse>
+public sealed class GetServerInfo(IOptions<MapOptions> map) : EndpointWithoutRequest<ServerInfoResponse>
 {
     public override void Configure()
     {
@@ -16,6 +18,7 @@ public sealed class GetServerInfo : EndpointWithoutRequest<ServerInfoResponse>
     public override async Task HandleAsync(CancellationToken ct)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
-        await Send.OkAsync(new ServerInfoResponse("Velomine", version), ct);
+        var tiles = map.Value.UsableTileUrl;
+        await Send.OkAsync(new ServerInfoResponse("Velomine", version, tiles, tiles is null ? null : map.Value.Attribution), ct);
     }
 }

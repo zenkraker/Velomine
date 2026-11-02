@@ -25,10 +25,12 @@ class Session extends ChangeNotifier {
     required this.useCookies,
     this.ssoError,
   }) : accounts = AccountsApi(client),
-       rides = RidesApi(client);
+       rides = RidesApi(client),
+       server = ServerApi(client);
 
   final AccountsApi accounts;
   final RidesApi rides;
+  final ServerApi server;
   final bool useCookies;
   final HttpBearerAuth bearer;
 
@@ -38,11 +40,17 @@ class Session extends ChangeNotifier {
   SessionStatus status = SessionStatus.loading;
   MeResponse? me;
   SsoInfoResponse? sso;
+  ServerInfoResponse? serverInfo;
 
   bool get isAdmin => me?.roles.contains('admin') ?? false;
 
   /// Called once at start: find out whether the cookie already holds a session, and whether SSO is offered.
   Future<void> restore() async {
+    try {
+      serverInfo = await server.getServerInfo();
+    } on Object {
+      serverInfo = null; // no map background; everything else works
+    }
     // Single sign-on goes through the browser and comes back to the web app. A phone build cannot be handed back
     // to yet, so only the web app offers it.
     try {

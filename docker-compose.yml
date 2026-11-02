@@ -49,6 +49,9 @@ services:
       # First admin, created on start when the server has none. Change these for anything shared.
       Velomine__Admin__Email: ${VELOMINE_ADMIN_EMAIL:-admin@velomine.local}
       Velomine__Admin__Password: ${VELOMINE_ADMIN_PASSWORD:-Velomine-dev-1}
+      # Optional map background for the ride map. Empty: the route is drawn alone and no map server is contacted.
+      Velomine__Map__TileUrl: ${VELOMINE_MAP_TILE_URL:-}
+      Velomine__Map__Attribution: ${VELOMINE_MAP_ATTRIBUTION:-}
       # Single sign-on through the local Dex service above. Any OpenID Connect provider works.
       Velomine__Sso__Authority: http://dex.localhost:5556/dex
       Velomine__Sso__ClientId: velomine

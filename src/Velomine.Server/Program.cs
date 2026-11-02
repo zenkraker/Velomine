@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides;
+using Velomine.Server.Features.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<VelomineDbContext>((services, options) =>
 builder.Services.AddHostedService<DatabaseMigrator>(); // first: later startup work needs the tables
 builder.Services.AddAccounts(builder.Configuration);
 builder.Services.AddRides();
+builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
 builder.Services.OpenApiDocument(o =>
 {

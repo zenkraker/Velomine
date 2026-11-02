@@ -10,6 +10,8 @@ import 'core/theme.dart';
 import 'features/admin/pending_users_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/auth/sign_in_screen.dart';
+import 'features/rides/detail/ride_detail_controller.dart';
+import 'features/rides/detail/ride_detail_screen.dart';
 import 'features/rides/rides_controller.dart';
 import 'features/rides/rides_screen.dart';
 import 'home_shell.dart';
@@ -89,7 +91,24 @@ class _VelomineAppState extends State<VelomineApp> {
         routes: [
           GoRoute(
             path: '/rides',
-            builder: (_, _) => RidesScreen(controller: _rides),
+            builder: (context, _) => RidesScreen(
+              controller: _rides,
+              onOpen: (id) => context.go('/rides/$id'),
+            ),
+          ),
+          GoRoute(
+            path: '/rides/:id',
+            builder: (context, state) => _RideDetailPage(
+              key: ValueKey(state.pathParameters['id']),
+              session: widget.session,
+              id: state.pathParameters['id']!,
+              onBack: () => context.go('/rides'),
+              onDeleted: () {
+                _rides.refresh();
+                context.go('/rides');
+              },
+              pollInterval: widget.uploadPollInterval,
+            ),
           ),
           GoRoute(
             path: '/admin',
@@ -120,6 +139,54 @@ class _VelomineAppState extends State<VelomineApp> {
             ? const Scaffold(body: Center(child: CircularProgressIndicator()))
             : child!,
       ),
+    );
+  }
+}
+
+/// Owns the controller of one ride's detail screen, so it lives exactly as long as the screen does.
+class _RideDetailPage extends StatefulWidget {
+  const _RideDetailPage({
+    super.key,
+    required this.session,
+    required this.id,
+    required this.onBack,
+    required this.onDeleted,
+    required this.pollInterval,
+  });
+
+  final Session session;
+  final String id;
+  final VoidCallback onBack;
+  final VoidCallback onDeleted;
+  final Duration pollInterval;
+
+  @override
+  State<_RideDetailPage> createState() => _RideDetailPageState();
+}
+
+class _RideDetailPageState extends State<_RideDetailPage> {
+  late final RideDetailController _controller = RideDetailController(
+    api: widget.session.rides,
+    id: widget.id,
+    onUnauthorized: widget.session.sessionExpired,
+    pollInterval: widget.pollInterval,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = widget.session.serverInfo;
+    return RideDetailScreen(
+      controller: _controller,
+      onBack: widget.onBack,
+      onDeleted: widget.onDeleted,
+      tileUrl: info?.mapTileUrl,
+      attribution: info?.mapAttribution,
     );
   }
 }

@@ -123,6 +123,42 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task RideStreams_ComeBackAsAlignedArrays_AndCanBeThinned()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)));
+
+        var all = await member.GetFromJsonAsync<RideStreamsResponse>($"/api/v1/rides/{ride.Id}/streams", Ct);
+        Assert.Equal(120, all!.Time.Length);
+        Assert.Equal(120, all.Power!.Length);
+        Assert.Equal(119, all.Time[^1]);
+        Assert.NotNull(all.Speed);
+
+        var thin = await member.GetFromJsonAsync<RideStreamsResponse>($"/api/v1/rides/{ride.Id}/streams?maxPoints=30", Ct);
+        Assert.Equal(30, thin!.Time.Length);
+        Assert.All(thin.Power!, p => Assert.Equal((short?)200, p));
+        Assert.All(thin.HeartRate!, p => Assert.Equal((short?)150, p));
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await member.GetAsync($"/api/v1/rides/{ride.Id}/streams?maxPoints=5", Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task RideStreams_BelongToTheOwnerOnly_AndExistOnlyForAReadyRide()
+    {
+        await using var api = await StartAsync();
+        var alice = await NewMemberAsync(api);
+        var bob = await NewMemberAsync(api);
+        var ready = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 90)));
+        var failed = await UploadAndWaitAsync(alice, Bytes("not a ride"), "note.txt");
+
+        Assert.Equal(HttpStatusCode.NotFound, (await bob.GetAsync($"/api/v1/rides/{ready.Id}/streams", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync($"/api/v1/rides/{Guid.NewGuid()}/streams", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await alice.GetAsync($"/api/v1/rides/{failed.Id}/streams", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync($"/api/v1/rides/{ready.Id}/streams", Ct)).StatusCode);
+    }
+
+    [Fact]
     public async Task RetryingAnUpload_WithTheSameKey_ReturnsTheSameRide()
     {
         await using var api = await StartAsync();

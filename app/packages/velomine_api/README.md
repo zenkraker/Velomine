@@ -76,6 +76,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
+*RidesApi* | [**getRideStreams**](doc//RidesApi.md#getridestreams) | **GET** /api/v1/rides/{id}/streams | 
 *RidesApi* | [**listRides**](doc//RidesApi.md#listrides) | **GET** /api/v1/rides | 
 *RidesApi* | [**uploadRide**](doc//RidesApi.md#uploadride) | **POST** /api/v1/rides/uploads | 
 *ServerApi* | [**getServerInfo**](doc//ServerApi.md#getserverinfo) | **GET** /api/v1/server | 
@@ -88,11 +89,12 @@ Class | Method | HTTP request | Description
  - [MeResponse](doc//MeResponse.md)
  - [ProblemDetails](doc//ProblemDetails.md)
  - [ProblemDetails2](doc//ProblemDetails2.md)
- - [ProblemDetailsErrorsInner](doc//ProblemDetailsErrorsInner.md)
+ - [ProblemDetails2ErrorsInner](doc//ProblemDetails2ErrorsInner.md)
  - [RefreshRequest](doc//RefreshRequest.md)
  - [RegisterRequest](doc//RegisterRequest.md)
  - [RegisterResponse](doc//RegisterResponse.md)
  - [RideResponse](doc//RideResponse.md)
+ - [RideStreamsResponse](doc//RideStreamsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [TokenResponse](doc//TokenResponse.md)

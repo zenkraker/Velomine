@@ -13,37 +13,26 @@ part of velomine_api;
 class ProblemDetails2 {
   /// Returns a new [ProblemDetails2] instance.
   ProblemDetails2({
-    this.type = const Optional.absent(),
-    this.title = const Optional.absent(),
-    this.status = const Optional.absent(),
+    this.type = const Optional.present('https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1'),
+    this.title = const Optional.present('One or more validation errors occurred.'),
+    this.status = const Optional.present(400),
+    this.instance = const Optional.present('/api/route'),
+    this.traceId = const Optional.present('0HMPNHL0JHL76:00000001'),
     this.detail = const Optional.absent(),
-    this.instance = const Optional.absent(),
+    this.errors = const Optional.present(const []),
   });
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   final Optional<String?> type;
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   final Optional<String?> title;
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   final Optional<int?> status;
 
+  final Optional<String?> instance;
+
+  final Optional<String?> traceId;
+
+  /// the details of the error
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
   /// does not include a default value (using the "default:" property), however, the generated
@@ -52,33 +41,31 @@ class ProblemDetails2 {
   ///
   final Optional<String?> detail;
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
-  final Optional<String?> instance;
+  final Optional<List<ProblemDetails2ErrorsInner>?> errors;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProblemDetails2 &&
     other.type == type &&
     other.title == title &&
     other.status == status &&
+    other.instance == instance &&
+    other.traceId == traceId &&
     other.detail == detail &&
-    other.instance == instance;
+    _deepEquality.equals(other.errors, errors);
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (type == null ? 0 : type!.hashCode) +
-    (title == null ? 0 : title!.hashCode) +
-    (status == null ? 0 : status!.hashCode) +
+    (type.hashCode) +
+    (title.hashCode) +
+    (status.hashCode) +
+    (instance.hashCode) +
+    (traceId.hashCode) +
     (detail == null ? 0 : detail!.hashCode) +
-    (instance == null ? 0 : instance!.hashCode);
+    (errors.hashCode);
 
   @override
-  String toString() => 'ProblemDetails2[type=$type, title=$title, status=$status, detail=$detail, instance=$instance]';
+  String toString() => 'ProblemDetails2[type=$type, title=$title, status=$status, instance=$instance, traceId=$traceId, detail=$detail, errors=$errors]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -94,13 +81,21 @@ class ProblemDetails2 {
       final value = this.status.value;
       json[r'status'] = value;
     }
+    if (this.instance.isPresent) {
+      final value = this.instance.value;
+      json[r'instance'] = value;
+    }
+    if (this.traceId.isPresent) {
+      final value = this.traceId.value;
+      json[r'traceId'] = value;
+    }
     if (this.detail.isPresent) {
       final value = this.detail.value;
       json[r'detail'] = value;
     }
-    if (this.instance.isPresent) {
-      final value = this.instance.value;
-      json[r'instance'] = value;
+    if (this.errors.isPresent) {
+      final value = this.errors.value;
+      json[r'errors'] = value;
     }
     return json;
   }
@@ -111,14 +106,18 @@ class ProblemDetails2 {
     Optional<String?>? type,
     Optional<String?>? title,
     Optional<int?>? status,
-    Optional<String?>? detail,
     Optional<String?>? instance,
+    Optional<String?>? traceId,
+    Optional<String?>? detail,
+    Optional<List<ProblemDetails2ErrorsInner>?>? errors,
   }) => ProblemDetails2(
     type: type ?? this.type,
     title: title ?? this.title,
     status: status ?? this.status,
-    detail: detail ?? this.detail,
     instance: instance ?? this.instance,
+    traceId: traceId ?? this.traceId,
+    detail: detail ?? this.detail,
+    errors: errors ?? this.errors,
   );
 
   /// Returns a new [ProblemDetails2] instance and imports its values from
@@ -139,8 +138,10 @@ class ProblemDetails2 {
         type: json.containsKey(r'type') ? Optional.present(mapValueOfType<String>(json, r'type')) : const Optional.absent(),
         title: json.containsKey(r'title') ? Optional.present(mapValueOfType<String>(json, r'title')) : const Optional.absent(),
         status: json.containsKey(r'status') ? Optional.present(json[r'status'] == null ? null : int.parse('${json[r'status']}')) : const Optional.absent(),
-        detail: json.containsKey(r'detail') ? Optional.present(mapValueOfType<String>(json, r'detail')) : const Optional.absent(),
         instance: json.containsKey(r'instance') ? Optional.present(mapValueOfType<String>(json, r'instance')) : const Optional.absent(),
+        traceId: json.containsKey(r'traceId') ? Optional.present(mapValueOfType<String>(json, r'traceId')) : const Optional.absent(),
+        detail: json.containsKey(r'detail') ? Optional.present(mapValueOfType<String>(json, r'detail')) : const Optional.absent(),
+        errors: json.containsKey(r'errors') ? Optional.present(ProblemDetails2ErrorsInner.listFromJson(json[r'errors'])) : const Optional.absent(),
       );
     }
     return null;

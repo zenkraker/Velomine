@@ -34,6 +34,9 @@ class FakeServer {
   final rides = <Map<String, Object?>>[];
   final requests = <String>[]; // "METHOD /path", in order
   bool ssoEnabled = false;
+  String? tileUrl; // what GET /server offers as a map background
+  final streams =
+      <String, Map<String, Object?>>{}; // a ride's samples, by ride id
   FakeAccount? _cookieUser;
   int _pollsLeft = 1;
 
@@ -85,6 +88,15 @@ class FakeServer {
       headers: {'content-type': 'application/json'},
     );
     final caller = _caller(request);
+
+    if (path == '/api/v1/server') {
+      return json({
+        'name': 'Velomine',
+        'version': '0.0.0',
+        'mapTileUrl': tileUrl,
+        'mapAttribution': tileUrl == null ? null : '© Test Maps',
+      });
+    }
 
     if (path == '/api/v1/accounts/sso') {
       return json({
@@ -185,7 +197,16 @@ class FakeServer {
       _pollsLeft = 1;
       return json({'rideId': 'ride-new', 'status': 'processing'}, 202);
     }
+    final samples = RegExp(r'^/api/v1/rides/([^/]+)/streams$').firstMatch(path);
+    if (samples != null) {
+      final body = streams[samples.group(1)];
+      return body == null ? http.Response('', 409) : json(body);
+    }
     final one = RegExp(r'^/api/v1/rides/([^/]+)$').firstMatch(path);
+    if (one != null && request.method == 'DELETE') {
+      rides.removeWhere((r) => r['id'] == one.group(1));
+      return http.Response('', 204);
+    }
     if (one != null && request.method == 'GET') {
       if (one.group(1) == 'ride-new' && _pollsLeft-- > 0) {
         return json(rides.first);
@@ -202,7 +223,8 @@ class FakeServer {
         );
         return json(rides.first);
       }
-      return json(rides.firstWhere((r) => r['id'] == one.group(1)));
+      final found = rides.where((r) => r['id'] == one.group(1));
+      return found.isEmpty ? http.Response('', 404) : json(found.first);
     }
     return http.Response('', 404);
   }
@@ -271,3 +293,26 @@ Future<XFile?> fakeRideFile() async => XFile.fromData(
   Uint8List.fromList(utf8.encode('<gpx/>')),
   name: 'morning.gpx',
 );
+
+/// A ride's samples as the server sends them: one array per signal, null for a signal the ride does not have.
+/// 60 samples a second apart, riding north at 10 m/s, climbing half a metre a second.
+Map<String, Object?> streamsJson({
+  bool position = true,
+  bool cadence = false,
+  bool speed = true,
+}) {
+  const n = 60;
+  List<T> each<T>(T Function(int i) f) => [for (var i = 0; i < n; i++) f(i)];
+  return {
+    'time': each((i) => i * 1.0),
+    'latitude': position ? each((i) => 46 + i * 10 / 111195) : null,
+    'longitude': position ? each((_) => 11.0) : null,
+    'altitude': each((i) => 300 + i * 0.5),
+    'speed': speed ? each((_) => 10.0) : null,
+    'distance': each((i) => i * 10.0),
+    'heartRate': each((i) => 140 + i ~/ 6),
+    'power': each((i) => i.isEven ? 180 : 220),
+    'cadence': cadence ? each((_) => 90) : null,
+    'temperature': null,
+  };
+}

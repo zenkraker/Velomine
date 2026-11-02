@@ -15,30 +15,50 @@ class ServerInfoResponse {
   ServerInfoResponse({
     required this.name,
     required this.version,
+    required this.mapTileUrl,
+    required this.mapAttribution,
   });
 
   final String name;
 
   final String version;
 
+  final String? mapTileUrl;
+
+  final String? mapAttribution;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ServerInfoResponse &&
     other.name == name &&
-    other.version == version;
+    other.version == version &&
+    other.mapTileUrl == mapTileUrl &&
+    other.mapAttribution == mapAttribution;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (name.hashCode) +
-    (version.hashCode);
+    (version.hashCode) +
+    (mapTileUrl == null ? 0 : mapTileUrl!.hashCode) +
+    (mapAttribution == null ? 0 : mapAttribution!.hashCode);
 
   @override
-  String toString() => 'ServerInfoResponse[name=$name, version=$version]';
+  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'name'] = this.name;
       json[r'version'] = this.version;
+    if (this.mapTileUrl != null) {
+      json[r'mapTileUrl'] = this.mapTileUrl;
+    } else {
+      json[r'mapTileUrl'] = null;
+    }
+    if (this.mapAttribution != null) {
+      json[r'mapAttribution'] = this.mapAttribution;
+    } else {
+      json[r'mapAttribution'] = null;
+    }
     return json;
   }
 
@@ -47,9 +67,15 @@ class ServerInfoResponse {
   ServerInfoResponse copyWith({
     String? name,
     String? version,
+    String? mapTileUrl,
+    bool mapTileUrlSetToNull = false,
+    String? mapAttribution,
+    bool mapAttributionSetToNull = false,
   }) => ServerInfoResponse(
     name: name ?? this.name,
     version: version ?? this.version,
+    mapTileUrl: mapTileUrlSetToNull ? null : mapTileUrl ?? this.mapTileUrl,
+    mapAttribution: mapAttributionSetToNull ? null : mapAttribution ?? this.mapAttribution,
   );
 
   /// Returns a new [ServerInfoResponse] instance and imports its values from
@@ -67,12 +93,16 @@ class ServerInfoResponse {
         assert(json[r'name'] != null, 'Required key "ServerInfoResponse[name]" has a null value in JSON.');
         assert(json.containsKey(r'version'), 'Required key "ServerInfoResponse[version]" is missing from JSON.');
         assert(json[r'version'] != null, 'Required key "ServerInfoResponse[version]" has a null value in JSON.');
+        assert(json.containsKey(r'mapTileUrl'), 'Required key "ServerInfoResponse[mapTileUrl]" is missing from JSON.');
+        assert(json.containsKey(r'mapAttribution'), 'Required key "ServerInfoResponse[mapAttribution]" is missing from JSON.');
         return true;
       }());
 
       return ServerInfoResponse(
         name: mapValueOfType<String>(json, r'name')!,
         version: mapValueOfType<String>(json, r'version')!,
+        mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl'),
+        mapAttribution: mapValueOfType<String>(json, r'mapAttribution'),
       );
     }
     return null;
@@ -122,6 +152,8 @@ class ServerInfoResponse {
   static const requiredKeys = <String>{
     'name',
     'version',
+    'mapTileUrl',
+    'mapAttribution',
   };
 }
 

@@ -16,9 +16,16 @@ String rideErrorText(String? code) => switch (code) {
 };
 
 class RidesScreen extends StatefulWidget {
-  const RidesScreen({super.key, required this.controller});
+  const RidesScreen({
+    super.key,
+    required this.controller,
+    required this.onOpen,
+  });
 
   final RidesController controller;
+
+  /// Called with a ride's id when its card is pressed.
+  final void Function(String id) onOpen;
 
   @override
   State<RidesScreen> createState() => _RidesScreenState();
@@ -71,7 +78,8 @@ class _RidesScreenState extends State<RidesScreen> {
                       ),
                     ),
                   ),
-                for (final ride in c.rides) RideCard(ride: ride),
+                for (final ride in c.rides)
+                  RideCard(ride: ride, onTap: () => widget.onOpen(ride.id)),
                 if (c.next != null)
                   TextButton(
                     key: const Key('load-more'),
@@ -95,9 +103,10 @@ class _RidesScreenState extends State<RidesScreen> {
 }
 
 class RideCard extends StatelessWidget {
-  const RideCard({super.key, required this.ride});
+  const RideCard({super.key, required this.ride, this.onTap});
 
   final RideResponse ride;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -118,42 +127,46 @@ class RideCard extends StatelessWidget {
     return Card(
       key: Key('ride-${ride.id}'),
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              dateTime(ride.startTime ?? ride.uploadedAt),
-              style: text.titleMedium,
-            ),
-            Text(ride.fileName, style: text.bodySmall),
-            const SizedBox(height: 8),
-            if (ride.status == 'processing')
-              const Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Reading the file…', key: Key('processing')),
-                ],
-              )
-            else if (ride.status == 'failed')
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                rideErrorText(ride.error),
-                key: const Key('ride-failed'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              )
-            else
-              Wrap(
-                spacing: 12,
-                runSpacing: 4,
-                children: [for (final f in facts) Text(f)],
+                dateTime(ride.startTime ?? ride.uploadedAt),
+                style: text.titleMedium,
               ),
-          ],
+              Text(ride.fileName, style: text.bodySmall),
+              const SizedBox(height: 8),
+              if (ride.status == 'processing')
+                const Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Reading the file…', key: Key('processing')),
+                  ],
+                )
+              else if (ride.status == 'failed')
+                Text(
+                  rideErrorText(ride.error),
+                  key: const Key('ride-failed'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                )
+              else
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [for (final f in facts) Text(f)],
+                ),
+            ],
+          ),
         ),
       ),
     );

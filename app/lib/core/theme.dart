@@ -31,3 +31,12 @@ ThemeData dayTheme() {
     ),
   );
 }
+
+/// One colour per chart, so a signal looks the same wherever it appears.
+const seriesColors = <String, Color>{
+  'elevation': Color(0xFF6B7A7C),
+  'speed': deepTeal,
+  'power': ironOxide,
+  'heartrate': Color(0xFFB3261E),
+  'cadence': Color(0xFF7A5C00),
+};
