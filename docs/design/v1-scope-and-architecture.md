@@ -37,7 +37,7 @@ Roughly half of Endurain carries over, mostly reshaped for cycling. The multi-sp
 | Garmin Connect (unofficial login) | Change | Garmin's official personal key: activities as FIT files. |
 | Gear and components (shoes, wetsuits, racquets…) | Change | Bikes only, with the 44 bike component types. Wear by distance, hours and months, with reminders. Wheel circumference per bike. |
 | Default gear per activity type | Keep | Default bike per ride type. |
-| Goals and summaries | Keep | Weekly, monthly, yearly totals, cycling only. |
+| Goals and summaries | Keep | Weekly, monthly, yearly totals, cycling only. Goals per week, month or year (distance, elevation, time or number of rides), in v1. |
 | Followers, feed, follow requests | Drop | Replaced by share links, clubs and coaches. |
 | Public activity pages | Change | Share link per ride, with optional expiry and privacy zones. |
 | Per-stream privacy switches | Keep | Applied to share links and coach views. |
@@ -130,7 +130,7 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 6. Web app (Flutter web): rides, bikes, profile, club and admin screens, drag-and-drop upload.
 7. Wellbeing: daily check-in, RPE and notes after each ride.
 8. Sharing: share links rendered by the server, privacy zones (saved addresses up to 1 mile, plus optional start and end trimming), per-stream privacy switches.
-9. Analytics, basic: NP, IF, TSS with a manual FTP, TRIMP, weekly and monthly totals.
+9. Analytics, basic: NP, IF, TSS with a manual FTP, TRIMP, weekly and monthly totals, goals per week, month or year.
 
 **v2: automatic and smart**
 

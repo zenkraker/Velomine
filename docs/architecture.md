@@ -77,7 +77,7 @@ app/                             Flutter app (section 9)
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, default bike per ride type, components, wear by km, hours and months | v1; reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
-| Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year (scope to confirm) | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
+| Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |
 | Sharing | Share links and the server-rendered share pages | v1 |
 | Notifications | In-app notifications and email | v1 |
