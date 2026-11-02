@@ -48,6 +48,8 @@ No runtime cost beyond `package:http`. Generation takes seconds.
 - Exit: generated code is committed, so the app keeps building if the tool is dropped. Switch to swagger_parser (after evaluating `dio`, `retrofit` and `json_annotation`); only `core/api/` changes.
 
 ## Recommendation
+Approved by the owner on 2026-11-02 (see `APPROVED.md`).
+
 Approve with conditions:
 - Use the `dart` target with the Docker image pinned to **v7.26.0** (documented stable); move to 7.27.x after it has been out for a few weeks.
 - Server emits OpenAPI 3.0; DTOs stay flat.

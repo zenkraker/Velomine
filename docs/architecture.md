@@ -213,7 +213,7 @@ Each needs an evaluation in `docs/dependencies/` and owner approval before use.
 | Need | Library | State |
 |------|---------|-------|
 | Endpoints | FastEndpoints, FastEndpoints.OpenApi | Approved, see `docs/dependencies/APPROVED.md` |
-| Dart client generator | OpenAPI Generator 7.26.0 (`dart` target) | Evaluated, awaiting approval; server must emit OpenAPI 3.0 |
+| Dart client generator | OpenAPI Generator 7.26.0 (`dart` target) | Approved, see `docs/dependencies/APPROVED.md`; server must emit OpenAPI 3.0 |
 | EF Core provider for PostgreSQL | `Npgsql.EntityFrameworkCore.PostgreSQL` | Needs evaluation |
 | Bluetooth LE in Flutter | `universal_ble` or similar | Needs evaluation |
 | Map widget | `flutter_map` | Needs evaluation |
