@@ -75,7 +75,7 @@ app/                             Flutter app (section 9)
 | Accounts | Users, roles (admin, member, coach), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
 | Clubs | Clubs, members, coaches, share grants per data type and audience, revocation, view log | clubs v1; grants v2 |
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
-| Bikes | Bikes, wheel circumference, default bike per ride type, components, wear by km, hours and months | v1; reminders v2 |
+| Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months | v1; reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
 | Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |

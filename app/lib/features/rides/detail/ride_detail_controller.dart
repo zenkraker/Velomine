@@ -7,12 +7,14 @@ import 'ride_series.dart';
 class RideDetailController extends ChangeNotifier {
   RideDetailController({
     required this.api,
+    required this.bikesApi,
     required this.id,
     required this.onUnauthorized,
     this.pollInterval = const Duration(seconds: 1),
   });
 
   final RidesApi api;
+  final BikesApi bikesApi;
   final String id;
   final VoidCallback onUnauthorized;
   final Duration pollInterval;
@@ -21,6 +23,9 @@ class RideDetailController extends ChangeNotifier {
   final selected = ValueNotifier<int?>(null);
 
   RideResponse? ride;
+
+  /// The member's bikes, to pick the one ridden. Empty when they could not be loaded: the ride still shows.
+  List<BikeResponse> bikes = [];
   RideSeries? data;
   bool loading = true;
   bool notFound = false;
@@ -41,6 +46,11 @@ class RideDetailController extends ChangeNotifier {
         if (ride!.status == 'ready') {
           final streams = await api.getRideStreams(id, maxPoints: 1200);
           if (streams != null) data = RideSeries.from(streams);
+          try {
+            bikes = (await bikesApi.listBikes())?.bikes ?? [];
+          } on Object {
+            bikes = [];
+          }
         }
         error = null;
       } on ApiException catch (e) {
@@ -58,6 +68,25 @@ class RideDetailController extends ChangeNotifier {
     }
     loading = false;
     if (!_disposed) notifyListeners();
+  }
+
+  /// Says which bike was ridden (null for none).
+  Future<void> setBike(String? bikeId) async {
+    try {
+      ride =
+          await api.setRideBike(
+            id,
+            SetRideBikeRequest(bikeId: Optional.present(bikeId)),
+          ) ??
+          ride;
+      error = null;
+    } on ApiException catch (e) {
+      if (e.code == 401) onUnauthorized();
+      error = 'Could not change the bike (${e.code}).';
+    } on Object {
+      error = 'Could not reach the server.';
+    }
+    notifyListeners();
   }
 
   /// Returns whether the ride was deleted.

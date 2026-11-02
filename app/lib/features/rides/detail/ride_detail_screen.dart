@@ -176,6 +176,8 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         )
       else ...[
         _Stats(ride: ride),
+        if (c.bikes.isNotEmpty || ride.bikeId != null)
+          _BikePicker(controller: c, ride: ride),
         if (c.data?.hasRoute ?? false)
           RouteMap(
             data: c.data!,
@@ -276,6 +278,34 @@ class _Stats extends StatelessWidget {
             style: text.bodySmall,
           ),
       ],
+    );
+  }
+}
+
+/// Which bike was ridden. An archived bike is only listed when this ride already uses it.
+class _BikePicker extends StatelessWidget {
+  const _BikePicker({required this.controller, required this.ride});
+
+  final RideDetailController controller;
+  final RideResponse ride;
+
+  @override
+  Widget build(BuildContext context) {
+    final bikes = controller.bikes
+        .where((b) => b.isActive || b.id == ride.bikeId)
+        .toList();
+    // A bike this list does not know (deleted meanwhile) must not break the dropdown.
+    final value = bikes.any((b) => b.id == ride.bikeId) ? ride.bikeId : null;
+    return DropdownButtonFormField<String?>(
+      key: ValueKey('ride-bike-$value'),
+      initialValue: value,
+      decoration: const InputDecoration(labelText: 'Bike'),
+      items: [
+        const DropdownMenuItem<String?>(value: null, child: Text('No bike')),
+        for (final b in bikes)
+          DropdownMenuItem<String?>(value: b.id, child: Text(b.name)),
+      ],
+      onChanged: controller.setBike,
     );
   }
 }

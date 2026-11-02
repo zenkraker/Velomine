@@ -26,10 +26,12 @@ class Session extends ChangeNotifier {
     this.ssoError,
   }) : accounts = AccountsApi(client),
        rides = RidesApi(client),
+       bikes = BikesApi(client),
        server = ServerApi(client);
 
   final AccountsApi accounts;
   final RidesApi rides;
+  final BikesApi bikes;
   final ServerApi server;
   final bool useCookies;
   final HttpBearerAuth bearer;

@@ -35,6 +35,9 @@ class FakeServer {
   final requests = <String>[]; // "METHOD /path", in order
   bool ssoEnabled = false;
   String? tileUrl; // what GET /server offers as a map background
+  final bikes = <Map<String, Object?>>[];
+  final parts =
+      <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
   final streams =
       <String, Map<String, Object?>>{}; // a ride's samples, by ride id
   FakeAccount? _cookieUser;
@@ -186,6 +189,9 @@ class FakeServer {
       return http.Response('', 204);
     }
 
+    final bikeReply = _bikes(request, path, json);
+    if (bikeReply != null) return bikeReply;
+
     if (path == '/api/v1/rides' && request.method == 'GET') {
       return json({'rides': rides, 'next': null});
     }
@@ -201,6 +207,12 @@ class FakeServer {
     if (samples != null) {
       final body = streams[samples.group(1)];
       return body == null ? http.Response('', 409) : json(body);
+    }
+    final rideBike = RegExp(r'^/api/v1/rides/([^/]+)/bike$').firstMatch(path);
+    if (rideBike != null && request.method == 'PUT') {
+      final ride = rides.firstWhere((r) => r['id'] == rideBike.group(1));
+      ride['bikeId'] = (jsonDecode(request.body) as Map)['bikeId'];
+      return json(ride);
     }
     final one = RegExp(r'^/api/v1/rides/([^/]+)$').firstMatch(path);
     if (one != null && request.method == 'DELETE') {
@@ -230,6 +242,130 @@ class FakeServer {
   }
 }
 
+extension on FakeServer {
+  http.Response? _bikes(
+    http.Request request,
+    String path,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    if (!path.startsWith('/api/v1/bikes')) return null;
+    final body = request.body.isEmpty
+        ? <String, Object?>{}
+        : jsonDecode(request.body) as Map<String, Object?>;
+    Map<String, Object?> bikeJson(Map<String, Object?> b) => {
+      'isActive': true,
+      'rideCount': 0,
+      'distanceM': b['initialDistanceM'],
+      'movingS': 0.0,
+      'isDefault': false,
+      'brand': null,
+      'model': null,
+      'purchasedOn': null,
+      ...b,
+    };
+    Map<String, Object?> detail(String id) => {
+      'bike': bikeJson(bikes.firstWhere((b) => b['id'] == id)),
+      'components': parts[id] ?? [],
+    };
+
+    if (path == '/api/v1/bikes/component-types') {
+      return json({
+        'types': [
+          {
+            'id': 'chain',
+            'name': 'Chain',
+            'group': 'Drivetrain',
+            'typicalDistanceM': 4000000.0,
+            'typicalHours': null,
+            'typicalMonths': null,
+          },
+          {
+            'id': 'tubeless_sealant',
+            'name': 'Tubeless sealant',
+            'group': 'Wheels',
+            'typicalDistanceM': null,
+            'typicalHours': null,
+            'typicalMonths': 3,
+          },
+        ],
+      });
+    }
+    if (path == '/api/v1/bikes') {
+      if (request.method == 'GET') {
+        return json({
+          'bikes': [for (final b in bikes) bikeJson(b)],
+        });
+      }
+      final b = {
+        'id': 'bike-${bikes.length + 1}',
+        ...body,
+        'isDefault': bikes.isEmpty,
+      };
+      bikes.add(b);
+      return json(detail(b['id']! as String), 201);
+    }
+    final part = RegExp(r'^/api/v1/bikes/([^/]+)/components(?:/([^/]+))?$')
+        .firstMatch(path);
+    if (part != null) {
+      final list = parts.putIfAbsent(part.group(1)!, () => []);
+      if (request.method == 'POST') {
+        list.add({
+          'id': 'part-${list.length + 1}',
+          'typeName': body['type'] == 'chain' ? 'Chain' : 'Tubeless sealant',
+          'brand': null,
+          'model': null,
+          'removedOn': null,
+          'expectedDistanceM': null,
+          'expectedHours': null,
+          'expectedMonths': null,
+          'usedDistanceM': 0.0,
+          'usedHours': 0.0,
+          'usedMonths': 0.0,
+          'wearPercent': null,
+          'status': 'ok',
+          ...body,
+        });
+        return json(detail(part.group(1)!), 201);
+      }
+      final index = list.indexWhere((p) => p['id'] == part.group(2));
+      if (index < 0) return http.Response('', 404);
+      if (request.method == 'DELETE') {
+        list.removeAt(index);
+        return http.Response('', 204);
+      }
+      list[index] = {
+        ...list[index],
+        ...body,
+        if (body['removedOn'] != null) 'status': 'retired',
+      };
+      return json(detail(part.group(1)!));
+    }
+    final one = RegExp(r'^/api/v1/bikes/([^/]+)(/default)?$').firstMatch(path);
+    if (one == null) return null;
+    final id = one.group(1)!;
+    final index = bikes.indexWhere((b) => b['id'] == id);
+    if (index < 0) return http.Response('', 404);
+    if (one.group(2) != null) {
+      for (final b in bikes) {
+        b['isDefault'] = b['id'] == id;
+      }
+      return http.Response('', 204);
+    }
+    if (request.method == 'DELETE') {
+      bikes.removeAt(index);
+      return http.Response('', 204);
+    }
+    if (request.method == 'PUT') {
+      bikes[index] = {
+        ...bikes[index],
+        ...body,
+        if (body['isActive'] == false) 'isDefault': false,
+      };
+    }
+    return json(detail(id));
+  }
+}
+
 /// Every field the server sends for a ride (the generated client expects all of them to be present).
 Map<String, Object?> rideJson(
   String id,
@@ -244,6 +380,7 @@ Map<String, Object?> rideJson(
   int? normalizedPowerW,
   int? avgHeartRate,
   int? avgCadence,
+  String? bikeId,
 }) => {
   'id': id,
   'status': status,
@@ -268,6 +405,7 @@ Map<String, Object?> rideJson(
   'avgHeartRate': avgHeartRate,
   'maxHeartRate': null,
   'avgCadence': avgCadence,
+  'bikeId': bikeId,
 };
 
 /// Starts the app the way main.dart does, with the session restored first.

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/session.dart';
 
 /// The frame around the signed-in screens: title bar with the member's name and sign out,
-/// and a bottom bar to switch screens for admins.
+/// and a bottom bar to switch between rides, bikes and (for admins) accounts.
 class HomeShell extends StatelessWidget {
   const HomeShell({
     super.key,
@@ -16,6 +16,8 @@ class HomeShell extends StatelessWidget {
   final Session session;
   final String location;
   final Widget child;
+
+  static const _destinations = ['/rides', '/bikes', '/admin'];
 
   @override
   Widget build(BuildContext context) {
@@ -34,23 +36,27 @@ class HomeShell extends StatelessWidget {
         ],
       ),
       body: child,
-      bottomNavigationBar: session.isAdmin
-          ? NavigationBar(
-              selectedIndex: location == '/admin' ? 1 : 0,
-              onDestinationSelected: (i) =>
-                  context.go(i == 1 ? '/admin' : '/rides'),
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.directions_bike),
-                  label: 'Rides',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.people),
-                  label: 'Accounts',
-                ),
-              ],
-            )
-          : null,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _destinations
+            .indexWhere(location.startsWith)
+            .clamp(0, 2),
+        onDestinationSelected: (i) => context.go(_destinations[i]),
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.directions_bike),
+            label: 'Rides',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.pedal_bike),
+            label: 'Bikes',
+          ),
+          if (session.isAdmin)
+            const NavigationDestination(
+              icon: Icon(Icons.people),
+              label: 'Accounts',
+            ),
+        ],
+      ),
     );
   }
 }

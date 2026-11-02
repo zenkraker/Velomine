@@ -9,6 +9,9 @@ import 'core/session.dart';
 import 'core/theme.dart';
 import 'features/admin/pending_users_screen.dart';
 import 'features/auth/register_screen.dart';
+import 'features/bikes/bike_detail_screen.dart';
+import 'features/bikes/bikes_controller.dart';
+import 'features/bikes/bikes_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/rides/detail/ride_detail_controller.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
@@ -54,6 +57,11 @@ class _VelomineAppState extends State<VelomineApp> {
     pickFile: widget.pickFile,
     onUnauthorized: widget.session.sessionExpired,
     pollInterval: widget.uploadPollInterval,
+  );
+
+  late final BikesController _bikes = BikesController(
+    api: widget.session.bikes,
+    onUnauthorized: widget.session.sessionExpired,
   );
 
   late final GoRouter _router = GoRouter(
@@ -111,6 +119,26 @@ class _VelomineAppState extends State<VelomineApp> {
             ),
           ),
           GoRoute(
+            path: '/bikes',
+            builder: (context, _) => BikesScreen(
+              controller: _bikes,
+              onOpen: (id) => context.go('/bikes/$id'),
+            ),
+          ),
+          GoRoute(
+            path: '/bikes/:id',
+            builder: (context, state) => _BikeDetailPage(
+              key: ValueKey(state.pathParameters['id']),
+              session: widget.session,
+              id: state.pathParameters['id']!,
+              onBack: () => context.go('/bikes'),
+              onDeleted: () {
+                _bikes.refresh();
+                context.go('/bikes');
+              },
+            ),
+          ),
+          GoRoute(
             path: '/admin',
             builder: (_, _) => PendingUsersScreen(session: widget.session),
           ),
@@ -123,6 +151,7 @@ class _VelomineAppState extends State<VelomineApp> {
   void dispose() {
     _router.dispose();
     _rides.dispose();
+    _bikes.dispose();
     super.dispose();
   }
 
@@ -167,6 +196,7 @@ class _RideDetailPage extends StatefulWidget {
 class _RideDetailPageState extends State<_RideDetailPage> {
   late final RideDetailController _controller = RideDetailController(
     api: widget.session.rides,
+    bikesApi: widget.session.bikes,
     id: widget.id,
     onUnauthorized: widget.session.sessionExpired,
     pollInterval: widget.pollInterval,
@@ -189,4 +219,44 @@ class _RideDetailPageState extends State<_RideDetailPage> {
       attribution: info?.mapAttribution,
     );
   }
+}
+
+/// Owns the controller of one bike's screen, so it lives exactly as long as the screen does.
+class _BikeDetailPage extends StatefulWidget {
+  const _BikeDetailPage({
+    super.key,
+    required this.session,
+    required this.id,
+    required this.onBack,
+    required this.onDeleted,
+  });
+
+  final Session session;
+  final String id;
+  final VoidCallback onBack;
+  final VoidCallback onDeleted;
+
+  @override
+  State<_BikeDetailPage> createState() => _BikeDetailPageState();
+}
+
+class _BikeDetailPageState extends State<_BikeDetailPage> {
+  late final BikeDetailController _controller = BikeDetailController(
+    api: widget.session.bikes,
+    id: widget.id,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => BikeDetailScreen(
+    controller: _controller,
+    onBack: widget.onBack,
+    onDeleted: widget.onDeleted,
+  );
 }

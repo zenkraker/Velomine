@@ -148,6 +148,7 @@ void main() {
     final session = server.session(useCookies: true);
     final controller = RideDetailController(
       api: session.rides,
+      bikesApi: session.bikes,
       id: 'nobody-has-this-ride',
       onUnauthorized: () {},
     );
@@ -178,6 +179,7 @@ void main() {
     final session = server.session(useCookies: true);
     final controller = RideDetailController(
       api: session.rides,
+      bikesApi: session.bikes,
       id: 'r3',
       onUnauthorized: () {},
       pollInterval: const Duration(milliseconds: 10),

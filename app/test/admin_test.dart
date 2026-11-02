@@ -41,6 +41,9 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
 
     expect(find.text('Accounts'), findsNothing);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(
+      find.text('Bikes'),
+      findsOneWidget,
+    ); // the bar is there, without the admin entry
   });
 }

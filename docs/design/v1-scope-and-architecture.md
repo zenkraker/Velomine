@@ -35,8 +35,8 @@ Roughly half of Endurain carries over, mostly reshaped for cycling. The multi-sp
 | Thumbnails, reverse geocoding | Keep | — |
 | Strava sync and bulk import | Change | Bulk import of a Strava export to migrate history. Ongoing sync is optional, given Strava's API limits. |
 | Garmin Connect (unofficial login) | Change | Garmin's official personal key: activities as FIT files. |
-| Gear and components (shoes, wetsuits, racquets…) | Change | Bikes only, with the 44 bike component types. Wear by distance, hours and months, with reminders. Wheel circumference per bike. |
-| Default gear per activity type | Keep | Default bike per ride type. |
+| Gear and components (shoes, wetsuits, racquets…) | Change | Bikes only, with our own list of 35 bike part types (chain, tyres, pads, fork service…) and typical lifetimes as suggestions. Wear by distance, hours and months, computed from the rides; reminders come in v2. Wheel circumference per bike. |
+| Default gear per activity type | Change | One default bike per member, copied onto a ride at import. A default per ride type waits until ride types exist. |
 | Goals and summaries | Keep | Weekly, monthly, yearly totals, cycling only. Goals per week, month or year (distance, elevation, time or number of rides), in v1. |
 | Followers, feed, follow requests | Drop | Replaced by share links, clubs and coaches. |
 | Public activity pages | Change | Share link per ride, with optional expiry and privacy zones. |
