@@ -77,6 +77,10 @@ The defaults are for trying it out on your own machine only. Do not expose this 
 
 Not needed for the steps above.
 
+**Recommended: the Nix dev environment.** `flake.nix` provides every tool below at pinned versions (the Flutter release matches the `Dockerfile`), plus the Android SDK and emulator, Node for ponytail, CodeGraph and psql, without installing them into your system. With direnv the tools load when you enter the folder, and `just` runs the everyday commands (`just server`, `just web`, `just android`, `just check`). [docs/development.md](docs/development.md) explains how it works and walks through the one-time setup.
+
+**Without Nix**, install these yourself:
+
 | Install | For |
 |---------|-----|
 | **.NET SDK 10** | Building and testing the server: `dotnet test --solution Velomine.slnx` (the tests also need Docker; they start their own PostgreSQL and test provider). |
@@ -106,6 +110,7 @@ Code is in [app/](app/README.md). Its API client is generated: after changing an
 
 ## Documents
 
+- [Development environment](docs/development.md)
 - [Architecture](docs/architecture.md)
 - [v1 scope and architecture](docs/design/v1-scope-and-architecture.md)
 - [Endurain feature analysis (v0.20.2)](docs/research/endurain-feature-analysis-v0.20.2.md)

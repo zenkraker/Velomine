@@ -10,3 +10,9 @@
 | Testcontainers.PostgreSql | 4.16.x | 2026-11-02, by the owner | [testcontainers.md](testcontainers.md) | Test projects only. PostgreSQL module, plus the core generic-container builder (same package family) to run Dex in the SSO tests. Keep the `VELOMINE_TEST_POSTGRES` escape hatch. |
 | Bogus | 35.6.x | 2026-11-02, by the owner | [bogus.md](bogus.md) | **Approved, not added yet.** Test projects only, fixed seed, no exact-value assertions. |
 | Dex (container image `ghcr.io/dexidp/dex:v2.46.1`) | 2.46.1 | 2026-11-02, by the owner | [dex.md](dex.md) | **Dev and tests only** (docker-compose and Testcontainers); never in a shared or production environment; port bound to `127.0.0.1`. Pin 2.46.x or later, never 2.41.1 or older. |
+
+## Needs an evaluation before use
+
+| Need | Why | Candidates |
+|------|-----|------------|
+| Bluetooth LE in Flutter (sensors) | Flutter has no official BLE plugin. Evaluate and approve before the sensor work starts. | `universal_ble` |

@@ -23,6 +23,8 @@ Background documents. Read the relevant one before designing a feature. When a d
 | `docs/research/endurain-feature-analysis-v0.20.2.md` | What Endurain does, its bugs and gaps, and the ride-ingestion design |
 | `docs/research/endurain-porting-comparison.md` | Endurain features checked in its code, and what Velomine ports, reshapes or skips |
 | `docs/design/brand-directions.html` | Brand: name, colours, type and day/night themes (open in a browser) |
+| `docs/development.md` | The Nix development environment: how it works, setup (including Claude Code, ponytail and CodeGraph), daily commands, updating tools |
+| `docs/dependencies/` | Dependency evaluations, the template, approved and pending libraries |
 
 **Clean-room rule:** Endurain is AGPL-3.0. Take ideas from it, never code. Do not copy, translate or adapt Endurain source, and do not use the Endurain name or logo.
 
@@ -38,48 +40,24 @@ Background documents. Read the relevant one before designing a feature. When a d
 - **The web app is served by the server** from `wwwroot`, at the same address as the API (built by the Dockerfile), so its session cookie needs no cross-origin setup.
 - **The Dart API client is generated** from the server's OpenAPI document. Never edit generated files by hand. For the generator only, a community tool is acceptable if it is free, well documented and actively supported; it still needs an evaluation in `docs/dependencies/`.
 
-## Claude Code setup
+## Development environment
 
-### Ponytail is mandatory
+- **`flake.nix` is the toolchain.** A tool needed to develop, build or test goes into the flake. Don't add install instructions, scripts that install into the home folder, or host requirements for it. Adding a tool is still a dependency and follows the dependency rule below.
+- **Running needs Docker only.** `docker compose up --build` must keep working without Nix. The `Dockerfile` and the compose stack do not use Nix.
+- **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and in the `Dockerfile` change in the same commit. psql in the flake has the same major version as the `postgres` image. The Android SDK, NDK and CMake versions in the flake are the ones the pinned Flutter's Gradle plugin asks for.
+- **Commit `flake.lock`.** Update nixpkgs with `nix flake update` in a commit of its own.
+- **Machine-local state stays in `.dev/`** (git-ignored). Never commit anything from it, and never send a tool's cache or data elsewhere.
+- **The `justfile` is the entry point for everyday commands.** A command developers run repeatedly gets a recipe. `compose.dev.yml` is only for `just` and only publishes ports for the host.
 
-Every developer working on this project must use the **ponytail** plugin (smallest complete change, YAGNI, stdlib first). It is enabled for the project in `.claude/settings.json`; accept the marketplace and plugin when Claude Code prompts you on first start. Manual install:
+## Claude Code
 
-```
-/plugin marketplace add DietrichGebert/ponytail
-/plugin install ponytail@ponytail
-```
-
-The project settings also show a `[PONYTAIL]` badge in the status line; it reads `[PONYTAIL NOT INSTALLED]` until the plugin is set up. Do not turn it off for work on this repository. Its hooks need `node` on your PATH. Useful commands: `/ponytail-review` before a PR, `/ponytail-audit` for the whole repo, `/ponytail-debt` to list `shortcut:` comments.
-
-### CodeGraph
-
-Every developer also installs **[CodeGraph](https://github.com/colbymchenry/codegraph)** (MIT). It indexes the code into a local symbol graph and gives Claude MCP tools (`codegraph_explore`, `codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`). The project already wires it up: `.mcp.json` starts the server, `.claude/settings.json` allows its tools and runs its prompt hook, and `.claude/CLAUDE.md` tells Claude when to use it.
-
-One-time setup per machine:
-
-```
-curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
-codegraph telemetry off
-```
-
-Then, in the repository: `codegraph init`. The index lives in `.codegraph/`, which is git-ignored. Use CodeGraph before grep or reading files to find code, trace callers and callees, and check what a change affects.
-
-### Project skills
-
-Skills in `.claude/skills/` load automatically when the task matches them:
-
-| Skill | Use for |
-|-------|---------|
-| `flutter` | Flutter/Dart code for Android, iOS and web |
-| `dotnet` | .NET 10, ASP.NET Core and EF Core server code |
-| `postgres` | Schema, EF Core migrations, queries, activity data |
-| `software-architecture` | Module boundaries, API contracts, self-hosting, ADRs |
-
-The skills never override the dependency rule below.
+- **The ponytail plugin is mandatory** (enabled in `.claude/settings.json`). Never turn it off for work on this repository.
+- **CodeGraph is mandatory** (wired up by `.mcp.json` and `.claude/settings.json`; `.claude/CLAUDE.md` says when to use it).
+- Setup for both is in `docs/development.md`.
 
 ## Dependency rule: official libraries first
 
-**Never add a dependency without following this section.** This covers runtime packages, build tools, test libraries, linters, code generators, CI actions and container base images.
+**Never add a dependency without following this section.** The project skills in `.claude/skills/` never override it. This covers runtime packages, build tools, test libraries, linters, code generators, CI actions and container base images.
 
 ### 1. Prefer what the platform already gives you
 
@@ -109,49 +87,11 @@ Any library that is not official is a **community library**. You must **not** ad
 
 Do this instead:
 
-1. Write an evaluation in `docs/dependencies/<package-name>.md` using the template below.
+1. Write an evaluation in `docs/dependencies/<package-name>.md` using the template in `docs/dependencies/TEMPLATE.md`.
 2. Stop and ask the owner for approval, linking the evaluation.
 3. Wait. Do not add the package "temporarily", in a branch, or behind a flag.
 
 Commands like `dotnet add package`, `flutter pub add`, `dart pub add` and `npm install` for a community package are forbidden until approval is recorded.
-
-#### Evaluation template
-
-```markdown
-# <package name> <version>
-
-## Need
-What problem it solves, and why the platform or an official library cannot.
-
-## Alternatives considered
-Official options, other community packages, writing it ourselves (rough effort).
-
-## Licence
-Licence name, and whether it is compatible with Velomine's licence.
-
-## Maintenance
-- Last release date:
-- Commit activity in the last 12 months:
-- Number of active maintainers:
-- Open issues and pull requests; how fast they are answered:
-
-## Security
-- Known advisories or CVEs:
-- Transitive dependencies it brings in (list them):
-
-## Platform support
-- .NET: targets .NET 10 or .NET Standard 2.0+?
-- Flutter: Android, iOS and web supported? Any native code?
-
-## Size and performance
-Package size, startup or bundle impact, anything measured.
-
-## Risk and exit plan
-What happens if it is abandoned; how we would replace it.
-
-## Recommendation
-Approve, approve with conditions, or reject, and why.
-```
 
 ### 4. Record decisions
 
@@ -164,6 +104,4 @@ Approve, approve with conditions, or reject, and why.
 - Major updates, or a change of maintainer or licence: re-evaluate and ask again.
 - Removing a dependency never needs approval.
 
-### Known cases that need an evaluation
-
-- **Bluetooth LE in Flutter:** Flutter has no official BLE plugin. Candidates such as `universal_ble` must be evaluated and approved before the sensor work starts.
+Pending evaluations are listed in `docs/dependencies/APPROVED.md`.
