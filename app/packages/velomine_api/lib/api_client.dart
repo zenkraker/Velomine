@@ -183,6 +183,8 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'AdminUserSummary':
+          return AdminUserSummary.fromJson(value);
         case 'BikeDetailResponse':
           return BikeDetailResponse.fromJson(value);
         case 'BikeResponse':
@@ -201,6 +203,8 @@ class ApiClient {
           return ExchangeSsoCodeRequest.fromJson(value);
         case 'GoalResponse':
           return GoalResponse.fromJson(value);
+        case 'ListAdminUsersResponse':
+          return ListAdminUsersResponse.fromJson(value);
         case 'ListBikesResponse':
           return ListBikesResponse.fromJson(value);
         case 'ListComponentTypesResponse':
@@ -217,6 +221,8 @@ class ApiClient {
           return MeResponse.fromJson(value);
         case 'NotificationResponse':
           return NotificationResponse.fromJson(value);
+        case 'OverviewResponse':
+          return OverviewResponse.fromJson(value);
         case 'PeriodTotals':
           return PeriodTotals.fromJson(value);
         case 'ProblemDetails':
@@ -241,8 +247,16 @@ class ApiClient {
           return ServerInfoResponse.fromJson(value);
         case 'SetRideBikeRequest':
           return SetRideBikeRequest.fromJson(value);
+        case 'SetUserRolesRequest':
+          return SetUserRolesRequest.fromJson(value);
+        case 'SettingsResponse':
+          return SettingsResponse.fromJson(value);
+        case 'SmtpStatus':
+          return SmtpStatus.fromJson(value);
         case 'SsoInfoResponse':
           return SsoInfoResponse.fromJson(value);
+        case 'SsoStatus':
+          return SsoStatus.fromJson(value);
         case 'TokenResponse':
           return TokenResponse.fromJson(value);
         case 'TotalsResponse':
@@ -255,6 +269,8 @@ class ApiClient {
           return UpdateGoalRequest.fromJson(value);
         case 'UpdateProfileRequest':
           return UpdateProfileRequest.fromJson(value);
+        case 'UpdateSettingsRequest':
+          return UpdateSettingsRequest.fromJson(value);
         case 'UploadRideResponse':
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
@@ -26,6 +27,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<BikeComponent> BikeComponents => Set<BikeComponent>();
 
     public DbSet<Goal> Goals => Set<Goal>();
+
+    public DbSet<ServerSettings> ServerSettings => Set<ServerSettings>();
 
     public DbSet<Notification> Notifications => Set<Notification>();
 

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Server;
 
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<VelomineDbContext>((services, options) =>
     options.UseNpgsql(services.GetRequiredService<IConfiguration>().GetConnectionString("Velomine")));
 builder.Services.AddHostedService<DatabaseMigrator>(); // first: later startup work needs the tables
 builder.Services.AddAccounts(builder.Configuration);
+builder.Services.AddAdmin();
 builder.Services.AddRides();
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();

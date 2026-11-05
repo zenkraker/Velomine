@@ -17,6 +17,7 @@ class ServerInfoResponse {
     required this.version,
     required this.mapTileUrl,
     required this.mapAttribution,
+    required this.emailAvailable,
   });
 
   final String name;
@@ -27,12 +28,15 @@ class ServerInfoResponse {
 
   final String? mapAttribution;
 
+  final bool emailAvailable;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ServerInfoResponse &&
     other.name == name &&
     other.version == version &&
     other.mapTileUrl == mapTileUrl &&
-    other.mapAttribution == mapAttribution;
+    other.mapAttribution == mapAttribution &&
+    other.emailAvailable == emailAvailable;
 
   @override
   int get hashCode =>
@@ -40,10 +44,11 @@ class ServerInfoResponse {
     (name.hashCode) +
     (version.hashCode) +
     (mapTileUrl == null ? 0 : mapTileUrl!.hashCode) +
-    (mapAttribution == null ? 0 : mapAttribution!.hashCode);
+    (mapAttribution == null ? 0 : mapAttribution!.hashCode) +
+    (emailAvailable.hashCode);
 
   @override
-  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution]';
+  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution, emailAvailable=$emailAvailable]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -59,6 +64,7 @@ class ServerInfoResponse {
     } else {
       json[r'mapAttribution'] = null;
     }
+      json[r'emailAvailable'] = this.emailAvailable;
     return json;
   }
 
@@ -71,11 +77,13 @@ class ServerInfoResponse {
     bool mapTileUrlSetToNull = false,
     String? mapAttribution,
     bool mapAttributionSetToNull = false,
+    bool? emailAvailable,
   }) => ServerInfoResponse(
     name: name ?? this.name,
     version: version ?? this.version,
     mapTileUrl: mapTileUrlSetToNull ? null : mapTileUrl ?? this.mapTileUrl,
     mapAttribution: mapAttributionSetToNull ? null : mapAttribution ?? this.mapAttribution,
+    emailAvailable: emailAvailable ?? this.emailAvailable,
   );
 
   /// Returns a new [ServerInfoResponse] instance and imports its values from
@@ -95,6 +103,8 @@ class ServerInfoResponse {
         assert(json[r'version'] != null, 'Required key "ServerInfoResponse[version]" has a null value in JSON.');
         assert(json.containsKey(r'mapTileUrl'), 'Required key "ServerInfoResponse[mapTileUrl]" is missing from JSON.');
         assert(json.containsKey(r'mapAttribution'), 'Required key "ServerInfoResponse[mapAttribution]" is missing from JSON.');
+        assert(json.containsKey(r'emailAvailable'), 'Required key "ServerInfoResponse[emailAvailable]" is missing from JSON.');
+        assert(json[r'emailAvailable'] != null, 'Required key "ServerInfoResponse[emailAvailable]" has a null value in JSON.');
         return true;
       }());
 
@@ -103,6 +113,7 @@ class ServerInfoResponse {
         version: mapValueOfType<String>(json, r'version')!,
         mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl'),
         mapAttribution: mapValueOfType<String>(json, r'mapAttribution'),
+        emailAvailable: mapValueOfType<bool>(json, r'emailAvailable')!,
       );
     }
     return null;
@@ -154,6 +165,7 @@ class ServerInfoResponse {
     'version',
     'mapTileUrl',
     'mapAttribution',
+    'emailAvailable',
   };
 }
 

@@ -87,8 +87,8 @@ class HomeShell extends StatelessWidget {
           ),
           if (session.isAdmin)
             const NavigationDestination(
-              icon: Icon(Icons.people),
-              label: 'Accounts',
+              icon: Icon(Icons.admin_panel_settings),
+              label: 'Admin',
             ),
         ],
       ),

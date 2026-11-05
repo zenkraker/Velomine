@@ -6,6 +6,7 @@ analysis_options.yaml
 git_push.sh
 lib/api.dart
 lib/api/accounts_api.dart
+lib/api/admin_api.dart
 lib/api/analytics_api.dart
 lib/api/bikes_api.dart
 lib/api/notifications_api.dart
@@ -19,6 +20,7 @@ lib/auth/authentication.dart
 lib/auth/http_basic_auth.dart
 lib/auth/http_bearer_auth.dart
 lib/auth/oauth.dart
+lib/model/admin_user_summary.dart
 lib/model/bike_detail_response.dart
 lib/model/bike_response.dart
 lib/model/component_response.dart
@@ -28,6 +30,7 @@ lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
 lib/model/exchange_sso_code_request.dart
 lib/model/goal_response.dart
+lib/model/list_admin_users_response.dart
 lib/model/list_bikes_response.dart
 lib/model/list_component_types_response.dart
 lib/model/list_goals_response.dart
@@ -36,6 +39,7 @@ lib/model/list_rides_response.dart
 lib/model/login_request.dart
 lib/model/me_response.dart
 lib/model/notification_response.dart
+lib/model/overview_response.dart
 lib/model/period_totals.dart
 lib/model/problem_details.dart
 lib/model/problem_details2.dart
@@ -48,13 +52,18 @@ lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
 lib/model/server_info_response.dart
 lib/model/set_ride_bike_request.dart
+lib/model/set_user_roles_request.dart
+lib/model/settings_response.dart
+lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
+lib/model/sso_status.dart
 lib/model/token_response.dart
 lib/model/totals_response.dart
 lib/model/update_bike_request.dart
 lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
 lib/model/update_profile_request.dart
+lib/model/update_settings_request.dart
 lib/model/upload_ride_response.dart
 lib/model/user_summary.dart
 lib/optional.dart

@@ -52,6 +52,9 @@ public sealed class Notification
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? ReadAt { get; set; }
+
+    /// <summary>When it was emailed to the member; null until then (or if the member does not get emails).</summary>
+    public DateTimeOffset? EmailedAt { get; set; }
 }
 
 public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notification>

@@ -18,15 +18,17 @@ class FakeAccount {
     this.password, {
     this.name = 'Test Rider',
     this.approved = true,
-    this.roles = const ['member'],
-  }) : id = 'id-${email.hashCode.abs()}';
+    List<String> roles = const ['member'],
+  }) : id = 'id-${email.hashCode.abs()}',
+       roles = [...roles];
 
   final String id;
   final String email;
   final String password;
   final String name;
   bool approved;
-  final List<String> roles;
+  bool locked = false;
+  List<String> roles;
 }
 
 /// A tiny stand-in for the Velomine server, answering the calls the app makes.
@@ -54,6 +56,20 @@ class FakeServer {
   final goalCurrent = <String, double>{};
 
   final notifications = <Map<String, Object?>>[];
+
+  /// What the admin settings screen is told, and the read-only status of what only the environment sets.
+  final adminSettings = <String, Object?>{
+    'signUpEnabled': true,
+    'requireAdminApproval': true,
+    'mapTileUrl': null,
+    'mapAttribution': null,
+  };
+  bool smtpConfigured = false;
+
+  /// Who a test email was sent to, and what the mail server answered.
+  final testEmails = <String>[];
+  int testEmailStatus = 204;
+  bool ssoConfigured = false;
 
   /// One-time codes the browser sign-in could have handed back, and the PKCE challenge the app sent for them.
   final ssoCodes = <String, FakeAccount>{};
@@ -116,6 +132,7 @@ class FakeServer {
         'version': '0.0.0',
         'mapTileUrl': tileUrl,
         'mapAttribution': tileUrl == null ? null : '© Test Maps',
+        'emailAvailable': smtpConfigured,
       });
     }
 
@@ -323,8 +340,13 @@ extension on FakeServer {
   ) {
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/analytics') &&
-        !path.startsWith('/api/v1/notifications')) {
+        !path.startsWith('/api/v1/notifications') &&
+        !path.startsWith('/api/v1/admin')) {
       return null;
+    }
+    if (path.startsWith('/api/v1/admin')) {
+      if (!caller.roles.contains('admin')) return http.Response('', 403);
+      return _admin(request, path, caller, json);
     }
     final body = request.body.isEmpty
         ? <String, Object?>{}
@@ -340,6 +362,7 @@ extension on FakeServer {
           'maxHeartRate': null,
           'timeZone': null,
           'firstDayOfWeek': 'monday',
+          'emailNotifications': true,
         },
       );
       if (request.method == 'PUT') profile.addAll(body);
@@ -407,6 +430,90 @@ extension on FakeServer {
       return http.Response('', 204);
     }
     return null;
+  }
+
+  http.Response _admin(
+    http.Request request,
+    String path,
+    FakeAccount caller,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    Map<String, Object?> userJson(FakeAccount a) => {
+      'id': a.id,
+      'email': a.email,
+      'displayName': a.name,
+      'isApproved': a.approved,
+      'isLockedOut': a.locked,
+      'roles': a.roles,
+      'createdAt': '2026-11-02T08:00:00Z',
+    };
+
+    if (path == '/api/v1/admin/users') {
+      return json({
+        'users': [for (final a in accounts.values) userJson(a)],
+      });
+    }
+    if (path == '/api/v1/admin/settings/test-email') {
+      testEmails.add(caller.email);
+      return testEmailStatus == 204
+          ? http.Response('', 204)
+          : http.Response('{"detail":"rejected"}', testEmailStatus);
+    }
+    if (path == '/api/v1/admin/overview') {
+      return json({
+        'accounts': accounts.length,
+        'waitingForApproval': accounts.values.where((a) => !a.approved).length,
+        'locked': accounts.values.where((a) => a.locked).length,
+        'rides': rides.length,
+        'rideFilesBytes': 1234567,
+        'version': '0.1.0',
+      });
+    }
+    if (path == '/api/v1/admin/settings') {
+      if (request.method == 'PUT') {
+        adminSettings.addAll(jsonDecode(request.body) as Map<String, Object?>);
+      }
+      return json({
+        ...adminSettings,
+        'smtp': {
+          'configured': smtpConfigured,
+          'host': smtpConfigured ? 'smtp.club.example' : null,
+          'port': smtpConfigured ? 587 : null,
+          'security': smtpConfigured ? 'starttls' : null,
+          'from': smtpConfigured ? 'velomine@club.example' : null,
+        },
+        'sso': {
+          'enabled': ssoConfigured,
+          'displayName': ssoConfigured ? 'Club login' : null,
+          'authority': ssoConfigured ? 'https://idp.club.example' : null,
+        },
+      });
+    }
+    final one = RegExp(
+      r'^/api/v1/admin/users/([^/]+)(?:/(roles|lock|unlock))?$',
+    ).firstMatch(path);
+    if (one != null) {
+      final found = accounts.values.where((a) => a.id == one.group(1));
+      if (found.isEmpty) return http.Response('', 404);
+      final target = found.first;
+      if (target.id == caller.id && one.group(2) != 'roles') {
+        return http.Response('', 409);
+      }
+      switch (one.group(2)) {
+        case 'roles':
+          final wanted = (jsonDecode(request.body) as Map)['roles'] as List;
+          target.roles = {'member', ...wanted.cast<String>()}.toList();
+          return json(userJson(target));
+        case 'lock':
+          target.locked = true;
+        case 'unlock':
+          target.locked = false;
+        default:
+          accounts.remove(target.email);
+      }
+      return http.Response('', 204);
+    }
+    return http.Response('', 404);
   }
 
   http.Response? _bikes(

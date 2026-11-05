@@ -24,6 +24,9 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>The day weekly totals and goals start on.</summary>
     public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Monday;
+
+    /// <summary>Also email this member their notifications, when the server can send email.</summary>
+    public bool EmailNotifications { get; set; } = true;
 }
 
 public static class Roles

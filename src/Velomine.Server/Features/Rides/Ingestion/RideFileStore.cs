@@ -47,6 +47,15 @@ public sealed partial class RideFileStore(IOptions<RidesOptions> options)
         if (File.Exists(path)) File.Delete(path);
     }
 
+    /// <summary>The size of all stored original files, in bytes.</summary>
+    public long TotalBytes()
+    {
+        var originals = Path.Combine(Root, "originals");
+        return Directory.Exists(originals)
+            ? new DirectoryInfo(originals).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length)
+            : 0;
+    }
+
     // Only a hash we made ourselves can name a file, so a stored value can never point outside the folder.
     private string PathFor(string sha) => HexSha256().IsMatch(sha)
         ? Path.Combine(Root, "originals", sha[..2], sha)

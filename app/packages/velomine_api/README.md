@@ -77,6 +77,15 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
+*AdminApi* | [**deleteUser**](doc//AdminApi.md#deleteuser) | **DELETE** /api/v1/admin/users/{id} | 
+*AdminApi* | [**getOverview**](doc//AdminApi.md#getoverview) | **GET** /api/v1/admin/overview | 
+*AdminApi* | [**getSettings**](doc//AdminApi.md#getsettings) | **GET** /api/v1/admin/settings | 
+*AdminApi* | [**listAdminUsers**](doc//AdminApi.md#listadminusers) | **GET** /api/v1/admin/users | 
+*AdminApi* | [**lockUser**](doc//AdminApi.md#lockuser) | **POST** /api/v1/admin/users/{id}/lock | 
+*AdminApi* | [**sendTestEmail**](doc//AdminApi.md#sendtestemail) | **POST** /api/v1/admin/settings/test-email | 
+*AdminApi* | [**setUserRoles**](doc//AdminApi.md#setuserroles) | **PUT** /api/v1/admin/users/{id}/roles | 
+*AdminApi* | [**unlockUser**](doc//AdminApi.md#unlockuser) | **POST** /api/v1/admin/users/{id}/unlock | 
+*AdminApi* | [**updateSettings**](doc//AdminApi.md#updatesettings) | **PUT** /api/v1/admin/settings | 
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
@@ -106,6 +115,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AdminUserSummary](doc//AdminUserSummary.md)
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)
@@ -115,6 +125,7 @@ Class | Method | HTTP request | Description
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
  - [GoalResponse](doc//GoalResponse.md)
+ - [ListAdminUsersResponse](doc//ListAdminUsersResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
  - [ListGoalsResponse](doc//ListGoalsResponse.md)
@@ -123,6 +134,7 @@ Class | Method | HTTP request | Description
  - [LoginRequest](doc//LoginRequest.md)
  - [MeResponse](doc//MeResponse.md)
  - [NotificationResponse](doc//NotificationResponse.md)
+ - [OverviewResponse](doc//OverviewResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
  - [ProblemDetails](doc//ProblemDetails.md)
  - [ProblemDetails2](doc//ProblemDetails2.md)
@@ -135,13 +147,18 @@ Class | Method | HTTP request | Description
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
+ - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
+ - [SettingsResponse](doc//SettingsResponse.md)
+ - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
+ - [SsoStatus](doc//SsoStatus.md)
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
+ - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
 

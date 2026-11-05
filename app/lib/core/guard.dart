@@ -19,6 +19,10 @@ Future<String?> guardCall(
       return 'The server did not accept that. Check the values.';
     }
     if (e.code == 404) return 'It no longer exists.';
+    if (e.code == 409) return 'That is not allowed.';
+    if (e.code == 502) {
+      return 'The mail server did not accept it. Check the email settings.';
+    }
     return 'Could not $what (${e.code}). Try again.';
   } on Object {
     return 'Could not reach the server. Try again.';

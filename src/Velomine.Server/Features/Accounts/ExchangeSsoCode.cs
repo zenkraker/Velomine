@@ -33,7 +33,8 @@ public sealed class ExchangeSsoCode(SsoAppCodes codes, UserManager<User> users, 
     {
         if (codes.Redeem(req.Code, req.CodeVerifier) is not { } userId
             || await users.FindByIdAsync(userId.ToString()) is not { } user
-            || !await signIn.CanSignInAsync(user))
+            || !await signIn.CanSignInAsync(user)
+            || await users.IsLockedOutAsync(user))
         {
             await Send.UnauthorizedAsync(ct);
             return;

@@ -9,7 +9,8 @@ import 'core/server_url.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
 import 'core/theme_choice.dart';
-import 'features/admin/pending_users_screen.dart';
+import 'features/admin/admin_controller.dart';
+import 'features/admin/admin_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/bikes/bike_detail_screen.dart';
 import 'features/bikes/bikes_controller.dart';
@@ -83,6 +84,13 @@ class _VelomineAppState extends State<VelomineApp> {
   late final BikesController _bikes = BikesController(
     api: widget.session.bikes,
     onUnauthorized: widget.session.sessionExpired,
+  );
+
+  late final AdminController _admin = AdminController(
+    api: widget.session.admin,
+    accounts: widget.session.accounts,
+    onUnauthorized: widget.session.sessionExpired,
+    myId: () => widget.session.me?.id,
   );
 
   late final ProgressController _progress = ProgressController(
@@ -218,7 +226,7 @@ class _VelomineAppState extends State<VelomineApp> {
           ),
           GoRoute(
             path: '/admin',
-            builder: (_, _) => PendingUsersScreen(session: widget.session),
+            builder: (_, _) => AdminScreen(controller: _admin),
           ),
         ],
       ),
@@ -232,6 +240,7 @@ class _VelomineAppState extends State<VelomineApp> {
     _rides.dispose();
     _bikes.dispose();
     _progress.dispose();
+    _admin.dispose();
     _notifications.dispose();
     super.dispose();
   }
@@ -368,5 +377,8 @@ class _ProfilePageState extends State<_ProfilePage> {
   }
 
   @override
-  Widget build(BuildContext context) => ProfileScreen(controller: _controller);
+  Widget build(BuildContext context) => ProfileScreen(
+    controller: _controller,
+    emailAvailable: widget.session.serverInfo?.emailAvailable ?? false,
+  );
 }

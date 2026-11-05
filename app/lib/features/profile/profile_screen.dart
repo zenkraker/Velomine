@@ -15,9 +15,16 @@ const weekDays = {
 };
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required this.controller});
+  const ProfileScreen({
+    super.key,
+    required this.controller,
+    required this.emailAvailable,
+  });
 
   final ProfileController controller;
+
+  /// Whether the server can send email at all; the switch is explained and disabled when it cannot.
+  final bool emailAvailable;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -30,6 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _maxHr = TextEditingController();
   final _zone = TextEditingController();
   String _firstDay = 'monday';
+  bool _email = true;
   String? _problem;
   bool _saved = false;
 
@@ -48,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _maxHr.text = p.maxHeartRate?.toString() ?? '';
       _zone.text = p.timeZone ?? '';
       _firstDay = p.firstDayOfWeek;
+      _email = p.emailNotifications;
     });
   }
 
@@ -100,6 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         maxHeartRate: maxHr.$2?.toInt(),
         timeZone: zone.isEmpty ? null : zone,
         firstDayOfWeek: _firstDay,
+        emailNotifications: Optional.present(_email),
       ),
     );
     if (mounted) setState(() => _saved = ok);
@@ -199,6 +209,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                           onChanged: (v) =>
                               setState(() => _firstDay = v ?? _firstDay),
+                        ),
+                        SwitchListTile(
+                          key: const Key('profile-email'),
+                          contentPadding: EdgeInsets.zero,
+                          value: _email,
+                          title: const Text('Email me my notifications'),
+                          subtitle: Text(
+                            widget.emailAvailable
+                                ? 'A ride that was read, a part that is worn, and so on.'
+                                : 'This server is not set up to send email, so nothing is sent yet.',
+                          ),
+                          onChanged: widget.emailAvailable
+                              ? (v) => setState(() {
+                                  _email = v;
+                                  _saved = false;
+                                })
+                              : null,
                         ),
                         if (_problem ?? c.error case final message?)
                           Text(

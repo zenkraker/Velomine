@@ -30,6 +30,7 @@ class Session extends ChangeNotifier {
        rides = RidesApi(client),
        bikes = BikesApi(client),
        analytics = AnalyticsApi(client),
+       admin = AdminApi(client),
        notifications = NotificationsApi(client),
        server = ServerApi(client);
 
@@ -37,6 +38,7 @@ class Session extends ChangeNotifier {
   final RidesApi rides;
   final BikesApi bikes;
   final AnalyticsApi analytics;
+  final AdminApi admin;
   final NotificationsApi notifications;
   final ServerApi server;
   final bool useCookies;

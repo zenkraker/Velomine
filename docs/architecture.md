@@ -80,8 +80,8 @@ app/                             Flutter app (section 9)
 | Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |
 | Sharing | Share links and the server-rendered share pages | v1 |
-| Notifications | In-app notifications (ride read, failed or duplicate; part nearly worn or worn; sign-up waiting, for admins) and email | v1; email not built yet |
-| Admin | Server settings, map tiles, SMTP, OIDC, user approval | v1 |
+| Notifications | In-app notifications (ride read, failed or duplicate; part nearly worn or worn; sign-up waiting, for admins) and email (SMTP from environment variables, sent by a background service every 30 seconds; state on the notification row, no queue) | v1 |
+| Admin | User management (approve, roles, lock, delete), settings an admin can change in the app (sign-up, approval, map tiles; saved in the database over the environment defaults), a server overview, a test email. **SMTP and OIDC are set only with environment variables and shown read-only: credentials are never stored in the database or returned by the API.** Not built: an SSRF guard for the SMTP host (private relays are the normal case). | v1 |
 
 ## 5. Ride ingestion
 

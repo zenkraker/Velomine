@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Notifications;
 
 namespace Velomine.Server.Features.Accounts;
@@ -25,7 +26,7 @@ public sealed class FinishSso(
     UserManager<User> users,
     VelomineDbContext db,
     IOptions<SsoOptions> sso,
-    IOptions<AccountsOptions> accounts,
+    SettingsReader settings,
     SsoAppCodes appCodes,
     TimeProvider clock) : Endpoint<FinishSsoRequest>
 {
@@ -57,7 +58,7 @@ public sealed class FinishSso(
         var result = await signIn.ExternalLoginSignInAsync(SsoOptions.Scheme, subject, isPersistent: false, bypassTwoFactor: true);
         if (!result.Succeeded && !result.IsLockedOut && !result.IsNotAllowed)
         {
-            var error = await LinkOrCreate(external.Principal!, subject);
+            var error = await LinkOrCreate(external.Principal!, subject, ct);
             if (error is not null)
             {
                 await Fail(returnUrl, error, forApp, ct);
@@ -89,7 +90,7 @@ public sealed class FinishSso(
         : Send.RedirectAsync(SsoReturnUrl.WithError(returnUrl, error), allowRemoteRedirects: false);
 
     /// <summary>Returns an error code, or null when the provider identity is now linked to an account.</summary>
-    private async Task<string?> LinkOrCreate(ClaimsPrincipal principal, string subject)
+    private async Task<string?> LinkOrCreate(ClaimsPrincipal principal, string subject, CancellationToken ct)
     {
         var email = principal.FindFirstValue("email");
         if (string.IsNullOrWhiteSpace(email)) return "no_email";
@@ -114,7 +115,7 @@ public sealed class FinishSso(
             Email = email,
             EmailConfirmed = string.Equals(verified, "true", StringComparison.OrdinalIgnoreCase),
             DisplayName = principal.FindFirstValue("name") ?? email.Split('@')[0],
-            IsApproved = !accounts.Value.RequireAdminApproval,
+            IsApproved = !(await settings.GetAsync(ct)).RequireAdminApproval,
             CreatedAt = clock.GetUtcNow(),
         };
         if (!(await users.CreateAsync(user)).Succeeded) return "failed";

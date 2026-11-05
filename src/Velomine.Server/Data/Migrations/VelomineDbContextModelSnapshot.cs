@@ -219,6 +219,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("email_confirmed");
 
+                    b.Property<bool>("EmailNotifications")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_notifications");
+
                     b.Property<int>("FirstDayOfWeek")
                         .HasColumnType("integer")
                         .HasColumnName("first_day_of_week");
@@ -306,6 +310,43 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
 
                             t.HasCheckConstraint("ck_users_weight_kg", "weight_kg BETWEEN 20 AND 300");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Admin.ServerSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("EmailStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("email_started_at");
+
+                    b.Property<string>("MapAttribution")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("map_attribution");
+
+                    b.Property<string>("MapTileUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("map_tile_url");
+
+                    b.Property<bool?>("RequireAdminApproval")
+                        .HasColumnType("boolean")
+                        .HasColumnName("require_admin_approval");
+
+                    b.Property<bool?>("SignUpEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sign_up_enabled");
+
+                    b.HasKey("Id")
+                        .HasName("pk_server_settings");
+
+                    b.ToTable("server_settings", "admin", t =>
+                        {
+                            t.HasCheckConstraint("ck_server_settings_one_row", "id = 1");
                         });
                 });
 
@@ -521,6 +562,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("EmailedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("emailed_at");
 
                     b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("timestamp with time zone")

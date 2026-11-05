@@ -19,6 +19,7 @@ class ProfileResponse {
     required this.maxHeartRate,
     required this.timeZone,
     required this.firstDayOfWeek,
+    required this.emailNotifications,
   });
 
   final String displayName;
@@ -33,6 +34,8 @@ class ProfileResponse {
 
   final String firstDayOfWeek;
 
+  final bool emailNotifications;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProfileResponse &&
     other.displayName == displayName &&
@@ -40,7 +43,8 @@ class ProfileResponse {
     other.weightKg == weightKg &&
     other.maxHeartRate == maxHeartRate &&
     other.timeZone == timeZone &&
-    other.firstDayOfWeek == firstDayOfWeek;
+    other.firstDayOfWeek == firstDayOfWeek &&
+    other.emailNotifications == emailNotifications;
 
   @override
   int get hashCode =>
@@ -50,10 +54,11 @@ class ProfileResponse {
     (weightKg == null ? 0 : weightKg!.hashCode) +
     (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
     (timeZone == null ? 0 : timeZone!.hashCode) +
-    (firstDayOfWeek.hashCode);
+    (firstDayOfWeek.hashCode) +
+    (emailNotifications.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -79,6 +84,7 @@ class ProfileResponse {
       json[r'timeZone'] = null;
     }
       json[r'firstDayOfWeek'] = this.firstDayOfWeek;
+      json[r'emailNotifications'] = this.emailNotifications;
     return json;
   }
 
@@ -95,6 +101,7 @@ class ProfileResponse {
     String? timeZone,
     bool timeZoneSetToNull = false,
     String? firstDayOfWeek,
+    bool? emailNotifications,
   }) => ProfileResponse(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -102,6 +109,7 @@ class ProfileResponse {
     maxHeartRate: maxHeartRateSetToNull ? null : maxHeartRate ?? this.maxHeartRate,
     timeZone: timeZoneSetToNull ? null : timeZone ?? this.timeZone,
     firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
+    emailNotifications: emailNotifications ?? this.emailNotifications,
   );
 
   /// Returns a new [ProfileResponse] instance and imports its values from
@@ -123,6 +131,8 @@ class ProfileResponse {
         assert(json.containsKey(r'timeZone'), 'Required key "ProfileResponse[timeZone]" is missing from JSON.');
         assert(json.containsKey(r'firstDayOfWeek'), 'Required key "ProfileResponse[firstDayOfWeek]" is missing from JSON.');
         assert(json[r'firstDayOfWeek'] != null, 'Required key "ProfileResponse[firstDayOfWeek]" has a null value in JSON.');
+        assert(json.containsKey(r'emailNotifications'), 'Required key "ProfileResponse[emailNotifications]" is missing from JSON.');
+        assert(json[r'emailNotifications'] != null, 'Required key "ProfileResponse[emailNotifications]" has a null value in JSON.');
         return true;
       }());
 
@@ -133,6 +143,7 @@ class ProfileResponse {
         maxHeartRate: mapValueOfType<int>(json, r'maxHeartRate'),
         timeZone: mapValueOfType<String>(json, r'timeZone'),
         firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
+        emailNotifications: mapValueOfType<bool>(json, r'emailNotifications')!,
       );
     }
     return null;
@@ -186,6 +197,7 @@ class ProfileResponse {
     'maxHeartRate',
     'timeZone',
     'firstDayOfWeek',
+    'emailNotifications',
   };
 }
 

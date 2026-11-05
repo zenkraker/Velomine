@@ -32,6 +32,7 @@ void main() {
       'maxHeartRate': 186,
       'timeZone': 'Europe/Rome',
       'firstDayOfWeek': 'sunday',
+      'emailNotifications': true,
     };
     await openProfile(tester);
 
@@ -71,6 +72,7 @@ void main() {
       'maxHeartRate': null,
       'timeZone': 'Europe/Rome',
       'firstDayOfWeek': 'saturday',
+      'emailNotifications': true,
     });
     expect(find.byKey(const Key('profile-saved')), findsOneWidget);
     expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
@@ -85,6 +87,33 @@ void main() {
 
     expect(find.text('Maximum heart rate is 100 to 240 bpm.'), findsOneWidget);
     expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+  });
+
+  testWidgets(
+    'the email switch is explained and off-limits without email on the server',
+    (tester) async {
+      await openProfile(tester);
+
+      final tile = tester.widget<SwitchListTile>(
+        find.byKey(const Key('profile-email')),
+      );
+      expect(tile.onChanged, isNull);
+      expect(find.textContaining('not set up to send email'), findsOneWidget);
+    },
+  );
+
+  testWidgets('with email on the server the switch is sent with the profile', (
+    tester,
+  ) async {
+    server.smtpConfigured = true;
+    await openProfile(tester);
+
+    await tester.tap(find.byKey(const Key('profile-email')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.profiles['rider@example.com']!['emailNotifications'], false);
   });
 
   test('the fake server keeps profiles as JSON', () {

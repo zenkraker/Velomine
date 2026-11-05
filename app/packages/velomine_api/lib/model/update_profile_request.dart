@@ -19,6 +19,7 @@ class UpdateProfileRequest {
     required this.maxHeartRate,
     required this.timeZone,
     required this.firstDayOfWeek,
+    this.emailNotifications = const Optional.absent(),
   });
 
   final String displayName;
@@ -39,6 +40,14 @@ class UpdateProfileRequest {
 
   final String firstDayOfWeek;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> emailNotifications;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateProfileRequest &&
     other.displayName == displayName &&
@@ -46,7 +55,8 @@ class UpdateProfileRequest {
     other.weightKg == weightKg &&
     other.maxHeartRate == maxHeartRate &&
     other.timeZone == timeZone &&
-    other.firstDayOfWeek == firstDayOfWeek;
+    other.firstDayOfWeek == firstDayOfWeek &&
+    other.emailNotifications == emailNotifications;
 
   @override
   int get hashCode =>
@@ -56,10 +66,11 @@ class UpdateProfileRequest {
     (weightKg == null ? 0 : weightKg!.hashCode) +
     (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
     (timeZone == null ? 0 : timeZone!.hashCode) +
-    (firstDayOfWeek.hashCode);
+    (firstDayOfWeek.hashCode) +
+    (emailNotifications == null ? 0 : emailNotifications!.hashCode);
 
   @override
-  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek]';
+  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -85,6 +96,10 @@ class UpdateProfileRequest {
       json[r'timeZone'] = null;
     }
       json[r'firstDayOfWeek'] = this.firstDayOfWeek;
+    if (this.emailNotifications.isPresent) {
+      final value = this.emailNotifications.value;
+      json[r'emailNotifications'] = value;
+    }
     return json;
   }
 
@@ -101,6 +116,7 @@ class UpdateProfileRequest {
     String? timeZone,
     bool timeZoneSetToNull = false,
     String? firstDayOfWeek,
+    Optional<bool?>? emailNotifications,
   }) => UpdateProfileRequest(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -108,6 +124,7 @@ class UpdateProfileRequest {
     maxHeartRate: maxHeartRateSetToNull ? null : maxHeartRate ?? this.maxHeartRate,
     timeZone: timeZoneSetToNull ? null : timeZone ?? this.timeZone,
     firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
+    emailNotifications: emailNotifications ?? this.emailNotifications,
   );
 
   /// Returns a new [UpdateProfileRequest] instance and imports its values from
@@ -139,6 +156,7 @@ class UpdateProfileRequest {
         maxHeartRate: mapValueOfType<int>(json, r'maxHeartRate'),
         timeZone: mapValueOfType<String>(json, r'timeZone'),
         firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
+        emailNotifications: json.containsKey(r'emailNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailNotifications')) : const Optional.absent(),
       );
     }
     return null;

@@ -11,6 +11,7 @@ public sealed record RefreshRequest(string RefreshToken);
 public sealed class Refresh(
     IOptionsMonitor<BearerTokenOptions> bearerOptions,
     SignInManager<User> signIn,
+    UserManager<User> users,
     TimeProvider clock) : Endpoint<RefreshRequest>
 {
     public override void Configure()
@@ -28,7 +29,8 @@ public sealed class Refresh(
         if (ticket?.Properties.ExpiresUtc is not { } expires
             || clock.GetUtcNow() >= expires
             || await signIn.ValidateSecurityStampAsync(ticket.Principal) is not { } user
-            || !await signIn.CanSignInAsync(user))
+            || !await signIn.CanSignInAsync(user)
+            || await users.IsLockedOutAsync(user)) // an admin locked the account: the session ends at its next renewal
         {
             await Send.UnauthorizedAsync(ct);
             return;

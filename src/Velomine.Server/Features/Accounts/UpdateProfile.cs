@@ -5,14 +5,15 @@ using Velomine.Server.Data;
 
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>Changing the profile: all fields are sent each time; null clears a value.</summary>
+/// <summary>Changing the profile: all fields are sent each time; null clears a value. EmailNotifications is kept when left out.</summary>
 public sealed record UpdateProfileRequest(
     string DisplayName,
     int? FtpW,
     double? WeightKg,
     int? MaxHeartRate,
     string? TimeZone,
-    string FirstDayOfWeek);
+    string FirstDayOfWeek,
+    bool? EmailNotifications = null);
 
 public sealed class UpdateProfileValidator : Validator<UpdateProfileRequest>
 {
@@ -50,6 +51,7 @@ public sealed class UpdateProfile(VelomineDbContext db) : Endpoint<UpdateProfile
         user.MaxHeartRate = req.MaxHeartRate;
         user.TimeZone = string.IsNullOrWhiteSpace(req.TimeZone) ? null : req.TimeZone.Trim();
         user.FirstDayOfWeek = firstDay;
+        user.EmailNotifications = req.EmailNotifications ?? user.EmailNotifications;
         await db.SaveChangesAsync(ct);
 
         await Send.OkAsync(GetProfile.ProfileOf(user), ct);

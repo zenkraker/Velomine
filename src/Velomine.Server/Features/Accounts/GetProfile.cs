@@ -11,7 +11,8 @@ public sealed record ProfileResponse(
     double? WeightKg,
     int? MaxHeartRate,
     string? TimeZone,
-    string FirstDayOfWeek);
+    string FirstDayOfWeek,
+    bool EmailNotifications);
 
 public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<ProfileResponse>
 {
@@ -29,5 +30,5 @@ public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<Pr
     }
 
     public static ProfileResponse ProfileOf(User u) =>
-        new(u.DisplayName, u.FtpW, u.WeightKg, u.MaxHeartRate, u.TimeZone, WeekDays.Name(u.FirstDayOfWeek));
+        new(u.DisplayName, u.FtpW, u.WeightKg, u.MaxHeartRate, u.TimeZone, WeekDays.Name(u.FirstDayOfWeek), u.EmailNotifications);
 }

@@ -19,3 +19,15 @@ String duration(double? seconds) {
 
 String dateTime(DateTime? value) =>
     value == null ? '–' : DateFormat.yMMMd().add_Hm().format(value.toLocal());
+
+/// A size on disk: "0 B", "12 KB", "3.4 MB", "1.2 GB".
+String bytes(num size) {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  var value = size.toDouble();
+  var unit = 0;
+  while (value >= 1000 && unit < units.length - 1) {
+    value /= 1000;
+    unit++;
+  }
+  return '${value.toStringAsFixed(unit == 0 || value >= 100 ? 0 : 1)} ${units[unit]}';
+}

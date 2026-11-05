@@ -9,6 +9,7 @@
 | xunit.v3 | 4.0.x | 2026-11-02, by the owner | [xunit.md](xunit.md) | Test projects only. Run through the Microsoft Testing Platform (`global.json`). |
 | Testcontainers.PostgreSql | 4.16.x | 2026-11-02, by the owner | [testcontainers.md](testcontainers.md) | Test projects only. PostgreSQL module, plus the core generic-container builder (same package family) to run Dex in the SSO tests. Keep the `VELOMINE_TEST_POSTGRES` escape hatch. |
 | Bogus | 35.6.x | 2026-11-02, by the owner | [bogus.md](bogus.md) | **Approved, not added yet.** Test projects only, fixed seed, no exact-value assertions. |
+| MailKit (brings `MimeKit` and its cryptography dependencies) | 4.18.x | 2026-11-05, by the owner, evaluation waived | none | Sends notification and test emails over SMTP. Referenced only from the one `IEmailSender` implementation. SMTP settings (including the password) come from environment variables only, never the database. Patch and minor updates allowed; re-evaluate on a major update. |
 | Dex (container image `ghcr.io/dexidp/dex:v2.46.1`) | 2.46.1 | 2026-11-02, by the owner | [dex.md](dex.md) | **Dev and tests only** (docker-compose and Testcontainers); never in a shared or production environment; port bound to `127.0.0.1`. Pin 2.46.x or later, never 2.41.1 or older. |
 
 ## Needs an evaluation before use
