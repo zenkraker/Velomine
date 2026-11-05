@@ -110,7 +110,7 @@ public sealed class CreateBike(VelomineDbContext db, TimeProvider time) : Endpoi
         };
         db.Bikes.Add(bike);
         await db.SaveChangesAsync(ct);
-        await Send.CreatedAtAsync<GetBike>(new { id = bike.Id }, await BikeQueries.DetailAsync(db, bike, DateOnly.FromDateTime(time.GetLocalNow().Date), ct), cancellation: ct);
+        await Send.CreatedAtAsync<GetBike>(new { id = bike.Id }, await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), cancellation: ct);
     }
 }
 
@@ -146,6 +146,6 @@ public sealed class UpdateBike(VelomineDbContext db, TimeProvider time) : Endpoi
         }
 
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, DateOnly.FromDateTime(time.GetLocalNow().Date), ct), ct);
+        await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }
 }

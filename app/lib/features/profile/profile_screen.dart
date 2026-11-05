@@ -1,0 +1,229 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:velomine_api/api.dart';
+
+import 'profile_controller.dart';
+
+const weekDays = {
+  'monday': 'Monday',
+  'tuesday': 'Tuesday',
+  'wednesday': 'Wednesday',
+  'thursday': 'Thursday',
+  'friday': 'Friday',
+  'saturday': 'Saturday',
+  'sunday': 'Sunday',
+};
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key, required this.controller});
+
+  final ProfileController controller;
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _name = TextEditingController();
+  final _ftp = TextEditingController();
+  final _weight = TextEditingController();
+  final _maxHr = TextEditingController();
+  final _zone = TextEditingController();
+  String _firstDay = 'monday';
+  String? _problem;
+  bool _saved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.load().then((_) => _fill(widget.controller.profile));
+  }
+
+  void _fill(ProfileResponse? p) {
+    if (p == null || !mounted) return;
+    setState(() {
+      _name.text = p.displayName;
+      _ftp.text = p.ftpW?.toString() ?? '';
+      _weight.text = p.weightKg?.toString() ?? '';
+      _maxHr.text = p.maxHeartRate?.toString() ?? '';
+      _zone.text = p.timeZone ?? '';
+      _firstDay = p.firstDayOfWeek;
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_name, _ftp, _weight, _maxHr, _zone]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  /// An empty box means "not set"; anything else must be a number in range.
+  static (bool ok, num? value) _read(
+    String text,
+    num min,
+    num max, {
+    bool whole = true,
+  }) {
+    final t = text.trim().replaceAll(',', '.');
+    if (t.isEmpty) return (true, null);
+    final n = whole ? int.tryParse(t) : double.tryParse(t);
+    return n == null || n < min || n > max ? (false, null) : (true, n);
+  }
+
+  Future<void> _save() async {
+    final ftp = _read(_ftp.text, 30, 1000);
+    final weight = _read(_weight.text, 20, 300, whole: false);
+    final maxHr = _read(_maxHr.text, 100, 240);
+    final problem = _name.text.trim().isEmpty
+        ? 'Enter your name.'
+        : !ftp.$1
+        ? 'FTP is 30 to 1000 watts.'
+        : !weight.$1
+        ? 'Weight is 20 to 300 kg.'
+        : !maxHr.$1
+        ? 'Maximum heart rate is 100 to 240 bpm.'
+        : null;
+    setState(() {
+      _problem = problem;
+      _saved = false;
+    });
+    if (problem != null) return;
+
+    final zone = _zone.text.trim();
+    final ok = await widget.controller.save(
+      UpdateProfileRequest(
+        displayName: _name.text.trim(),
+        ftpW: ftp.$2?.toInt(),
+        weightKg: weight.$2?.toDouble(),
+        maxHeartRate: maxHr.$2?.toInt(),
+        timeZone: zone.isEmpty ? null : zone,
+        firstDayOfWeek: _firstDay,
+      ),
+    );
+    if (mounted) setState(() => _saved = ok);
+  }
+
+  Widget _number(
+    String key,
+    TextEditingController c,
+    String label,
+    String suffix, {
+    String? helper,
+    bool decimals = false,
+  }) => TextField(
+    key: Key(key),
+    controller: c,
+    keyboardType: TextInputType.numberWithOptions(decimal: decimals),
+    inputFormatters: [
+      FilteringTextInputFormatter.allow(
+        RegExp(decimals ? r'[0-9.,]' : r'[0-9]'),
+      ),
+    ],
+    decoration: InputDecoration(
+      labelText: label,
+      suffixText: suffix,
+      helperText: helper,
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.controller;
+    return ListenableBuilder(
+      listenable: c,
+      builder: (context, _) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: c.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 16,
+                      children: [
+                        Text(
+                          'Profile',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        TextField(
+                          key: const Key('profile-name'),
+                          controller: _name,
+                          decoration: const InputDecoration(labelText: 'Name'),
+                        ),
+                        _number(
+                          'profile-ftp',
+                          _ftp,
+                          'FTP',
+                          'W',
+                          helper: 'Functional threshold power. Used for training load and power zones.',
+                        ),
+                        _number(
+                          'profile-weight',
+                          _weight,
+                          'Weight',
+                          'kg',
+                          decimals: true,
+                        ),
+                        _number(
+                          'profile-max-hr',
+                          _maxHr,
+                          'Maximum heart rate',
+                          'bpm',
+                          helper: 'Heart rate zones are worked out from it.',
+                        ),
+                        TextField(
+                          key: const Key('profile-zone'),
+                          controller: _zone,
+                          decoration: const InputDecoration(
+                            labelText: 'Time zone',
+                            hintText: 'Europe/Rome',
+                            helperText: 'Decides which day a ride counts on when its file does not say. Empty means UTC.',
+                          ),
+                        ),
+                        DropdownButtonFormField<String>(
+                          key: const Key('profile-first-day'),
+                          initialValue: _firstDay,
+                          decoration: const InputDecoration(
+                            labelText: 'Weeks start on',
+                          ),
+                          items: [
+                            for (final e in weekDays.entries)
+                              DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value),
+                              ),
+                          ],
+                          onChanged: (v) =>
+                              setState(() => _firstDay = v ?? _firstDay),
+                        ),
+                        if (_problem ?? c.error case final message?)
+                          Text(
+                            message,
+                            key: const Key('profile-error'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        if (_saved && c.error == null)
+                          const Text('Saved.', key: Key('profile-saved')),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton(
+                            key: const Key('profile-save'),
+                            onPressed: c.saving ? null : _save,
+                            child: const Text('Save'),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

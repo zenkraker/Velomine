@@ -116,7 +116,7 @@ public sealed class CreateComponent(VelomineDbContext db, TimeProvider time) : E
         Apply(component, req);
         db.BikeComponents.Add(component); // Add explicitly: EF would treat a new child with a preset key as existing
         await db.SaveChangesAsync(ct);
-        await Send.CreatedAtAsync<GetBike>(new { id = bike.Id }, await BikeQueries.DetailAsync(db, bike, DateOnly.FromDateTime(time.GetLocalNow().Date), ct), cancellation: ct);
+        await Send.CreatedAtAsync<GetBike>(new { id = bike.Id }, await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), cancellation: ct);
     }
 
     internal static void Apply(BikeComponent c, IComponentFields req)
@@ -153,7 +153,7 @@ public sealed class UpdateComponent(VelomineDbContext db, TimeProvider time) : E
 
         CreateComponent.Apply(component, req);
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, DateOnly.FromDateTime(time.GetLocalNow().Date), ct), ct);
+        await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }
 }
 

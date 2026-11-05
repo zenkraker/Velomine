@@ -67,6 +67,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**approveUser**](doc//AccountsApi.md#approveuser) | **POST** /api/v1/accounts/users/{id}/approve | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
+*AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
 *AccountsApi* | [**listUsers**](doc//AccountsApi.md#listusers) | **GET** /api/v1/accounts/users | 
 *AccountsApi* | [**login**](doc//AccountsApi.md#login) | **POST** /api/v1/accounts/login | 
@@ -74,6 +75,12 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
+*AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
+*AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
+*AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
+*AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
+*AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
+*AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
 *BikesApi* | [**createBike**](doc//BikesApi.md#createbike) | **POST** /api/v1/bikes | 
 *BikesApi* | [**createComponent**](doc//BikesApi.md#createcomponent) | **POST** /api/v1/bikes/{bikeId}/components | 
 *BikesApi* | [**deleteBike**](doc//BikesApi.md#deletebike) | **DELETE** /api/v1/bikes/{id} | 
@@ -84,6 +91,9 @@ Class | Method | HTTP request | Description
 *BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
+*NotificationsApi* | [**listNotifications**](doc//NotificationsApi.md#listnotifications) | **GET** /api/v1/notifications | 
+*NotificationsApi* | [**markAllNotificationsRead**](doc//NotificationsApi.md#markallnotificationsread) | **POST** /api/v1/notifications/read | 
+*NotificationsApi* | [**markNotificationRead**](doc//NotificationsApi.md#marknotificationread) | **POST** /api/v1/notifications/{id}/read | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
 *RidesApi* | [**getRideStreams**](doc//RidesApi.md#getridestreams) | **GET** /api/v1/rides/{id}/streams | 
@@ -101,14 +111,21 @@ Class | Method | HTTP request | Description
  - [ComponentTypeResponse](doc//ComponentTypeResponse.md)
  - [CreateBikeRequest](doc//CreateBikeRequest.md)
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
+ - [CreateGoalRequest](doc//CreateGoalRequest.md)
+ - [GoalResponse](doc//GoalResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
+ - [ListGoalsResponse](doc//ListGoalsResponse.md)
+ - [ListNotificationsResponse](doc//ListNotificationsResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [MeResponse](doc//MeResponse.md)
+ - [NotificationResponse](doc//NotificationResponse.md)
+ - [PeriodTotals](doc//PeriodTotals.md)
  - [ProblemDetails](doc//ProblemDetails.md)
  - [ProblemDetails2](doc//ProblemDetails2.md)
  - [ProblemDetails2ErrorsInner](doc//ProblemDetails2ErrorsInner.md)
+ - [ProfileResponse](doc//ProfileResponse.md)
  - [RefreshRequest](doc//RefreshRequest.md)
  - [RegisterRequest](doc//RegisterRequest.md)
  - [RegisterResponse](doc//RegisterResponse.md)
@@ -118,8 +135,11 @@ Class | Method | HTTP request | Description
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [TokenResponse](doc//TokenResponse.md)
+ - [TotalsResponse](doc//TotalsResponse.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
+ - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
+ - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
 

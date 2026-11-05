@@ -14,7 +14,8 @@ VERSION=7.26.0
 OUT=app/packages/velomine_api
 
 # 1. The server writes its OpenAPI document and exits. This needs no database.
-(cd src/Velomine.Server && rm -rf wwwroot/openapi && dotnet run -- --export-openapi-docs true)
+# Port 0 lets the OS pick a free port for the moment the server is up, so a busy port 5000 doesn't stop it.
+(cd src/Velomine.Server && rm -rf wwwroot/openapi && ASPNETCORE_URLS=http://127.0.0.1:0 dotnet run -- --export-openapi-docs true)
 SPEC=src/Velomine.Server/wwwroot/openapi/v1.json
 
 # 2. Generate. The options are the ones approved in docs/dependencies/APPROVED.md.
@@ -26,7 +27,8 @@ ARGS=(generate -i "$SPEC" -g dart -o "$OUT"
 if [[ -n "${OPENAPI_GENERATOR_JAR:-}" ]]; then
   java -jar "$OPENAPI_GENERATOR_JAR" "${ARGS[@]}"
 else
-  docker run --rm -v "$PWD:/local" -w /local "openapitools/openapi-generator-cli:v$VERSION" "${ARGS[@]}"
+  # Run as the current user, so the generated files are not owned by root (Docker on Linux).
+  docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/local" -w /local "openapitools/openapi-generator-cli:v$VERSION" "${ARGS[@]}"
 fi
 
 # 3. The generated code is not ours to lint.

@@ -2,31 +2,57 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/session.dart';
+import 'features/notifications/notifications_controller.dart';
 
-/// The frame around the signed-in screens: title bar with the member's name and sign out,
-/// and a bottom bar to switch between rides, bikes and (for admins) accounts.
+/// The frame around the signed-in screens: title bar with notifications, the member's profile and sign out,
+/// and a bottom bar to switch between rides, progress, bikes and (for admins) accounts.
 class HomeShell extends StatelessWidget {
   const HomeShell({
     super.key,
     required this.session,
+    required this.notifications,
     required this.location,
     required this.child,
   });
 
   final Session session;
+  final NotificationsController notifications;
   final String location;
   final Widget child;
 
-  static const _destinations = ['/rides', '/bikes', '/admin'];
+  static const _destinations = ['/rides', '/progress', '/bikes', '/admin'];
 
   @override
   Widget build(BuildContext context) {
     final me = session.me;
+    final selected = _destinations.indexWhere(location.startsWith);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Velomine'),
         actions: [
-          if (me != null) Center(child: Text(me.displayName)),
+          ListenableBuilder(
+            listenable: notifications,
+            builder: (context, _) => IconButton(
+              key: const Key('open-notifications'),
+              tooltip: notifications.unread == 0
+                  ? 'Notifications'
+                  : 'Notifications, ${notifications.unread} unread',
+              isSelected: location == '/notifications',
+              icon: Badge(
+                isLabelVisible: notifications.unread > 0,
+                label: Text('${notifications.unread}'),
+                child: const Icon(Icons.notifications_none),
+              ),
+              onPressed: () => context.go('/notifications'),
+            ),
+          ),
+          if (me != null)
+            TextButton.icon(
+              key: const Key('open-profile'),
+              onPressed: () => context.go('/profile'),
+              icon: const Icon(Icons.account_circle_outlined),
+              label: Text(me.displayName),
+            ),
           IconButton(
             key: const Key('sign-out'),
             tooltip: 'Sign out',
@@ -37,14 +63,19 @@ class HomeShell extends StatelessWidget {
       ),
       body: child,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _destinations
-            .indexWhere(location.startsWith)
-            .clamp(0, 2),
+        // Profile and notifications are reached from the title bar, so no tab is lit for them: the bar needs an
+        // index, so it keeps the first one with its highlight hidden.
+        selectedIndex: selected < 0 ? 0 : selected,
+        indicatorColor: selected < 0 ? Colors.transparent : null,
         onDestinationSelected: (i) => context.go(_destinations[i]),
         destinations: [
           const NavigationDestination(
             icon: Icon(Icons.directions_bike),
             label: 'Rides',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.insights),
+            label: 'Progress',
           ),
           const NavigationDestination(
             icon: Icon(Icons.pedal_bike),

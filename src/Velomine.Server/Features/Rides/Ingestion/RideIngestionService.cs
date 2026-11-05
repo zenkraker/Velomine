@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Notifications;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
 
@@ -12,6 +13,7 @@ public sealed class RideIngestionService(
     IServiceProvider services,
     IngestionQueue queue,
     RideFileStore files,
+    TimeProvider time,
     ILogger<RideIngestionService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -55,19 +57,18 @@ public sealed class RideIngestionService(
         }
         catch (RideParseException ex)
         {
-            Fail(ride, ex.Code);
-            await db.SaveChangesAsync(ct);
+            await FailAsync(db, ride, ex.Code, ct);
             return;
         }
         catch (FileNotFoundException)
         {
-            Fail(ride, "file_missing");
-            await db.SaveChangesAsync(ct);
+            await FailAsync(db, ride, "file_missing", ct);
             return;
         }
 
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
         var used = false;
+        var read = new List<Ride>();
         Guid? defaultBike = null;
         string? lastError = null;
         foreach (var file in parsed)
@@ -88,6 +89,7 @@ public sealed class RideIngestionService(
                 : ride;
             if (used) db.Rides.Add(target);
             used = true;
+            read.Add(target);
 
             target.StartTime = file.StartTime;
             target.UtcOffsetMinutes = file.UtcOffsetMinutes;
@@ -113,22 +115,33 @@ public sealed class RideIngestionService(
             target.Streams = ToStreams(file.Samples);
         }
 
-        if (!used) Fail(ride, lastError ?? "no_records");
+        if (!used)
+        {
+            await FailAsync(db, ride, lastError ?? "no_records", ct);
+            return;
+        }
+
+        foreach (var r in read) Notify.RideRead(db, time, r);
         await db.SaveChangesAsync(ct);
+
+        // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
+        var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
+        await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
     }
 
-    private static void Fail(Ride ride, string code)
+    private async Task FailAsync(VelomineDbContext db, Ride ride, string code, CancellationToken ct)
     {
         ride.Status = RideStatus.Failed;
         ride.Error = code;
+        Notify.RideRead(db, time, ride);
+        await db.SaveChangesAsync(ct);
     }
 
-    private static async Task MarkFailedAsync(VelomineDbContext db, Guid id, string code, CancellationToken ct)
+    private async Task MarkFailedAsync(VelomineDbContext db, Guid id, string code, CancellationToken ct)
     {
         var ride = await db.Rides.FirstOrDefaultAsync(r => r.Id == id, ct);
         if (ride is null) return;
-        Fail(ride, code);
-        await db.SaveChangesAsync(ct);
+        await FailAsync(db, ride, code, ct);
     }
 
     private static void Apply(Ride ride, RideMetricValues m)

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Npgsql;
 using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
@@ -72,6 +73,9 @@ public sealed class TestApi : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await factory.DisposeAsync();
+        // Every test has its own database, so its pooled connections are never reused: close them now, or a long run
+        // reaches PostgreSQL's connection limit.
+        await using (var connection = new NpgsqlConnection(ConnectionString)) NpgsqlConnection.ClearPool(connection);
         if (Directory.Exists(FilesPath)) Directory.Delete(FilesPath, recursive: true);
     }
 }

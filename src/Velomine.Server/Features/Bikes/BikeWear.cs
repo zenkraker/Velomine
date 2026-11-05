@@ -1,12 +1,7 @@
 namespace Velomine.Server.Features.Bikes;
 
-/// <summary>One ride as the wear calculation sees it.</summary>
-public readonly record struct RideUse(DateOnly LocalDate, double DistanceM, double MovingS)
-{
-    /// <summary>A ride counts on the day it started where the rider was, not the UTC day (a night ride in Rome is not "yesterday").</summary>
-    public static DateOnly LocalDateOf(DateTimeOffset start, int? utcOffsetMinutes) =>
-        DateOnly.FromDateTime(start.AddMinutes(utcOffsetMinutes ?? 0).DateTime);
-}
+/// <summary>One ride as the wear calculation sees it, on its local date (see <see cref="Accounts.MemberClock.LocalDateOf"/>).</summary>
+public readonly record struct RideUse(DateOnly LocalDate, double DistanceM, double MovingS);
 
 public sealed record ComponentWear(double DistanceM, double Hours, double Months, int? Percent, string Status);
 

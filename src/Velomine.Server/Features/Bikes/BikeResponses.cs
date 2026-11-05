@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Bikes;
@@ -59,24 +60,29 @@ public static class BikeQueries
         })];
     }
 
-    public static async Task<BikeDetailResponse> DetailAsync(VelomineDbContext db, Bike bike, DateOnly today, CancellationToken ct)
+    public static async Task<BikeDetailResponse> DetailAsync(VelomineDbContext db, Bike bike, MemberClock clock, CancellationToken ct)
     {
-        var rides = (await db.Rides.AsNoTracking()
-                .Where(r => r.BikeId == bike.Id && r.Status == RideStatus.Ready && r.StartTime != null)
-                .Select(r => new { r.StartTime, r.UtcOffsetMinutes, r.DistanceM, r.MovingS })
-                .ToListAsync(ct))
-            .Select(r => new RideUse(RideUse.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes), r.DistanceM ?? 0, r.MovingS ?? 0))
-            .ToList();
-
-        var components = bike.Components
-            .OrderBy(c => c.RemovedOn != null)
-            .ThenBy(c => ComponentTypes.NameOf(c.Type))
-            .ThenByDescending(c => c.InstalledOn)
-            .Select(c => Component(c, BikeWear.Compute(c, rides, today)))
+        var components = Wear(bike, await RideUsesAsync(db, bike.Id, clock, ct), clock.Today)
+            .OrderBy(x => x.Component.RemovedOn != null)
+            .ThenBy(x => ComponentTypes.NameOf(x.Component.Type))
+            .ThenByDescending(x => x.Component.InstalledOn)
+            .Select(x => Component(x.Component, x.Wear))
             .ToArray();
 
         return new BikeDetailResponse((await SummariesAsync(db, [bike], ct))[0], components);
     }
+
+    /// <summary>Each of the bike's parts (loaded with it) with its wear.</summary>
+    public static IEnumerable<(BikeComponent Component, ComponentWear Wear)> Wear(Bike bike, IReadOnlyList<RideUse> rides, DateOnly today) =>
+        bike.Components.Select(c => (c, BikeWear.Compute(c, rides, today)));
+
+    public static async Task<List<RideUse>> RideUsesAsync(VelomineDbContext db, Guid bikeId, MemberClock clock, CancellationToken ct) =>
+        (await db.Rides.AsNoTracking()
+                .Where(r => r.BikeId == bikeId && r.Status == RideStatus.Ready && r.StartTime != null)
+                .Select(r => new { r.StartTime, r.UtcOffsetMinutes, r.DistanceM, r.MovingS })
+                .ToListAsync(ct))
+            .Select(r => new RideUse(clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes), r.DistanceM ?? 0, r.MovingS ?? 0))
+            .ToList();
 
     public static ComponentResponse Component(BikeComponent c, ComponentWear w) => new(
         c.Id, c.Type, ComponentTypes.NameOf(c.Type), c.Brand, c.Model, c.InstalledOn, c.RemovedOn,

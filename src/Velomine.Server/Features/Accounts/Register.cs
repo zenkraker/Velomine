@@ -2,6 +2,8 @@ using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Velomine.Server.Data;
+using Velomine.Server.Features.Notifications;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -19,7 +21,7 @@ public sealed class RegisterValidator : Validator<RegisterRequest>
     }
 }
 
-public sealed class Register(UserManager<User> users, IOptions<AccountsOptions> options, TimeProvider clock)
+public sealed class Register(UserManager<User> users, VelomineDbContext db, IOptions<AccountsOptions> options, TimeProvider clock)
     : Endpoint<RegisterRequest, RegisterResponse>
 {
     public override void Configure()
@@ -54,6 +56,7 @@ public sealed class Register(UserManager<User> users, IOptions<AccountsOptions> 
         }
 
         await users.AddToRoleAsync(user, Accounts.Roles.Member);
+        await Notify.SignUpWaitingAsync(db, users, clock, user);
         await Send.ResponseAsync(new RegisterResponse(user.Id, user.IsApproved), 201, ct);
     }
 }

@@ -13,6 +13,12 @@ import 'features/bikes/bike_detail_screen.dart';
 import 'features/bikes/bikes_controller.dart';
 import 'features/bikes/bikes_screen.dart';
 import 'features/auth/sign_in_screen.dart';
+import 'features/notifications/notifications_controller.dart';
+import 'features/notifications/notifications_screen.dart';
+import 'features/profile/profile_controller.dart';
+import 'features/profile/profile_screen.dart';
+import 'features/progress/progress_controller.dart';
+import 'features/progress/progress_screen.dart';
 import 'features/rides/detail/ride_detail_controller.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
 import 'features/rides/rides_controller.dart';
@@ -40,12 +46,14 @@ class VelomineApp extends StatefulWidget {
     this.pickFile = _pickRideFile,
     this.startSso = _startSso,
     this.uploadPollInterval = const Duration(seconds: 1),
+    this.notificationPollInterval = const Duration(minutes: 1),
   });
 
   final Session session;
   final FilePicker pickFile;
   final SsoStarter startSso;
   final Duration uploadPollInterval;
+  final Duration notificationPollInterval;
 
   @override
   State<VelomineApp> createState() => _VelomineAppState();
@@ -63,6 +71,33 @@ class _VelomineAppState extends State<VelomineApp> {
     api: widget.session.bikes,
     onUnauthorized: widget.session.sessionExpired,
   );
+
+  late final ProgressController _progress = ProgressController(
+    api: widget.session.analytics,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  late final NotificationsController _notifications = NotificationsController(
+    api: widget.session.notifications,
+    onUnauthorized: widget.session.sessionExpired,
+    pollInterval: widget.notificationPollInterval,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    widget.session.addListener(_followSession);
+    _followSession();
+  }
+
+  /// Notifications are checked while someone is signed in, and forgotten when they sign out.
+  void _followSession() {
+    if (widget.session.status == SessionStatus.signedIn) {
+      _notifications.start();
+    } else if (_notifications.running) {
+      _notifications.stop();
+    }
+  }
 
   late final GoRouter _router = GoRouter(
     initialLocation: '/',
@@ -93,6 +128,7 @@ class _VelomineAppState extends State<VelomineApp> {
       ShellRoute(
         builder: (_, state, child) => HomeShell(
           session: widget.session,
+          notifications: _notifications,
           location: state.uri.path,
           child: child,
         ),
@@ -117,6 +153,21 @@ class _VelomineAppState extends State<VelomineApp> {
               },
               pollInterval: widget.uploadPollInterval,
             ),
+          ),
+          GoRoute(
+            path: '/progress',
+            builder: (_, _) => ProgressScreen(controller: _progress),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, _) => NotificationsScreen(
+              controller: _notifications,
+              onOpen: (location) => context.go(location),
+            ),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (_, _) => _ProfilePage(session: widget.session),
           ),
           GoRoute(
             path: '/bikes',
@@ -149,9 +200,12 @@ class _VelomineAppState extends State<VelomineApp> {
 
   @override
   void dispose() {
+    widget.session.removeListener(_followSession);
     _router.dispose();
     _rides.dispose();
     _bikes.dispose();
+    _progress.dispose();
+    _notifications.dispose();
     super.dispose();
   }
 
@@ -259,4 +313,31 @@ class _BikeDetailPageState extends State<_BikeDetailPage> {
     onBack: widget.onBack,
     onDeleted: widget.onDeleted,
   );
+}
+
+/// Owns the profile controller, so the form is read fresh each time the screen opens.
+class _ProfilePage extends StatefulWidget {
+  const _ProfilePage({required this.session});
+
+  final Session session;
+
+  @override
+  State<_ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<_ProfilePage> {
+  late final ProfileController _controller = ProfileController(
+    api: widget.session.accounts,
+    onUnauthorized: widget.session.sessionExpired,
+    onSaved: widget.session.refreshMe,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ProfileScreen(controller: _controller);
 }

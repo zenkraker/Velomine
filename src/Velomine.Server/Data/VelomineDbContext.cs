@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
+using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Data;
@@ -23,12 +25,23 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<BikeComponent> BikeComponents => Set<BikeComponent>();
 
+    public DbSet<Goal> Goals => Set<Goal>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.HasDefaultSchema("accounts");
 
-        builder.Entity<User>().ToTable("users");
+        builder.Entity<User>().ToTable("users", t =>
+        {
+            t.HasCheckConstraint("ck_users_first_day_of_week", "first_day_of_week BETWEEN 0 AND 6");
+            t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
+            t.HasCheckConstraint("ck_users_weight_kg", "weight_kg BETWEEN 20 AND 300");
+            t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
+        });
+        builder.Entity<User>().Property(u => u.TimeZone).HasMaxLength(64);
         builder.Entity<IdentityRole<Guid>>().ToTable("roles");
         builder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
         builder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");

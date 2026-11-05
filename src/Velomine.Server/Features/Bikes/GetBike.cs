@@ -24,6 +24,6 @@ public sealed class GetBike(VelomineDbContext db, TimeProvider time) : Endpoint<
         var userId = User.UserId();
         var bike = await db.Bikes.AsNoTracking().Include(b => b.Components).FirstOrDefaultAsync(b => b.Id == req.Id && b.UserId == userId, ct);
         if (bike is null) await Send.NotFoundAsync(ct);
-        else await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, DateOnly.FromDateTime(time.GetLocalNow().Date), ct), ct);
+        else await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }
 }

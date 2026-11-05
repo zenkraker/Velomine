@@ -27,11 +27,15 @@ class Session extends ChangeNotifier {
   }) : accounts = AccountsApi(client),
        rides = RidesApi(client),
        bikes = BikesApi(client),
+       analytics = AnalyticsApi(client),
+       notifications = NotificationsApi(client),
        server = ServerApi(client);
 
   final AccountsApi accounts;
   final RidesApi rides;
   final BikesApi bikes;
+  final AnalyticsApi analytics;
+  final NotificationsApi notifications;
   final ServerApi server;
   final bool useCookies;
   final HttpBearerAuth bearer;
@@ -69,6 +73,16 @@ class Session extends ChangeNotifier {
       status = SessionStatus.signedOut;
     }
     notifyListeners();
+  }
+
+  /// Reads the signed-in member again, after they changed something shown elsewhere (their name).
+  Future<void> refreshMe() async {
+    try {
+      me = await accounts.getMe() ?? me;
+      notifyListeners();
+    } on Object {
+      // Keeps the name it had; the next start reads it again.
+    }
   }
 
   /// Returns null on success, or the reason it failed.

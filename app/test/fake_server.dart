@@ -40,6 +40,18 @@ class FakeServer {
       <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
   final streams =
       <String, Map<String, Object?>>{}; // a ride's samples, by ride id
+  /// Profiles by email; a missing one is the default (nothing set, weeks from Monday).
+  final profiles = <String, Map<String, Object?>>{};
+
+  /// What GET /analytics/totals answers, by period; a missing period has no rides.
+  final totals = <String, List<Map<String, Object?>>>{};
+
+  final goals = <Map<String, Object?>>[];
+
+  /// How far each goal metric has got this period, for goal progress.
+  final goalCurrent = <String, double>{};
+
+  final notifications = <Map<String, Object?>>[];
   FakeAccount? _cookieUser;
   int _pollsLeft = 1;
 
@@ -191,6 +203,8 @@ class FakeServer {
 
     final bikeReply = _bikes(request, path, json);
     if (bikeReply != null) return bikeReply;
+    final moreReply = _more(request, path, caller, json);
+    if (moreReply != null) return moreReply;
 
     if (path == '/api/v1/rides' && request.method == 'GET') {
       return json({'rides': rides, 'next': null});
@@ -242,7 +256,139 @@ class FakeServer {
   }
 }
 
+/// One notification as the server sends it.
+Map<String, Object?> notificationJson(
+  String id,
+  String type,
+  String subject, {
+  String? rideId,
+  String? bikeId,
+  bool isRead = false,
+}) => {
+  'id': id,
+  'type': type,
+  'subject': subject,
+  'rideId': rideId,
+  'bikeId': bikeId,
+  'componentId': null,
+  'aboutUserId': null,
+  'createdAt': '2026-11-04T09:00:00Z',
+  'isRead': isRead,
+};
+
+/// One period's totals as the server sends them.
+Map<String, Object?> totalsJson(
+  String start,
+  String end, {
+  int rides = 0,
+  double distanceM = 0,
+  double movingS = 0,
+  double elevationGainM = 0,
+}) => {
+  'start': start,
+  'end': end,
+  'rides': rides,
+  'distanceM': distanceM,
+  'movingS': movingS,
+  'elevationGainM': elevationGainM,
+};
+
 extension on FakeServer {
+  /// Profile, totals, goals and notifications.
+  http.Response? _more(
+    http.Request request,
+    String path,
+    FakeAccount caller,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    if (!path.startsWith('/api/v1/accounts/me/profile') &&
+        !path.startsWith('/api/v1/analytics') &&
+        !path.startsWith('/api/v1/notifications')) {
+      return null;
+    }
+    final body = request.body.isEmpty
+        ? <String, Object?>{}
+        : jsonDecode(request.body) as Map<String, Object?>;
+
+    if (path == '/api/v1/accounts/me/profile') {
+      final profile = profiles.putIfAbsent(
+        caller.email,
+        () => {
+          'displayName': caller.name,
+          'ftpW': null,
+          'weightKg': null,
+          'maxHeartRate': null,
+          'timeZone': null,
+          'firstDayOfWeek': 'monday',
+        },
+      );
+      if (request.method == 'PUT') profile.addAll(body);
+      return json(profile);
+    }
+
+    if (path == '/api/v1/analytics/totals') {
+      final period = request.url.queryParameters['period']!;
+      return json({'period': period, 'totals': totals[period] ?? []});
+    }
+
+    Map<String, Object?> goalJson(Map<String, Object?> g) {
+      final current = goalCurrent[g['metric']] ?? 0.0;
+      final target = (g['target']! as num).toDouble();
+      return {
+        ...g,
+        'periodStart': '2026-11-02',
+        'periodEnd': '2026-11-08',
+        'current': current,
+        'percent': (current / target * 100).floor(),
+        'reached': current >= target,
+      };
+    }
+
+    if (path == '/api/v1/analytics/goals') {
+      if (request.method == 'GET') {
+        return json({
+          'goals': [for (final g in goals) goalJson(g)],
+        });
+      }
+      final g = {'id': 'goal-${goals.length + 1}', ...body};
+      goals.add(g);
+      return json(goalJson(g), 201);
+    }
+    final goal = RegExp(r'^/api/v1/analytics/goals/([^/]+)$').firstMatch(path);
+    if (goal != null) {
+      final index = goals.indexWhere((g) => g['id'] == goal.group(1));
+      if (index < 0) return http.Response('', 404);
+      if (request.method == 'DELETE') {
+        goals.removeAt(index);
+        return http.Response('', 204);
+      }
+      goals[index] = {...goals[index], 'target': body['target']};
+      return json(goalJson(goals[index]));
+    }
+
+    if (path == '/api/v1/notifications') {
+      return json({
+        'notifications': notifications,
+        'unreadCount': notifications.where((n) => n['isRead'] != true).length,
+      });
+    }
+    if (path == '/api/v1/notifications/read') {
+      for (final n in notifications) {
+        n['isRead'] = true;
+      }
+      return http.Response('', 204);
+    }
+    final read = RegExp(r'^/api/v1/notifications/([^/]+)/read$')
+        .firstMatch(path);
+    if (read != null) {
+      final found = notifications.where((n) => n['id'] == read.group(1));
+      if (found.isEmpty) return http.Response('', 404);
+      found.first['isRead'] = true;
+      return http.Response('', 204);
+    }
+    return null;
+  }
+
   http.Response? _bikes(
     http.Request request,
     String path,

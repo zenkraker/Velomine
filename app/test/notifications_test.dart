@@ -1,0 +1,120 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'fake_server.dart';
+
+void main() {
+  late FakeServer server;
+
+  setUp(() {
+    server = FakeServer();
+    server.signInBrowser(server.add('rider@example.com'));
+    server.rides.add(
+      rideJson('ride-1', 'ready', fileName: 'morning.fit', distanceM: 24500),
+    );
+    server.bikes.add({
+      'id': 'bike-1',
+      'name': 'Road bike',
+      'kind': 'road',
+      'wheelCircumferenceMm': 2105,
+      'initialDistanceM': 0.0,
+    });
+    server.notifications.addAll([
+      notificationJson(
+        'n-3',
+        'part_worn',
+        'Chain on Road bike',
+        bikeId: 'bike-1',
+      ),
+      notificationJson('n-2', 'ride_failed', 'broken.fit'),
+      notificationJson(
+        'n-1',
+        'ride_ready',
+        'morning.fit',
+        rideId: 'ride-1',
+        isRead: true,
+      ),
+    ]);
+  });
+
+  Future<void> openNotifications(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.byKey(const Key('open-notifications')));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('the bell shows how many are unread', (tester) async {
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('open-notifications')),
+        matching: find.text('2'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('notifications read as sentences, newest first', (tester) async {
+    await openNotifications(tester);
+
+    expect(
+      find.text('Chain on Road bike is worn out. Time to replace it.'),
+      findsOneWidget,
+    );
+    expect(find.text('broken.fit could not be read.'), findsOneWidget);
+    expect(find.text('Your ride morning.fit is ready.'), findsOneWidget);
+    expect(find.byKey(const Key('no-notifications')), findsNothing);
+  });
+
+  testWidgets('tapping one marks it read and opens what it is about', (
+    tester,
+  ) async {
+    await openNotifications(tester);
+
+    await tester.tap(
+      find.text('Chain on Road bike is worn out. Time to replace it.'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('POST /api/v1/notifications/n-3/read'));
+    expect(server.notifications.first['isRead'], isTrue);
+    expect(find.text('Road bike'), findsWidgets); // the bike's screen
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('open-notifications')),
+        matching: find.text('1'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('mark all read clears the count', (tester) async {
+    await openNotifications(tester);
+
+    await tester.tap(find.byKey(const Key('notifications-read-all')));
+    await tester.pumpAndSettle();
+
+    expect(server.notifications.every((n) => n['isRead'] == true), isTrue);
+    expect(find.byKey(const Key('notifications-read-all')), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('open-notifications')),
+        matching: find.text('2'),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('with nothing yet, the screen says what will appear', (
+    tester,
+  ) async {
+    server.notifications.clear();
+    await openNotifications(tester);
+
+    expect(find.byKey(const Key('no-notifications')), findsOneWidget);
+  });
+}

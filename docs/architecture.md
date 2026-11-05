@@ -75,12 +75,12 @@ app/                             Flutter app (section 9)
 | Accounts | Users, roles (admin, member, coach), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
 | Clubs | Clubs, members, coaches, share grants per data type and audience, revocation, view log | clubs v1; grants v2 |
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
-| Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months | v1; reminders v2 |
+| Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months, a notification when a ride takes a part to 80 % or 100 % | v1; timed reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
 | Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |
 | Sharing | Share links and the server-rendered share pages | v1 |
-| Notifications | In-app notifications and email | v1 |
+| Notifications | In-app notifications (ride read, failed or duplicate; part nearly worn or worn; sign-up waiting, for admins) and email | v1; email not built yet |
 | Admin | Server settings, map tiles, SMTP, OIDC, user approval | v1 |
 
 ## 5. Ride ingestion
@@ -112,7 +112,7 @@ sequenceDiagram
 - **Speed source:** each ride records whether speed came from a wheel sensor or GPS. The wheel sensor wins when present.
 - **Privacy defaults and default bike** are copied onto the ride at import, so changing the defaults later never exposes old rides.
 - **Multi-activity FIT:** one file can hold several rides; each becomes its own ride.
-- **Duplicates:** the key is the connector ride id, otherwise the file hash plus the start time (the start time keeps rides from one multi-activity file apart). With no key, a ride with the same start time counts as a duplicate. A likely duplicate is kept hidden and the member is notified. *Built so far:* file hash plus start time only, and no notification yet; the same ride exported by two different apps is not caught.
+- **Duplicates:** the key is the connector ride id, otherwise the file hash plus the start time (the start time keeps rides from one multi-activity file apart). With no key, a ride with the same start time counts as a duplicate. A likely duplicate is kept hidden and the member is notified. *Built so far:* file hash plus start time only, with an in-app notification; the same ride exported by two different apps is not caught.
 - **Thumbnail and geocoding** run in the same pass. If the tile server or geocoder is unavailable, the ride stores a next-attempt time and a timer retries (section 6). Reverse geocoding is off by default; the admin picks Nominatim, Photon or their own instance, and its rate limit is respected.
 - **Idempotency:** the `Idempotency-Key` header (the phone sends its local ride id) makes retries safe.
 - **Re-parse:** originals are kept forever, so an admin can re-run ingestion on all rides when a parser improves.

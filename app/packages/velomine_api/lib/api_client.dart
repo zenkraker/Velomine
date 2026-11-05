@@ -195,22 +195,36 @@ class ApiClient {
           return CreateBikeRequest.fromJson(value);
         case 'CreateComponentRequest':
           return CreateComponentRequest.fromJson(value);
+        case 'CreateGoalRequest':
+          return CreateGoalRequest.fromJson(value);
+        case 'GoalResponse':
+          return GoalResponse.fromJson(value);
         case 'ListBikesResponse':
           return ListBikesResponse.fromJson(value);
         case 'ListComponentTypesResponse':
           return ListComponentTypesResponse.fromJson(value);
+        case 'ListGoalsResponse':
+          return ListGoalsResponse.fromJson(value);
+        case 'ListNotificationsResponse':
+          return ListNotificationsResponse.fromJson(value);
         case 'ListRidesResponse':
           return ListRidesResponse.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
         case 'MeResponse':
           return MeResponse.fromJson(value);
+        case 'NotificationResponse':
+          return NotificationResponse.fromJson(value);
+        case 'PeriodTotals':
+          return PeriodTotals.fromJson(value);
         case 'ProblemDetails':
           return ProblemDetails.fromJson(value);
         case 'ProblemDetails2':
           return ProblemDetails2.fromJson(value);
         case 'ProblemDetails2ErrorsInner':
           return ProblemDetails2ErrorsInner.fromJson(value);
+        case 'ProfileResponse':
+          return ProfileResponse.fromJson(value);
         case 'RefreshRequest':
           return RefreshRequest.fromJson(value);
         case 'RegisterRequest':
@@ -229,10 +243,16 @@ class ApiClient {
           return SsoInfoResponse.fromJson(value);
         case 'TokenResponse':
           return TokenResponse.fromJson(value);
+        case 'TotalsResponse':
+          return TotalsResponse.fromJson(value);
         case 'UpdateBikeRequest':
           return UpdateBikeRequest.fromJson(value);
         case 'UpdateComponentRequest':
           return UpdateComponentRequest.fromJson(value);
+        case 'UpdateGoalRequest':
+          return UpdateGoalRequest.fromJson(value);
+        case 'UpdateProfileRequest':
+          return UpdateProfileRequest.fromJson(value);
         case 'UploadRideResponse':
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':

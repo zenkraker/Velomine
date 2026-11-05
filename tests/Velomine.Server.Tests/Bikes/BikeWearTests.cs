@@ -1,3 +1,4 @@
+using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Bikes;
 
 namespace Velomine.Server.Tests.Bikes;
@@ -60,11 +61,16 @@ public sealed class BikeWearTests
     }
 
     [Fact]
-    public void LocalDate_UsesTheRidersOffset()
+    public void LocalDate_UsesTheRidersOffset_ElseTheMembersTimeZone()
     {
-        // 23:30 UTC on the 1st is already the 2nd in Rome (+120 minutes).
+        // 23:30 UTC on the 1st is already the 2nd in Rome (+60 minutes in March, +120 in summer).
         var start = new DateTimeOffset(2026, 3, 1, 23, 30, 0, TimeSpan.Zero);
-        Assert.Equal(new DateOnly(2026, 3, 2), RideUse.LocalDateOf(start, 120));
-        Assert.Equal(new DateOnly(2026, 3, 1), RideUse.LocalDateOf(start, null));
+        var utc = MemberClock.For(null, DayOfWeek.Monday, TimeProvider.System);
+        var rome = MemberClock.For("Europe/Rome", DayOfWeek.Monday, TimeProvider.System);
+
+        Assert.Equal(new DateOnly(2026, 3, 2), utc.LocalDateOf(start, 120)); // the file's offset wins
+        Assert.Equal(new DateOnly(2026, 3, 1), utc.LocalDateOf(start, null));
+        Assert.Equal(new DateOnly(2026, 3, 2), rome.LocalDateOf(start, null)); // no offset in the file: the member's zone
+        Assert.Equal(new DateOnly(2026, 3, 1), rome.LocalDateOf(start, -60)); // a ride abroad keeps its own day
     }
 }

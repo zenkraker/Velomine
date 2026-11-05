@@ -3,6 +3,8 @@ using FastEndpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Velomine.Server.Data;
+using Velomine.Server.Features.Notifications;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -18,6 +20,7 @@ public sealed class FinishSsoRequest
 public sealed class FinishSso(
     SignInManager<User> signIn,
     UserManager<User> users,
+    VelomineDbContext db,
     IOptions<SsoOptions> sso,
     IOptions<AccountsOptions> accounts,
     TimeProvider clock) : Endpoint<FinishSsoRequest>
@@ -91,6 +94,8 @@ public sealed class FinishSso(
         };
         if (!(await users.CreateAsync(user)).Succeeded) return "failed";
         await users.AddToRoleAsync(user, Accounts.Roles.Member);
-        return (await users.AddLoginAsync(user, info)).Succeeded ? null : "failed";
+        if (!(await users.AddLoginAsync(user, info)).Succeeded) return "failed";
+        await Notify.SignUpWaitingAsync(db, users, clock, user);
+        return null;
     }
 }
