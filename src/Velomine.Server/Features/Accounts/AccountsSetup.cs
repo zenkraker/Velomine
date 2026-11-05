@@ -17,6 +17,8 @@ public static class AccountsSetup
         services.AddOptions<AdminBootstrapOptions>().BindConfiguration("Velomine:Admin");
         services.AddOptions<SsoOptions>().BindConfiguration("Velomine:Sso");
         services.AddSingleton(TimeProvider.System);
+        services.AddMemoryCache();
+        services.AddSingleton<SsoAppCodes>();
 
         // Cookie for the web app, bearer token for the mobile app and tools. The Identity endpoints
         // themselves are not mapped: the slices in Features/Accounts own the routes.

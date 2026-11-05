@@ -43,6 +43,7 @@ part 'model/component_type_response.dart';
 part 'model/create_bike_request.dart';
 part 'model/create_component_request.dart';
 part 'model/create_goal_request.dart';
+part 'model/exchange_sso_code_request.dart';
 part 'model/goal_response.dart';
 part 'model/list_bikes_response.dart';
 part 'model/list_component_types_response.dart';

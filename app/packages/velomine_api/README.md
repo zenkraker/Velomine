@@ -65,6 +65,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountsApi* | [**approveUser**](doc//AccountsApi.md#approveuser) | **POST** /api/v1/accounts/users/{id}/approve | 
+*AccountsApi* | [**exchangeSsoCode**](doc//AccountsApi.md#exchangessocode) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
 *AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
@@ -112,6 +113,7 @@ Class | Method | HTTP request | Description
  - [CreateBikeRequest](doc//CreateBikeRequest.md)
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
+ - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
  - [GoalResponse](doc//GoalResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)

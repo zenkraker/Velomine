@@ -26,6 +26,7 @@ lib/model/component_type_response.dart
 lib/model/create_bike_request.dart
 lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
+lib/model/exchange_sso_code_request.dart
 lib/model/goal_response.dart
 lib/model/list_bikes_response.dart
 lib/model/list_component_types_response.dart

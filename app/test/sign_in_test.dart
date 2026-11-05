@@ -35,9 +35,7 @@ void main() {
       var started = false;
       await startApp(
         tester,
-        server.session(
-          useCookies: true,
-        ), // single sign-on is for the web app, which uses the cookie session
+        server.session(useCookies: true),
         startSso: () async => started = true,
       );
 
@@ -46,13 +44,6 @@ void main() {
       expect(started, isTrue);
     },
   );
-
-  testWidgets('phone builds do not offer single sign-on yet', (tester) async {
-    server.ssoEnabled = true;
-    await startApp(tester, server.session(useCookies: false));
-
-    expect(find.byKey(const Key('sso')), findsNothing);
-  });
 
   testWidgets('explains why single sign-on sent the visitor back', (
     tester,

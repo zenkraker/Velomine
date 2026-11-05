@@ -197,6 +197,8 @@ class ApiClient {
           return CreateComponentRequest.fromJson(value);
         case 'CreateGoalRequest':
           return CreateGoalRequest.fromJson(value);
+        case 'ExchangeSsoCodeRequest':
+          return ExchangeSsoCodeRequest.fromJson(value);
         case 'GoalResponse':
           return GoalResponse.fromJson(value);
         case 'ListBikesResponse':

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
 import 'package:velomine/core/hooks.dart';
+import 'package:velomine/core/pkce.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/theme_choice.dart';
 import 'package:velomine_api/api.dart';
@@ -53,6 +54,10 @@ class FakeServer {
   final goalCurrent = <String, double>{};
 
   final notifications = <Map<String, Object?>>[];
+
+  /// One-time codes the browser sign-in could have handed back, and the PKCE challenge the app sent for them.
+  final ssoCodes = <String, FakeAccount>{};
+  String? ssoChallenge;
   FakeAccount? _cookieUser;
   int _pollsLeft = 1;
 
@@ -135,6 +140,20 @@ class FakeServer {
         _cookieUser = account;
         return http.Response('', 204);
       }
+      return json({
+        'tokenType': 'Bearer',
+        'accessToken': 't-${account.email}',
+        'expiresIn': 3600,
+        'refreshToken': 'r',
+      });
+    }
+    if (path == '/api/v1/accounts/sso/token') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final account = ssoCodes.remove(body['code']); // a code is good once
+      final proven =
+          Pkce.fromVerifier(body['codeVerifier']! as String).challenge ==
+          ssoChallenge;
+      if (account == null || !proven) return http.Response('', 401);
       return json({
         'tokenType': 'Bearer',
         'accessToken': 't-${account.email}',

@@ -1,4 +1,5 @@
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,6 +15,7 @@ import 'features/bikes/bike_detail_screen.dart';
 import 'features/bikes/bikes_controller.dart';
 import 'features/bikes/bikes_screen.dart';
 import 'features/auth/sign_in_screen.dart';
+import 'features/auth/sso_callback_screen.dart';
 import 'features/notifications/notifications_controller.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/profile/profile_controller.dart';
@@ -32,12 +34,20 @@ Future<XFile?> _pickRideFile() => openFile(
   ],
 );
 
-Future<void> _startSso() async {
+Future<void> _startWebSso() async {
   // The server redirects to the provider and back, ending on the home page: leave this page for it.
   final login = Uri.parse(
     '${serverUrl()}/api/v1/accounts/sso/login?returnUrl=%2F',
   );
   await launchUrl(login, webOnlyWindowName: '_self');
+}
+
+/// On a phone the system browser signs in and hands back through the app's own link (see Session.appSsoUrl).
+Future<void> _startAppSso(Session session) async {
+  await launchUrl(
+    session.appSsoUrl(serverUrl()),
+    mode: LaunchMode.externalApplication,
+  );
 }
 
 class VelomineApp extends StatefulWidget {
@@ -46,7 +56,7 @@ class VelomineApp extends StatefulWidget {
     required this.session,
     required this.themeChoice,
     this.pickFile = _pickRideFile,
-    this.startSso = _startSso,
+    this.startSso,
     this.uploadPollInterval = const Duration(seconds: 1),
     this.notificationPollInterval = const Duration(minutes: 1),
   });
@@ -54,7 +64,7 @@ class VelomineApp extends StatefulWidget {
   final Session session;
   final ThemeChoice themeChoice;
   final FilePicker pickFile;
-  final SsoStarter startSso;
+  final SsoStarter? startSso;
   final Duration uploadPollInterval;
   final Duration notificationPollInterval;
 
@@ -102,13 +112,17 @@ class _VelomineAppState extends State<VelomineApp> {
     }
   }
 
+  late final SsoStarter _startSso =
+      widget.startSso ??
+      (kIsWeb ? _startWebSso : () => _startAppSso(widget.session));
+
   late final GoRouter _router = GoRouter(
     initialLocation: '/',
     refreshListenable: widget.session,
     redirect: (context, state) {
       final session = widget.session;
       final path = state.uri.path;
-      const open = {'/sign-in', '/register'};
+      const open = {'/sign-in', '/register', '/sso-callback'};
       if (session.status == SessionStatus.loading) return null;
       if (session.status == SessionStatus.signedOut) {
         return open.contains(path) ? null : '/sign-in';
@@ -122,7 +136,16 @@ class _VelomineAppState extends State<VelomineApp> {
       GoRoute(
         path: '/sign-in',
         builder: (_, _) =>
-            SignInScreen(session: widget.session, startSso: widget.startSso),
+            SignInScreen(session: widget.session, startSso: _startSso),
+      ),
+      GoRoute(
+        path: '/sso-callback',
+        builder: (context, state) => SsoCallbackScreen(
+          session: widget.session,
+          code: state.uri.queryParameters['code'],
+          error: state.uri.queryParameters['sso_error'],
+          onFailed: () => context.go('/sign-in'),
+        ),
       ),
       GoRoute(
         path: '/register',

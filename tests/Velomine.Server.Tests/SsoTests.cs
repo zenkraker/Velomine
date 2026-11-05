@@ -29,9 +29,10 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     /// Plays the browser: start SSO on the server, sign in on the provider's login page, come back with the code.
     /// Returns the server's final redirect; <paramref name="server"/> then holds the session cookie if sign-in worked.
     /// </summary>
-    private static async Task<HttpResponseMessage> SignInWithProviderAsync(HttpClient server, string email, string returnUrl = "/")
+    private static async Task<HttpResponseMessage> SignInWithProviderAsync(HttpClient server, string email, string returnUrl = "/", string? codeChallenge = null)
     {
-        var start = await server.GetAsync("/api/v1/accounts/sso/login?returnUrl=" + Uri.EscapeDataString(returnUrl), Ct);
+        var query = "returnUrl=" + Uri.EscapeDataString(returnUrl) + (codeChallenge is null ? "" : "&codeChallenge=" + codeChallenge);
+        var start = await server.GetAsync("/api/v1/accounts/sso/login?" + query, Ct);
         Assert.Equal(HttpStatusCode.Redirect, start.StatusCode);
 
         using var provider = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = true });
@@ -182,5 +183,80 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
         var final = await SignInWithProviderAsync(browser, DexFixture.VerifiedEmail, returnUrl);
 
         Assert.Equal("/", final.Headers.Location!.OriginalString);
+    }
+    // The example from RFC 7636 appendix B.
+    private const string Verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
+    private const string Challenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
+
+    private static string CodeIn(HttpResponseMessage final)
+    {
+        var location = final.Headers.Location!.OriginalString;
+        Assert.StartsWith("com.velomine.app:/sso-callback?code=", location);
+        return location["com.velomine.app:/sso-callback?code=".Length..];
+    }
+
+    private static Task<HttpResponseMessage> ExchangeAsync(HttpClient client, string code, string verifier) =>
+        client.PostAsJsonAsync("/api/v1/accounts/sso/token", new ExchangeSsoCodeRequest(code, verifier), Ct);
+
+    [Fact]
+    public async Task PhoneApp_SignsInThroughTheBrowser_AndGetsTokensForACode()
+    {
+        await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var browser = api.CreateClient(handleCookies: true);
+
+        var final = await SignInWithProviderAsync(browser, DexFixture.VerifiedEmail, codeChallenge: Challenge);
+        var code = CodeIn(final);
+
+        // The browser is not left signed in: the app signs in with a token, not the browser's cookie.
+        Assert.Equal(HttpStatusCode.Unauthorized, (await browser.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
+
+        var app = api.CreateClient();
+        var exchanged = await ExchangeAsync(app, code, Verifier);
+        Assert.Equal(HttpStatusCode.OK, exchanged.StatusCode);
+        var token = await exchanged.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        app.DefaultRequestHeaders.Authorization = new("Bearer", token.GetProperty("accessToken").GetString());
+        Assert.False(string.IsNullOrEmpty(token.GetProperty("refreshToken").GetString()));
+        var me = await app.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
+        Assert.Equal(DexFixture.VerifiedEmail, me!.Email);
+    }
+
+    [Fact]
+    public async Task ACodeWorksOnce_AndNotWithAnotherAppsVerifier()
+    {
+        await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var app = api.CreateClient();
+
+        // Another app caught the redirect and guesses: wrong verifier, and the code is used up.
+        var stolen = CodeIn(await SignInWithProviderAsync(api.CreateClient(handleCookies: true), DexFixture.VerifiedEmail, codeChallenge: Challenge));
+        Assert.Equal(HttpStatusCode.Unauthorized, (await ExchangeAsync(app, stolen, new string('a', 43))).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await ExchangeAsync(app, stolen, Verifier)).StatusCode);
+
+        // A fresh sign-in works once, and not a second time.
+        var code = CodeIn(await SignInWithProviderAsync(api.CreateClient(handleCookies: true), DexFixture.VerifiedEmail, codeChallenge: Challenge));
+        Assert.Equal(HttpStatusCode.OK, (await ExchangeAsync(app, code, Verifier)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await ExchangeAsync(app, code, Verifier)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await ExchangeAsync(app, "not-a-code", Verifier)).StatusCode);
+    }
+
+    [Fact]
+    public async Task PhoneApp_IsToldWhenTheAccountWaitsForApproval()
+    {
+        await using var api = await StartAsync(); // approval is required by default
+
+        var final = await SignInWithProviderAsync(api.CreateClient(handleCookies: true), DexFixture.VerifiedEmail, codeChallenge: Challenge);
+
+        Assert.Equal("com.velomine.app:/sso-callback?sso_error=not_approved", final.Headers.Location!.OriginalString);
+    }
+
+    [Theory]
+    [InlineData("short")]
+    [InlineData("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw+cM")] // not base64url
+    public async Task PhoneApp_MustSendAProperChallenge(string challenge)
+    {
+        await using var api = await StartAsync();
+
+        var start = await api.CreateClient().GetAsync("/api/v1/accounts/sso/login?codeChallenge=" + Uri.EscapeDataString(challenge), Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, start.StatusCode);
     }
 }

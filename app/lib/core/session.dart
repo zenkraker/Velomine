@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
+import 'pkce.dart';
+
 enum SessionStatus { loading, signedOut, signedIn }
 
 /// Why a sign-in or sign-up did not work, for the screens to explain.
@@ -40,8 +42,12 @@ class Session extends ChangeNotifier {
   final bool useCookies;
   final HttpBearerAuth bearer;
 
-  /// The reason the server gave when single sign-on sent the browser back unsuccessfully (`?sso_error=...`).
-  final String? ssoError;
+  /// The reason single sign-on did not work: the server's `?sso_error=...` on the web, the same reason in the link
+  /// the phone is handed back through. The sign-in screen explains it.
+  String? ssoError;
+
+  /// The secret of the sign-in the phone started in the browser; the code that comes back is only good with it.
+  String? _ssoVerifier;
 
   SessionStatus status = SessionStatus.loading;
   MeResponse? me;
@@ -57,10 +63,8 @@ class Session extends ChangeNotifier {
     } on Object {
       serverInfo = null; // no map background; everything else works
     }
-    // Single sign-on goes through the browser and comes back to the web app. A phone build cannot be handed back
-    // to yet, so only the web app offers it.
     try {
-      sso = useCookies ? await accounts.getSsoInfo() : null;
+      sso = await accounts.getSsoInfo();
     } on Object {
       sso = null;
     }
@@ -73,6 +77,36 @@ class Session extends ChangeNotifier {
       status = SessionStatus.signedOut;
     }
     notifyListeners();
+  }
+
+  /// The address to open in the phone's browser to sign in with single sign-on. The browser ends up on the app's own
+  /// link (`com.velomine.app:/sso-callback?code=...`), which [finishAppSso] turns into a session.
+  Uri appSsoUrl(String server) {
+    final pkce = Pkce.generate();
+    _ssoVerifier = pkce.verifier;
+    return Uri.parse('$server/api/v1/accounts/sso/login')
+        .replace(queryParameters: {'codeChallenge': pkce.challenge});
+  }
+
+  /// Trades the one-time code from the browser for a session. Returns null on success, or the reason in the same
+  /// words as `?sso_error=`.
+  Future<String?> finishAppSso(String code) async {
+    final verifier = _ssoVerifier;
+    _ssoVerifier = null; // a code is good once
+    if (verifier == null) return 'failed'; // the app was closed while the browser was open: start again
+    try {
+      final token = await accounts.exchangeSsoCode(
+        ExchangeSsoCodeRequest(code: code, codeVerifier: verifier),
+      );
+      bearer.accessToken = token?.accessToken ?? '';
+      me = await accounts.getMe();
+      status = SessionStatus.signedIn;
+      notifyListeners();
+      return null;
+    } on Object {
+      bearer.accessToken = '';
+      return 'failed';
+    }
   }
 
   /// Reads the signed-in member again, after they changed something shown elsewhere (their name).

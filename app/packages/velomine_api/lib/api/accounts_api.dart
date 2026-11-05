@@ -57,11 +57,61 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'POST /api/v1/accounts/sso/token' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [ExchangeSsoCodeRequest] exchangeSsoCodeRequest (required):
+  Future<Response> exchangeSsoCodeWithHttpInfo(ExchangeSsoCodeRequest exchangeSsoCodeRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/sso/token';
+
+    // ignore: prefer_final_locals
+    Object? postBody = exchangeSsoCodeRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [ExchangeSsoCodeRequest] exchangeSsoCodeRequest (required):
+  Future<TokenResponse?> exchangeSsoCode(ExchangeSsoCodeRequest exchangeSsoCodeRequest, { Future<void>? abortTrigger, }) async {
+    final response = await exchangeSsoCodeWithHttpInfo(exchangeSsoCodeRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TokenResponse',) as TokenResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/accounts/sso/callback' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  Future<Response> finishSsoWithHttpInfo({ String? returnUrl, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] codeChallenge:
+  Future<Response> finishSsoWithHttpInfo({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/accounts/sso/callback';
 
@@ -74,6 +124,9 @@ class AccountsApi {
 
     if (returnUrl != null) {
       queryParams.addAll(_queryParams('', 'returnUrl', returnUrl));
+    }
+    if (codeChallenge != null) {
+      queryParams.addAll(_queryParams('', 'codeChallenge', codeChallenge));
     }
 
     const contentTypes = <String>[];
@@ -94,8 +147,10 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  Future<void> finishSso({ String? returnUrl, Future<void>? abortTrigger, }) async {
-    final response = await finishSsoWithHttpInfo(returnUrl: returnUrl, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] codeChallenge:
+  Future<void> finishSso({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
+    final response = await finishSsoWithHttpInfo(returnUrl: returnUrl, codeChallenge: codeChallenge, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -462,7 +517,9 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  Future<Response> startSsoWithHttpInfo({ String? returnUrl, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] codeChallenge:
+  Future<Response> startSsoWithHttpInfo({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/accounts/sso/login';
 
@@ -475,6 +532,9 @@ class AccountsApi {
 
     if (returnUrl != null) {
       queryParams.addAll(_queryParams('', 'returnUrl', returnUrl));
+    }
+    if (codeChallenge != null) {
+      queryParams.addAll(_queryParams('', 'codeChallenge', codeChallenge));
     }
 
     const contentTypes = <String>[];
@@ -495,8 +555,10 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  Future<void> startSso({ String? returnUrl, Future<void>? abortTrigger, }) async {
-    final response = await startSsoWithHttpInfo(returnUrl: returnUrl, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] codeChallenge:
+  Future<void> startSso({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
+    final response = await startSsoWithHttpInfo(returnUrl: returnUrl, codeChallenge: codeChallenge, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
