@@ -65,6 +65,9 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountsApi* | [**approveUser**](doc//AccountsApi.md#approveuser) | **POST** /api/v1/accounts/users/{id}/approve | 
+*AccountsApi* | [**createExportLink**](doc//AccountsApi.md#createexportlink) | **POST** /api/v1/accounts/me/export-link | 
+*AccountsApi* | [**deleteMyAccount**](doc//AccountsApi.md#deletemyaccount) | **POST** /api/v1/accounts/me/delete | 
+*AccountsApi* | [**downloadExport**](doc//AccountsApi.md#downloadexport) | **GET** /api/v1/accounts/export/{token} | 
 *AccountsApi* | [**exchangeSsoCode**](doc//AccountsApi.md#exchangessocode) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
@@ -123,7 +126,9 @@ Class | Method | HTTP request | Description
  - [CreateBikeRequest](doc//CreateBikeRequest.md)
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
+ - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
+ - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
  - [ListAdminUsersResponse](doc//ListAdminUsersResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)

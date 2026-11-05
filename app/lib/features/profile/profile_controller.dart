@@ -18,6 +18,7 @@ class ProfileController extends ChangeNotifier {
   final VoidCallback? onSaved;
 
   ProfileResponse? profile;
+  bool exporting = false;
   bool loading = true;
   bool saving = false;
   String? error;
@@ -30,6 +31,49 @@ class ProfileController extends ChangeNotifier {
     );
     loading = false;
     notifyListeners();
+  }
+
+  /// Asks for a download link for all of the member's data. Returns the path on the server, or null when it failed
+  /// (then [error] says why).
+  Future<String?> exportLink() async {
+    exporting = true;
+    error = null;
+    notifyListeners();
+    ExportLinkResponse? link;
+    error = await guardCall(
+      () async => link = await api.createExportLink(),
+      onUnauthorized,
+      what: 'prepare your data',
+    );
+    exporting = false;
+    notifyListeners();
+    return link?.path;
+  }
+
+  /// Deletes the member's account and all its data. [password] confirms an account that has one, [confirmEmail] one
+  /// that does not (single sign-on). Returns whether it was deleted; otherwise [error] says why.
+  Future<bool> deleteAccount({String? password, String? confirmEmail}) async {
+    error = null;
+    try {
+      await api.deleteMyAccount(
+        DeleteMyAccountRequest(password: password, confirmEmail: confirmEmail),
+      );
+    } on ApiException catch (e) {
+      error = switch (e.code) {
+        401 => null,
+        403 => 'That does not match. Nothing was deleted.',
+        409 => 'You are the only admin. Make someone else an admin first.',
+        _ => 'Could not delete the account (${e.code}). Try again.',
+      };
+      if (e.code == 401) onUnauthorized();
+      notifyListeners();
+      return false;
+    } on Object {
+      error = 'Could not reach the server. Try again.';
+      notifyListeners();
+      return false;
+    }
+    return true;
   }
 
   Future<bool> save(UpdateProfileRequest request) async {

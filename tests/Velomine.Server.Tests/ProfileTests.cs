@@ -26,7 +26,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
 
         var profile = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
 
-        Assert.Equal(new ProfileResponse("Ada", null, null, null, null, "monday", true), profile);
+        Assert.Equal(new ProfileResponse("Ada", null, null, null, null, "monday", true, true), profile);
     }
 
     [Fact]
@@ -38,11 +38,11 @@ public sealed class ProfileTests(PostgresFixture postgres)
         var put = await member.PutAsJsonAsync("/api/v1/accounts/me/profile",
             new UpdateProfileRequest("Ada L", 265, 68.04, 188, "Europe/Rome", "sunday"), Ct);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
-        Assert.Equal(new ProfileResponse("Ada L", 265, 68.0, 188, "Europe/Rome", "sunday", true), await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
+        Assert.Equal(new ProfileResponse("Ada L", 265, 68.0, 188, "Europe/Rome", "sunday", true, true), await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
 
         await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada L", null, null, null, null, "monday"), Ct);
         var cleared = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
-        Assert.Equal(new ProfileResponse("Ada L", null, null, null, null, "monday", true), cleared);
+        Assert.Equal(new ProfileResponse("Ada L", null, null, null, null, "monday", true, true), cleared);
 
         var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
         Assert.Equal("Ada L", me!.DisplayName); // the name is the same everywhere

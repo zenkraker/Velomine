@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/hooks.dart';
+import '../../core/server_url.dart';
+
 import 'profile_controller.dart';
 
 const weekDays = {
@@ -19,12 +22,20 @@ class ProfileScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.emailAvailable,
+    required this.openLink,
+    required this.onAccountDeleted,
   });
 
   final ProfileController controller;
 
   /// Whether the server can send email at all; the switch is explained and disabled when it cannot.
   final bool emailAvailable;
+
+  /// Opens the export download in the browser.
+  final LinkOpener openLink;
+
+  /// Called once the account is gone, so the app can leave the signed-in screens.
+  final VoidCallback onAccountDeleted;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -40,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _email = true;
   String? _problem;
   bool _saved = false;
+  bool _exported = false;
 
   @override
   void initState() {
@@ -79,6 +91,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (t.isEmpty) return (true, null);
     final n = whole ? int.tryParse(t) : double.tryParse(t);
     return n == null || n < min || n > max ? (false, null) : (true, n);
+  }
+
+  Future<void> _export() async {
+    final path = await widget.controller.exportLink();
+    if (path == null) return;
+    await widget.openLink(Uri.parse('${serverUrl()}$path'));
+    if (mounted) setState(() => _exported = true);
+  }
+
+  Future<void> _delete() async {
+    final profile = widget.controller.profile;
+    if (profile == null) return;
+    final answer = await showDialog<String>(
+      context: context,
+      builder: (_) => _DeleteAccountDialog(hasPassword: profile.hasPassword),
+    );
+    if (answer == null) return;
+    final deleted = await widget.controller.deleteAccount(
+      password: profile.hasPassword ? answer : null,
+      confirmEmail: profile.hasPassword ? null : answer,
+    );
+    if (deleted) widget.onAccountDeleted();
   }
 
   Future<void> _save() async {
@@ -245,6 +279,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: const Text('Save'),
                           ),
                         ),
+                        const Divider(),
+                        Text(
+                          'Your data',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const Text(
+                          'It is yours. Download everything Velomine keeps about you: your details, bikes, goals and rides, with every ride file exactly as you uploaded it.',
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            key: const Key('export-data'),
+                            onPressed: c.exporting ? null : _export,
+                            icon: const Icon(Icons.download),
+                            label: const Text('Download my data'),
+                          ),
+                        ),
+                        if (_exported)
+                          const Text(
+                            'Your download has started in your browser. The link works for two minutes.',
+                            key: Key('export-started'),
+                          ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            key: const Key('delete-account'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                            ),
+                            onPressed: _delete,
+                            icon: const Icon(Icons.delete_forever),
+                            label: const Text('Delete my account'),
+                          ),
+                        ),
                       ],
                     ),
             ),
@@ -253,4 +323,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+}
+
+/// Asks the member to confirm deleting their account: with their password, or by typing their email when they have none.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.hasPassword});
+
+  final bool hasPassword;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _answer = TextEditingController();
+
+  @override
+  void dispose() {
+    _answer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Delete your account?'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 16,
+      children: [
+        const Text(
+          'This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.',
+        ),
+        TextField(
+          key: const Key('delete-confirm'),
+          controller: _answer,
+          obscureText: widget.hasPassword,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: widget.hasPassword
+                ? 'Your password'
+                : 'Type your email address to confirm',
+          ),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        key: const Key('confirm-delete-account'),
+        style: FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.error,
+          foregroundColor: Theme.of(context).colorScheme.onError,
+        ),
+        onPressed: () => Navigator.pop(context, _answer.text),
+        child: const Text('Delete everything'),
+      ),
+    ],
+  );
 }

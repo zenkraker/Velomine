@@ -43,6 +43,11 @@ Future<void> _startWebSso() async {
   await launchUrl(login, webOnlyWindowName: '_self');
 }
 
+/// Opens the data export in the system browser, which saves the ZIP (on the web, a new tab does).
+Future<void> _openLink(Uri uri) async {
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
 /// On a phone the system browser signs in and hands back through the app's own link (see Session.appSsoUrl).
 Future<void> _startAppSso(Session session) async {
   await launchUrl(
@@ -58,6 +63,7 @@ class VelomineApp extends StatefulWidget {
     required this.themeChoice,
     this.pickFile = _pickRideFile,
     this.startSso,
+    this.openLink = _openLink,
     this.uploadPollInterval = const Duration(seconds: 1),
     this.notificationPollInterval = const Duration(minutes: 1),
   });
@@ -66,6 +72,7 @@ class VelomineApp extends StatefulWidget {
   final ThemeChoice themeChoice;
   final FilePicker pickFile;
   final SsoStarter? startSso;
+  final LinkOpener openLink;
   final Duration uploadPollInterval;
   final Duration notificationPollInterval;
 
@@ -202,7 +209,10 @@ class _VelomineAppState extends State<VelomineApp> {
           ),
           GoRoute(
             path: '/profile',
-            builder: (_, _) => _ProfilePage(session: widget.session),
+            builder: (_, _) => _ProfilePage(
+              session: widget.session,
+              openLink: widget.openLink,
+            ),
           ),
           GoRoute(
             path: '/bikes',
@@ -355,9 +365,10 @@ class _BikeDetailPageState extends State<_BikeDetailPage> {
 
 /// Owns the profile controller, so the form is read fresh each time the screen opens.
 class _ProfilePage extends StatefulWidget {
-  const _ProfilePage({required this.session});
+  const _ProfilePage({required this.session, required this.openLink});
 
   final Session session;
+  final LinkOpener openLink;
 
   @override
   State<_ProfilePage> createState() => _ProfilePageState();
@@ -380,5 +391,8 @@ class _ProfilePageState extends State<_ProfilePage> {
   Widget build(BuildContext context) => ProfileScreen(
     controller: _controller,
     emailAvailable: widget.session.serverInfo?.emailAvailable ?? false,
+    openLink: widget.openLink,
+    // The account is gone: sign out, which sends the app to the sign-in screen.
+    onAccountDeleted: widget.session.signOut,
   );
 }

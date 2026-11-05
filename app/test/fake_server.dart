@@ -66,6 +66,9 @@ class FakeServer {
   };
   bool smtpConfigured = false;
 
+  /// How many export download links were asked for.
+  int exportLinks = 0;
+
   /// Who a test email was sent to, and what the mail server answered.
   final testEmails = <String>[];
   int testEmailStatus = 204;
@@ -338,6 +341,27 @@ extension on FakeServer {
     FakeAccount caller,
     http.Response Function(Object?, [int]) json,
   ) {
+    if (path == '/api/v1/accounts/me/export-link') {
+      exportLinks++;
+      return json({
+        'path': '/api/v1/accounts/export/token-$exportLinks',
+        'expiresAt': '2026-11-05T12:02:00Z',
+      });
+    }
+    if (path == '/api/v1/accounts/me/delete') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final confirmed = caller.password.isNotEmpty
+          ? body['password'] == caller.password
+          : (body['confirmEmail'] as String?)?.toLowerCase() == caller.email;
+      if (!confirmed) return http.Response('{"detail":"no"}', 403);
+      if (caller.roles.contains('admin') &&
+          accounts.values.where((a) => a.roles.contains('admin')).length < 2) {
+        return http.Response('{"detail":"only admin"}', 409);
+      }
+      accounts.remove(caller.email);
+      _cookieUser = null;
+      return http.Response('', 204);
+    }
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
@@ -363,6 +387,7 @@ extension on FakeServer {
           'timeZone': null,
           'firstDayOfWeek': 'monday',
           'emailNotifications': true,
+          'hasPassword': caller.password.isNotEmpty,
         },
       );
       if (request.method == 'PUT') profile.addAll(body);
@@ -688,6 +713,7 @@ Future<void> startApp(
   FilePicker? pickFile,
   SsoStarter? startSso,
   ThemeChoice? themeChoice,
+  LinkOpener? openLink,
 }) async {
   await tester.runAsync(session.restore);
   await tester.pumpWidget(
@@ -696,6 +722,7 @@ Future<void> startApp(
       themeChoice: themeChoice ?? ThemeChoice(store: MemoryThemeStore()),
       pickFile: pickFile ?? () async => null,
       startSso: startSso ?? () async {},
+      openLink: openLink ?? (_) async {},
       uploadPollInterval: const Duration(milliseconds: 10),
     ),
   );

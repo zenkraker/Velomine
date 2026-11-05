@@ -57,6 +57,129 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'POST /api/v1/accounts/me/export-link' operation and returns the [Response].
+  Future<Response> createExportLinkWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/export-link';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<ExportLinkResponse?> createExportLink({ Future<void>? abortTrigger, }) async {
+    final response = await createExportLinkWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ExportLinkResponse',) as ExportLinkResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/accounts/me/delete' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [DeleteMyAccountRequest] deleteMyAccountRequest (required):
+  Future<Response> deleteMyAccountWithHttpInfo(DeleteMyAccountRequest deleteMyAccountRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/delete';
+
+    // ignore: prefer_final_locals
+    Object? postBody = deleteMyAccountRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [DeleteMyAccountRequest] deleteMyAccountRequest (required):
+  Future<void> deleteMyAccount(DeleteMyAccountRequest deleteMyAccountRequest, { Future<void>? abortTrigger, }) async {
+    final response = await deleteMyAccountWithHttpInfo(deleteMyAccountRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'GET /api/v1/accounts/export/{token}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<Response> downloadExportWithHttpInfo(String token, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/export/{token}'
+      .replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<void> downloadExport(String token, { Future<void>? abortTrigger, }) async {
+    final response = await downloadExportWithHttpInfo(token, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/sso/token' operation and returns the [Response].
   /// Parameters:
   ///

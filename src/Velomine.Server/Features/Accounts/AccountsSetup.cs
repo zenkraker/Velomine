@@ -20,6 +20,8 @@ public static class AccountsSetup
         services.AddMemoryCache();
         services.AddSingleton<SsoAppCodes>();
         services.AddScoped<AccountDeletion>();
+        services.AddScoped<AccountExport>();
+        services.AddSingleton<ExportTokens>();
 
         // Cookie for the web app, bearer token for the mobile app and tools. The Identity endpoints
         // themselves are not mapped: the slices in Features/Accounts own the routes.

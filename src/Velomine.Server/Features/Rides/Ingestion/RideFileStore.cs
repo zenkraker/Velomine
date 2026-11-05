@@ -41,6 +41,13 @@ public sealed partial class RideFileStore(IOptions<RidesOptions> options)
 
     public Task<byte[]> ReadAsync(string sha, CancellationToken ct) => File.ReadAllBytesAsync(PathFor(sha), ct);
 
+    /// <summary>Opens a stored file for reading, or null when it is not there.</summary>
+    public FileStream? OpenRead(string sha)
+    {
+        var path = PathFor(sha);
+        return File.Exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true) : null;
+    }
+
     public void Delete(string sha)
     {
         var path = PathFor(sha);
