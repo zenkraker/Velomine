@@ -91,6 +91,7 @@ class SeriesChart extends StatelessWidget {
                                     .onSurfaceVariant,
                               ),
                       gridColor: Theme.of(context).colorScheme.outlineVariant,
+                      background: Theme.of(context).colorScheme.surface,
                     ),
                   ),
                 ),
@@ -111,6 +112,7 @@ class _ChartPainter extends CustomPainter {
     required this.color,
     required this.textStyle,
     required this.gridColor,
+    required this.background,
   }) : super(repaint: selected);
 
   final Series series;
@@ -119,6 +121,9 @@ class _ChartPainter extends CustomPainter {
   final Color color;
   final TextStyle textStyle;
   final Color gridColor;
+
+  /// The ring around the selected point, so it stands out from the line.
+  final Color background;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -214,7 +219,7 @@ class _ChartPainter extends CustomPainter {
       );
       final v = series.values[index];
       if (v != null) {
-        canvas.drawCircle(Offset(px, y(v)), 4.5, Paint()..color = Colors.white);
+        canvas.drawCircle(Offset(px, y(v)), 4.5, Paint()..color = background);
         canvas.drawCircle(Offset(px, y(v)), 3.2, Paint()..color = color);
       }
     }
@@ -250,5 +255,7 @@ class _ChartPainter extends CustomPainter {
       old.series != series ||
       old.time != time ||
       old.color != color ||
+      old.background != background ||
+      old.gridColor != gridColor ||
       old.textStyle != textStyle;
 }

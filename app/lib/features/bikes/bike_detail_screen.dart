@@ -287,9 +287,9 @@ class _Stat extends StatelessWidget {
 
 Color wearColor(BuildContext context, String status) => switch (status) {
   'worn' => Theme.of(context).colorScheme.error,
-  'soon' => const Color(0xFF7A5C00),
+  'soon' => VelomineColors.of(context).wearSoon,
   'retired' => Theme.of(context).disabledColor,
-  _ => deepTeal,
+  _ => VelomineColors.of(context).wearOk,
 };
 
 String wearLabel(String status) => switch (status) {

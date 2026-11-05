@@ -21,9 +21,10 @@
         sha256 = "25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a";
       };
 
-      # Versions Flutter 3.47's Gradle plugin asks for (compileSdk 36, NDK 28.2).
+      # Versions Flutter 3.47's Gradle plugin asks for (compileSdk 36, NDK 28.2). Platform 35 is for the jni
+      # package (dart.dev, used by shared_preferences on Android), which compiles against it.
       android = pkgs.androidenv.composeAndroidPackages {
-        platformVersions = [ "36" ];
+        platformVersions = [ "35" "36" ];
         buildToolsVersions = [ "36.0.0" ];
         includeNDK = true;
         ndkVersions = [ "28.2.13676358" ];

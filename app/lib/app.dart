@@ -7,6 +7,7 @@ import 'core/hooks.dart';
 import 'core/server_url.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
+import 'core/theme_choice.dart';
 import 'features/admin/pending_users_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/bikes/bike_detail_screen.dart';
@@ -43,6 +44,7 @@ class VelomineApp extends StatefulWidget {
   const VelomineApp({
     super.key,
     required this.session,
+    required this.themeChoice,
     this.pickFile = _pickRideFile,
     this.startSso = _startSso,
     this.uploadPollInterval = const Duration(seconds: 1),
@@ -50,6 +52,7 @@ class VelomineApp extends StatefulWidget {
   });
 
   final Session session;
+  final ThemeChoice themeChoice;
   final FilePicker pickFile;
   final SsoStarter startSso;
   final Duration uploadPollInterval;
@@ -129,6 +132,7 @@ class _VelomineAppState extends State<VelomineApp> {
         builder: (_, state, child) => HomeShell(
           session: widget.session,
           notifications: _notifications,
+          themeChoice: widget.themeChoice,
           location: state.uri.path,
           child: child,
         ),
@@ -212,10 +216,12 @@ class _VelomineAppState extends State<VelomineApp> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: widget.session,
+      listenable: Listenable.merge([widget.session, widget.themeChoice]),
       builder: (context, _) => MaterialApp.router(
         title: 'Velomine',
         theme: dayTheme(),
+        darkTheme: nightTheme(),
+        themeMode: widget.themeChoice.mode,
         routerConfig: _router,
         builder: (context, child) =>
             widget.session.status == SessionStatus.loading

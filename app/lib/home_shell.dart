@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/session.dart';
+import 'core/theme_choice.dart';
 import 'features/notifications/notifications_controller.dart';
 
 /// The frame around the signed-in screens: title bar with notifications, the member's profile and sign out,
@@ -11,12 +12,14 @@ class HomeShell extends StatelessWidget {
     super.key,
     required this.session,
     required this.notifications,
+    required this.themeChoice,
     required this.location,
     required this.child,
   });
 
   final Session session;
   final NotificationsController notifications;
+  final ThemeChoice themeChoice;
   final String location;
   final Widget child;
 
@@ -30,6 +33,7 @@ class HomeShell extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Velomine'),
         actions: [
+          ThemeChoiceButton(choice: themeChoice),
           ListenableBuilder(
             listenable: notifications,
             builder: (context, _) => IconButton(

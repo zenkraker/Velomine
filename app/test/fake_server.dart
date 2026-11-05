@@ -8,6 +8,7 @@ import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
 import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/session.dart';
+import 'package:velomine/core/theme_choice.dart';
 import 'package:velomine_api/api.dart';
 
 class FakeAccount {
@@ -560,17 +561,32 @@ Future<void> startApp(
   Session session, {
   FilePicker? pickFile,
   SsoStarter? startSso,
+  ThemeChoice? themeChoice,
 }) async {
   await tester.runAsync(session.restore);
   await tester.pumpWidget(
     VelomineApp(
       session: session,
+      themeChoice: themeChoice ?? ThemeChoice(store: MemoryThemeStore()),
       pickFile: pickFile ?? () async => null,
       startSso: startSso ?? () async {},
       uploadPollInterval: const Duration(milliseconds: 10),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+/// Keeps the theme choice in memory instead of the device's preferences.
+class MemoryThemeStore implements ThemeChoiceStore {
+  MemoryThemeStore([this.value]);
+
+  String? value;
+
+  @override
+  Future<String?> read() async => value;
+
+  @override
+  Future<void> write(String value) async => this.value = value;
 }
 
 Future<XFile?> fakeRideFile() async => XFile.fromData(

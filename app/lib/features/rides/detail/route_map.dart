@@ -60,6 +60,7 @@ class RouteMap extends StatelessWidget {
                           view: view,
                           data: data,
                           selected: selected,
+                          colors: VelomineColors.of(context),
                         ),
                       ),
                     ),
@@ -101,7 +102,10 @@ class _RoutePainter extends CustomPainter {
     required this.view,
     required this.data,
     required this.selected,
+    required this.colors,
   }) : super(repaint: selected);
+
+  final VelomineColors colors;
 
   final MapView view;
   final RideSeries data;
@@ -118,7 +122,7 @@ class _RoutePainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = Colors.white.withValues(alpha: 0.9)
+        ..color = colors.halo.withValues(alpha: 0.9)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 7
         ..strokeJoin = StrokeJoin.round
@@ -127,33 +131,34 @@ class _RoutePainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = deepTeal
+        ..color = colors.route
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4
         ..strokeJoin = StrokeJoin.round
         ..strokeCap = StrokeCap.round,
     );
 
-    _dot(canvas, view.project(data.route.first), deepTeal, 7); // start
-    _dot(canvas, view.project(data.route.last), ironOxide, 7); // finish
+    _dot(canvas, view.project(data.route.first), colors.route, 7); // start
+    _dot(canvas, view.project(data.route.last), colors.finish, 7); // finish
 
     final index = selected.value;
     if (index != null) {
       final at = data.routePointAt(index);
       if (at != null) {
         final p = view.project(at);
-        canvas.drawCircle(p, 11, Paint()..color = Colors.white);
-        canvas.drawCircle(p, 8, Paint()..color = ironOxide);
-        canvas.drawCircle(p, 3, Paint()..color = Colors.white);
+        canvas.drawCircle(p, 11, Paint()..color = colors.halo);
+        canvas.drawCircle(p, 8, Paint()..color = colors.finish);
+        canvas.drawCircle(p, 3, Paint()..color = colors.halo);
       }
     }
   }
 
   void _dot(Canvas canvas, Offset at, Color color, double radius) {
-    canvas.drawCircle(at, radius + 2, Paint()..color = Colors.white);
+    canvas.drawCircle(at, radius + 2, Paint()..color = colors.halo);
     canvas.drawCircle(at, radius, Paint()..color = color);
   }
 
   @override
-  bool shouldRepaint(_RoutePainter old) => old.view != view || old.data != data;
+  bool shouldRepaint(_RoutePainter old) =>
+      old.view != view || old.data != data || old.colors != colors;
 }

@@ -203,7 +203,9 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
               series: series,
               time: c.data!.time,
               selected: c.selected,
-              color: seriesColors[series.id] ?? deepTeal,
+              color:
+                  VelomineColors.of(context).series[series.id] ??
+                  Theme.of(context).colorScheme.primary,
             ),
         ],
       ],

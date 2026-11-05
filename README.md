@@ -48,7 +48,8 @@ Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your
 7. **Fill in your profile:** press your name at the top. Set your time zone (for example `Europe/Rome`) and the day your weeks start on; totals and goals follow them.
 8. **See your progress:** open *Progress* for distance per week, month or year, and press *Add goal* (for example 100 km a week). A ride counts in the week, month and year it was ridden, not when it was uploaded: the sample ride is from 25 October 2026, so it moves a yearly goal (until 2027) but not this week's.
 9. **Read your notifications:** the bell at the top counts unread ones: a ride that was read or failed, a part that is nearly worn (give a part a small limit to try it), and, for admins, a new account waiting for approval. Press one to open what it is about.
-10. **Look at the API:** the description is at http://localhost:8080/openapi/v1.json and the health check at http://localhost:8080/health.
+10. **Switch the theme:** the sun or moon button at the top chooses *Day*, *Night* or *Follow this device*. The choice is kept on that device (browser or phone).
+11. **Look at the API:** the description is at http://localhost:8080/openapi/v1.json and the health check at http://localhost:8080/health.
 
 ### Settings you can change
 
