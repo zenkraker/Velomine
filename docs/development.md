@@ -25,7 +25,7 @@ You only need a few ideas to use this setup.
 | Place | What | Why there |
 |-------|------|-----------|
 | Your distribution (pacman, apt, …) | Nix, direnv, Docker, VS Code, a Chromium-based browser, a database GUI | Used across all projects, or system services Nix cannot run |
-| `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, psql, CodeGraph, just | Versions that matter to this project |
+| `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, psql, CodeGraph, OpenCode, VS Code with extensions, just | Versions that matter to this project |
 | `.dev/` in the repository | Caches, unpacked Flutter, emulator, ride files | Machine-local and writable; safe to delete |
 | Docker | PostgreSQL and Dex | The same containers as `docker compose`; see [the compose file](../docker-compose.yml) |
 
@@ -39,6 +39,8 @@ You only need a few ideas to use this setup.
 | Java | JDK 17 | Gradle 9 and the Android Gradle Plugin 9 need Java 17 or newer. It also runs the OpenAPI generator JAR. |
 | Node.js | from nixpkgs | The ponytail plugin's hooks (see [CLAUDE.md](../CLAUDE.md)) |
 | CodeGraph | from nixpkgs | Required by CLAUDE.md, so there's no `curl … \| sh` install |
+| OpenCode | from nixpkgs | AI coding agent, an alternative to Claude Code |
+| VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code and OpenCode V2. It is the same Microsoft build as `visual-studio-code-bin`. |
 | psql | 17 | Same major version as the `postgres:17` container |
 | just | from nixpkgs | Runs the commands in the `justfile` |
 | nixd | from nixpkgs | Language server for editing `flake.nix` |
@@ -107,6 +109,8 @@ code --install-extension ms-dotnettools.csdevkit
 - **direnv** (`mkhl.direnv`, maintained under the [direnv organisation](https://github.com/direnv/direnv-vscode)) loads the dev shell into VS Code. Without it, VS Code doesn't find the SDKs unless you start it with `code .` from inside the shell.
 - **Nix IDE** gives syntax highlighting and completion for `flake.nix`, using `nixd` from the flake.
 - **Flutter** (also installs Dart) and **C# Dev Kit** are the language extensions. The flake sets `DOTNET_ROOT` so the C# Dev Kit finds the SDK.
+
+The flake also builds the same VS Code with those extensions, plus Claude Code and OpenCode V2: run `nix run .#vscode` from the repository. It keeps your normal VS Code settings, and its extensions come from the flake instead of the Marketplace.
 
 ### 5. Install Claude Code
 

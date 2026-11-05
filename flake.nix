@@ -37,7 +37,40 @@
       };
       androidSdk = "${android.androidsdk}/libexec/android-sdk";
       dotnet = pkgs.dotnetCorePackages.sdk_10_0;
+
+      # nixpkgs' opencode 2.2.5 pins a stale node_modules hash, so override it until
+      # nixpkgs catches up. Remove this once `nix shell nixpkgs#opencode` builds.
+      opencode = pkgs.opencode.overrideAttrs (old: {
+        node_modules = old.node_modules.overrideAttrs (_: {
+          outputHash = "sha256-prx9dX7kUvs/E3zopkaPk5LXh3xJAy5sZeum/W8L7cA=";
+        });
+      });
+
+      # OpenCode V2 is not in nixpkgs' extension set yet.
+      opencodeV2Extension = pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
+        name = "opencode-v2";
+        publisher = "sst-dev";
+        version = "0.1.1";
+        sha256 = "sha256-11a8JaishNyy6XkTeh6s36efdt1tSNYclOdkglx8x30=";
+      }];
+
+      # VS Code with the project's extensions, using the same Microsoft build as the
+      # host package. Run it with `nix run .#vscode`.
+      vscode = pkgs.vscode-with-extensions.override {
+        vscode = pkgs.vscode;
+        vscodeExtensions = [
+          pkgs.vscode-extensions.anthropic.claude-code
+          pkgs.vscode-extensions.dart-code.flutter
+          pkgs.vscode-extensions.jnoortheen.nix-ide
+          pkgs.vscode-extensions.mkhl.direnv
+          pkgs.vscode-extensions.ms-dotnettools.csdevkit
+        ] ++ opencodeV2Extension;
+      };
     in {
+      packages.${system} = {
+        inherit opencode vscode;
+      };
+
       devShells.${system}.default = pkgs.mkShell {
         packages = [
           # server
@@ -48,9 +81,10 @@
           android.androidsdk
           pkgs.jdk17           # Gradle 9 / AGP 9 need Java 17+; also runs the OpenAPI generator JAR
 
-          # Claude Code tooling required by CLAUDE.md
+          # AI coding agents and the tooling they share
           pkgs.nodejs          # ponytail's hooks
           pkgs.codegraph
+          opencode             # local override (see above); alternative to Claude Code
 
           # Flutter's own command-line needs, plus helpers
           pkgs.git pkgs.curl pkgs.unzip pkgs.zip pkgs.xz pkgs.which
