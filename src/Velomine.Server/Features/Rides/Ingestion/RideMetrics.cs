@@ -28,26 +28,33 @@ public static class RideMetrics
     private const double ElevationThresholdM = 2;
     private const int NormalizedPowerWindowS = 30;
 
-    public static RideMetricValues Compute(IReadOnlyList<Sample> samples, int? deviceNormalizedPowerW = null)
+    public static RideMetricValues Compute(
+        IReadOnlyList<Sample> samples,
+        int? deviceNormalizedPowerW = null,
+        double? deviceElapsedS = null,
+        double? deviceMovingS = null,
+        IReadOnlyList<PauseInterval>? pauses = null)
     {
         if (samples.Count < 2) throw new RideParseException("too_short", "The ride has fewer than two samples.");
 
-        var elapsed = samples[^1].T - samples[0].T;
+        var paused = pauses ?? [];
+        var elapsed = deviceElapsedS is { } recordedElapsed && recordedElapsed >= 0
+            ? recordedElapsed
+            : samples[^1].T - samples[0].T;
         var pause = PauseThresholdS(samples);
-        var speeds = SpeedSeries(samples, out var source);
+        var speeds = SpeedSeries(samples, out var source, paused);
 
-        var moving = 0.0;
-        for (var i = 1; i < samples.Count; i++)
-        {
-            var dt = samples[i].T - samples[i - 1].T;
-            if (dt > 0 && dt <= pause && IsMoving(speeds[i - 1], speeds[i])) moving += dt;
-        }
+        var moving = deviceMovingS is { } recordedMoving && recordedMoving >= 0
+            ? Math.Min(recordedMoving, elapsed)
+            : paused.Count > 0
+                ? MovingFromPauses(elapsed, paused)
+                : MovingFromSamples(samples, speeds, pause);
 
-        var distance = TotalDistance(samples);
+        var distance = TotalDistance(samples, paused);
         var (gain, loss) = ElevationChange(samples.Select(s => s.Altitude).ToArray());
-        var power = Resample(samples, s => s.Power, pause);
-        var heartRate = Resample(samples, s => s.HeartRate, pause);
-        var cadence = Resample(samples, s => s.Cadence, pause).Where(c => c > 0).ToArray();
+        var power = Resample(samples, s => s.Power, pause, paused);
+        var heartRate = Resample(samples, s => s.HeartRate, pause, paused);
+        var cadence = Resample(samples, s => s.Cadence, pause, paused).Where(c => c > 0).ToArray();
 
         return new RideMetricValues(
             elapsed,
@@ -78,22 +85,58 @@ public static class RideMetrics
     private static bool IsMoving(float? before, float? after) => (before ?? after ?? StoppedSpeedMs + 1) > StoppedSpeedMs
         || (after ?? before ?? StoppedSpeedMs + 1) > StoppedSpeedMs;
 
+    private static double MovingFromSamples(IReadOnlyList<Sample> samples, float?[] speeds, double pause)
+    {
+        var moving = 0.0;
+        for (var i = 1; i < samples.Count; i++)
+        {
+            var dt = samples[i].T - samples[i - 1].T;
+            if (dt > 0 && dt <= pause && IsMoving(speeds[i - 1], speeds[i])) moving += dt;
+        }
+        return moving;
+    }
+
+    private static double MovingFromPauses(double elapsed, IReadOnlyList<PauseInterval> pauses)
+    {
+        var paused = 0.0;
+        var lastEnd = 0.0;
+        foreach (var interval in pauses.OrderBy(p => p.StartS))
+        {
+            var start = Math.Max(0, Math.Min(elapsed, interval.StartS));
+            var end = Math.Max(0, Math.Min(elapsed, interval.EndS));
+            var from = Math.Max(start, lastEnd);
+            if (end > from) paused += end - from;
+            if (end > lastEnd) lastEnd = end;
+        }
+        return Math.Max(0, elapsed - paused);
+    }
+
+    private static bool CrossesPause(IReadOnlyList<PauseInterval>? pauses, double from, double to) =>
+        pauses is not null && pauses.Any(p => p.StartS < to && p.EndS > from);
+
     /// <summary>
     /// Speed per sample: the file's own speed where it has one for most samples, otherwise worked out from positions
-    /// (and the cumulative distance when there are no positions).
+    /// (and the cumulative distance when there are no positions). A pair that spans a timer pause is left unknown.
     /// </summary>
-    public static float?[] SpeedSeries(IReadOnlyList<Sample> samples, out SpeedSource source)
+    public static float?[] SpeedSeries(
+        IReadOnlyList<Sample> samples,
+        out SpeedSource source,
+        IReadOnlyList<PauseInterval>? pauses = null)
     {
         if (samples.Count(s => s.Speed.HasValue) * 2 >= samples.Count)
         {
             source = SpeedSource.Device;
-            return samples.Select(s => s.Speed).ToArray();
+            var device = samples.Select(s => s.Speed).ToArray();
+            for (var i = 1; i < samples.Count; i++)
+                if (CrossesPause(pauses, samples[i - 1].T, samples[i].T)) device[i] = null;
+            return device;
         }
 
         source = SpeedSource.Gps;
         var speeds = new float?[samples.Count];
         for (var i = 1; i < samples.Count; i++)
         {
+            if (CrossesPause(pauses, samples[i - 1].T, samples[i].T)) continue;
             var dt = samples[i].T - samples[i - 1].T;
             var meters = DistanceBetween(samples[i - 1], samples[i]);
             if (dt > 0 && meters.HasValue) speeds[i] = (float)(meters.Value / dt);
@@ -104,13 +147,24 @@ public static class RideMetrics
     }
 
     /// <summary>Total distance: the device's cumulative distance if the file has it, else the sum of position steps.</summary>
-    public static double TotalDistance(IReadOnlyList<Sample> samples)
+    public static double TotalDistance(
+        IReadOnlyList<Sample> samples,
+        IReadOnlyList<PauseInterval>? pauses = null)
     {
-        var cumulative = samples.Where(s => s.Distance.HasValue).Select(s => (double)s.Distance!.Value).ToArray();
-        if (cumulative.Length >= 2) return Math.Max(0, cumulative[^1] - cumulative[0]);
+        // A device cumulative distance cannot say which metres were ridden during a paused interval, so positions win
+        // when the file also has timer events.
+        if (pauses is null || pauses.Count == 0)
+        {
+            var cumulative = samples.Where(s => s.Distance.HasValue).Select(s => (double)s.Distance!.Value).ToArray();
+            if (cumulative.Length >= 2) return Math.Max(0, cumulative[^1] - cumulative[0]);
+        }
 
         var total = 0.0;
-        for (var i = 1; i < samples.Count; i++) total += DistanceBetween(samples[i - 1], samples[i]) ?? 0;
+        for (var i = 1; i < samples.Count; i++)
+        {
+            if (CrossesPause(pauses, samples[i - 1].T, samples[i].T)) continue;
+            total += DistanceBetween(samples[i - 1], samples[i]) ?? 0;
+        }
         return total;
     }
 
@@ -176,13 +230,19 @@ public static class RideMetrics
     /// <summary>
     /// A value for every second of riding: each sample's value is held until the next sample, and pauses are left out.
     /// </summary>
-    public static double[] Resample(IReadOnlyList<Sample> samples, Func<Sample, short?> pick, double pauseThresholdS)
+    public static double[] Resample(
+        IReadOnlyList<Sample> samples,
+        Func<Sample, short?> pick,
+        double pauseThresholdS,
+        IReadOnlyList<PauseInterval>? pauses = null)
     {
         var result = new List<double>();
         for (var i = 0; i + 1 < samples.Count; i++)
         {
             var dt = samples[i + 1].T - samples[i].T;
-            if (dt <= 0 || dt > pauseThresholdS || pick(samples[i]) is not { } value) continue;
+            if (dt <= 0 || dt > pauseThresholdS ||
+                CrossesPause(pauses, samples[i].T, samples[i + 1].T) ||
+                pick(samples[i]) is not { } value) continue;
             var seconds = (int)Math.Round(dt);
             for (var s = 0; s < Math.Max(1, seconds); s++) result.Add(value);
         }

@@ -11,7 +11,13 @@ public static class TestRideFiles
 {
     public static readonly DateTime Start = new(2026, 10, 3, 8, 0, 0, DateTimeKind.Utc);
 
-    public sealed record FitSession(DateTime Start, int Seconds, Sport Sport = Sport.Cycling, ushort? NormalizedPower = null);
+    public sealed record FitSession(
+        DateTime Start,
+        int Seconds,
+        Sport Sport = Sport.Cycling,
+        ushort? NormalizedPower = null,
+        int? TimerSeconds = null,
+        IReadOnlyList<(int Start, int Stop)>? Pauses = null);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -29,6 +35,13 @@ public static class TestRideFiles
 
         foreach (var session in sessions)
         {
+            WriteTimer(encode, session.Start, EventType.Start);
+            foreach (var pause in session.Pauses ?? [])
+            {
+                WriteTimer(encode, session.Start.AddSeconds(pause.Start), EventType.Stop);
+                WriteTimer(encode, session.Start.AddSeconds(pause.Stop), EventType.Start);
+            }
+
             for (var s = 0; s < session.Seconds; s++)
             {
                 var record = new RecordMesg();
@@ -46,11 +59,13 @@ public static class TestRideFiles
             }
 
             var end = session.Start.AddSeconds(session.Seconds);
+            WriteTimer(encode, end, EventType.StopAll);
+
             var summary = new SessionMesg();
             summary.SetTimestamp(new Dynastream.Fit.DateTime(end));
             summary.SetStartTime(new Dynastream.Fit.DateTime(session.Start));
             summary.SetTotalElapsedTime(session.Seconds);
-            summary.SetTotalTimerTime(session.Seconds);
+            summary.SetTotalTimerTime(session.TimerSeconds ?? session.Seconds);
             summary.SetSport(session.Sport);
             if (session.NormalizedPower is { } np) summary.SetNormalizedPower(np);
             encode.Write(summary);
@@ -65,6 +80,16 @@ public static class TestRideFiles
 
         encode.Close();
         return stream.ToArray();
+    }
+
+    private static void WriteTimer(Encode encode, DateTime time, EventType type)
+    {
+        var timer = new EventMesg();
+        timer.SetTimestamp(new Dynastream.Fit.DateTime(time));
+        timer.SetEvent(Dynastream.Fit.Event.Timer);
+        timer.SetEventType(type);
+        timer.SetTimerTrigger((byte)TimerTrigger.Manual);
+        encode.Write(timer);
     }
 
     /// <summary>A GPX track of <paramref name="count"/> points, one second apart, riding north at 8 m/s.</summary>

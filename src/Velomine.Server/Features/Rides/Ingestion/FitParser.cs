@@ -23,7 +23,8 @@ public static class FitParser
         stream.Position = 0;
 
         var records = new List<Raw>();
-        var sessions = new List<(System.DateTime Start, double Elapsed, Sport? Sport, int? NormalizedPower)>();
+        var sessions = new List<(System.DateTime Start, double Elapsed, double? Timer, Sport? Sport, int? NormalizedPower)>();
+        var timerEvents = new List<(System.DateTime Time, EventType Type)>();
         string? device = null;
         int? offsetMinutes = null;
 
@@ -50,7 +51,19 @@ public static class FitParser
         {
             var session = (SessionMesg)e.mesg;
             if (session.GetStartTime() is not { } start) return;
-            sessions.Add((start.GetDateTime(), session.GetTotalElapsedTime() ?? 0, session.GetSport(), session.GetNormalizedPower()));
+            sessions.Add((
+                start.GetDateTime(),
+                session.GetTotalElapsedTime() ?? 0,
+                session.GetTotalTimerTime(),
+                session.GetSport(),
+                session.GetNormalizedPower()));
+        };
+        broadcaster.EventMesgEvent += (_, e) =>
+        {
+            var timer = (EventMesg)e.mesg;
+            if (timer.GetEvent() != Event.Timer) return;
+            if (timer.GetTimestamp() is not { } stamp || timer.GetEventType() is not { } type) return;
+            timerEvents.Add((stamp.GetDateTime(), type));
         };
         broadcaster.FileIdMesgEvent += (_, e) => device ??= ManufacturerName(((FileIdMesg)e.mesg).GetManufacturer());
         broadcaster.ActivityMesgEvent += (_, e) =>
@@ -74,7 +87,7 @@ public static class FitParser
         var rides = new List<ParsedRide>();
         if (sessions.Count == 0)
         {
-            rides.Add(Build(records, device, offsetMinutes, normalizedPower: null));
+            rides.Add(Build(records, device, offsetMinutes, normalizedPower: null, timerEvents));
         }
         else
         {
@@ -85,7 +98,17 @@ public static class FitParser
 
                 var end = session.Start.AddSeconds(session.Elapsed + 1);
                 var inSession = records.Where(r => r.Time >= session.Start && r.Time <= end).ToList();
-                if (inSession.Count >= 2) rides.Add(Build(inSession, device, offsetMinutes, session.NormalizedPower));
+                if (inSession.Count >= 2)
+                {
+                    rides.Add(Build(
+                        inSession,
+                        device,
+                        offsetMinutes,
+                        session.NormalizedPower,
+                        timerEvents.Where(e => e.Time >= session.Start && e.Time <= end),
+                        session.Elapsed,
+                        session.Timer));
+                }
             }
         }
 
@@ -100,9 +123,19 @@ public static class FitParser
             .FirstOrDefault(f => f.IsLiteral && f.GetRawConstantValue() is ushort value && value == id)?.Name
             ?? id.ToString();
 
-    private static ParsedRide Build(List<Raw> records, string? device, int? offsetMinutes, int? normalizedPower)
+    private static ParsedRide Build(
+        List<Raw> records,
+        string? device,
+        int? offsetMinutes,
+        int? normalizedPower,
+        IEnumerable<(System.DateTime Time, EventType Type)> timerEvents,
+        double? deviceElapsedS = null,
+        double? deviceMovingS = null)
     {
         var first = records.Min(r => r.Time);
+        var last = records.Max(r => r.Time);
+        var eventList = timerEvents.ToList();
+        var pauseEnd = eventList.Select(e => e.Time).DefaultIfEmpty(last).Max();
         var samples = records.OrderBy(r => r.Time).Select(r => r.Sample with { T = (r.Time - first).TotalSeconds }).ToList();
         return new ParsedRide
         {
@@ -110,7 +143,43 @@ public static class FitParser
             UtcOffsetMinutes = offsetMinutes,
             Device = device,
             DeviceNormalizedPowerW = normalizedPower is > 0 ? normalizedPower : null,
+            DeviceElapsedS = deviceElapsedS is > 0 ? deviceElapsedS : null,
+            DeviceMovingS = deviceMovingS is > 0 ? deviceMovingS : null,
+            Pauses = BuildPauses(eventList, first, pauseEnd),
             Samples = samples,
         };
+    }
+
+    /// <summary>Turns timer stop/start events into paused intervals relative to the first sample.</summary>
+    private static IReadOnlyList<PauseInterval> BuildPauses(
+        IEnumerable<(System.DateTime Time, EventType Type)> events,
+        System.DateTime first,
+        System.DateTime last)
+    {
+        var pauses = new List<PauseInterval>();
+        double? pausedAt = null;
+        foreach (var item in events.OrderBy(e => e.Time))
+        {
+            if (item.Time < first) continue;
+            if (item.Time > last) break;
+            var seconds = (item.Time - first).TotalSeconds;
+
+            if (item.Type is EventType.Stop or EventType.StopAll)
+            {
+                pausedAt ??= seconds;
+            }
+            else if (item.Type is EventType.Start && pausedAt is { } start)
+            {
+                if (seconds > start) pauses.Add(new PauseInterval(start, seconds));
+                pausedAt = null;
+            }
+        }
+
+        if (pausedAt is { } open)
+        {
+            var end = (last - first).TotalSeconds;
+            if (end > open) pauses.Add(new PauseInterval(open, end));
+        }
+        return pauses;
     }
 }

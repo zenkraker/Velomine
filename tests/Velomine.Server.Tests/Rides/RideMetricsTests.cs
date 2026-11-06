@@ -146,6 +146,42 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
+    public void Pauses_ExcludeMovingTime_AveragesAndTheDistanceAcrossTheStop()
+    {
+        const double degreesPerMeter = 1 / 111_195.0;
+        var samples = new List<Sample>();
+        for (var t = 0; t <= 9; t++)
+            samples.Add(new Sample(t, Latitude: t * 10 * degreesPerMeter, Longitude: 0, Power: 200));
+        // The rider moved while the timer was stopped; that jump must not become distance or speed.
+        for (var t = 20; t <= 29; t++)
+            samples.Add(new Sample(t, Latitude: (1000 + (t - 20) * 10) * degreesPerMeter, Longitude: 0, Power: 100));
+
+        var pauses = new[] { new PauseInterval(9.5, 19.5) };
+        var m = RideMetrics.Compute(
+            samples,
+            deviceElapsedS: 30,
+            deviceMovingS: 20,
+            pauses: pauses);
+
+        Assert.Equal(30, m.ElapsedS);
+        Assert.Equal(20, m.MovingS);
+        Assert.InRange(m.DistanceM, 170, 190); // two 90 m stretches, not the 900 m jump across the pause
+        Assert.InRange(m.AvgSpeedMs!.Value, 8.5, 9.5);
+        Assert.InRange(m.AvgPowerW!.Value, 140, 160); // 9 s at 200 W and 9 s at 100 W
+    }
+
+    [Fact]
+    public void DeviceTiming_IsPreferredWhenTheFileHasIt()
+    {
+        var samples = Series(10, i => new Sample(i, Speed: 5));
+
+        var m = RideMetrics.Compute(samples, deviceElapsedS: 30, deviceMovingS: 20);
+
+        Assert.Equal(30, m.ElapsedS);
+        Assert.Equal(20, m.MovingS);
+    }
+
+    [Fact]
     public void Compute_RejectsARideWithFewerThanTwoSamples()
     {
         var error = Assert.Throws<RideParseException>(() => RideMetrics.Compute([new Sample(0)]));

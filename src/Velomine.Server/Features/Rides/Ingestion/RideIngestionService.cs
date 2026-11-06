@@ -76,7 +76,12 @@ public sealed class RideIngestionService(
             RideMetricValues metrics;
             try
             {
-                metrics = RideMetrics.Compute(file.Samples, file.DeviceNormalizedPowerW);
+                metrics = RideMetrics.Compute(
+                    file.Samples,
+                    file.DeviceNormalizedPowerW,
+                    file.DeviceElapsedS,
+                    file.DeviceMovingS,
+                    file.Pauses);
             }
             catch (RideParseException ex)
             {

@@ -13,6 +13,12 @@ public readonly record struct Sample(
     short? Cadence = null,
     short? Temperature = null);
 
+/// <summary>A stopped interval in a ride, in seconds relative to the first sample.</summary>
+public readonly record struct PauseInterval(double StartS, double EndS)
+{
+    public double DurationS => Math.Max(0, EndS - StartS);
+}
+
 /// <summary>What every file format is turned into. Parsers know nothing about the database.</summary>
 public sealed class ParsedRide
 {
@@ -24,6 +30,14 @@ public sealed class ParsedRide
 
     /// <summary>Normalized power the recording device worked out itself (FIT sessions), preferred over our own.</summary>
     public int? DeviceNormalizedPowerW { get; init; }
+
+    /// <summary>The device's own elapsed and moving time, when the file has them.</summary>
+    public double? DeviceElapsedS { get; init; }
+
+    public double? DeviceMovingS { get; init; }
+
+    /// <summary>Timer stop/start intervals (auto-pause or manual pauses), relative to the first sample.</summary>
+    public IReadOnlyList<PauseInterval> Pauses { get; init; } = [];
 
     public required IReadOnlyList<Sample> Samples { get; init; }
 }

@@ -34,6 +34,22 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
+    public void Fit_ReadsTimerPausesAndTheDevicesMovingTime()
+    {
+        var ride = Assert.Single(RideFileParser.Parse(Fit(new FitSession(
+            Start,
+            30,
+            TimerSeconds: 20,
+            Pauses: [(5, 15)]))));
+
+        Assert.Equal(30d, ride.DeviceElapsedS);
+        Assert.Equal(20d, ride.DeviceMovingS);
+        var pause = Assert.Single(ride.Pauses);
+        Assert.Equal(5d, pause.StartS);
+        Assert.Equal(15d, pause.EndS);
+    }
+
+    [Fact]
     public void Fit_WithTwoSessions_GivesTwoRides()
     {
         var second = Start.AddHours(2);

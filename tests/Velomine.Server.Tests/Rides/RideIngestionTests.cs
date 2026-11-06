@@ -72,7 +72,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(120, ride.UtcOffsetMinutes);
         Assert.Equal("Garmin", ride.Device);
         Assert.Equal("ride.fit", ride.FileName);
-        Assert.Equal(119, ride.ElapsedS);
+        Assert.Equal(120, ride.ElapsedS); // the session's elapsed time, one second longer than the last sample's timestamp
         Assert.Equal(119 * 8.0, ride.DistanceM!.Value, 1);
         Assert.Equal("device", ride.SpeedSource);
         Assert.Equal(8, ride.MaxSpeedMs!.Value, 3);
