@@ -1,11 +1,3 @@
-import 'package:flutter/foundation.dart';
-
-/// Where the Velomine server is.
-///
-/// The web app is served by the server itself, so it uses its own address and the browser's cookies work.
-/// Other builds take the address from `--dart-define=VELOMINE_URL=https://your-server`.
-String serverUrl() {
-  const configured = String.fromEnvironment('VELOMINE_URL');
-  if (configured.isNotEmpty) return configured;
-  return kIsWeb ? Uri.base.origin : 'http://localhost:8080';
-}
+/// A server address fixed at build time, for development: `--dart-define=VELOMINE_URL=...`.
+/// Empty when the build does not set one; on a phone the member enters the address instead.
+String configuredServerUrl() => const String.fromEnvironment('VELOMINE_URL');

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
 import 'pkce.dart';
+import 'session_auth.dart';
 
 enum SessionStatus { loading, signedOut, signedIn }
 
@@ -18,13 +21,14 @@ enum AuthProblem {
 
 /// Who is signed in, and the calls that change that.
 ///
-/// The web app keeps its session in a cookie the server sets (the browser sends it by itself). Other builds hold the
-/// bearer token in memory only for now, so they sign in again after a restart.
+/// The web app keeps its session in a cookie the server sets (the browser sends it by itself). The phone app keeps
+/// the refresh token in the platform's secure storage, so it can come back after a restart without the password.
 class Session extends ChangeNotifier {
   Session({
     required ApiClient client,
-    required this.bearer,
+    required this.auth,
     required this.useCookies,
+    required this.serverUrl,
     this.ssoError,
   }) : accounts = AccountsApi(client),
        rides = RidesApi(client),
@@ -32,7 +36,9 @@ class Session extends ChangeNotifier {
        analytics = AnalyticsApi(client),
        admin = AdminApi(client),
        notifications = NotificationsApi(client),
-       server = ServerApi(client);
+       server = ServerApi(client) {
+    auth.onSignedOut = sessionExpired;
+  }
 
   final AccountsApi accounts;
   final RidesApi rides;
@@ -41,8 +47,11 @@ class Session extends ChangeNotifier {
   final AdminApi admin;
   final NotificationsApi notifications;
   final ServerApi server;
+  final SessionAuth auth;
   final bool useCookies;
-  final HttpBearerAuth bearer;
+
+  /// The address this session belongs to, without a trailing slash.
+  final String serverUrl;
 
   /// The reason single sign-on did not work: the server's `?sso_error=...` on the web, the same reason in the link
   /// the phone is handed back through. The sign-in screen explains it.
@@ -56,10 +65,29 @@ class Session extends ChangeNotifier {
   SsoInfoResponse? sso;
   ServerInfoResponse? serverInfo;
 
+  /// Set when a saved session could not be brought back because the server was unreachable.
+  AuthProblem? restoreProblem;
+
+  bool _disposed = false;
+
   bool get isAdmin => me?.roles.contains('admin') ?? false;
 
-  /// Called once at start: find out whether the cookie already holds a session, and whether SSO is offered.
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  /// Called once at start: find out whether a session is saved, and whether SSO is offered.
   Future<void> restore() async {
+    status = SessionStatus.loading;
+    restoreProblem = null;
+    _notify();
+
     try {
       serverInfo = await server.getServerInfo();
     } on Object {
@@ -70,6 +98,20 @@ class Session extends ChangeNotifier {
     } on Object {
       sso = null;
     }
+
+    if (useCookies) {
+      await _restoreCookie();
+    } else {
+      await _restoreToken();
+    }
+
+    _notify();
+  }
+
+  /// Tries again after [restoreProblem] said the server was unreachable.
+  Future<void> retryRestore() => restore();
+
+  Future<void> _restoreCookie() async {
     try {
       me = await accounts.getMe();
       status = me == null ? SessionStatus.signedOut : SessionStatus.signedIn;
@@ -78,15 +120,42 @@ class Session extends ChangeNotifier {
     } on Object {
       status = SessionStatus.signedOut;
     }
-    notifyListeners();
+  }
+
+  Future<void> _restoreToken() async {
+    final restored = await auth.restore();
+    if (restored == SessionRestore.unavailable) {
+      status = SessionStatus.signedOut;
+      restoreProblem = AuthProblem.unavailable;
+      return;
+    }
+    if (restored != SessionRestore.restored) {
+      status = SessionStatus.signedOut;
+      return;
+    }
+
+    try {
+      me = await accounts.getMe();
+      status = me == null ? SessionStatus.signedOut : SessionStatus.signedIn;
+    } on ApiException catch (e) {
+      if (e.code == 401) {
+        await auth.clear();
+      } else {
+        restoreProblem = AuthProblem.unavailable;
+      }
+      status = SessionStatus.signedOut;
+    } on Object {
+      restoreProblem = AuthProblem.unavailable;
+      status = SessionStatus.signedOut;
+    }
   }
 
   /// The address to open in the phone's browser to sign in with single sign-on. The browser ends up on the app's own
   /// link (`com.velomine.app:/sso-callback?code=...`), which [finishAppSso] turns into a session.
-  Uri appSsoUrl(String server) {
+  Uri appSsoUrl() {
     final pkce = Pkce.generate();
     _ssoVerifier = pkce.verifier;
-    return Uri.parse('$server/api/v1/accounts/sso/login')
+    return Uri.parse('$serverUrl/api/v1/accounts/sso/login')
         .replace(queryParameters: {'codeChallenge': pkce.challenge});
   }
 
@@ -96,26 +165,39 @@ class Session extends ChangeNotifier {
     final verifier = _ssoVerifier;
     _ssoVerifier = null; // a code is good once
     if (verifier == null) return 'failed'; // the app was closed while the browser was open: start again
+
+    TokenResponse? token;
     try {
-      final token = await accounts.exchangeSsoCode(
+      token = await accounts.exchangeSsoCode(
         ExchangeSsoCodeRequest(code: code, codeVerifier: verifier),
       );
-      bearer.accessToken = token?.accessToken ?? '';
-      me = await accounts.getMe();
-      status = SessionStatus.signedIn;
-      notifyListeners();
-      return null;
     } on Object {
-      bearer.accessToken = '';
       return 'failed';
     }
+    if (token == null) return 'failed';
+
+    await auth.accept(token);
+    try {
+      me = await accounts.getMe();
+    } on ApiException catch (e) {
+      if (e.code == 401) {
+        await auth.clear();
+        return 'failed';
+      }
+    } on Object {
+      // The token is good; the next screen will read the member again.
+    }
+
+    status = SessionStatus.signedIn;
+    _notify();
+    return null;
   }
 
   /// Reads the signed-in member again, after they changed something shown elsewhere (their name).
   Future<void> refreshMe() async {
     try {
       me = await accounts.getMe() ?? me;
-      notifyListeners();
+      _notify();
     } on Object {
       // Keeps the name it had; the next start reads it again.
     }
@@ -123,29 +205,49 @@ class Session extends ChangeNotifier {
 
   /// Returns null on success, or the reason it failed.
   Future<AuthProblem?> signIn(String email, String password) async {
+    restoreProblem = null;
+
+    TokenResponse? token;
     try {
-      final token = await accounts.login(
+      token = await accounts.login(
         LoginRequest(
           email: email,
           password: password,
           useCookies: Optional.present(useCookies),
         ),
       );
-      if (!useCookies) bearer.accessToken = token?.accessToken ?? '';
-      me = await accounts.getMe();
-      status = SessionStatus.signedIn;
-      notifyListeners();
-      return null;
     } on ApiException catch (e) {
+      if (e.code == 401) {
+        await auth.clear();
+        return AuthProblem.wrongPassword;
+      }
       return switch (e.code) {
         403 => AuthProblem.notApproved,
         423 => AuthProblem.lockedOut,
-        401 => AuthProblem.wrongPassword,
         _ => AuthProblem.unavailable,
       };
     } on Object {
       return AuthProblem.unavailable;
     }
+
+    if (!useCookies) {
+      if (token == null) return AuthProblem.unavailable;
+      await auth.accept(token);
+    }
+
+    try {
+      me = await accounts.getMe();
+    } on ApiException catch (e) {
+      if (e.code == 401) await auth.clear();
+      return AuthProblem.unavailable;
+    } on Object {
+      // The login succeeded; the next call will read the member again.
+      return AuthProblem.unavailable;
+    }
+
+    status = SessionStatus.signedIn;
+    _notify();
+    return null;
   }
 
   /// Returns null on success. [approved] says whether the new account can sign in right away.
@@ -184,18 +286,19 @@ class Session extends ChangeNotifier {
     } on Object {
       // The session is dropped on this side either way.
     }
-    bearer.accessToken = '';
+    await auth.clear();
     me = null;
     status = SessionStatus.signedOut;
-    notifyListeners();
+    restoreProblem = null;
+    _notify();
   }
 
-  /// A call came back 401: the session ended (expired token or cookie). Back to the sign-in screen.
+  /// A call came back 401: the session ended (expired token, revoked token or cookie). Back to the sign-in screen.
   void sessionExpired() {
     if (status != SessionStatus.signedIn) return;
-    bearer.accessToken = '';
+    unawaited(auth.clear());
     me = null;
     status = SessionStatus.signedOut;
-    notifyListeners();
+    _notify();
   }
 }

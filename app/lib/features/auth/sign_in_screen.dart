@@ -31,10 +31,12 @@ class SignInScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.startSso,
+    this.onChangeServer,
   });
 
   final Session session;
   final SsoStarter startSso;
+  final Future<void> Function()? onChangeServer;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -75,8 +77,12 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     final sso = widget.session.sso;
+    final restoreProblem = widget.session.restoreProblem;
     final message =
-        _error ?? (_ssoError == null ? null : ssoErrorText(_ssoError!));
+        _error ??
+        (restoreProblem == null
+            ? (_ssoError == null ? null : ssoErrorText(_ssoError!))
+            : authProblemText(restoreProblem));
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
@@ -91,6 +97,27 @@ class _SignInScreenState extends State<SignInScreen> {
                   style: Theme.of(context).textTheme.headlineLarge,
                   textAlign: TextAlign.center,
                 ),
+                if (widget.onChangeServer != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Server: ${widget.session.serverUrl}',
+                          key: const Key('server-address'),
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      TextButton(
+                        key: const Key('change-server'),
+                        onPressed: widget.onChangeServer,
+                        child: const Text('Change'),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 24),
                 TextField(
                   key: const Key('email'),
@@ -116,6 +143,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
+                  ),
+                ],
+                if (restoreProblem != null) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    key: const Key('retry-session'),
+                    onPressed: widget.session.retryRestore,
+                    child: const Text('Try again'),
                   ),
                 ],
                 const SizedBox(height: 16),

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/hooks.dart';
-import 'core/server_url.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
 import 'core/theme_choice.dart';
@@ -23,6 +22,8 @@ import 'features/profile/profile_controller.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/progress/progress_controller.dart';
 import 'features/progress/progress_screen.dart';
+import 'features/recording/recording_screen.dart';
+import 'features/recording/ride_uploader.dart';
 import 'features/rides/detail/ride_detail_controller.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
 import 'features/rides/rides_controller.dart';
@@ -35,11 +36,9 @@ Future<XFile?> _pickRideFile() => openFile(
   ],
 );
 
-Future<void> _startWebSso() async {
+Future<void> _startWebSso(String server) async {
   // The server redirects to the provider and back, ending on the home page: leave this page for it.
-  final login = Uri.parse(
-    '${serverUrl()}/api/v1/accounts/sso/login?returnUrl=%2F',
-  );
+  final login = Uri.parse('$server/api/v1/accounts/sso/login?returnUrl=%2F');
   await launchUrl(login, webOnlyWindowName: '_self');
 }
 
@@ -50,10 +49,7 @@ Future<void> _openLink(Uri uri) async {
 
 /// On a phone the system browser signs in and hands back through the app's own link (see Session.appSsoUrl).
 Future<void> _startAppSso(Session session) async {
-  await launchUrl(
-    session.appSsoUrl(serverUrl()),
-    mode: LaunchMode.externalApplication,
-  );
+  await launchUrl(session.appSsoUrl(), mode: LaunchMode.externalApplication);
 }
 
 class VelomineApp extends StatefulWidget {
@@ -64,6 +60,7 @@ class VelomineApp extends StatefulWidget {
     this.pickFile = _pickRideFile,
     this.startSso,
     this.openLink = _openLink,
+    this.onChangeServer,
     this.uploadPollInterval = const Duration(seconds: 1),
     this.notificationPollInterval = const Duration(minutes: 1),
   });
@@ -73,6 +70,7 @@ class VelomineApp extends StatefulWidget {
   final FilePicker pickFile;
   final SsoStarter? startSso;
   final LinkOpener openLink;
+  final Future<void> Function()? onChangeServer;
   final Duration uploadPollInterval;
   final Duration notificationPollInterval;
 
@@ -129,7 +127,9 @@ class _VelomineAppState extends State<VelomineApp> {
 
   late final SsoStarter _startSso =
       widget.startSso ??
-      (kIsWeb ? _startWebSso : () => _startAppSso(widget.session));
+      (kIsWeb
+          ? () => _startWebSso(widget.session.serverUrl)
+          : () => _startAppSso(widget.session));
 
   late final GoRouter _router = GoRouter(
     initialLocation: '/',
@@ -143,6 +143,7 @@ class _VelomineAppState extends State<VelomineApp> {
         return open.contains(path) ? null : '/sign-in';
       }
       if (open.contains(path) || path == '/') return '/rides';
+      if (path == '/record' && kIsWeb) return '/rides';
       if (path == '/admin' && !session.isAdmin) return '/rides';
       return null;
     },
@@ -150,8 +151,11 @@ class _VelomineAppState extends State<VelomineApp> {
       GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
       GoRoute(
         path: '/sign-in',
-        builder: (_, _) =>
-            SignInScreen(session: widget.session, startSso: _startSso),
+        builder: (_, _) => SignInScreen(
+          session: widget.session,
+          startSso: _startSso,
+          onChangeServer: widget.onChangeServer,
+        ),
       ),
       GoRoute(
         path: '/sso-callback',
@@ -197,6 +201,14 @@ class _VelomineAppState extends State<VelomineApp> {
             ),
           ),
           GoRoute(
+            path: '/record',
+            builder: (_, _) => RecordingScreen(
+              uploader: ServerRideUploader(widget.session.rides),
+              onUnauthorized: widget.session.sessionExpired,
+              serverUrl: widget.session.serverUrl,
+            ),
+          ),
+          GoRoute(
             path: '/progress',
             builder: (_, _) => ProgressScreen(controller: _progress),
           ),
@@ -212,6 +224,7 @@ class _VelomineAppState extends State<VelomineApp> {
             builder: (_, _) => _ProfilePage(
               session: widget.session,
               openLink: widget.openLink,
+              serverUrl: widget.session.serverUrl,
             ),
           ),
           GoRoute(
@@ -365,10 +378,15 @@ class _BikeDetailPageState extends State<_BikeDetailPage> {
 
 /// Owns the profile controller, so the form is read fresh each time the screen opens.
 class _ProfilePage extends StatefulWidget {
-  const _ProfilePage({required this.session, required this.openLink});
+  const _ProfilePage({
+    required this.session,
+    required this.openLink,
+    required this.serverUrl,
+  });
 
   final Session session;
   final LinkOpener openLink;
+  final String serverUrl;
 
   @override
   State<_ProfilePage> createState() => _ProfilePageState();
@@ -390,6 +408,7 @@ class _ProfilePageState extends State<_ProfilePage> {
   @override
   Widget build(BuildContext context) => ProfileScreen(
     controller: _controller,
+    serverUrl: widget.serverUrl,
     emailAvailable: widget.session.serverInfo?.emailAvailable ?? false,
     openLink: widget.openLink,
     // The account is gone: sign out, which sends the app to the sign-in screen.

@@ -42,8 +42,11 @@ void main() {
   testWidgets('the browser address carries the challenge, never the secret', (
     tester,
   ) async {
-    final session = server.session(useCookies: false);
-    final url = session.appSsoUrl('https://velo.example');
+    final session = server.session(
+      useCookies: false,
+      serverUrl: 'https://velo.example',
+    );
+    final url = session.appSsoUrl();
 
     expect(url.path, '/api/v1/accounts/sso/login');
     expect(url.host, 'velo.example');
@@ -58,9 +61,7 @@ void main() {
     tester,
   ) async {
     final session = server.session(useCookies: false);
-    server.ssoChallenge = session
-        .appSsoUrl('http://server')
-        .queryParameters['codeChallenge'];
+    server.ssoChallenge = session.appSsoUrl().queryParameters['codeChallenge'];
     server.ssoCodes['good-code'] = server.accounts['rider@sso.test']!;
     await startApp(tester, session);
 
@@ -77,9 +78,7 @@ void main() {
     tester,
   ) async {
     final session = server.session(useCookies: false);
-    server.ssoChallenge = session
-        .appSsoUrl('http://server')
-        .queryParameters['codeChallenge'];
+    server.ssoChallenge = session.appSsoUrl().queryParameters['codeChallenge'];
     await startApp(tester, session);
 
     openLink(tester, '/sso-callback?code=stolen-or-old');

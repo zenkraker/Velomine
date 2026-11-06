@@ -9,7 +9,9 @@ import 'package:velomine/app.dart';
 import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/pkce.dart';
 import 'package:velomine/core/session.dart';
+import 'package:velomine/core/session_auth.dart';
 import 'package:velomine/core/theme_choice.dart';
+import 'package:velomine/core/token_store.dart';
 import 'package:velomine_api/api.dart';
 
 class FakeAccount {
@@ -69,6 +71,15 @@ class FakeServer {
   /// How many export download links were asked for.
   int exportLinks = 0;
 
+  /// Simulates a server that cannot be reached: every request fails before it is handled.
+  bool unreachable = false;
+
+  /// How long the access tokens the fake hands out last.
+  int tokenExpiresIn = 3600;
+
+  /// How many refresh-token exchanges were made.
+  int refreshCount = 0;
+
   /// Who a test email was sent to, and what the mail server answered.
   final testEmails = <String>[];
   int testEmailStatus = 204;
@@ -99,14 +110,28 @@ class FakeServer {
   /// Pretend the browser already holds a session cookie for this account.
   void signInBrowser(FakeAccount account) => _cookieUser = account;
 
-  Session session({required bool useCookies, String? ssoError}) {
-    final bearer = HttpBearerAuth();
-    final api = ApiClient(basePath: 'http://server', authentication: bearer)
+  Session session({
+    required bool useCookies,
+    String? ssoError,
+    TokenStore? tokenStore,
+    DateTime Function()? now,
+    String serverUrl = 'http://server',
+  }) {
+    final baseUrl = serverUrl;
+    final auth = SessionAuth(
+      baseUrl: baseUrl,
+      store: tokenStore ?? MemoryTokenStore(),
+      useCookies: useCookies,
+      refreshClient: client,
+      now: now,
+    );
+    final api = ApiClient(basePath: baseUrl, authentication: auth)
       ..client = client;
     return Session(
       client: api,
-      bearer: bearer,
+      auth: auth,
       useCookies: useCookies,
+      serverUrl: baseUrl,
       ssoError: ssoError,
     );
   }
@@ -120,6 +145,9 @@ class FakeServer {
   }
 
   Future<http.Response> _handle(http.Request request) async {
+    if (unreachable) {
+      throw http.ClientException('The server is unreachable.', request.url);
+    }
     final path = request.url.path;
     requests.add('${request.method} $path');
     http.Response json(Object? body, [int status = 200]) => http.Response(
@@ -147,6 +175,25 @@ class FakeServer {
       });
     }
 
+    if (path == '/api/v1/accounts/refresh') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final saved = body['refreshToken'] as String?;
+      final email = saved != null && saved.startsWith('r-')
+          ? saved.substring(2)
+          : null;
+      final account = email == null ? null : accounts[email];
+      if (account == null || !account.approved || account.locked) {
+        return http.Response('', 401);
+      }
+      refreshCount++;
+      return json({
+        'tokenType': 'Bearer',
+        'accessToken': 't-${account.email}',
+        'expiresIn': tokenExpiresIn,
+        'refreshToken': 'r-${account.email}',
+      });
+    }
+
     if (path == '/api/v1/accounts/login') {
       final body = jsonDecode(request.body) as Map<String, Object?>;
       final account = accounts[body['email']];
@@ -163,8 +210,8 @@ class FakeServer {
       return json({
         'tokenType': 'Bearer',
         'accessToken': 't-${account.email}',
-        'expiresIn': 3600,
-        'refreshToken': 'r',
+        'expiresIn': tokenExpiresIn,
+        'refreshToken': 'r-${account.email}',
       });
     }
     if (path == '/api/v1/accounts/sso/token') {
@@ -177,8 +224,8 @@ class FakeServer {
       return json({
         'tokenType': 'Bearer',
         'accessToken': 't-${account.email}',
-        'expiresIn': 3600,
-        'refreshToken': 'r',
+        'expiresIn': tokenExpiresIn,
+        'refreshToken': 'r-${account.email}',
       });
     }
     if (path == '/api/v1/accounts/logout') {
@@ -714,6 +761,7 @@ Future<void> startApp(
   SsoStarter? startSso,
   ThemeChoice? themeChoice,
   LinkOpener? openLink,
+  Future<void> Function()? onChangeServer,
 }) async {
   await tester.runAsync(session.restore);
   await tester.pumpWidget(
@@ -723,10 +771,27 @@ Future<void> startApp(
       pickFile: pickFile ?? () async => null,
       startSso: startSso ?? () async {},
       openLink: openLink ?? (_) async {},
+      onChangeServer: onChangeServer,
       uploadPollInterval: const Duration(milliseconds: 10),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+/// Keeps the refresh token in memory instead of the platform's secure storage.
+class MemoryTokenStore implements TokenStore {
+  MemoryTokenStore([this.token]);
+
+  String? token;
+
+  @override
+  Future<String?> readRefreshToken() async => token;
+
+  @override
+  Future<void> writeRefreshToken(String value) async => token = value;
+
+  @override
+  Future<void> clear() async => token = null;
 }
 
 /// Keeps the theme choice in memory instead of the device's preferences.

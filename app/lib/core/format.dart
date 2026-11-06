@@ -17,6 +17,18 @@ String duration(double? seconds) {
   return h > 0 ? '$h h ${m.toString().padLeft(2, '0')} min' : '$m min';
 }
 
+/// A running clock, for the recorder: "7:05" or "1:02:03".
+String stopwatch(double? seconds) {
+  if (seconds == null) return '–';
+  final total = seconds.round().clamp(0, 359999);
+  final h = total ~/ 3600;
+  final m = (total % 3600) ~/ 60;
+  final s = total % 60;
+  final mm = m.toString().padLeft(2, '0');
+  final ss = s.toString().padLeft(2, '0');
+  return h > 0 ? '$h:$mm:$ss' : '$m:$ss';
+}
+
 String dateTime(DateTime? value) =>
     value == null ? '–' : DateFormat.yMMMd().add_Hm().format(value.toLocal());
 

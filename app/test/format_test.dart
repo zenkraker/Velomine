@@ -16,4 +16,11 @@ void main() {
     expect(duration(3599), '1 h 00 min'); // 59.98 min rounds up to the hour
     expect(duration(null), '–');
   });
+
+  test('the recorder clock shows seconds', () {
+    expect(stopwatch(0), '0:00');
+    expect(stopwatch(65), '1:05');
+    expect(stopwatch(3723), '1:02:03');
+    expect(stopwatch(null), '–');
+  });
 }

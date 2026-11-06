@@ -12,5 +12,29 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    let channel = FlutterMethodChannel(
+      name: "velomine/secure_storage",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    let store = SecureTokenStore()
+
+    channel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "readRefreshToken":
+        result(store.read())
+      case "writeRefreshToken":
+        guard let token = call.arguments as? String else {
+          result(FlutterError(code: "bad_argument", message: "No token was sent.", details: nil))
+          return
+        }
+        result(store.write(token))
+      case "clear":
+        store.clear()
+        result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
   }
 }

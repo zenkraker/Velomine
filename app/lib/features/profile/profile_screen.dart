@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/hooks.dart';
-import '../../core/server_url.dart';
 
 import 'profile_controller.dart';
 
@@ -24,9 +23,13 @@ class ProfileScreen extends StatefulWidget {
     required this.emailAvailable,
     required this.openLink,
     required this.onAccountDeleted,
+    required this.serverUrl,
   });
 
   final ProfileController controller;
+
+  /// The server this session belongs to, used for the export download link.
+  final String serverUrl;
 
   /// Whether the server can send email at all; the switch is explained and disabled when it cannot.
   final bool emailAvailable;
@@ -96,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _export() async {
     final path = await widget.controller.exportLink();
     if (path == null) return;
-    await widget.openLink(Uri.parse('${serverUrl()}$path'));
+    await widget.openLink(Uri.parse('${widget.serverUrl}$path'));
     if (mounted) setState(() => _exported = true);
   }
 

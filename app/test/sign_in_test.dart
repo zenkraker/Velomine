@@ -56,6 +56,23 @@ void main() {
     expect(find.textContaining('waiting for an admin'), findsOneWidget);
   });
 
+  testWidgets('a phone can see which server it uses and change it', (
+    tester,
+  ) async {
+    var changed = false;
+    await startApp(
+      tester,
+      server.session(useCookies: false),
+      onChangeServer: () async => changed = true,
+    );
+
+    expect(find.byKey(const Key('server-address')), findsOneWidget);
+    expect(find.text('Server: http://server'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('change-server')));
+    expect(changed, isTrue);
+  });
+
   testWidgets('a wrong password is explained', (tester) async {
     server.add('rider@example.com');
     await startApp(tester, server.session(useCookies: false));

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,12 +24,19 @@ class HomeShell extends StatelessWidget {
   final String location;
   final Widget child;
 
-  static const _destinations = ['/rides', '/progress', '/bikes', '/admin'];
+  List<String> get _destinations => [
+    '/rides',
+    if (!kIsWeb) '/record',
+    '/progress',
+    '/bikes',
+    if (session.isAdmin) '/admin',
+  ];
 
   @override
   Widget build(BuildContext context) {
     final me = session.me;
-    final selected = _destinations.indexWhere(location.startsWith);
+    final destinations = _destinations;
+    final selected = destinations.indexWhere(location.startsWith);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Velomine'),
@@ -71,12 +79,17 @@ class HomeShell extends StatelessWidget {
         // index, so it keeps the first one with its highlight hidden.
         selectedIndex: selected < 0 ? 0 : selected,
         indicatorColor: selected < 0 ? Colors.transparent : null,
-        onDestinationSelected: (i) => context.go(_destinations[i]),
+        onDestinationSelected: (i) => context.go(destinations[i]),
         destinations: [
           const NavigationDestination(
             icon: Icon(Icons.directions_bike),
             label: 'Rides',
           ),
+          if (!kIsWeb)
+            const NavigationDestination(
+              icon: Icon(Icons.fiber_manual_record),
+              label: 'Record',
+            ),
           const NavigationDestination(
             icon: Icon(Icons.insights),
             label: 'Progress',
