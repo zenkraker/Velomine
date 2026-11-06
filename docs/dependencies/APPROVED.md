@@ -14,6 +14,4 @@
 
 ## Needs an evaluation before use
 
-| Need | Why | Candidates |
-|------|-----|------------|
-| Bluetooth LE in Flutter (sensors) | Flutter has no official BLE plugin. Evaluate and approve before the sensor work starts. | `universal_ble` |
+None at the moment. Bluetooth uses the native platform APIs (`BluetoothGatt` on Android, CoreBluetooth on iOS); no Flutter BLE package is needed while the recorder stays native.
