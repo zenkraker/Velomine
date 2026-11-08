@@ -2,7 +2,15 @@
   description = "Velomine dev environment (CachyOS + Nix)";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs = { nixpkgs, ... }:
+  # Official Dart and Flutter agent skills (BSD-3-Clause). Pinned in flake.lock;
+  # the dev shell links them into .claude/skills for Claude Code and OpenCode.
+  inputs.flutter-agent-plugins = {
+    url = "github:flutter/agent-plugins";
+    flake = false;
+  };
+
+  outputs =
+    { nixpkgs, flutter-agent-plugins, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -24,7 +32,10 @@
       # Versions Flutter 3.47's Gradle plugin asks for (compileSdk 36, NDK 28.2). Platform 35 is for the jni
       # package (dart.dev, used by shared_preferences on Android), which compiles against it.
       android = pkgs.androidenv.composeAndroidPackages {
-        platformVersions = [ "35" "36" ];
+        platformVersions = [
+          "35"
+          "36"
+        ];
         buildToolsVersions = [ "36.0.0" ];
         includeNDK = true;
         ndkVersions = [ "28.2.13676358" ];
@@ -47,12 +58,14 @@
       });
 
       # OpenCode V2 is not in nixpkgs' extension set yet.
-      opencodeV2Extension = pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
-        name = "opencode-v2";
-        publisher = "sst-dev";
-        version = "0.1.1";
-        sha256 = "sha256-11a8JaishNyy6XkTeh6s36efdt1tSNYclOdkglx8x30=";
-      }];
+      opencodeV2Extension = pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+        {
+          name = "opencode-v2";
+          publisher = "sst-dev";
+          version = "0.1.1";
+          sha256 = "sha256-11a8JaishNyy6XkTeh6s36efdt1tSNYclOdkglx8x30=";
+        }
+      ];
 
       # VS Code with the project's extensions, using the same Microsoft build as the
       # host package. Run it with `nix run .#vscode`.
@@ -64,9 +77,13 @@
           pkgs.vscode-extensions.jnoortheen.nix-ide
           pkgs.vscode-extensions.mkhl.direnv
           pkgs.vscode-extensions.ms-dotnettools.csdevkit
-        ] ++ opencodeV2Extension;
+        ]
+        ++ opencodeV2Extension;
       };
-    in {
+    in
+    {
+      formatter.${system} = pkgs.nixfmt;
+
       packages.${system} = {
         inherit opencode vscode;
       };
@@ -75,19 +92,24 @@
         packages = [
           # server
           dotnet
-          pkgs.postgresql_17   # psql only; same major version as the postgres:17 container
+          pkgs.postgresql_17 # psql only; same major version as the postgres:17 container
 
           # app
           android.androidsdk
-          pkgs.jdk17           # Gradle 9 / AGP 9 need Java 17+; also runs the OpenAPI generator JAR
+          pkgs.jdk17 # Gradle 9 / AGP 9 need Java 17+; also runs the OpenAPI generator JAR
 
           # AI coding agents and the tooling they share
-          pkgs.nodejs          # ponytail's hooks
+          pkgs.nodejs # ponytail's hooks
           pkgs.codegraph
-          opencode             # local override (see above); alternative to Claude Code
+          opencode # local override (see above); alternative to Claude Code
 
           # Flutter's own command-line needs, plus helpers
-          pkgs.git pkgs.curl pkgs.unzip pkgs.zip pkgs.xz pkgs.which
+          pkgs.git
+          pkgs.curl
+          pkgs.unzip
+          pkgs.zip
+          pkgs.xz
+          pkgs.which
           pkgs.just
           pkgs.nixd
         ];
@@ -127,6 +149,15 @@
 
           # Flutter web debugging uses the browser installed on your host.
           export CHROME_EXECUTABLE="$(command -v chromium || command -v google-chrome-stable || command -v google-chrome || true)"
+
+          # Official Dart/Flutter agent skills, pinned by the flake input. Link them
+          # beside the project's own skills so Claude Code and OpenCode discover them.
+          # The links are git-ignored, so refresh them with `direnv reload`.
+          mkdir -p "$REPO/.claude/skills"
+          find "$REPO/.claude/skills" -maxdepth 1 -type l -lname "${flutter-agent-plugins}/*" -delete
+          for skill in ${flutter-agent-plugins}/skills/*/; do
+            ln -sfn "''${skill%/}" "$REPO/.claude/skills/$(basename "$skill")"
+          done
 
           (cd "$REPO" && dotnet tool restore > /dev/null 2>&1) || true
         '';
