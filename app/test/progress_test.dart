@@ -41,6 +41,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> reveal(WidgetTester tester, Finder finder) async {
+    await tester.scrollUntilVisible(
+      finder,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('ProgressScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
     tester,
   ) async {
@@ -96,7 +105,12 @@ void main() {
     expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
     expect(find.byKey(const Key('tss-chart')), findsOneWidget);
 
-    await tester.tap(find.text('30 d'));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('training-range')),
+        matching: find.text('30 d'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(server.trainingRequests, [90, 30]);
@@ -108,6 +122,7 @@ void main() {
     server.goalCurrent['distance'] = 40000;
     await openProgress(tester);
 
+    await reveal(tester, find.byKey(const Key('add-goal')));
     await tester.tap(find.byKey(const Key('add-goal')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('goal-target')), '100');
@@ -137,6 +152,7 @@ void main() {
     await openProgress(tester);
     expect(find.text('Reached'), findsOneWidget);
 
+    await reveal(tester, find.byKey(const Key('goal-edit-goal-1')));
     await tester.tap(find.byKey(const Key('goal-edit-goal-1')));
     await tester.pumpAndSettle();
     expect(
@@ -152,6 +168,7 @@ void main() {
     expect(server.goals.single['target'], 72000.0);
     expect(find.text('10 h 00 min of 20 h 00 min · 50 %'), findsOneWidget);
 
+    await reveal(tester, find.byKey(const Key('goal-delete-goal-1')));
     await tester.tap(find.byKey(const Key('goal-delete-goal-1')));
     await tester.pumpAndSettle();
     expect(server.goals, isEmpty);
@@ -163,6 +180,7 @@ void main() {
   ) async {
     await openProgress(tester);
 
+    await reveal(tester, find.byKey(const Key('add-goal')));
     await tester.tap(find.byKey(const Key('add-goal')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('goal-save')));
@@ -170,5 +188,43 @@ void main() {
 
     expect(find.text('Enter a target above 0.'), findsOneWidget);
     expect(server.goals, isEmpty);
+  });
+
+  testWidgets('ProgressScreen_ShouldShowPowerAndReadiness_WhenAnalyticsLoad', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('power-curve-card')));
+    expect(find.byKey(const Key('readiness-card')), findsOneWidget);
+    expect(find.byKey(const Key('power-curve-card')), findsOneWidget);
+    expect(find.text('Estimated FTP'), findsOneWidget);
+    expect(find.byKey(const Key('use-ftp')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('use-ftp')));
+    await tester.pumpAndSettle();
+
+    expect(server.profiles['rider@example.com']?['ftpW'], 266);
+  });
+
+  testWidgets('ProgressScreen_ShouldAskForConsent_WhenWellbeingIsNotSetUp', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('wellbeing-consent')));
+    expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('wellbeing-consent')));
+    await tester.pumpAndSettle();
+
+    expect(server.wellbeingConsent, isTrue);
+    await reveal(tester, find.byKey(const Key('wellbeing-save')));
+    await tester.tap(find.byKey(const Key('wellbeing-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.wellbeingToday?['fatigue'], 3);
+    expect(server.wellbeingToday?['motivation'], 3);
+    expect(find.byKey(const Key('readiness-card')), findsOneWidget);
+    expect(find.text('How you feel'), findsOneWidget);
   });
 }

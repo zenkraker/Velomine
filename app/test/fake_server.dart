@@ -77,8 +77,17 @@ class FakeServer {
     'rides': 'none',
     'analytics': 'none',
     'routes': 'none',
+    'wellbeing': 'none',
   };
   final shareViews = <Map<String, Object?>>[];
+
+  /// Whether the fake member accepted the wellbeing terms, today's check-in and its history.
+  bool wellbeingConsent = false;
+  Map<String, Object?>? wellbeingToday;
+  final checkIns = <Map<String, Object?>>[];
+
+  /// The member's RPE and note per ride id.
+  final rideFeels = <String, Map<String, Object?>>{};
 
   /// What the admin settings screen is told, and the read-only status of what only the environment sets.
   final adminSettings = <String, Object?>{
@@ -343,6 +352,27 @@ class FakeServer {
       ride['bikeId'] = (jsonDecode(request.body) as Map)['bikeId'];
       return json(ride);
     }
+    final rideFeel = RegExp(r'^/api/v1/rides/([^/]+)/feel$').firstMatch(path);
+    if (rideFeel != null) {
+      final rideId = rideFeel.group(1)!;
+      if (!wellbeingConsent) {
+        return json({'consentRequired': true, 'rpe': null, 'notes': null});
+      }
+      if (request.method == 'DELETE') {
+        rideFeels.remove(rideId);
+        return http.Response('', 204);
+      }
+      if (request.method == 'PUT') {
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        rideFeels[rideId] = body;
+      }
+      final feel = rideFeels[rideId];
+      return json({
+        'consentRequired': false,
+        'rpe': feel?['rpe'],
+        'notes': feel?['notes'],
+      });
+    }
     final one = RegExp(r'^/api/v1/rides/([^/]+)$').firstMatch(path);
     if (one != null && request.method == 'DELETE') {
       rides.removeWhere((r) => r['id'] == one.group(1));
@@ -438,13 +468,18 @@ extension on FakeServer {
       return http.Response('', 204);
     }
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
+        !path.startsWith('/api/v1/accounts/me/ftp') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
         !path.startsWith('/api/v1/club') &&
         !path.startsWith('/api/v1/clubs') &&
         !path.startsWith('/api/v1/sharing') &&
+        !path.startsWith('/api/v1/wellbeing') &&
         !path.startsWith('/api/v1/admin')) {
       return null;
+    }
+    if (path.startsWith('/api/v1/wellbeing')) {
+      return _wellbeing(request, path, json);
     }
     if (path.startsWith('/api/v1/clubs')) {
       return _coach(request, path, caller, json);
@@ -479,6 +514,71 @@ extension on FakeServer {
       );
       if (request.method == 'PUT') profile.addAll(body);
       return json(profile);
+    }
+
+    if (path == '/api/v1/accounts/me/ftp') {
+      final profile = profiles.putIfAbsent(
+        caller.email,
+        () => {
+          'displayName': caller.name,
+          'ftpW': null,
+          'weightKg': null,
+          'maxHeartRate': null,
+          'timeZone': null,
+          'firstDayOfWeek': 'monday',
+          'emailNotifications': true,
+          'hasPassword': caller.password.isNotEmpty,
+        },
+      );
+      if (request.method == 'PUT') profile['ftpW'] = body['ftpW'];
+      return json(profile);
+    }
+
+    if (path == '/api/v1/analytics/power-curve') {
+      final days =
+          int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90;
+      final profile = profiles[caller.email] ?? const <String, Object?>{};
+      return json({
+        'dayCount': days,
+        'from': '2026-08-11',
+        'to': '2026-11-08',
+        'rides': rides.length,
+        'hasPower': true,
+        'currentFtpW': profile['ftpW'],
+        'weightKg': profile['weightKg'],
+        'points': [
+          {'seconds': 1, 'watts': 800},
+          {'seconds': 5, 'watts': 600},
+          {'seconds': 60, 'watts': 400},
+          {'seconds': 300, 'watts': 320},
+          {'seconds': 1200, 'watts': 280},
+        ],
+        'ftp': {
+          'watts': 266,
+          'method': '20min',
+          'from': '2026-10-20',
+          'wPerKg': profile['weightKg'] == null ? null : 3.5,
+        },
+        'vo2Max': profile['weightKg'] == null
+            ? null
+            : {'value': 50.0, 'method': '5min', 'from': '2026-10-20'},
+      });
+    }
+
+    if (path == '/api/v1/analytics/readiness') {
+      return json({
+        'date': '2026-11-08',
+        'score': 62,
+        'band': 'normal',
+        'hasWellbeing': wellbeingToday != null,
+        'factors': [
+          {'key': 'form', 'value': -8.2, 'effect': -10.0},
+          {'key': 'ramp', 'value': 2.1, 'effect': -2.0},
+          {'key': 'recentLoad', 'value': 120.0, 'effect': 0.0},
+          if (wellbeingToday != null)
+            {'key': 'wellbeing', 'value': 3.6, 'effect': 6.0},
+        ],
+      });
     }
 
     if (path == '/api/v1/analytics/totals') {
@@ -674,6 +774,59 @@ extension on FakeServer {
     return http.Response('', 404);
   }
 
+  http.Response _wellbeing(
+    http.Request request,
+    String path,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    Map<String, Object?>? today() => wellbeingToday;
+
+    if (path == '/api/v1/wellbeing') {
+      return json({
+        'consentRequired': !wellbeingConsent,
+        'consented': wellbeingConsent,
+        'today': today(),
+      });
+    }
+
+    if (path == '/api/v1/wellbeing/consent' && request.method == 'POST') {
+      wellbeingConsent = true;
+      return json({
+        'consentRequired': false,
+        'consented': true,
+        'today': today(),
+      });
+    }
+
+    if (path == '/api/v1/wellbeing/check-ins/today' &&
+        request.method == 'PUT') {
+      if (!wellbeingConsent) {
+        return http.Response(
+          '{"detail":"Accept the wellbeing terms first."}',
+          409,
+        );
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final saved = {'date': '2026-11-08', ...body};
+      wellbeingToday = saved;
+      checkIns.removeWhere((c) => c['date'] == saved['date']);
+      checkIns.add(saved);
+      return json(saved);
+    }
+
+    if (path == '/api/v1/wellbeing/check-ins') {
+      if (!wellbeingConsent) {
+        return http.Response(
+          '{"detail":"Accept the wellbeing terms first."}',
+          409,
+        );
+      }
+      return json({'checkIns': checkIns});
+    }
+
+    return http.Response('', 404);
+  }
+
   http.Response _sharing(
     http.Request request,
     String path,
@@ -707,6 +860,7 @@ extension on FakeServer {
       'sharesRides': sharingChoices['rides'] != 'none',
       'sharesAnalytics': sharingChoices['analytics'] != 'none',
       'sharesRoutes': sharingChoices['routes'] != 'none',
+      'sharesWellbeing': sharingChoices['wellbeing'] != 'none',
       'lastRideAt': sharingChoices['rides'] != 'none' && rides.isNotEmpty
           ? rides.first['startTime']
           : null,
@@ -756,6 +910,57 @@ extension on FakeServer {
       final days =
           int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90;
       return json(trainingJson(days: days));
+    }
+
+    final coachCurve = RegExp(
+      r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/power-curve$',
+    ).firstMatch(path);
+    if (coachCurve != null) {
+      if (sharingChoices['analytics'] == 'none') return http.Response('', 404);
+      return json({
+        'dayCount':
+            int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90,
+        'from': '2026-08-11',
+        'to': '2026-11-08',
+        'rides': rides.length,
+        'hasPower': true,
+        'currentFtpW': null,
+        'weightKg': null,
+        'points': [
+          {'seconds': 1, 'watts': 800},
+          {'seconds': 5, 'watts': 600},
+          {'seconds': 60, 'watts': 400},
+          {'seconds': 300, 'watts': 320},
+          {'seconds': 1200, 'watts': 280},
+        ],
+        'ftp': {
+          'watts': 266,
+          'method': '20min',
+          'from': '2026-10-20',
+          'wPerKg': null,
+        },
+        'vo2Max': null,
+      });
+    }
+
+    final coachWellbeing = RegExp(
+      r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/wellbeing$',
+    ).firstMatch(path);
+    if (coachWellbeing != null) {
+      if (sharingChoices['wellbeing'] == 'none') {
+        return http.Response('', 404);
+      }
+      return json({
+        'checkIns': checkIns,
+        'rides': [
+          for (final entry in rideFeels.entries)
+            {
+              'rideId': entry.key,
+              'date': '2026-11-08',
+              'rpe': entry.value['rpe'],
+            },
+        ],
+      });
     }
 
     final one = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)$')

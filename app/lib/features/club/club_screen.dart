@@ -25,6 +25,8 @@ String _viewName(AppLocalizations l10n, String what) => switch (what) {
   'ride' => l10n.viewRide,
   'rides' => l10n.viewRides,
   'route' => l10n.viewRoute,
+  'power-curve' => l10n.viewPowerCurve,
+  'wellbeing' => l10n.viewWellbeing,
   _ => l10n.viewSummary,
 };
 
@@ -453,6 +455,13 @@ class _SharingCard extends StatelessWidget {
                 (v) => sharing.choose(routes: v),
                 enabled: sharing.rides != 'none',
                 helper: sharing.rides == 'none' ? l10n.routesNeedRides : null,
+              ),
+              choice(
+                l10n.shareWellbeing,
+                sharing.wellbeing,
+                'share-wellbeing',
+                (v) => sharing.choose(wellbeing: v),
+                helper: l10n.shareWellbeingHelper,
               ),
             ],
             if (sharing.error != null)

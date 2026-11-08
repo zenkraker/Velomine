@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
+import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../progress/power_summary.dart';
 import '../progress/training_summary.dart';
 import 'coach_controllers.dart';
 
@@ -92,6 +95,8 @@ class _CoachAthleteScreenState extends State<CoachAthleteScreen> {
                             Chip(label: Text(l10n.sharesTraining)),
                           if (summary.sharesRoutes)
                             Chip(label: Text(l10n.sharesRoutes)),
+                          if (summary.sharesWellbeing)
+                            Chip(label: Text(l10n.sharesWellbeing)),
                         ],
                       ),
                       if (c.error != null)
@@ -109,6 +114,16 @@ class _CoachAthleteScreenState extends State<CoachAthleteScreen> {
                           onDays: (days) =>
                               c.setDays(widget.clubId, widget.userId, days),
                         ),
+                      if (c.powerCurve case final curve?)
+                        PowerSummary(
+                          curve: curve,
+                          days: c.days,
+                          onDays: (days) =>
+                              c.setDays(widget.clubId, widget.userId, days),
+                          readOnly: true,
+                        ),
+                      if (c.wellbeing case final wellbeing?)
+                        _CoachWellbeingCard(wellbeing: wellbeing),
                       if (summary.sharesRides) ...[
                         Text(l10n.shareRides, style: text.titleMedium),
                         if (c.rides.isEmpty)
@@ -145,6 +160,61 @@ class _CoachAthleteScreenState extends State<CoachAthleteScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+/// What a coach may see of wellbeing: daily scores and per-ride RPE, never the member's notes.
+class _CoachWellbeingCard extends StatelessWidget {
+  const _CoachWellbeingCard({required this.wellbeing});
+
+  final CoachWellbeingResponse wellbeing;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    String date(DateTime value) => DateFormat.MMMd(locale).format(value);
+
+    return Card(
+      key: const Key('coach-wellbeing'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.coachWellbeing, style: text.titleMedium),
+            const SizedBox(height: 4),
+            Text(l10n.coachWellbeingNoNotes, style: text.bodySmall),
+            if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty) ...[
+              const SizedBox(height: 8),
+              Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
+            ],
+            for (final checkIn in wellbeing.checkIns)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  '${date(checkIn.date)} · '
+                  '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
+                  '${l10n.wellbeingShortSoreness} ${checkIn.soreness} · '
+                  '${l10n.wellbeingShortMood} ${checkIn.mood} · '
+                  '${l10n.wellbeingShortStress} ${checkIn.stress} · '
+                  '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+                  style: text.bodySmall,
+                ),
+              ),
+            for (final ride in wellbeing.rides)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
+                  style: text.bodySmall,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

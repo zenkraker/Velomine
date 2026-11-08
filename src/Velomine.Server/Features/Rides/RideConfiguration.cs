@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Velomine.Server.Features.Rides;
 
-public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityTypeConfiguration<RideStreams>
+public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityTypeConfiguration<RideStreams>, IEntityTypeConfiguration<RidePowerBest>
 {
     public void Configure(EntityTypeBuilder<Ride> ride)
     {
@@ -44,5 +44,13 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         streams.Property(s => s.Power).HasColumnType("smallint[]");
         streams.Property(s => s.Cadence).HasColumnType("smallint[]");
         streams.Property(s => s.Temperature).HasColumnType("smallint[]");
+    }
+
+    public void Configure(EntityTypeBuilder<RidePowerBest> best)
+    {
+        best.ToTable("ride_power_bests", "rides");
+        best.HasKey(b => new { b.RideId, b.DurationS });
+        best.Property(b => b.Watts).IsRequired();
+        best.HasOne<Ride>().WithMany(r => r.PowerBests).HasForeignKey(b => b.RideId).OnDelete(DeleteBehavior.Cascade);
     }
 }

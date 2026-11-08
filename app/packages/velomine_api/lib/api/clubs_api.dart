@@ -70,6 +70,68 @@ class ClubsApi {
     return null;
   }
 
+  /// Performs an HTTP 'GET /api/v1/clubs/{clubId}/athletes/{userId}/power-curve' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] clubId (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [int] days:
+  Future<Response> coachGetCoachPowerCurveWithHttpInfo(String clubId, String userId, { int? days, Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/clubs/{clubId}/athletes/{userId}/power-curve'
+      .replaceAll('{clubId}', clubId)
+      .replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (days != null) {
+      queryParams.addAll(_queryParams('', 'days', days));
+    }
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] clubId (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [int] days:
+  Future<PowerCurveResponse?> coachGetCoachPowerCurve(String clubId, String userId, { int? days, Future<void>? abortTrigger, }) async {
+    final response = await coachGetCoachPowerCurveWithHttpInfo(clubId, userId, days: days, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'PowerCurveResponse',) as PowerCurveResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}' operation and returns the [Response].
   /// Parameters:
   ///
@@ -253,6 +315,68 @@ class ClubsApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TrainingResponse',) as TrainingResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/clubs/{clubId}/athletes/{userId}/wellbeing' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] clubId (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [int] days:
+  Future<Response> coachGetCoachWellbeingWithHttpInfo(String clubId, String userId, { int? days, Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/clubs/{clubId}/athletes/{userId}/wellbeing'
+      .replaceAll('{clubId}', clubId)
+      .replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (days != null) {
+      queryParams.addAll(_queryParams('', 'days', days));
+    }
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] clubId (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [int] days:
+  Future<CoachWellbeingResponse?> coachGetCoachWellbeing(String clubId, String userId, { int? days, Future<void>? abortTrigger, }) async {
+    final response = await coachGetCoachWellbeingWithHttpInfo(clubId, userId, days: days, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'CoachWellbeingResponse',) as CoachWellbeingResponse;
     
     }
     return null;

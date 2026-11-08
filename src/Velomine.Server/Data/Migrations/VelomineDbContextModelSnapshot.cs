@@ -291,6 +291,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("weight_kg");
 
+                    b.Property<DateTimeOffset?>("WellbeingConsentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("wellbeing_consent_at");
+
+                    b.Property<int?>("WellbeingConsentVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("wellbeing_consent_version");
+
                     b.HasKey("Id")
                         .HasName("pk_users");
 
@@ -864,6 +872,26 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("rides", "rides");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Rides.RidePowerBest", b =>
+                {
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<int>("DurationS")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_s");
+
+                    b.Property<int>("Watts")
+                        .HasColumnType("integer")
+                        .HasColumnName("watts");
+
+                    b.HasKey("RideId", "DurationS")
+                        .HasName("pk_ride_power_bests");
+
+                    b.ToTable("ride_power_bests", "rides");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.RideStreams", b =>
                 {
                     b.Property<Guid>("RideId")
@@ -962,7 +990,7 @@ namespace Velomine.Server.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_share_grants_audience", "audience IN ('coaches', 'club')");
 
-                            t.HasCheckConstraint("ck_share_grants_data_type", "data_type IN ('rides', 'analytics', 'routes')");
+                            t.HasCheckConstraint("ck_share_grants_data_type", "data_type IN ('rides', 'analytics', 'routes', 'wellbeing')");
                         });
                 });
 
@@ -1008,6 +1036,98 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_view_log_member_id_at");
 
                     b.ToTable("view_log", "sharing");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Fatigue")
+                        .HasColumnType("integer")
+                        .HasColumnName("fatigue");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<int>("Mood")
+                        .HasColumnType("integer")
+                        .HasColumnName("mood");
+
+                    b.Property<int>("Motivation")
+                        .HasColumnType("integer")
+                        .HasColumnName("motivation");
+
+                    b.Property<int>("Soreness")
+                        .HasColumnType("integer")
+                        .HasColumnName("soreness");
+
+                    b.Property<int>("Stress")
+                        .HasColumnType("integer")
+                        .HasColumnName("stress");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_daily_check_ins");
+
+                    b.HasIndex("UserId", "LocalDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_daily_check_ins_user_id_local_date");
+
+                    b.ToTable("daily_check_ins", "wellbeing", t =>
+                        {
+                            t.HasCheckConstraint("ck_daily_check_ins_fatigue", "fatigue BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_daily_check_ins_mood", "mood BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_daily_check_ins_motivation", "motivation BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_daily_check_ins_soreness", "soreness BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_daily_check_ins_stress", "stress BETWEEN 1 AND 5");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Wellbeing.RideFeel", b =>
+                {
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("Rpe")
+                        .HasColumnType("integer")
+                        .HasColumnName("rpe");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("RideId")
+                        .HasName("pk_ride_feel");
+
+                    b.ToTable("ride_feel", "wellbeing", t =>
+                        {
+                            t.HasCheckConstraint("ck_ride_feel_rpe", "rpe BETWEEN 1 AND 10");
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -1174,6 +1294,16 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Rides.RidePowerBest", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany("PowerBests")
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ride_power_bests_rides_ride_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.RideStreams", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Rides.Ride", null)
@@ -1204,6 +1334,26 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_view_log_users_member_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_daily_check_ins_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Wellbeing.RideFeel", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithOne()
+                        .HasForeignKey("Velomine.Server.Features.Wellbeing.RideFeel", "RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ride_feel_rides_ride_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
                 {
                     b.Navigation("Components");
@@ -1216,6 +1366,8 @@ namespace Velomine.Server.Data.Migrations
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
+                    b.Navigation("PowerBests");
+
                     b.Navigation("Streams");
                 });
 #pragma warning restore 612, 618

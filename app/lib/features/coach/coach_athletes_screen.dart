@@ -77,10 +77,13 @@ class _CoachAthletesScreenState extends State<CoachAthletesScreen> {
                               if (athlete.tss42 != null)
                                 '${l10n.days42}: ${athlete.tss42!.round()} TSS',
                               if (athlete.lastRideAt == null &&
-                                  athlete.tss7 == null)
-                                athlete.sharesRides
-                                    ? l10n.sharesRides
-                                    : l10n.sharesTraining,
+                                  athlete.tss7 == null) ...[
+                                if (athlete.sharesRides) l10n.sharesRides,
+                                if (athlete.sharesAnalytics)
+                                  l10n.sharesTraining,
+                                if (athlete.sharesWellbeing)
+                                  l10n.sharesWellbeing,
+                              ],
                             ].join(' · '),
                           ),
                           trailing: const Icon(Icons.chevron_right),

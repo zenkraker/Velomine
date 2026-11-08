@@ -8,7 +8,7 @@ using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Features.Sharing;
 
-public sealed record SharingResponse(string Rides, string Analytics, string Routes);
+public sealed record SharingResponse(string Rides, string Analytics, string Routes, string Wellbeing);
 
 public sealed class UpdateSharingRequest
 {
@@ -20,6 +20,9 @@ public sealed class UpdateSharingRequest
 
     /// <summary>none, coaches or club.</summary>
     public required string Routes { get; set; }
+
+    /// <summary>none, coaches or club.</summary>
+    public required string Wellbeing { get; set; }
 }
 
 public sealed class UpdateSharingValidator : Validator<UpdateSharingRequest>
@@ -34,6 +37,7 @@ public sealed class UpdateSharingValidator : Validator<UpdateSharingRequest>
             .Must(Choices.Contains).WithMessage("Choose none or coaches.")
             .Must((request, routes) => routes == "none" || request.Rides != "none")
             .WithMessage("Share rides before sharing routes.");
+        RuleFor(x => x.Wellbeing).Must(Choices.Contains).WithMessage("Choose none or coaches.");
     }
 }
 
@@ -57,7 +61,11 @@ public sealed class GetSharing(VelomineDbContext db) : EndpointWithoutRequest<Sh
 
         var grants = await db.ShareGrants.AsNoTracking().Where(g => g.MemberId == User.UserId()).ToListAsync(ct);
         string Choice(string type) => grants.FirstOrDefault(g => g.DataType == type)?.Audience ?? "none";
-        await Send.OkAsync(new SharingResponse(Choice(DataTypes.Rides), Choice(DataTypes.Analytics), Choice(DataTypes.Routes)), ct);
+        await Send.OkAsync(new SharingResponse(
+            Choice(DataTypes.Rides),
+            Choice(DataTypes.Analytics),
+            Choice(DataTypes.Routes),
+            Choice(DataTypes.Wellbeing)), ct);
     }
 }
 
@@ -86,6 +94,7 @@ public sealed class UpdateSharing(VelomineDbContext db, TimeProvider time) : End
             [DataTypes.Rides] = req.Rides,
             [DataTypes.Analytics] = req.Analytics,
             [DataTypes.Routes] = req.Routes,
+            [DataTypes.Wellbeing] = req.Wellbeing,
         };
         var existing = await db.ShareGrants.Where(g => g.MemberId == userId).ToListAsync(ct);
         foreach (var (type, choice) in wanted)
@@ -118,6 +127,6 @@ public sealed class UpdateSharing(VelomineDbContext db, TimeProvider time) : End
         }
 
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(new SharingResponse(req.Rides, req.Analytics, req.Routes), ct);
+        await Send.OkAsync(new SharingResponse(req.Rides, req.Analytics, req.Routes, req.Wellbeing), ct);
     }
 }

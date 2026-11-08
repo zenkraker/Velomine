@@ -113,6 +113,8 @@ class _VelomineAppState extends State<VelomineApp> {
 
   late final ProgressController _progress = ProgressController(
     api: widget.session.analytics,
+    accounts: widget.session.accounts,
+    wellbeing: widget.session.wellbeing,
     onUnauthorized: widget.session.sessionExpired,
   );
 

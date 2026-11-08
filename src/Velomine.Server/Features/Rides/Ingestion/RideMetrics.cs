@@ -17,7 +17,8 @@ public sealed record RideMetricValues(
     int? AvgCadence,
     double? IntensityFactor = null,
     double? Tss = null,
-    double? Trimp = null);
+    double? Trimp = null,
+    int[]? PowerBests = null);
 
 /// <summary>
 /// The numbers shown for a ride, worked out from its samples. Pure functions, no I/O.
@@ -83,7 +84,8 @@ public static class RideMetrics
             cadence.Length > 0 ? (int)Math.Round(cadence.Average()) : null,
             intensityFactor,
             tss,
-            TrainingLoad.Trimp(heartRateZones));
+            TrainingLoad.Trimp(heartRateZones),
+            PowerBests.ComputeFromSamples(samples, pause, paused));
     }
 
     /// <summary>A gap this long between samples is a pause (the device stopped recording), not riding.</summary>

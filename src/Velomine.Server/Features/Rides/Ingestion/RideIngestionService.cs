@@ -123,6 +123,18 @@ public sealed class RideIngestionService(
                 .Where(b => b.UserId == ride.UserId && b.IsDefault && b.IsActive).Select(b => (Guid?)b.Id).FirstOrDefaultAsync(ct);
             target.Status = RideStatus.Ready;
             target.Streams = ToStreams(file.Samples);
+            target.PowerBests.Clear();
+            var bests = metrics.PowerBests ?? [];
+            for (var i = 0; i < bests.Length && i < PowerBests.Durations.Length; i++)
+            {
+                if (bests[i] <= 0) continue;
+                target.PowerBests.Add(new RidePowerBest
+                {
+                    RideId = target.Id,
+                    DurationS = PowerBests.Durations[i],
+                    Watts = bests[i],
+                });
+            }
         }
 
         if (!used)

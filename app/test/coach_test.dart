@@ -142,4 +142,44 @@ void main() {
     expect(find.byKey(const Key('route-map')), findsOneWidget);
     expect(find.byKey(const Key('route-not-shared')), findsNothing);
   });
+
+  testWidgets('CoachAthleteScreen_ShouldShowPowerAndWellbeing_WhenShared', (
+    tester,
+  ) async {
+    final owner = server.add(
+      'owner@example.com',
+      name: 'Owner Rina',
+      clubRole: 'owner',
+    );
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['analytics'] = 'coaches';
+    server.sharingChoices['wellbeing'] = 'coaches';
+    server.wellbeingConsent = true;
+    server.checkIns.add({
+      'date': '2026-11-08',
+      'fatigue': 4,
+      'soreness': 2,
+      'mood': 4,
+      'stress': 2,
+      'motivation': 5,
+    });
+    server.rideFeels['r1'] = {'rpe': 7, 'notes': 'A private note'};
+    server.signInBrowser(owner);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-athletes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('power-curve-card')), findsOneWidget);
+    expect(find.byKey(const Key('coach-wellbeing')), findsOneWidget);
+    expect(find.textContaining('A private note'), findsNothing);
+    expect(find.textContaining('RPE 7/10'), findsOneWidget);
+  });
 }

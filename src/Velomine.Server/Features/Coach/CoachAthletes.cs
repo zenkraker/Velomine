@@ -16,6 +16,7 @@ public sealed record CoachAthleteResponse(
     bool SharesRides,
     bool SharesAnalytics,
     bool SharesRoutes,
+    bool SharesWellbeing,
     DateTimeOffset? LastRideAt,
     int? Rides,
     double? DistanceM,
@@ -59,7 +60,7 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
             .Where(g => g.ClubId == req.ClubId)
             .ToListAsync(ct);
         var athleteIds = grants
-            .Where(g => g.DataType is DataTypes.Rides or DataTypes.Analytics)
+            .Where(g => g.DataType is DataTypes.Rides or DataTypes.Analytics or DataTypes.Wellbeing)
             .Select(g => g.MemberId)
             .Where(id => id != viewerId)
             .Distinct()
@@ -74,7 +75,7 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
         {
             // Each member's own grants decide what the roster shows: one rider's choice must not colour another's.
             var memberGrants = grants.Where(g => g.MemberId == member.UserId).ToList();
-            if (!memberGrants.Any(g => g.DataType is DataTypes.Rides or DataTypes.Analytics)) continue;
+            if (!memberGrants.Any(g => g.DataType is DataTypes.Rides or DataTypes.Analytics or DataTypes.Wellbeing)) continue;
             athletes.Add(await CoachQueries.SummaryAsync(db, time, member, memberGrants, ct));
         }
 
@@ -104,7 +105,8 @@ public sealed class GetCoachAthlete(VelomineDbContext db, TimeProvider time)
             .FirstOrDefaultAsync(m => m.ClubId == req.ClubId && m.UserId == req.UserId, ct);
         var canRides = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Rides, ct);
         var canAnalytics = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Analytics, ct);
-        if (member is null || (!canRides && !canAnalytics))
+        var canWellbeing = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Wellbeing, ct);
+        if (member is null || (!canRides && !canAnalytics && !canWellbeing))
         {
             await Send.NotFoundAsync(ct);
             return;
@@ -179,6 +181,7 @@ public static class CoachQueries
         var sharesRides = grants.Any(g => g.DataType == DataTypes.Rides);
         var sharesAnalytics = grants.Any(g => g.DataType == DataTypes.Analytics);
         var sharesRoutes = grants.Any(g => g.DataType == DataTypes.Routes);
+        var sharesWellbeing = grants.Any(g => g.DataType == DataTypes.Wellbeing);
 
         var ftpW = await db.Users.AsNoTracking()
             .Where(u => u.Id == member.UserId)
@@ -209,6 +212,7 @@ public static class CoachQueries
             sharesRides,
             sharesAnalytics,
             sharesRoutes,
+            sharesWellbeing,
             lastRideAt,
             sharesRides ? rides.Count : null,
             sharesRides ? rides.Sum(r => r.DistanceM) : null,

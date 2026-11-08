@@ -135,6 +135,8 @@
   "actionAddGoal": "add the goal",
   "actionChangeGoal": "change the goal",
   "actionDeleteGoal": "delete the goal",
+  "actionSaveWellbeing": "save how you feel",
+  "actionSetFtp": "set your FTP",
   "actionLoadAdmin": "load the admin pages",
   "actionReloadAccounts": "reload the accounts",
   "actionApproveAccount": "approve the account",
@@ -1012,5 +1014,89 @@
       }
     }
   },
-  "uploadFailedGeneric": "Upload failed. Try again."
+  "uploadFailedGeneric": "Upload failed. Try again.",
+
+  "readiness": "Readiness",
+  "readinessHard": "Ready for a hard ride",
+  "readinessNormal": "Train normally",
+  "readinessEasy": "Take it easy",
+  "readinessRest": "Rest today",
+  "readinessAdviceHard": "Your form is good. A hard session fits today.",
+  "readinessAdviceNormal": "A normal session is fine; keep the hardest intervals for a fresher day.",
+  "readinessAdviceEasy": "Keep it easy: endurance pace, no hard efforts.",
+  "readinessAdviceRest": "Rest or move very easily. You are carrying a lot of fatigue.",
+  "readinessNoData": "Record a ride to see readiness.",
+  "readinessLoadOnly": "Add a daily check-in to include how you feel.",
+  "readinessWhy": "Why",
+  "readinessNotMedical": "A training guide, not a medical measure.",
+  "readinessFactorForm": "Form",
+  "readinessFactorRamp": "7-day ramp",
+  "readinessFactorRecentLoad": "Last 2 days",
+  "readinessFactorWellbeing": "How you feel",
+  "readinessFactorRpe": "Last ride RPE",
+
+  "wellbeing": "Wellbeing",
+  "wellbeingConsentTitle": "Before you start",
+  "wellbeingConsentBody": "Velomine stores a short daily check-in and the RPE you add to rides. It is health data: nobody else sees it unless you share it with your coaches, and you can export or delete it at any time. It is not medical advice.",
+  "wellbeingConsentAction": "I agree",
+  "wellbeingToday": "How do you feel today?",
+  "wellbeingSaved": "Today's check-in",
+  "wellbeingEdit": "Edit today",
+  "wellbeingSave": "Save check-in",
+  "wellbeingFatigue": "Fatigue",
+  "wellbeingSoreness": "Soreness",
+  "wellbeingMood": "Mood",
+  "wellbeingStress": "Stress",
+  "wellbeingMotivation": "Motivation",
+  "wellbeingShortFatigue": "Fat",
+  "wellbeingShortSoreness": "Sor",
+  "wellbeingShortMood": "Mood",
+  "wellbeingShortStress": "Str",
+  "wellbeingShortMotivation": "Mot",
+  "wellbeingHistory": "Last 30 days",
+  "wellbeingNoHistory": "No check-ins yet.",
+  "wellbeingRpe": "How hard was it?",
+  "wellbeingRpeHint": "1 easy, 10 maximal",
+  "wellbeingNotes": "Notes (optional)",
+  "wellbeingRpeSave": "Save",
+  "wellbeingRpeSaved": "RPE {rpe}/10",
+  "@wellbeingRpeSaved": {
+    "placeholders": {
+      "rpe": {
+        "type": "int"
+      }
+    }
+  },
+  "wellbeingRpeDelete": "Remove",
+  "wellbeingConsentNeeded": "Set up wellbeing in Progress to add how a ride felt.",
+
+  "shareWellbeing": "Wellbeing",
+  "shareWellbeingHelper": "Check-in scores and ride RPE; notes stay private.",
+  "sharesWellbeing": "Wellbeing",
+  "viewPowerCurve": "Power curve",
+  "viewWellbeing": "Wellbeing",
+
+  "powerCurve": "Power curve",
+  "powerCurveEmpty": "No power data in this range. Upload a ride with a power meter.",
+  "powerBestEfforts": "Best efforts",
+  "ftpEstimate": "Estimated FTP",
+  "ftpCurrent": "Current FTP",
+  "ftpMethod20": "95 % of your best 20-minute power",
+  "ftpMethod8": "90 % of your best 8-minute power",
+  "ftpUse": "Use {watts} W",
+  "@ftpUse": {
+    "placeholders": {
+      "watts": {
+        "type": "int"
+      }
+    }
+  },
+  "vo2MaxEstimate": "VO2max estimate",
+  "vo2MaxFrom5Min": "from your best 5-minute power and weight",
+  "vo2MaxNeedsWeight": "Set your weight to estimate VO2max.",
+  "vo2MaxNeedsEffort": "A 5-minute effort is needed to estimate VO2max.",
+  "coachWellbeing": "Wellbeing",
+  "coachWellbeingEmpty": "Wellbeing was shared, but there are no check-ins yet.",
+  "coachWellbeingNoNotes": "Scores and RPE only. Notes stay private.",
+  "coachPowerCurve": "Power curve"
 }

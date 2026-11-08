@@ -18,6 +18,7 @@ class CoachAthleteResponse {
     required this.sharesRides,
     required this.sharesAnalytics,
     required this.sharesRoutes,
+    required this.sharesWellbeing,
     required this.lastRideAt,
     required this.rides,
     required this.distanceM,
@@ -34,6 +35,8 @@ class CoachAthleteResponse {
   final bool sharesAnalytics;
 
   final bool sharesRoutes;
+
+  final bool sharesWellbeing;
 
   final DateTime? lastRideAt;
 
@@ -52,6 +55,7 @@ class CoachAthleteResponse {
     other.sharesRides == sharesRides &&
     other.sharesAnalytics == sharesAnalytics &&
     other.sharesRoutes == sharesRoutes &&
+    other.sharesWellbeing == sharesWellbeing &&
     other.lastRideAt == lastRideAt &&
     other.rides == rides &&
     other.distanceM == distanceM &&
@@ -66,6 +70,7 @@ class CoachAthleteResponse {
     (sharesRides.hashCode) +
     (sharesAnalytics.hashCode) +
     (sharesRoutes.hashCode) +
+    (sharesWellbeing.hashCode) +
     (lastRideAt == null ? 0 : lastRideAt!.hashCode) +
     (rides == null ? 0 : rides!.hashCode) +
     (distanceM == null ? 0 : distanceM!.hashCode) +
@@ -73,7 +78,7 @@ class CoachAthleteResponse {
     (tss42 == null ? 0 : tss42!.hashCode);
 
   @override
-  String toString() => 'CoachAthleteResponse[userId=$userId, displayName=$displayName, sharesRides=$sharesRides, sharesAnalytics=$sharesAnalytics, sharesRoutes=$sharesRoutes, lastRideAt=$lastRideAt, rides=$rides, distanceM=$distanceM, tss7=$tss7, tss42=$tss42]';
+  String toString() => 'CoachAthleteResponse[userId=$userId, displayName=$displayName, sharesRides=$sharesRides, sharesAnalytics=$sharesAnalytics, sharesRoutes=$sharesRoutes, sharesWellbeing=$sharesWellbeing, lastRideAt=$lastRideAt, rides=$rides, distanceM=$distanceM, tss7=$tss7, tss42=$tss42]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -82,6 +87,7 @@ class CoachAthleteResponse {
       json[r'sharesRides'] = this.sharesRides;
       json[r'sharesAnalytics'] = this.sharesAnalytics;
       json[r'sharesRoutes'] = this.sharesRoutes;
+      json[r'sharesWellbeing'] = this.sharesWellbeing;
     if (this.lastRideAt != null) {
       json[r'lastRideAt'] = this.lastRideAt!.toUtc().toIso8601String();
     } else {
@@ -118,6 +124,7 @@ class CoachAthleteResponse {
     bool? sharesRides,
     bool? sharesAnalytics,
     bool? sharesRoutes,
+    bool? sharesWellbeing,
     DateTime? lastRideAt,
     bool lastRideAtSetToNull = false,
     int? rides,
@@ -134,6 +141,7 @@ class CoachAthleteResponse {
     sharesRides: sharesRides ?? this.sharesRides,
     sharesAnalytics: sharesAnalytics ?? this.sharesAnalytics,
     sharesRoutes: sharesRoutes ?? this.sharesRoutes,
+    sharesWellbeing: sharesWellbeing ?? this.sharesWellbeing,
     lastRideAt: lastRideAtSetToNull ? null : lastRideAt ?? this.lastRideAt,
     rides: ridesSetToNull ? null : rides ?? this.rides,
     distanceM: distanceMSetToNull ? null : distanceM ?? this.distanceM,
@@ -162,6 +170,8 @@ class CoachAthleteResponse {
         assert(json[r'sharesAnalytics'] != null, 'Required key "CoachAthleteResponse[sharesAnalytics]" has a null value in JSON.');
         assert(json.containsKey(r'sharesRoutes'), 'Required key "CoachAthleteResponse[sharesRoutes]" is missing from JSON.');
         assert(json[r'sharesRoutes'] != null, 'Required key "CoachAthleteResponse[sharesRoutes]" has a null value in JSON.');
+        assert(json.containsKey(r'sharesWellbeing'), 'Required key "CoachAthleteResponse[sharesWellbeing]" is missing from JSON.');
+        assert(json[r'sharesWellbeing'] != null, 'Required key "CoachAthleteResponse[sharesWellbeing]" has a null value in JSON.');
         assert(json.containsKey(r'lastRideAt'), 'Required key "CoachAthleteResponse[lastRideAt]" is missing from JSON.');
         assert(json.containsKey(r'rides'), 'Required key "CoachAthleteResponse[rides]" is missing from JSON.');
         assert(json.containsKey(r'distanceM'), 'Required key "CoachAthleteResponse[distanceM]" is missing from JSON.');
@@ -176,6 +186,7 @@ class CoachAthleteResponse {
         sharesRides: mapValueOfType<bool>(json, r'sharesRides')!,
         sharesAnalytics: mapValueOfType<bool>(json, r'sharesAnalytics')!,
         sharesRoutes: mapValueOfType<bool>(json, r'sharesRoutes')!,
+        sharesWellbeing: mapValueOfType<bool>(json, r'sharesWellbeing')!,
         lastRideAt: mapDateTime(json, r'lastRideAt', r''),
         rides: mapValueOfType<int>(json, r'rides'),
         distanceM: mapValueOfType<double>(json, r'distanceM'),
@@ -233,6 +244,7 @@ class CoachAthleteResponse {
     'sharesRides',
     'sharesAnalytics',
     'sharesRoutes',
+    'sharesWellbeing',
     'lastRideAt',
     'rides',
     'distanceM',

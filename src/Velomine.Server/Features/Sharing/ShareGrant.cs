@@ -6,8 +6,9 @@ public static class DataTypes
     public const string Rides = "rides";
     public const string Analytics = "analytics";
     public const string Routes = "routes";
+    public const string Wellbeing = "wellbeing";
 
-    public static readonly string[] All = [Rides, Analytics, Routes];
+    public static readonly string[] All = [Rides, Analytics, Routes, Wellbeing];
 }
 
 /// <summary>Who may look: nobody (no row) or the club's coaches. A whole-club audience is reserved for a member view.</summary>
@@ -27,6 +28,8 @@ public static class ViewKinds
     public const string Ride = "ride";
     public const string Rides = "rides";
     public const string Route = "route";
+    public const string PowerCurve = "power-curve";
+    public const string Wellbeing = "wellbeing";
 }
 
 /// <summary>One rider's choice for one kind of data, in the club they belong to.</summary>

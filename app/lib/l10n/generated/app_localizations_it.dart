@@ -287,6 +287,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionDeleteGoal => 'eliminare l\'obiettivo';
 
   @override
+  String get actionSaveWellbeing => 'salvare come ti senti';
+
+  @override
+  String get actionSetFtp => 'impostare il tuo FTP';
+
+  @override
   String get actionLoadAdmin => 'caricare le pagine admin';
 
   @override
@@ -1860,4 +1866,219 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get uploadFailedGeneric => 'Caricamento non riuscito. Riprova.';
+
+  @override
+  String get readiness => 'Prontezza';
+
+  @override
+  String get readinessHard => 'Pronto per un\'uscita dura';
+
+  @override
+  String get readinessNormal => 'Allenati normalmente';
+
+  @override
+  String get readinessEasy => 'Vai piano';
+
+  @override
+  String get readinessRest => 'Riposa oggi';
+
+  @override
+  String get readinessAdviceHard =>
+      'La forma è buona. Oggi ci sta una seduta intensa.';
+
+  @override
+  String get readinessAdviceNormal =>
+      'Una seduta normale va bene; lascia gli intervalli più duri a un giorno più fresco.';
+
+  @override
+  String get readinessAdviceEasy =>
+      'Resta facile: ritmo di resistenza, nessuno sforzo intenso.';
+
+  @override
+  String get readinessAdviceRest =>
+      'Riposa o muoviti molto piano. Hai molta fatica accumulata.';
+
+  @override
+  String get readinessNoData => 'Registra un\'uscita per vedere la prontezza.';
+
+  @override
+  String get readinessLoadOnly =>
+      'Aggiungi il check-in giornaliero per includere come ti senti.';
+
+  @override
+  String get readinessWhy => 'Perché';
+
+  @override
+  String get readinessNotMedical =>
+      'Una guida per l\'allenamento, non una misura medica.';
+
+  @override
+  String get readinessFactorForm => 'Forma';
+
+  @override
+  String get readinessFactorRamp => 'Crescita 7 giorni';
+
+  @override
+  String get readinessFactorRecentLoad => 'Ultimi 2 giorni';
+
+  @override
+  String get readinessFactorWellbeing => 'Come ti senti';
+
+  @override
+  String get readinessFactorRpe => 'RPE ultima uscita';
+
+  @override
+  String get wellbeing => 'Benessere';
+
+  @override
+  String get wellbeingConsentTitle => 'Prima di iniziare';
+
+  @override
+  String get wellbeingConsentBody =>
+      'Velomine conserva un breve check-in giornaliero e l\'RPE che aggiungi alle uscite. Sono dati sulla salute: nessun altro li vede se non li condividi con i tuoi allenatori, e puoi esportarli o eliminarli in qualsiasi momento. Non sono consigli medici.';
+
+  @override
+  String get wellbeingConsentAction => 'Accetto';
+
+  @override
+  String get wellbeingToday => 'Come ti senti oggi?';
+
+  @override
+  String get wellbeingSaved => 'Check-in di oggi';
+
+  @override
+  String get wellbeingEdit => 'Modifica oggi';
+
+  @override
+  String get wellbeingSave => 'Salva check-in';
+
+  @override
+  String get wellbeingFatigue => 'Affaticamento';
+
+  @override
+  String get wellbeingSoreness => 'Indolenzimento';
+
+  @override
+  String get wellbeingMood => 'Umore';
+
+  @override
+  String get wellbeingStress => 'Stress';
+
+  @override
+  String get wellbeingMotivation => 'Motivazione';
+
+  @override
+  String get wellbeingShortFatigue => 'Aff';
+
+  @override
+  String get wellbeingShortSoreness => 'Ind';
+
+  @override
+  String get wellbeingShortMood => 'Umo';
+
+  @override
+  String get wellbeingShortStress => 'Str';
+
+  @override
+  String get wellbeingShortMotivation => 'Mot';
+
+  @override
+  String get wellbeingHistory => 'Ultimi 30 giorni';
+
+  @override
+  String get wellbeingNoHistory => 'Nessun check-in.';
+
+  @override
+  String get wellbeingRpe => 'Quanto è stata dura?';
+
+  @override
+  String get wellbeingRpeHint => '1 facile, 10 massimo';
+
+  @override
+  String get wellbeingNotes => 'Note (facoltative)';
+
+  @override
+  String get wellbeingRpeSave => 'Salva';
+
+  @override
+  String wellbeingRpeSaved(int rpe) {
+    return 'RPE $rpe/10';
+  }
+
+  @override
+  String get wellbeingRpeDelete => 'Rimuovi';
+
+  @override
+  String get wellbeingConsentNeeded =>
+      'Attiva il benessere in Progressi per aggiungere come è andata un\'uscita.';
+
+  @override
+  String get shareWellbeing => 'Benessere';
+
+  @override
+  String get shareWellbeingHelper =>
+      'Punteggi del check-in e RPE delle uscite; le note restano private.';
+
+  @override
+  String get sharesWellbeing => 'Benessere';
+
+  @override
+  String get viewPowerCurve => 'Curva di potenza';
+
+  @override
+  String get viewWellbeing => 'Benessere';
+
+  @override
+  String get powerCurve => 'Curva di potenza';
+
+  @override
+  String get powerCurveEmpty =>
+      'Nessun dato di potenza in questo periodo. Carica un\'uscita con un misuratore di potenza.';
+
+  @override
+  String get powerBestEfforts => 'Migliori sforzi';
+
+  @override
+  String get ftpEstimate => 'FTP stimato';
+
+  @override
+  String get ftpCurrent => 'FTP attuale';
+
+  @override
+  String get ftpMethod20 => '95 % della tua migliore potenza sui 20 minuti';
+
+  @override
+  String get ftpMethod8 => '90 % della tua migliore potenza sugli 8 minuti';
+
+  @override
+  String ftpUse(int watts) {
+    return 'Usa $watts W';
+  }
+
+  @override
+  String get vo2MaxEstimate => 'VO2max stimato';
+
+  @override
+  String get vo2MaxFrom5Min => 'dalla migliore potenza sui 5 minuti e dal peso';
+
+  @override
+  String get vo2MaxNeedsWeight => 'Imposta il peso per stimare il VO2max.';
+
+  @override
+  String get vo2MaxNeedsEffort =>
+      'Serve uno sforzo di 5 minuti per stimare il VO2max.';
+
+  @override
+  String get coachWellbeing => 'Benessere';
+
+  @override
+  String get coachWellbeingEmpty =>
+      'Il benessere è condiviso, ma non ci sono ancora check-in.';
+
+  @override
+  String get coachWellbeingNoNotes =>
+      'Solo punteggi e RPE. Le note restano private.';
+
+  @override
+  String get coachPowerCurve => 'Curva di potenza';
 }

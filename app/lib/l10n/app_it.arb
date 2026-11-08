@@ -90,6 +90,8 @@
   "actionAddGoal": "aggiungere l'obiettivo",
   "actionChangeGoal": "modificare l'obiettivo",
   "actionDeleteGoal": "eliminare l'obiettivo",
+  "actionSaveWellbeing": "salvare come ti senti",
+  "actionSetFtp": "impostare il tuo FTP",
   "actionLoadAdmin": "caricare le pagine admin",
   "actionReloadAccounts": "ricaricare gli account",
   "actionApproveAccount": "approvare l'account",
@@ -572,5 +574,89 @@
   "uploadTimeout": "Il server ha impiegato troppo tempo a leggere l'uscita.",
   "uploadServerFailed": "Il server non è riuscito a leggere questa uscita.",
   "uploadHttpRefused": "Il server ha rifiutato il caricamento ({code}).",
-  "uploadFailedGeneric": "Caricamento non riuscito. Riprova."
+  "uploadFailedGeneric": "Caricamento non riuscito. Riprova.",
+
+  "readiness": "Prontezza",
+  "readinessHard": "Pronto per un'uscita dura",
+  "readinessNormal": "Allenati normalmente",
+  "readinessEasy": "Vai piano",
+  "readinessRest": "Riposa oggi",
+  "readinessAdviceHard": "La forma è buona. Oggi ci sta una seduta intensa.",
+  "readinessAdviceNormal": "Una seduta normale va bene; lascia gli intervalli più duri a un giorno più fresco.",
+  "readinessAdviceEasy": "Resta facile: ritmo di resistenza, nessuno sforzo intenso.",
+  "readinessAdviceRest": "Riposa o muoviti molto piano. Hai molta fatica accumulata.",
+  "readinessNoData": "Registra un'uscita per vedere la prontezza.",
+  "readinessLoadOnly": "Aggiungi il check-in giornaliero per includere come ti senti.",
+  "readinessWhy": "Perché",
+  "readinessNotMedical": "Una guida per l'allenamento, non una misura medica.",
+  "readinessFactorForm": "Forma",
+  "readinessFactorRamp": "Crescita 7 giorni",
+  "readinessFactorRecentLoad": "Ultimi 2 giorni",
+  "readinessFactorWellbeing": "Come ti senti",
+  "readinessFactorRpe": "RPE ultima uscita",
+
+  "wellbeing": "Benessere",
+  "wellbeingConsentTitle": "Prima di iniziare",
+  "wellbeingConsentBody": "Velomine conserva un breve check-in giornaliero e l'RPE che aggiungi alle uscite. Sono dati sulla salute: nessun altro li vede se non li condividi con i tuoi allenatori, e puoi esportarli o eliminarli in qualsiasi momento. Non sono consigli medici.",
+  "wellbeingConsentAction": "Accetto",
+  "wellbeingToday": "Come ti senti oggi?",
+  "wellbeingSaved": "Check-in di oggi",
+  "wellbeingEdit": "Modifica oggi",
+  "wellbeingSave": "Salva check-in",
+  "wellbeingFatigue": "Affaticamento",
+  "wellbeingSoreness": "Indolenzimento",
+  "wellbeingMood": "Umore",
+  "wellbeingStress": "Stress",
+  "wellbeingMotivation": "Motivazione",
+  "wellbeingShortFatigue": "Aff",
+  "wellbeingShortSoreness": "Ind",
+  "wellbeingShortMood": "Umo",
+  "wellbeingShortStress": "Str",
+  "wellbeingShortMotivation": "Mot",
+  "wellbeingHistory": "Ultimi 30 giorni",
+  "wellbeingNoHistory": "Nessun check-in.",
+  "wellbeingRpe": "Quanto è stata dura?",
+  "wellbeingRpeHint": "1 facile, 10 massimo",
+  "wellbeingNotes": "Note (facoltative)",
+  "wellbeingRpeSave": "Salva",
+  "wellbeingRpeSaved": "RPE {rpe}/10",
+  "@wellbeingRpeSaved": {
+    "placeholders": {
+      "rpe": {
+        "type": "int"
+      }
+    }
+  },
+  "wellbeingRpeDelete": "Rimuovi",
+  "wellbeingConsentNeeded": "Attiva il benessere in Progressi per aggiungere come è andata un'uscita.",
+
+  "shareWellbeing": "Benessere",
+  "shareWellbeingHelper": "Punteggi del check-in e RPE delle uscite; le note restano private.",
+  "sharesWellbeing": "Benessere",
+  "viewPowerCurve": "Curva di potenza",
+  "viewWellbeing": "Benessere",
+
+  "powerCurve": "Curva di potenza",
+  "powerCurveEmpty": "Nessun dato di potenza in questo periodo. Carica un'uscita con un misuratore di potenza.",
+  "powerBestEfforts": "Migliori sforzi",
+  "ftpEstimate": "FTP stimato",
+  "ftpCurrent": "FTP attuale",
+  "ftpMethod20": "95 % della tua migliore potenza sui 20 minuti",
+  "ftpMethod8": "90 % della tua migliore potenza sugli 8 minuti",
+  "ftpUse": "Usa {watts} W",
+  "@ftpUse": {
+    "placeholders": {
+      "watts": {
+        "type": "int"
+      }
+    }
+  },
+  "vo2MaxEstimate": "VO2max stimato",
+  "vo2MaxFrom5Min": "dalla migliore potenza sui 5 minuti e dal peso",
+  "vo2MaxNeedsWeight": "Imposta il peso per stimare il VO2max.",
+  "vo2MaxNeedsEffort": "Serve uno sforzo di 5 minuti per stimare il VO2max.",
+  "coachWellbeing": "Benessere",
+  "coachWellbeingEmpty": "Il benessere è condiviso, ma non ci sono ancora check-in.",
+  "coachWellbeingNoNotes": "Solo punteggi e RPE. Le note restano private.",
+  "coachPowerCurve": "Curva di potenza"
 }

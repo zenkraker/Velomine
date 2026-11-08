@@ -46,6 +46,8 @@ class CoachAthleteController extends ChangeNotifier {
 
   CoachAthleteResponse? summary;
   TrainingResponse? training;
+  PowerCurveResponse? powerCurve;
+  CoachWellbeingResponse? wellbeing;
   List<RideResponse> rides = [];
   bool loading = true;
   bool notFound = false;
@@ -71,6 +73,14 @@ class CoachAthleteController extends ChangeNotifier {
             userId,
             days: days,
           );
+          powerCurve = await api.coachGetCoachPowerCurve(
+            clubId,
+            userId,
+            days: days,
+          );
+        }
+        if (summary!.sharesWellbeing) {
+          wellbeing = await api.coachGetCoachWellbeing(clubId, userId);
         }
         if (summary!.sharesRides) {
           rides = (await api.coachListCoachRides(clubId, userId))?.rides ?? [];
@@ -104,17 +114,18 @@ class CoachAthleteController extends ChangeNotifier {
     final request = ++_trainingRequest;
     days = value;
     training = null;
+    powerCurve = null;
     error = null;
     notifyListeners();
     try {
-      final result = await api.coachGetCoachTraining(
-        clubId,
-        userId,
-        days: days,
-      );
+      final results = await Future.wait([
+        api.coachGetCoachTraining(clubId, userId, days: days),
+        api.coachGetCoachPowerCurve(clubId, userId, days: days),
+      ]);
       // A slower earlier request must not overwrite the range the coach picked last.
       if (_disposed || request != _trainingRequest) return;
-      training = result;
+      training = results[0] as TrainingResponse?;
+      powerCurve = results[1] as PowerCurveResponse?;
     } on ApiException catch (e) {
       if (_disposed || request != _trainingRequest) return;
       if (e.code == 401) {

@@ -342,4 +342,29 @@ void main() {
       },
     );
   });
+
+  testWidgets('RideDetailScreen_ShouldSaveRpeAndNote_WhenWellbeingIsSetUp', (
+    tester,
+  ) async {
+    server.wellbeingConsent = true;
+    await open(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('ride-feel-card')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ride-feel-7')));
+    await tester.enterText(
+      find.byKey(const Key('ride-feel-notes')),
+      'Felt strong',
+    );
+    await tester.tap(find.byKey(const Key('ride-feel-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.rideFeels['r1']?['rpe'], 7);
+    expect(server.rideFeels['r1']?['notes'], 'Felt strong');
+    expect(find.byKey(const Key('ride-feel-saved')), findsOneWidget);
+  });
 }

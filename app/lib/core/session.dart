@@ -38,6 +38,7 @@ class Session extends ChangeNotifier {
        clubs = ClubApi(client),
        coach = ClubsApi(client),
        sharing = SharingApi(client),
+       wellbeing = WellbeingApi(client),
        notifications = NotificationsApi(client),
        server = ServerApi(client) {
     auth.onSignedOut = sessionExpired;
@@ -53,6 +54,9 @@ class Session extends ChangeNotifier {
   /// The club-scoped endpoints a coach uses: athletes, their training and their rides.
   final ClubsApi coach;
   final SharingApi sharing;
+
+  /// Check-ins, ride RPE and notes.
+  final WellbeingApi wellbeing;
   final NotificationsApi notifications;
   final ServerApi server;
   final SessionAuth auth;

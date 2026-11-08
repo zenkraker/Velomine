@@ -48,10 +48,11 @@ public sealed class SharingTests(PostgresFixture postgres)
         Member member,
         string rides,
         string analytics = "none",
-        string routes = "none") =>
+        string routes = "none",
+        string wellbeing = "none") =>
         member.Client.PutAsJsonAsync(
             "/api/v1/sharing",
-            new UpdateSharingRequest { Rides = rides, Analytics = analytics, Routes = routes },
+            new UpdateSharingRequest { Rides = rides, Analytics = analytics, Routes = routes, Wellbeing = wellbeing },
             Ct);
 
     private static async Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file)
@@ -80,11 +81,11 @@ public sealed class SharingTests(PostgresFixture postgres)
 
         var club = await CreateClubAsync(api, rider);
         var sharing = await rider.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
-        Assert.Equal(new SharingResponse("none", "none", "none"), sharing);
+        Assert.Equal(new SharingResponse("none", "none", "none", "none"), sharing);
 
         Assert.Equal(HttpStatusCode.OK, (await ShareAsync(rider, "coaches", "coaches", "none")).StatusCode);
         var saved = await rider.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
-        Assert.Equal(new SharingResponse("coaches", "coaches", "none"), saved);
+        Assert.Equal(new SharingResponse("coaches", "coaches", "none", "none"), saved);
 
         // Whole-club reading comes with a member-facing club view; until then the choice is refused.
         Assert.Equal(HttpStatusCode.BadRequest, (await ShareAsync(rider, "coaches", "club", "none")).StatusCode);
@@ -290,6 +291,6 @@ public sealed class SharingTests(PostgresFixture postgres)
 
         await JoinAsync(athlete, club);
         var sharing = await athlete.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
-        Assert.Equal(new SharingResponse("none", "none", "none"), sharing);
+        Assert.Equal(new SharingResponse("none", "none", "none", "none"), sharing);
     }
 }

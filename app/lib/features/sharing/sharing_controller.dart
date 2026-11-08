@@ -4,7 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/guard.dart';
 
-/// What the member shares with their club, and who has looked. Choices are none, coaches or club.
+/// What the member shares with their club, and who has looked. Choices are none or coaches.
 class SharingController extends ChangeNotifier {
   SharingController({required this.api, required this.onUnauthorized});
 
@@ -14,6 +14,7 @@ class SharingController extends ChangeNotifier {
   String rides = 'none';
   String analytics = 'none';
   String routes = 'none';
+  String wellbeing = 'none';
   List<ShareViewResponse> views = [];
   bool loading = false;
   bool saving = false;
@@ -25,6 +26,7 @@ class SharingController extends ChangeNotifier {
     rides = 'none';
     analytics = 'none';
     routes = 'none';
+    wellbeing = 'none';
     views = [];
     loading = false;
     saving = false;
@@ -56,6 +58,7 @@ class SharingController extends ChangeNotifier {
         rides = sharing!.rides;
         analytics = sharing!.analytics;
         routes = sharing!.routes;
+        wellbeing = sharing!.wellbeing;
       }
       this.views = views?.views ?? [];
       loaded = true;
@@ -69,11 +72,13 @@ class SharingController extends ChangeNotifier {
     String? rides,
     String? analytics,
     String? routes,
+    String? wellbeing,
   }) async {
     final nextRides = rides ?? this.rides;
     final nextAnalytics = analytics ?? this.analytics;
     // Routes are a map on shared rides: turning rides off turns them off too.
     final nextRoutes = nextRides == 'none' ? 'none' : (routes ?? this.routes);
+    final nextWellbeing = wellbeing ?? this.wellbeing;
     saving = true;
     notifyListeners();
     final failure = await guardCall(
@@ -82,6 +87,7 @@ class SharingController extends ChangeNotifier {
           rides: nextRides,
           analytics: nextAnalytics,
           routes: nextRoutes,
+          wellbeing: nextWellbeing,
         ),
       ),
       onUnauthorized,
@@ -91,6 +97,7 @@ class SharingController extends ChangeNotifier {
       this.rides = nextRides;
       this.analytics = nextAnalytics;
       this.routes = nextRoutes;
+      this.wellbeing = nextWellbeing;
     }
     error = failure;
     saving = false;

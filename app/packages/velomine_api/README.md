@@ -78,6 +78,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**logout**](doc//AccountsApi.md#logout) | **POST** /api/v1/accounts/logout | 
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
+*AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
 *AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
@@ -95,6 +96,8 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**updateSettings**](doc//AdminApi.md#updatesettings) | **PUT** /api/v1/admin/settings | 
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
+*AnalyticsApi* | [**getPowerCurve**](doc//AnalyticsApi.md#getpowercurve) | **GET** /api/v1/analytics/power-curve | 
+*AnalyticsApi* | [**getReadiness**](doc//AnalyticsApi.md#getreadiness) | **GET** /api/v1/analytics/readiness | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
 *AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
@@ -115,9 +118,11 @@ Class | Method | HTTP request | Description
 *ClubApi* | [**rotateJoinCode**](doc//ClubApi.md#rotatejoincode) | **POST** /api/v1/club/join-code | 
 *ClubApi* | [**setClubMemberRole**](doc//ClubApi.md#setclubmemberrole) | **PUT** /api/v1/club/members/{userId}/role | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
+*ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
 *ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
 *ClubsApi* | [**coachGetCoachRideStreams**](doc//ClubsApi.md#coachgetcoachridestreams) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/streams | 
 *ClubsApi* | [**coachGetCoachTraining**](doc//ClubsApi.md#coachgetcoachtraining) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/training | 
+*ClubsApi* | [**coachGetCoachWellbeing**](doc//ClubsApi.md#coachgetcoachwellbeing) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/wellbeing | 
 *ClubsApi* | [**coachListCoachAthletes**](doc//ClubsApi.md#coachlistcoachathletes) | **GET** /api/v1/clubs/{clubId}/athletes | 
 *ClubsApi* | [**coachListCoachRides**](doc//ClubsApi.md#coachlistcoachrides) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides | 
 *NotificationsApi* | [**listNotifications**](doc//NotificationsApi.md#listnotifications) | **GET** /api/v1/notifications | 
@@ -129,10 +134,17 @@ Class | Method | HTTP request | Description
 *RidesApi* | [**listRides**](doc//RidesApi.md#listrides) | **GET** /api/v1/rides | 
 *RidesApi* | [**setRideBike**](doc//RidesApi.md#setridebike) | **PUT** /api/v1/rides/{id}/bike | 
 *RidesApi* | [**uploadRide**](doc//RidesApi.md#uploadride) | **POST** /api/v1/rides/uploads | 
+*RidesApi* | [**wellbeingDeleteRideFeel**](doc//RidesApi.md#wellbeingdeleteridefeel) | **DELETE** /api/v1/rides/{id}/feel | 
+*RidesApi* | [**wellbeingGetRideFeel**](doc//RidesApi.md#wellbeinggetridefeel) | **GET** /api/v1/rides/{id}/feel | 
+*RidesApi* | [**wellbeingSaveRideFeel**](doc//RidesApi.md#wellbeingsaveridefeel) | **PUT** /api/v1/rides/{id}/feel | 
 *ServerApi* | [**getServerInfo**](doc//ServerApi.md#getserverinfo) | **GET** /api/v1/server | 
 *SharingApi* | [**getShareViews**](doc//SharingApi.md#getshareviews) | **GET** /api/v1/sharing/views | 
 *SharingApi* | [**getSharing**](doc//SharingApi.md#getsharing) | **GET** /api/v1/sharing | 
 *SharingApi* | [**updateSharing**](doc//SharingApi.md#updatesharing) | **PUT** /api/v1/sharing | 
+*WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
+*WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
+*WellbeingApi* | [**listCheckIns**](doc//WellbeingApi.md#listcheckins) | **GET** /api/v1/wellbeing/check-ins | 
+*WellbeingApi* | [**saveCheckIn**](doc//WellbeingApi.md#savecheckin) | **PUT** /api/v1/wellbeing/check-ins/today | 
 
 
 ## Documentation For Models
@@ -142,10 +154,14 @@ Class | Method | HTTP request | Description
  - [AdminUserSummary](doc//AdminUserSummary.md)
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
+ - [CheckInResponse](doc//CheckInResponse.md)
+ - [CheckInsResponse](doc//CheckInsResponse.md)
  - [ClubMemberResponse](doc//ClubMemberResponse.md)
  - [ClubResponse](doc//ClubResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
+ - [CoachRpeResponse](doc//CoachRpeResponse.md)
+ - [CoachWellbeingResponse](doc//CoachWellbeingResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)
  - [ComponentTypeResponse](doc//ComponentTypeResponse.md)
  - [CreateBikeRequest](doc//CreateBikeRequest.md)
@@ -155,6 +171,7 @@ Class | Method | HTTP request | Description
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
+ - [FtpEstimate](doc//FtpEstimate.md)
  - [GoalResponse](doc//GoalResponse.md)
  - [JoinClubRequest](doc//JoinClubRequest.md)
  - [JoinCodeResponse](doc//JoinCodeResponse.md)
@@ -170,18 +187,26 @@ Class | Method | HTTP request | Description
  - [NotificationResponse](doc//NotificationResponse.md)
  - [OverviewResponse](doc//OverviewResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
+ - [PowerCurvePoint](doc//PowerCurvePoint.md)
+ - [PowerCurveResponse](doc//PowerCurveResponse.md)
  - [ProblemDetails](doc//ProblemDetails.md)
  - [ProblemDetails2](doc//ProblemDetails2.md)
  - [ProblemDetails2ErrorsInner](doc//ProblemDetails2ErrorsInner.md)
  - [ProfileResponse](doc//ProfileResponse.md)
+ - [ReadinessFactor](doc//ReadinessFactor.md)
+ - [ReadinessResponse](doc//ReadinessResponse.md)
  - [RefreshRequest](doc//RefreshRequest.md)
  - [RegisterRequest](doc//RegisterRequest.md)
  - [RegisterResponse](doc//RegisterResponse.md)
+ - [RideFeelResponse](doc//RideFeelResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
+ - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
+ - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
+ - [SetFtpRequest](doc//SetFtpRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
@@ -204,6 +229,9 @@ Class | Method | HTTP request | Description
  - [UpdateSharingRequest](doc//UpdateSharingRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
+ - [Vo2MaxEstimate](doc//Vo2MaxEstimate.md)
+ - [WellbeingConsentRequest](doc//WellbeingConsentRequest.md)
+ - [WellbeingResponse](doc//WellbeingResponse.md)
  - [ZoneTime](doc//ZoneTime.md)
 
 

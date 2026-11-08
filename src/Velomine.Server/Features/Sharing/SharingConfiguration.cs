@@ -9,7 +9,7 @@ public sealed class SharingConfiguration : IEntityTypeConfiguration<ShareGrant>,
     {
         grant.ToTable("grants", "sharing", t =>
         {
-            t.HasCheckConstraint("ck_share_grants_data_type", "data_type IN ('rides', 'analytics', 'routes')");
+            t.HasCheckConstraint("ck_share_grants_data_type", "data_type IN ('rides', 'analytics', 'routes', 'wellbeing')");
             t.HasCheckConstraint("ck_share_grants_audience", "audience IN ('coaches', 'club')");
         });
         grant.HasKey(g => g.Id);

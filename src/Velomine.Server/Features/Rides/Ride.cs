@@ -99,6 +99,20 @@ public sealed class Ride
     public User? Owner { get; set; }
 
     public RideStreams? Streams { get; set; }
+
+    /// <summary>Best mean maximal power for the durations a power curve shows, worked out when the ride is read.</summary>
+    public List<RidePowerBest> PowerBests { get; set; } = [];
+}
+
+/// <summary>One duration's best average power on one ride; zero values are not stored.</summary>
+public sealed class RidePowerBest
+{
+    public Guid RideId { get; set; }
+
+    /// <summary>Window length in seconds, one of <see cref="Ingestion.PowerBests.Durations"/>.</summary>
+    public int DurationS { get; set; }
+
+    public int Watts { get; set; }
 }
 
 /// <summary>

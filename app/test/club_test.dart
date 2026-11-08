@@ -216,4 +216,29 @@ void main() {
     expect(server.clubRoles[owner.email], 'owner');
     expect(find.text('Velocità'), findsWidgets);
   });
+
+  testWidgets('ClubScreen_ShouldSaveWellbeingSharing_WhenChosen', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com');
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('share-wellbeing')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('share-wellbeing')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('My coaches').last);
+    await tester.pumpAndSettle();
+
+    expect(server.sharingChoices['wellbeing'], 'coaches');
+  });
 }

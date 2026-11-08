@@ -8,6 +8,7 @@ import '../../../core/theme.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../rides_screen.dart';
 import 'ride_detail_controller.dart';
+import 'ride_feel_card.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
@@ -208,6 +209,12 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           ),
         if (c.bikes.isNotEmpty || ride.bikeId != null)
           _BikePicker(controller: c, ride: ride),
+        RideFeelCard(
+          feel: c.feel,
+          saving: c.savingFeel,
+          onSave: c.saveFeel,
+          onDelete: c.deleteFeel,
+        ),
         if (c.data?.hasRoute ?? false)
           RouteMap(
             data: c.data!,

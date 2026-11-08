@@ -590,6 +590,18 @@ abstract class AppLocalizations {
   /// **'delete the goal'**
   String get actionDeleteGoal;
 
+  /// No description provided for @actionSaveWellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'save how you feel'**
+  String get actionSaveWellbeing;
+
+  /// No description provided for @actionSetFtp.
+  ///
+  /// In en, this message translates to:
+  /// **'set your FTP'**
+  String get actionSetFtp;
+
   /// No description provided for @actionLoadAdmin.
   ///
   /// In en, this message translates to:
@@ -3379,6 +3391,402 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload failed. Try again.'**
   String get uploadFailedGeneric;
+
+  /// No description provided for @readiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Readiness'**
+  String get readiness;
+
+  /// No description provided for @readinessHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for a hard ride'**
+  String get readinessHard;
+
+  /// No description provided for @readinessNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Train normally'**
+  String get readinessNormal;
+
+  /// No description provided for @readinessEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it easy'**
+  String get readinessEasy;
+
+  /// No description provided for @readinessRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest today'**
+  String get readinessRest;
+
+  /// No description provided for @readinessAdviceHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Your form is good. A hard session fits today.'**
+  String get readinessAdviceHard;
+
+  /// No description provided for @readinessAdviceNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'A normal session is fine; keep the hardest intervals for a fresher day.'**
+  String get readinessAdviceNormal;
+
+  /// No description provided for @readinessAdviceEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it easy: endurance pace, no hard efforts.'**
+  String get readinessAdviceEasy;
+
+  /// No description provided for @readinessAdviceRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest or move very easily. You are carrying a lot of fatigue.'**
+  String get readinessAdviceRest;
+
+  /// No description provided for @readinessNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a ride to see readiness.'**
+  String get readinessNoData;
+
+  /// No description provided for @readinessLoadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a daily check-in to include how you feel.'**
+  String get readinessLoadOnly;
+
+  /// No description provided for @readinessWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why'**
+  String get readinessWhy;
+
+  /// No description provided for @readinessNotMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'A training guide, not a medical measure.'**
+  String get readinessNotMedical;
+
+  /// No description provided for @readinessFactorForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get readinessFactorForm;
+
+  /// No description provided for @readinessFactorRamp.
+  ///
+  /// In en, this message translates to:
+  /// **'7-day ramp'**
+  String get readinessFactorRamp;
+
+  /// No description provided for @readinessFactorRecentLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 2 days'**
+  String get readinessFactorRecentLoad;
+
+  /// No description provided for @readinessFactorWellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'How you feel'**
+  String get readinessFactorWellbeing;
+
+  /// No description provided for @readinessFactorRpe.
+  ///
+  /// In en, this message translates to:
+  /// **'Last ride RPE'**
+  String get readinessFactorRpe;
+
+  /// No description provided for @wellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing'**
+  String get wellbeing;
+
+  /// No description provided for @wellbeingConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you start'**
+  String get wellbeingConsentTitle;
+
+  /// No description provided for @wellbeingConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine stores a short daily check-in and the RPE you add to rides. It is health data: nobody else sees it unless you share it with your coaches, and you can export or delete it at any time. It is not medical advice.'**
+  String get wellbeingConsentBody;
+
+  /// No description provided for @wellbeingConsentAction.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree'**
+  String get wellbeingConsentAction;
+
+  /// No description provided for @wellbeingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel today?'**
+  String get wellbeingToday;
+
+  /// No description provided for @wellbeingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s check-in'**
+  String get wellbeingSaved;
+
+  /// No description provided for @wellbeingEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit today'**
+  String get wellbeingEdit;
+
+  /// No description provided for @wellbeingSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save check-in'**
+  String get wellbeingSave;
+
+  /// No description provided for @wellbeingFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigue'**
+  String get wellbeingFatigue;
+
+  /// No description provided for @wellbeingSoreness.
+  ///
+  /// In en, this message translates to:
+  /// **'Soreness'**
+  String get wellbeingSoreness;
+
+  /// No description provided for @wellbeingMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get wellbeingMood;
+
+  /// No description provided for @wellbeingStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress'**
+  String get wellbeingStress;
+
+  /// No description provided for @wellbeingMotivation.
+  ///
+  /// In en, this message translates to:
+  /// **'Motivation'**
+  String get wellbeingMotivation;
+
+  /// No description provided for @wellbeingShortFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get wellbeingShortFatigue;
+
+  /// No description provided for @wellbeingShortSoreness.
+  ///
+  /// In en, this message translates to:
+  /// **'Sor'**
+  String get wellbeingShortSoreness;
+
+  /// No description provided for @wellbeingShortMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get wellbeingShortMood;
+
+  /// No description provided for @wellbeingShortStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Str'**
+  String get wellbeingShortStress;
+
+  /// No description provided for @wellbeingShortMotivation.
+  ///
+  /// In en, this message translates to:
+  /// **'Mot'**
+  String get wellbeingShortMotivation;
+
+  /// No description provided for @wellbeingHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get wellbeingHistory;
+
+  /// No description provided for @wellbeingNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-ins yet.'**
+  String get wellbeingNoHistory;
+
+  /// No description provided for @wellbeingRpe.
+  ///
+  /// In en, this message translates to:
+  /// **'How hard was it?'**
+  String get wellbeingRpe;
+
+  /// No description provided for @wellbeingRpeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'1 easy, 10 maximal'**
+  String get wellbeingRpeHint;
+
+  /// No description provided for @wellbeingNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get wellbeingNotes;
+
+  /// No description provided for @wellbeingRpeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get wellbeingRpeSave;
+
+  /// No description provided for @wellbeingRpeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'RPE {rpe}/10'**
+  String wellbeingRpeSaved(int rpe);
+
+  /// No description provided for @wellbeingRpeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get wellbeingRpeDelete;
+
+  /// No description provided for @wellbeingConsentNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up wellbeing in Progress to add how a ride felt.'**
+  String get wellbeingConsentNeeded;
+
+  /// No description provided for @shareWellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing'**
+  String get shareWellbeing;
+
+  /// No description provided for @shareWellbeingHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in scores and ride RPE; notes stay private.'**
+  String get shareWellbeingHelper;
+
+  /// No description provided for @sharesWellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing'**
+  String get sharesWellbeing;
+
+  /// No description provided for @viewPowerCurve.
+  ///
+  /// In en, this message translates to:
+  /// **'Power curve'**
+  String get viewPowerCurve;
+
+  /// No description provided for @viewWellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing'**
+  String get viewWellbeing;
+
+  /// No description provided for @powerCurve.
+  ///
+  /// In en, this message translates to:
+  /// **'Power curve'**
+  String get powerCurve;
+
+  /// No description provided for @powerCurveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No power data in this range. Upload a ride with a power meter.'**
+  String get powerCurveEmpty;
+
+  /// No description provided for @powerBestEfforts.
+  ///
+  /// In en, this message translates to:
+  /// **'Best efforts'**
+  String get powerBestEfforts;
+
+  /// No description provided for @ftpEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated FTP'**
+  String get ftpEstimate;
+
+  /// No description provided for @ftpCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current FTP'**
+  String get ftpCurrent;
+
+  /// No description provided for @ftpMethod20.
+  ///
+  /// In en, this message translates to:
+  /// **'95 % of your best 20-minute power'**
+  String get ftpMethod20;
+
+  /// No description provided for @ftpMethod8.
+  ///
+  /// In en, this message translates to:
+  /// **'90 % of your best 8-minute power'**
+  String get ftpMethod8;
+
+  /// No description provided for @ftpUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {watts} W'**
+  String ftpUse(int watts);
+
+  /// No description provided for @vo2MaxEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'VO2max estimate'**
+  String get vo2MaxEstimate;
+
+  /// No description provided for @vo2MaxFrom5Min.
+  ///
+  /// In en, this message translates to:
+  /// **'from your best 5-minute power and weight'**
+  String get vo2MaxFrom5Min;
+
+  /// No description provided for @vo2MaxNeedsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your weight to estimate VO2max.'**
+  String get vo2MaxNeedsWeight;
+
+  /// No description provided for @vo2MaxNeedsEffort.
+  ///
+  /// In en, this message translates to:
+  /// **'A 5-minute effort is needed to estimate VO2max.'**
+  String get vo2MaxNeedsEffort;
+
+  /// No description provided for @coachWellbeing.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing'**
+  String get coachWellbeing;
+
+  /// No description provided for @coachWellbeingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing was shared, but there are no check-ins yet.'**
+  String get coachWellbeingEmpty;
+
+  /// No description provided for @coachWellbeingNoNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Scores and RPE only. Notes stay private.'**
+  String get coachWellbeingNoNotes;
+
+  /// No description provided for @coachPowerCurve.
+  ///
+  /// In en, this message translates to:
+  /// **'Power curve'**
+  String get coachPowerCurve;
 }
 
 class _AppLocalizationsDelegate

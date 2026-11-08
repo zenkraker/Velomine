@@ -5,9 +5,12 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import 'goals.dart';
+import 'power_summary.dart';
 import 'progress_controller.dart';
+import 'readiness_card.dart';
 import 'totals_chart.dart';
 import 'training_summary.dart';
+import 'wellbeing_card.dart';
 
 /// Totals per week, month or year, and goals.
 class ProgressScreen extends StatefulWidget {
@@ -84,6 +87,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     selected: {c.period},
                     onSelectionChanged: (s) => c.setPeriod(s.single),
                   ),
+                  WellbeingCard(
+                    wellbeing: c.wellbeingToday,
+                    checkIns: c.checkIns,
+                    saving: c.savingWellbeing,
+                    onConsent: c.giveWellbeingConsent,
+                    onSave: c.saveCheckIn,
+                  ),
+                  if (c.readiness case final readiness?)
+                    ReadinessCard(readiness: readiness),
+                  if (c.powerCurve case final curve?)
+                    PowerSummary(
+                      curve: curve,
+                      days: c.powerDays,
+                      onDays: c.setPowerDays,
+                      onUseFtp: c.useFtp,
+                    ),
                   if (c.totals case final totals?) ...[
                     TotalsChart(period: totals.period, totals: totals.totals),
                     _TotalsTable(totals: totals),

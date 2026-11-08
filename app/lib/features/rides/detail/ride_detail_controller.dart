@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
+import '../../../core/guard.dart';
 import 'ride_series.dart';
 
 /// One ride: its numbers, its samples for the charts and map, and deleting it.
@@ -28,7 +29,11 @@ class RideDetailController extends ChangeNotifier {
   /// The member's bikes, to pick the one ridden. Empty when they could not be loaded: the ride still shows.
   List<BikeResponse> bikes = [];
   RideSeries? data;
+
+  /// How the ride felt, owned by this member. Loaded only for a ready ride.
+  RideFeelResponse? feel;
   bool loading = true;
+  bool savingFeel = false;
   bool notFound = false;
   Failure? error;
   bool _disposed = false;
@@ -51,6 +56,13 @@ class RideDetailController extends ChangeNotifier {
             bikes = (await bikesApi.listBikes())?.bikes ?? [];
           } on Object {
             bikes = [];
+          }
+          try {
+            feel = await api.wellbeingGetRideFeel(id);
+          } on ApiException catch (e) {
+            if (e.code == 401) onUnauthorized();
+          } on Object {
+            feel = null;
           }
         }
         error = null;
@@ -102,6 +114,48 @@ class RideDetailController extends ChangeNotifier {
       );
     }
     notifyListeners();
+  }
+
+  /// Returns whether the RPE and note were saved.
+  Future<bool> saveFeel(int rpe, String? notes) async {
+    savingFeel = true;
+    notifyListeners();
+    final failure = await guardCall(
+      () async {
+        feel = await api.wellbeingSaveRideFeel(
+          id,
+          SaveRideFeelRequest(rpe: rpe, notes: Optional.present(notes)),
+        );
+      },
+      onUnauthorized,
+      doing: FailureAction.saveWellbeing,
+    );
+    savingFeel = false;
+    error = failure;
+    notifyListeners();
+    return failure == null;
+  }
+
+  /// Returns whether the RPE and note were removed.
+  Future<bool> deleteFeel() async {
+    savingFeel = true;
+    notifyListeners();
+    final failure = await guardCall(
+      () async {
+        await api.wellbeingDeleteRideFeel(id);
+        feel = RideFeelResponse(
+          consentRequired: feel?.consentRequired ?? false,
+          rpe: null,
+          notes: null,
+        );
+      },
+      onUnauthorized,
+      doing: FailureAction.saveWellbeing,
+    );
+    savingFeel = false;
+    error = failure;
+    notifyListeners();
+    return failure == null;
   }
 
   /// Returns whether the ride was deleted.

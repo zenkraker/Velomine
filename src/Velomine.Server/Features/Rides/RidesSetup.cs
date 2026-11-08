@@ -10,6 +10,7 @@ public static class RidesSetup
         services.AddSingleton<RideFileStore>();
         services.AddSingleton<IngestionQueue>();
         services.AddHostedService<RideIngestionService>();
+        services.AddHostedService<PowerBestsBackfill>();
         return services;
     }
 }

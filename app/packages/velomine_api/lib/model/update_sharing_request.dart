@@ -16,6 +16,7 @@ class UpdateSharingRequest {
     required this.rides,
     required this.analytics,
     required this.routes,
+    required this.wellbeing,
   });
 
   final String rides;
@@ -24,27 +25,32 @@ class UpdateSharingRequest {
 
   final String routes;
 
+  final String wellbeing;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateSharingRequest &&
     other.rides == rides &&
     other.analytics == analytics &&
-    other.routes == routes;
+    other.routes == routes &&
+    other.wellbeing == wellbeing;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (rides.hashCode) +
     (analytics.hashCode) +
-    (routes.hashCode);
+    (routes.hashCode) +
+    (wellbeing.hashCode);
 
   @override
-  String toString() => 'UpdateSharingRequest[rides=$rides, analytics=$analytics, routes=$routes]';
+  String toString() => 'UpdateSharingRequest[rides=$rides, analytics=$analytics, routes=$routes, wellbeing=$wellbeing]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'rides'] = this.rides;
       json[r'analytics'] = this.analytics;
       json[r'routes'] = this.routes;
+      json[r'wellbeing'] = this.wellbeing;
     return json;
   }
 
@@ -54,10 +60,12 @@ class UpdateSharingRequest {
     String? rides,
     String? analytics,
     String? routes,
+    String? wellbeing,
   }) => UpdateSharingRequest(
     rides: rides ?? this.rides,
     analytics: analytics ?? this.analytics,
     routes: routes ?? this.routes,
+    wellbeing: wellbeing ?? this.wellbeing,
   );
 
   /// Returns a new [UpdateSharingRequest] instance and imports its values from
@@ -77,6 +85,8 @@ class UpdateSharingRequest {
         assert(json[r'analytics'] != null, 'Required key "UpdateSharingRequest[analytics]" has a null value in JSON.');
         assert(json.containsKey(r'routes'), 'Required key "UpdateSharingRequest[routes]" is missing from JSON.');
         assert(json[r'routes'] != null, 'Required key "UpdateSharingRequest[routes]" has a null value in JSON.');
+        assert(json.containsKey(r'wellbeing'), 'Required key "UpdateSharingRequest[wellbeing]" is missing from JSON.');
+        assert(json[r'wellbeing'] != null, 'Required key "UpdateSharingRequest[wellbeing]" has a null value in JSON.');
         return true;
       }());
 
@@ -84,6 +94,7 @@ class UpdateSharingRequest {
         rides: mapValueOfType<String>(json, r'rides')!,
         analytics: mapValueOfType<String>(json, r'analytics')!,
         routes: mapValueOfType<String>(json, r'routes')!,
+        wellbeing: mapValueOfType<String>(json, r'wellbeing')!,
       );
     }
     return null;
@@ -134,6 +145,7 @@ class UpdateSharingRequest {
     'rides',
     'analytics',
     'routes',
+    'wellbeing',
   };
 }
 

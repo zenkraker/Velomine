@@ -26,6 +26,15 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var rides = await db.Rides.AsNoTracking().Where(r => r.UserId == userId).OrderBy(r => r.StartTime).ThenBy(r => r.UploadedAt).ToListAsync(ct);
         var goals = await db.Set<Goal>().AsNoTracking().Where(g => g.UserId == userId).OrderBy(g => g.CreatedAt).ToListAsync(ct);
         var notifications = await db.Notifications.AsNoTracking().Where(n => n.UserId == userId).OrderBy(n => n.CreatedAt).ToListAsync(ct);
+        var checkIns = await db.DailyCheckIns.AsNoTracking()
+            .Where(c => c.UserId == userId).OrderBy(c => c.LocalDate).ToListAsync(ct);
+        var feels = await (
+                from f in db.RideFeels.AsNoTracking()
+                join r in db.Rides.AsNoTracking() on f.RideId equals r.Id
+                where r.UserId == userId
+                orderby r.StartTime
+                select new { f.RideId, f.Rpe, f.Notes, f.UpdatedAt })
+            .ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -90,6 +99,24 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         }), ct);
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
+        await AddJsonAsync(zip, "wellbeing.json", new
+        {
+            ConsentAt = user.WellbeingConsentAt,
+            ConsentVersion = user.WellbeingConsentVersion,
+            CheckIns = checkIns.Select(c => new
+            {
+                c.Id,
+                Date = c.LocalDate.ToString("yyyy-MM-dd"),
+                c.Fatigue,
+                c.Soreness,
+                c.Mood,
+                c.Stress,
+                c.Motivation,
+                c.CreatedAt,
+                c.UpdatedAt,
+            }),
+            RideFeel = feels.Select(f => new { f.RideId, f.Rpe, f.Notes, f.UpdatedAt }),
+        }, ct);
         await AddTextAsync(zip, "README.txt", ReadMe, ct);
     }
 
@@ -118,6 +145,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         rides.json          every ride: its numbers, its status, and where its original file is in this ZIP
         goals.json          your goals
         notifications.json  your notifications
+        wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.
 

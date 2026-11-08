@@ -27,6 +27,12 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>Also email this member their notifications, when the server can send email.</summary>
     public bool EmailNotifications { get; set; } = true;
+
+    /// <summary>When the member accepted the wellbeing terms; null means they have not started.</summary>
+    public DateTimeOffset? WellbeingConsentAt { get; set; }
+
+    /// <summary>The consent text version they accepted. A new version asks again.</summary>
+    public int? WellbeingConsentVersion { get; set; }
 }
 
 public static class Roles
