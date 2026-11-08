@@ -5,18 +5,31 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 import 'profile_controller.dart';
 
-const weekDays = {
-  'monday': 'Monday',
-  'tuesday': 'Tuesday',
-  'wednesday': 'Wednesday',
-  'thursday': 'Thursday',
-  'friday': 'Friday',
-  'saturday': 'Saturday',
-  'sunday': 'Sunday',
+const weekDayIds = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
+
+String weekDayName(AppLocalizations l10n, String day) => switch (day) {
+  'monday' => l10n.monday,
+  'tuesday' => l10n.tuesday,
+  'wednesday' => l10n.wednesday,
+  'thursday' => l10n.thursday,
+  'friday' => l10n.friday,
+  'saturday' => l10n.saturday,
+  _ => l10n.sunday,
 };
+
+enum _ProfileProblem { name, ftp, weight, maxHeartRate }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -54,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _zone = TextEditingController();
   String _firstDay = 'monday';
   bool _email = true;
-  String? _problem;
+  _ProfileProblem? _problem;
   bool _saved = false;
   bool _exported = false;
 
@@ -125,13 +138,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final weight = _read(_weight.text, 20, 300, whole: false);
     final maxHr = _read(_maxHr.text, 100, 240);
     final problem = _name.text.trim().isEmpty
-        ? 'Enter your name.'
+        ? _ProfileProblem.name
         : !ftp.$1
-        ? 'FTP is 30 to 1000 watts.'
+        ? _ProfileProblem.ftp
         : !weight.$1
-        ? 'Weight is 20 to 300 kg.'
+        ? _ProfileProblem.weight
         : !maxHr.$1
-        ? 'Maximum heart rate is 100 to 240 bpm.'
+        ? _ProfileProblem.maxHeartRate
         : null;
     setState(() {
       _problem = problem;
@@ -182,154 +195,162 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final c = widget.controller;
     return ListenableBuilder(
       listenable: c,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: c.loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: 16,
-                      children: [
-                        Text(
-                          'Profile',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        TextField(
-                          key: const Key('profile-name'),
-                          controller: _name,
-                          decoration: const InputDecoration(labelText: 'Name'),
-                        ),
-                        _number(
-                          'profile-ftp',
-                          _ftp,
-                          'FTP',
-                          'W',
-                          helper: 'Functional threshold power. Used for training load and power zones.',
-                        ),
-                        _number(
-                          'profile-weight',
-                          _weight,
-                          'Weight',
-                          'kg',
-                          decimals: true,
-                        ),
-                        _number(
-                          'profile-max-hr',
-                          _maxHr,
-                          'Maximum heart rate',
-                          'bpm',
-                          helper: 'Heart rate zones are worked out from it.',
-                        ),
-                        TextField(
-                          key: const Key('profile-zone'),
-                          controller: _zone,
-                          decoration: const InputDecoration(
-                            labelText: 'Time zone',
-                            hintText: 'Europe/Rome',
-                            helperText: 'Decides which day a ride counts on when its file does not say. Empty means UTC.',
-                          ),
-                        ),
-                        DropdownButtonFormField<String>(
-                          key: const Key('profile-first-day'),
-                          initialValue: _firstDay,
-                          decoration: const InputDecoration(
-                            labelText: 'Weeks start on',
-                          ),
-                          items: [
-                            for (final e in weekDays.entries)
-                              DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              ),
-                          ],
-                          onChanged: (v) =>
-                              setState(() => _firstDay = v ?? _firstDay),
-                        ),
-                        SwitchListTile(
-                          key: const Key('profile-email'),
-                          contentPadding: EdgeInsets.zero,
-                          value: _email,
-                          title: const Text('Email me my notifications'),
-                          subtitle: Text(
-                            widget.emailAvailable
-                                ? 'A ride that was read, a part that is worn, and so on.'
-                                : 'This server is not set up to send email, so nothing is sent yet.',
-                          ),
-                          onChanged: widget.emailAvailable
-                              ? (v) => setState(() {
-                                  _email = v;
-                                  _saved = false;
-                                })
-                              : null,
-                        ),
-                        if (_problem ??
-                                (c.error == null
-                                    ? null
-                                    : failureText(context.l10n, c.error!))
-                            case final message?)
+      builder: (context, _) {
+        final l10n = context.l10n;
+        final problem = switch (_problem) {
+          null => null,
+          _ProfileProblem.name => l10n.errorEnterName,
+          _ProfileProblem.ftp => l10n.errorFtp,
+          _ProfileProblem.weight => l10n.errorWeight,
+          _ProfileProblem.maxHeartRate => l10n.errorMaxHeartRate,
+        };
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: c.loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: 16,
+                        children: [
                           Text(
-                            message,
-                            key: const Key('profile-error'),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                            l10n.profileTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          TextField(
+                            key: const Key('profile-name'),
+                            controller: _name,
+                            decoration: InputDecoration(labelText: l10n.name),
+                          ),
+                          _number(
+                            'profile-ftp',
+                            _ftp,
+                            'FTP',
+                            'W',
+                            helper: l10n.ftpHelper,
+                          ),
+                          _number(
+                            'profile-weight',
+                            _weight,
+                            l10n.weight,
+                            'kg',
+                            decimals: true,
+                          ),
+                          _number(
+                            'profile-max-hr',
+                            _maxHr,
+                            l10n.maxHeartRate,
+                            'bpm',
+                            helper: l10n.maxHeartRateHelper,
+                          ),
+                          TextField(
+                            key: const Key('profile-zone'),
+                            controller: _zone,
+                            decoration: InputDecoration(
+                              labelText: l10n.timeZone,
+                              hintText: 'Europe/Rome',
+                              helperText: l10n.timeZoneHelper,
                             ),
                           ),
-                        if (_saved && c.error == null)
-                          const Text('Saved.', key: Key('profile-saved')),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton(
-                            key: const Key('profile-save'),
-                            onPressed: c.saving ? null : _save,
-                            child: const Text('Save'),
-                          ),
-                        ),
-                        const Divider(),
-                        Text(
-                          'Your data',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const Text(
-                          'It is yours. Download everything Velomine keeps about you: your details, bikes, goals and rides, with every ride file exactly as you uploaded it.',
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            key: const Key('export-data'),
-                            onPressed: c.exporting ? null : _export,
-                            icon: const Icon(Icons.download),
-                            label: const Text('Download my data'),
-                          ),
-                        ),
-                        if (_exported)
-                          const Text(
-                            'Your download has started in your browser. The link works for two minutes.',
-                            key: Key('export-started'),
-                          ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            key: const Key('delete-account'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .error,
+                          DropdownButtonFormField<String>(
+                            key: const Key('profile-first-day'),
+                            initialValue: _firstDay,
+                            decoration: InputDecoration(
+                              labelText: l10n.firstDayOfWeek,
                             ),
-                            onPressed: _delete,
-                            icon: const Icon(Icons.delete_forever),
-                            label: const Text('Delete my account'),
+                            items: [
+                              for (final day in weekDayIds)
+                                DropdownMenuItem(
+                                  value: day,
+                                  child: Text(weekDayName(l10n, day)),
+                                ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _firstDay = v ?? _firstDay),
                           ),
-                        ),
-                      ],
-                    ),
+                          SwitchListTile(
+                            key: const Key('profile-email'),
+                            contentPadding: EdgeInsets.zero,
+                            value: _email,
+                            title: Text(l10n.emailNotifications),
+                            subtitle: Text(
+                              widget.emailAvailable
+                                  ? l10n.emailAvailableHelp
+                                  : l10n.emailUnavailableHelp,
+                            ),
+                            onChanged: widget.emailAvailable
+                                ? (v) => setState(() {
+                                    _email = v;
+                                    _saved = false;
+                                  })
+                                : null,
+                          ),
+                          if (problem ??
+                                  (c.error == null
+                                      ? null
+                                      : failureText(l10n, c.error!))
+                              case final message?)
+                            Text(
+                              message,
+                              key: const Key('profile-error'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          if (_saved && c.error == null)
+                            Text(l10n.saved, key: const Key('profile-saved')),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton(
+                              key: const Key('profile-save'),
+                              onPressed: c.saving ? null : _save,
+                              child: Text(l10n.save),
+                            ),
+                          ),
+                          const Divider(),
+                          Text(
+                            l10n.yourData,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(l10n.yourDataHelp),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              key: const Key('export-data'),
+                              onPressed: c.exporting ? null : _export,
+                              icon: const Icon(Icons.download),
+                              label: Text(l10n.downloadMyData),
+                            ),
+                          ),
+                          if (_exported)
+                            Text(
+                              l10n.exportStarted,
+                              key: const Key('export-started'),
+                            ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              key: const Key('delete-account'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .error,
+                              ),
+                              onPressed: _delete,
+                              icon: const Icon(Icons.delete_forever),
+                              label: Text(l10n.deleteMyAccount),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
@@ -354,42 +375,43 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Delete your account?'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 16,
-      children: [
-        const Text(
-          'This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.',
-        ),
-        TextField(
-          key: const Key('delete-confirm'),
-          controller: _answer,
-          obscureText: widget.hasPassword,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: widget.hasPassword
-                ? 'Your password'
-                : 'Type your email address to confirm',
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.deleteAccountTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          Text(l10n.deleteAccountBody),
+          TextField(
+            key: const Key('delete-confirm'),
+            controller: _answer,
+            obscureText: widget.hasPassword,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: widget.hasPassword
+                  ? l10n.yourPassword
+                  : l10n.confirmEmail,
+            ),
           ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('confirm-delete-account'),
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+            foregroundColor: Theme.of(context).colorScheme.onError,
+          ),
+          onPressed: () => Navigator.pop(context, _answer.text),
+          child: Text(l10n.deleteEverything),
         ),
       ],
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(
-        key: const Key('confirm-delete-account'),
-        style: FilledButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.error,
-          foregroundColor: Theme.of(context).colorScheme.onError,
-        ),
-        onPressed: () => Navigator.pop(context, _answer.text),
-        child: const Text('Delete everything'),
-      ),
-    ],
-  );
+    );
+  }
 }

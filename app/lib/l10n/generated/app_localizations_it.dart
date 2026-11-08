@@ -1140,4 +1140,119 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get serverVersion => 'Versione del server';
+
+  @override
+  String get profileTitle => 'Profilo';
+
+  @override
+  String get ftpHelper =>
+      'Soglia funzionale di potenza. Usata per il carico di allenamento e le zone di potenza.';
+
+  @override
+  String get weight => 'Peso';
+
+  @override
+  String get maxHeartRate => 'Frequenza cardiaca massima';
+
+  @override
+  String get maxHeartRateHelper =>
+      'Le zone di frequenza cardiaca si calcolano da qui.';
+
+  @override
+  String get timeZone => 'Fuso orario';
+
+  @override
+  String get timeZoneHelper =>
+      'Decide in quale giorno conta un\'uscita quando il file non lo indica. Vuoto significa UTC.';
+
+  @override
+  String get firstDayOfWeek => 'La settimana inizia di';
+
+  @override
+  String get emailNotifications => 'Inviami le notifiche via email';
+
+  @override
+  String get emailAvailableHelp =>
+      'Un\'uscita letta, un componente usurato e così via.';
+
+  @override
+  String get emailUnavailableHelp =>
+      'Questo server non è configurato per inviare email, quindi per ora non viene inviato nulla.';
+
+  @override
+  String get yourData => 'I tuoi dati';
+
+  @override
+  String get yourDataHelp =>
+      'Sono tuoi. Scarica tutto ciò che Velomine conserva su di te: i tuoi dati, le bici, gli obiettivi e le uscite, con ogni file esattamente come l\'hai caricato.';
+
+  @override
+  String get downloadMyData => 'Scarica i miei dati';
+
+  @override
+  String get exportStarted =>
+      'Il download è partito nel browser. Il link funziona per due minuti.';
+
+  @override
+  String get deleteMyAccount => 'Elimina il mio account';
+
+  @override
+  String get errorEnterName => 'Inserisci il tuo nome.';
+
+  @override
+  String get errorFtp => 'L\'FTP è tra 30 e 1000 watt.';
+
+  @override
+  String get errorWeight => 'Il peso è tra 20 e 300 kg.';
+
+  @override
+  String get errorMaxHeartRate =>
+      'La frequenza cardiaca massima è tra 100 e 240 bpm.';
+
+  @override
+  String get deleteAccountTitle => 'Eliminare il tuo account?';
+
+  @override
+  String get deleteAccountBody =>
+      'Elimina per sempre il tuo account e tutto ciò che contiene: uscite e file, bici, obiettivi e notifiche. Scarica prima i tuoi dati se vuoi conservarli. Non si può annullare.';
+
+  @override
+  String get yourPassword => 'La tua password';
+
+  @override
+  String get confirmEmail => 'Scrivi il tuo indirizzo email per confermare';
+
+  @override
+  String get deleteEverything => 'Elimina tutto';
+
+  @override
+  String get monday => 'Lunedì';
+
+  @override
+  String get tuesday => 'Martedì';
+
+  @override
+  String get wednesday => 'Mercoledì';
+
+  @override
+  String get thursday => 'Giovedì';
+
+  @override
+  String get friday => 'Venerdì';
+
+  @override
+  String get saturday => 'Sabato';
+
+  @override
+  String get sunday => 'Domenica';
+
+  @override
+  String get markAllRead => 'Segna tutte come lette';
+
+  @override
+  String get noNotifications =>
+      'Ancora nulla. Qui vedrai quando un\'uscita è stata letta o un componente della bici è quasi usurato.';
+
+  @override
+  String get unread => 'Non letta';
 }

@@ -1136,4 +1136,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverVersion => 'Server version';
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get ftpHelper =>
+      'Functional threshold power. Used for training load and power zones.';
+
+  @override
+  String get weight => 'Weight';
+
+  @override
+  String get maxHeartRate => 'Maximum heart rate';
+
+  @override
+  String get maxHeartRateHelper => 'Heart rate zones are worked out from it.';
+
+  @override
+  String get timeZone => 'Time zone';
+
+  @override
+  String get timeZoneHelper =>
+      'Decides which day a ride counts on when its file does not say. Empty means UTC.';
+
+  @override
+  String get firstDayOfWeek => 'Weeks start on';
+
+  @override
+  String get emailNotifications => 'Email me my notifications';
+
+  @override
+  String get emailAvailableHelp =>
+      'A ride that was read, a part that is worn, and so on.';
+
+  @override
+  String get emailUnavailableHelp =>
+      'This server is not set up to send email, so nothing is sent yet.';
+
+  @override
+  String get yourData => 'Your data';
+
+  @override
+  String get yourDataHelp =>
+      'It is yours. Download everything Velomine keeps about you: your details, bikes, goals and rides, with every ride file exactly as you uploaded it.';
+
+  @override
+  String get downloadMyData => 'Download my data';
+
+  @override
+  String get exportStarted =>
+      'Your download has started in your browser. The link works for two minutes.';
+
+  @override
+  String get deleteMyAccount => 'Delete my account';
+
+  @override
+  String get errorEnterName => 'Enter your name.';
+
+  @override
+  String get errorFtp => 'FTP is 30 to 1000 watts.';
+
+  @override
+  String get errorWeight => 'Weight is 20 to 300 kg.';
+
+  @override
+  String get errorMaxHeartRate => 'Maximum heart rate is 100 to 240 bpm.';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountBody =>
+      'This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.';
+
+  @override
+  String get yourPassword => 'Your password';
+
+  @override
+  String get confirmEmail => 'Type your email address to confirm';
+
+  @override
+  String get deleteEverything => 'Delete everything';
+
+  @override
+  String get monday => 'Monday';
+
+  @override
+  String get tuesday => 'Tuesday';
+
+  @override
+  String get wednesday => 'Wednesday';
+
+  @override
+  String get thursday => 'Thursday';
+
+  @override
+  String get friday => 'Friday';
+
+  @override
+  String get saturday => 'Saturday';
+
+  @override
+  String get sunday => 'Sunday';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications =>
+      'Nothing yet. You will hear here when a ride has been read, or a part on your bike is nearly worn.';
+
+  @override
+  String get unread => 'Unread';
 }

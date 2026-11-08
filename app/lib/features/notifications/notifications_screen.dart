@@ -52,7 +52,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Notifications',
+                          context.l10n.notifications,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
@@ -60,7 +60,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         TextButton(
                           key: const Key('notifications-read-all'),
                           onPressed: c.markAllRead,
-                          child: const Text('Mark all read'),
+                          child: Text(context.l10n.markAllRead),
                         ),
                     ],
                   ),
@@ -73,9 +73,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ),
                     ),
                   if (c.items.isEmpty && !c.loading && c.error == null)
-                    const Text(
-                      'Nothing yet. You will hear here when a ride has been read, or a part on your bike is nearly worn.',
-                      key: Key('no-notifications'),
+                    Text(
+                      context.l10n.noNotifications,
+                      key: const Key('no-notifications'),
                     ),
                   for (final n in c.items)
                     _NotificationTile(notification: n, onTap: () => _open(n)),
@@ -123,7 +123,7 @@ class _NotificationTile extends StatelessWidget {
         trailing: n.isRead
             ? null
             : Semantics(
-                label: 'Unread',
+                label: context.l10n.unread,
                 child: Icon(Icons.circle, size: 10, color: scheme.primary),
               ),
       ),

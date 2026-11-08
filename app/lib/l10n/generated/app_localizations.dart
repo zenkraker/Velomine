@@ -2041,6 +2041,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Server version'**
   String get serverVersion;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// No description provided for @ftpHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Functional threshold power. Used for training load and power zones.'**
+  String get ftpHelper;
+
+  /// No description provided for @weight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get weight;
+
+  /// No description provided for @maxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum heart rate'**
+  String get maxHeartRate;
+
+  /// No description provided for @maxHeartRateHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate zones are worked out from it.'**
+  String get maxHeartRateHelper;
+
+  /// No description provided for @timeZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone'**
+  String get timeZone;
+
+  /// No description provided for @timeZoneHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Decides which day a ride counts on when its file does not say. Empty means UTC.'**
+  String get timeZoneHelper;
+
+  /// No description provided for @firstDayOfWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Weeks start on'**
+  String get firstDayOfWeek;
+
+  /// No description provided for @emailNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Email me my notifications'**
+  String get emailNotifications;
+
+  /// No description provided for @emailAvailableHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A ride that was read, a part that is worn, and so on.'**
+  String get emailAvailableHelp;
+
+  /// No description provided for @emailUnavailableHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This server is not set up to send email, so nothing is sent yet.'**
+  String get emailUnavailableHelp;
+
+  /// No description provided for @yourData.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get yourData;
+
+  /// No description provided for @yourDataHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It is yours. Download everything Velomine keeps about you: your details, bikes, goals and rides, with every ride file exactly as you uploaded it.'**
+  String get yourDataHelp;
+
+  /// No description provided for @downloadMyData.
+  ///
+  /// In en, this message translates to:
+  /// **'Download my data'**
+  String get downloadMyData;
+
+  /// No description provided for @exportStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your download has started in your browser. The link works for two minutes.'**
+  String get exportStarted;
+
+  /// No description provided for @deleteMyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteMyAccount;
+
+  /// No description provided for @errorEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name.'**
+  String get errorEnterName;
+
+  /// No description provided for @errorFtp.
+  ///
+  /// In en, this message translates to:
+  /// **'FTP is 30 to 1000 watts.'**
+  String get errorFtp;
+
+  /// No description provided for @errorWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight is 20 to 300 kg.'**
+  String get errorWeight;
+
+  /// No description provided for @errorMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum heart rate is 100 to 240 bpm.'**
+  String get errorMaxHeartRate;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.'**
+  String get deleteAccountBody;
+
+  /// No description provided for @yourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password'**
+  String get yourPassword;
+
+  /// No description provided for @confirmEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your email address to confirm'**
+  String get confirmEmail;
+
+  /// No description provided for @deleteEverything.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything'**
+  String get deleteEverything;
+
+  /// No description provided for @monday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monday;
+
+  /// No description provided for @tuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tuesday;
+
+  /// No description provided for @wednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wednesday;
+
+  /// No description provided for @thursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thursday;
+
+  /// No description provided for @friday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friday;
+
+  /// No description provided for @saturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get saturday;
+
+  /// No description provided for @sunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunday;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet. You will hear here when a ride has been read, or a part on your bike is nearly worn.'**
+  String get noNotifications;
+
+  /// No description provided for @unread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get unread;
 }
 
 class _AppLocalizationsDelegate
