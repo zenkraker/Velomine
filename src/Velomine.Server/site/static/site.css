@@ -852,7 +852,8 @@ a {
 /* Ride band */
 
 .ride-grid,
-.club-grid {
+.club-grid,
+.sensor-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(38px, 6vw, 80px);
@@ -860,7 +861,8 @@ a {
 }
 
 .ride-grid h2,
-.club-grid h2 {
+.club-grid h2,
+.sensor-grid h2 {
   margin: 0;
   font-family: var(--serif);
   font-size: clamp(2.3rem, 4.3vw, 3.8rem);
@@ -871,7 +873,8 @@ a {
 }
 
 .ride-grid p,
-.club-grid p {
+.club-grid p,
+.sensor-grid p {
   max-width: 56ch;
   margin: 1.1rem 0 0;
   font-size: 1.03rem;
@@ -899,6 +902,19 @@ a {
   flex: none;
   margin-top: 0.2rem;
   color: var(--volt);
+}
+
+.feature-list .next-mark {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  margin-top: 0.45rem;
+  border: 1px solid var(--iron);
+  border-radius: 50%;
+}
+
+.feature-list--day .next-mark {
+  border-color: var(--iron);
 }
 
 .feature-list--day li {
@@ -995,6 +1011,122 @@ a {
 
 .note-small a {
   color: var(--volt);
+  font-weight: 600;
+}
+
+/* Sensors */
+
+.sensor-card {
+  padding: clamp(22px, 3vw, 32px);
+  border: 1px solid var(--gravel);
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(24, 32, 30, 0.06);
+}
+
+.sensor-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.sensor-card-head strong {
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: 1.65rem;
+  font-weight: 400;
+}
+
+.sensor-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sensor-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(201, 191, 174, 0.75);
+  border-radius: 12px;
+}
+
+.sensor-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cloud);
+  color: var(--teal);
+}
+
+.sensor-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.sensor-list strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.sensor-state {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sensor-state.ready {
+  color: var(--teal);
+}
+
+.sensor-state.progress {
+  color: var(--iron);
+}
+
+.sensor-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  color: rgba(24, 32, 30, 0.66);
+  font-size: 0.72rem;
+}
+
+.sensor-flow .node {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--gravel);
+  border-radius: 999px;
+  background: var(--cloud);
+}
+
+.sensor-flow .arrow {
+  color: var(--iron);
+}
+
+.sensor-flow .crossed {
+  color: rgba(24, 32, 30, 0.45);
+  text-decoration: line-through;
+}
+
+.sensor-note {
+  margin: 1rem 0 0;
+  color: rgba(24, 32, 30, 0.66);
+  font-size: 0.78rem;
+}
+
+.sensor-note a {
+  color: var(--teal);
   font-weight: 600;
 }
 
@@ -1828,6 +1960,7 @@ a {
   .hero-grid,
   .ride-grid,
   .club-grid,
+  .sensor-grid,
   .status-card,
   .price-card-main,
   .cost-grid,

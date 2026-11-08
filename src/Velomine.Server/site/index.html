@@ -164,7 +164,7 @@
                 <span>Saved on the phone first, then synced to Velomine.</span>
               </li>
             </ul>
-            <p class="note-small">Recording is on Android today. iOS, power and cadence sensors are next. <a href="/status/">See the status →</a></p>
+            <p class="note-small">Recording is on Android today. Speed, cadence and power sensors are being added; iOS is next. <a href="/status/">See the status →</a></p>
           </div>
 
           <div class="ride-sheet" role="img" aria-label="A ride sheet with 32.8 kilometres, 412 metres of climbing, 148 beats per minute and a route line.">
@@ -192,6 +192,73 @@
               <span>Saved here first</span>
               <span>syncs to Velomine</span>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="sensors-title">
+      <div class="container">
+        <div class="sensor-grid">
+          <div>
+            <p class="eyebrow">Sensors, without the setup</p>
+            <h2 id="sensors-title">Pair the sensor. Skip the ecosystem.</h2>
+            <p>Velomine pairs directly with standard Bluetooth LE heart-rate straps today. No vendor app, no extra account, no cloud bridge. Pair once in the app; the recorder reconnects for later rides, even with the screen off.</p>
+            <ul class="feature-list feature-list--day">
+              <li>
+                <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Heart-rate straps work today.</span>
+              </li>
+              <li>
+                <span class="next-mark" aria-hidden="true"></span>
+                <span>Speed, cadence and power are next.</span>
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>The samples go straight into the ride on your instance.</span>
+              </li>
+            </ul>
+            <p class="sensor-note">Recording is on Android today. The same direct pairing comes to iOS next. <a href="/status/">See the status →</a></p>
+          </div>
+
+          <div class="sensor-card">
+            <div class="sensor-card-head">
+              <strong>Sensors</strong>
+              <span class="pill">Standard Bluetooth LE</span>
+            </div>
+            <ul class="sensor-list">
+              <li>
+                <span class="sensor-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5S4.5 16 4.5 10.5a4.2 4.2 0 0 1 7.5-2.4 4.2 4.2 0 0 1 7.5 2.4C19.5 16 12 20.5 12 20.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </span>
+                <strong>Heart rate</strong>
+                <span class="sensor-state ready">Ready</span>
+              </li>
+              <li>
+                <span class="sensor-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>
+                </span>
+                <strong>Speed &amp; cadence</strong>
+                <span class="sensor-state progress">In progress</span>
+              </li>
+              <li>
+                <span class="sensor-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h6l-1 8 8-12h-6z" fill="currentColor"/></svg>
+                </span>
+                <strong>Power</strong>
+                <span class="sensor-state progress">In progress</span>
+              </li>
+            </ul>
+            <div class="sensor-flow">
+              <span class="node">Sensor</span>
+              <span class="arrow" aria-hidden="true">→</span>
+              <span class="node">Velomine</span>
+              <span class="arrow" aria-hidden="true">→</span>
+              <span class="node">Your instance</span>
+              <span class="crossed">vendor app</span>
+              <span class="crossed">extra account</span>
+            </div>
+            <p class="sensor-note">Pair the strap once. It reconnects for later rides.</p>
           </div>
         </div>
       </div>
