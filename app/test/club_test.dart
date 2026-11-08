@@ -79,6 +79,103 @@ void main() {
     expect(find.text('Coach'), findsWidgets);
   });
 
+  testWidgets('an invite code survives signing in', (tester) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    final session = server.session(useCookies: true);
+    session.pendingJoinCode = server.joinCode;
+    server.signInBrowser(rider);
+    await startApp(tester, session);
+
+    expect(find.text('Join a club'), findsOneWidget);
+    final field = tester.widget<TextField>(find.byKey(const Key('join-code')));
+    expect(field.controller!.text, server.joinCode);
+  });
+
+  testWidgets('the admin moves ownership so the old owner can leave', (
+    tester,
+  ) async {
+    final admin = server.add(
+      'admin@example.com',
+      roles: ['admin', 'member'],
+      name: 'Boss',
+      clubRole: null,
+    );
+    final owner = server.add(
+      'owner@example.com',
+      name: 'Owner Rina',
+      clubRole: null,
+    );
+    final rider = server.add('rider@example.com', name: 'Rider Luca');
+    server.signInBrowser(admin);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Admin'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    // Create the club, then hand ownership to the rider who is already in the fake club.
+    await tester.tap(find.byKey(const Key('create-club')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('club-name')), 'Velocità');
+    await tester.enterText(
+      find.byKey(const Key('club-owner-email')),
+      owner.email,
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('save-club')));
+    await tester.pumpAndSettle();
+    expect(server.clubRoles[owner.email], 'owner');
+
+    await tester.tap(find.byKey(const Key('change-owner-club-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-owner')));
+    await tester.pumpAndSettle();
+
+    expect(server.clubRoles[rider.email], 'owner');
+    expect(server.clubRoles[owner.email], 'member');
+  });
+
+  testWidgets('a server validation sentence is shown for a bad club owner', (
+    tester,
+  ) async {
+    final admin = server.add(
+      'admin@example.com',
+      roles: ['admin', 'member'],
+      name: 'Boss',
+      clubRole: null,
+    );
+    server.signInBrowser(admin);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Admin'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('create-club')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('club-name')), 'Velocità');
+    await tester.enterText(
+      find.byKey(const Key('club-owner-email')),
+      'nobody@example.com',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('save-club')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('There is no account with that email address.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('an admin creates a club from the admin pages', (tester) async {
     final admin = server.add(
       'admin@example.com',

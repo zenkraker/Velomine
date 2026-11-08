@@ -489,7 +489,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audienceCoaches => 'My coaches';
 
   @override
-  String get audienceClub => 'Whole club';
+  String get routesNeedRides =>
+      'Turn on rides first; routes add the map to them.';
 
   @override
   String get viewsTitle => 'Who looked';
@@ -505,6 +506,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewRide => 'Ride';
+
+  @override
+  String get viewRides => 'Ride list';
 
   @override
   String get viewRoute => 'Route';
@@ -523,9 +527,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String lastRideOn(String date) {
     return 'Last ride $date';
   }
-
-  @override
-  String get lastRideNever => 'No rides yet';
 
   @override
   String get days7 => '7 days';
@@ -581,6 +582,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminNoClubs => 'No clubs yet. Create the first one.';
+
+  @override
+  String get changeOwner => 'Change owner';
+
+  @override
+  String get chooseOwner => 'Choose the new owner';
 
   @override
   String get errorClubName => 'Give the club a name.';

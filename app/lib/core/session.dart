@@ -68,6 +68,9 @@ class Session extends ChangeNotifier {
   /// The secret of the sign-in the phone started in the browser; the code that comes back is only good with it.
   String? _ssoVerifier;
 
+  /// A join code from an invite link, kept while a signed-out visitor signs in, so the link still works afterwards.
+  String? pendingJoinCode;
+
   SessionStatus status = SessionStatus.loading;
   MeResponse? me;
   SsoInfoResponse? sso;

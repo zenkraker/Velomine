@@ -57,7 +57,7 @@ public sealed class CoachRideStreamsValidator : Validator<CoachRideStreamsReques
 }
 
 /// <summary>An athlete's rides, newest first. Only numbers: the route lives in the streams and needs its own grant.</summary>
-public sealed class ListCoachRides(VelomineDbContext db)
+public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
     : Endpoint<CoachRidesRequest, ListRidesResponse>
 {
     public override void Configure()
@@ -103,6 +103,10 @@ public sealed class ListCoachRides(VelomineDbContext db)
         var last = page.LastOrDefault();
         var next = hasMore && last is not null ? $"{(last.StartTime ?? last.UploadedAt).UtcTicks}:{last.Id}" : null;
 
+        var viewerId = User.UserId();
+        await SharingRules.RecordViewAsync(
+            db, time, req.UserId, req.ClubId, viewerId,
+            await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Rides, ct);
         await Send.OkAsync(new ListRidesResponse([.. page.Select(RideResponse.From)], next), ct);
     }
 }

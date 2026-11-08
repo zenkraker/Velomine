@@ -17,13 +17,13 @@ String clubRoleName(AppLocalizations l10n, String role) => switch (role) {
 String _audienceName(AppLocalizations l10n, String audience) =>
     switch (audience) {
       'coaches' => l10n.audienceCoaches,
-      'club' => l10n.audienceClub,
       _ => l10n.audienceNone,
     };
 
 String _viewName(AppLocalizations l10n, String what) => switch (what) {
   'training' => l10n.viewTraining,
   'ride' => l10n.viewRide,
+  'rides' => l10n.viewRides,
   'route' => l10n.viewRoute,
   _ => l10n.viewSummary,
 };
@@ -390,22 +390,24 @@ class _SharingCard extends StatelessWidget {
       String label,
       String value,
       String key,
-      Future<void> Function(String) onChanged,
-    ) => InputDecorator(
-      decoration: InputDecoration(labelText: label),
+      Future<void> Function(String) onChanged, {
+      bool enabled = true,
+      String? helper,
+    }) => InputDecorator(
+      decoration: InputDecoration(labelText: label, helperText: helper),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           key: Key(key),
           value: value,
           isExpanded: true,
           items: [
-            for (final audience in ['none', 'coaches', 'club'])
+            for (final audience in ['none', 'coaches'])
               DropdownMenuItem(
                 value: audience,
                 child: Text(_audienceName(l10n, audience)),
               ),
           ],
-          onChanged: sharing.saving
+          onChanged: sharing.saving || !enabled
               ? null
               : (v) {
                   if (v != null) onChanged(v);
@@ -449,6 +451,8 @@ class _SharingCard extends StatelessWidget {
                 sharing.routes,
                 'share-routes',
                 (v) => sharing.choose(routes: v),
+                enabled: sharing.rides != 'none',
+                helper: sharing.rides == 'none' ? l10n.routesNeedRides : null,
               ),
             ],
             if (sharing.error != null)

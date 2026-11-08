@@ -25,6 +25,7 @@ class TrainingSummary extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final colors = [
       scheme.primary,
       const Color(0xFFE07A3F),
@@ -131,6 +132,7 @@ class TrainingSummary extends StatelessWidget {
                     grid: scheme.outlineVariant,
                     labelStyle: labelStyle,
                     colors: colors,
+                    locale: locale,
                   ),
                 ),
               ),
@@ -150,6 +152,7 @@ class TrainingSummary extends StatelessWidget {
                     bar: scheme.primary.withValues(alpha: 0.55),
                     peak: scheme.primary,
                     labelStyle: labelStyle,
+                    locale: locale,
                   ),
                 ),
               ),
@@ -215,12 +218,14 @@ class _FitnessPainter extends CustomPainter {
     required this.grid,
     required this.labelStyle,
     required this.colors,
+    required this.locale,
   });
 
   final List<TrainingDay> days;
   final Color grid;
   final TextStyle labelStyle;
   final List<Color> colors;
+  final String locale;
 
   static const _left = 34.0, _right = 8.0, _top = 8.0, _bottom = 18.0;
 
@@ -302,7 +307,7 @@ class _FitnessPainter extends CustomPainter {
     for (final index in [0, days.length ~/ 2, days.length - 1]) {
       _label(
         canvas,
-        DateFormat.MMMd().format(days[index].date),
+        DateFormat.MMMd(locale).format(days[index].date),
         Offset(x(index), plot.bottom + 3),
         alignRight: false,
         centerY: false,
@@ -337,7 +342,8 @@ class _FitnessPainter extends CustomPainter {
       old.days != days ||
       old.grid != grid ||
       old.labelStyle != labelStyle ||
-      old.colors != colors;
+      old.colors != colors ||
+      old.locale != locale;
 }
 
 class _LoadPainter extends CustomPainter {
@@ -346,12 +352,14 @@ class _LoadPainter extends CustomPainter {
     required this.bar,
     required this.peak,
     required this.labelStyle,
+    required this.locale,
   });
 
   final List<TrainingDay> days;
   final Color bar;
   final Color peak;
   final TextStyle labelStyle;
+  final String locale;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -384,7 +392,7 @@ class _LoadPainter extends CustomPainter {
       if ((days.length - 1 - i) % every == 0) {
         final painter = TextPainter(
           text: TextSpan(
-            text: DateFormat.MMMd().format(days[i].date),
+            text: DateFormat.MMMd(locale).format(days[i].date),
             style: labelStyle,
           ),
           textDirection: TextDirection.ltr,
@@ -405,5 +413,6 @@ class _LoadPainter extends CustomPainter {
       old.days != days ||
       old.bar != bar ||
       old.peak != peak ||
-      old.labelStyle != labelStyle;
+      old.labelStyle != labelStyle ||
+      old.locale != locale;
 }

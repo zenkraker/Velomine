@@ -16,8 +16,9 @@ public static class SharingRules
     }
 
     /// <summary>
-    /// A coach (or the owner) of [clubId] may see [ownerId]'s [dataType] when the owner is in the same club and has
-    /// shared that kind of data. Anything else is a no: the endpoint then answers 404, like a missing record.
+    /// A club member may see [ownerId]'s [dataType] when the owner is in the same club and has shared that kind of
+    /// data with an audience that includes the caller: the coaches (owner and coaches) or, later, the whole club.
+    /// Anything else is a no: the endpoint then answers 404, like a missing record.
     /// </summary>
     public static async Task<bool> CanViewAsync(
         VelomineDbContext db,
@@ -27,15 +28,26 @@ public static class SharingRules
         string dataType,
         CancellationToken ct)
     {
-        if (!await IsCoachAsync(db, clubId, viewerId, ct)) return false;
+        var viewer = await db.ClubMemberships.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.ClubId == clubId && m.UserId == viewerId, ct);
+        if (viewer is null || viewerId == ownerId) return false;
         if (!await db.ClubMemberships.AsNoTracking().AnyAsync(m => m.ClubId == clubId && m.UserId == ownerId, ct))
             return false;
-        return await db.ShareGrants.AsNoTracking()
-            .AnyAsync(g => g.ClubId == clubId && g.MemberId == ownerId && g.DataType == dataType, ct);
+
+        var grant = await db.ShareGrants.AsNoTracking()
+            .FirstOrDefaultAsync(g => g.ClubId == clubId && g.MemberId == ownerId && g.DataType == dataType, ct);
+        if (grant is null) return false;
+
+        return grant.Audience switch
+        {
+            Audiences.Club => true,
+            Audiences.Coaches => viewer.Role is ClubRoles.Owner or ClubRoles.Coach,
+            _ => false,
+        };
     }
 
     /// <summary>Remembers that someone other than the owner looked. The name is kept, so a later rename does not rewrite history.</summary>
-    public static async Task RecordViewAsync(
+    public static Task RecordViewAsync(
         VelomineDbContext db,
         TimeProvider time,
         Guid memberId,
@@ -43,18 +55,36 @@ public static class SharingRules
         Guid viewerId,
         string viewerName,
         string what,
+        CancellationToken ct) =>
+        RecordViewsAsync(db, time, [memberId], clubId, viewerId, viewerName, what, ct);
+
+    /// <summary>The same, for a roster that shows several athletes at once: one round trip, one timestamp.</summary>
+    public static async Task RecordViewsAsync(
+        VelomineDbContext db,
+        TimeProvider time,
+        IEnumerable<Guid> memberIds,
+        Guid clubId,
+        Guid viewerId,
+        string viewerName,
+        string what,
         CancellationToken ct)
     {
-        db.ShareViews.Add(new ShareView
+        var at = time.GetUtcNow();
+        var added = false;
+        foreach (var memberId in memberIds)
         {
-            Id = Guid.NewGuid(),
-            MemberId = memberId,
-            ClubId = clubId,
-            ViewerId = viewerId,
-            ViewerName = viewerName,
-            What = what,
-            At = time.GetUtcNow(),
-        });
-        await db.SaveChangesAsync(ct);
+            db.ShareViews.Add(new ShareView
+            {
+                Id = Guid.NewGuid(),
+                MemberId = memberId,
+                ClubId = clubId,
+                ViewerId = viewerId,
+                ViewerName = viewerName,
+                What = what,
+                At = at,
+            });
+            added = true;
+        }
+        if (added) await db.SaveChangesAsync(ct);
     }
 }

@@ -566,6 +566,17 @@ extension on FakeServer {
       'ownerName': owner?.name,
       'ownerEmail': owner?.email,
       'ownerRole': owner == null ? null : 'owner',
+      'members': [
+        for (final a in accounts.values.where(
+          (a) => clubRoles.containsKey(a.email),
+        ))
+          {
+            'userId': a.id,
+            'displayName': a.name,
+            'role': clubRoles[a.email],
+            'joinedAt': '2026-11-02T08:00:00Z',
+          },
+      ],
     };
   }
 
@@ -696,14 +707,18 @@ extension on FakeServer {
       'sharesRides': sharingChoices['rides'] != 'none',
       'sharesAnalytics': sharingChoices['analytics'] != 'none',
       'sharesRoutes': sharingChoices['routes'] != 'none',
-      'lastRideAt': rides.isEmpty ? null : rides.first['startTime'],
-      'rides': rides.length,
-      'distanceM': rides.fold<double>(
-        0,
-        (sum, r) => sum + ((r['distanceM'] as num?)?.toDouble() ?? 0),
-      ),
-      'tss7': 60.0,
-      'tss42': 240.0,
+      'lastRideAt': sharingChoices['rides'] != 'none' && rides.isNotEmpty
+          ? rides.first['startTime']
+          : null,
+      'rides': sharingChoices['rides'] != 'none' ? rides.length : null,
+      'distanceM': sharingChoices['rides'] != 'none'
+          ? rides.fold<double>(
+              0,
+              (sum, r) => sum + ((r['distanceM'] as num?)?.toDouble() ?? 0),
+            )
+          : null,
+      'tss7': sharingChoices['analytics'] != 'none' ? 60.0 : null,
+      'tss42': sharingChoices['analytics'] != 'none' ? 240.0 : null,
     };
 
     final rideStreams = RegExp(
@@ -791,7 +806,12 @@ extension on FakeServer {
         final body = jsonDecode(request.body) as Map<String, Object?>;
         final email = body['ownerEmail']! as String;
         final owner = accounts[email];
-        if (owner == null) return http.Response('', 400);
+        if (owner == null) {
+          return http.Response(
+            '{"detail":"There is no account with that email address."}',
+            400,
+          );
+        }
         if (clubRoles.containsKey(email)) return http.Response('', 409);
         clubName = body['name']! as String;
         clubRoles[email] = 'owner';

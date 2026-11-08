@@ -968,11 +968,11 @@ abstract class AppLocalizations {
   /// **'My coaches'**
   String get audienceCoaches;
 
-  /// No description provided for @audienceClub.
+  /// No description provided for @routesNeedRides.
   ///
   /// In en, this message translates to:
-  /// **'Whole club'**
-  String get audienceClub;
+  /// **'Turn on rides first; routes add the map to them.'**
+  String get routesNeedRides;
 
   /// No description provided for @viewsTitle.
   ///
@@ -1004,6 +1004,12 @@ abstract class AppLocalizations {
   /// **'Ride'**
   String get viewRide;
 
+  /// No description provided for @viewRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride list'**
+  String get viewRides;
+
   /// No description provided for @viewRoute.
   ///
   /// In en, this message translates to:
@@ -1033,12 +1039,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last ride {date}'**
   String lastRideOn(String date);
-
-  /// No description provided for @lastRideNever.
-  ///
-  /// In en, this message translates to:
-  /// **'No rides yet'**
-  String get lastRideNever;
 
   /// No description provided for @days7.
   ///
@@ -1147,6 +1147,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No clubs yet. Create the first one.'**
   String get adminNoClubs;
+
+  /// No description provided for @changeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Change owner'**
+  String get changeOwner;
+
+  /// No description provided for @chooseOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the new owner'**
+  String get chooseOwner;
 
   /// No description provided for @errorClubName.
   ///

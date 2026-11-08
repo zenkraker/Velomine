@@ -51,7 +51,11 @@ class CoachAthleteController extends ChangeNotifier {
   bool notFound = false;
   Failure? error;
 
+  bool _disposed = false;
+  int _trainingRequest = 0;
+
   Future<void> load(String clubId, String userId) async {
+    _trainingRequest++;
     loading = true;
     notFound = false;
     error = null;
@@ -90,21 +94,56 @@ class CoachAthleteController extends ChangeNotifier {
         action: FailureAction.loadAthlete,
       );
     }
+    if (_disposed) return;
     loading = false;
     notifyListeners();
   }
 
   Future<void> setDays(String clubId, String userId, int value) async {
     if (value == days) return;
+    final request = ++_trainingRequest;
     days = value;
     training = null;
+    error = null;
     notifyListeners();
     try {
-      training = await api.coachGetCoachTraining(clubId, userId, days: days);
+      final result = await api.coachGetCoachTraining(
+        clubId,
+        userId,
+        days: days,
+      );
+      // A slower earlier request must not overwrite the range the coach picked last.
+      if (_disposed || request != _trainingRequest) return;
+      training = result;
+    } on ApiException catch (e) {
+      if (_disposed || request != _trainingRequest) return;
+      if (e.code == 401) {
+        onUnauthorized();
+        return;
+      }
+      if (e.code == 404) {
+        notFound = true;
+      } else {
+        error = Failure(
+          FailureKind.failed,
+          code: e.code,
+          action: FailureAction.loadAthlete,
+        );
+      }
     } on Object {
-      // The screen keeps the rest; the athlete can try again by reopening it.
+      if (_disposed || request != _trainingRequest) return;
+      error = const Failure(
+        FailureKind.unreachable,
+        action: FailureAction.loadAthlete,
+      );
     }
-    notifyListeners();
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
 

@@ -166,16 +166,26 @@ class _VelomineAppState extends State<VelomineApp> {
       const open = {'/sign-in', '/register', '/sso-callback'};
       if (session.status == SessionStatus.loading) return null;
       if (session.status == SessionStatus.signedOut) {
+        if (path == '/join') {
+          final code = state.uri.queryParameters['code'];
+          if (code != null && code.isNotEmpty) session.pendingJoinCode = code;
+        }
         return open.contains(path) ? null : '/sign-in';
       }
       // An admin has no club of their own until they make one, and still needs the admin pages.
+      if (session.pendingJoinCode != null && _club.club != null) {
+        session.pendingJoinCode = null;
+      }
       if (!session.isAdmin && _club.loaded && _club.club == null) {
         return path == '/join' ? null : '/join';
       }
       if (path.startsWith('/club/athletes') && _club.club == null) {
         return '/club';
       }
-      if (path == '/join' && _club.club != null) return '/rides';
+      if (path == '/join' && _club.club != null) {
+        session.pendingJoinCode = null;
+        return '/rides';
+      }
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
       if (path == '/admin' && !session.isAdmin) return '/rides';
@@ -194,10 +204,16 @@ class _VelomineAppState extends State<VelomineApp> {
       ),
       GoRoute(
         path: '/join',
-        builder: (context, state) => JoinClubScreen(
-          controller: _club,
-          initialCode: state.uri.queryParameters['code'] ?? '',
-        ),
+        builder: (context, state) {
+          final code = state.uri.queryParameters['code'];
+          return JoinClubScreen(
+            controller: _club,
+            initialCode: code != null && code.isNotEmpty
+                ? code
+                : (widget.session.pendingJoinCode ?? ''),
+            onJoined: () => widget.session.pendingJoinCode = null,
+          );
+        },
       ),
       GoRoute(
         path: '/sso-callback',

@@ -43,6 +43,55 @@ void main() {
     expect(server.sharingChoices['routes'], 'none');
   });
 
+  testWidgets('the roster shows only the kinds of data shared', (tester) async {
+    final owner = server.add(
+      'owner@example.com',
+      name: 'Owner Rina',
+      clubRole: 'owner',
+    );
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    server.sharingChoices['analytics'] = 'none';
+    server.signInBrowser(owner);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-athletes')));
+    await tester.pumpAndSettle();
+
+    final card = find.byKey(Key('athlete-${athlete.id}'));
+    expect(card, findsOneWidget);
+    expect(
+      find.descendant(of: card, matching: find.textContaining('TSS')),
+      findsNothing,
+    );
+
+    // Training only: no ride date on the roster, but the load is there.
+    server.sharingChoices['rides'] = 'none';
+    server.sharingChoices['analytics'] = 'coaches';
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-athletes')));
+    await tester.pumpAndSettle();
+
+    final refreshed = find.byKey(Key('athlete-${athlete.id}'));
+    expect(
+      find.descendant(of: refreshed, matching: find.textContaining('TSS')),
+      findsWidgets,
+    );
+    expect(
+      find.descendant(
+        of: refreshed,
+        matching: find.textContaining('Last ride'),
+      ),
+      findsNothing,
+    );
+  });
+
   testWidgets('a coach sees shared training and rides, and no route yet', (
     tester,
   ) async {

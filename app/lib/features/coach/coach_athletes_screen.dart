@@ -70,13 +70,17 @@ class _CoachAthletesScreenState extends State<CoachAthletesScreen> {
                           title: Text(athlete.displayName),
                           subtitle: Text(
                             [
-                              athlete.lastRideAt == null
-                                  ? l10n.lastRideNever
-                                  : l10n.lastRideOn(
-                                      dateTime(athlete.lastRideAt),
-                                    ),
-                              '${l10n.days7}: ${athlete.tss7.round()} TSS',
-                              '${l10n.days42}: ${athlete.tss42.round()} TSS',
+                              if (athlete.lastRideAt != null)
+                                l10n.lastRideOn(dateTime(athlete.lastRideAt)),
+                              if (athlete.tss7 != null)
+                                '${l10n.days7}: ${athlete.tss7!.round()} TSS',
+                              if (athlete.tss42 != null)
+                                '${l10n.days42}: ${athlete.tss42!.round()} TSS',
+                              if (athlete.lastRideAt == null &&
+                                  athlete.tss7 == null)
+                                athlete.sharesRides
+                                    ? l10n.sharesRides
+                                    : l10n.sharesTraining,
                             ].join(' · '),
                           ),
                           trailing: const Icon(Icons.chevron_right),

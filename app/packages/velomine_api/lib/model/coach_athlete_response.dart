@@ -37,13 +37,13 @@ class CoachAthleteResponse {
 
   final DateTime? lastRideAt;
 
-  final int rides;
+  final int? rides;
 
-  final double distanceM;
+  final double? distanceM;
 
-  final double tss7;
+  final double? tss7;
 
-  final double tss42;
+  final double? tss42;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is CoachAthleteResponse &&
@@ -67,10 +67,10 @@ class CoachAthleteResponse {
     (sharesAnalytics.hashCode) +
     (sharesRoutes.hashCode) +
     (lastRideAt == null ? 0 : lastRideAt!.hashCode) +
-    (rides.hashCode) +
-    (distanceM.hashCode) +
-    (tss7.hashCode) +
-    (tss42.hashCode);
+    (rides == null ? 0 : rides!.hashCode) +
+    (distanceM == null ? 0 : distanceM!.hashCode) +
+    (tss7 == null ? 0 : tss7!.hashCode) +
+    (tss42 == null ? 0 : tss42!.hashCode);
 
   @override
   String toString() => 'CoachAthleteResponse[userId=$userId, displayName=$displayName, sharesRides=$sharesRides, sharesAnalytics=$sharesAnalytics, sharesRoutes=$sharesRoutes, lastRideAt=$lastRideAt, rides=$rides, distanceM=$distanceM, tss7=$tss7, tss42=$tss42]';
@@ -87,10 +87,26 @@ class CoachAthleteResponse {
     } else {
       json[r'lastRideAt'] = null;
     }
+    if (this.rides != null) {
       json[r'rides'] = this.rides;
+    } else {
+      json[r'rides'] = null;
+    }
+    if (this.distanceM != null) {
       json[r'distanceM'] = this.distanceM;
+    } else {
+      json[r'distanceM'] = null;
+    }
+    if (this.tss7 != null) {
       json[r'tss7'] = this.tss7;
+    } else {
+      json[r'tss7'] = null;
+    }
+    if (this.tss42 != null) {
       json[r'tss42'] = this.tss42;
+    } else {
+      json[r'tss42'] = null;
+    }
     return json;
   }
 
@@ -105,9 +121,13 @@ class CoachAthleteResponse {
     DateTime? lastRideAt,
     bool lastRideAtSetToNull = false,
     int? rides,
+    bool ridesSetToNull = false,
     double? distanceM,
+    bool distanceMSetToNull = false,
     double? tss7,
+    bool tss7SetToNull = false,
     double? tss42,
+    bool tss42SetToNull = false,
   }) => CoachAthleteResponse(
     userId: userId ?? this.userId,
     displayName: displayName ?? this.displayName,
@@ -115,10 +135,10 @@ class CoachAthleteResponse {
     sharesAnalytics: sharesAnalytics ?? this.sharesAnalytics,
     sharesRoutes: sharesRoutes ?? this.sharesRoutes,
     lastRideAt: lastRideAtSetToNull ? null : lastRideAt ?? this.lastRideAt,
-    rides: rides ?? this.rides,
-    distanceM: distanceM ?? this.distanceM,
-    tss7: tss7 ?? this.tss7,
-    tss42: tss42 ?? this.tss42,
+    rides: ridesSetToNull ? null : rides ?? this.rides,
+    distanceM: distanceMSetToNull ? null : distanceM ?? this.distanceM,
+    tss7: tss7SetToNull ? null : tss7 ?? this.tss7,
+    tss42: tss42SetToNull ? null : tss42 ?? this.tss42,
   );
 
   /// Returns a new [CoachAthleteResponse] instance and imports its values from
@@ -144,13 +164,9 @@ class CoachAthleteResponse {
         assert(json[r'sharesRoutes'] != null, 'Required key "CoachAthleteResponse[sharesRoutes]" has a null value in JSON.');
         assert(json.containsKey(r'lastRideAt'), 'Required key "CoachAthleteResponse[lastRideAt]" is missing from JSON.');
         assert(json.containsKey(r'rides'), 'Required key "CoachAthleteResponse[rides]" is missing from JSON.');
-        assert(json[r'rides'] != null, 'Required key "CoachAthleteResponse[rides]" has a null value in JSON.');
         assert(json.containsKey(r'distanceM'), 'Required key "CoachAthleteResponse[distanceM]" is missing from JSON.');
-        assert(json[r'distanceM'] != null, 'Required key "CoachAthleteResponse[distanceM]" has a null value in JSON.');
         assert(json.containsKey(r'tss7'), 'Required key "CoachAthleteResponse[tss7]" is missing from JSON.');
-        assert(json[r'tss7'] != null, 'Required key "CoachAthleteResponse[tss7]" has a null value in JSON.');
         assert(json.containsKey(r'tss42'), 'Required key "CoachAthleteResponse[tss42]" is missing from JSON.');
-        assert(json[r'tss42'] != null, 'Required key "CoachAthleteResponse[tss42]" has a null value in JSON.');
         return true;
       }());
 
@@ -161,10 +177,10 @@ class CoachAthleteResponse {
         sharesAnalytics: mapValueOfType<bool>(json, r'sharesAnalytics')!,
         sharesRoutes: mapValueOfType<bool>(json, r'sharesRoutes')!,
         lastRideAt: mapDateTime(json, r'lastRideAt', r''),
-        rides: mapValueOfType<int>(json, r'rides')!,
-        distanceM: mapValueOfType<double>(json, r'distanceM')!,
-        tss7: mapValueOfType<double>(json, r'tss7')!,
-        tss42: mapValueOfType<double>(json, r'tss42')!,
+        rides: mapValueOfType<int>(json, r'rides'),
+        distanceM: mapValueOfType<double>(json, r'distanceM'),
+        tss7: mapValueOfType<double>(json, r'tss7'),
+        tss42: mapValueOfType<double>(json, r'tss42'),
       );
     }
     return null;

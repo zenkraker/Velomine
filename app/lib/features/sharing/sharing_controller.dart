@@ -72,7 +72,8 @@ class SharingController extends ChangeNotifier {
   }) async {
     final nextRides = rides ?? this.rides;
     final nextAnalytics = analytics ?? this.analytics;
-    final nextRoutes = routes ?? this.routes;
+    // Routes are a map on shared rides: turning rides off turns them off too.
+    final nextRoutes = nextRides == 'none' ? 'none' : (routes ?? this.routes);
     saving = true;
     notifyListeners();
     final failure = await guardCall(

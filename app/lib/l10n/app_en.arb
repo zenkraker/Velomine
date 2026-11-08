@@ -207,12 +207,13 @@
   "shareRoutes": "Routes",
   "audienceNone": "Nobody",
   "audienceCoaches": "My coaches",
-  "audienceClub": "Whole club",
+  "routesNeedRides": "Turn on rides first; routes add the map to them.",
   "viewsTitle": "Who looked",
   "viewsEmpty": "Nobody has looked yet.",
   "viewSummary": "Summary",
   "viewTraining": "Training",
   "viewRide": "Ride",
+  "viewRides": "Ride list",
   "viewRoute": "Route",
 
   "athletesTitle": "Athletes",
@@ -226,7 +227,6 @@
       }
     }
   },
-  "lastRideNever": "No rides yet",
   "days7": "7 days",
   "days42": "42 days",
   "sharesRides": "Rides",
@@ -246,6 +246,8 @@
   "adminClubActive": "Active",
   "adminClubJoinCode": "Join code",
   "adminNoClubs": "No clubs yet. Create the first one.",
+  "changeOwner": "Change owner",
+  "chooseOwner": "Choose the new owner",
   "errorClubName": "Give the club a name.",
   "errorClubOwner": "Enter the owner's email.",
 

@@ -17,10 +17,10 @@ public sealed record CoachAthleteResponse(
     bool SharesAnalytics,
     bool SharesRoutes,
     DateTimeOffset? LastRideAt,
-    int Rides,
-    double DistanceM,
-    double Tss7,
-    double Tss42);
+    int? Rides,
+    double? DistanceM,
+    double? Tss7,
+    double? Tss42);
 
 public sealed record CoachAthletesResponse(CoachAthleteResponse[] Athletes);
 
@@ -56,9 +56,14 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
         }
 
         var grants = await db.ShareGrants.AsNoTracking()
-            .Where(g => g.ClubId == req.ClubId && (g.DataType == DataTypes.Rides || g.DataType == DataTypes.Analytics))
+            .Where(g => g.ClubId == req.ClubId)
             .ToListAsync(ct);
-        var athleteIds = grants.Select(g => g.MemberId).Where(id => id != viewerId).Distinct().ToList();
+        var athleteIds = grants
+            .Where(g => g.DataType is DataTypes.Rides or DataTypes.Analytics)
+            .Select(g => g.MemberId)
+            .Where(id => id != viewerId)
+            .Distinct()
+            .ToList();
         var members = await db.ClubMemberships.AsNoTracking()
             .Include(m => m.User)
             .Where(m => m.ClubId == req.ClubId && athleteIds.Contains(m.UserId))
@@ -66,8 +71,17 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
 
         var athletes = new List<CoachAthleteResponse>(members.Count);
         foreach (var member in members)
-            athletes.Add(await CoachQueries.SummaryAsync(db, time, member, grants, ct));
+        {
+            // Each member's own grants decide what the roster shows: one rider's choice must not colour another's.
+            var memberGrants = grants.Where(g => g.MemberId == member.UserId).ToList();
+            if (!memberGrants.Any(g => g.DataType is DataTypes.Rides or DataTypes.Analytics)) continue;
+            athletes.Add(await CoachQueries.SummaryAsync(db, time, member, memberGrants, ct));
+        }
 
+        // The roster shows each athlete's snapshot, so it is a view of their data, not just a directory.
+        await SharingRules.RecordViewsAsync(
+            db, time, athletes.Select(a => a.UserId), req.ClubId, viewerId,
+            await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Summary, ct);
         await Send.OkAsync(new CoachAthletesResponse([.. athletes.OrderBy(a => a.DisplayName, StringComparer.OrdinalIgnoreCase)]), ct);
     }
 }
@@ -88,16 +102,17 @@ public sealed class GetCoachAthlete(VelomineDbContext db, TimeProvider time)
         var member = await db.ClubMemberships.AsNoTracking()
             .Include(m => m.User)
             .FirstOrDefaultAsync(m => m.ClubId == req.ClubId && m.UserId == req.UserId, ct);
-        var grants = await db.ShareGrants.AsNoTracking()
-            .Where(g => g.ClubId == req.ClubId && g.MemberId == req.UserId)
-            .ToListAsync(ct);
-        if (member is null || !await SharingRules.IsCoachAsync(db, req.ClubId, viewerId, ct) ||
-            grants.All(g => g.DataType is not (DataTypes.Rides or DataTypes.Analytics)))
+        var canRides = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Rides, ct);
+        var canAnalytics = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Analytics, ct);
+        if (member is null || (!canRides && !canAnalytics))
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
+        var grants = await db.ShareGrants.AsNoTracking()
+            .Where(g => g.ClubId == req.ClubId && g.MemberId == req.UserId)
+            .ToListAsync(ct);
         var summary = await CoachQueries.SummaryAsync(db, time, member, grants, ct);
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
@@ -161,28 +176,43 @@ public static class CoachQueries
         IReadOnlyCollection<ShareGrant> grants,
         CancellationToken ct)
     {
-        var clock = await MemberClock.ForAsync(db, member.UserId, time, ct);
+        var sharesRides = grants.Any(g => g.DataType == DataTypes.Rides);
+        var sharesAnalytics = grants.Any(g => g.DataType == DataTypes.Analytics);
+        var sharesRoutes = grants.Any(g => g.DataType == DataTypes.Routes);
+
         var ftpW = await db.Users.AsNoTracking()
             .Where(u => u.Id == member.UserId)
             .Select(u => u.FtpW)
             .FirstAsync(ct);
-        var from = clock.Today.AddDays(-41);
-        var rides = await RideDays.LoadAsync(db, member.UserId, clock, from, clock.Today.AddDays(1), ct, ftpW: ftpW);
+        var clock = await MemberClock.ForAsync(db, member.UserId, time, ct);
+        var rides = await RideDays.LoadAsync(
+            db,
+            member.UserId,
+            clock,
+            clock.Today.AddDays(-41),
+            clock.Today.AddDays(1),
+            ct,
+            ftpW: ftpW);
+
+        // Each number exists only for the kind of data the member shared: no ride dates or counts to a coach
+        // who was given training but not rides, and no training load to one given only rides.
+        var lastRideAt = sharesRides
+            ? await db.Rides.AsNoTracking()
+                .Where(r => r.UserId == member.UserId && r.Status == RideStatus.Ready)
+                .MaxAsync(r => (DateTimeOffset?)r.StartTime, ct)
+            : null;
         var week = rides.Where(r => r.LocalDate >= clock.Today.AddDays(-6)).ToList();
-        var lastRideAt = await db.Rides.AsNoTracking()
-            .Where(r => r.UserId == member.UserId && r.Status == RideStatus.Ready)
-            .MaxAsync(r => (DateTimeOffset?)r.StartTime, ct);
 
         return new CoachAthleteResponse(
             member.UserId,
             member.User.DisplayName,
-            grants.Any(g => g.DataType == DataTypes.Rides),
-            grants.Any(g => g.DataType == DataTypes.Analytics),
-            grants.Any(g => g.DataType == DataTypes.Routes),
+            sharesRides,
+            sharesAnalytics,
+            sharesRoutes,
             lastRideAt,
-            rides.Count,
-            rides.Sum(r => r.DistanceM),
-            Math.Round(week.Sum(r => r.Tss), 1),
-            Math.Round(rides.Sum(r => r.Tss), 1));
+            sharesRides ? rides.Count : null,
+            sharesRides ? rides.Sum(r => r.DistanceM) : null,
+            sharesAnalytics ? Math.Round(week.Sum(r => r.Tss), 1) : null,
+            sharesAnalytics ? Math.Round(rides.Sum(r => r.Tss), 1) : null);
     }
 }

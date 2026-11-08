@@ -23,6 +23,7 @@ class AdminClubResponse {
     required this.ownerName,
     required this.ownerEmail,
     required this.ownerRole,
+    this.members = const [],
   });
 
   final String id;
@@ -45,6 +46,8 @@ class AdminClubResponse {
 
   final String? ownerRole;
 
+  final List<ClubMemberResponse> members;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is AdminClubResponse &&
     other.id == id &&
@@ -56,7 +59,8 @@ class AdminClubResponse {
     other.ownerId == ownerId &&
     other.ownerName == ownerName &&
     other.ownerEmail == ownerEmail &&
-    other.ownerRole == ownerRole;
+    other.ownerRole == ownerRole &&
+    _deepEquality.equals(other.members, members);
 
   @override
   int get hashCode =>
@@ -70,10 +74,11 @@ class AdminClubResponse {
     (ownerId == null ? 0 : ownerId!.hashCode) +
     (ownerName == null ? 0 : ownerName!.hashCode) +
     (ownerEmail == null ? 0 : ownerEmail!.hashCode) +
-    (ownerRole == null ? 0 : ownerRole!.hashCode);
+    (ownerRole == null ? 0 : ownerRole!.hashCode) +
+    (members.hashCode);
 
   @override
-  String toString() => 'AdminClubResponse[id=$id, name=$name, joinCode=$joinCode, isActive=$isActive, createdAt=$createdAt, memberCount=$memberCount, ownerId=$ownerId, ownerName=$ownerName, ownerEmail=$ownerEmail, ownerRole=$ownerRole]';
+  String toString() => 'AdminClubResponse[id=$id, name=$name, joinCode=$joinCode, isActive=$isActive, createdAt=$createdAt, memberCount=$memberCount, ownerId=$ownerId, ownerName=$ownerName, ownerEmail=$ownerEmail, ownerRole=$ownerRole, members=$members]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -103,6 +108,7 @@ class AdminClubResponse {
     } else {
       json[r'ownerRole'] = null;
     }
+      json[r'members'] = this.members;
     return json;
   }
 
@@ -123,6 +129,7 @@ class AdminClubResponse {
     bool ownerEmailSetToNull = false,
     String? ownerRole,
     bool ownerRoleSetToNull = false,
+    List<ClubMemberResponse>? members,
   }) => AdminClubResponse(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -134,6 +141,7 @@ class AdminClubResponse {
     ownerName: ownerNameSetToNull ? null : ownerName ?? this.ownerName,
     ownerEmail: ownerEmailSetToNull ? null : ownerEmail ?? this.ownerEmail,
     ownerRole: ownerRoleSetToNull ? null : ownerRole ?? this.ownerRole,
+    members: members ?? this.members,
   );
 
   /// Returns a new [AdminClubResponse] instance and imports its values from
@@ -163,6 +171,8 @@ class AdminClubResponse {
         assert(json.containsKey(r'ownerName'), 'Required key "AdminClubResponse[ownerName]" is missing from JSON.');
         assert(json.containsKey(r'ownerEmail'), 'Required key "AdminClubResponse[ownerEmail]" is missing from JSON.');
         assert(json.containsKey(r'ownerRole'), 'Required key "AdminClubResponse[ownerRole]" is missing from JSON.');
+        assert(json.containsKey(r'members'), 'Required key "AdminClubResponse[members]" is missing from JSON.');
+        assert(json[r'members'] != null, 'Required key "AdminClubResponse[members]" has a null value in JSON.');
         return true;
       }());
 
@@ -177,6 +187,7 @@ class AdminClubResponse {
         ownerName: mapValueOfType<String>(json, r'ownerName'),
         ownerEmail: mapValueOfType<String>(json, r'ownerEmail'),
         ownerRole: mapValueOfType<String>(json, r'ownerRole'),
+        members: ClubMemberResponse.listFromJson(json[r'members']),
       );
     }
     return null;
@@ -234,6 +245,7 @@ class AdminClubResponse {
     'ownerName',
     'ownerEmail',
     'ownerRole',
+    'members',
   };
 }
 

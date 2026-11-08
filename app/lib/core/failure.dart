@@ -80,11 +80,19 @@ enum FailureAction {
 }
 
 class Failure {
-  const Failure(this.kind, {this.code, this.action = FailureAction.general});
+  const Failure(
+    this.kind, {
+    this.code,
+    this.action = FailureAction.general,
+    this.detail,
+  });
 
   final FailureKind kind;
   final int? code;
   final FailureAction action;
+
+  /// A sentence from the server for a rejected request, when it sent one.
+  final String? detail;
 }
 
 String _actionText(AppLocalizations l10n, FailureAction action) =>
@@ -142,9 +150,9 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
 /// The sentence for a failure in the language on screen.
 String failureText(AppLocalizations l10n, Failure failure) =>
     switch (failure.kind) {
-      FailureKind.rejected => l10n.failureRejected,
+      FailureKind.rejected => failure.detail ?? l10n.failureRejected,
+      FailureKind.conflict => failure.detail ?? l10n.failureConflict,
       FailureKind.missing => l10n.failureMissing,
-      FailureKind.conflict => l10n.failureConflict,
       FailureKind.mailRejected => l10n.failureMail,
       FailureKind.wrongConfirmation => l10n.failureWrongConfirmation,
       FailureKind.lastAdmin => l10n.failureLastAdmin,

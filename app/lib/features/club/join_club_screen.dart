@@ -10,10 +10,14 @@ class JoinClubScreen extends StatefulWidget {
     super.key,
     required this.controller,
     this.initialCode = '',
+    this.onJoined,
   });
 
   final ClubController controller;
   final String initialCode;
+
+  /// Called once the membership exists, so an invite code kept for this visit can be forgotten.
+  final VoidCallback? onJoined;
 
   @override
   State<JoinClubScreen> createState() => _JoinClubScreenState();
@@ -36,6 +40,7 @@ class _JoinClubScreenState extends State<JoinClubScreen> {
     if (code.isEmpty) return;
     setState(() => _failure = null);
     final failure = await widget.controller.join(code);
+    if (failure == null) widget.onJoined?.call();
     if (mounted) setState(() => _failure = failure);
   }
 

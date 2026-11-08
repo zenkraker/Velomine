@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
@@ -17,6 +18,17 @@ class ClubsTab extends StatelessWidget {
     );
     if (result == null) return;
     await controller.createClub(result.name, result.ownerEmail);
+  }
+
+  Future<void> _changeOwner(
+    BuildContext context,
+    AdminClubResponse club,
+  ) async {
+    final userId = await showDialog<String>(
+      context: context,
+      builder: (_) => _OwnerDialog(club: club),
+    );
+    if (userId != null) await controller.setClubOwner(club, userId);
   }
 
   @override
@@ -74,12 +86,28 @@ class ClubsTab extends StatelessWidget {
                             '${l10n.adminClubJoinCode}: ${club.joinCode}',
                           ].join(' · '),
                         ),
-                        trailing: Switch(
-                          key: Key('club-active-${club.id}'),
-                          value: club.isActive,
-                          onChanged: controller.clubsBusy
-                              ? null
-                              : (on) => controller.setClubActive(club, on),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (club.members.any(
+                              (m) => m.userId != club.ownerId,
+                            ))
+                              IconButton(
+                                key: Key('change-owner-${club.id}'),
+                                tooltip: l10n.changeOwner,
+                                icon: const Icon(Icons.person_pin_outlined),
+                                onPressed: controller.clubsBusy
+                                    ? null
+                                    : () => _changeOwner(context, club),
+                              ),
+                            Switch(
+                              key: Key('club-active-${club.id}'),
+                              value: club.isActive,
+                              onChanged: controller.clubsBusy
+                                  ? null
+                                  : (on) => controller.setClubActive(club, on),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -172,6 +200,68 @@ class _CreateClubDialogState extends State<_CreateClubDialog> {
             }
             Navigator.pop(context, (name: name, ownerEmail: email));
           },
+          child: Text(l10n.save),
+        ),
+      ],
+    );
+  }
+}
+
+class _OwnerDialog extends StatefulWidget {
+  const _OwnerDialog({required this.club});
+
+  final AdminClubResponse club;
+
+  @override
+  State<_OwnerDialog> createState() => _OwnerDialogState();
+}
+
+class _OwnerDialogState extends State<_OwnerDialog> {
+  late String? _chosen = widget.club.members
+      .where((m) => m.userId != widget.club.ownerId)
+      .firstOrNull
+      ?.userId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final members = widget.club.members
+        .where((m) => m.userId != widget.club.ownerId)
+        .toList();
+    return AlertDialog(
+      title: Text(l10n.changeOwner),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 12,
+          children: [
+            Text(l10n.chooseOwner),
+            DropdownButtonFormField<String>(
+              key: const Key('new-owner'),
+              initialValue: _chosen,
+              items: [
+                for (final member in members)
+                  DropdownMenuItem(
+                    value: member.userId,
+                    child: Text(member.displayName),
+                  ),
+              ],
+              onChanged: (value) => setState(() => _chosen = value),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('save-owner'),
+          onPressed: _chosen == null
+              ? null
+              : () => Navigator.pop(context, _chosen),
           child: Text(l10n.save),
         ),
       ],

@@ -82,11 +82,97 @@ public sealed class SharingTests(PostgresFixture postgres)
         var sharing = await rider.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
         Assert.Equal(new SharingResponse("none", "none", "none"), sharing);
 
-        Assert.Equal(HttpStatusCode.OK, (await ShareAsync(rider, "coaches", "club", "none")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await ShareAsync(rider, "coaches", "coaches", "none")).StatusCode);
         var saved = await rider.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
-        Assert.Equal(new SharingResponse("coaches", "club", "none"), saved);
+        Assert.Equal(new SharingResponse("coaches", "coaches", "none"), saved);
 
-        Assert.Equal(HttpStatusCode.BadRequest, (await ShareAsync(rider, "everyone")).StatusCode);
+        // Whole-club reading comes with a member-facing club view; until then the choice is refused.
+        Assert.Equal(HttpStatusCode.BadRequest, (await ShareAsync(rider, "coaches", "club", "none")).StatusCode);
+        // Routes are a map on shared rides, so they cannot stand alone.
+        Assert.Equal(HttpStatusCode.BadRequest, (await ShareAsync(rider, "none", "none", "coaches")).StatusCode);
+    }
+
+    [Fact]
+    public async Task SharingRidesDoesNotLeakTraining_AndTheOtherWayRound()
+    {
+        await using var api = await StartAsync();
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(api, owner);
+        var athlete = await NewMemberAsync(api);
+        await JoinAsync(athlete, club);
+        await UploadAndWaitAsync(
+            athlete.Client,
+            Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
+
+        (await ShareAsync(athlete, "coaches", "none")).EnsureSuccessStatusCode();
+        var ridesOnly = await owner.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}", Ct);
+        Assert.True(ridesOnly!.SharesRides);
+        Assert.False(ridesOnly.SharesAnalytics);
+        Assert.Equal(1, ridesOnly.Rides);
+        Assert.NotNull(ridesOnly.LastRideAt);
+        Assert.Null(ridesOnly.Tss7);
+        Assert.Null(ridesOnly.Tss42);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            (await owner.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/training", Ct)).StatusCode);
+
+        (await ShareAsync(athlete, "none", "coaches")).EnsureSuccessStatusCode();
+        var trainingOnly = await owner.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}", Ct);
+        Assert.False(trainingOnly!.SharesRides);
+        Assert.True(trainingOnly.SharesAnalytics);
+        Assert.Null(trainingOnly.Rides);
+        Assert.Null(trainingOnly.DistanceM);
+        Assert.Null(trainingOnly.LastRideAt);
+        Assert.NotNull(trainingOnly.Tss7);
+        Assert.NotNull(trainingOnly.Tss42);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            (await owner.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides", Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task TheRosterKeepsEachAthletesShareKindsApart_AndLogsTheLook()
+    {
+        await using var api = await StartAsync();
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(api, owner);
+        var ridesOnly = await NewMemberAsync(api);
+        var trainingOnly = await NewMemberAsync(api);
+        await JoinAsync(ridesOnly, club);
+        await JoinAsync(trainingOnly, club);
+        await UploadAndWaitAsync(
+            ridesOnly.Client,
+            Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
+        await UploadAndWaitAsync(
+            trainingOnly.Client,
+            Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
+        (await ShareAsync(ridesOnly, "coaches", "none")).EnsureSuccessStatusCode();
+        (await ShareAsync(trainingOnly, "none", "coaches")).EnsureSuccessStatusCode();
+
+        var roster = await owner.Client.GetFromJsonAsync<CoachAthletesResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes", Ct);
+
+        // One rider's choice must not colour the other's numbers.
+        var rides = Assert.Single(roster!.Athletes, a => a.UserId == ridesOnly.Id);
+        Assert.True(rides.SharesRides);
+        Assert.False(rides.SharesAnalytics);
+        Assert.NotNull(rides.Rides);
+        Assert.Null(rides.Tss7);
+
+        var training = Assert.Single(roster.Athletes, a => a.UserId == trainingOnly.Id);
+        Assert.False(training.SharesRides);
+        Assert.True(training.SharesAnalytics);
+        Assert.Null(training.Rides);
+        Assert.NotNull(training.Tss7);
+
+        // The roster shows a snapshot, so it leaves a trace like opening each athlete.
+        foreach (var athlete in new[] { ridesOnly, trainingOnly })
+        {
+            var views = await athlete.Client.GetFromJsonAsync<ShareViewsResponse>("/api/v1/sharing/views", Ct);
+            Assert.Contains(views!.Views, v => v.What == ViewKinds.Summary && v.ViewerName == "Test Rider");
+        }
     }
 
     [Fact]

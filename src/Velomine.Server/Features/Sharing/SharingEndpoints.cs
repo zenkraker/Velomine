@@ -24,13 +24,16 @@ public sealed class UpdateSharingRequest
 
 public sealed class UpdateSharingValidator : Validator<UpdateSharingRequest>
 {
-    private static readonly string[] Choices = ["none", .. Audiences.All];
+    private static readonly string[] Choices = ["none", .. Audiences.Assignable];
 
     public UpdateSharingValidator()
     {
-        RuleFor(x => x.Rides).Must(Choices.Contains).WithMessage("Choose none, coaches or club.");
-        RuleFor(x => x.Analytics).Must(Choices.Contains).WithMessage("Choose none, coaches or club.");
-        RuleFor(x => x.Routes).Must(Choices.Contains).WithMessage("Choose none, coaches or club.");
+        RuleFor(x => x.Rides).Must(Choices.Contains).WithMessage("Choose none or coaches.");
+        RuleFor(x => x.Analytics).Must(Choices.Contains).WithMessage("Choose none or coaches.");
+        RuleFor(x => x.Routes)
+            .Must(Choices.Contains).WithMessage("Choose none or coaches.")
+            .Must((request, routes) => routes == "none" || request.Rides != "none")
+            .WithMessage("Share rides before sharing routes.");
     }
 }
 

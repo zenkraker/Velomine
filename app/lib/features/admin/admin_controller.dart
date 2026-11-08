@@ -159,6 +159,23 @@ class AdminController extends ChangeNotifier {
     return failure;
   }
 
+  /// Moves ownership to another member of the club, so the old owner can leave.
+  Future<Failure?> setClubOwner(AdminClubResponse club, String userId) async {
+    clubsBusy = true;
+    error = null;
+    notifyListeners();
+    final failure = await guardCall(
+      () => api.clubsSetClubOwner(club.id, SetClubOwnerRequest(userId: userId)),
+      onUnauthorized,
+      doing: FailureAction.setClubOwner,
+    );
+    error = failure;
+    if (failure == null) await _reloadClubs();
+    clubsBusy = false;
+    notifyListeners();
+    return failure;
+  }
+
   Future<void> _reloadClubs() async {
     try {
       clubs = (await api.clubsListAdminClubs())?.clubs ?? clubs;

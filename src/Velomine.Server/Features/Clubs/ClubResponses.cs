@@ -28,7 +28,8 @@ public sealed record AdminClubResponse(
     Guid? OwnerId,
     string? OwnerName,
     string? OwnerEmail,
-    string? OwnerRole);
+    string? OwnerRole,
+    ClubMemberResponse[] Members);
 
 public sealed record AdminClubListResponse(AdminClubResponse[] Clubs);
 
@@ -77,6 +78,11 @@ public static class ClubQueries
             .Where(m => m.ClubId == club.Id)
             .ToListAsync(ct);
         var owner = members.FirstOrDefault(m => m.Role == ClubRoles.Owner);
+        var roster = members
+            .OrderBy(m => RoleRank(m.Role))
+            .ThenBy(m => m.User.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(m => new ClubMemberResponse(m.UserId, m.User.DisplayName, m.Role, m.JoinedAt))
+            .ToArray();
 
         return new AdminClubResponse(
             club.Id,
@@ -88,7 +94,8 @@ public static class ClubQueries
             owner?.UserId,
             owner?.User.DisplayName,
             owner?.User.Email,
-            owner?.Role);
+            owner?.Role,
+            roster);
     }
 
     private static int RoleRank(string role) => role switch
