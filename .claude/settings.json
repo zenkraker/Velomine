@@ -10,13 +10,18 @@
   "enabledPlugins": {
     "ponytail@ponytail": true
   },
+  "enabledMcpjsonServers": [
+    "codegraph",
+    "dart"
+  ],
   "statusLine": {
     "type": "command",
     "command": "f=\"$HOME/.claude/ponytail-statusline.sh\"; if [ -f \"$f\" ]; then bash \"$f\"; else echo '[PONYTAIL NOT INSTALLED]'; fi"
   },
   "permissions": {
     "allow": [
-      "mcp__codegraph__*"
+      "mcp__codegraph__*",
+      "mcp__dart__*"
     ]
   },
   "hooks": {

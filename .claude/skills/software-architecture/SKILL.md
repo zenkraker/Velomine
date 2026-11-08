@@ -9,7 +9,7 @@ Velomine is self-hosted by clubs and teams, often on one small server run by a v
 
 ## Shape
 
-Follow `docs/architecture.md` and the architecture invariants in `CLAUDE.md`. In short:
+Follow `docs/architecture.md` and the architecture invariants in `AGENTS.md`. In short:
 
 - **One server process + one PostgreSQL + one file volume.** No microservices, brokers, Redis or extra services. An instance serves up to about 1,000 members; don't design for more.
 - **Vertical slices** in `Features/<Area>/`: one FastEndpoints endpoint per use case, using the `DbContext` directly. No layers, repositories or mediators.
@@ -31,5 +31,5 @@ Follow `docs/architecture.md` and the architecture invariants in `CLAUDE.md`. In
 ## Decisions
 
 - Record significant decisions as short ADRs in `docs/adr/NNNN-title.md` (context, decision, consequences).
-- Prefer reversible, boring choices. Dependency choices follow the rule in `CLAUDE.md`.
+- Prefer reversible, boring choices. Dependency choices follow the rule in `AGENTS.md`.
 - To understand an unfamiliar subsystem before changing it, use CodeGraph (`codegraph_explore`, `codegraph_impact`).

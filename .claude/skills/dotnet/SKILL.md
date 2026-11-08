@@ -5,7 +5,7 @@ description: Use when writing, reviewing or testing Velomine's server code - .NE
 
 # .NET in Velomine
 
-Server: .NET 10 (LTS), ASP.NET Core, EF Core on PostgreSQL. Read `CLAUDE.md` first; its dependency rule overrides anything here.
+Server: .NET 10 (LTS), ASP.NET Core, EF Core on PostgreSQL. Read `AGENTS.md` first; its dependency rule overrides anything here.
 
 ## Rules
 

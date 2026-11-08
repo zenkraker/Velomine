@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "dart": {
+      "type": "local",
+      "command": ["dart", "mcp-server"],
+      "environment": {
+        "AGENT_PLUGIN": "opencode"
+      },
+      "enabled": true
+    }
+  }
+}

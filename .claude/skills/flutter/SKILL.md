@@ -5,7 +5,18 @@ description: Use when writing, reviewing or testing Velomine's Flutter/Dart code
 
 # Flutter in Velomine
 
-One Dart codebase ships Android, iOS and the web app. Read `CLAUDE.md` first; its dependency rule overrides anything here.
+One Dart codebase ships Android, iOS and the web app. Read `AGENTS.md` first; its dependency rule overrides anything here.
+
+## Tools and official skills
+
+The Dart MCP server ships with the pinned Flutter SDK and is started by `.mcp.json` (Claude Code) and `opencode.json` (OpenCode). Prefer it over guessing from source:
+
+- `analyze_files` for diagnostics, `run_tests` for tests, `dart_fix` / `dart_format` for mechanical fixes.
+- `pub` / `pub_dev_search` for dependencies, but the dependency rule still decides what may be added.
+- `list_devices`, `launch_app`, `get_app_logs`, `get_runtime_errors`, `hot_reload`, `hot_restart`, `stop_app` for a running app.
+- `dtd`, `lsp`, `vm_service`, `widget_inspector` for runtime inspection.
+
+The flake links the official Flutter/Dart skills into `.claude/skills/` (names starting `flutter-` or `dart-`). Load the matching one before the task, for example `flutter-add-widget-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-setup-declarative-routing`, `flutter-setup-localization`, `dart-add-unit-test` or `dart-run-static-analysis`. This project's skill wins where they conflict, especially on dependencies, state management and the generated API client.
 
 ## Rules
 

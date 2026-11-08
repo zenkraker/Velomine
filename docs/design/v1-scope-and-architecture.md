@@ -16,7 +16,7 @@ Velomine is a self-hosted, cycling-only platform for clubs and teams. Rides are 
 | Body data | Weight in the profile (assumption) | Not chosen as a health area, but W/kg, VO2max estimate and calories need it. Kept as a single profile field, not a tracked series. |
 | Name and brand | Velomine, direction D | Contour × Night Ride: Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
 
-**Dependency rule (all apps):** official libraries first. A community library is added only after a written evaluation and the owner's approval. The rule lives in the repository's `CLAUDE.md`. Known cases that will need approval: Flutter has no official Bluetooth LE plugin, so the BLE library (for example universal\_ble) must go through the evaluation.
+**Dependency rule (all apps):** official libraries first. A community library is added only after a written evaluation and the owner's approval. The rule lives in the repository's `AGENTS.md`. Known cases that will need approval: Flutter has no official Bluetooth LE plugin, so the BLE library (for example universal\_ble) must go through the evaluation.
 
 ## Endurain features: keep, change or drop
 

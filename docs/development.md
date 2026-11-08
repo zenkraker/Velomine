@@ -37,9 +37,10 @@ You only need a few ideas to use this setup.
 | Flutter | 3.47.9 with Dart 3.13.7 | The official release with the **same version and checksum as the `Dockerfile`**. Not the nixpkgs build, which lags behind (3.47.4 with Dart 3.13.3, too old for `app/pubspec.yaml`). It is unpacked once into `.dev/`, because Flutter writes into its own folder. |
 | Android SDK | platform 36, build tools 36.0.0, NDK 28.2.13676358, CMake 3.22.1, emulator, Play Store image (x86_64) | The versions Flutter 3.47's Gradle plugin asks for |
 | Java | JDK 17 | Gradle 9 and the Android Gradle Plugin 9 need Java 17 or newer. It also runs the OpenAPI generator JAR. |
-| Node.js | from nixpkgs | The ponytail plugin's hooks (see [CLAUDE.md](../CLAUDE.md)) |
-| CodeGraph | from nixpkgs | Required by CLAUDE.md, so there's no `curl … \| sh` install |
+| Node.js | from nixpkgs | The ponytail plugin's hooks (see [AGENTS.md](../AGENTS.md)) |
+| CodeGraph | from nixpkgs | Required by AGENTS.md, so there's no `curl … \| sh` install |
 | OpenCode | from nixpkgs | AI coding agent, an alternative to Claude Code |
+| Flutter/Dart agent skills | pinned `flutter/agent-plugins` (BSD-3-Clause) | Official skills for Claude Code and OpenCode, linked into `.claude/skills/` when the shell loads. The Dart MCP server ships with the pinned Flutter SDK (`dart mcp-server`), so it needs no separate package. |
 | VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code and OpenCode V2. It is the same Microsoft build as `visual-studio-code-bin`. |
 | psql | 17 | Same major version as the `postgres:17` container |
 | just | from nixpkgs | Runs the commands in the `justfile` |
@@ -54,11 +55,11 @@ These are one-time steps per machine. The commands use fish, the CachyOS default
 ### 1. Install the host packages
 
 ```
-sudo pacman -S nix direnv nix-direnv docker docker-compose docker-buildx chromium dbeaver
+sudo pacman -S nix direnv docker docker-compose docker-buildx chromium dbeaver
 paru -S visual-studio-code-bin
 ```
 
-- `nix` is the package manager. `direnv` and `nix-direnv` load the dev shell when you enter the folder, and `nix-direnv` also keeps the shell's packages from being garbage-collected.
+- `nix` is the package manager. `direnv` loads the dev shell when you enter the folder; step 3 adds `nix-direnv`, which caches the shell and keeps its packages from being garbage-collected.
 - `docker`, `docker-compose` and `docker-buildx` run PostgreSQL and Dex, the tests' Testcontainers, the full stack, and the OpenAPI generator.
 - `chromium` is used by `flutter run -d chrome`. Google Chrome works as well.
 - `dbeaver` is a GUI for browsing the database. Any PostgreSQL client works. Desktop apps go on the host because GUI programs from Nix often have graphics problems outside NixOS.
@@ -91,11 +92,12 @@ Arch's `nix` package does not create a `nix-users` group, and you don't need one
 
 ```
 echo 'direnv hook fish | source' >> ~/.config/fish/config.fish
+nix profile install nixpkgs#nix-direnv
 mkdir -p ~/.config/direnv
-echo 'source /usr/share/nix-direnv/direnvrc' >> ~/.config/direnv/direnvrc
+echo 'source ~/.nix-profile/share/nix-direnv/direnvrc' >> ~/.config/direnv/direnvrc
 ```
 
-The first line lets direnv react when you change folders. In bash use `eval "$(direnv hook bash)"` in `~/.bashrc`, and in zsh `eval "$(direnv hook zsh)"` in `~/.zshrc`. The other two lines make direnv use `nix-direnv`, which caches the shell, so entering the folder is instant after the first time. Open a new terminal afterwards.
+The first line lets direnv react when you change folders. In bash use `eval "$(direnv hook bash)"` in `~/.bashrc`, and in zsh `eval "$(direnv hook zsh)"` in `~/.zshrc`. `nix-direnv` is not in the Arch repositories, so the second line installs it from nixpkgs. The last two lines make direnv use it, which caches the shell and keeps its packages from being garbage-collected, so entering the folder is instant after the first time. Open a new terminal afterwards.
 
 ### 4. Install the VS Code extensions
 
@@ -114,7 +116,7 @@ The flake also builds the same VS Code with those extensions, plus Claude Code a
 
 ### 5. Install Claude Code
 
-Install [Claude Code](https://claude.com/claude-code) as its documentation describes, then start it from the repository folder, so the ponytail hooks find Node from the dev shell. Accept the ponytail marketplace and plugin when it asks (see [CLAUDE.md](../CLAUDE.md)). The status line shows `[PONYTAIL NOT INSTALLED]` until it is set up. To install it by hand:
+Install [Claude Code](https://claude.com/claude-code) as its documentation describes, then start it from the repository folder, so the ponytail hooks find Node from the dev shell. Accept the ponytail marketplace and plugin when it asks (see [AGENTS.md](../AGENTS.md)). The status line shows `[PONYTAIL NOT INSTALLED]` until it is set up. To install it by hand:
 
 ```
 /plugin marketplace add DietrichGebert/ponytail
@@ -124,6 +126,8 @@ Install [Claude Code](https://claude.com/claude-code) as its documentation descr
 Ponytail keeps changes small (smallest complete change, YAGNI, stdlib first). Its hooks need `node`, which the dev shell provides. Useful commands: `/ponytail-review` before a PR, `/ponytail-audit` for the whole repo, `/ponytail-debt` to list `shortcut:` comments.
 
 CodeGraph indexes the code into a local symbol graph and gives Claude MCP tools (`codegraph_explore`, `codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook, so `codegraph` must be on PATH when Claude Code starts: start it from the dev shell. Without Nix, install it with `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`.
+
+OpenCode reads `AGENTS.md` directly and takes its MCP servers from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. The flake also links the official Flutter and Dart skills into `.claude/skills/`, so both agents discover them next to the project's own skills.
 
 The dev shell points the NuGet, pub, Gradle and Android caches, the unpacked Flutter SDK and the server's ride files into `.dev/`.
 
@@ -198,6 +202,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `just migration Name` | Adds an EF Core migration under `Data/Migrations` |
 | `just api-client` | Regenerates the Dart API client after an endpoint change (`tools/generate-api-client.sh`) |
 | `just check` | Runs the README's checks: server tests, Dart format, analyzer and Flutter tests |
+| `nix fmt flake.nix` | Formats the flake with the pinned `nixfmt` |
 
 `flutter run -d chrome` also works for quick UI work. Password sign-in needs the cookie, which only works when the server serves the app, so use `just web` for anything that needs a session.
 
@@ -206,7 +211,9 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 ## Updating tools
 
 - **Flutter:** change `flutterVersion` and `sha256` in `flake.nix` **and** `FLUTTER_VERSION` and `FLUTTER_SHA256` in the `Dockerfile`, in the same commit. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). Run `direnv reload`. The new version unpacks into its own `.dev/flutter-<version>` folder, so delete the old one. A new minor version (3.48 rather than 3.47.x) may ask for newer Android SDK or NDK versions. See *Troubleshooting*.
-- **Everything from nixpkgs** (.NET SDK, Java, Node, psql, CodeGraph, just, the Android packages): `nix flake update`, then commit the new `flake.lock` on its own.
+- **Everything from nixpkgs** (.NET SDK, Java, Node, psql, CodeGraph, just, the Android packages): `nix flake update nixpkgs`, then commit the new `flake.lock` on its own.
+- **Flutter/Dart agent skills:** `nix flake update flutter-agent-plugins`, then restart the agent. The shell relinks them into `.claude/skills/`.
+- **Before committing a flake change:** run `nix fmt flake.nix` and `nix flake check --no-build`.
 - **PostgreSQL:** psql's major version follows the `postgres` image in `docker-compose.yml`. Change both together.
 
 ## Troubleshooting
@@ -216,10 +223,12 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `experimental Nix feature 'nix-command' is disabled` | Step 2's `experimental-features` line is missing from `/etc/nix/nix.conf`. Add it and restart `nix-daemon.socket`. |
 | `usermod: group 'nix-users' does not exist` | Arch does not have that group and you don't need it. Leave it out of `usermod`. |
 | Nix says `flake.nix` (or another file) does not exist | Inside a git repository, Nix only sees files git tracks. `git add` the file; you don't have to commit it. |
+| `/usr/share/nix-direnv/direnvrc: No such file` | `nix-direnv` is not in the Arch repositories. Run `nix profile install nixpkgs#nix-direnv`, then source `~/.nix-profile/share/nix-direnv/direnvrc` in `~/.config/direnv/direnvrc` (step 3). |
 | No `kvm` group | Check `ls -l /dev/kvm`. `crw-rw-rw-` means everyone can use it and you don't need the group. If `/dev/kvm` is missing, turn on Intel VT-x or AMD SVM in the firmware settings and check `lsmod \| grep kvm`. Inside the shell, `emulator -accel-check` tells you whether acceleration works. |
 | The emulator window stays black | Start it with software rendering: `emulator -avd velomine -gpu swiftshader_indirect`. |
 | Gradle wants an SDK component or NDK version that is not installed | The SDK in `/nix/store` is read-only, so Gradle cannot install anything into it. Add the exact version it names to the `android` block in `flake.nix` (`platformVersions`, `buildToolsVersions` or `ndkVersions`) and run `direnv reload`. |
 | `flutter run -d chrome` finds no browser | Install Chromium or Chrome on the host. The shell sets `CHROME_EXECUTABLE` to the first one it finds. |
+| The Dart MCP server is missing in OpenCode, or `opencode mcp list` says `NotFound` | OpenCode's background service was started outside the dev shell and is spawning the server without `dart` on PATH. Run `direnv reload`, then `opencode service restart` from the repository, and start a new session. If the desktop app starts the service itself, quit it fully first and relaunch it from the dev shell. |
 | Single sign-on through Dex fails with `just server` | Port 8080 must be free (no `just stack` running), because Dex only accepts `http://localhost:8080/signin-oidc`. |
 | Port 5432 is already in use | A PostgreSQL on the host is running. Stop it, or change the port in `compose.dev.yml` and pass a matching `ConnectionStrings__Velomine`. |
 | Something in the shell is broken or stale | `rm -rf .dev .direnv`, then `direnv allow`. Caches download again, and nothing in git is affected. |

@@ -2,7 +2,7 @@
 
 How Velomine is built: server, apps, share pages and deployment. Keep it simple: one server, one database, vertical slices.
 
-This document describes the design, not progress. Scope labels (v1, v2) only say which release a part belongs to; the plan is in [v1 scope and architecture](design/v1-scope-and-architecture.md). Rules in [`CLAUDE.md`](../CLAUDE.md) override anything here.
+This document describes the design, not progress. Scope labels (v1, v2) only say which release a part belongs to; the plan is in [v1 scope and architecture](design/v1-scope-and-architecture.md). Rules in [`AGENTS.md`](../AGENTS.md) override anything here.
 
 ## 1. Goals and constraints
 

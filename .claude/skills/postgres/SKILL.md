@@ -5,7 +5,7 @@ description: Use when designing Velomine's PostgreSQL schema, writing EF Core mi
 
 # PostgreSQL in Velomine
 
-PostgreSQL is the only database. Access goes through EF Core with the Npgsql provider. Read `CLAUDE.md` first: `Npgsql.EntityFrameworkCore.PostgreSQL` is published by the Npgsql project, not Microsoft, so it needs an evaluation in `docs/dependencies/` like any community library.
+PostgreSQL is the only database. Access goes through EF Core with the Npgsql provider. Read `AGENTS.md` first: `Npgsql.EntityFrameworkCore.PostgreSQL` is published by the Npgsql project, not Microsoft, so it needs an evaluation in `docs/dependencies/` like any community library.
 
 ## Schema
 

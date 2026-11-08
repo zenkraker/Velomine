@@ -8,6 +8,17 @@
         "--mcp"
       ],
       "alwaysLoad": true
+    },
+    "dart": {
+      "type": "stdio",
+      "command": "dart",
+      "args": [
+        "mcp-server"
+      ],
+      "env": {
+        "AGENT_PLUGIN": "claude-code"
+      },
+      "alwaysLoad": true
     }
   }
 }

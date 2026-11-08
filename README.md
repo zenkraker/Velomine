@@ -95,7 +95,7 @@ Not needed for the steps above.
 | **.NET SDK 10** | Building and testing the server: `dotnet test --solution Velomine.slnx` (the tests also need Docker; they start their own PostgreSQL and test provider). |
 | **Flutter 3.47** (comes with Dart 3.13) | The app: `cd app && flutter test`. Run `flutter doctor` to see what else your target needs (Android Studio for Android, Xcode for iOS). |
 | **Java 11 or newer, or Docker** | Regenerating the API client with `tools/generate-api-client.sh`. |
-| **Claude Code with the ponytail plugin and CodeGraph** | Required for working on this repository; see [CLAUDE.md](CLAUDE.md). |
+| **Claude Code with the ponytail plugin, or OpenCode, plus CodeGraph** | Required for working on this repository; see [AGENTS.md](AGENTS.md). |
 
 ## Uploading rides
 
@@ -128,4 +128,4 @@ Code is in [app/](app/README.md). Its API client is generated: after changing an
 
 ## Contributing
 
-Read [CLAUDE.md](CLAUDE.md) first: it holds the rules for code, architecture and dependencies, including the mandatory ponytail plugin for Claude Code.
+Read [AGENTS.md](AGENTS.md) first: it holds the rules for code, architecture and dependencies. Claude Code reads the same file through `CLAUDE.md`.
