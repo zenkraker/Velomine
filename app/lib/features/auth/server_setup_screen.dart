@@ -23,6 +23,9 @@ class ServerSetupScreen extends StatefulWidget {
 }
 
 class _ServerSetupScreenState extends State<ServerSetupScreen> {
+  /// A phone on the wrong network otherwise sits on "Checking…" until the system gives up, which can be minutes.
+  static const _checkTimeout = Duration(seconds: 10);
+
   late final _url = TextEditingController(text: widget.initialUrl);
   String? _error;
   bool _busy = false;
@@ -54,7 +57,7 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
 
     ServerInfoResponse? info;
     try {
-      info = await (widget.check ?? _lookUp)(normalized);
+      info = await (widget.check ?? _lookUp)(normalized).timeout(_checkTimeout);
     } on Object {
       info = null;
     }
@@ -63,7 +66,9 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
     if (info == null) {
       setState(() {
         _busy = false;
-        _error = 'Could not reach a Velomine server at that address.';
+        _error =
+            'Could not reach a Velomine server at that address. Check the '
+            'address, and that the phone is on the same network as the server.';
       });
       return;
     }

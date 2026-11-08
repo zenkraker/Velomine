@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/auth/server_setup_screen.dart';
@@ -87,6 +89,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Could not reach'), findsOneWidget);
+    expect(saved, isFalse);
+  });
+
+  testWidgets('an address that never answers is given up on', (tester) async {
+    var saved = false;
+    await pump(
+      tester,
+      check: (_) => Completer<ServerInfoResponse?>().future,
+      onSaved: (_) async => saved = true,
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('server-url')),
+      'http://192.168.10.193:8080',
+    );
+    await tester.tap(find.byKey(const Key('server-save')));
+    await tester.pump();
+
+    expect(find.text('Checking…'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 11));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('server-error')), findsOneWidget);
+    expect(find.textContaining('same network'), findsOneWidget);
     expect(saved, isFalse);
   });
 
