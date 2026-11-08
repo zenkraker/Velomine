@@ -29,7 +29,7 @@ void main() {
     now: now,
   );
 
-  test('brings back a saved session by exchanging the refresh token', () async {
+  test('SessionAuth_ShouldRestoreSavedSession_WhenTokenIsStored', () async {
     store.token = 'r-rider@example.com';
 
     final result = await auth().restore();
@@ -39,7 +39,7 @@ void main() {
     expect(store.token, 'r-rider@example.com');
   });
 
-  test('a refresh token the server refuses is cleared', () async {
+  test('SessionAuth_ShouldClearTokenAndSignOut_WhenRefused', () async {
     store.token = 'r-nobody@example.com';
     var signedOut = false;
 
@@ -51,7 +51,7 @@ void main() {
     expect(signedOut, isTrue);
   });
 
-  test('an unreachable server keeps the token for the next try', () async {
+  test('SessionAuth_ShouldKeepToken_WhenServerIsUnreachable', () async {
     store.token = 'r-rider@example.com';
     server.unreachable = true;
 
@@ -62,7 +62,7 @@ void main() {
   });
 
   test(
-    'a request waits for an unavailable refresh instead of going unsigned',
+    'SessionAuth_ShouldWaitForUnavailableRefresh_WhenApplyingToParams',
     () async {
       store.token = 'r-rider@example.com';
       server.unreachable = true;
@@ -77,7 +77,7 @@ void main() {
   );
 
   test(
-    'refreshes before a request when the access token has expired',
+    'SessionAuth_ShouldRefreshBeforeRequest_WhenAccessTokenHasExpired',
     () async {
       var now = DateTime.utc(2026, 11, 6, 8);
       final session = auth(now: () => now);
@@ -98,7 +98,7 @@ void main() {
   );
 
   test(
-    'two requests that notice the expiry at once share one refresh',
+    'SessionAuth_ShouldShareOneRefresh_WhenTwoRequestsExpireAtOnce',
     () async {
       final session = auth();
       await session.accept(tokens('rider@example.com', expiresIn: 0));

@@ -33,7 +33,7 @@ void main() {
   );
 
   testWidgets(
-    'a valid address is checked and saved without the trailing slash',
+    'ServerSetupScreen_ShouldCheckAndSaveAddress_WhenAddressIsValid',
     (tester) async {
       String? saved;
       await pump(
@@ -53,7 +53,7 @@ void main() {
     },
   );
 
-  testWidgets('a malformed address is rejected before any request', (
+  testWidgets('ServerSetupScreen_ShouldRejectAddress_WhenItIsMalformed', (
     tester,
   ) async {
     var checked = false;
@@ -74,7 +74,7 @@ void main() {
     expect(checked, isFalse);
   });
 
-  testWidgets('an address with no Velomine server is explained', (
+  testWidgets('ServerSetupScreen_ShouldExplainUnreachable_WhenServerIsAbsent', (
     tester,
   ) async {
     var saved = false;
@@ -95,7 +95,7 @@ void main() {
     expect(saved, isFalse);
   });
 
-  testWidgets('an address that never answers is given up on', (tester) async {
+  testWidgets('ServerSetupScreen_ShouldTimeOut_WhenUnanswered', (tester) async {
     var saved = false;
     await pump(
       tester,
@@ -120,7 +120,7 @@ void main() {
     expect(saved, isFalse);
   });
 
-  testWidgets('the last address is filled in after Change server', (
+  testWidgets('ServerSetupScreen_ShouldFillLastAddress_WhenAfterServerChange', (
     tester,
   ) async {
     await pump(

@@ -10,13 +10,13 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
   });
 
-  testWidgets('says so when there are no rides', (tester) async {
+  testWidgets('RidesScreen_ShouldShowNoRides_WhenThereAreNone', (tester) async {
     await startApp(tester, server.session(useCookies: true));
 
     expect(find.byKey(const Key('no-rides')), findsOneWidget);
   });
 
-  testWidgets('shows a ready ride with its numbers', (tester) async {
+  testWidgets('RidesScreen_ShouldShowRideNumbers_WhenReady', (tester) async {
     server.rides.add(
       rideJson(
         'r1',
@@ -46,7 +46,7 @@ void main() {
     }
   });
 
-  testWidgets('shows why a ride could not be read', (tester) async {
+  testWidgets('RidesScreen_ShouldExplainFailure_WhenReadFails', (tester) async {
     server.rides.add(
       rideJson('r2', 'failed', error: 'not_cycling', fileName: 'run.fit'),
     );
@@ -56,7 +56,7 @@ void main() {
     expect(find.text('run.fit'), findsOneWidget);
   });
 
-  testWidgets('uploading a file shows the ride being read, then ready', (
+  testWidgets('RidesScreen_ShouldShowRideBecomingReady_WhenAFileIsUploaded', (
     tester,
   ) async {
     await startApp(
@@ -76,7 +76,7 @@ void main() {
     expect(find.byKey(const Key('processing')), findsNothing);
   });
 
-  testWidgets('cancelling the file picker uploads nothing', (tester) async {
+  testWidgets('RidesScreen_ShouldUploadNothing_WhenCancelled', (tester) async {
     await startApp(tester, server.session(useCookies: true));
 
     await tester.tap(find.byKey(const Key('upload')));

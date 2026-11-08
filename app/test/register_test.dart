@@ -21,7 +21,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a new account is told it needs approval', (tester) async {
+  testWidgets('RegisterScreen_ShouldSayApprovalNeeded_WhenAccountIsNew', (
+    tester,
+  ) async {
     await startApp(tester, server.session(useCookies: false));
 
     await register(tester);
@@ -31,7 +33,9 @@ void main() {
     expect(server.accounts['new@example.com']!.approved, isFalse);
   });
 
-  testWidgets('a weak password is explained', (tester) async {
+  testWidgets('RegisterScreen_ShouldExplainWeakPassword_WhenPasswordIsShort', (
+    tester,
+  ) async {
     await startApp(tester, server.session(useCookies: false));
 
     await register(tester, password: 'short');
@@ -41,7 +45,9 @@ void main() {
     expect(find.byKey(const Key('registered')), findsNothing);
   });
 
-  testWidgets('an email that is already used is explained', (tester) async {
+  testWidgets('RegisterScreen_ShouldExplainEmailTaken_WhenEmailIsUsed', (
+    tester,
+  ) async {
     server.add('new@example.com');
     await startApp(tester, server.session(useCookies: false));
 

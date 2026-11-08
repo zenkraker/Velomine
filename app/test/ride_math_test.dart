@@ -10,20 +10,20 @@ import 'package:velomine_api/api.dart';
 void main() {
   group('map projection', () {
     test(
-      'London is in tile 10/511/340, the address OpenStreetMap documents',
+      'Geo_ShouldMatchTheOpenStreetMapLondonTile_WhenProjectingCoordinates',
       () {
         expect((worldX(-0.12, 10) / tileSize).floor(), 511);
         expect((worldY(51.5, 10) / tileSize).floor(), 340);
       },
     );
 
-    test('the world is one tile at zoom 0 and the equator is its middle', () {
+    test('Geo_ShouldCoverOneTileAtZoomZero_WhenProjectingTheWorld', () {
       expect(worldX(-180, 0), 0);
       expect(worldX(180, 0), closeTo(256, 1e-9));
       expect(worldY(0, 0), closeTo(128, 1e-9));
     });
 
-    test('a short route gets a more detailed zoom than a long one, and always fits', () {
+    test('MapView_ShouldZoomInMoreForShortRoutes_WhenFittingTheRoute', () {
       const size = Size(800, 450);
       final short = <LatLon>[
         (lat: 46.07, lon: 11.12),
@@ -44,7 +44,7 @@ void main() {
       }
     });
 
-    test('tiles cover the whole view, are addressed from the template and sit where the route is drawn', () {
+    test('MapView_ShouldCoverTheWholeViewWithAddressedTiles_WhenGivenTheUrlTemplate', () {
       const size = Size(600, 400);
       final view = MapView.fit(const [
         (lat: 46.07, lon: 11.12),
@@ -79,7 +79,7 @@ void main() {
       );
     });
 
-    test('a single point still gets a map', () {
+    test('MapView_ShouldZoomAllTheWayIn_WhenRouteIsASinglePoint', () {
       expect(
         MapView.fit(const [(lat: 46.0, lon: 11.0)], const Size(400, 300)).zoom,
         17,
@@ -88,7 +88,7 @@ void main() {
   });
 
   group('chart scales', () {
-    test('use round steps', () {
+    test('NiceScale_ShouldUseRoundStepsAndTicks_WhenScalingValues', () {
       final s = niceScale(0, 97);
       expect((s.min, s.max, s.step), (0, 100, 25));
       expect(s.ticks, [0, 25, 50, 75, 100]);
@@ -96,13 +96,13 @@ void main() {
       expect(niceScale(0.2, 0.9).step, 0.2);
     });
 
-    test('draw a flat line in the middle', () {
+    test('NiceScale_ShouldCenterAFlatLine_WhenAllValuesAreEqual', () {
       final s = niceScale(200, 200);
       expect(s.min, lessThan(200));
       expect(s.max, greaterThan(200));
     });
 
-    test('time marks are round and few', () {
+    test('TimeAxis_ShouldUseRoundAndFewMarks_WhenLabellingRideTime', () {
       expect(timeTicks(720), [0, 120, 240, 360, 480, 600, 720]);
       expect(timeTicks(7800).length, lessThanOrEqualTo(7));
       expect(timeLabel(330), '5:30');
@@ -116,7 +116,7 @@ void main() {
       expect(clock(4530), '1:15:30');
     });
 
-    test('find the nearest sample', () {
+    test('NearestIndex_ShouldFindTheClosestSample_WhenBetweenSamples', () {
       const time = [0.0, 10.0, 20.0, 30.0];
       expect(nearestIndex(time, -5), 0);
       expect(nearestIndex(time, 14), 1);
@@ -146,7 +146,7 @@ void main() {
       );
     }
 
-    test('only the signals the ride has become charts, in a fixed order', () {
+    test('RideSeries_ShouldChartOnlyPresentSignals_WhenBuiltFromStreams', () {
       final series = RideSeries.from(streams());
 
       expect(series.series.map((s) => s.id), [
@@ -157,7 +157,7 @@ void main() {
       ]); // speed is worked out from positions
     });
 
-    test('speed from the file is converted to km/h, and used instead of working it out', () {
+    test('RideSeries_ShouldUseFileSpeedInKmh_WhenSpeedIsPresent', () {
       final series = RideSeries.from(streams(speed: List.filled(60, 8.0)));
 
       expect(
@@ -166,7 +166,7 @@ void main() {
       );
     });
 
-    test('speed worked out from positions matches the pace (10 m per second is 36 km/h)', () {
+    test('RideSeries_ShouldDeriveSpeedFromPositionsAtTenMetresPerSecond_WhenNoSpeed', () {
       final speed = RideSeries.from(streams()).series
           .firstWhere((s) => s.id == 'speed');
 
@@ -174,13 +174,13 @@ void main() {
       expect(speed.max, closeTo(36, 0.5));
     });
 
-    test('a signal that is all gaps is not a chart', () {
+    test('RideSeries_ShouldOmitAllGapSignals_WhenEveryValueIsNull', () {
       final series = RideSeries.from(streams(cadence: List.filled(60, null)));
 
       expect(series.series.any((s) => s.id == 'cadence'), isFalse);
     });
 
-    test('the route keeps which sample each point belongs to, and finds the nearest one', () {
+    test('RideSeries_ShouldMapRoutePointsToSamplesAndFindNearest_WhenPositionsHaveGaps', () {
       final lat = <double?>[46.0, null, 46.002, 46.003];
       final series = RideSeries.from(
         RideStreamsResponse(
@@ -205,7 +205,7 @@ void main() {
       ); // sample 1 has no position; sample 0 is the nearest
     });
 
-    test('statistics skip gaps', () {
+    test('Series_ShouldSkipGapsInStatistics_WhenValuesContainNulls', () {
       final s = Series(
         id: 'x',
         name: 'X',

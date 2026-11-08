@@ -9,7 +9,7 @@ namespace Velomine.Server.Tests;
 public sealed class ServerInfoTests(PostgresFixture postgres)
 {
     [Fact]
-    public async Task ServerInfo_ReturnsNameAndVersion()
+    public async Task ServerInfo_ShouldReturnNameAndVersion_WhenRequested()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
@@ -20,7 +20,7 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ServerInfo_OffersNoMapTiles_UnlessAnAdminSetsAUsableAddress()
+    public async Task ServerInfo_ShouldOfferNoMapTiles_WhenNoUsableTileAddressIsSet()
     {
         await using var off = await TestApi.StartAsync(postgres);
         var none = await off.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
@@ -40,7 +40,7 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
     [InlineData("https://tiles.example/map.png")] // no {z}/{x}/{y}
     [InlineData("tiles.example/{z}/{x}/{y}.png")] // not an address
     [InlineData("javascript:alert({z}{x}{y})")] // not http or https
-    public async Task ServerInfo_IgnoresAnUnusableTileAddress(string tileUrl)
+    public async Task ServerInfo_ShouldIgnoreTheTileAddress_WhenItIsUnusable(string tileUrl)
     {
         await using var api = await TestApi.StartAsync(postgres, b =>
         {
@@ -55,7 +55,7 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Health_ReturnsOk()
+    public async Task Health_ShouldReturnOk_WhenProbed()
     {
         await using var api = await TestApi.StartAsync(postgres);
 

@@ -19,7 +19,7 @@ void main() {
   }
 
   testWidgets(
-    'a signed-out visitor sees the sign-in form, without a single sign-on button when it is off',
+    'SignInScreen_ShouldShowFormWithoutSsoButton_WhenSingleSignOnIsOff',
     (tester) async {
       await startApp(tester, server.session(useCookies: false));
 
@@ -29,7 +29,7 @@ void main() {
   );
 
   testWidgets(
-    'shows the single sign-on button when the server offers it, and starts it',
+    'SignInScreen_ShouldShowSsoButtonAndStartIt_WhenServerOffersSso',
     (tester) async {
       server.ssoEnabled = true;
       var started = false;
@@ -45,7 +45,7 @@ void main() {
     },
   );
 
-  testWidgets('explains why single sign-on sent the visitor back', (
+  testWidgets('SignInScreen_ShouldExplainSsoError_WhenVisitorIsSentBack', (
     tester,
   ) async {
     await startApp(
@@ -56,7 +56,7 @@ void main() {
     expect(find.textContaining('waiting for an admin'), findsOneWidget);
   });
 
-  testWidgets('a phone can see which server it uses and change it', (
+  testWidgets('SignInScreen_ShouldShowServerAndAllowChange_WhenOnAPhone', (
     tester,
   ) async {
     var changed = false;
@@ -73,7 +73,9 @@ void main() {
     expect(changed, isTrue);
   });
 
-  testWidgets('a wrong password is explained', (tester) async {
+  testWidgets('SignInScreen_ShouldExplainWrongPassword_WhenPasswordIsWrong', (
+    tester,
+  ) async {
     server.add('rider@example.com');
     await startApp(tester, server.session(useCookies: false));
 
@@ -83,7 +85,7 @@ void main() {
     expect(find.byKey(const Key('upload')), findsNothing);
   });
 
-  testWidgets('an account that is not approved yet is told to wait', (
+  testWidgets('SignInScreen_ShouldTellToWait_WhenAccountIsNotApproved', (
     tester,
   ) async {
     server.add('rider@example.com', approved: false);
@@ -95,7 +97,7 @@ void main() {
   });
 
   testWidgets(
-    'signing in with a bearer token opens the rides, and the token is sent with later calls',
+    'SignInScreen_ShouldOpenRidesAndSendToken_WhenSigningInWithToken',
     (tester) async {
       server.add('rider@example.com', name: 'Alex Rider');
       server.rides.add(
@@ -126,7 +128,7 @@ void main() {
   );
 
   testWidgets(
-    'a browser that already has a session cookie goes straight to the rides',
+    'SignInScreen_ShouldGoStraightToRides_WhenThereIsASessionCookie',
     (tester) async {
       server.signInBrowser(server.add('rider@example.com'));
       await startApp(tester, server.session(useCookies: true));
@@ -136,7 +138,9 @@ void main() {
     },
   );
 
-  testWidgets('signing out returns to the sign-in form', (tester) async {
+  testWidgets('SignInScreen_ShouldReturnToSignInForm_WhenSigningOut', (
+    tester,
+  ) async {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 

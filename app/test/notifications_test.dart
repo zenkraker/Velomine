@@ -46,7 +46,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the bell shows how many are unread', (tester) async {
+  testWidgets('NotificationsScreen_ShouldShowUnreadCount_WhenSomeAreUnread', (
+    tester,
+  ) async {
     await startApp(tester, server.session(useCookies: true));
 
     expect(
@@ -58,7 +60,9 @@ void main() {
     );
   });
 
-  testWidgets('notifications read as sentences, newest first', (tester) async {
+  testWidgets('NotificationsScreen_ShouldShowSentencesNewestFirst_WhenOpened', (
+    tester,
+  ) async {
     await openNotifications(tester);
 
     expect(
@@ -70,7 +74,7 @@ void main() {
     expect(find.byKey(const Key('no-notifications')), findsNothing);
   });
 
-  testWidgets('tapping one marks it read and opens what it is about', (
+  testWidgets('NotificationsScreen_ShouldMarkReadAndOpenTarget_WhenTapped', (
     tester,
   ) async {
     await openNotifications(tester);
@@ -92,7 +96,9 @@ void main() {
     );
   });
 
-  testWidgets('mark all read clears the count', (tester) async {
+  testWidgets('NotificationsScreen_ShouldClearUnreadCount_WhenMarkingAllRead', (
+    tester,
+  ) async {
     await openNotifications(tester);
 
     await tester.tap(find.byKey(const Key('notifications-read-all')));
@@ -109,7 +115,7 @@ void main() {
     );
   });
 
-  testWidgets('with nothing yet, the screen says what will appear', (
+  testWidgets('NotificationsScreen_ShouldShowEmptyMessage_WhenThereAreNone', (
     tester,
   ) async {
     server.notifications.clear();

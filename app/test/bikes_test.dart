@@ -31,7 +31,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('with no bikes the screen explains what they are for', (
+  testWidgets('BikesScreen_ShouldExplainBikes_WhenThereAreNone', (
     tester,
   ) async {
     await openBikes(tester);
@@ -39,7 +39,7 @@ void main() {
     expect(find.byKey(const Key('no-bikes')), findsOneWidget);
   });
 
-  testWidgets('adding a bike opens it, and the first one is the default', (
+  testWidgets('BikesScreen_ShouldOpenNewBikeAsDefault_WhenBikeIsAdded', (
     tester,
   ) async {
     await openBikes(tester);
@@ -53,7 +53,7 @@ void main() {
     expect(find.byKey(const Key('no-parts')), findsOneWidget);
   });
 
-  testWidgets('a bike with a name that is empty is not sent', (tester) async {
+  testWidgets('BikesScreen_ShouldRejectBike_WhenNameEmpty', (tester) async {
     await openBikes(tester);
     await tester.tap(find.byKey(const Key('add-bike')));
     await tester.pumpAndSettle();
@@ -64,7 +64,7 @@ void main() {
     expect(server.bikes, isEmpty);
   });
 
-  testWidgets('a wheel size chip fills in the circumference', (tester) async {
+  testWidgets('BikesScreen_ShouldFillWheelSize_WhenPicked', (tester) async {
     await openBikes(tester);
     await tester.tap(find.byKey(const Key('add-bike')));
     await tester.pumpAndSettle();
@@ -76,7 +76,7 @@ void main() {
     expect(server.bikes.single['wheelCircumferenceMm'], 2200);
   });
 
-  testWidgets('a part is added with its typical limit, and shows its wear', (
+  testWidgets('BikeDetailScreen_ShouldAddPartAndShowWear_WhenAdded', (
     tester,
   ) async {
     await openBikes(tester);
@@ -117,7 +117,7 @@ void main() {
     expect(find.text('3400 of 4000 km'), findsOneWidget);
   });
 
-  testWidgets('replacing a part retires the old one and fits a new one', (
+  testWidgets('BikeDetailScreen_ShouldRetireOldPartAndFitNewOne_WhenReplaced', (
     tester,
   ) async {
     server.bikes.add({
@@ -166,7 +166,7 @@ void main() {
     expect(find.text('Replaced parts'), findsOneWidget);
   });
 
-  testWidgets('a bike can be made the default, archived and deleted', (
+  testWidgets('BikeDetailScreen_ShouldDefaultArchiveAndDelete_WhenUsed', (
     tester,
   ) async {
     await openBikes(tester);
@@ -195,7 +195,7 @@ void main() {
     expect(find.byKey(const Key('bike-bike-1')), findsOneWidget);
   });
 
-  testWidgets('a ride says which bike was ridden, and it can be changed', (
+  testWidgets('RideDetailScreen_ShouldChangeBike_WhenAnotherPicked', (
     tester,
   ) async {
     server.bikes.addAll([
@@ -238,7 +238,9 @@ void main() {
     expect(find.text('Gravel'), findsOneWidget);
   });
 
-  testWidgets('a bike that is not yours says so', (tester) async {
+  testWidgets('BikeDetailScreen_ShouldShowNotFound_WhenBikeIsNotYours', (
+    tester,
+  ) async {
     await startApp(tester, server.session(useCookies: true));
     GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/bikes/nope');
     await tester.pumpAndSettle();

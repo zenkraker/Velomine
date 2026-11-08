@@ -44,7 +44,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
         (await client.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct))!;
 
     [Fact]
-    public async Task UploadsTellTheMemberHowTheyWent()
+    public async Task Notifications_ShouldReportEachUpload_WhenRidesAreProcessed()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -66,7 +66,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task NotificationsCanBeMarkedRead_OneOrAll_AndOnlyByTheirOwner()
+    public async Task Notifications_ShouldMarkReadOneOrAll_WhenTheyBelongToTheMember()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -88,7 +88,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DeletingARide_RemovesItsNotifications()
+    public async Task Notifications_ShouldBeRemoved_WhenTheirRideIsDeleted()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -100,7 +100,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AdminsHearAboutSignUps_AndApprovingClearsIt()
+    public async Task Notifications_ShouldTellAdminsAboutSignUps_WhenApprovalIsRequired()
     {
         await using var api = await StartAsync(approval: true);
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
@@ -121,7 +121,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task NoSignUpNotice_WhenAccountsNeedNoApproval()
+    public async Task Notifications_ShouldStayQuiet_WhenAccountsNeedNoApproval()
     {
         await using var api = await StartAsync(approval: false);
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
@@ -131,7 +131,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task APartIsWarnedAboutOncePerLevel_SoonThenWorn()
+    public async Task Notifications_ShouldWarnOncePerLevel_WhenAPartWearsOut()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);

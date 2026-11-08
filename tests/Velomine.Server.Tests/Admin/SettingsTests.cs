@@ -30,7 +30,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
         admin.PutAsJsonAsync("/api/v1/admin/settings", new UpdateSettingsRequest(signUp, approval, tile, credit), Ct);
 
     [Fact]
-    public async Task OnlyAdminsCanReadOrChangeSettings()
+    public async Task AdminSettings_ShouldBeForbidden_WhenCallerIsNotAnAdmin()
     {
         await using var api = await StartAsync();
         var member = await MemberAsync(api);
@@ -41,7 +41,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task WithNothingSaved_TheEnvironmentValuesAreInEffect()
+    public async Task AdminSettings_ShouldReturnEnvironmentValues_WhenNothingIsSaved()
     {
         await using var api = await StartAsync(b =>
         {
@@ -63,7 +63,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SmtpAndSsoAreShownReadOnly_WithoutAnyCredential()
+    public async Task AdminSettings_ShouldShowSmtpAndSsoWithoutSecrets_WhenRead()
     {
         await using var api = await StartAsync(b =>
         {
@@ -94,7 +94,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SavedValues_OverrideTheEnvironment_AndChangeWhatTheServerDoes()
+    public async Task AdminSettings_ShouldOverrideTheEnvironment_WhenValuesAreSaved()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Map:TileUrl", "https://env.example/{z}/{x}/{y}.png"));
         var admin = await AdminAsync(api);
@@ -128,7 +128,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
     [InlineData("https://tiles.example/map.png")]
     [InlineData("ftp://tiles.example/{z}/{x}/{y}.png")]
     [InlineData("not a url {z}{x}{y}")]
-    public async Task AnUnusableTileAddressIsRejected(string tile)
+    public async Task AdminSettings_ShouldRejectTileAddress_WhenItIsUnusable(string tile)
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -141,7 +141,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
     [InlineData(null, "velomine@example", "starttls", 587)]
     [InlineData("smtp.example", "velomine@example", "tls", 587)]
     [InlineData("smtp.example", "velomine@example", "starttls", 0)]
-    public void SmtpSettingsMustBeCompleteAndSensible(string? host, string? from, string security, int port)
+    public void SmtpOptionsValidator_ShouldFail_WhenSettingsAreIncompleteOrWrong(string? host, string? from, string security, int port)
     {
         var result = new SmtpOptionsValidator().Validate(null, new SmtpOptions { Host = host, From = from, Security = security, Port = port });
 
@@ -149,7 +149,7 @@ public sealed class SettingsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public void SmtpSettingsWithNothingSetAreFine_AndMeanEmailIsOff()
+    public void SmtpOptionsValidator_ShouldPassAndMeanEmailIsOff_WhenNothingIsSet()
     {
         var options = new SmtpOptions();
 

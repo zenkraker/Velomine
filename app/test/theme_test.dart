@@ -23,7 +23,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the app follows the device until a theme is chosen', (
+  testWidgets('ThemeController_ShouldFollowDeviceTheme_WhenNoneIsChosen', (
     tester,
   ) async {
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
@@ -33,7 +33,7 @@ void main() {
     expect(current(tester).colorScheme.surface, asphalt);
   });
 
-  testWidgets('choosing night or day switches the colours and is kept', (
+  testWidgets('ThemeController_ShouldSwitchAndKeepTheme_WhenNightOrDayChosen', (
     tester,
   ) async {
     final store = MemoryThemeStore();
@@ -55,7 +55,7 @@ void main() {
   });
 
   test(
-    'a saved choice is read back, and anything unknown means the device',
+    'ThemeChoice_ShouldReadSavedChoiceAndFallBackToDevice_WhenLoaded',
     () async {
       final night = ThemeChoice(store: MemoryThemeStore('dark'));
       await night.load();
@@ -67,7 +67,7 @@ void main() {
     },
   );
 
-  testWidgets('a ride opens in the night theme with its charts', (
+  testWidgets('Theme_ShouldUseNightThemeWithCharts_WhenOpeningARide', (
     tester,
   ) async {
     server.rides.add(rideJson('ride-1', 'ready', distanceM: 24500));

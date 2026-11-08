@@ -60,7 +60,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task FitUpload_BecomesAReadyRide_WithMetrics()
+    public async Task UploadRide_ShouldStoreAReadyRideWithMetrics_WhenGivenAFitFile()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -84,7 +84,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task GpxUpload_WithoutSpeed_UsesGpsSpeed_AndWorksOutNormalizedPower()
+    public async Task UploadRide_ShouldUseGpsSpeedAndWorkOutNormalizedPower_WhenGpxHasNoSpeed()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -102,7 +102,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Streams_AreStoredAsArraysAlignedBySample()
+    public async Task UploadRide_ShouldStoreStreamsAlignedBySample_WhenTheFileIsRead()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -123,7 +123,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RideStreams_ComeBackAsAlignedArrays_AndCanBeThinned()
+    public async Task GetRideStreams_ShouldReturnAlignedArraysAndThinThem_WhenRequested()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -144,7 +144,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RideStreams_BelongToTheOwnerOnly_AndExistOnlyForAReadyRide()
+    public async Task GetRideStreams_ShouldBeHiddenFromNonOwners_WhenTheRideIsNotTheirs()
     {
         await using var api = await StartAsync();
         var alice = await NewMemberAsync(api);
@@ -159,7 +159,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RetryingAnUpload_WithTheSameKey_ReturnsTheSameRide()
+    public async Task UploadRide_ShouldReturnTheSameRide_WhenRetriedWithTheSameKey()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -176,7 +176,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ReusingAKeyWithAnotherFile_IsAConflict()
+    public async Task UploadRide_ShouldReturnConflict_WhenTheKeyIsReusedForAnotherFile()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -188,7 +188,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheSameFileUploadedAgain_IsAHiddenDuplicate()
+    public async Task UploadRide_ShouldReturnAHiddenDuplicate_WhenTheSameFileIsUploadedAgain()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -204,7 +204,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AFileWithTwoSessions_GivesTwoRides()
+    public async Task UploadRide_ShouldCreateTwoRides_WhenTheFileHasTwoSessions()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -221,7 +221,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Theory]
     [InlineData("a note, not a ride", "invalid_file")]
     [InlineData("<recipe/>", "unsupported_format")]
-    public async Task AFileThatIsNotARide_FailsWithAReason_AndIsKept(string content, string error)
+    public async Task UploadRide_ShouldFailWithAReasonAndKeepTheFile_WhenItIsNotARide(string content, string error)
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -234,7 +234,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ARun_FailsAsNotCycling()
+    public async Task UploadRide_ShouldFailAsNotCycling_WhenTheActivityIsARun()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -246,7 +246,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Upload_NeedsSignIn()
+    public async Task UploadRide_ShouldBeUnauthorized_WhenTheCallerIsNotSignedIn()
     {
         await using var api = await StartAsync();
 
@@ -256,7 +256,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Upload_AsTheGeneratedDartClientSendsIt_Works()
+    public async Task UploadRide_ShouldAcceptTheRequest_WhenSentAsTheGeneratedDartClientDoes()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -275,7 +275,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Upload_WithTwoFiles_IsRejected()
+    public async Task UploadRide_ShouldRejectTheRequest_WhenTwoFilesAreSent()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -289,7 +289,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Upload_WithAnEmptyFile_IsRejected()
+    public async Task UploadRide_ShouldRejectTheRequest_WhenTheFileIsEmpty()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -300,7 +300,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Members_CannotSeeOrDeleteEachOthersRides()
+    public async Task Rides_ShouldBeInvisibleToOtherMembers_WhenTheyBelongToSomeoneElse()
     {
         await using var api = await StartAsync();
         var alice = await NewMemberAsync(api);
@@ -314,7 +314,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ListRides_PagesNewestFirst()
+    public async Task ListRides_ShouldPageNewestFirst_WhenThereAreMoreRidesThanTheLimit()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -332,7 +332,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DeletingARide_RemovesItAndItsFile()
+    public async Task DeleteRide_ShouldRemoveTheRideAndItsFile_WhenItIsDeleted()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -347,7 +347,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ARideLeftProcessing_IsReadWhenTheServerStartsAgain()
+    public async Task RideIngestionService_ShouldReadLeftoverRides_WhenTheServerStartsAgain()
     {
         await using var first = await StartAsync();
         var member = await NewMemberAsync(first);

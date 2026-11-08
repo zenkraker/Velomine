@@ -8,7 +8,7 @@ public sealed class RideMetricsTests
     private static Sample[] Series(int seconds, Func<int, Sample> at) => [.. Enumerable.Range(0, seconds).Select(at)];
 
     [Fact]
-    public void NormalizedPower_OfSteadyPower_IsThatPower()
+    public void NormalizedPower_ShouldReturnThatPower_WhenPowerIsSteady()
     {
         var power = Enumerable.Repeat(200.0, 120).ToArray();
 
@@ -16,7 +16,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void NormalizedPower_UsesA30SecondRollingAverage_NotTheRawSamples()
+    public void NormalizedPower_ShouldUseA30SecondRollingAverage_WhenPowerIsVariable()
     {
         // 60 s at 100 W then 60 s at 300 W.
         var power = Enumerable.Range(0, 120).Select(i => i < 60 ? 100.0 : 300.0).ToArray();
@@ -34,11 +34,11 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void NormalizedPower_OfLessThan30Seconds_IsUnknown() =>
+    public void NormalizedPower_ShouldReturnNull_WhenShorterThan30Seconds() =>
         Assert.Null(RideMetrics.NormalizedPower(Enumerable.Repeat(250.0, 29).ToArray()));
 
     [Fact]
-    public void RobustMax_IgnoresASingleGlitch()
+    public void RobustMax_ShouldIgnoreASingleGlitch_WhenOneSampleSpikes()
     {
         var speeds = Enumerable.Repeat(8f, 40).ToArray();
         speeds[20] = 55f;
@@ -47,7 +47,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void RobustMax_KeepsARealSustainedMaximum()
+    public void RobustMax_ShouldKeepTheMaximum_WhenTheSurgeIsSustained()
     {
         var speeds = Enumerable.Repeat(8f, 40).Select((v, i) => i is >= 20 and < 26 ? 15f : v).ToArray();
 
@@ -55,7 +55,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Elevation_CountsARealClimb_ButNotNoise()
+    public void ElevationChange_ShouldCountARealClimb_WhenTheSignalHasNoise()
     {
         // 100 m of climbing, 1 m per sample, with +-0.8 m of measurement noise.
         var climb = Enumerable.Range(0, 101).Select(i => (float?)(i + (i % 2 == 0 ? 0.8 : -0.8))).ToArray();
@@ -69,15 +69,15 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Elevation_WithoutAltitude_IsUnknown() =>
+    public void ElevationChange_ShouldReturnUnknown_WhenThereIsNoAltitude() =>
         Assert.Equal((null, null), RideMetrics.ElevationChange([null, null, null]));
 
     [Fact]
-    public void Haversine_OneDegreeOfLatitude_Is111Km() =>
+    public void Haversine_ShouldReturn111Km_WhenGivenOneDegreeOfLatitude() =>
         Assert.InRange(RideMetrics.Haversine(0, 0, 1, 0), 111_100, 111_300);
 
     [Fact]
-    public void Distance_FromPositions_WhenTheFileHasNoCumulativeDistance()
+    public void TotalDistance_ShouldUsePositions_WhenThereIsNoCumulativeDistance()
     {
         var samples = Series(2, i => new Sample(i * 3600, Latitude: i, Longitude: 0));
 
@@ -85,7 +85,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Distance_PrefersTheDevicesCumulativeDistance()
+    public void TotalDistance_ShouldPreferTheDevicesDistance_WhenItIsPresent()
     {
         var samples = Series(5, i => new Sample(i, Latitude: i * 0.001, Longitude: 0, Distance: 100 + i * 10));
 
@@ -93,7 +93,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void MovingTime_SkipsPausesAndStops()
+    public void Compute_ShouldSkipPausesAndStops_WhenTheRideHasPausesAndStops()
     {
         // 60 s riding at 5 m/s, a 5 minute pause with no samples, 30 s standing still, 60 s riding.
         var samples = new List<Sample>();
@@ -109,7 +109,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Speed_WithoutSpeedValues_IsWorkedOutFromPositions()
+    public void Compute_ShouldWorkOutSpeedFromPositions_WhenSamplesHaveNoSpeed()
     {
         // Moving north at 10 m/s: 1 s apart, 10 m apart.
         const double degreesPerMeter = 1 / 111_195.0;
@@ -123,7 +123,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Compute_AveragesPowerHeartRateAndCadence_AndLeavesOutCoastingCadence()
+    public void Compute_ShouldAveragePowerHeartRateAndCadence_WhenSamplesIncludeCoasting()
     {
         var samples = Series(120, i => new Sample(i, Speed: 7, Power: (short)(i % 2 == 0 ? 100 : 300), HeartRate: 140, Cadence: (short)(i < 60 ? 0 : 90)));
 
@@ -137,7 +137,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Compute_PrefersTheDevicesNormalizedPower()
+    public void Compute_ShouldPreferTheDevicesNormalizedPower_WhenTheDeviceSuppliesIt()
     {
         var samples = Series(120, i => new Sample(i, Speed: 7, Power: 200));
 
@@ -146,7 +146,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Pauses_ExcludeMovingTime_AveragesAndTheDistanceAcrossTheStop()
+    public void Compute_ShouldExcludePausesFromTimeAndAverages_WhenTheRideHasPauses()
     {
         const double degreesPerMeter = 1 / 111_195.0;
         var samples = new List<Sample>();
@@ -171,7 +171,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void DeviceTiming_IsPreferredWhenTheFileHasIt()
+    public void Compute_ShouldPreferDeviceTiming_WhenTheFileSuppliesIt()
     {
         var samples = Series(10, i => new Sample(i, Speed: 5));
 
@@ -182,7 +182,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Compute_RejectsARideWithFewerThanTwoSamples()
+    public void Compute_ShouldRejectTheRide_WhenThereAreFewerThanTwoSamples()
     {
         var error = Assert.Throws<RideParseException>(() => RideMetrics.Compute([new Sample(0)]));
 
@@ -190,7 +190,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Tss_UsesNormalizedPowerFtpAndMovingTime()
+    public void Tss_ShouldReturn64_WhenRidingAnHourAt200WWithFtpOf250()
     {
         // One hour at 200 W against an FTP of 250: IF 0.8, TSS 64.
         var samples = Series(3600, i => new Sample(i, Power: 200));
@@ -202,7 +202,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void Trimp_WeightsTimeInHigherZonesMore()
+    public void Trimp_ShouldWeightHigherZonesMore_WhenHeartRateIsHigher()
     {
         // 119 seconds at 60 % of a 200 bpm maximum is zone 2, worth two points a minute.
         var samples = Series(120, i => new Sample(i, HeartRate: 120));
@@ -213,7 +213,7 @@ public sealed class RideMetricsTests
     }
 
     [Fact]
-    public void ZoneSeconds_SplitSamplesByHeartRateZone()
+    public void ZoneSeconds_ShouldSplitSamplesByZone_WhenGivenHeartRateSamples()
     {
         Sample[] samples =
         [

@@ -46,7 +46,7 @@ public sealed class ClubsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CreatingAClubIsForAdmins_AndTheOwnerMustBeAnAccountWithoutOne()
+    public async Task Clubs_ShouldRequireAnAdminAndAFreeOwner_WhenCreatingAClub()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -84,7 +84,7 @@ public sealed class ClubsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task MembersJoinWithTheCode_AndOnlyTheOwnerSeesIt()
+    public async Task Clubs_ShouldJoinAndHideTheCode_WhenUsingTheJoinCode()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -123,7 +123,7 @@ public sealed class ClubsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AClublessAccountHasNoClub_AndADisabledClubTakesNoNewJoins()
+    public async Task Clubs_ShouldTakeNoNewJoins_WhenTheClubIsDisabled()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -155,7 +155,7 @@ public sealed class ClubsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task OnlyTheOwnerPromotesCoaches_AndCanRotateTheCode()
+    public async Task Clubs_ShouldLetOnlyTheOwnerPromoteAndRotate_WhenManagingTheClub()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -210,7 +210,7 @@ public sealed class ClubsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheAdminCanMoveOwnershipToAnotherMember()
+    public async Task Clubs_ShouldMoveOwnership_WhenAnAdminAssignsAnotherMember()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);

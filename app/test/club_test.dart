@@ -8,7 +8,7 @@ void main() {
 
   setUp(() => server = FakeServer());
 
-  testWidgets('a clubless rider joins with the code and sees the roster', (
+  testWidgets('JoinClubScreen_ShouldJoinAndShowRoster_WhenCodeIsValid', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', clubRole: null);
@@ -52,7 +52,7 @@ void main() {
     expect(server.clubRoles.containsKey(rider.email), isFalse);
   });
 
-  testWidgets('the owner sees the code and can make a member a coach', (
+  testWidgets('ClubScreen_ShouldShowCodeAndPromoteMember_WhenOwner', (
     tester,
   ) async {
     final owner = server.add(
@@ -79,7 +79,7 @@ void main() {
     expect(find.text('Coach'), findsWidgets);
   });
 
-  testWidgets('an invite code survives signing in', (tester) async {
+  testWidgets('JoinClubScreen_ShouldPrefillCode_WhenInvited', (tester) async {
     final rider = server.add('rider@example.com', clubRole: null);
     final session = server.session(useCookies: true);
     session.pendingJoinCode = server.joinCode;
@@ -91,7 +91,7 @@ void main() {
     expect(field.controller!.text, server.joinCode);
   });
 
-  testWidgets('the admin moves ownership so the old owner can leave', (
+  testWidgets('ClubsTab_ShouldMoveOwnership_WhenAdminChangesIt', (
     tester,
   ) async {
     final admin = server.add(
@@ -139,7 +139,7 @@ void main() {
     expect(server.clubRoles[owner.email], 'member');
   });
 
-  testWidgets('a server validation sentence is shown for a bad club owner', (
+  testWidgets('ClubsTab_ShouldShowValidationMessage_WhenOwnerUnknown', (
     tester,
   ) async {
     final admin = server.add(
@@ -176,7 +176,7 @@ void main() {
     );
   });
 
-  testWidgets('an admin creates a club from the admin pages', (tester) async {
+  testWidgets('ClubsTab_ShouldCreateClub_WhenAdminSubmits', (tester) async {
     final admin = server.add(
       'admin@example.com',
       roles: ['admin', 'member'],

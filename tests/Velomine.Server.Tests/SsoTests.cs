@@ -69,7 +69,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     private static partial Regex FormAction();
 
     [Fact]
-    public async Task SsoInfo_ReportsWhetherSsoIsOn()
+    public async Task Sso_ShouldReportWhetherItIsEnabled_WhenTheInfoEndpointIsCalled()
     {
         await using var on = await StartAsync();
         var info = await on.CreateClient().GetFromJsonAsync<SsoInfoResponse>("/api/v1/accounts/sso", Ct);
@@ -83,7 +83,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task FirstSignIn_CreatesTheAccount_AndStartsASession()
+    public async Task Sso_ShouldCreateTheAccountAndStartASession_WhenSigningInForTheFirstTime()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var browser = api.CreateClient(handleCookies: true);
@@ -98,7 +98,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task SecondSignIn_UsesTheSameAccount()
+    public async Task Sso_ShouldReuseTheSameAccount_WhenSigningInAgain()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var first = api.CreateClient(handleCookies: true);
@@ -112,7 +112,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task NewAccount_WaitsForApproval_ThenSignsIn()
+    public async Task Sso_ShouldRefuseSignInUntilApproved_WhenTheAccountIsNew()
     {
         await using var api = await StartAsync(); // approval is required by default
         var browser = api.CreateClient(handleCookies: true);
@@ -132,7 +132,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task ExistingPasswordAccount_IsLinkedByVerifiedEmail()
+    public async Task Sso_ShouldLinkTheExistingAccount_WhenTheEmailIsVerified()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var registered = await (await api.RegisterAsync(DexFixture.VerifiedEmail)).Content.ReadFromJsonAsync<RegisterResponse>(Ct);
@@ -147,7 +147,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task UnverifiedEmail_IsNotAccepted()
+    public async Task Sso_ShouldRefuseSignIn_WhenTheEmailIsNotVerified()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var browser = api.CreateClient(handleCookies: true);
@@ -161,7 +161,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task WhenAutoCreateIsOff_OnlyExistingAccountsCanSignIn()
+    public async Task Sso_ShouldRefuseUnknownAccounts_WhenAutoCreateIsOff()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Sso:AutoCreateUsers", "false"));
         var browser = api.CreateClient(handleCookies: true);
@@ -175,7 +175,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     [InlineData("https://evil.example/phish")]
     [InlineData("//evil.example")]
     [InlineData("/\\evil.example")]
-    public async Task ReturnUrl_ThatLeavesTheServer_IsReplacedWithTheHomePage(string returnUrl)
+    public async Task Sso_ShouldReplaceTheReturnUrlWithHome_WhenItLeavesTheServer(string returnUrl)
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var browser = api.CreateClient(handleCookies: true);
@@ -199,7 +199,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
         client.PostAsJsonAsync("/api/v1/accounts/sso/token", new ExchangeSsoCodeRequest(code, verifier), Ct);
 
     [Fact]
-    public async Task PhoneApp_SignsInThroughTheBrowser_AndGetsTokensForACode()
+    public async Task Sso_ShouldGiveTokensForACode_WhenThePhoneAppSignsInThroughTheBrowser()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var browser = api.CreateClient(handleCookies: true);
@@ -221,7 +221,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task ACodeWorksOnce_AndNotWithAnotherAppsVerifier()
+    public async Task Sso_ShouldAcceptTheCodeOnlyOnce_WhenExchangedWithTheMatchingVerifier()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var app = api.CreateClient();
@@ -239,7 +239,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
-    public async Task PhoneApp_IsToldWhenTheAccountWaitsForApproval()
+    public async Task Sso_ShouldReportNotApproved_WhenThePhoneAppAccountIsPending()
     {
         await using var api = await StartAsync(); // approval is required by default
 
@@ -251,7 +251,7 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
     [Theory]
     [InlineData("short")]
     [InlineData("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw+cM")] // not base64url
-    public async Task PhoneApp_MustSendAProperChallenge(string challenge)
+    public async Task Sso_ShouldRejectTheStart_WhenThePhoneAppChallengeIsMalformed(string challenge)
     {
         await using var api = await StartAsync();
 

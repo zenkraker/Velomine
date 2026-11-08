@@ -41,7 +41,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('weekly totals show this week first, with every number', (
+  testWidgets('ProgressScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
     tester,
   ) async {
     await openProgress(tester);
@@ -67,7 +67,9 @@ void main() {
     expect(find.byKey(const Key('no-goals')), findsOneWidget);
   });
 
-  testWidgets('switching to months asks for monthly totals', (tester) async {
+  testWidgets('ProgressScreen_ShouldAskMonthlyTotals_WhenSwitchingToMonths', (
+    tester,
+  ) async {
     await openProgress(tester);
 
     await tester.tap(find.text('Months'));
@@ -77,7 +79,7 @@ void main() {
     expect(find.text('103 km'), findsWidgets); // 102.5 km, rounded
   });
 
-  testWidgets('training load shows its totals and can change range', (
+  testWidgets('ProgressScreen_ShouldShowTrainingTotals_WhenChangingRange', (
     tester,
   ) async {
     await openProgress(tester);
@@ -100,7 +102,7 @@ void main() {
     expect(server.trainingRequests, [90, 30]);
   });
 
-  testWidgets('a goal is added in km and sent in metres, with its progress', (
+  testWidgets('ProgressScreen_ShouldSendGoalInMetres_WhenTargetIsInKm', (
     tester,
   ) async {
     server.goalCurrent['distance'] = 40000;
@@ -122,7 +124,7 @@ void main() {
     expect(find.text('40.0 km of 100 km · 40 %'), findsOneWidget);
   });
 
-  testWidgets('a goal target can be changed, and the goal deleted', (
+  testWidgets('ProgressScreen_ShouldUpdateAndDeleteGoal_WhenEditingGoal', (
     tester,
   ) async {
     server.goals.add({
@@ -156,7 +158,9 @@ void main() {
     expect(find.byKey(const Key('no-goals')), findsOneWidget);
   });
 
-  testWidgets('an empty target is not sent', (tester) async {
+  testWidgets('ProgressScreen_ShouldRejectEmptyTarget_WhenSavingGoal', (
+    tester,
+  ) async {
     await openProgress(tester);
 
     await tester.tap(find.byKey(const Key('add-goal')));

@@ -72,7 +72,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheExportHoldsAllMyDataAndOnlyMine_IncludingTheOriginalFiles()
+    public async Task DataOwnership_ShouldExportAllAndOnlyMyData_WhenDownloadingTheExport()
     {
         await using var api = await StartAsync();
         var me = await NewMemberAsync(api, "Ada");
@@ -124,7 +124,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AnExportLinkNeedsASignIn_AndNothingElseWorksAsALink()
+    public async Task DataOwnership_ShouldRejectExportLinks_WhenTheyAreInvalidExpiredOrForged()
     {
         await using var api = await StartAsync();
         var me = await NewMemberAsync(api);
@@ -148,7 +148,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DeletingMyAccount_NeedsMyPassword_AndNothingIsDeletedOnAWrongOne()
+    public async Task DataOwnership_ShouldDeleteNothing_WhenTheDeletePasswordIsWrong()
     {
         await using var api = await StartAsync();
         var me = await NewMemberAsync(api);
@@ -161,7 +161,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DeletingMyAccount_RemovesEverythingIOwn_AndLeavesEveryoneElseAlone()
+    public async Task DataOwnership_ShouldRemoveEverythingIOwn_WhenDeletingMyAccount()
     {
         await using var api = await StartAsync();
         var me = await NewMemberAsync(api);
@@ -187,7 +187,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AnAccountWithoutAPassword_ConfirmsByTypingItsEmail()
+    public async Task DataOwnership_ShouldAskForTheEmail_WhenAnAccountWithoutPasswordDeletesItself()
     {
         await using var api = await StartAsync();
         string email = TestApi.NewEmail();
@@ -219,7 +219,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheOnlyAdminCannotDeleteThemselves_UntilSomeoneElseIsAdmin()
+    public async Task DataOwnership_ShouldBlockDeletion_WhenTheCallerIsTheOnlyAdmin()
     {
         await using var api = await StartAsync();
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
@@ -235,7 +235,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheProfileSaysWhetherTheAccountHasAPassword()
+    public async Task DataOwnership_ShouldReportHasPassword_WhenReadingTheProfile()
     {
         await using var api = await StartAsync();
         var me = await NewMemberAsync(api);

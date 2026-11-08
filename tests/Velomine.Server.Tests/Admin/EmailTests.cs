@@ -77,7 +77,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct);
 
     [Fact]
-    public async Task WithoutSmtp_NothingIsSent_AndEmailIsNotAnnounced()
+    public async Task EmailSettings_ShouldSendNothingAndAnnounceNothing_WhenSmtpIsMissing()
     {
         var (api, mail) = await StartAsync(postgres, smtp: false);
         await using var _ = api;
@@ -91,7 +91,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task WithSmtp_EmailIsAnnounced()
+    public async Task EmailSettings_ShouldBeAnnounced_WhenSmtpIsConfigured()
     {
         var (api, _) = await StartAsync(postgres);
         await using var _ = api;
@@ -100,7 +100,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TurningEmailOn_NeverSendsABacklog_ButLaterNotificationsGoOutOnce()
+    public async Task NotificationEmail_ShouldSkipBacklogAndSendOnce_WhenEmailIsTurnedOn()
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
@@ -133,7 +133,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AMemberWhoTurnedEmailOff_GetsNone()
+    public async Task NotificationEmail_ShouldSendNothing_WhenMemberTurnedEmailOff()
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
@@ -148,7 +148,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ANotificationAlreadyReadInTheApp_IsNotEmailed()
+    public async Task NotificationEmail_ShouldSkip_WhenNotificationWasAlreadyRead()
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
@@ -162,7 +162,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AFailedSend_IsTriedAgainAtTheNextRun()
+    public async Task NotificationEmail_ShouldRetry_WhenSendFails()
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
@@ -180,7 +180,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheTestEmail_GoesToTheAdminsOwnAddress()
+    public async Task AdminTestEmail_ShouldGoToTheAdminAddress_WhenRequested()
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
@@ -195,7 +195,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheTestEmail_ExplainsWhenItCannotBeSent_AndIsForAdminsOnly()
+    public async Task AdminTestEmail_ShouldExplainFailureAndBeAdminsOnly_WhenSendFails()
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
@@ -222,6 +222,6 @@ public sealed class EmailTests(PostgresFixture postgres)
     [InlineData(NotificationTypes.SignUpWaiting, "morning.fit signed up and is waiting for approval.")]
     [InlineData(NotificationTypes.PartSoon, "morning.fit is nearly worn.")]
     [InlineData(NotificationTypes.PartWorn, "morning.fit is worn out. Time to replace it.")]
-    public void EveryNotificationTypeHasItsSentence(string type, string sentence) =>
+    public void NotificationText_ShouldReturnTheSentence_WhenNotificationTypeIsKnown(string type, string sentence) =>
         Assert.Equal(sentence, NotificationText.Sentence(new Notification { Type = type, Subject = "morning.fit" }));
 }

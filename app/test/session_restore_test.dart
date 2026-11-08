@@ -13,7 +13,7 @@ void main() {
     store = MemoryTokenStore();
   });
 
-  testWidgets('a saved refresh token opens the app without the password', (
+  testWidgets('SessionRestore_ShouldOpenAppWithoutPassword_WhenTokenIsSaved', (
     tester,
   ) async {
     store.token = 'r-rider@example.com';
@@ -31,7 +31,7 @@ void main() {
     expect(server.requests, isNot(contains('POST /api/v1/accounts/login')));
   });
 
-  testWidgets('a refused token asks for the password', (tester) async {
+  testWidgets('SessionRestore_ShouldAskPassword_WhenRefused', (tester) async {
     store.token = 'r-nobody@example.com';
 
     await startApp(
@@ -43,7 +43,7 @@ void main() {
     expect(store.token, isNull);
   });
 
-  testWidgets('an unreachable server keeps the token and offers to try again', (
+  testWidgets('SessionRestore_ShouldKeepTokenAndOfferRetry_WhenUnreachable', (
     tester,
   ) async {
     store.token = 'r-rider@example.com';
@@ -60,7 +60,7 @@ void main() {
     // The retry path itself is covered in session_auth_test; keep this test on the screen and the kept token.
   });
 
-  testWidgets('signing out clears the saved token', (tester) async {
+  testWidgets('SessionRestore_ShouldClearToken_WhenSigningOut', (tester) async {
     store.token = 'r-rider@example.com';
 
     await startApp(

@@ -18,7 +18,7 @@ Map<String, Object?> _messages(Map<String, Object?> arb) => {
 };
 
 void main() {
-  test('English and Italian have the same keys and no empty translations', () {
+  test('L10n_ShouldHaveSameKeysAndNoEmptyValues_WhenComparingLocales', () {
     final en = _arb('en');
     final it = _arb('it');
 
@@ -35,7 +35,7 @@ void main() {
     }
   });
 
-  test('every declared placeholder appears in the Italian message', () {
+  test('L10n_ShouldKeepEveryPlaceholder_WhenTranslatingToItalian', () {
     final en = _arb('en');
     final it = _messages(_arb('it'));
 
@@ -56,7 +56,7 @@ void main() {
   });
 
   test(
-    'a saved language is read back, and anything unknown means the device',
+    'LanguageChoice_ShouldReadSavedLanguageAndFallBackToDevice_WhenLoaded',
     () async {
       final italian = LanguageChoice(store: MemoryLanguageStore('it'));
       await italian.load();
@@ -68,7 +68,7 @@ void main() {
     },
   );
 
-  testWidgets('the app follows the device language until one is chosen', (
+  testWidgets('AppLocalizations_ShouldFollowDeviceLanguage_WhenNoneIsChosen', (
     tester,
   ) async {
     tester.platformDispatcher.localesTestValue = [const Locale('it')];
@@ -81,7 +81,7 @@ void main() {
     expect(find.text('Rides'), findsNothing);
   });
 
-  testWidgets('choosing a language switches the app and is kept', (
+  testWidgets('AppLocalizations_ShouldSwitchAndKeepLanguage_WhenOneIsChosen', (
     tester,
   ) async {
     final server = FakeServer();
@@ -113,7 +113,7 @@ void main() {
     expect(store.value, 'system');
   });
 
-  testWidgets('the sign-in screen is Italian too', (tester) async {
+  testWidgets('L10n_ShouldLocalizeSignInScreen_WhenItalian', (tester) async {
     final server = FakeServer();
     await startApp(
       tester,
@@ -126,7 +126,7 @@ void main() {
     expect(find.text('Password'), findsOneWidget);
   });
 
-  testWidgets('progress and dates render in Italian', (tester) async {
+  testWidgets('L10n_ShouldLocalizeProgressDates_WhenItalian', (tester) async {
     final server = FakeServer();
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(
@@ -144,7 +144,7 @@ void main() {
     expect(find.textContaining('4 nov'), findsOneWidget);
   });
 
-  testWidgets('the rides list is Italian, including its empty state', (
+  testWidgets('AppLocalizations_ShouldTranslateRidesList_WhenItalian', (
     tester,
   ) async {
     final server = FakeServer();

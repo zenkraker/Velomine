@@ -10,7 +10,7 @@ These rules apply to every app and project in this repository: server, mobile, w
 
 ## What belongs in this file
 
-`AGENTS.md` holds **only invariants**: code, architecture, dependency and tooling rules that stay true for as long as nobody decides otherwise. **Never** put project status here: progress, roadmap position, current release, open questions, to-do lists or "what's done". Those go in `README.md`. When a rule here changes, edit it in place; do not add a history. `CLAUDE.md` only imports this file, so Claude Code reads the same rules.
+`AGENTS.md` holds **only invariants**: code, architecture, dependency and tooling rules that stay true for as long as nobody decides otherwise. **Never** put project status here: progress, roadmap position, current release, open questions, to-do lists or "what's done". Those go in `README.md`. When a rule here changes, edit it in place; do not add a history. `CLAUDE.md` imports this file, so Claude Code reads the same rules.
 
 ## References
 
@@ -35,6 +35,11 @@ Background documents. Read the relevant one before designing a feature. When a d
 - **Every endpoint declares what it really accepts and returns** (`Description(...)` in its `Configure()`), because the generated Dart client is only as accurate as the OpenAPI document. After changing an endpoint, run `tools/generate-api-client.sh` and commit the regenerated client.
 - **The web app is served by the server** from `wwwroot`, at the same address as the API (built by the Dockerfile), so its session cookie needs no cross-origin setup.
 - **The Dart API client is generated** from the server's OpenAPI document. Never edit generated files by hand. For the generator only, a community tool is acceptable if it is free, well documented and actively supported; it still needs an evaluation in `docs/dependencies/`.
+
+## Tests
+
+- **Every test name follows `Subject_ShouldDoSomething_WhenCondition`.** Three PascalCase parts separated by underscores: the method, class, screen or controller under test, the observable behaviour, and the condition that triggers it. This applies to xUnit test methods and to the description strings of Dart `test(...)` and `testWidgets(...)`; group labels stay descriptive prose.
+- **Examples.** `NormalizedPower_ShouldReturnThatPower_WhenPowerIsSteady`, `SignInScreen_ShouldExplainWrongPassword_WhenSignInFails`, `MapView_ShouldZoomInMoreForShortRoutes_WhenFittingTheRoute`. Avoid spaces, punctuation and vague subjects like `Test1`.
 
 ## Development environment
 

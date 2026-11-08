@@ -58,7 +58,7 @@ void main() {
   }
 
   testWidgets(
-    'opening a ride shows its numbers, its route and a chart for each signal it has',
+    'RideDetailScreen_ShouldShowNumbersRouteAndCharts_WhenRideIsOpened',
     (tester) async {
       await open(tester);
 
@@ -87,7 +87,7 @@ void main() {
     },
   );
 
-  testWidgets('training load and zone times show when the profile has them', (
+  testWidgets('RideDetailScreen_ShouldShowZonesAndLoad_WhenProfileHasThem', (
     tester,
   ) async {
     await open(tester);
@@ -121,7 +121,7 @@ void main() {
   });
 
   testWidgets(
-    'touching a chart shows the values at that moment on every chart',
+    'RideDetailScreen_ShouldShowMomentValuesOnEachChart_WhenAChartIsTouched',
     (tester) async {
       await open(tester);
       expect(find.byKey(const Key('readout-power')), findsOneWidget);
@@ -162,7 +162,7 @@ void main() {
     },
   );
 
-  testWidgets('a ride without GPS (indoor) has charts and no map', (
+  testWidgets('RideDetailScreen_ShouldShowChartsAndNoMap_WhenRideHasNoGps', (
     tester,
   ) async {
     server.streams['r1'] = streamsJson(position: false);
@@ -172,7 +172,7 @@ void main() {
     expect(find.byKey(const Key('chart-power')), findsOneWidget);
   });
 
-  testWidgets('speed is worked out from the positions when the file has none', (
+  testWidgets('RideDetailScreen_ShouldShowDerivedSpeed_WhenFileHasNoSpeed', (
     tester,
   ) async {
     server.streams['r1'] = streamsJson(speed: false);
@@ -181,7 +181,7 @@ void main() {
     expect(find.byKey(const Key('chart-speed')), findsOneWidget);
   });
 
-  testWidgets('a ride that could not be read says why, and has no charts', (
+  testWidgets('RideDetailScreen_ShouldExplainAndHideCharts_WhenReadFailed', (
     tester,
   ) async {
     server.rides.add(
@@ -195,7 +195,7 @@ void main() {
     expect(server.requests, isNot(contains('GET /api/v1/rides/r2/streams')));
   });
 
-  testWidgets('a ride that does not exist, or is not yours, says so', (
+  testWidgets('RideDetailScreen_ShouldReportNotFound_WhenRideIsMissing', (
     tester,
   ) async {
     final session = server.session(useCookies: true);
@@ -227,7 +227,7 @@ void main() {
     expect(controller.notFound, isTrue);
   });
 
-  testWidgets('a ride still being read is shown as such, then fills in', (
+  testWidgets('RideDetailScreen_ShouldFillInAfterProcessing_WhenRideIsRead', (
     tester,
   ) async {
     server.rides.add(rideJson('r3', 'processing', fileName: 'big.fit'));
@@ -271,7 +271,7 @@ void main() {
     expect(find.text('1.0 km'), findsOneWidget);
   });
 
-  testWidgets('the back button returns to the list', (tester) async {
+  testWidgets('RideDetailScreen_ShouldGoBack_WhenBackIsTapped', (tester) async {
     await open(tester);
 
     await tester.tap(find.byKey(const Key('back')));
@@ -281,7 +281,7 @@ void main() {
     expect(find.byKey(const Key('ride-r1')), findsOneWidget);
   });
 
-  testWidgets('deleting asks first, and then removes the ride', (tester) async {
+  testWidgets('RideDetailScreen_ShouldAskAndDelete_WhenTapped', (tester) async {
     await open(tester);
 
     await tester.tap(find.byKey(const Key('delete')));
@@ -303,7 +303,7 @@ void main() {
   });
 
   group('map tiles', () {
-    testWidgets('are not requested unless the server offers an address', (
+    testWidgets('RouteMap_ShouldRequestNoTiles_WhenServerOffersNoAddress', (
       tester,
     ) async {
       await open(tester);
@@ -320,7 +320,7 @@ void main() {
     });
 
     testWidgets(
-      'are laid out from the address, with the provider credit shown',
+      'RouteMap_ShouldLayOutTilesAndShowCredit_WhenServerOffersAnAddress',
       (tester) async {
         server.tileUrl = 'https://tiles.example/{z}/{x}/{y}.png';
         await open(tester);

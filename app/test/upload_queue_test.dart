@@ -143,7 +143,7 @@ void main() {
     );
   });
 
-  test('uploads a ready ride and remembers it', () async {
+  test('UploadQueue_ShouldUploadAndRememberRide_WhenRideIsReady', () async {
     await queue.init();
     await queue.resume([ready('r1')]);
     await settle(queue, 'r1');
@@ -154,7 +154,7 @@ void main() {
     expect(store.states['r1']?.isUploaded, isTrue);
   });
 
-  test('a duplicate is treated as uploaded', () async {
+  test('UploadQueue_ShouldTreatAsUploaded_WhenServerSaysDuplicate', () async {
     uploader.pollStatus = 'duplicate';
     await queue.init();
     await queue.enqueue('r1');
@@ -163,7 +163,7 @@ void main() {
     expect(queue.stateFor('r1')?.isUploaded, isTrue);
   });
 
-  test('a failed upload can be retried', () async {
+  test('UploadQueue_ShouldRetryUpload_WhenUploadFailed', () async {
     uploader.failUpload = true;
     await queue.init();
     await queue.enqueue('r1');
@@ -179,7 +179,7 @@ void main() {
     expect(uploader.keys, ['r1']);
   });
 
-  test('an expired session asks the app to sign in again', () async {
+  test('UploadQueue_ShouldAskToSignInAgain_WhenSessionExpired', () async {
     var signedOut = false;
     queue = RideUploadQueue(
       recorder: QueueRecorder(),
@@ -196,7 +196,7 @@ void main() {
     expect(queue.stateFor('r1')?.error, 'sign_in');
   });
 
-  test('an already uploaded ride is not sent again after a restart', () async {
+  test('UploadQueue_ShouldNotResendRide_WhenAlreadyUploaded', () async {
     store.states = {
       'r1': const UploadState(state: UploadState.uploaded, serverRideId: 'old'),
     };

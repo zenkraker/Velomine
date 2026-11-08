@@ -244,7 +244,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('starts, pauses, resumes and saves a ride on the phone', (
+  testWidgets('RecordingScreen_ShouldStartPauseResumeAndSave_WhenRiding', (
     tester,
   ) async {
     final recorder = FakeRecorder();
@@ -278,7 +278,7 @@ void main() {
   });
 
   testWidgets(
-    'auto-pause is on by default, can be turned off and is remembered',
+    'RecordingScreen_ShouldDefaultAutoPauseOnAndRememberOff_WhenToggled',
     (tester) async {
       final recorder = FakeRecorder();
       final settings = MemoryRecorderSettings();
@@ -298,7 +298,7 @@ void main() {
     },
   );
 
-  testWidgets('a speed pause is shown as auto-paused', (tester) async {
+  testWidgets('RecordingScreen_ShouldShowAutoPause_WhenPaused', (tester) async {
     final recorder = FakeRecorder();
     await pump(tester, recorder);
 
@@ -318,7 +318,9 @@ void main() {
     expect(find.byKey(const Key('record-resume')), findsOneWidget);
   });
 
-  testWidgets('an interrupted ride can be finished', (tester) async {
+  testWidgets('RecordingScreen_ShouldFinishRide_WhenInterrupted', (
+    tester,
+  ) async {
     final recorder = FakeRecorder();
     recorder.rides.add(
       LocalRide(
@@ -339,7 +341,9 @@ void main() {
     expect(find.textContaining('Ready to upload'), findsOneWidget);
   });
 
-  testWidgets('a denied permission is explained', (tester) async {
+  testWidgets('RecordingScreen_ShouldExplainDenial_WhenLocationDenied', (
+    tester,
+  ) async {
     final recorder = FakeRecorder()..permission = false;
     await pump(tester, recorder);
 
@@ -351,7 +355,7 @@ void main() {
     expect(find.textContaining('Allow precise location'), findsOneWidget);
   });
 
-  testWidgets('a local ride can be deleted', (tester) async {
+  testWidgets('RecordingScreen_ShouldDeleteRide_WhenTapped', (tester) async {
     final recorder = FakeRecorder();
     recorder.rides.add(
       LocalRide(
@@ -371,7 +375,7 @@ void main() {
     expect(find.byKey(const Key('local-ride-ride-1')), findsNothing);
   });
 
-  testWidgets('finds and remembers a heart-rate strap', (tester) async {
+  testWidgets('SensorPairing_ShouldPairAndKeepStrap_WhenFound', (tester) async {
     final recorder = FakeRecorder()
       ..sensors.add(
         const SensorInfo(
@@ -399,7 +403,7 @@ void main() {
     expect(find.text('Polar H10 1A2B3C'), findsOneWidget);
   });
 
-  testWidgets('a paired strap can be forgotten', (tester) async {
+  testWidgets('SensorPairing_ShouldForgetStrap_WhenTapped', (tester) async {
     final recorder = FakeRecorder()
       ..snapshot = const RecorderSnapshot(
         state: 'idle',
@@ -418,7 +422,7 @@ void main() {
     expect(find.byKey(const Key('pair-sensor')), findsOneWidget);
   });
 
-  testWidgets('the sensor row is hidden where sensors are unsupported', (
+  testWidgets('SensorPairing_ShouldHideSensorRow_WhenUnsupported', (
     tester,
   ) async {
     final recorder = FakeRecorder()..sensorSupport = false;
@@ -428,7 +432,7 @@ void main() {
     expect(find.text('Heart-rate strap'), findsNothing);
   });
 
-  testWidgets('a refused nearby-devices permission is explained', (
+  testWidgets('SensorPairing_ShouldExplainRefusal_WhenNearbyDenied', (
     tester,
   ) async {
     final recorder = FakeRecorder()..sensorPermission = false;
@@ -442,7 +446,7 @@ void main() {
     expect(recorder.sensorScans, 0);
   });
 
-  testWidgets('the live card shows the heart rate and strap status', (
+  testWidgets('RecordingScreen_ShouldShowHeartRateAndStrap_WhenLive', (
     tester,
   ) async {
     final recorder = FakeRecorder();
@@ -472,7 +476,7 @@ void main() {
     );
   });
 
-  test('a snapshot reads the paired strap from the phone', () {
+  test('RecorderSnapshot_ShouldReadPairedStrap_WhenBuiltFromMap', () {
     final snapshot = RecorderSnapshot.fromMap({
       'state': 'recording',
       'elapsedS': 3,

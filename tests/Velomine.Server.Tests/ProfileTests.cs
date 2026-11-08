@@ -19,7 +19,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task NewProfile_HasNothingSet_AndWeeksStartOnMonday()
+    public async Task Profile_ShouldBeEmptyWithMondayWeeks_WhenTheAccountIsNew()
     {
         var (api, member) = await StartAsync();
         await using var _ = api;
@@ -30,7 +30,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ProfileCanBeChanged_AndCleared()
+    public async Task Profile_ShouldUpdateAndClear_WhenTheMemberChangesIt()
     {
         var (api, member) = await StartAsync();
         await using var _ = api;
@@ -49,7 +49,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task EmailNotifications_AreOnByDefault_CanBeSwitchedOff_AndAreKeptWhenLeftOut()
+    public async Task Profile_ShouldToggleEmailNotificationsAndKeepThem_WhenTheFieldIsLeftOut()
     {
         var (api, member) = await StartAsync();
         await using var _ = api;
@@ -73,7 +73,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     [InlineData("Ada", null, null, null, "Mars/Olympus", "monday")]
     [InlineData("Ada", null, null, null, null, "someday")]
     [InlineData("Ada", null, null, null, null, "1")]
-    public async Task InvalidProfilesAreRejected(string name, int? ftp, double? weight, int? maxHr, string? zone, string firstDay)
+    public async Task Profile_ShouldRejectTheUpdate_WhenTheValuesAreInvalid(string name, int? ftp, double? weight, int? maxHr, string? zone, string firstDay)
     {
         var (api, member) = await StartAsync();
         await using var _ = api;
@@ -84,7 +84,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ProfileNeedsSignIn()
+    public async Task Profile_ShouldBeUnauthorized_WhenNotSignedIn()
     {
         var (api, _) = await StartAsync();
         await using var __ = api;

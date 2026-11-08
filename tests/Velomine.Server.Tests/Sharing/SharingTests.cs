@@ -71,7 +71,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SharingStartsAtNone_AndNeedsAClub()
+    public async Task Sharing_ShouldRequireAClubAndStartAtNone_WhenFirstUsed()
     {
         await using var api = await StartAsync();
         var rider = await NewMemberAsync(api);
@@ -93,7 +93,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SharingRidesDoesNotLeakTraining_AndTheOtherWayRound()
+    public async Task Sharing_ShouldKeepRidesAndTrainingApart_WhenOnlyOneKindIsShared()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
@@ -133,7 +133,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheRosterKeepsEachAthletesShareKindsApart_AndLogsTheLook()
+    public async Task Sharing_ShouldKeepEachAthleteApartAndLogTheView_WhenReadingTheRoster()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
@@ -176,7 +176,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ACoachSeesSharedTrainingAndRides_ButNotTheRoute()
+    public async Task Sharing_ShouldShowSharedTrainingAndRidesButNoRoute_WhenACoachLooks()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
@@ -224,7 +224,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheRouteAppearsOnlyWhenRoutesAreShared()
+    public async Task Sharing_ShouldShowTheRoute_WhenRoutesAreShared()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
@@ -244,7 +244,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task OnlyCoachesOfThatClubMayLook()
+    public async Task Sharing_ShouldRefuseTheLook_WhenTheViewerIsNotACoachOfThatClub()
     {
         await using var api = await StartAsync();
         var ownerA = await NewMemberAsync(api);
@@ -270,7 +270,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RevokingALookAndLeavingTheClubTakeTheDataAway()
+    public async Task Sharing_ShouldWithdrawTheData_WhenTheLookIsRevokedOrTheClubIsLeft()
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);

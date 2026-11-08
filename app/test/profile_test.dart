@@ -22,7 +22,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the profile opens from the name in the title bar, filled in', (
+  testWidgets('ProfileScreen_ShouldShowFilledFields_WhenOpenedFromTitleBar', (
     tester,
   ) async {
     server.profiles['rider@example.com'] = {
@@ -47,7 +47,7 @@ void main() {
     expect(find.text('Sunday'), findsOneWidget);
   });
 
-  testWidgets('saving sends every field, empty boxes as not set', (
+  testWidgets('ProfileScreen_ShouldSendEveryField_WhenSomeAreEmpty', (
     tester,
   ) async {
     await openProfile(tester);
@@ -80,7 +80,9 @@ void main() {
     expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
   });
 
-  testWidgets('a value out of range is explained and not sent', (tester) async {
+  testWidgets('ProfileScreen_ShouldRejectOutOfRangeValue_WhenSaving', (
+    tester,
+  ) async {
     await openProfile(tester);
 
     await tester.enterText(find.byKey(const Key('profile-max-hr')), '300');
@@ -92,7 +94,7 @@ void main() {
   });
 
   testWidgets(
-    'the email switch is explained and off-limits without email on the server',
+    'ProfileScreen_ShouldDisableEmailSwitchAndExplain_WhenServerHasNoEmail',
     (tester) async {
       await openProfile(tester);
 
@@ -104,7 +106,7 @@ void main() {
     },
   );
 
-  testWidgets('with email on the server the switch is sent with the profile', (
+  testWidgets('ProfileScreen_ShouldSendEmailSwitch_WhenServerHasEmail', (
     tester,
   ) async {
     server.smtpConfigured = true;
@@ -125,7 +127,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the data export opens a download link in the browser', (
+  testWidgets('ProfileScreen_ShouldOpenDownloadLink_WhenExportingData', (
     tester,
   ) async {
     Uri? opened;
@@ -153,7 +155,9 @@ void main() {
       await tapVisible(tester, 'delete-account');
     }
 
-    testWidgets('asks for the password and says what is lost', (tester) async {
+    testWidgets('DeleteAccountDialog_ShouldAskPasswordAndWarn_WhenOpened', (
+      tester,
+    ) async {
       await openDelete(tester);
 
       expect(find.text('Delete your account?'), findsOneWidget);
@@ -161,7 +165,9 @@ void main() {
       expect(find.text('Your password'), findsOneWidget);
     });
 
-    testWidgets('a wrong password deletes nothing and says so', (tester) async {
+    testWidgets('DeleteAccountDialog_ShouldDeleteNothing_WhenPasswordIsWrong', (
+      tester,
+    ) async {
       await openDelete(tester);
 
       await tester.enterText(find.byKey(const Key('delete-confirm')), 'nope');
@@ -179,7 +185,9 @@ void main() {
       ); // still signed in
     });
 
-    testWidgets('cancelling deletes nothing', (tester) async {
+    testWidgets('DeleteAccountDialog_ShouldDeleteNothing_WhenCancelled', (
+      tester,
+    ) async {
       await openDelete(tester);
 
       await tester.tap(find.text('Cancel'));
@@ -192,7 +200,7 @@ void main() {
       );
     });
 
-    testWidgets('the right password deletes it and returns to sign-in', (
+    testWidgets('DeleteAccountDialog_ShouldDeleteAccount_WhenPasswordIsRight', (
       tester,
     ) async {
       await openDelete(tester);
@@ -209,7 +217,7 @@ void main() {
       expect(find.text('Sign in'), findsWidgets); // back at the sign-in screen
     });
 
-    testWidgets('an account without a password confirms with its email', (
+    testWidgets('DeleteAccountDialog_ShouldConfirmWithEmail_WhenNoPassword', (
       tester,
     ) async {
       server.accounts.clear();
@@ -235,7 +243,9 @@ void main() {
       expect(server.accounts, isNot(contains('sso@example.com')));
     });
 
-    testWidgets('the only admin is told to hand over first', (tester) async {
+    testWidgets('DeleteAccountDialog_ShouldRefuseDeletion_WhenOnlyAdmin', (
+      tester,
+    ) async {
       server.accounts.clear();
       server.signInBrowser(
         server.add('boss@example.com', roles: ['admin', 'member']),
@@ -257,7 +267,7 @@ void main() {
     });
   });
 
-  test('the fake server keeps profiles as JSON', () {
+  test('FakeServer_ShouldKeepNumbersAsIntegers_WhenDecodingProfileJson', () {
     // Guards the test helper: the app sends numbers, not strings.
     expect(jsonDecode('{"ftpW":265}')['ftpW'], isA<int>());
   });

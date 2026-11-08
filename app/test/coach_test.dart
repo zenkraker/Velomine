@@ -25,7 +25,7 @@ void main() {
     };
   });
 
-  testWidgets('a member chooses who sees what in the Club tab', (tester) async {
+  testWidgets('ClubScreen_ShouldSaveSharing_WhenChosen', (tester) async {
     final rider = server.add('rider@example.com');
     server.signInBrowser(rider);
     await startApp(tester, server.session(useCookies: true));
@@ -43,7 +43,9 @@ void main() {
     expect(server.sharingChoices['routes'], 'none');
   });
 
-  testWidgets('the roster shows only the kinds of data shared', (tester) async {
+  testWidgets('CoachAthletesScreen_ShouldShowOnlySharedData_WhenOpened', (
+    tester,
+  ) async {
     final owner = server.add(
       'owner@example.com',
       name: 'Owner Rina',
@@ -92,7 +94,7 @@ void main() {
     );
   });
 
-  testWidgets('a coach sees shared training and rides, and no route yet', (
+  testWidgets('CoachAthletesScreen_ShouldRespectSharedRoutes_WhenOpened', (
     tester,
   ) async {
     final owner = server.add(

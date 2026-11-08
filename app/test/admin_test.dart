@@ -32,7 +32,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('an admin sees the accounts waiting and approves one', (
+  testWidgets('AccountsTab_ShouldApproveWaitingAccount_WhenApproved', (
     tester,
   ) async {
     final waiting = server.add(
@@ -53,7 +53,7 @@ void main() {
     expect(find.byKey(Key('approve-${waiting.id}')), findsNothing);
   });
 
-  testWidgets('every account is listed, and your own has no actions', (
+  testWidgets('AccountsTab_ShouldListAccountsWithoutOwnActions_WhenOpened', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', name: 'Rider');
@@ -65,7 +65,7 @@ void main() {
     expect(find.byKey(Key('user-menu-${rider.id}')), findsOneWidget);
   });
 
-  testWidgets('roles are changed from a dialog, and member stays', (
+  testWidgets('AccountsTab_ShouldChangeRolesAndKeepMember_WhenSaved', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', name: 'Rider');
@@ -81,7 +81,7 @@ void main() {
     expect(find.text('Coach'), findsOneWidget);
   });
 
-  testWidgets('an account is locked and unlocked', (tester) async {
+  testWidgets('AccountsTab_ShouldLockAndUnlock_WhenUsed', (tester) async {
     final rider = server.add('rider@example.com', name: 'Rider');
     await openAdmin(tester);
 
@@ -95,7 +95,7 @@ void main() {
   });
 
   testWidgets(
-    'deleting an account asks first, and cancelling deletes nothing',
+    'AccountsTab_ShouldAskBeforeDeletingAndKeepAccount_WhenCancelled',
     (tester) async {
       final rider = server.add('rider@example.com', name: 'Rider');
       await openAdmin(tester);
@@ -115,7 +115,7 @@ void main() {
     },
   );
 
-  testWidgets('settings show what is in effect and are saved', (tester) async {
+  testWidgets('SettingsTab_ShouldSaveSettings_WhenSaved', (tester) async {
     await openAdmin(tester);
     await tester.tap(find.byKey(const Key('tab-settings')));
     await tester.pumpAndSettle();
@@ -142,7 +142,7 @@ void main() {
     expect(find.byKey(const Key('settings-saved')), findsOneWidget);
   });
 
-  testWidgets('email and single sign-on are shown read-only', (tester) async {
+  testWidgets('SettingsTab_ShouldShowSsoReadOnly_WhenOpened', (tester) async {
     server.smtpConfigured = true;
     await openAdmin(tester);
     await tester.tap(find.byKey(const Key('tab-settings')));
@@ -168,7 +168,7 @@ void main() {
     ); // tile address and credit only
   });
 
-  testWidgets('a test email goes to the admin, and the outcome is shown', (
+  testWidgets('SettingsTab_ShouldSendTestEmailAndShowOutcome_WhenTapped', (
     tester,
   ) async {
     server.smtpConfigured = true;
@@ -195,7 +195,7 @@ void main() {
     );
   });
 
-  testWidgets('without email set up there is no test button', (tester) async {
+  testWidgets('SettingsTab_ShouldHideTestEmail_WhenNoEmail', (tester) async {
     await openAdmin(tester);
     await tester.tap(find.byKey(const Key('tab-settings')));
     await tester.pumpAndSettle();
@@ -209,7 +209,7 @@ void main() {
     expect(find.text('Email (SMTP): off'), findsOneWidget);
   });
 
-  testWidgets('the overview shows server totals', (tester) async {
+  testWidgets('OverviewTab_ShouldShowTotals_WhenOpened', (tester) async {
     server.add('rider@example.com', approved: false);
     await openAdmin(tester);
     await tester.tap(find.byKey(const Key('tab-overview')));
@@ -223,7 +223,7 @@ void main() {
     expect(value('overview-version'), '0.1.0');
   });
 
-  testWidgets('a member has no admin screen', (tester) async {
+  testWidgets('AdminScreen_ShouldBeHidden_WhenNotAdmin', (tester) async {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 

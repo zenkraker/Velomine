@@ -32,7 +32,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task FirstBikeIsTheDefault_TheSecondIsNot_AndTheDefaultCanMove()
+    public async Task Bikes_ShouldDefaultTheFirstBikeAndMoveTheDefault_WhenBikesAreAdded()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -51,7 +51,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ArchivingTheDefaultClearsIt_AndAnArchivedBikeCannotBecomeDefault()
+    public async Task Bikes_ShouldClearTheDefaultAndRefuseArchiveAsDefault_WhenArchived()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -72,7 +72,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     [InlineData("Bike", "unicycle", 2105, 0)]
     [InlineData("Bike", "road", 500, 0)]
     [InlineData("Bike", "road", 2105, -1)]
-    public async Task InvalidBikesAreRejected(string name, string kind, int wheel, double initial)
+    public async Task Bikes_ShouldRejectTheBike_WhenItsFieldsAreInvalid(string name, string kind, int wheel, double initial)
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -83,7 +83,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task OthersCannotSeeOrChangeMyBike()
+    public async Task Bikes_ShouldBeNotFound_WhenBikeBelongsToAnotherMember()
     {
         await using var api = await StartAsync();
         var mine = await NewMemberAsync(api);
@@ -102,7 +102,7 @@ public sealed class BikesTests(PostgresFixture postgres)
         new() { Type = "chain", InstalledOn = new DateOnly(2026, 1, 1), ExpectedDistanceM = 4_000_000 };
 
     [Fact]
-    public async Task ComponentsCanBeAddedChangedRetiredAndRemoved()
+    public async Task BikeComponents_ShouldSupportTheFullLifecycle_WhenManagedByTheOwner()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -127,7 +127,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ComponentTypes_ListTheCatalogue()
+    public async Task BikeComponentTypes_ShouldListTheCatalogue_WhenRequested()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -139,7 +139,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ImportedRidesGetTheDefaultBike_RidesCountTowardsWear_AndDeletingTheBikeKeepsTheRide()
+    public async Task Bikes_ShouldAssignAndKeepRides_WhenRideIsImportedAndBikeDeleted()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -161,7 +161,7 @@ public sealed class BikesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RideBikeCanBeChanged_ButOnlyToMyOwnBike()
+    public async Task RideBike_ShouldRejectOtherMembersBike_WhenChangingTheRideBike()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);

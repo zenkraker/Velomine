@@ -33,7 +33,7 @@ public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IAsyncL
     }
 
     [Fact]
-    public async Task ColumnTypes_AreTheOnesTheArchitectureNeeds()
+    public async Task NpgsqlProvider_ShouldMapTheColumnTypes_WhenMigratingTheSchema()
     {
         string Column(string name) => $"select data_type || '/' || udt_name from information_schema.columns where table_schema = '{Schema}' and table_name = 'rides' and column_name = '{name}'";
 
@@ -44,7 +44,7 @@ public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IAsyncL
     }
 
     [Fact]
-    public async Task RoundTrip_KeepsInstantArrayAndBytes()
+    public async Task NpgsqlProvider_ShouldKeepInstantArrayAndBytes_WhenRoundTrippingARide()
     {
         var ride = new SpikeRide
         {
@@ -67,7 +67,7 @@ public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IAsyncL
     }
 
     [Fact]
-    public async Task NonUtcOffset_IsRejected_SoCodeMustStoreUtcAndKeepTheLocalOffsetSeparately()
+    public async Task NpgsqlProvider_ShouldRejectNonUtcOffsets_WhenSavingATimestamp()
     {
         await using var context = NewContext();
         context.Rides.Add(new SpikeRide
@@ -83,7 +83,7 @@ public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IAsyncL
     }
 
     [Fact]
-    public async Task ConcurrentEdits_SecondSaveIsRejected()
+    public async Task NpgsqlProvider_ShouldRejectTheSecondSave_WhenEditsAreConcurrent()
     {
         var id = Guid.NewGuid();
         await using (var seed = NewContext())
@@ -104,7 +104,7 @@ public sealed class NpgsqlProviderSpikeTests(PostgresFixture postgres) : IAsyncL
     }
 
     [Fact]
-    public async Task MigrationCanCreateIndexConcurrently()
+    public async Task NpgsqlProvider_ShouldCreateTheIndexConcurrently_WhenMigrating()
     {
         var valid = await Scalar($"select i.indisvalid from pg_index i join pg_class c on c.oid = i.indexrelid join pg_namespace n on n.oid = c.relnamespace where n.nspname = '{Schema}' and c.relname = 'ix_rides_start_time'");
 

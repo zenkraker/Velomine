@@ -17,14 +17,14 @@ void main() {
   void openLink(WidgetTester tester, String link) =>
       GoRouter.of(tester.element(find.byType(Scaffold).first)).go(link);
 
-  test('a PKCE pair follows RFC 7636 (its appendix B example)', () {
+  test('Pkce_ShouldMatchRfc7636AppendixB_WhenBuiltFromVerifier', () {
     final pkce = Pkce.fromVerifier(
       'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
     );
     expect(pkce.challenge, 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
   });
 
-  test('a fresh pair is 43 URL-safe characters and never repeats', () {
+  test('Pkce_ShouldGenerate43UrlSafeCharsThatNeverRepeat_WhenGenerating', () {
     final a = Pkce.generate();
     final b = Pkce.generate();
     expect(a.verifier, matches(RegExp(r'^[A-Za-z0-9_-]{43}$')));
@@ -32,14 +32,14 @@ void main() {
     expect(a.verifier, isNot(b.verifier));
   });
 
-  testWidgets('a phone offers single sign-on, and the web app does too', (
+  testWidgets('SsoApp_ShouldOfferSingleSignOn_WhenSignInScreenIsShown', (
     tester,
   ) async {
     await startApp(tester, server.session(useCookies: false));
     expect(find.byKey(const Key('sso')), findsOneWidget);
   });
 
-  testWidgets('the browser address carries the challenge, never the secret', (
+  testWidgets('SsoApp_ShouldPutChallengeNotSecretInUrl_WhenBuildingSsoUrl', (
     tester,
   ) async {
     final session = server.session(
@@ -57,7 +57,7 @@ void main() {
     );
   });
 
-  testWidgets('the link the browser hands back signs the member in', (
+  testWidgets('SsoApp_ShouldSignMemberIn_WhenBrowserHandsBackLink', (
     tester,
   ) async {
     final session = server.session(useCookies: false);
@@ -74,7 +74,7 @@ void main() {
     expect(server.requests, contains('POST /api/v1/accounts/sso/token'));
   });
 
-  testWidgets('a wrong or used code returns to sign-in with the reason', (
+  testWidgets('SsoApp_ShouldReturnToSignInWithReason_WhenCodeIsWrongOrUsed', (
     tester,
   ) async {
     final session = server.session(useCookies: false);
@@ -92,7 +92,7 @@ void main() {
     expect(session.me, isNull);
   });
 
-  testWidgets('a link with no sign-in started on this phone does not sign in', (
+  testWidgets('SsoApp_ShouldNotSignIn_WhenNoSignInWasStartedHere', (
     tester,
   ) async {
     final session = server.session(useCookies: false);
@@ -111,7 +111,7 @@ void main() {
   });
 
   testWidgets(
-    'the reason from the server is shown, such as waiting for approval',
+    'SsoApp_ShouldShowTheReasonFromTheServer_WhenCallbackReportsError',
     (tester) async {
       await startApp(tester, server.session(useCookies: false));
 

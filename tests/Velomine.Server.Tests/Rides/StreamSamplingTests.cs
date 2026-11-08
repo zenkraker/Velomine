@@ -20,7 +20,7 @@ public sealed class StreamSamplingTests
     };
 
     [Fact]
-    public void ASmallRide_IsReturnedAsIs()
+    public void StreamSampling_ShouldReturnTheSameRide_WhenItHasAtMostTheRequestedPoints()
     {
         var ride = Ride(100);
 
@@ -28,7 +28,7 @@ public sealed class StreamSamplingTests
     }
 
     [Fact]
-    public void ALongRide_IsAveragedDownToTheRequestedNumberOfPoints()
+    public void StreamSampling_ShouldAverageDownToTheRequestedPoints_WhenTheRideIsLonger()
     {
         var reduced = StreamSampling.Reduce(Ride(1000), 100);
 
@@ -41,7 +41,7 @@ public sealed class StreamSamplingTests
     }
 
     [Fact]
-    public void Distance_KeepsTheLastValueOfEachSlice_SoItStaysCumulative()
+    public void StreamSampling_ShouldKeepTheLastDistanceOfEachSlice_WhenReducing()
     {
         var reduced = StreamSampling.Reduce(Ride(1000), 100);
 
@@ -51,7 +51,7 @@ public sealed class StreamSamplingTests
     }
 
     [Fact]
-    public void ASignalThatIsMissingInASlice_IsNullThere_AndASignalThatIsMissingAlways_StaysNull()
+    public void StreamSampling_ShouldKeepMissingSignalsNull_WhenASliceHasNoValue()
     {
         var reduced = StreamSampling.Reduce(Ride(1000), 100);
 
@@ -62,7 +62,7 @@ public sealed class StreamSamplingTests
     }
 
     [Fact]
-    public void Positions_StayInOrder()
+    public void StreamSampling_ShouldKeepPositionsInOrder_WhenReducing()
     {
         var reduced = StreamSampling.Reduce(Ride(1000), 50);
 

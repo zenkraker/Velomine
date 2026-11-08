@@ -11,7 +11,7 @@ public sealed class RideFileParserTests
     // --- FIT
 
     [Fact]
-    public void Fit_ReadsTheSamples_TheDevice_AndTheLocalTimeOffset()
+    public void FitParser_ShouldReadSamplesDeviceAndOffset_WhenGivenAFitFile()
     {
         var rides = RideFileParser.Parse(Fit(new FitSession(Start, 120, NormalizedPower: 215)));
 
@@ -34,7 +34,7 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Fit_ReadsTimerPausesAndTheDevicesMovingTime()
+    public void FitParser_ShouldReadTimerPausesAndMovingTime_WhenTheFileHasThem()
     {
         var ride = Assert.Single(RideFileParser.Parse(Fit(new FitSession(
             Start,
@@ -50,7 +50,7 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Fit_WithTwoSessions_GivesTwoRides()
+    public void FitParser_ShouldReturnTwoRides_WhenTheFileHasTwoSessions()
     {
         var second = Start.AddHours(2);
 
@@ -65,11 +65,11 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Fit_OfARun_IsRefused() =>
+    public void FitParser_ShouldRefuseTheFile_WhenTheActivityIsARun() =>
         Assert.Equal("not_cycling", Code(() => RideFileParser.Parse(Fit(new FitSession(Start, 60, Sport.Running)))));
 
     [Fact]
-    public void Fit_ThatIsCutShort_IsReportedAsCorrupt()
+    public void FitParser_ShouldReportCorruption_WhenTheFileIsCutShort()
     {
         var file = Fit(new FitSession(Start, 120));
 
@@ -79,7 +79,7 @@ public sealed class RideFileParserTests
     // --- GPX
 
     [Fact]
-    public void Gpx_ReadsSensorValuesFromTheCommonExtensions()
+    public void GpxParser_ShouldReadSensorValues_WhenUsingTheCommonExtensions()
     {
         var gpx = Gpx(60, _ => "<gpxtpx:TrackPointExtension><gpxtpx:hr>150</gpxtpx:hr><gpxtpx:cad>88</gpxtpx:cad><gpxtpx:atemp>17</gpxtpx:atemp><gpxtpx:speed>7.5</gpxtpx:speed></gpxtpx:TrackPointExtension>");
 
@@ -97,7 +97,7 @@ public sealed class RideFileParserTests
     [InlineData("<power>240</power>")]
     [InlineData("<gpxtpx:TrackPointExtension><gpxtpx:power>240</gpxtpx:power></gpxtpx:TrackPointExtension>")]
     [InlineData("<watts>240</watts>")]
-    public void Gpx_ReadsPower_InEveryCommonSpelling(string extension)
+    public void GpxParser_ShouldReadPower_WhenWrittenInAnyCommonSpelling(string extension)
     {
         var ride = Assert.Single(RideFileParser.Parse(Bytes(Gpx(30, _ => extension))));
 
@@ -105,7 +105,7 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Gpx_WithTwoTracks_GivesTwoRides()
+    public void GpxParser_ShouldReturnTwoRides_WhenTheFileHasTwoTracks()
     {
         var one = Gpx(30);
         var two = Gpx(30, start: Start.AddHours(3));
@@ -115,13 +115,13 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Gpx_WithoutTimestamps_IsRefused() =>
+    public void GpxParser_ShouldRefuseTheFile_WhenItHasNoTimestamps() =>
         Assert.Equal("no_timestamps", Code(() => RideFileParser.Parse(Bytes(Gpx(30, withTime: false)))));
 
     // --- TCX
 
     [Fact]
-    public void Tcx_ReadsABikeActivity()
+    public void TcxParser_ShouldReadTheActivity_WhenItIsABikeRide()
     {
         var ride = Assert.Single(RideFileParser.Parse(Bytes(Tcx("Biking", 60))));
 
@@ -135,17 +135,17 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Tcx_OfARun_IsRefused() =>
+    public void TcxParser_ShouldRefuseTheFile_WhenTheActivityIsARun() =>
         Assert.Equal("not_cycling", Code(() => RideFileParser.Parse(Bytes(Tcx("Running", 60)))));
 
     // --- Recognising the format
 
     [Fact]
-    public void Gzip_IsUnzippedFirst() =>
+    public void RideFileParser_ShouldUnzipTheFile_WhenItIsGzipped() =>
         Assert.Single(RideFileParser.Parse(Gzip(Bytes(Gpx(30)))));
 
     [Fact]
-    public void Gzip_ThatIsDamaged_IsReported()
+    public void RideFileParser_ShouldReportAnError_WhenTheGzipIsDamaged()
     {
         var zipped = Gzip(Bytes(Gpx(300)));
 
@@ -154,15 +154,15 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
-    public void Text_ThatIsNotARideFile_IsRefused() =>
+    public void RideFileParser_ShouldRefuseTheFile_WhenTheTextIsNotARide() =>
         Assert.Equal("invalid_file", Code(() => RideFileParser.Parse(Bytes("this is just a note"))));
 
     [Fact]
-    public void Xml_OfAnotherKind_IsRefused() =>
+    public void RideFileParser_ShouldRefuseTheFile_WhenTheXmlIsAnotherKind() =>
         Assert.Equal("unsupported_format", Code(() => RideFileParser.Parse(Bytes("<recipe><step>stir</step></recipe>"))));
 
     [Fact]
-    public void Xml_WithADocumentTypeDefinition_IsRefused()
+    public void RideFileParser_ShouldRefuseTheFile_WhenTheXmlHasADocumentTypeDefinition()
     {
         const string hostile = """<?xml version="1.0"?><!DOCTYPE gpx [<!ENTITY x SYSTEM "file:///etc/passwd">]><gpx>&x;</gpx>""";
 

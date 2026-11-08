@@ -56,7 +56,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task OnlyAdminsCanManageAccounts()
+    public async Task AdminUsers_ShouldBeForbidden_WhenCallerIsNotAnAdmin()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -73,7 +73,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheListShowsEveryAccountWithItsRolesAndState()
+    public async Task AdminUsers_ShouldListEveryAccountWithRolesAndState_WhenCalledByAnAdmin()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -91,7 +91,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RolesCanBeChanged_MemberIsAlwaysKept_AndYouCannotDemoteYourself()
+    public async Task AdminUserRoles_ShouldKeepMemberAndRejectSelfDemotion_WhenChanged()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -117,7 +117,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ALockedAccountCannotSignIn_NorRenewItsSession_UntilUnlocked()
+    public async Task AdminUserLock_ShouldBlockSignInAndRenewal_WhenAccountIsLocked()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -139,7 +139,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task YouCannotLockOrDeleteYourself_AndUnknownAccountsAre404()
+    public async Task AdminUsers_ShouldRefuseSelfLockAndDelete_WhenAccountIsSelfOrUnknown()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -154,7 +154,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DeletingAnAccount_RemovesEverythingTheMemberOwned_AndTheirFiles()
+    public async Task AdminUsers_ShouldRemoveEverythingOwned_WhenAccountIsDeleted()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -181,7 +181,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task AFileTwoMembersUploaded_IsKeptUntilTheLastOneIsGone()
+    public async Task AdminUsers_ShouldKeepSharedFile_WhenOnlyOneOwnerIsDeleted()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);
@@ -200,7 +200,7 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TheOverviewCountsAccountsRidesAndStorage()
+    public async Task AdminOverview_ShouldCountAccountsRidesAndStorage_WhenRequested()
     {
         await using var api = await StartAsync();
         var admin = await AdminAsync(api);

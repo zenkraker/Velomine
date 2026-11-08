@@ -62,7 +62,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
         member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Rider", null, null, null, zone, firstDay), Ct);
 
     [Fact]
-    public async Task WeeklyTotals_AddUpEachWeek_OnTheMembersCalendar()
+    public async Task GetTotals_ShouldAddUpEachWeekOnTheMembersCalendar_WhenPeriodIsWeek()
     {
         await using var api = await StartAsync();
         var (member, id) = await NewMemberAsync(api);
@@ -85,7 +85,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SundayWeeks_AndTheMembersTimeZone_DecideWhichWeekARideIsIn()
+    public async Task GetTotals_ShouldUseTheMembersTimeZone_WhenDecidingWhichWeekARideIsIn()
     {
         await using var api = await StartAsync();
         var (member, id) = await NewMemberAsync(api);
@@ -102,7 +102,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task MonthlyAndYearlyTotals_DefaultToTwelvePeriods()
+    public async Task GetTotals_ShouldReturnTwelvePeriods_WhenCountIsNotGiven()
     {
         await using var api = await StartAsync();
         var (member, id) = await NewMemberAsync(api);
@@ -126,7 +126,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     [InlineData("period=fortnight")]
     [InlineData("period=week&count=0")]
     [InlineData("period=week&count=61")]
-    public async Task InvalidTotalsRequestsAreRejected(string query)
+    public async Task GetTotals_ShouldRejectTheRequest_WhenTheQueryIsInvalid(string query)
     {
         await using var api = await StartAsync();
         var (member, _) = await NewMemberAsync(api);
@@ -135,7 +135,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task OnlyMyOwnRidesCount()
+    public async Task GetTotals_ShouldCountOnlyMyRides_WhenOthersHaveRides()
     {
         await using var api = await StartAsync();
         var (member, _) = await NewMemberAsync(api);
@@ -147,7 +147,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Goals_ShowProgressForTheCurrentPeriod()
+    public async Task ListGoals_ShouldShowProgressForTheCurrentPeriod_WhenGoalsExist()
     {
         await using var api = await StartAsync();
         var (member, id) = await NewMemberAsync(api);
@@ -173,7 +173,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Goals_CanBeChangedAndDeleted_ButNotDoubled()
+    public async Task Goals_ShouldBeUpdatedAndDeletedButNotDoubled_WhenManagedByTheirOwner()
     {
         await using var api = await StartAsync();
         var (member, _) = await NewMemberAsync(api);
@@ -194,7 +194,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     [InlineData("week", "calories", 10)]
     [InlineData("week", "distance", 0)]
     [InlineData("week", "distance", 1e12)]
-    public async Task InvalidGoalsAreRejected(string period, string metric, double target)
+    public async Task CreateGoal_ShouldRejectTheGoal_WhenPeriodMetricOrTargetIsInvalid(string period, string metric, double target)
     {
         await using var api = await StartAsync();
         var (member, _) = await NewMemberAsync(api);
@@ -204,7 +204,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task OthersCannotSeeOrChangeMyGoals()
+    public async Task Goals_ShouldBeHiddenFromOtherMembers_WhenTheyBelongToSomeoneElse()
     {
         await using var api = await StartAsync();
         var (member, _) = await NewMemberAsync(api);
@@ -217,7 +217,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Training_AddsUpLoadAndBuildsFitnessAndForm()
+    public async Task GetTraining_ShouldAddUpLoadAndBuildFitnessAndForm_WhenRidesHaveTssAndTrimp()
     {
         await using var api = await StartAsync();
         var (member, id) = await NewMemberAsync(api);
@@ -242,7 +242,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Training_FillsLoadForRidesReadBeforeTheProfileHadFtp()
+    public async Task GetTraining_ShouldFillInLoad_WhenRidesWereReadBeforeFtpWasSet()
     {
         await using var api = await StartAsync();
         var (member, id) = await NewMemberAsync(api);
@@ -258,7 +258,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Training_RejectsARangeLongerThanTwoYears()
+    public async Task GetTraining_ShouldRejectTheRequest_WhenTheRangeIsLongerThanTwoYears()
     {
         await using var api = await StartAsync();
         var (member, _) = await NewMemberAsync(api);

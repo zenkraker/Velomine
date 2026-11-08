@@ -11,7 +11,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task NewAccount_CannotSignInUntilAnAdminApprovesIt()
+    public async Task Accounts_ShouldRefuseSignIn_WhenNewAccountIsNotYetApproved()
     {
         await using var api = await TestApi.StartAsync(postgres);
         var email = TestApi.NewEmail();
@@ -36,7 +36,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Admin_FromConfiguration_HasAdminAndMemberRoles()
+    public async Task Accounts_ShouldGiveAdminAndMemberRoles_WhenConfiguredAdminSignsIn()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
@@ -47,7 +47,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Register_WithAWeakPassword_IsRejected()
+    public async Task Accounts_ShouldRejectRegistration_WhenThePasswordIsWeak()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
@@ -57,7 +57,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Register_WithATakenEmail_IsRejected()
+    public async Task Accounts_ShouldRejectRegistration_WhenTheEmailIsAlreadyTaken()
     {
         await using var api = await TestApi.StartAsync(postgres);
         var email = TestApi.NewEmail();
@@ -69,7 +69,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Register_WhenSignUpIsOff_IsForbidden()
+    public async Task Accounts_ShouldForbidRegistration_WhenSignUpIsOff()
     {
         await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:SignUpEnabled", "false"));
 
@@ -79,7 +79,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Me_WithoutSigningIn_IsUnauthorized()
+    public async Task Accounts_ShouldRejectMe_WhenNotSignedIn()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
@@ -89,7 +89,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Member_CannotManageUsers()
+    public async Task Accounts_ShouldForbidUserManagement_WhenCallerIsAMember()
     {
         await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var email = TestApi.NewEmail();
@@ -102,7 +102,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task WrongPassword_IsUnauthorized_AndRepeatedFailuresLockTheAccount()
+    public async Task Accounts_ShouldLockTheAccount_WhenThePasswordIsWrongRepeatedly()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
@@ -114,7 +114,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RefreshToken_GivesNewTokens()
+    public async Task Accounts_ShouldReturnNewTokens_WhenTheRefreshTokenIsValid()
     {
         await using var api = await TestApi.StartAsync(postgres);
         using var login = JsonDocument.Parse(await (await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword)).Content.ReadAsStringAsync(Ct));
@@ -130,7 +130,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RefreshToken_Garbage_IsUnauthorized()
+    public async Task Accounts_ShouldRejectTheRefresh_WhenTheTokenIsGarbage()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
@@ -140,7 +140,7 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CookieSession_WorksForTheWebApp_AndLogoutEndsIt()
+    public async Task Accounts_ShouldKeepTheCookieSessionUntilLogout_WhenTheWebAppSignsIn()
     {
         await using var api = await TestApi.StartAsync(postgres);
         var web = api.CreateClient(handleCookies: true);

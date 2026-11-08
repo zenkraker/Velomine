@@ -15,7 +15,7 @@ class MemoryServerConfigStore implements ServerConfigStore {
 
 void main() {
   group('normalizeServerUrl', () {
-    test('keeps a plain server address and removes the trailing slash', () {
+    test('normalizeServerUrl_ShouldKeepAddressAndStripSlash_WhenPlainUrl', () {
       expect(
         normalizeServerUrl('https://velo.example'),
         'https://velo.example',
@@ -30,7 +30,7 @@ void main() {
       );
     });
 
-    test('accepts a pasted API address and a reverse-proxy path', () {
+    test('normalizeServerUrl_ShouldAcceptApiAndProxyPath_WhenPasted', () {
       expect(
         normalizeServerUrl('https://velo.example/api/v1'),
         'https://velo.example',
@@ -41,7 +41,7 @@ void main() {
       );
     });
 
-    test('rejects anything that is not an http or https server address', () {
+    test('normalizeServerUrl_ShouldRejectNonHttpAddresses_WhenGivenThem', () {
       for (final bad in [
         '',
         'velo.example',
@@ -58,7 +58,7 @@ void main() {
 
   group('ServerConfig', () {
     test(
-      'loads a saved address, saves a tidy one and clears it again',
+      'ServerConfig_ShouldLoadSaveAndClearAddress_WhenStoreHasValues',
       () async {
         final store = MemoryServerConfigStore('https://old.example/');
         final config = ServerConfig(store: store, web: false);
@@ -76,13 +76,13 @@ void main() {
       },
     );
 
-    test('has no address until one is chosen', () async {
+    test('ServerConfig_ShouldHaveNoAddress_WhenNoneIsSaved', () async {
       final config = ServerConfig(store: MemoryServerConfigStore(), web: false);
       await config.load();
       expect(config.baseUrl, isNull);
     });
 
-    test('the web app always uses its own origin', () async {
+    test('ServerConfig_ShouldUseOwnOrigin_WhenRunningAsWebApp', () async {
       final config = ServerConfig(
         store: MemoryServerConfigStore(),
         web: true,
