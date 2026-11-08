@@ -983,4 +983,157 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get trainingLoadHelp =>
       'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
+
+  @override
+  String get adminAccounts => 'Accounts';
+
+  @override
+  String get adminSettings => 'Settings';
+
+  @override
+  String get adminOverview => 'Overview';
+
+  @override
+  String deleteUserTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String deleteUserBody(String email) {
+    return 'This deletes the account of $email for good: their rides, bikes, goals and the ride files. It cannot be undone.';
+  }
+
+  @override
+  String get waitingForApproval => 'Waiting for approval';
+
+  @override
+  String get nonePending => 'No accounts are waiting for approval.';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String get locked => 'Locked';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get roleCoach => 'Coach';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String actionsFor(String name) {
+    return 'Actions for $name';
+  }
+
+  @override
+  String get changeRoles => 'Change roles';
+
+  @override
+  String get unlockAccount => 'Unlock account';
+
+  @override
+  String get lockAccount => 'Lock account';
+
+  @override
+  String get deleteAccountAction => 'Delete account';
+
+  @override
+  String rolesFor(String name) {
+    return 'Roles for $name';
+  }
+
+  @override
+  String get everyAccountMember => 'Every account is a member.';
+
+  @override
+  String get saved => 'Saved.';
+
+  @override
+  String get signUp => 'Sign-up';
+
+  @override
+  String get peopleCanCreate => 'People can create accounts';
+
+  @override
+  String get newAccountsApproval =>
+      'New accounts need an admin to approve them';
+
+  @override
+  String get mapBackground => 'Map background';
+
+  @override
+  String get tileAddress => 'Tile address';
+
+  @override
+  String get tileHelper =>
+      'Empty draws the route alone and contacts no map server. Read the provider\'s usage rules first.';
+
+  @override
+  String get creditShown => 'Credit shown on the map';
+
+  @override
+  String get envVariables => 'Set with environment variables';
+
+  @override
+  String get secretsHelp =>
+      'These hold passwords and secrets, so they are never stored in the database or changed from here. Edit the server\'s environment and restart it.';
+
+  @override
+  String get sendTestEmail => 'Send a test email to me';
+
+  @override
+  String get testEmailSent => 'Test email sent to your own address.';
+
+  @override
+  String get emailSmtp => 'Email (SMTP)';
+
+  @override
+  String smtpDetail(String host, int port, String security, String from) {
+    return '$host:$port · $security · from $from';
+  }
+
+  @override
+  String get smtpNotConfigured =>
+      'Not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From.';
+
+  @override
+  String get singleSignOn => 'Single sign-on';
+
+  @override
+  String ssoDetail(String name, String authority) {
+    return '$name · $authority';
+  }
+
+  @override
+  String get ssoNotConfigured =>
+      'Not set up. Set Velomine__Sso__Authority, ClientId and ClientSecret.';
+
+  @override
+  String statusOn(String title) {
+    return '$title: on';
+  }
+
+  @override
+  String statusOff(String title) {
+    return '$title: off';
+  }
+
+  @override
+  String get noOverview => 'No overview.';
+
+  @override
+  String get noSettings => 'No settings.';
+
+  @override
+  String get rideFilesOnDisk => 'Ride files on disk';
+
+  @override
+  String get serverVersion => 'Server version';
 }

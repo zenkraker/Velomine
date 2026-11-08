@@ -647,5 +647,117 @@
       }
     }
   },
-  "trainingLoadHelp": "Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue."
+  "trainingLoadHelp": "Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.",
+
+  "adminAccounts": "Accounts",
+  "adminSettings": "Settings",
+  "adminOverview": "Overview",
+  "deleteUserTitle": "Delete {name}?",
+  "@deleteUserTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteUserBody": "This deletes the account of {email} for good: their rides, bikes, goals and the ride files. It cannot be undone.",
+  "@deleteUserBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingForApproval": "Waiting for approval",
+  "nonePending": "No accounts are waiting for approval.",
+  "you": "You",
+  "locked": "Locked",
+  "roleMember": "Member",
+  "roleCoach": "Coach",
+  "roleAdmin": "Admin",
+  "approve": "Approve",
+  "actionsFor": "Actions for {name}",
+  "@actionsFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "changeRoles": "Change roles",
+  "unlockAccount": "Unlock account",
+  "lockAccount": "Lock account",
+  "deleteAccountAction": "Delete account",
+  "rolesFor": "Roles for {name}",
+  "@rolesFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "everyAccountMember": "Every account is a member.",
+  "saved": "Saved.",
+  "signUp": "Sign-up",
+  "peopleCanCreate": "People can create accounts",
+  "newAccountsApproval": "New accounts need an admin to approve them",
+  "mapBackground": "Map background",
+  "tileAddress": "Tile address",
+  "tileHelper": "Empty draws the route alone and contacts no map server. Read the provider's usage rules first.",
+  "creditShown": "Credit shown on the map",
+  "envVariables": "Set with environment variables",
+  "secretsHelp": "These hold passwords and secrets, so they are never stored in the database or changed from here. Edit the server's environment and restart it.",
+  "sendTestEmail": "Send a test email to me",
+  "testEmailSent": "Test email sent to your own address.",
+  "emailSmtp": "Email (SMTP)",
+  "smtpDetail": "{host}:{port} · {security} · from {from}",
+  "@smtpDetail": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      },
+      "port": {
+        "type": "int"
+      },
+      "security": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      }
+    }
+  },
+  "smtpNotConfigured": "Not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From.",
+  "singleSignOn": "Single sign-on",
+  "ssoDetail": "{name} · {authority}",
+  "@ssoDetail": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "authority": {
+        "type": "String"
+      }
+    }
+  },
+  "ssoNotConfigured": "Not set up. Set Velomine__Sso__Authority, ClientId and ClientSecret.",
+  "statusOn": "{title}: on",
+  "@statusOn": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "statusOff": "{title}: off",
+  "@statusOff": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "noOverview": "No overview.",
+  "noSettings": "No settings.",  "rideFilesOnDisk": "Ride files on disk",
+  "serverVersion": "Server version"
 }

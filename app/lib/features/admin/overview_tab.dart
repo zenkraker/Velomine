@@ -20,7 +20,7 @@ class OverviewTab extends StatelessWidget {
             ? const CircularProgressIndicator()
             : Text(
                 controller.error == null
-                    ? 'No overview.'
+                    ? context.l10n.noOverview
                     : failureText(context.l10n, controller.error!),
               ),
       );
@@ -32,6 +32,7 @@ class OverviewTab extends StatelessWidget {
         trailing: Text(value, style: Theme.of(context).textTheme.titleLarge),
       ),
     );
+    final l10n = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -40,20 +41,20 @@ class OverviewTab extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 640),
             child: Column(
               children: [
-                tile('overview-accounts', 'Accounts', '${o.accounts}'),
+                tile('overview-accounts', l10n.adminAccounts, '${o.accounts}'),
                 tile(
                   'overview-waiting',
-                  'Waiting for approval',
+                  l10n.waitingForApproval,
                   '${o.waitingForApproval}',
                 ),
-                tile('overview-locked', 'Locked', '${o.locked}'),
-                tile('overview-rides', 'Rides', '${o.rides}'),
+                tile('overview-locked', l10n.locked, '${o.locked}'),
+                tile('overview-rides', l10n.navRides, '${o.rides}'),
                 tile(
                   'overview-storage',
-                  'Ride files on disk',
+                  l10n.rideFilesOnDisk,
                   bytes(o.rideFilesBytes),
                 ),
-                tile('overview-version', 'Server version', o.version),
+                tile('overview-version', l10n.serverVersion, o.version),
               ],
             ),
           ),

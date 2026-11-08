@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n.dart';
 import 'accounts_tab.dart';
 import 'admin_controller.dart';
 import 'overview_tab.dart';
@@ -27,11 +28,20 @@ class _AdminScreenState extends State<AdminScreen> {
     length: 3,
     child: Column(
       children: [
-        const TabBar(
+        TabBar(
           tabs: [
-            Tab(key: Key('tab-accounts'), text: 'Accounts'),
-            Tab(key: Key('tab-settings'), text: 'Settings'),
-            Tab(key: Key('tab-overview'), text: 'Overview'),
+            Tab(
+              key: const Key('tab-accounts'),
+              text: context.l10n.adminAccounts,
+            ),
+            Tab(
+              key: const Key('tab-settings'),
+              text: context.l10n.adminSettings,
+            ),
+            Tab(
+              key: const Key('tab-overview'),
+              text: context.l10n.adminOverview,
+            ),
           ],
         ),
         Expanded(

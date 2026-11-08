@@ -1777,6 +1777,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.'**
   String get trainingLoadHelp;
+
+  /// No description provided for @adminAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get adminAccounts;
+
+  /// No description provided for @adminSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get adminSettings;
+
+  /// No description provided for @adminOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get adminOverview;
+
+  /// No description provided for @deleteUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteUserTitle(String name);
+
+  /// No description provided for @deleteUserBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes the account of {email} for good: their rides, bikes, goals and the ride files. It cannot be undone.'**
+  String deleteUserBody(String email);
+
+  /// No description provided for @waitingForApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get waitingForApproval;
+
+  /// No description provided for @nonePending.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts are waiting for approval.'**
+  String get nonePending;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get locked;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get roleMember;
+
+  /// No description provided for @roleCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Coach'**
+  String get roleCoach;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @actionsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions for {name}'**
+  String actionsFor(String name);
+
+  /// No description provided for @changeRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Change roles'**
+  String get changeRoles;
+
+  /// No description provided for @unlockAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock account'**
+  String get unlockAccount;
+
+  /// No description provided for @lockAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock account'**
+  String get lockAccount;
+
+  /// No description provided for @deleteAccountAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountAction;
+
+  /// No description provided for @rolesFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles for {name}'**
+  String rolesFor(String name);
+
+  /// No description provided for @everyAccountMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Every account is a member.'**
+  String get everyAccountMember;
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved.'**
+  String get saved;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-up'**
+  String get signUp;
+
+  /// No description provided for @peopleCanCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'People can create accounts'**
+  String get peopleCanCreate;
+
+  /// No description provided for @newAccountsApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'New accounts need an admin to approve them'**
+  String get newAccountsApproval;
+
+  /// No description provided for @mapBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Map background'**
+  String get mapBackground;
+
+  /// No description provided for @tileAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Tile address'**
+  String get tileAddress;
+
+  /// No description provided for @tileHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty draws the route alone and contacts no map server. Read the provider\'s usage rules first.'**
+  String get tileHelper;
+
+  /// No description provided for @creditShown.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit shown on the map'**
+  String get creditShown;
+
+  /// No description provided for @envVariables.
+  ///
+  /// In en, this message translates to:
+  /// **'Set with environment variables'**
+  String get envVariables;
+
+  /// No description provided for @secretsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These hold passwords and secrets, so they are never stored in the database or changed from here. Edit the server\'s environment and restart it.'**
+  String get secretsHelp;
+
+  /// No description provided for @sendTestEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a test email to me'**
+  String get sendTestEmail;
+
+  /// No description provided for @testEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Test email sent to your own address.'**
+  String get testEmailSent;
+
+  /// No description provided for @emailSmtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Email (SMTP)'**
+  String get emailSmtp;
+
+  /// No description provided for @smtpDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{host}:{port} · {security} · from {from}'**
+  String smtpDetail(String host, int port, String security, String from);
+
+  /// No description provided for @smtpNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From.'**
+  String get smtpNotConfigured;
+
+  /// No description provided for @singleSignOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on'**
+  String get singleSignOn;
+
+  /// No description provided for @ssoDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {authority}'**
+  String ssoDetail(String name, String authority);
+
+  /// No description provided for @ssoNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set up. Set Velomine__Sso__Authority, ClientId and ClientSecret.'**
+  String get ssoNotConfigured;
+
+  /// No description provided for @statusOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}: on'**
+  String statusOn(String title);
+
+  /// No description provided for @statusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}: off'**
+  String statusOff(String title);
+
+  /// No description provided for @noOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'No overview.'**
+  String get noOverview;
+
+  /// No description provided for @noSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'No settings.'**
+  String get noSettings;
+
+  /// No description provided for @rideFilesOnDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride files on disk'**
+  String get rideFilesOnDisk;
+
+  /// No description provided for @serverVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Server version'**
+  String get serverVersion;
 }
 
 class _AppLocalizationsDelegate

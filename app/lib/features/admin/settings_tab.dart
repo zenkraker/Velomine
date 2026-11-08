@@ -68,15 +68,14 @@ class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     final c = widget.controller;
+    final l10n = context.l10n;
     final s = c.settings;
     if (s == null) {
       return Center(
         child: c.loading
             ? const CircularProgressIndicator()
             : Text(
-                c.error == null
-                    ? 'No settings.'
-                    : failureText(context.l10n, c.error!),
+                c.error == null ? l10n.noSettings : failureText(l10n, c.error!),
               ),
       );
     }
@@ -90,11 +89,14 @@ class _SettingsTabState extends State<SettingsTab> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: 12,
               children: [
-                Text('Sign-up', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  l10n.signUp,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 SwitchListTile(
                   key: const Key('setting-signup'),
                   value: _signUp,
-                  title: const Text('People can create accounts'),
+                  title: Text(l10n.peopleCanCreate),
                   onChanged: (v) => setState(() {
                     _signUp = v;
                     _saved = false;
@@ -103,26 +105,24 @@ class _SettingsTabState extends State<SettingsTab> {
                 SwitchListTile(
                   key: const Key('setting-approval'),
                   value: _approval,
-                  title: const Text(
-                    'New accounts need an admin to approve them',
-                  ),
+                  title: Text(l10n.newAccountsApproval),
                   onChanged: (v) => setState(() {
                     _approval = v;
                     _saved = false;
                   }),
                 ),
                 Text(
-                  'Map background',
+                  l10n.mapBackground,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 TextField(
                   key: const Key('setting-tile'),
                   controller: _tile,
                   onChanged: (_) => setState(() => _saved = false),
-                  decoration: const InputDecoration(
-                    labelText: 'Tile address',
+                  decoration: InputDecoration(
+                    labelText: l10n.tileAddress,
                     hintText: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    helperText: 'Empty draws the route alone and contacts no map server. Read the provider\'s usage rules first.',
+                    helperText: l10n.tileHelper,
                     helperMaxLines: 2,
                   ),
                 ),
@@ -130,37 +130,35 @@ class _SettingsTabState extends State<SettingsTab> {
                   key: const Key('setting-credit'),
                   controller: _credit,
                   onChanged: (_) => setState(() => _saved = false),
-                  decoration: const InputDecoration(
-                    labelText: 'Credit shown on the map',
+                  decoration: InputDecoration(
+                    labelText: l10n.creditShown,
                     hintText: '© OpenStreetMap contributors',
                   ),
                 ),
                 if (c.error != null)
                   Text(
-                    failureText(context.l10n, c.error!),
+                    failureText(l10n, c.error!),
                     key: const Key('settings-error'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 if (_saved && c.error == null)
-                  const Text('Saved.', key: Key('settings-saved')),
+                  Text(l10n.saved, key: const Key('settings-saved')),
                 Align(
                   alignment: Alignment.centerRight,
                   child: FilledButton(
                     key: const Key('setting-save'),
                     onPressed: c.saving ? null : _save,
-                    child: const Text('Save'),
+                    child: Text(l10n.save),
                   ),
                 ),
                 const Divider(),
                 Text(
-                  'Set with environment variables',
+                  l10n.envVariables,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const Text(
-                  'These hold passwords and secrets, so they are never stored in the database or changed from here. Edit the server\'s environment and restart it.',
-                ),
+                Text(l10n.secretsHelp),
                 if (s.smtp.configured)
                   Align(
                     alignment: Alignment.centerLeft,
@@ -168,14 +166,14 @@ class _SettingsTabState extends State<SettingsTab> {
                       key: const Key('send-test-email'),
                       onPressed: c.sendTestEmail,
                       icon: const Icon(Icons.send),
-                      label: const Text('Send a test email to me'),
+                      label: Text(l10n.sendTestEmail),
                     ),
                   ),
                 if (c.testEmailSent || c.testEmailError != null)
                   Text(
                     c.testEmailError == null
-                        ? 'Test email sent to your own address.'
-                        : failureText(context.l10n, c.testEmailError!),
+                        ? l10n.testEmailSent
+                        : failureText(l10n, c.testEmailError!),
                     key: const Key('test-email-result'),
                     style: c.testEmailError != null
                         ? TextStyle(color: Theme.of(context).colorScheme.error)
@@ -184,20 +182,28 @@ class _SettingsTabState extends State<SettingsTab> {
                 _StatusCard(
                   key: const Key('smtp-status'),
                   icon: Icons.mail_outline,
-                  title: 'Email (SMTP)',
+                  title: l10n.emailSmtp,
                   on: s.smtp.configured,
                   detail: s.smtp.configured
-                      ? '${s.smtp.host}:${s.smtp.port} · ${s.smtp.security} · from ${s.smtp.from}'
-                      : 'Not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From.',
+                      ? l10n.smtpDetail(
+                          s.smtp.host ?? '',
+                          s.smtp.port ?? 0,
+                          s.smtp.security ?? '',
+                          s.smtp.from ?? '',
+                        )
+                      : l10n.smtpNotConfigured,
                 ),
                 _StatusCard(
                   key: const Key('sso-status'),
                   icon: Icons.login,
-                  title: 'Single sign-on',
+                  title: l10n.singleSignOn,
                   on: s.sso.enabled,
                   detail: s.sso.enabled
-                      ? '${s.sso.displayName ?? 'Single sign-on'} · ${s.sso.authority}'
-                      : 'Not set up. Set Velomine__Sso__Authority, ClientId and ClientSecret.',
+                      ? l10n.ssoDetail(
+                          s.sso.displayName ?? l10n.ssoGeneric,
+                          s.sso.authority ?? '',
+                        )
+                      : l10n.ssoNotConfigured,
                 ),
               ],
             ),
@@ -223,11 +229,14 @@ class _StatusCard extends StatelessWidget {
   final String detail;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: ListTile(
-      leading: Icon(icon),
-      title: Text('$title: ${on ? 'on' : 'off'}'),
-      subtitle: Text(detail),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Card(
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(on ? l10n.statusOn(title) : l10n.statusOff(title)),
+        subtitle: Text(detail),
+      ),
+    );
+  }
 }

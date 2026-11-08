@@ -987,4 +987,157 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get trainingLoadHelp =>
       'La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.';
+
+  @override
+  String get adminAccounts => 'Account';
+
+  @override
+  String get adminSettings => 'Impostazioni';
+
+  @override
+  String get adminOverview => 'Panoramica';
+
+  @override
+  String deleteUserTitle(String name) {
+    return 'Eliminare $name?';
+  }
+
+  @override
+  String deleteUserBody(String email) {
+    return 'L\'account di $email viene eliminato per sempre: uscite, bici, obiettivi e file delle uscite. Non si può annullare.';
+  }
+
+  @override
+  String get waitingForApproval => 'In attesa di approvazione';
+
+  @override
+  String get nonePending => 'Nessun account in attesa di approvazione.';
+
+  @override
+  String get you => 'Tu';
+
+  @override
+  String get locked => 'Bloccato';
+
+  @override
+  String get roleMember => 'Membro';
+
+  @override
+  String get roleCoach => 'Allenatore';
+
+  @override
+  String get roleAdmin => 'Amministratore';
+
+  @override
+  String get approve => 'Approva';
+
+  @override
+  String actionsFor(String name) {
+    return 'Azioni per $name';
+  }
+
+  @override
+  String get changeRoles => 'Cambia ruoli';
+
+  @override
+  String get unlockAccount => 'Sblocca account';
+
+  @override
+  String get lockAccount => 'Blocca account';
+
+  @override
+  String get deleteAccountAction => 'Elimina account';
+
+  @override
+  String rolesFor(String name) {
+    return 'Ruoli di $name';
+  }
+
+  @override
+  String get everyAccountMember => 'Ogni account è un membro.';
+
+  @override
+  String get saved => 'Salvato.';
+
+  @override
+  String get signUp => 'Registrazione';
+
+  @override
+  String get peopleCanCreate => 'Le persone possono creare account';
+
+  @override
+  String get newAccountsApproval =>
+      'I nuovi account devono essere approvati da un amministratore';
+
+  @override
+  String get mapBackground => 'Sfondo mappa';
+
+  @override
+  String get tileAddress => 'Indirizzo dei riquadri';
+
+  @override
+  String get tileHelper =>
+      'Vuoto disegna solo il percorso e non contatta nessun server di mappe. Leggi prima le regole d\'uso del fornitore.';
+
+  @override
+  String get creditShown => 'Credito mostrato sulla mappa';
+
+  @override
+  String get envVariables => 'Impostato con variabili d\'ambiente';
+
+  @override
+  String get secretsHelp =>
+      'Contengono password e segreti, quindi non vengono mai salvati nel database né modificati da qui. Modifica l\'ambiente del server e riavvialo.';
+
+  @override
+  String get sendTestEmail => 'Inviami un\'email di prova';
+
+  @override
+  String get testEmailSent => 'Email di prova inviata al tuo indirizzo.';
+
+  @override
+  String get emailSmtp => 'Email (SMTP)';
+
+  @override
+  String smtpDetail(String host, int port, String security, String from) {
+    return '$host:$port · $security · da $from';
+  }
+
+  @override
+  String get smtpNotConfigured =>
+      'Non impostato. Imposta Velomine__Smtp__Host e Velomine__Smtp__From.';
+
+  @override
+  String get singleSignOn => 'Accesso singolo';
+
+  @override
+  String ssoDetail(String name, String authority) {
+    return '$name · $authority';
+  }
+
+  @override
+  String get ssoNotConfigured =>
+      'Non impostato. Imposta Velomine__Sso__Authority, ClientId e ClientSecret.';
+
+  @override
+  String statusOn(String title) {
+    return '$title: attivo';
+  }
+
+  @override
+  String statusOff(String title) {
+    return '$title: disattivo';
+  }
+
+  @override
+  String get noOverview => 'Nessuna panoramica.';
+
+  @override
+  String get noSettings => 'Nessuna impostazione.';
+
+  @override
+  String get rideFilesOnDisk => 'File delle uscite su disco';
+
+  @override
+  String get serverVersion => 'Versione del server';
 }
