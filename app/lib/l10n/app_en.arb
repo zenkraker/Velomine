@@ -335,5 +335,185 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "addBike": "Add bike",
+  "noBikes": "No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.",
+  "defaultBike": "Default",
+  "archived": "Archived",
+  "bikeRides": "{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}",
+  "@bikeRides": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteBikeTitle": "Delete this bike?",
+  "deleteBikeBody": "The bike and its parts are removed. Your rides stay, but they will no longer say which bike you rode. To keep the history, archive the bike instead.",
+  "removePartTitle": "Remove {name} from the list?",
+  "@removePartTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removePartBody": "Its history is deleted. To keep it, use Replace, which retires the part but keeps its wear.",
+  "remove": "Remove",
+  "bikeNotFound": "This bike does not exist, or it is not yours.",
+  "wheelLabel": "wheel {mm} mm",
+  "@wheelLabel": {
+    "placeholders": {
+      "mm": {
+        "type": "int"
+      }
+    }
+  },
+  "statRides": "Rides",
+  "edit": "Edit",
+  "makeDefault": "Make default",
+  "archive": "Archive",
+  "restore": "Restore",
+  "parts": "Parts",
+  "addPartAction": "Add part",
+  "noParts": "No parts yet. Add the chain, tyres or brake pads to see how worn they are.",
+  "replacedParts": "Replaced parts",
+  "wearReplace": "Replace it",
+  "wearSoon": "Getting worn",
+  "wearReplaced": "Replaced",
+  "wearGood": "Good",
+  "wearDistance": "{used} of {expected} km",
+  "@wearDistance": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      }
+    }
+  },
+  "wearHours": "{used} of {expected} h",
+  "@wearHours": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      }
+    }
+  },
+  "wearMonths": "{used} of {expected} months",
+  "@wearMonths": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "int"
+      }
+    }
+  },
+  "wearNoLimit": "{distance} · {hours} h, no limit set",
+  "@wearNoLimit": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "wearPercent": "{percent}% worn",
+  "@wearPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "installedOn": "Installed {date}",
+  "@installedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "installedAndRemoved": "Installed {installed} · removed {removed}",
+  "@installedAndRemoved": {
+    "placeholders": {
+      "installed": {
+        "type": "String"
+      },
+      "removed": {
+        "type": "String"
+      }
+    }
+  },
+  "replace": "Replace",
+
+  "addBikeTitle": "Add a bike",
+  "editBikeTitle": "Edit bike",
+  "kind": "Kind",
+  "brand": "Brand",
+  "model": "Model",
+  "wheelCircumference": "Wheel circumference (mm)",
+  "wheelHelper": "Typical values below; measure one roll of your own wheel for the exact number.",
+  "initialDistance": "Distance before Velomine (km)",
+  "initialHelper": "For a bike you already rode. Leave empty for a new one.",
+  "purchaseDate": "Purchase date (optional)",
+  "boughtOn": "Bought {date}",
+  "@boughtOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "errorBikeName": "Give the bike a name.",
+  "errorWheelRange": "The wheel circumference is 1000 to 2600 mm.",
+  "errorInitialDistance": "Distance before Velomine must be 0 or more.",
+  "cancel": "Cancel",
+  "save": "Save",
+
+  "replacePartTitle": "Replace {name}",
+  "@replacePartTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editPartTitle": "Edit part",
+  "addPartTitle": "Add a part",
+  "partLabel": "Part",
+  "stillOnBike": "Still on the bike",
+  "removedOn": "Removed {date}",
+  "@removedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "putBackOnBike": "Put it back on the bike",
+  "partLimitsHelp": "Replace it when it reaches the first of these limits. Typical values are only a starting point; leave a field empty for no limit.",
+  "hours": "hours",
+  "months": "months",
+  "errorChoosePart": "Choose what kind of part it is.",
+  "errorLimits": "Limits must be numbers above 0, or empty.",
+  "errorRemovedBeforeInstalled": "It cannot be removed before it was installed.",
+
+  "bikeKindRoad": "Road",
+  "bikeKindGravel": "Gravel",
+  "bikeKindMountain": "Mountain",
+  "bikeKindEbike": "E-bike",
+  "bikeKindTimeTrial": "Time trial",
+  "bikeKindTrack": "Track",
+  "bikeKindCity": "City",
+  "bikeKindOther": "Other"
 }

@@ -1051,6 +1051,426 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'avg {average} · max {max}'**
   String chartAverageMax(String average, String max);
+
+  /// No description provided for @addBike.
+  ///
+  /// In en, this message translates to:
+  /// **'Add bike'**
+  String get addBike;
+
+  /// No description provided for @noBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.'**
+  String get noBikes;
+
+  /// No description provided for @defaultBike.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultBike;
+
+  /// No description provided for @archived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get archived;
+
+  /// No description provided for @bikeRides.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}'**
+  String bikeRides(int count);
+
+  /// No description provided for @deleteBikeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this bike?'**
+  String get deleteBikeTitle;
+
+  /// No description provided for @deleteBikeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The bike and its parts are removed. Your rides stay, but they will no longer say which bike you rode. To keep the history, archive the bike instead.'**
+  String get deleteBikeBody;
+
+  /// No description provided for @removePartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from the list?'**
+  String removePartTitle(String name);
+
+  /// No description provided for @removePartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its history is deleted. To keep it, use Replace, which retires the part but keeps its wear.'**
+  String get removePartBody;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @bikeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This bike does not exist, or it is not yours.'**
+  String get bikeNotFound;
+
+  /// No description provided for @wheelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'wheel {mm} mm'**
+  String wheelLabel(int mm);
+
+  /// No description provided for @statRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get statRides;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @makeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Make default'**
+  String get makeDefault;
+
+  /// No description provided for @archive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archive;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @parts.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts'**
+  String get parts;
+
+  /// No description provided for @addPartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add part'**
+  String get addPartAction;
+
+  /// No description provided for @noParts.
+  ///
+  /// In en, this message translates to:
+  /// **'No parts yet. Add the chain, tyres or brake pads to see how worn they are.'**
+  String get noParts;
+
+  /// No description provided for @replacedParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaced parts'**
+  String get replacedParts;
+
+  /// No description provided for @wearReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace it'**
+  String get wearReplace;
+
+  /// No description provided for @wearSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting worn'**
+  String get wearSoon;
+
+  /// No description provided for @wearReplaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaced'**
+  String get wearReplaced;
+
+  /// No description provided for @wearGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get wearGood;
+
+  /// No description provided for @wearDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {expected} km'**
+  String wearDistance(String used, String expected);
+
+  /// No description provided for @wearHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {expected} h'**
+  String wearHours(String used, String expected);
+
+  /// No description provided for @wearMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {expected} months'**
+  String wearMonths(String used, int expected);
+
+  /// No description provided for @wearNoLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} · {hours} h, no limit set'**
+  String wearNoLimit(String distance, String hours);
+
+  /// No description provided for @wearPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% worn'**
+  String wearPercent(int percent);
+
+  /// No description provided for @installedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {date}'**
+  String installedOn(String date);
+
+  /// No description provided for @installedAndRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {installed} · removed {removed}'**
+  String installedAndRemoved(String installed, String removed);
+
+  /// No description provided for @replace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replace;
+
+  /// No description provided for @addBikeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a bike'**
+  String get addBikeTitle;
+
+  /// No description provided for @editBikeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit bike'**
+  String get editBikeTitle;
+
+  /// No description provided for @kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get kind;
+
+  /// No description provided for @brand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get brand;
+
+  /// No description provided for @model.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get model;
+
+  /// No description provided for @wheelCircumference.
+  ///
+  /// In en, this message translates to:
+  /// **'Wheel circumference (mm)'**
+  String get wheelCircumference;
+
+  /// No description provided for @wheelHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical values below; measure one roll of your own wheel for the exact number.'**
+  String get wheelHelper;
+
+  /// No description provided for @initialDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance before Velomine (km)'**
+  String get initialDistance;
+
+  /// No description provided for @initialHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'For a bike you already rode. Leave empty for a new one.'**
+  String get initialHelper;
+
+  /// No description provided for @purchaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date (optional)'**
+  String get purchaseDate;
+
+  /// No description provided for @boughtOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought {date}'**
+  String boughtOn(String date);
+
+  /// No description provided for @errorBikeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the bike a name.'**
+  String get errorBikeName;
+
+  /// No description provided for @errorWheelRange.
+  ///
+  /// In en, this message translates to:
+  /// **'The wheel circumference is 1000 to 2600 mm.'**
+  String get errorWheelRange;
+
+  /// No description provided for @errorInitialDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance before Velomine must be 0 or more.'**
+  String get errorInitialDistance;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @replacePartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace {name}'**
+  String replacePartTitle(String name);
+
+  /// No description provided for @editPartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit part'**
+  String get editPartTitle;
+
+  /// No description provided for @addPartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a part'**
+  String get addPartTitle;
+
+  /// No description provided for @partLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Part'**
+  String get partLabel;
+
+  /// No description provided for @stillOnBike.
+  ///
+  /// In en, this message translates to:
+  /// **'Still on the bike'**
+  String get stillOnBike;
+
+  /// No description provided for @removedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {date}'**
+  String removedOn(String date);
+
+  /// No description provided for @putBackOnBike.
+  ///
+  /// In en, this message translates to:
+  /// **'Put it back on the bike'**
+  String get putBackOnBike;
+
+  /// No description provided for @partLimitsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace it when it reaches the first of these limits. Typical values are only a starting point; leave a field empty for no limit.'**
+  String get partLimitsHelp;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hours;
+
+  /// No description provided for @months.
+  ///
+  /// In en, this message translates to:
+  /// **'months'**
+  String get months;
+
+  /// No description provided for @errorChoosePart.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what kind of part it is.'**
+  String get errorChoosePart;
+
+  /// No description provided for @errorLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Limits must be numbers above 0, or empty.'**
+  String get errorLimits;
+
+  /// No description provided for @errorRemovedBeforeInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'It cannot be removed before it was installed.'**
+  String get errorRemovedBeforeInstalled;
+
+  /// No description provided for @bikeKindRoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Road'**
+  String get bikeKindRoad;
+
+  /// No description provided for @bikeKindGravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gravel'**
+  String get bikeKindGravel;
+
+  /// No description provided for @bikeKindMountain.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain'**
+  String get bikeKindMountain;
+
+  /// No description provided for @bikeKindEbike.
+  ///
+  /// In en, this message translates to:
+  /// **'E-bike'**
+  String get bikeKindEbike;
+
+  /// No description provided for @bikeKindTimeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Time trial'**
+  String get bikeKindTimeTrial;
+
+  /// No description provided for @bikeKindTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track'**
+  String get bikeKindTrack;
+
+  /// No description provided for @bikeKindCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get bikeKindCity;
+
+  /// No description provided for @bikeKindOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get bikeKindOther;
 }
 
 class _AppLocalizationsDelegate

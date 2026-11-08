@@ -1,15 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
-const bikeKinds = {
-  'road': 'Road',
-  'gravel': 'Gravel',
-  'mountain': 'Mountain',
-  'ebike': 'E-bike',
-  'timetrial': 'Time trial',
-  'track': 'Track',
-  'city': 'City',
-  'other': 'Other',
+import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
+
+const bikeKindIds = [
+  'road',
+  'gravel',
+  'mountain',
+  'ebike',
+  'timetrial',
+  'track',
+  'city',
+  'other',
+];
+
+/// The name of a kind of bike in the language on screen; an unknown kind is shown as the server sent it.
+String bikeKindName(AppLocalizations l10n, String kind) => switch (kind) {
+  'road' => l10n.bikeKindRoad,
+  'gravel' => l10n.bikeKindGravel,
+  'mountain' => l10n.bikeKindMountain,
+  'ebike' => l10n.bikeKindEbike,
+  'timetrial' => l10n.bikeKindTimeTrial,
+  'track' => l10n.bikeKindTrack,
+  'city' => l10n.bikeKindCity,
+  'other' => l10n.bikeKindOther,
+  _ => kind,
 };
 
 /// Rough rolling lengths for common wheel and tyre sizes. They vary with the tyre and the pressure:
@@ -26,6 +42,8 @@ String? _text(String value) => value.trim().isEmpty ? null : value.trim();
 
 double? _number(String value) =>
     double.tryParse(value.trim().replaceAll(',', '.'));
+
+enum _BikeProblem { name, wheelRange, initialDistance }
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -113,7 +131,7 @@ class _BikeFormState extends State<_BikeForm> {
   );
   late String _kind = widget.bike?.kind ?? 'road';
   late DateTime? _purchased = widget.bike?.purchasedOn;
-  String? _error;
+  _BikeProblem? _problem;
 
   @override
   void dispose() {
@@ -129,11 +147,11 @@ class _BikeFormState extends State<_BikeForm> {
     final wheel = int.tryParse(_wheel.text.trim());
     final initial = _initial.text.trim().isEmpty ? 0.0 : _number(_initial.text);
     if (_name.text.trim().isEmpty) {
-      setState(() => _error = 'Give the bike a name.');
+      setState(() => _problem = _BikeProblem.name);
     } else if (wheel == null || wheel < 1000 || wheel > 2600) {
-      setState(() => _error = 'The wheel circumference is 1000 to 2600 mm.');
+      setState(() => _problem = _BikeProblem.wheelRange);
     } else if (initial == null || initial < 0) {
-      setState(() => _error = 'Distance before Velomine must be 0 or more.');
+      setState(() => _problem = _BikeProblem.initialDistance);
     } else {
       Navigator.pop(
         context,
@@ -151,120 +169,132 @@ class _BikeFormState extends State<_BikeForm> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(widget.bike == null ? 'Add a bike' : 'Edit bike'),
-    content: SizedBox(
-      width: 420,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 12,
-          children: [
-            TextField(
-              key: const Key('bike-name'),
-              controller: _name,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            DropdownButtonFormField<String>(
-              key: const Key('bike-kind'),
-              initialValue: _kind,
-              decoration: const InputDecoration(labelText: 'Kind'),
-              items: [
-                for (final e in bikeKinds.entries)
-                  DropdownMenuItem(value: e.key, child: Text(e.value)),
-              ],
-              onChanged: (v) => setState(() => _kind = v ?? _kind),
-            ),
-            Row(
-              spacing: 12,
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('bike-brand'),
-                    controller: _brand,
-                    decoration: const InputDecoration(labelText: 'Brand'),
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final problem = switch (_problem) {
+      null => null,
+      _BikeProblem.name => l10n.errorBikeName,
+      _BikeProblem.wheelRange => l10n.errorWheelRange,
+      _BikeProblem.initialDistance => l10n.errorInitialDistance,
+    };
+    return AlertDialog(
+      title: Text(widget.bike == null ? l10n.addBikeTitle : l10n.editBikeTitle),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 12,
+            children: [
+              TextField(
+                key: const Key('bike-name'),
+                controller: _name,
+                decoration: InputDecoration(labelText: l10n.name),
+              ),
+              DropdownButtonFormField<String>(
+                key: const Key('bike-kind'),
+                initialValue: _kind,
+                decoration: InputDecoration(labelText: l10n.kind),
+                items: [
+                  for (final id in bikeKindIds)
+                    DropdownMenuItem(
+                      value: id,
+                      child: Text(bikeKindName(l10n, id)),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _kind = v ?? _kind),
+              ),
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('bike-brand'),
+                      controller: _brand,
+                      decoration: InputDecoration(labelText: l10n.brand),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: TextField(
-                    key: const Key('bike-model'),
-                    controller: _model,
-                    decoration: const InputDecoration(labelText: 'Model'),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('bike-model'),
+                      controller: _model,
+                      decoration: InputDecoration(labelText: l10n.model),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            TextField(
-              key: const Key('bike-wheel'),
-              controller: _wheel,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Wheel circumference (mm)',
-                helperText: 'Typical values below; measure one roll of your own wheel for the exact number.',
-                helperMaxLines: 2,
+                ],
               ),
-            ),
-            Wrap(
-              spacing: 8,
-              children: [
-                for (final e in wheelPresets.entries)
-                  ActionChip(
-                    label: Text('${e.key} · ${e.value}'),
-                    onPressed: () => setState(() => _wheel.text = '${e.value}'),
+              TextField(
+                key: const Key('bike-wheel'),
+                controller: _wheel,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.wheelCircumference,
+                  helperText: l10n.wheelHelper,
+                  helperMaxLines: 2,
+                ),
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final e in wheelPresets.entries)
+                    ActionChip(
+                      label: Text('${e.key} · ${e.value}'),
+                      onPressed: () =>
+                          setState(() => _wheel.text = '${e.value}'),
+                    ),
+                ],
+              ),
+              TextField(
+                key: const Key('bike-initial'),
+                controller: _initial,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: l10n.initialDistance,
+                  helperText: l10n.initialHelper,
+                  helperMaxLines: 2,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  key: const Key('bike-purchased'),
+                  icon: const Icon(Icons.event),
+                  label: Text(
+                    _purchased == null
+                        ? l10n.purchaseDate
+                        : l10n.boughtOn(isoDate(_purchased!)),
                   ),
-              ],
-            ),
-            TextField(
-              key: const Key('bike-initial'),
-              controller: _initial,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Distance before Velomine (km)',
-                helperText:
-                    'For a bike you already rode. Leave empty for a new one.',
-                helperMaxLines: 2,
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const Key('bike-purchased'),
-                icon: const Icon(Icons.event),
-                label: Text(
-                  _purchased == null
-                      ? 'Purchase date (optional)'
-                      : 'Bought ${isoDate(_purchased!)}',
+                  onPressed: () async {
+                    final d = await _pickDate(context, _purchased);
+                    if (d != null) setState(() => _purchased = dateOnly(d));
+                  },
                 ),
-                onPressed: () async {
-                  final d = await _pickDate(context, _purchased);
-                  if (d != null) setState(() => _purchased = dateOnly(d));
-                },
               ),
-            ),
-            if (_error != null)
-              Text(
-                _error!,
-                key: const Key('form-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-          ],
+              if (problem != null)
+                Text(
+                  problem,
+                  key: const Key('form-error'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+            ],
+          ),
         ),
       ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(
-        key: const Key('bike-save'),
-        onPressed: _submit,
-        child: const Text('Save'),
-      ),
-    ],
-  );
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('bike-save'),
+          onPressed: _submit,
+          child: Text(l10n.save),
+        ),
+      ],
+    );
+  }
 }
 
 class PartFormData {
@@ -349,6 +379,8 @@ String _fmt(num? v) => v == null
     ? ''
     : (v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1));
 
+enum _PartProblem { type, limits, removedBeforeInstalled }
+
 class _PartFormState extends State<_PartForm> {
   late final ComponentResponse? _from = widget.part ?? widget.replacing;
   late String? _type = _from?.type;
@@ -365,7 +397,7 @@ class _PartFormState extends State<_PartForm> {
   late final _months = TextEditingController(text: _fmt(_from?.expectedMonths));
   late DateTime _installed = widget.part?.installedOn ?? dateOnly(widget.today);
   late DateTime? _removed = widget.part?.removedOn;
-  String? _error;
+  _PartProblem? _problem;
 
   @override
   void dispose() {
@@ -401,11 +433,11 @@ class _PartFormState extends State<_PartForm> {
     bool bad(double? v, TextEditingController c) =>
         c.text.trim().isNotEmpty && (v == null || v <= 0);
     if (_type == null) {
-      setState(() => _error = 'Choose what kind of part it is.');
+      setState(() => _problem = _PartProblem.type);
     } else if (bad(km, _km) || bad(hours, _hours) || bad(months, _months)) {
-      setState(() => _error = 'Limits must be numbers above 0, or empty.');
+      setState(() => _problem = _PartProblem.limits);
     } else if (_removed != null && _removed!.isBefore(_installed)) {
-      setState(() => _error = 'It cannot be removed before it was installed.');
+      setState(() => _problem = _PartProblem.removedBeforeInstalled);
     } else {
       Navigator.pop(
         context,
@@ -425,11 +457,18 @@ class _PartFormState extends State<_PartForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final title = widget.replacing != null
-        ? 'Replace ${widget.replacing!.typeName.toLowerCase()}'
+        ? l10n.replacePartTitle(widget.replacing!.typeName.toLowerCase())
         : widget.part != null
-        ? 'Edit part'
-        : 'Add a part';
+        ? l10n.editPartTitle
+        : l10n.addPartTitle;
+    final problem = switch (_problem) {
+      null => null,
+      _PartProblem.type => l10n.errorChoosePart,
+      _PartProblem.limits => l10n.errorLimits,
+      _PartProblem.removedBeforeInstalled => l10n.errorRemovedBeforeInstalled,
+    };
     return AlertDialog(
       title: Text(title),
       content: SizedBox(
@@ -443,7 +482,7 @@ class _PartFormState extends State<_PartForm> {
                 key: const Key('part-type'),
                 initialValue: _type,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Part'),
+                decoration: InputDecoration(labelText: l10n.partLabel),
                 items: [
                   for (final t in widget.types)
                     DropdownMenuItem(
@@ -460,14 +499,14 @@ class _PartFormState extends State<_PartForm> {
                     child: TextField(
                       key: const Key('part-brand'),
                       controller: _brand,
-                      decoration: const InputDecoration(labelText: 'Brand'),
+                      decoration: InputDecoration(labelText: l10n.brand),
                     ),
                   ),
                   Expanded(
                     child: TextField(
                       key: const Key('part-model'),
                       controller: _model,
-                      decoration: const InputDecoration(labelText: 'Model'),
+                      decoration: InputDecoration(labelText: l10n.model),
                     ),
                   ),
                 ],
@@ -477,7 +516,7 @@ class _PartFormState extends State<_PartForm> {
                 child: TextButton.icon(
                   key: const Key('part-installed'),
                   icon: const Icon(Icons.event),
-                  label: Text('Installed ${isoDate(_installed)}'),
+                  label: Text(l10n.installedOn(isoDate(_installed))),
                   onPressed: () async {
                     final d = await _pickDate(context, _installed);
                     if (d != null) setState(() => _installed = dateOnly(d));
@@ -494,8 +533,8 @@ class _PartFormState extends State<_PartForm> {
                         icon: const Icon(Icons.event_busy),
                         label: Text(
                           _removed == null
-                              ? 'Still on the bike'
-                              : 'Removed ${isoDate(_removed!)}',
+                              ? l10n.stillOnBike
+                              : l10n.removedOn(isoDate(_removed!)),
                         ),
                         onPressed: () async {
                           final d = await _pickDate(context, _removed);
@@ -504,7 +543,7 @@ class _PartFormState extends State<_PartForm> {
                       ),
                       if (_removed != null)
                         IconButton(
-                          tooltip: 'Put it back on the bike',
+                          tooltip: l10n.putBackOnBike,
                           icon: const Icon(Icons.close),
                           onPressed: () => setState(() => _removed = null),
                         ),
@@ -512,7 +551,7 @@ class _PartFormState extends State<_PartForm> {
                   ),
                 ),
               Text(
-                'Replace it when it reaches the first of these limits. Typical values are only a starting point; leave a field empty for no limit.',
+                l10n.partLimitsHelp,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               Row(
@@ -535,7 +574,7 @@ class _PartFormState extends State<_PartForm> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(labelText: 'hours'),
+                      decoration: InputDecoration(labelText: l10n.hours),
                     ),
                   ),
                   Expanded(
@@ -543,14 +582,14 @@ class _PartFormState extends State<_PartForm> {
                       key: const Key('part-months'),
                       controller: _months,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'months'),
+                      decoration: InputDecoration(labelText: l10n.months),
                     ),
                   ),
                 ],
               ),
-              if (_error != null)
+              if (problem != null)
                 Text(
-                  _error!,
+                  problem,
                   key: const Key('form-error'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
@@ -561,12 +600,12 @@ class _PartFormState extends State<_PartForm> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           key: const Key('part-save'),
           onPressed: _submit,
-          child: const Text('Save'),
+          child: Text(l10n.save),
         ),
       ],
     );

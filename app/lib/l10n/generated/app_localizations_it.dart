@@ -548,4 +548,257 @@ class AppLocalizationsIt extends AppLocalizations {
   String chartAverageMax(String average, String max) {
     return 'media $average · max $max';
   }
+
+  @override
+  String get addBike => 'Aggiungi bici';
+
+  @override
+  String get noBikes =>
+      'Nessuna bici. Aggiungine una per tenere traccia dei chilometri e dell\'usura dei componenti. Le nuove uscite ricevono la bici predefinita.';
+
+  @override
+  String get defaultBike => 'Predefinita';
+
+  @override
+  String get archived => 'Archiviata';
+
+  @override
+  String bikeRides(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite',
+      one: '1 uscita',
+      zero: 'Nessuna uscita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteBikeTitle => 'Eliminare questa bici?';
+
+  @override
+  String get deleteBikeBody =>
+      'La bici e i suoi componenti vengono rimossi. Le uscite restano, ma non indicheranno più quale bici hai usato. Per conservare la storia, archivia la bici.';
+
+  @override
+  String removePartTitle(String name) {
+    return 'Rimuovere $name dalla lista?';
+  }
+
+  @override
+  String get removePartBody =>
+      'La sua storia viene eliminata. Per conservarla, usa Sostituisci: ritira il componente ma mantiene l\'usura.';
+
+  @override
+  String get remove => 'Rimuovi';
+
+  @override
+  String get bikeNotFound => 'Questa bici non esiste, oppure non è tua.';
+
+  @override
+  String wheelLabel(int mm) {
+    return 'ruota $mm mm';
+  }
+
+  @override
+  String get statRides => 'Uscite';
+
+  @override
+  String get edit => 'Modifica';
+
+  @override
+  String get makeDefault => 'Imposta predefinita';
+
+  @override
+  String get archive => 'Archivia';
+
+  @override
+  String get restore => 'Ripristina';
+
+  @override
+  String get parts => 'Componenti';
+
+  @override
+  String get addPartAction => 'Aggiungi componente';
+
+  @override
+  String get noParts =>
+      'Nessun componente. Aggiungi catena, copertoni o pastiglie dei freni per vedere quanto sono usurati.';
+
+  @override
+  String get replacedParts => 'Componenti sostituiti';
+
+  @override
+  String get wearReplace => 'Sostituiscilo';
+
+  @override
+  String get wearSoon => 'Si sta usurando';
+
+  @override
+  String get wearReplaced => 'Sostituito';
+
+  @override
+  String get wearGood => 'Buono';
+
+  @override
+  String wearDistance(String used, String expected) {
+    return '$used di $expected km';
+  }
+
+  @override
+  String wearHours(String used, String expected) {
+    return '$used di $expected h';
+  }
+
+  @override
+  String wearMonths(String used, int expected) {
+    return '$used di $expected mesi';
+  }
+
+  @override
+  String wearNoLimit(String distance, String hours) {
+    return '$distance · $hours h, nessun limite';
+  }
+
+  @override
+  String wearPercent(int percent) {
+    return '$percent% usurato';
+  }
+
+  @override
+  String installedOn(String date) {
+    return 'Installato il $date';
+  }
+
+  @override
+  String installedAndRemoved(String installed, String removed) {
+    return 'Installato il $installed · rimosso il $removed';
+  }
+
+  @override
+  String get replace => 'Sostituisci';
+
+  @override
+  String get addBikeTitle => 'Aggiungi una bici';
+
+  @override
+  String get editBikeTitle => 'Modifica bici';
+
+  @override
+  String get kind => 'Tipo';
+
+  @override
+  String get brand => 'Marca';
+
+  @override
+  String get model => 'Modello';
+
+  @override
+  String get wheelCircumference => 'Circonferenza ruota (mm)';
+
+  @override
+  String get wheelHelper =>
+      'Valori tipici qui sotto; misura un giro della tua ruota per il numero esatto.';
+
+  @override
+  String get initialDistance => 'Distanza prima di Velomine (km)';
+
+  @override
+  String get initialHelper =>
+      'Per una bici che hai già usato. Lascia vuoto per una nuova.';
+
+  @override
+  String get purchaseDate => 'Data di acquisto (facoltativa)';
+
+  @override
+  String boughtOn(String date) {
+    return 'Acquistata il $date';
+  }
+
+  @override
+  String get errorBikeName => 'Dai un nome alla bici.';
+
+  @override
+  String get errorWheelRange => 'La circonferenza ruota è tra 1000 e 2600 mm.';
+
+  @override
+  String get errorInitialDistance =>
+      'La distanza prima di Velomine deve essere 0 o più.';
+
+  @override
+  String get cancel => 'Annulla';
+
+  @override
+  String get save => 'Salva';
+
+  @override
+  String replacePartTitle(String name) {
+    return 'Sostituisci $name';
+  }
+
+  @override
+  String get editPartTitle => 'Modifica componente';
+
+  @override
+  String get addPartTitle => 'Aggiungi un componente';
+
+  @override
+  String get partLabel => 'Componente';
+
+  @override
+  String get stillOnBike => 'Ancora sulla bici';
+
+  @override
+  String removedOn(String date) {
+    return 'Rimosso il $date';
+  }
+
+  @override
+  String get putBackOnBike => 'Rimettilo sulla bici';
+
+  @override
+  String get partLimitsHelp =>
+      'Sostituiscilo quando raggiunge il primo di questi limiti. I valori tipici sono solo un punto di partenza; lascia un campo vuoto per nessun limite.';
+
+  @override
+  String get hours => 'ore';
+
+  @override
+  String get months => 'mesi';
+
+  @override
+  String get errorChoosePart => 'Scegli che tipo di componente è.';
+
+  @override
+  String get errorLimits =>
+      'I limiti devono essere numeri maggiori di 0, oppure vuoti.';
+
+  @override
+  String get errorRemovedBeforeInstalled =>
+      'Non può essere rimosso prima di essere installato.';
+
+  @override
+  String get bikeKindRoad => 'Strada';
+
+  @override
+  String get bikeKindGravel => 'Gravel';
+
+  @override
+  String get bikeKindMountain => 'Mountain bike';
+
+  @override
+  String get bikeKindEbike => 'E-bike';
+
+  @override
+  String get bikeKindTimeTrial => 'Cronometro';
+
+  @override
+  String get bikeKindTrack => 'Pista';
+
+  @override
+  String get bikeKindCity => 'Città';
+
+  @override
+  String get bikeKindOther => 'Altro';
 }

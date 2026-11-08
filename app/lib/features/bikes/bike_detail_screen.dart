@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'bike_forms.dart';
 import 'bikes_controller.dart';
 
@@ -40,22 +42,21 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this bike?'),
-        content: const Text(
-          'The bike and its parts are removed. Your rides stay, but they will no longer say which bike you rode. To keep the history, archive the bike instead.',
-        ),
+        title: Text(l10n.deleteBikeTitle),
+        content: Text(l10n.deleteBikeBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep it'),
+            child: Text(l10n.keepIt),
           ),
           FilledButton(
             key: const Key('confirm-delete-bike'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -89,22 +90,21 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
   }
 
   Future<void> _removePart(ComponentResponse part) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Remove ${part.typeName.toLowerCase()} from the list?'),
-        content: const Text(
-          'Its history is deleted. To keep it, use Replace, which retires the part but keeps its wear.',
-        ),
+        title: Text(l10n.removePartTitle(part.typeName.toLowerCase())),
+        content: Text(l10n.removePartBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep it'),
+            child: Text(l10n.keepIt),
           ),
           FilledButton(
             key: const Key('confirm-remove-part'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
+            child: Text(l10n.remove),
           ),
         ],
       ),
@@ -131,7 +131,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
                     key: const Key('back'),
                     onPressed: widget.onBack,
                     icon: const Icon(Icons.arrow_back),
-                    label: const Text('Bikes'),
+                    label: Text(context.l10n.navBikes),
                   ),
                 ),
                 ..._body(context),
@@ -145,11 +145,12 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
 
   List<Widget> _body(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final errorStyle = TextStyle(color: Theme.of(context).colorScheme.error);
     if (c.notFound) {
       return [
         Text(
-          'This bike does not exist, or it is not yours.',
+          l10n.bikeNotFound,
           key: const Key('not-found'),
           style: text.titleMedium,
         ),
@@ -180,24 +181,24 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         spacing: 8,
         children: [
           Flexible(child: Text(bike.name, style: text.headlineSmall)),
-          if (bike.isDefault) const Chip(label: Text('Default')),
-          if (!bike.isActive) const Chip(label: Text('Archived')),
+          if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
+          if (!bike.isActive) Chip(label: Text(l10n.archived)),
         ],
       ),
       Text(
         [
-          bikeKinds[bike.kind] ?? bike.kind,
+          bikeKindName(l10n, bike.kind),
           if (make.isNotEmpty) make,
-          'wheel ${bike.wheelCircumferenceMm} mm',
+          l10n.wheelLabel(bike.wheelCircumferenceMm),
         ].join(' · '),
       ),
       Wrap(
         spacing: 24,
         runSpacing: 8,
         children: [
-          _Stat('Distance', km(bike.distanceM)),
-          _Stat('Rides', '${bike.rideCount}'),
-          _Stat('Moving time', duration(bike.movingS)),
+          _Stat(l10n.statDistance, km(bike.distanceM)),
+          _Stat(l10n.statRides, '${bike.rideCount}'),
+          _Stat(l10n.statMovingTime, duration(bike.movingS)),
         ],
       ),
       Wrap(
@@ -208,14 +209,14 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
             key: const Key('edit-bike'),
             onPressed: _edit,
             icon: const Icon(Icons.edit),
-            label: const Text('Edit'),
+            label: Text(l10n.edit),
           ),
           if (!bike.isDefault && bike.isActive)
             OutlinedButton.icon(
               key: const Key('make-default'),
               onPressed: c.makeDefault,
               icon: const Icon(Icons.star_outline),
-              label: const Text('Make default'),
+              label: Text(l10n.makeDefault),
             ),
           OutlinedButton.icon(
             key: const Key('toggle-archive'),
@@ -223,13 +224,13 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
             icon: Icon(
               bike.isActive ? Icons.archive_outlined : Icons.unarchive_outlined,
             ),
-            label: Text(bike.isActive ? 'Archive' : 'Restore'),
+            label: Text(bike.isActive ? l10n.archive : l10n.restore),
           ),
           TextButton.icon(
             key: const Key('delete-bike'),
             onPressed: _confirmDelete,
             icon: const Icon(Icons.delete_outline),
-            label: const Text('Delete'),
+            label: Text(l10n.delete),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
@@ -244,21 +245,17 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         ),
       Row(
         children: [
-          Text('Parts', style: text.titleLarge),
+          Text(l10n.parts, style: text.titleLarge),
           const Spacer(),
           FilledButton.icon(
             key: const Key('add-part'),
             onPressed: _addPart,
             icon: const Icon(Icons.add),
-            label: const Text('Add part'),
+            label: Text(l10n.addPartAction),
           ),
         ],
       ),
-      if (current.isEmpty)
-        const Text(
-          'No parts yet. Add the chain, tyres or brake pads to see how worn they are.',
-          key: Key('no-parts'),
-        ),
+      if (current.isEmpty) Text(l10n.noParts, key: const Key('no-parts')),
       for (final part in current)
         _PartCard(
           part: part,
@@ -267,7 +264,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
           onRemove: () => _removePart(part),
         ),
       if (retired.isNotEmpty) ...[
-        Text('Replaced parts', style: text.titleMedium),
+        Text(l10n.replacedParts, style: text.titleMedium),
         for (final part in retired)
           _PartCard(
             part: part,
@@ -302,25 +299,34 @@ Color wearColor(BuildContext context, String status) => switch (status) {
   _ => VelomineColors.of(context).wearOk,
 };
 
-String wearLabel(String status) => switch (status) {
-  'worn' => 'Replace it',
-  'soon' => 'Getting worn',
-  'retired' => 'Replaced',
-  _ => 'Good',
+String wearLabel(AppLocalizations l10n, String status) => switch (status) {
+  'worn' => l10n.wearReplace,
+  'soon' => l10n.wearSoon,
+  'retired' => l10n.wearReplaced,
+  _ => l10n.wearGood,
 };
 
 /// "820 of 4000 km · 31 of 100 h · 5.2 of 12 months", only the limits the part has.
-String wearText(ComponentResponse p) => [
+String wearText(AppLocalizations l10n, ComponentResponse p) => [
   if (p.expectedDistanceM != null)
-    '${(p.usedDistanceM / 1000).toStringAsFixed(0)} of ${(p.expectedDistanceM! / 1000).toStringAsFixed(0)} km',
+    l10n.wearDistance(
+      (p.usedDistanceM / 1000).toStringAsFixed(0),
+      (p.expectedDistanceM! / 1000).toStringAsFixed(0),
+    ),
   if (p.expectedHours != null)
-    '${p.usedHours.toStringAsFixed(0)} of ${p.expectedHours!.toStringAsFixed(0)} h',
+    l10n.wearHours(
+      p.usedHours.toStringAsFixed(0),
+      p.expectedHours!.toStringAsFixed(0),
+    ),
   if (p.expectedMonths != null)
-    '${p.usedMonths.toStringAsFixed(1)} of ${p.expectedMonths} months',
+    l10n.wearMonths(
+      NumberFormat('0.0').format(p.usedMonths),
+      p.expectedMonths!,
+    ),
   if (p.expectedDistanceM == null &&
       p.expectedHours == null &&
       p.expectedMonths == null)
-    '${km(p.usedDistanceM)} · ${p.usedHours.toStringAsFixed(0)} h, no limit set',
+    l10n.wearNoLimit(km(p.usedDistanceM), p.usedHours.toStringAsFixed(0)),
 ].join(' · ');
 
 class _PartCard extends StatelessWidget {
@@ -339,6 +345,7 @@ class _PartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final color = wearColor(context, part.status);
     final make = [part.brand, part.model].whereType<String>().join(' ');
     return Card(
@@ -358,14 +365,14 @@ class _PartCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  wearLabel(part.status),
+                  wearLabel(l10n, part.status),
                   style: TextStyle(color: color, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
             if (part.wearPercent != null)
               Semantics(
-                label: '${part.wearPercent}% worn',
+                label: l10n.wearPercent(part.wearPercent!),
                 child: LinearProgressIndicator(
                   key: Key('wear-${part.id}'),
                   value: (part.wearPercent! / 100).clamp(0.0, 1.0),
@@ -374,11 +381,14 @@ class _PartCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-            Text(wearText(part), key: Key('wear-text-${part.id}')),
+            Text(wearText(l10n, part), key: Key('wear-text-${part.id}')),
             Text(
               part.removedOn == null
-                  ? 'Installed ${isoDate(part.installedOn)}'
-                  : 'Installed ${isoDate(part.installedOn)} · removed ${isoDate(part.removedOn!)}',
+                  ? l10n.installedOn(isoDate(part.installedOn))
+                  : l10n.installedAndRemoved(
+                      isoDate(part.installedOn),
+                      isoDate(part.removedOn!),
+                    ),
               style: text.bodySmall,
             ),
             Wrap(
@@ -387,18 +397,18 @@ class _PartCard extends StatelessWidget {
                 TextButton(
                   key: Key('edit-${part.id}'),
                   onPressed: onEdit,
-                  child: const Text('Edit'),
+                  child: Text(l10n.edit),
                 ),
                 if (onReplace != null)
                   TextButton(
                     key: Key('replace-${part.id}'),
                     onPressed: onReplace,
-                    child: const Text('Replace'),
+                    child: Text(l10n.replace),
                   ),
                 TextButton(
                   key: Key('remove-${part.id}'),
                   onPressed: onRemove,
-                  child: const Text('Remove'),
+                  child: Text(l10n.remove),
                 ),
               ],
             ),

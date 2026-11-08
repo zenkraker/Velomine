@@ -46,7 +46,7 @@ class _BikesScreenState extends State<BikesScreen> {
           key: const Key('add-bike'),
           onPressed: _add,
           icon: const Icon(Icons.add),
-          label: const Text('Add bike'),
+          label: Text(context.l10n.addBike),
         ),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -59,7 +59,7 @@ class _BikesScreenState extends State<BikesScreen> {
                   spacing: 12,
                   children: [
                     Text(
-                      'Bikes',
+                      context.l10n.navBikes,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     if (c.error != null)
@@ -73,10 +73,7 @@ class _BikesScreenState extends State<BikesScreen> {
                     if (c.loading && c.bikes.isEmpty)
                       const Center(child: CircularProgressIndicator())
                     else if (c.bikes.isEmpty && c.error == null)
-                      const Text(
-                        'No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.',
-                        key: Key('no-bikes'),
-                      ),
+                      Text(context.l10n.noBikes, key: const Key('no-bikes')),
                     for (final bike in c.bikes)
                       _BikeCard(bike: bike, onOpen: widget.onOpen),
                   ],
@@ -99,6 +96,7 @@ class _BikeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final make = [bike.brand, bike.model].whereType<String>().join(' ');
     return Card(
       key: Key('bike-${bike.id}'),
@@ -112,15 +110,15 @@ class _BikeCard extends StatelessWidget {
           spacing: 8,
           children: [
             Flexible(child: Text(bike.name, style: text.titleMedium)),
-            if (bike.isDefault) const Chip(label: Text('Default')),
-            if (!bike.isActive) const Chip(label: Text('Archived')),
+            if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
+            if (!bike.isActive) Chip(label: Text(l10n.archived)),
           ],
         ),
         subtitle: Text(
           [
-            bikeKinds[bike.kind] ?? bike.kind,
+            bikeKindName(l10n, bike.kind),
             if (make.isNotEmpty) make,
-            '${km(bike.distanceM)} · ${bike.rideCount} rides · ${duration(bike.movingS)}',
+            '${km(bike.distanceM)} · ${l10n.bikeRides(bike.rideCount)} · ${duration(bike.movingS)}',
           ].join(' · '),
         ),
         trailing: const Icon(Icons.chevron_right),
