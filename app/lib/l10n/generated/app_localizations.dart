@@ -680,6 +680,282 @@ abstract class AppLocalizations {
   /// **'mark them read'**
   String get actionMarkAllRead;
 
+  /// No description provided for @actionLoadClub.
+  ///
+  /// In en, this message translates to:
+  /// **'load your club'**
+  String get actionLoadClub;
+
+  /// No description provided for @actionJoinClub.
+  ///
+  /// In en, this message translates to:
+  /// **'join the club'**
+  String get actionJoinClub;
+
+  /// No description provided for @actionLeaveClub.
+  ///
+  /// In en, this message translates to:
+  /// **'leave the club'**
+  String get actionLeaveClub;
+
+  /// No description provided for @actionRotateJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'make a new join code'**
+  String get actionRotateJoinCode;
+
+  /// No description provided for @actionChangeClubRole.
+  ///
+  /// In en, this message translates to:
+  /// **'change the member\'s role'**
+  String get actionChangeClubRole;
+
+  /// No description provided for @actionLoadAdminClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'load the clubs'**
+  String get actionLoadAdminClubs;
+
+  /// No description provided for @actionCreateClub.
+  ///
+  /// In en, this message translates to:
+  /// **'create the club'**
+  String get actionCreateClub;
+
+  /// No description provided for @actionUpdateClub.
+  ///
+  /// In en, this message translates to:
+  /// **'change the club'**
+  String get actionUpdateClub;
+
+  /// No description provided for @actionSetClubOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'name the owner'**
+  String get actionSetClubOwner;
+
+  /// No description provided for @navClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get navClub;
+
+  /// No description provided for @joinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a club'**
+  String get joinTitle;
+
+  /// No description provided for @joinIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your club\'s owner for the join code, or open the link they shared.'**
+  String get joinIntro;
+
+  /// No description provided for @joinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join code'**
+  String get joinCode;
+
+  /// No description provided for @joinAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinAction;
+
+  /// No description provided for @joinInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is not right, or the club is not taking new members.'**
+  String get joinInvalid;
+
+  /// No description provided for @joinAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is already in a club.'**
+  String get joinAlready;
+
+  /// No description provided for @clubNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not in a club yet'**
+  String get clubNoneTitle;
+
+  /// No description provided for @clubNoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with the code from your club\'s owner.'**
+  String get clubNoneBody;
+
+  /// No description provided for @clubInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'This club is not active. Joining is closed.'**
+  String get clubInactive;
+
+  /// No description provided for @clubOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get clubOwner;
+
+  /// No description provided for @clubCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Coach'**
+  String get clubCoach;
+
+  /// No description provided for @clubMemberRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider'**
+  String get clubMemberRole;
+
+  /// No description provided for @clubMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get clubMembers;
+
+  /// No description provided for @clubJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join code'**
+  String get clubJoinCode;
+
+  /// No description provided for @clubJoinCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code or the link with the people who should join.'**
+  String get clubJoinCodeHelp;
+
+  /// No description provided for @clubNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'New code'**
+  String get clubNewCode;
+
+  /// No description provided for @clubNewCodeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The old code stops working at once. Continue?'**
+  String get clubNewCodeConfirm;
+
+  /// No description provided for @clubLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave club'**
+  String get clubLeave;
+
+  /// No description provided for @clubLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this club?'**
+  String get clubLeaveTitle;
+
+  /// No description provided for @clubLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can join again with a new code. Your rides stay yours.'**
+  String get clubLeaveBody;
+
+  /// No description provided for @clubOwnerCannotLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'The owner cannot leave. Ask the server admin to name another owner first.'**
+  String get clubOwnerCannotLeave;
+
+  /// No description provided for @clubMakeCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Make coach'**
+  String get clubMakeCoach;
+
+  /// No description provided for @clubMakeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Make rider'**
+  String get clubMakeMember;
+
+  /// No description provided for @clubCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get clubCopy;
+
+  /// No description provided for @clubCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get clubCopied;
+
+  /// No description provided for @clubMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String clubMemberCount(int count);
+
+  /// No description provided for @adminClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs'**
+  String get adminClubs;
+
+  /// No description provided for @adminCreateClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Create club'**
+  String get adminCreateClub;
+
+  /// No description provided for @adminClubName.
+  ///
+  /// In en, this message translates to:
+  /// **'Club name'**
+  String get adminClubName;
+
+  /// No description provided for @adminClubOwnerEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner\'s email'**
+  String get adminClubOwnerEmail;
+
+  /// No description provided for @adminClubOwnerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An existing account, which becomes the club\'s owner.'**
+  String get adminClubOwnerHelp;
+
+  /// No description provided for @adminClubActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminClubActive;
+
+  /// No description provided for @adminClubJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join code'**
+  String get adminClubJoinCode;
+
+  /// No description provided for @adminNoClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'No clubs yet. Create the first one.'**
+  String get adminNoClubs;
+
+  /// No description provided for @errorClubName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the club a name.'**
+  String get errorClubName;
+
+  /// No description provided for @errorClubOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the owner\'s email.'**
+  String get errorClubOwner;
+
   /// No description provided for @notificationRideReady.
   ///
   /// In en, this message translates to:

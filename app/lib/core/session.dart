@@ -35,6 +35,7 @@ class Session extends ChangeNotifier {
        bikes = BikesApi(client),
        analytics = AnalyticsApi(client),
        admin = AdminApi(client),
+       clubs = ClubApi(client),
        notifications = NotificationsApi(client),
        server = ServerApi(client) {
     auth.onSignedOut = sessionExpired;
@@ -45,6 +46,7 @@ class Session extends ChangeNotifier {
   final BikesApi bikes;
   final AnalyticsApi analytics;
   final AdminApi admin;
+  final ClubApi clubs;
   final NotificationsApi notifications;
   final ServerApi server;
   final SessionAuth auth;

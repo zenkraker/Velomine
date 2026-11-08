@@ -183,18 +183,28 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'AdminClubListResponse':
+          return AdminClubListResponse.fromJson(value);
+        case 'AdminClubResponse':
+          return AdminClubResponse.fromJson(value);
         case 'AdminUserSummary':
           return AdminUserSummary.fromJson(value);
         case 'BikeDetailResponse':
           return BikeDetailResponse.fromJson(value);
         case 'BikeResponse':
           return BikeResponse.fromJson(value);
+        case 'ClubMemberResponse':
+          return ClubMemberResponse.fromJson(value);
+        case 'ClubResponse':
+          return ClubResponse.fromJson(value);
         case 'ComponentResponse':
           return ComponentResponse.fromJson(value);
         case 'ComponentTypeResponse':
           return ComponentTypeResponse.fromJson(value);
         case 'CreateBikeRequest':
           return CreateBikeRequest.fromJson(value);
+        case 'CreateClubRequest':
+          return CreateClubRequest.fromJson(value);
         case 'CreateComponentRequest':
           return CreateComponentRequest.fromJson(value);
         case 'CreateGoalRequest':
@@ -207,6 +217,10 @@ class ApiClient {
           return ExportLinkResponse.fromJson(value);
         case 'GoalResponse':
           return GoalResponse.fromJson(value);
+        case 'JoinClubRequest':
+          return JoinClubRequest.fromJson(value);
+        case 'JoinCodeResponse':
+          return JoinCodeResponse.fromJson(value);
         case 'ListAdminUsersResponse':
           return ListAdminUsersResponse.fromJson(value);
         case 'ListBikesResponse':
@@ -223,6 +237,8 @@ class ApiClient {
           return LoginRequest.fromJson(value);
         case 'MeResponse':
           return MeResponse.fromJson(value);
+        case 'MyClubResponse':
+          return MyClubResponse.fromJson(value);
         case 'NotificationResponse':
           return NotificationResponse.fromJson(value);
         case 'OverviewResponse':
@@ -249,6 +265,10 @@ class ApiClient {
           return RideStreamsResponse.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
+        case 'SetClubMemberRoleRequest':
+          return SetClubMemberRoleRequest.fromJson(value);
+        case 'SetClubOwnerRequest':
+          return SetClubOwnerRequest.fromJson(value);
         case 'SetRideBikeRequest':
           return SetRideBikeRequest.fromJson(value);
         case 'SetUserRolesRequest':
@@ -271,6 +291,8 @@ class ApiClient {
           return TrainingResponse.fromJson(value);
         case 'UpdateBikeRequest':
           return UpdateBikeRequest.fromJson(value);
+        case 'UpdateClubRequest':
+          return UpdateClubRequest.fromJson(value);
         case 'UpdateComponentRequest':
           return UpdateComponentRequest.fromJson(value);
         case 'UpdateGoalRequest':

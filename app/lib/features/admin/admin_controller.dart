@@ -21,10 +21,12 @@ class AdminController extends ChangeNotifier {
   final String? Function() myId;
 
   List<AdminUserSummary> users = [];
+  List<AdminClubResponse> clubs = [];
   SettingsResponse? settings;
   OverviewResponse? overview;
   bool loading = false;
   bool saving = false;
+  bool clubsBusy = false;
   Failure? error;
 
   /// How the last test email went: null before one was sent, then sent or the failure.
@@ -41,10 +43,12 @@ class AdminController extends ChangeNotifier {
           api.listAdminUsers(),
           api.getSettings(),
           api.getOverview(),
+          api.clubsListAdminClubs(),
         ]);
         users = (results[0] as ListAdminUsersResponse?)?.users ?? [];
         settings = results[1] as SettingsResponse?;
         overview = results[2] as OverviewResponse?;
+        clubs = (results[3] as AdminClubListResponse?)?.clubs ?? [];
       },
       onUnauthorized,
       doing: FailureAction.loadAdmin,
@@ -114,5 +118,53 @@ class AdminController extends ChangeNotifier {
     saving = false;
     notifyListeners();
     return error == null;
+  }
+
+  /// Creates a club with an existing account as its owner. Returns the reason it failed, or null.
+  Future<Failure?> createClub(String name, String ownerEmail) async {
+    clubsBusy = true;
+    error = null;
+    notifyListeners();
+    final failure = await guardCall(
+      () => api.clubsCreateClub(
+        CreateClubRequest(name: name, ownerEmail: ownerEmail),
+      ),
+      onUnauthorized,
+      doing: FailureAction.createClub,
+    );
+    error = failure;
+    if (failure == null) await _reloadClubs();
+    clubsBusy = false;
+    notifyListeners();
+    return failure;
+  }
+
+  /// Turns a club on or off. A disabled club takes no new joins but keeps its members and data.
+  Future<Failure?> setClubActive(AdminClubResponse club, bool active) async {
+    clubsBusy = true;
+    error = null;
+    notifyListeners();
+    final failure = await guardCall(
+      () => api.clubsUpdateClub(
+        club.id,
+        UpdateClubRequest(name: club.name, isActive: active),
+      ),
+      onUnauthorized,
+      doing: FailureAction.updateClub,
+    );
+    error = failure;
+    if (failure == null) await _reloadClubs();
+    clubsBusy = false;
+    notifyListeners();
+    return failure;
+  }
+
+  Future<void> _reloadClubs() async {
+    try {
+      clubs = (await api.clubsListAdminClubs())?.clubs ?? clubs;
+    } on Object {
+      // Keeps the list it had; the next refresh reads it again.
+    }
+    notifyListeners();
   }
 }

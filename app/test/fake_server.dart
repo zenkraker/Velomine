@@ -66,6 +66,12 @@ class FakeServer {
 
   final notifications = <Map<String, Object?>>[];
 
+  /// Club memberships by email, and the one club this fake hosts.
+  final clubRoles = <String, String>{};
+  String clubName = 'Test Club';
+  String joinCode = 'JOIN1234';
+  bool clubActive = true;
+
   /// What the admin settings screen is told, and the read-only status of what only the environment sets.
   final adminSettings = <String, Object?>{
     'signUpEnabled': true,
@@ -106,13 +112,19 @@ class FakeServer {
     bool approved = true,
     List<String> roles = const ['member'],
     String name = 'Test Rider',
-  }) => accounts[email] = FakeAccount(
-    email,
-    password,
-    approved: approved,
-    roles: roles,
-    name: name,
-  );
+    String? clubRole = 'member',
+  }) {
+    final account = FakeAccount(
+      email,
+      password,
+      approved: approved,
+      roles: roles,
+      name: name,
+    );
+    accounts[email] = account;
+    if (clubRole != null) clubRoles[email] = clubRole;
+    return account;
+  }
 
   /// Pretend the browser already holds a session cookie for this account.
   void signInBrowser(FakeAccount account) => _cookieUser = account;
@@ -258,6 +270,7 @@ class FakeServer {
         password: body['password']! as String,
         approved: false,
         name: body['displayName']! as String,
+        clubRole: null,
       );
       return json({'id': account.id, 'isApproved': account.approved}, 201);
     }
@@ -419,8 +432,12 @@ extension on FakeServer {
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
+        !path.startsWith('/api/v1/club') &&
         !path.startsWith('/api/v1/admin')) {
       return null;
+    }
+    if (path.startsWith('/api/v1/club')) {
+      return _club(request, path, caller, json);
     }
     if (path.startsWith('/api/v1/admin')) {
       if (!caller.roles.contains('admin')) return http.Response('', 403);
@@ -518,6 +535,118 @@ extension on FakeServer {
     return null;
   }
 
+  Map<String, Object?> _adminClubJson() {
+    final owner = accounts.values
+        .where((a) => clubRoles[a.email] == 'owner')
+        .firstOrNull;
+    return {
+      'id': 'club-1',
+      'name': clubName,
+      'joinCode': joinCode,
+      'isActive': clubActive,
+      'createdAt': '2026-11-02T08:00:00Z',
+      'memberCount': clubRoles.length,
+      'ownerId': owner?.id,
+      'ownerName': owner?.name,
+      'ownerEmail': owner?.email,
+      'ownerRole': owner == null ? null : 'owner',
+    };
+  }
+
+  Map<String, Object?>? _myClubJson(FakeAccount me) {
+    final role = clubRoles[me.email];
+    if (role == null) return null;
+    final members =
+        accounts.values.where((a) => clubRoles.containsKey(a.email)).toList()
+          ..sort((a, b) {
+            int rank(String? r) => r == 'owner'
+                ? 0
+                : r == 'coach'
+                ? 1
+                : 2;
+            final byRole = rank(clubRoles[a.email])
+                .compareTo(rank(clubRoles[b.email]));
+            return byRole != 0 ? byRole : a.name.compareTo(b.name);
+          });
+    return {
+      'id': 'club-1',
+      'name': clubName,
+      'isActive': clubActive,
+      'myRole': role,
+      'joinCode': role == 'owner' ? joinCode : null,
+      'members': [
+        for (final a in members)
+          {
+            'userId': a.id,
+            'displayName': a.name,
+            'role': clubRoles[a.email],
+            'joinedAt': '2026-11-02T08:00:00Z',
+          },
+      ],
+    };
+  }
+
+  http.Response _club(
+    http.Request request,
+    String path,
+    FakeAccount caller,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    final body = request.body.isEmpty
+        ? <String, Object?>{}
+        : jsonDecode(request.body) as Map<String, Object?>;
+
+    if (path == '/api/v1/club') {
+      return json({'club': _myClubJson(caller)});
+    }
+    if (path == '/api/v1/club/join') {
+      if (clubRoles.containsKey(caller.email)) {
+        return http.Response('{"detail":"already in a club"}', 409);
+      }
+      if (!clubActive || body['code'] != joinCode) {
+        return http.Response('', 404);
+      }
+      clubRoles[caller.email] = 'member';
+      return json({'club': _myClubJson(caller)});
+    }
+    if (path == '/api/v1/club/leave') {
+      if (!clubRoles.containsKey(caller.email)) return http.Response('', 404);
+      if (clubRoles[caller.email] == 'owner') {
+        return http.Response('{"detail":"owner"}', 409);
+      }
+      clubRoles.remove(caller.email);
+      return http.Response('', 204);
+    }
+    if (path == '/api/v1/club/join-code') {
+      if (clubRoles[caller.email] != 'owner') return http.Response('', 403);
+      joinCode = 'NEWCODE1';
+      return json({'joinCode': joinCode});
+    }
+    final member = RegExp(r'^/api/v1/club/members/([^/]+)/role$')
+        .firstMatch(path);
+    if (member != null) {
+      if (clubRoles[caller.email] != 'owner') return http.Response('', 403);
+      final target = accounts.values
+          .where((a) => a.id == member.group(1))
+          .firstOrNull;
+      if (target == null || !clubRoles.containsKey(target.email)) {
+        return http.Response('', 404);
+      }
+      final role = body['role']! as String;
+      if (role != 'coach' && role != 'member') {
+        return http.Response('', 400);
+      }
+      clubRoles[target.email] = role;
+      return json({
+        'userId': target.id,
+        'displayName': target.name,
+        'role': role,
+        'joinedAt': '2026-11-02T08:00:00Z',
+      });
+    }
+    return http.Response('', 404);
+  }
+
   http.Response _admin(
     http.Request request,
     String path,
@@ -538,6 +667,44 @@ extension on FakeServer {
       return json({
         'users': [for (final a in accounts.values) userJson(a)],
       });
+    }
+    if (path == '/api/v1/admin/clubs') {
+      if (request.method == 'POST') {
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        final email = body['ownerEmail']! as String;
+        final owner = accounts[email];
+        if (owner == null) return http.Response('', 400);
+        if (clubRoles.containsKey(email)) return http.Response('', 409);
+        clubName = body['name']! as String;
+        clubRoles[email] = 'owner';
+        return json(_adminClubJson());
+      }
+      return json({
+        'clubs': [_adminClubJson()],
+      });
+    }
+    final owner = RegExp(r'^/api/v1/admin/clubs/([^/]+)/owner$')
+        .firstMatch(path);
+    if (owner != null) {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final target = accounts.values
+          .where((a) => a.id == body['userId'])
+          .firstOrNull;
+      if (target == null || !clubRoles.containsKey(target.email)) {
+        return http.Response('', 404);
+      }
+      for (final entry in clubRoles.entries.toList()) {
+        if (entry.value == 'owner') clubRoles[entry.key] = 'member';
+      }
+      clubRoles[target.email] = 'owner';
+      return json(_adminClubJson());
+    }
+    final club = RegExp(r'^/api/v1/admin/clubs/([^/]+)$').firstMatch(path);
+    if (club != null) {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      clubName = body['name']! as String;
+      clubActive = body['isActive']! as bool;
+      return json(_adminClubJson());
     }
     if (path == '/api/v1/admin/settings/test-email') {
       testEmails.add(caller.email);

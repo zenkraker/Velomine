@@ -19,6 +19,9 @@ import 'features/bikes/bikes_controller.dart';
 import 'features/bikes/bikes_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/sso_callback_screen.dart';
+import 'features/club/club_controller.dart';
+import 'features/club/club_screen.dart';
+import 'features/club/join_club_screen.dart';
 import 'features/notifications/notifications_controller.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/profile/profile_controller.dart';
@@ -114,6 +117,11 @@ class _VelomineAppState extends State<VelomineApp> {
     pollInterval: widget.notificationPollInterval,
   );
 
+  late final ClubController _club = ClubController(
+    api: widget.session.clubs,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -125,8 +133,10 @@ class _VelomineAppState extends State<VelomineApp> {
   void _followSession() {
     if (widget.session.status == SessionStatus.signedIn) {
       _notifications.start();
-    } else if (_notifications.running) {
-      _notifications.stop();
+      if (!_club.loaded) _club.refresh();
+    } else {
+      if (_notifications.running) _notifications.stop();
+      if (_club.loaded) _club.reset();
     }
   }
 
@@ -138,7 +148,7 @@ class _VelomineAppState extends State<VelomineApp> {
 
   late final GoRouter _router = GoRouter(
     initialLocation: '/',
-    refreshListenable: widget.session,
+    refreshListenable: Listenable.merge([widget.session, _club]),
     redirect: (context, state) {
       final session = widget.session;
       final path = state.uri.path;
@@ -147,6 +157,11 @@ class _VelomineAppState extends State<VelomineApp> {
       if (session.status == SessionStatus.signedOut) {
         return open.contains(path) ? null : '/sign-in';
       }
+      // An admin has no club of their own until they make one, and still needs the admin pages.
+      if (!session.isAdmin && _club.loaded && _club.club == null) {
+        return path == '/join' ? null : '/join';
+      }
+      if (path == '/join') return '/rides';
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
       if (path == '/admin' && !session.isAdmin) return '/rides';
@@ -161,6 +176,13 @@ class _VelomineAppState extends State<VelomineApp> {
           startSso: _startSso,
           languageChoice: widget.languageChoice,
           onChangeServer: widget.onChangeServer,
+        ),
+      ),
+      GoRoute(
+        path: '/join',
+        builder: (context, state) => JoinClubScreen(
+          controller: _club,
+          initialCode: state.uri.queryParameters['code'] ?? '',
         ),
       ),
       GoRoute(
@@ -220,6 +242,14 @@ class _VelomineAppState extends State<VelomineApp> {
             builder: (_, _) => ProgressScreen(controller: _progress),
           ),
           GoRoute(
+            path: '/club',
+            builder: (context, _) => ClubScreen(
+              controller: _club,
+              serverUrl: widget.session.serverUrl,
+              onJoin: () => context.go('/join'),
+            ),
+          ),
+          GoRoute(
             path: '/notifications',
             builder: (context, _) => NotificationsScreen(
               controller: _notifications,
@@ -272,6 +302,7 @@ class _VelomineAppState extends State<VelomineApp> {
     _progress.dispose();
     _admin.dispose();
     _notifications.dispose();
+    _club.dispose();
     super.dispose();
   }
 
@@ -282,6 +313,7 @@ class _VelomineAppState extends State<VelomineApp> {
         widget.session,
         widget.themeChoice,
         widget.languageChoice,
+        _club,
       ]),
       builder: (context, _) => MaterialApp.router(
         title: 'Velomine',

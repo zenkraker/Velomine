@@ -44,7 +44,14 @@ builder.Services.OpenApiDocument(o =>
             if (operation.OperationId is { } id && id.StartsWith(prefix, StringComparison.Ordinal))
             {
                 id = id[prefix.Length..];
-                if (operation.Tags?.FirstOrDefault()?.Name is { } tag && id.StartsWith(tag, StringComparison.Ordinal)) id = id[tag.Length..];
+                if (operation.Tags?.FirstOrDefault()?.Name is { } tag)
+                {
+                    // FastEndpoints tags a plural namespace with a singular name ("Clubs" -> "Club").
+                    var start = id.StartsWith(tag + "s", StringComparison.Ordinal) ? tag.Length + 1
+                        : id.StartsWith(tag, StringComparison.Ordinal) ? tag.Length
+                        : 0;
+                    id = id[start..];
+                }
                 operation.OperationId = char.ToLowerInvariant(id[0]) + id[1..];
             }
 

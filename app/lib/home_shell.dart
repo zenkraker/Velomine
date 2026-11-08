@@ -32,6 +32,7 @@ class HomeShell extends StatelessWidget {
     '/rides',
     if (!kIsWeb) '/record',
     '/progress',
+    '/club',
     '/bikes',
     if (session.isAdmin) '/admin',
   ];
@@ -98,6 +99,10 @@ class HomeShell extends StatelessWidget {
           NavigationDestination(
             icon: const Icon(Icons.insights),
             label: context.l10n.navProgress,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.groups_outlined),
+            label: context.l10n.navClub,
           ),
           NavigationDestination(
             icon: const Icon(Icons.pedal_bike),

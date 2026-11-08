@@ -71,8 +71,8 @@ app/                             Flutter app (section 9)
 
 | Area | What it holds | Scope |
 |------|---------------|-------|
-| Accounts | Users, roles (admin, member, coach), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
-| Clubs | Clubs, members, coaches, share grants per data type and audience, revocation, view log | clubs v1; grants v2 |
+| Accounts | Users, roles (admin, member; the global `coach` role is kept for compatibility but grants nothing), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
+| Clubs | Several clubs per server, each with one owner, coaches and riders; one club per account; join by a rotatable code; roster visible to the club. Share grants per data type and audience, revocation and view log follow. | clubs v1; grants v1 next |
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months, a notification when a ride takes a part to 80 % or 100 % | v1; timed reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
@@ -160,8 +160,10 @@ erDiagram
   USER ||--o{ PRIVACY_ZONE : defines
   USER ||--o{ SHARE_GRANT : gives
   CLUB ||--o{ MEMBERSHIP : has
-  USER ||--o{ MEMBERSHIP : "member or coach"
+  USER ||--o| MEMBERSHIP : "one club per account"
 ```
+
+- A club has one owner, any number of coaches and riders, and a join code the owner can rotate. The instance admin creates clubs and names (or moves) the owner; the owner promotes coaches. A membership alone shows the roster and nothing else: any ride or training data needs a sharing grant.
 
 - Instants are `timestamptz` in UTC; a ride also stores its local time zone offset. SI units internally.
 - Keys are `uuid`; rides recorded on the phone keep the phone's id.
@@ -202,8 +204,8 @@ One Dart codebase builds Android, iOS and the web app.
 app/
   lib/
     main.dart
-    core/       session (sign-in state), theme, formatting; later charts, maps, i18n (en, it)
-    features/   auth/, rides/, admin/; later bikes/, wellbeing/, clubs/, sharing/, recording/
+    core/       session (sign-in state), theme, formatting, language; charts, maps
+    features/   auth/, rides/, bikes/, progress/, admin/, club/, notifications/, recording/
   packages/
     velomine_api/   the generated API client (never edited by hand)
   android/      Kotlin recorder service
@@ -212,6 +214,7 @@ app/
 
 - **Design system:** a day theme (Cloud Dancer, deep teal, iron oxide) and a night-ride theme (asphalt, Volt) for recording.
 - **State:** Flutter SDK primitives (`ChangeNotifier`). **Navigation:** `go_router`, with real URLs on the web.
+- **Languages:** English and Italian through Flutter's `gen-l10n` (`lib/l10n/app_en.arb`, `app_it.arb`). The app follows the device language until someone picks one; the choice is kept on the device, like the theme, and the number and date formats follow it. Server-rendered email is still English.
 - **Web app:** built by the Dockerfile and served by the server itself from `wwwroot`, at the same address as the API. That makes the session cookie work without cross-origin setup, and single sign-on returns to the same site. Any path that is not an API path falls back to `index.html`.
 - **Sign-in state:** the web app keeps its session in the cookie the server sets. The phone app asks for the server address once, keeps the refresh token in Android Keystore or the iOS Keychain through a small native channel, and exchanges it for a new access token at launch. The access token stays in memory; the refresh token is never written to preferences, backups or logs. A server that cannot be reached keeps the token for the next try; a refused one clears it.
 - **Ride detail:** the numbers, a map and one chart per signal the ride has. Samples come from `GET /api/v1/rides/{id}/streams`, which averages a long ride down to at most 1,500 points (`maxPoints`, up to 5,000) so a 10-hour ride is still a small download. The charts and the map share one selected moment, so moving over a chart moves a marker on the map. Speed is worked out from positions when the file has none.

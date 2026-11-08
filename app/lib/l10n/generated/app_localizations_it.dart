@@ -332,6 +332,160 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionMarkAllRead => 'segnarle come lette';
 
   @override
+  String get actionLoadClub => 'caricare il tuo club';
+
+  @override
+  String get actionJoinClub => 'entrare nel club';
+
+  @override
+  String get actionLeaveClub => 'uscire dal club';
+
+  @override
+  String get actionRotateJoinCode => 'creare un nuovo codice di accesso';
+
+  @override
+  String get actionChangeClubRole => 'cambiare il ruolo del membro';
+
+  @override
+  String get actionLoadAdminClubs => 'caricare i club';
+
+  @override
+  String get actionCreateClub => 'creare il club';
+
+  @override
+  String get actionUpdateClub => 'modificare il club';
+
+  @override
+  String get actionSetClubOwner => 'nominare il proprietario';
+
+  @override
+  String get navClub => 'Club';
+
+  @override
+  String get joinTitle => 'Entra in un club';
+
+  @override
+  String get joinIntro =>
+      'Chiedi il codice di accesso al proprietario del club, oppure apri il link che ha condiviso.';
+
+  @override
+  String get joinCode => 'Codice di accesso';
+
+  @override
+  String get joinAction => 'Entra';
+
+  @override
+  String get joinInvalid =>
+      'Il codice non è corretto, oppure il club non accetta nuovi membri.';
+
+  @override
+  String get joinAlready => 'Il tuo account è già in un club.';
+
+  @override
+  String get clubNoneTitle => 'Non sei ancora in un club';
+
+  @override
+  String get clubNoneBody => 'Entra con il codice del proprietario del club.';
+
+  @override
+  String get clubInactive =>
+      'Questo club non è attivo. Le iscrizioni sono chiuse.';
+
+  @override
+  String get clubOwner => 'Proprietario';
+
+  @override
+  String get clubCoach => 'Allenatore';
+
+  @override
+  String get clubMemberRole => 'Corridore';
+
+  @override
+  String get clubMembers => 'Membri';
+
+  @override
+  String get clubJoinCode => 'Codice di accesso';
+
+  @override
+  String get clubJoinCodeHelp =>
+      'Condividi questo codice o il link con chi deve entrare.';
+
+  @override
+  String get clubNewCode => 'Nuovo codice';
+
+  @override
+  String get clubNewCodeConfirm =>
+      'Il vecchio codice smette subito di funzionare. Continuare?';
+
+  @override
+  String get clubLeave => 'Esci dal club';
+
+  @override
+  String get clubLeaveTitle => 'Uscire da questo club?';
+
+  @override
+  String get clubLeaveBody =>
+      'Puoi rientrare con un nuovo codice. Le tue uscite restano tue.';
+
+  @override
+  String get clubOwnerCannotLeave =>
+      'Il proprietario non può uscire. Chiedi all\'amministratore del server di nominare prima un altro proprietario.';
+
+  @override
+  String get clubMakeCoach => 'Rendi allenatore';
+
+  @override
+  String get clubMakeMember => 'Rendi corridore';
+
+  @override
+  String get clubCopy => 'Copia';
+
+  @override
+  String get clubCopied => 'Copiato';
+
+  @override
+  String clubMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count membri',
+      one: '1 membro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminClubs => 'Club';
+
+  @override
+  String get adminCreateClub => 'Crea club';
+
+  @override
+  String get adminClubName => 'Nome del club';
+
+  @override
+  String get adminClubOwnerEmail => 'Email del proprietario';
+
+  @override
+  String get adminClubOwnerHelp =>
+      'Un account esistente, che diventa proprietario del club.';
+
+  @override
+  String get adminClubActive => 'Attivo';
+
+  @override
+  String get adminClubJoinCode => 'Codice di accesso';
+
+  @override
+  String get adminNoClubs => 'Nessun club. Crea il primo.';
+
+  @override
+  String get errorClubName => 'Dai un nome al club.';
+
+  @override
+  String get errorClubOwner => 'Inserisci l\'email del proprietario.';
+
+  @override
   String notificationRideReady(String subject) {
     return 'La tua uscita $subject è pronta.';
   }

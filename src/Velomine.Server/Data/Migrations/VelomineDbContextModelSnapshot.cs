@@ -540,6 +540,95 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("bike_components", "bikes");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.Club", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("JoinCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("join_code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_clubs");
+
+                    b.HasIndex("JoinCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_clubs_join_code");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_clubs_name");
+
+                    b.ToTable("clubs", "clubs", t =>
+                        {
+                            t.HasCheckConstraint("ck_clubs_join_code", "char_length(join_code) >= 6");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("role");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_memberships");
+
+                    b.HasIndex("ClubId")
+                        .HasDatabaseName("ix_memberships_club_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_memberships_user_id");
+
+                    b.ToTable("memberships", "clubs", t =>
+                        {
+                            t.HasCheckConstraint("ck_club_memberships_role", "role IN ('owner', 'coach', 'member')");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -919,6 +1008,27 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_bike_components_bikes_bike_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubMembership", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", "Club")
+                        .WithMany("Memberships")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_memberships_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_memberships_users_user_id");
+
+                    b.Navigation("Club");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Notifications.Notification", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
@@ -984,6 +1094,11 @@ namespace Velomine.Server.Data.Migrations
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
                 {
                     b.Navigation("Components");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.Club", b =>
+                {
+                    b.Navigation("Memberships");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>

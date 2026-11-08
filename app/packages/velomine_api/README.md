@@ -80,6 +80,10 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
+*AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
+*AdminApi* | [**clubsListAdminClubs**](doc//AdminApi.md#clubslistadminclubs) | **GET** /api/v1/admin/clubs | 
+*AdminApi* | [**clubsSetClubOwner**](doc//AdminApi.md#clubssetclubowner) | **PUT** /api/v1/admin/clubs/{id}/owner | 
+*AdminApi* | [**clubsUpdateClub**](doc//AdminApi.md#clubsupdateclub) | **PUT** /api/v1/admin/clubs/{id} | 
 *AdminApi* | [**deleteUser**](doc//AdminApi.md#deleteuser) | **DELETE** /api/v1/admin/users/{id} | 
 *AdminApi* | [**getOverview**](doc//AdminApi.md#getoverview) | **GET** /api/v1/admin/overview | 
 *AdminApi* | [**getSettings**](doc//AdminApi.md#getsettings) | **GET** /api/v1/admin/settings | 
@@ -105,6 +109,11 @@ Class | Method | HTTP request | Description
 *BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
+*ClubApi* | [**getMyClub**](doc//ClubApi.md#getmyclub) | **GET** /api/v1/club | 
+*ClubApi* | [**joinClub**](doc//ClubApi.md#joinclub) | **POST** /api/v1/club/join | 
+*ClubApi* | [**leaveClub**](doc//ClubApi.md#leaveclub) | **POST** /api/v1/club/leave | 
+*ClubApi* | [**rotateJoinCode**](doc//ClubApi.md#rotatejoincode) | **POST** /api/v1/club/join-code | 
+*ClubApi* | [**setClubMemberRole**](doc//ClubApi.md#setclubmemberrole) | **PUT** /api/v1/club/members/{userId}/role | 
 *NotificationsApi* | [**listNotifications**](doc//NotificationsApi.md#listnotifications) | **GET** /api/v1/notifications | 
 *NotificationsApi* | [**markAllNotificationsRead**](doc//NotificationsApi.md#markallnotificationsread) | **POST** /api/v1/notifications/read | 
 *NotificationsApi* | [**markNotificationRead**](doc//NotificationsApi.md#marknotificationread) | **POST** /api/v1/notifications/{id}/read | 
@@ -119,18 +128,25 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AdminClubListResponse](doc//AdminClubListResponse.md)
+ - [AdminClubResponse](doc//AdminClubResponse.md)
  - [AdminUserSummary](doc//AdminUserSummary.md)
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
+ - [ClubMemberResponse](doc//ClubMemberResponse.md)
+ - [ClubResponse](doc//ClubResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)
  - [ComponentTypeResponse](doc//ComponentTypeResponse.md)
  - [CreateBikeRequest](doc//CreateBikeRequest.md)
+ - [CreateClubRequest](doc//CreateClubRequest.md)
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
+ - [JoinClubRequest](doc//JoinClubRequest.md)
+ - [JoinCodeResponse](doc//JoinCodeResponse.md)
  - [ListAdminUsersResponse](doc//ListAdminUsersResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
@@ -139,6 +155,7 @@ Class | Method | HTTP request | Description
  - [ListRidesResponse](doc//ListRidesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [MeResponse](doc//MeResponse.md)
+ - [MyClubResponse](doc//MyClubResponse.md)
  - [NotificationResponse](doc//NotificationResponse.md)
  - [OverviewResponse](doc//OverviewResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
@@ -152,6 +169,8 @@ Class | Method | HTTP request | Description
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
+ - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
+ - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
@@ -163,6 +182,7 @@ Class | Method | HTTP request | Description
  - [TrainingDay](doc//TrainingDay.md)
  - [TrainingResponse](doc//TrainingResponse.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
+ - [UpdateClubRequest](doc//UpdateClubRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)

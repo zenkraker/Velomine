@@ -63,6 +63,15 @@ enum FailureAction {
   loadNotifications,
   markRead,
   markAllRead,
+  loadClub,
+  joinClub,
+  leaveClub,
+  rotateJoinCode,
+  changeClubRole,
+  loadAdminClubs,
+  createClub,
+  updateClub,
+  setClubOwner,
 }
 
 class Failure {
@@ -109,6 +118,15 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.loadNotifications => l10n.actionLoadNotifications,
       FailureAction.markRead => l10n.actionMarkRead,
       FailureAction.markAllRead => l10n.actionMarkAllRead,
+      FailureAction.loadClub => l10n.actionLoadClub,
+      FailureAction.joinClub => l10n.actionJoinClub,
+      FailureAction.leaveClub => l10n.actionLeaveClub,
+      FailureAction.rotateJoinCode => l10n.actionRotateJoinCode,
+      FailureAction.changeClubRole => l10n.actionChangeClubRole,
+      FailureAction.loadAdminClubs => l10n.actionLoadAdminClubs,
+      FailureAction.createClub => l10n.actionCreateClub,
+      FailureAction.updateClub => l10n.actionUpdateClub,
+      FailureAction.setClubOwner => l10n.actionSetClubOwner,
     };
 
 /// The sentence for a failure in the language on screen.

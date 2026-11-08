@@ -16,6 +16,202 @@ class AdminApi {
 
   final ApiClient apiClient;
 
+  /// Performs an HTTP 'POST /api/v1/admin/clubs' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [CreateClubRequest] createClubRequest (required):
+  Future<Response> clubsCreateClubWithHttpInfo(CreateClubRequest createClubRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/admin/clubs';
+
+    // ignore: prefer_final_locals
+    Object? postBody = createClubRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [CreateClubRequest] createClubRequest (required):
+  Future<AdminClubResponse?> clubsCreateClub(CreateClubRequest createClubRequest, { Future<void>? abortTrigger, }) async {
+    final response = await clubsCreateClubWithHttpInfo(createClubRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'AdminClubResponse',) as AdminClubResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/admin/clubs' operation and returns the [Response].
+  Future<Response> clubsListAdminClubsWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/admin/clubs';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<AdminClubListResponse?> clubsListAdminClubs({ Future<void>? abortTrigger, }) async {
+    final response = await clubsListAdminClubsWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'AdminClubListResponse',) as AdminClubListResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/admin/clubs/{id}/owner' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SetClubOwnerRequest] setClubOwnerRequest (required):
+  Future<Response> clubsSetClubOwnerWithHttpInfo(String id, SetClubOwnerRequest setClubOwnerRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/admin/clubs/{id}/owner'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setClubOwnerRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SetClubOwnerRequest] setClubOwnerRequest (required):
+  Future<AdminClubResponse?> clubsSetClubOwner(String id, SetClubOwnerRequest setClubOwnerRequest, { Future<void>? abortTrigger, }) async {
+    final response = await clubsSetClubOwnerWithHttpInfo(id, setClubOwnerRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'AdminClubResponse',) as AdminClubResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/admin/clubs/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateClubRequest] updateClubRequest (required):
+  Future<Response> clubsUpdateClubWithHttpInfo(String id, UpdateClubRequest updateClubRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/admin/clubs/{id}'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = updateClubRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateClubRequest] updateClubRequest (required):
+  Future<AdminClubResponse?> clubsUpdateClub(String id, UpdateClubRequest updateClubRequest, { Future<void>? abortTrigger, }) async {
+    final response = await clubsUpdateClubWithHttpInfo(id, updateClubRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'AdminClubResponse',) as AdminClubResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'DELETE /api/v1/admin/users/{id}' operation and returns the [Response].
   /// Parameters:
   ///
