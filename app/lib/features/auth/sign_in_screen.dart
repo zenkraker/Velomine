@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/hooks.dart';
+import '../../core/l10n.dart';
 import '../../core/language_choice.dart';
 import '../../core/session.dart';
+import '../../l10n/generated/app_localizations.dart';
 
-String authProblemText(AuthProblem problem) => switch (problem) {
-  AuthProblem.wrongPassword => 'The email or password is not right.',
-  AuthProblem.notApproved =>
-    'Your account is waiting for an admin to approve it.',
-  AuthProblem.lockedOut =>
-    'Too many wrong attempts. Try again in a few minutes.',
-  AuthProblem.signUpClosed => 'Sign-up is closed on this server.',
-  AuthProblem.weakPassword => 'The password needs at least 10 characters with a capital letter, a small letter and a digit.',
-  AuthProblem.emailTaken => 'There is already an account with this email.',
-  AuthProblem.unavailable => 'Could not reach the server. Try again.',
-};
+String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
+    switch (problem) {
+      AuthProblem.wrongPassword => l10n.authWrongPassword,
+      AuthProblem.notApproved => l10n.authNotApproved,
+      AuthProblem.lockedOut => l10n.authLockedOut,
+      AuthProblem.signUpClosed => l10n.authSignUpClosed,
+      AuthProblem.weakPassword => l10n.authWeakPassword,
+      AuthProblem.emailTaken => l10n.authEmailTaken,
+      AuthProblem.unavailable => l10n.authUnavailable,
+    };
 
-String ssoErrorText(String code) => switch (code) {
-  'not_approved' => 'Your account is waiting for an admin to approve it.',
-  'email_not_verified' =>
-    'Your sign-in provider has not verified your email address.',
-  'no_account' => 'There is no account for you here yet. Ask an admin.',
-  'locked_out' => 'This account is locked. Try again in a few minutes.',
-  'no_email' => 'Your sign-in provider did not share an email address.',
-  _ => 'Single sign-on did not work. Try again.',
+String ssoErrorText(AppLocalizations l10n, String code) => switch (code) {
+  'not_approved' => l10n.authNotApproved,
+  'email_not_verified' => l10n.ssoEmailNotVerified,
+  'no_account' => l10n.ssoNoAccount,
+  'locked_out' => l10n.ssoLockedOut,
+  'no_email' => l10n.ssoNoEmail,
+  _ => l10n.ssoFailed,
 };
 
 class SignInScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  String? _error;
+  AuthProblem? _problem;
   bool _busy = false;
 
   late String? _ssoError = widget.session.ssoError;
@@ -63,7 +63,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _signIn() async {
     setState(() {
       _busy = true;
-      _error = null;
+      _problem = null;
       _ssoError = null;
     });
     final problem = await widget.session.signIn(
@@ -73,7 +73,7 @@ class _SignInScreenState extends State<SignInScreen> {
     if (!mounted) return;
     setState(() {
       _busy = false;
-      if (problem != null) _error = authProblemText(problem);
+      _problem = problem;
     });
   }
 
@@ -81,11 +81,12 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final sso = widget.session.sso;
     final restoreProblem = widget.session.restoreProblem;
-    final message =
-        _error ??
-        (restoreProblem == null
-            ? (_ssoError == null ? null : ssoErrorText(_ssoError!))
-            : authProblemText(restoreProblem));
+    final l10n = context.l10n;
+    final message = _problem != null
+        ? authProblemText(l10n, _problem!)
+        : (restoreProblem != null
+              ? authProblemText(l10n, restoreProblem)
+              : (_ssoError == null ? null : ssoErrorText(l10n, _ssoError!)));
     return Scaffold(
       body: Stack(
         children: [
@@ -116,7 +117,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         children: [
                           Flexible(
                             child: Text(
-                              'Server: ${widget.session.serverUrl}',
+                              l10n.serverLabel(widget.session.serverUrl),
                               key: const Key('server-address'),
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -125,7 +126,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           TextButton(
                             key: const Key('change-server'),
                             onPressed: widget.onChangeServer,
-                            child: const Text('Change'),
+                            child: Text(l10n.change),
                           ),
                         ],
                       ),
@@ -136,7 +137,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration: InputDecoration(labelText: l10n.email),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -144,7 +145,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       controller: _password,
                       obscureText: true,
                       autofillHints: const [AutofillHints.password],
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      decoration: InputDecoration(labelText: l10n.password),
                       onSubmitted: (_) => _signIn(),
                     ),
                     if (message != null) ...[
@@ -162,14 +163,14 @@ class _SignInScreenState extends State<SignInScreen> {
                       OutlinedButton(
                         key: const Key('retry-session'),
                         onPressed: widget.session.retryRestore,
-                        child: const Text('Try again'),
+                        child: Text(l10n.tryAgain),
                       ),
                     ],
                     const SizedBox(height: 16),
                     FilledButton(
                       key: const Key('sign-in'),
                       onPressed: _busy ? null : _signIn,
-                      child: const Text('Sign in'),
+                      child: Text(l10n.signIn),
                     ),
                     if (sso?.enabled ?? false) ...[
                       const SizedBox(height: 12),
@@ -177,7 +178,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         key: const Key('sso'),
                         onPressed: widget.startSso,
                         child: Text(
-                          'Continue with ${sso!.displayName ?? 'single sign-on'}',
+                          l10n.continueWith(
+                            sso!.displayName ?? l10n.ssoGeneric,
+                          ),
                         ),
                       ),
                     ],
@@ -185,7 +188,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     TextButton(
                       key: const Key('to-register'),
                       onPressed: () => context.go('/register'),
-                      child: const Text('Create an account'),
+                      child: Text(l10n.createAccount),
                     ),
                   ],
                 ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/auth/server_setup_screen.dart';
+import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
 
 ServerInfoResponse info() => ServerInfoResponse(
@@ -21,6 +22,8 @@ void main() {
     String initialUrl = '',
   }) => tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: ServerSetupScreen(
         initialUrl: initialUrl,
         check: check,

@@ -193,6 +193,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Italiano'**
   String get languageItalian;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @serverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server: {url}'**
+  String serverLabel(String url);
+
+  /// No description provided for @continueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {provider}'**
+  String continueWith(String provider);
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account'**
+  String get createAccount;
+
+  /// No description provided for @createAccountAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccountAction;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get haveAccount;
+
+  /// No description provided for @backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
+
+  /// No description provided for @passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 10 characters, with a capital letter, a small letter and a digit.'**
+  String get passwordHint;
+
+  /// No description provided for @registeredReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is ready. You can sign in now.'**
+  String get registeredReady;
+
+  /// No description provided for @registeredPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account was created. An admin has to approve it before you can sign in.'**
+  String get registeredPending;
+
+  /// No description provided for @authWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'The email or password is not right.'**
+  String get authWrongPassword;
+
+  /// No description provided for @authNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is waiting for an admin to approve it.'**
+  String get authNotApproved;
+
+  /// No description provided for @authLockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong attempts. Try again in a few minutes.'**
+  String get authLockedOut;
+
+  /// No description provided for @authSignUpClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-up is closed on this server.'**
+  String get authSignUpClosed;
+
+  /// No description provided for @authWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'The password needs at least 10 characters with a capital letter, a small letter and a digit.'**
+  String get authWeakPassword;
+
+  /// No description provided for @authEmailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'There is already an account with this email.'**
+  String get authEmailTaken;
+
+  /// No description provided for @authUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Try again.'**
+  String get authUnavailable;
+
+  /// No description provided for @ssoEmailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in provider has not verified your email address.'**
+  String get ssoEmailNotVerified;
+
+  /// No description provided for @ssoNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no account for you here yet. Ask an admin.'**
+  String get ssoNoAccount;
+
+  /// No description provided for @ssoLockedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is locked. Try again in a few minutes.'**
+  String get ssoLockedOut;
+
+  /// No description provided for @ssoNoEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in provider did not share an email address.'**
+  String get ssoNoEmail;
+
+  /// No description provided for @ssoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Single sign-on did not work. Try again.'**
+  String get ssoFailed;
+
+  /// No description provided for @ssoGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'single sign-on'**
+  String get ssoGeneric;
+
+  /// No description provided for @signingIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you in…'**
+  String get signingIn;
+
+  /// No description provided for @setupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which server does your club use?'**
+  String get setupTitle;
+
+  /// No description provided for @setupServerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get setupServerAddress;
+
+  /// No description provided for @setupServerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://velomine.club.example'**
+  String get setupServerHint;
+
+  /// No description provided for @setupInsecure.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.'**
+  String get setupInsecure;
+
+  /// No description provided for @setupChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get setupChecking;
+
+  /// No description provided for @setupConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get setupConnect;
+
+  /// No description provided for @setupHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your club admin for the address. It usually looks like https://velomine.your-club.example.'**
+  String get setupHelp;
+
+  /// No description provided for @setupInvalidAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an address that starts with http:// or https://, for example https://velomine.club.example.'**
+  String get setupInvalidAddress;
+
+  /// No description provided for @setupUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach a Velomine server at that address. Check the address, and that the phone is on the same network as the server.'**
+  String get setupUnreachable;
+
+  /// No description provided for @setupSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the address. Try again.'**
+  String get setupSaveFailed;
 }
 
 class _AppLocalizationsDelegate

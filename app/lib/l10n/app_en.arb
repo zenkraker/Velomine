@@ -40,5 +40,60 @@
   },
   "languageSystem": "Follow this device",
   "languageEnglish": "English",
-  "languageItalian": "Italiano"
+  "languageItalian": "Italiano",
+
+  "email": "Email",
+  "password": "Password",
+  "name": "Name",
+  "signIn": "Sign in",
+  "change": "Change",
+  "tryAgain": "Try again",
+  "serverLabel": "Server: {url}",
+  "@serverLabel": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "continueWith": "Continue with {provider}",
+  "@continueWith": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "createAccount": "Create an account",
+  "createAccountAction": "Create account",
+  "haveAccount": "I already have an account",
+  "backToSignIn": "Back to sign in",
+  "passwordHint": "At least 10 characters, with a capital letter, a small letter and a digit.",
+  "registeredReady": "Your account is ready. You can sign in now.",
+  "registeredPending": "Your account was created. An admin has to approve it before you can sign in.",
+  "authWrongPassword": "The email or password is not right.",
+  "authNotApproved": "Your account is waiting for an admin to approve it.",
+  "authLockedOut": "Too many wrong attempts. Try again in a few minutes.",
+  "authSignUpClosed": "Sign-up is closed on this server.",
+  "authWeakPassword": "The password needs at least 10 characters with a capital letter, a small letter and a digit.",
+  "authEmailTaken": "There is already an account with this email.",
+  "authUnavailable": "Could not reach the server. Try again.",
+  "ssoEmailNotVerified": "Your sign-in provider has not verified your email address.",
+  "ssoNoAccount": "There is no account for you here yet. Ask an admin.",
+  "ssoLockedOut": "This account is locked. Try again in a few minutes.",
+  "ssoNoEmail": "Your sign-in provider did not share an email address.",
+  "ssoFailed": "Single sign-on did not work. Try again.",
+  "ssoGeneric": "single sign-on",
+  "signingIn": "Signing you in…",
+
+  "setupTitle": "Which server does your club use?",
+  "setupServerAddress": "Server address",
+  "setupServerHint": "https://velomine.club.example",
+  "setupInsecure": "This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.",
+  "setupChecking": "Checking…",
+  "setupConnect": "Connect",
+  "setupHelp": "Ask your club admin for the address. It usually looks like https://velomine.your-club.example.",
+  "setupInvalidAddress": "Enter an address that starts with http:// or https://, for example https://velomine.club.example.",
+  "setupUnreachable": "Could not reach a Velomine server at that address. Check the address, and that the phone is on the same network as the server.",
+  "setupSaveFailed": "Could not save the address. Try again."
 }

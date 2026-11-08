@@ -59,6 +59,7 @@ class _VelomineRootState extends State<VelomineRoot> {
               initialUrl:
                   widget.config.previousUrl ?? widget.config.suggestedUrl,
               onSaved: widget.config.save,
+              languageChoice: widget.languageChoice,
             ),
           );
         }

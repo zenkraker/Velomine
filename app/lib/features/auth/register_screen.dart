@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/l10n.dart';
 import '../../core/session.dart';
 import 'sign_in_screen.dart';
 
@@ -17,7 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _email = TextEditingController();
   final _name = TextEditingController();
   final _password = TextEditingController();
-  String? _error;
+  AuthProblem? _problem;
   bool? _approved; // null until the account is created
   bool _busy = false;
 
@@ -32,7 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     setState(() {
       _busy = true;
-      _error = null;
+      _problem = null;
     });
     final result = await widget.session.signUp(
       _email.text.trim(),
@@ -43,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _busy = false;
       if (result.problem != null) {
-        _error = authProblemText(result.problem!);
+        _problem = result.problem;
       } else {
         _approved = result.approved;
       }
@@ -53,8 +54,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final created = _approved != null;
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Create an account')),
+      appBar: AppBar(title: Text(l10n.createAccount)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -65,15 +67,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ? [
                     Text(
                       _approved!
-                          ? 'Your account is ready. You can sign in now.'
-                          : 'Your account was created. An admin has to approve it before you can sign in.',
+                          ? l10n.registeredReady
+                          : l10n.registeredPending,
                       key: const Key('registered'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: () => context.go('/sign-in'),
-                      child: const Text('Back to sign in'),
+                      child: Text(l10n.backToSignIn),
                     ),
                   ]
                 : [
@@ -81,29 +83,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       key: const Key('email'),
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(labelText: 'Email'),
+                      decoration: InputDecoration(labelText: l10n.email),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       key: const Key('name'),
                       controller: _name,
-                      decoration: const InputDecoration(labelText: 'Name'),
+                      decoration: InputDecoration(labelText: l10n.name),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       key: const Key('password'),
                       controller: _password,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        helperText: 'At least 10 characters, with a capital letter, a small letter and a digit.',
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        helperText: l10n.passwordHint,
                         helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
                       ),
                     ),
-                    if (_error != null) ...[
+                    if (_problem != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        _error!,
+                        authProblemText(l10n, _problem!),
                         key: const Key('register-error'),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
@@ -114,11 +116,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     FilledButton(
                       key: const Key('register'),
                       onPressed: _busy ? null : _register,
-                      child: const Text('Create account'),
+                      child: Text(l10n.createAccountAction),
                     ),
                     TextButton(
                       onPressed: () => context.go('/sign-in'),
-                      child: const Text('I already have an account'),
+                      child: Text(l10n.haveAccount),
                     ),
                   ],
           ),

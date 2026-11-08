@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/l10n.dart';
 import '../../core/session.dart';
 
 /// Where the phone lands when the browser hands a single sign-on back (`com.velomine.app:/sso-callback?code=...`).
@@ -42,12 +43,15 @@ class _SsoCallbackScreenState extends State<SsoCallbackScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
+  Widget build(BuildContext context) => Scaffold(
     body: Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 16,
-        children: [CircularProgressIndicator(), Text('Signing you in…')],
+        children: [
+          const CircularProgressIndicator(),
+          Text(context.l10n.signingIn),
+        ],
       ),
     ),
   );
