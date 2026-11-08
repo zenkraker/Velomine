@@ -3,6 +3,7 @@ using FastEndpoints.OpenApi;
 using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.FileProviders;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
@@ -65,9 +66,27 @@ builder.Services.AddHealthChecks();
 if (builder.IsExportMode()) builder.Services.RemoveAll<IHostedService>();
 
 var app = builder.Build();
-// The Flutter web app is built into wwwroot (see the Dockerfile) and served from the same address as the API,
-// so its session cookie works without any cross-origin setup.
-app.UseDefaultFiles();
+// The presentation site lives in site/ and is served at the root: "/", "/status/", "/pricing/" and "/contact/".
+// The Flutter web app is built into wwwroot (see the Dockerfile) and keeps its own routes through the fallback below.
+// Both are served from the same address as the API, so the session cookie works without any cross-origin setup.
+var sitePath = Path.Combine(app.Environment.ContentRootPath, "site");
+if (Directory.Exists(sitePath))
+{
+    var siteFiles = new PhysicalFileProvider(sitePath);
+    // Directory pages are linked with a trailing slash; add it when someone leaves it out.
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.Value is "/status" or "/pricing" or "/contact" or "/it")
+        {
+            context.Response.Redirect(context.Request.Path.Value + "/", permanent: true);
+            return;
+        }
+
+        await next();
+    });
+    app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = siteFiles });
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = siteFiles });
+}
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -78,8 +97,9 @@ app.UseFastEndpoints(c =>
 });
 app.MapOpenApi(); // /openapi/v1.json
 // An address without a file extension is a page of the web app (the app routes itself, e.g. /rides). Files such as
-// main.dart.js are left to the static file middleware, and API paths that do not exist stay 404.
-app.MapFallbackToFile("{*path:regex(^(?!api/|health|openapi/)[^.]*$)}", "index.html");
+// main.dart.js are left to the static file middleware, and API paths that do not exist stay 404. The presentation
+// site's pages are excluded so endpoint routing does not hide them from the default-file middleware above.
+app.MapFallbackToFile("{*path:regex(^(?!(?:api|health|openapi|status|pricing|contact|it)(?:/|$))[^.]*$)}", "index.html");
 app.MapHealthChecks("/health");
 await app.ExportOpenApiDocsAndExitAsync("v1"); // `--export-openapi-docs true` writes the document and exits, for the client generator
 app.Run();

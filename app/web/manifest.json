@@ -1,12 +1,12 @@
 {
-    "name": "velomine",
-    "short_name": "velomine",
-    "start_url": ".",
+    "name": "Velomine",
+    "short_name": "Velomine",
+    "start_url": "/rides",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F0EEE9",
+    "theme_color": "#0F4C4A",
+    "description": "Cycling training for clubs and teams. On-premise or cloud.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

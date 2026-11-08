@@ -1,6 +1,6 @@
 # Velomine
 
-Self-hosted, cycling-only training platform for clubs and teams. No paywall; every member owns their data.
+Cycling-only training platform for clubs and teams, on-premise or in the cloud. No feature paywall; every member owns their data.
 
 - **Server:** .NET 10 (LTS), ASP.NET Core, EF Core, PostgreSQL.
 - **Apps:** Flutter for mobile (Android, iOS) and for the web app (Flutter web), one shared Dart codebase.

@@ -48,8 +48,11 @@ Future<XFile?> _pickRideFile() => openFile(
 );
 
 Future<void> _startWebSso(String server) async {
-  // The server redirects to the provider and back, ending on the home page: leave this page for it.
-  final login = Uri.parse('$server/api/v1/accounts/sso/login?returnUrl=%2F');
+  // The server redirects to the provider and back, ending on the rides page: leave this page for it.
+  // It cannot end on "/" because that is the presentation site, not the app.
+  final login = Uri.parse(
+    '$server/api/v1/accounts/sso/login?returnUrl=%2Frides',
+  );
   await launchUrl(login, webOnlyWindowName: '_self');
 }
 

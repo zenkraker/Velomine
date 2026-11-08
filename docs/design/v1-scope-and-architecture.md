@@ -4,7 +4,7 @@ Nov 1, 2026 · @Alex
 
 ## Decisions so far
 
-Velomine is a self-hosted, cycling-only platform for clubs and teams. Rides are private by default, a coach can be given access, and wellbeing tracking focuses on how the rider feels.
+Velomine is a cycling-only training platform for clubs and teams, on-premise or in the cloud. Rides are private by default, a coach can be given access, and wellbeing tracking focuses on how the rider feels.
 
 | Topic | Decision | What it means |
 | --- | --- | --- |
@@ -15,6 +15,7 @@ Velomine is a self-hosted, cycling-only platform for clubs and teams. Rides are 
 | Health | Wellness + session feel, cycle tracking | Daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride, menstrual phase as optional and highly protected context. |
 | Body data | Weight in the profile (assumption) | Not chosen as a health area, but W/kg, VO2max estimate and calories need it. Kept as a single profile field, not a tracked series. |
 | Name and brand | Velomine, direction D | Contour × Night Ride: Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
+| Hosting and price | On-premise or cloud | The club chooses a server it controls or a dedicated cloud instance. A one-time activation fee, then a yearly fee per member. No feature paywall; the data stays the member's. |
 
 **Dependency rule (all apps):** official libraries first. A community library is added only after a written evaluation and the owner's approval. The rule lives in the repository's `AGENTS.md`. Known cases that will need approval: Flutter has no official Bluetooth LE plugin, so the BLE library (for example universal\_ble) must go through the evaluation.
 
@@ -100,7 +101,7 @@ As decided: Flutter UI, sensor pairing over Bluetooth LE, uploads, plus a native
 | Accessibility, text selection, browser feel | Weaker; improving | Native web |
 | Team effort | One stack: Dart for app and web | Two stacks: Dart and TypeScript |
 
-**Decision: Flutter web** for the user, coach and admin web app. Velomine is self-hosted and everything behind login, so SEO does not matter, and one design system and API client for phone and web halves the UI work. The weaknesses are handled outside Flutter:
+**Decision: Flutter web** for the user, coach and admin web app. Velomine runs on the club's server or a dedicated cloud instance and everything is behind login, so SEO does not matter, and one design system and API client for phone and web halves the UI work. The weaknesses are handled outside Flutter:
 
 - **Share links:** small HTML pages rendered by the .NET server, with Open Graph tags so a shared ride previews properly in chats.
 - **Landing page and docs:** static HTML.
@@ -153,6 +154,5 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 - [ ] **Weight:** confirm it lives as a single profile field. W/kg, VO2max and calories need it.
 - [ ] **Health data and the law:** wellness and cycle data are health data. A club running a server for its members holds health data about them, which in the EU is a special category under GDPR and needs explicit consent. Velomine should ship consent screens, export and deletion by design; check the legal side with someone qualified.
 - [ ] **Licence for Velomine:** AGPL-3.0 (keeps forks open) or MIT (easier for others to reuse)?
-- [ ] **Hosting:** self-host only, or also a hosted instance? "No paywall" needs a funding model for any hosted version.
 - [ ] **Strava:** one-time import of an export only, or ongoing sync despite Strava's API limits?
 - [ ] **Languages:** English and Italian first (assumption)?

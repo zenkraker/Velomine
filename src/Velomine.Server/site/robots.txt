@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /openapi/
+Disallow: /health
+Disallow: /sign-in
+Disallow: /register
+Disallow: /sso-callback
+Disallow: /rides
+Disallow: /progress
+Disallow: /bikes
+Disallow: /club
+Disallow: /admin
+Disallow: /notifications
+Disallow: /profile
+Disallow: /join
