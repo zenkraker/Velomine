@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import 'bike_forms.dart';
 import 'bikes_controller.dart';
 
@@ -62,7 +64,7 @@ class _BikesScreenState extends State<BikesScreen> {
                     ),
                     if (c.error != null)
                       Text(
-                        c.error!,
+                        failureText(context.l10n, c.error!),
                         key: const Key('bikes-error'),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import 'admin_controller.dart';
 
 const _roleNames = {'member': 'Member', 'coach': 'Coach', 'admin': 'Admin'};
@@ -58,7 +60,7 @@ class AccountsTab extends StatelessWidget {
       children: [
         if (c.error != null)
           Text(
-            c.error!,
+            failureText(context.l10n, c.error!),
             key: const Key('admin-error'),
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),

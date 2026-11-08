@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../../core/failure.dart';
 import 'ride_series.dart';
 
 /// One ride: its numbers, its samples for the charts and map, and deleting it.
@@ -29,7 +30,7 @@ class RideDetailController extends ChangeNotifier {
   RideSeries? data;
   bool loading = true;
   bool notFound = false;
-  String? error;
+  Failure? error;
   bool _disposed = false;
 
   Future<void> load() async {
@@ -59,10 +60,17 @@ class RideDetailController extends ChangeNotifier {
         } else if (e.code == 404) {
           notFound = true;
         } else {
-          error = 'Could not load this ride (${e.code}). Try again.';
+          error = Failure(
+            FailureKind.failed,
+            code: e.code,
+            action: FailureAction.loadRide,
+          );
         }
       } on Object {
-        error = 'Could not reach the server. Try again.';
+        error = Failure(
+          FailureKind.unreachable,
+          action: FailureAction.loadRide,
+        );
       }
       break;
     }
@@ -82,9 +90,16 @@ class RideDetailController extends ChangeNotifier {
       error = null;
     } on ApiException catch (e) {
       if (e.code == 401) onUnauthorized();
-      error = 'Could not change the bike (${e.code}).';
+      error = Failure(
+        FailureKind.failed,
+        code: e.code,
+        action: FailureAction.changeRideBike,
+      );
     } on Object {
-      error = 'Could not reach the server.';
+      error = Failure(
+        FailureKind.unreachable,
+        action: FailureAction.changeRideBike,
+      );
     }
     notifyListeners();
   }
@@ -96,9 +111,16 @@ class RideDetailController extends ChangeNotifier {
       return true;
     } on ApiException catch (e) {
       if (e.code == 401) onUnauthorized();
-      error = 'Could not delete the ride (${e.code}).';
+      error = Failure(
+        FailureKind.failed,
+        code: e.code,
+        action: FailureAction.deleteRide,
+      );
     } on Object {
-      error = 'Could not reach the server.';
+      error = Failure(
+        FailureKind.unreachable,
+        action: FailureAction.deleteRide,
+      );
     }
     notifyListeners();
     return false;

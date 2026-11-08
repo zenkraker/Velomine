@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' show MultipartFile;
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
+import '../../core/guard.dart';
 import '../../core/hooks.dart';
 
 /// The member's rides, and uploading new ones.
@@ -24,7 +26,7 @@ class RidesController extends ChangeNotifier {
   String? next;
   bool loading = false;
   bool uploading = false;
-  String? error;
+  Failure? error;
 
   Future<void> refresh() async {
     loading = true;
@@ -34,7 +36,7 @@ class RidesController extends ChangeNotifier {
       final page = await api.listRides();
       rides = page?.rides ?? [];
       next = page?.next;
-    });
+    }, FailureAction.loadRides);
     loading = false;
     notifyListeners();
   }
@@ -47,7 +49,7 @@ class RidesController extends ChangeNotifier {
       final page = await api.listRides(cursor: next);
       rides = [...rides, ...?page?.rides];
       next = page?.next;
-    });
+    }, FailureAction.loadRides);
     loading = false;
     notifyListeners();
   }
@@ -69,7 +71,7 @@ class RidesController extends ChangeNotifier {
       );
       // The key makes a retry of the same upload safe: the server returns the first ride instead of making another.
       rideId = (await api.uploadRide(file, idempotencyKey: _newKey()))?.rideId;
-    });
+    }, FailureAction.uploadRide);
     uploading = false;
     notifyListeners();
     if (rideId == null) return;
@@ -83,7 +85,10 @@ class RidesController extends ChangeNotifier {
     for (var i = 0; i < 120; i++) {
       await Future<void>.delayed(pollInterval);
       RideResponse? ride;
-      await _guard(() async => ride = await api.getRide(id));
+      await _guard(
+        () async => ride = await api.getRide(id),
+        FailureAction.loadRide,
+      );
       if (ride == null) return;
       final index = rides.indexWhere((r) => r.id == id);
       if (index >= 0) {
@@ -97,20 +102,11 @@ class RidesController extends ChangeNotifier {
     }
   }
 
-  Future<void> _guard(Future<void> Function() action) async {
-    try {
-      await action();
-    } on ApiException catch (e) {
-      if (e.code == 401) {
-        onUnauthorized();
-      } else if (e.code == 400) {
-        error = 'The server did not accept this file.';
-      } else {
-        error = 'Something went wrong (${e.code}). Try again.';
-      }
-    } on Object {
-      error = 'Could not reach the server. Try again.';
-    }
+  Future<void> _guard(
+    Future<void> Function() action,
+    FailureAction doing,
+  ) async {
+    error = await guardCall(action, onUnauthorized, doing: doing);
   }
 
   static String _newKey() {

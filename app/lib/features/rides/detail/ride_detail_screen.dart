@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../../core/failure.dart';
 import '../../../core/format.dart';
+import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
 import '../rides_screen.dart';
 import 'ride_detail_controller.dart';
@@ -134,7 +136,9 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     if (ride == null) {
       return [
         Text(
-          c.error ?? 'Could not load this ride.',
+          c.error == null
+              ? 'Could not load this ride.'
+              : failureText(context.l10n, c.error!),
           key: const Key('ride-error'),
           style: TextStyle(color: error),
         ),
@@ -155,7 +159,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
       ),
       if (c.error != null)
         Text(
-          c.error!,
+          failureText(context.l10n, c.error!),
           key: const Key('ride-error'),
           style: TextStyle(color: error),
         ),
@@ -173,7 +177,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         )
       else if (ride.status == 'failed')
         Text(
-          rideErrorText(ride.error),
+          rideErrorText(context.l10n, ride.error),
           key: const Key('ride-failed'),
           style: TextStyle(color: error),
         )

@@ -95,5 +95,117 @@
   "setupHelp": "Ask your club admin for the address. It usually looks like https://velomine.your-club.example.",
   "setupInvalidAddress": "Enter an address that starts with http:// or https://, for example https://velomine.club.example.",
   "setupUnreachable": "Could not reach a Velomine server at that address. Check the address, and that the phone is on the same network as the server.",
-  "setupSaveFailed": "Could not save the address. Try again."
+  "setupSaveFailed": "Could not save the address. Try again.",
+
+  "failureRejected": "The server did not accept that. Check the values.",
+  "failureMissing": "It no longer exists.",
+  "failureConflict": "That is not allowed.",
+  "failureMail": "The mail server did not accept it. Check the email settings.",
+  "failureWrongConfirmation": "That does not match. Nothing was deleted.",
+  "failureLastAdmin": "You are the only admin. Make someone else an admin first.",
+  "failureUnreachable": "Could not reach the server. Try again.",
+  "failureFailed": "Could not {action} ({code}). Try again.",
+  "@failureFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+
+  "actionGeneral": "do that",
+  "actionLoadRides": "load your rides",
+  "actionUploadRide": "upload this file",
+  "actionLoadRide": "load this ride",
+  "actionChangeRideBike": "change the bike",
+  "actionDeleteRide": "delete the ride",
+  "actionLoadBikes": "load your bikes",
+  "actionAddBike": "add the bike",
+  "actionLoadBike": "load this bike",
+  "actionSaveBike": "save the bike",
+  "actionSetDefaultBike": "set the default",
+  "actionDeleteBike": "delete the bike",
+  "actionAddPart": "add the part",
+  "actionSavePart": "save the part",
+  "actionRemovePart": "remove the part",
+  "actionLoadProgress": "load your progress",
+  "actionAddGoal": "add the goal",
+  "actionChangeGoal": "change the goal",
+  "actionDeleteGoal": "delete the goal",
+  "actionLoadAdmin": "load the admin pages",
+  "actionReloadAccounts": "reload the accounts",
+  "actionApproveAccount": "approve the account",
+  "actionChangeRoles": "change the roles",
+  "actionLockAccount": "lock the account",
+  "actionUnlockAccount": "unlock the account",
+  "actionDeleteAccount": "delete the account",
+  "actionSendTestEmail": "send the test email",
+  "actionSaveSettings": "save the settings",
+  "actionLoadProfile": "load your profile",
+  "actionPrepareData": "prepare your data",
+  "actionSaveProfile": "save your profile",
+  "actionLoadNotifications": "load your notifications",
+  "actionMarkRead": "mark it read",
+  "actionMarkAllRead": "mark them read",
+
+  "notificationRideReady": "Your ride {subject} is ready.",
+  "@notificationRideReady": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationRideFailed": "{subject} could not be read.",
+  "@notificationRideFailed": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationRideDuplicate": "{subject} was already uploaded, so it is hidden.",
+  "@notificationRideDuplicate": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSignupWaiting": "{subject} signed up and is waiting for approval.",
+  "@notificationSignupWaiting": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationPartSoon": "{subject} is nearly worn.",
+  "@notificationPartSoon": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationPartWorn": "{subject} is worn out. Time to replace it.",
+  "@notificationPartWorn": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+
+  "rideErrorCorrupt": "The file is damaged or incomplete.",
+  "rideErrorInvalid": "This is not a ride file.",
+  "rideErrorUnsupported": "Only FIT, GPX and TCX files are supported.",
+  "rideErrorNotCycling": "This is not a cycling activity.",
+  "rideErrorNoTimestamps": "The file has no timestamps.",
+  "rideErrorNoRecords": "The file has no usable ride data.",
+  "rideErrorTooLarge": "The file is too large.",
+  "rideErrorUnknown": "The server could not read this file."
 }

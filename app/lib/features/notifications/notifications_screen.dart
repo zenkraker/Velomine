@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import 'notifications_controller.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -64,7 +66,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   if (c.error != null)
                     Text(
-                      c.error!,
+                      failureText(context.l10n, c.error!),
                       key: const Key('notifications-error'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
@@ -114,7 +116,7 @@ class _NotificationTile extends StatelessWidget {
         onTap: onTap,
         leading: Icon(_icon(n.type), color: warning ? scheme.error : null),
         title: Text(
-          notificationText(n),
+          notificationText(context.l10n, n),
           style: n.isRead ? null : const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(dateTime(n.createdAt)),

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/guard.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// The member's notifications and how many are unread. While signed in it checks again every [pollInterval],
 /// so the bell shows news (a ride read, a part worn) without a reload.
@@ -21,7 +23,7 @@ class NotificationsController extends ChangeNotifier {
   List<NotificationResponse> items = [];
   int unread = 0;
   bool loading = false;
-  String? error;
+  Failure? error;
   Timer? _timer;
 
   bool get running => _timer != null;
@@ -52,7 +54,7 @@ class NotificationsController extends ChangeNotifier {
         unread = list?.unreadCount ?? 0;
       },
       onUnauthorized,
-      what: 'load your notifications',
+      doing: FailureAction.loadNotifications,
     );
     loading = false;
     notifyListeners();
@@ -63,7 +65,7 @@ class NotificationsController extends ChangeNotifier {
     error = await guardCall(
       () => api.markNotificationRead(n.id),
       onUnauthorized,
-      what: 'mark it read',
+      doing: FailureAction.markRead,
     );
     if (error == null) {
       items = [
@@ -78,7 +80,7 @@ class NotificationsController extends ChangeNotifier {
     error = await guardCall(
       api.markAllNotificationsRead,
       onUnauthorized,
-      what: 'mark them read',
+      doing: FailureAction.markAllRead,
     );
     if (error == null) {
       items = [for (final i in items) i.copyWith(isRead: true)];
@@ -95,15 +97,16 @@ class NotificationsController extends ChangeNotifier {
 }
 
 /// The sentence for a notification. The server sends its type and subject; wording lives in the app.
-String notificationText(NotificationResponse n) => switch (n.type) {
-  'ride_ready' => 'Your ride ${n.subject} is ready.',
-  'ride_failed' => '${n.subject} could not be read.',
-  'ride_duplicate' => '${n.subject} was already uploaded, so it is hidden.',
-  'signup_waiting' => '${n.subject} signed up and is waiting for approval.',
-  'part_soon' => '${n.subject} is nearly worn.',
-  'part_worn' => '${n.subject} is worn out. Time to replace it.',
-  _ => n.subject,
-};
+String notificationText(AppLocalizations l10n, NotificationResponse n) =>
+    switch (n.type) {
+      'ride_ready' => l10n.notificationRideReady(n.subject),
+      'ride_failed' => l10n.notificationRideFailed(n.subject),
+      'ride_duplicate' => l10n.notificationRideDuplicate(n.subject),
+      'signup_waiting' => l10n.notificationSignupWaiting(n.subject),
+      'part_soon' => l10n.notificationPartSoon(n.subject),
+      'part_worn' => l10n.notificationPartWorn(n.subject),
+      _ => n.subject,
+    };
 
 /// Where tapping a notification goes, or null when there is nowhere to go.
 String? notificationTarget(NotificationResponse n) => switch (n.type) {

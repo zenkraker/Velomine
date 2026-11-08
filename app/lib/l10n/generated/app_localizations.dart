@@ -427,6 +427,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the address. Try again.'**
   String get setupSaveFailed;
+
+  /// No description provided for @failureRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not accept that. Check the values.'**
+  String get failureRejected;
+
+  /// No description provided for @failureMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'It no longer exists.'**
+  String get failureMissing;
+
+  /// No description provided for @failureConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'That is not allowed.'**
+  String get failureConflict;
+
+  /// No description provided for @failureMail.
+  ///
+  /// In en, this message translates to:
+  /// **'The mail server did not accept it. Check the email settings.'**
+  String get failureMail;
+
+  /// No description provided for @failureWrongConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'That does not match. Nothing was deleted.'**
+  String get failureWrongConfirmation;
+
+  /// No description provided for @failureLastAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the only admin. Make someone else an admin first.'**
+  String get failureLastAdmin;
+
+  /// No description provided for @failureUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Try again.'**
+  String get failureUnreachable;
+
+  /// No description provided for @failureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not {action} ({code}). Try again.'**
+  String failureFailed(String action, int code);
+
+  /// No description provided for @actionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'do that'**
+  String get actionGeneral;
+
+  /// No description provided for @actionLoadRides.
+  ///
+  /// In en, this message translates to:
+  /// **'load your rides'**
+  String get actionLoadRides;
+
+  /// No description provided for @actionUploadRide.
+  ///
+  /// In en, this message translates to:
+  /// **'upload this file'**
+  String get actionUploadRide;
+
+  /// No description provided for @actionLoadRide.
+  ///
+  /// In en, this message translates to:
+  /// **'load this ride'**
+  String get actionLoadRide;
+
+  /// No description provided for @actionChangeRideBike.
+  ///
+  /// In en, this message translates to:
+  /// **'change the bike'**
+  String get actionChangeRideBike;
+
+  /// No description provided for @actionDeleteRide.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the ride'**
+  String get actionDeleteRide;
+
+  /// No description provided for @actionLoadBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'load your bikes'**
+  String get actionLoadBikes;
+
+  /// No description provided for @actionAddBike.
+  ///
+  /// In en, this message translates to:
+  /// **'add the bike'**
+  String get actionAddBike;
+
+  /// No description provided for @actionLoadBike.
+  ///
+  /// In en, this message translates to:
+  /// **'load this bike'**
+  String get actionLoadBike;
+
+  /// No description provided for @actionSaveBike.
+  ///
+  /// In en, this message translates to:
+  /// **'save the bike'**
+  String get actionSaveBike;
+
+  /// No description provided for @actionSetDefaultBike.
+  ///
+  /// In en, this message translates to:
+  /// **'set the default'**
+  String get actionSetDefaultBike;
+
+  /// No description provided for @actionDeleteBike.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the bike'**
+  String get actionDeleteBike;
+
+  /// No description provided for @actionAddPart.
+  ///
+  /// In en, this message translates to:
+  /// **'add the part'**
+  String get actionAddPart;
+
+  /// No description provided for @actionSavePart.
+  ///
+  /// In en, this message translates to:
+  /// **'save the part'**
+  String get actionSavePart;
+
+  /// No description provided for @actionRemovePart.
+  ///
+  /// In en, this message translates to:
+  /// **'remove the part'**
+  String get actionRemovePart;
+
+  /// No description provided for @actionLoadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'load your progress'**
+  String get actionLoadProgress;
+
+  /// No description provided for @actionAddGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'add the goal'**
+  String get actionAddGoal;
+
+  /// No description provided for @actionChangeGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'change the goal'**
+  String get actionChangeGoal;
+
+  /// No description provided for @actionDeleteGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the goal'**
+  String get actionDeleteGoal;
+
+  /// No description provided for @actionLoadAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'load the admin pages'**
+  String get actionLoadAdmin;
+
+  /// No description provided for @actionReloadAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'reload the accounts'**
+  String get actionReloadAccounts;
+
+  /// No description provided for @actionApproveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'approve the account'**
+  String get actionApproveAccount;
+
+  /// No description provided for @actionChangeRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'change the roles'**
+  String get actionChangeRoles;
+
+  /// No description provided for @actionLockAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'lock the account'**
+  String get actionLockAccount;
+
+  /// No description provided for @actionUnlockAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'unlock the account'**
+  String get actionUnlockAccount;
+
+  /// No description provided for @actionDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the account'**
+  String get actionDeleteAccount;
+
+  /// No description provided for @actionSendTestEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'send the test email'**
+  String get actionSendTestEmail;
+
+  /// No description provided for @actionSaveSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'save the settings'**
+  String get actionSaveSettings;
+
+  /// No description provided for @actionLoadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'load your profile'**
+  String get actionLoadProfile;
+
+  /// No description provided for @actionPrepareData.
+  ///
+  /// In en, this message translates to:
+  /// **'prepare your data'**
+  String get actionPrepareData;
+
+  /// No description provided for @actionSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'save your profile'**
+  String get actionSaveProfile;
+
+  /// No description provided for @actionLoadNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'load your notifications'**
+  String get actionLoadNotifications;
+
+  /// No description provided for @actionMarkRead.
+  ///
+  /// In en, this message translates to:
+  /// **'mark it read'**
+  String get actionMarkRead;
+
+  /// No description provided for @actionMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'mark them read'**
+  String get actionMarkAllRead;
+
+  /// No description provided for @notificationRideReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ride {subject} is ready.'**
+  String notificationRideReady(String subject);
+
+  /// No description provided for @notificationRideFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{subject} could not be read.'**
+  String notificationRideFailed(String subject);
+
+  /// No description provided for @notificationRideDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'{subject} was already uploaded, so it is hidden.'**
+  String notificationRideDuplicate(String subject);
+
+  /// No description provided for @notificationSignupWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{subject} signed up and is waiting for approval.'**
+  String notificationSignupWaiting(String subject);
+
+  /// No description provided for @notificationPartSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'{subject} is nearly worn.'**
+  String notificationPartSoon(String subject);
+
+  /// No description provided for @notificationPartWorn.
+  ///
+  /// In en, this message translates to:
+  /// **'{subject} is worn out. Time to replace it.'**
+  String notificationPartWorn(String subject);
+
+  /// No description provided for @rideErrorCorrupt.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is damaged or incomplete.'**
+  String get rideErrorCorrupt;
+
+  /// No description provided for @rideErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a ride file.'**
+  String get rideErrorInvalid;
+
+  /// No description provided for @rideErrorUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Only FIT, GPX and TCX files are supported.'**
+  String get rideErrorUnsupported;
+
+  /// No description provided for @rideErrorNotCycling.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a cycling activity.'**
+  String get rideErrorNotCycling;
+
+  /// No description provided for @rideErrorNoTimestamps.
+  ///
+  /// In en, this message translates to:
+  /// **'The file has no timestamps.'**
+  String get rideErrorNoTimestamps;
+
+  /// No description provided for @rideErrorNoRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'The file has no usable ride data.'**
+  String get rideErrorNoRecords;
+
+  /// No description provided for @rideErrorTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is too large.'**
+  String get rideErrorTooLarge;
+
+  /// No description provided for @rideErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The server could not read this file.'**
+  String get rideErrorUnknown;
 }
 
 class _AppLocalizationsDelegate

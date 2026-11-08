@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/hooks.dart';
+import '../../core/l10n.dart';
 
 import 'profile_controller.dart';
 
@@ -264,7 +266,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 })
                               : null,
                         ),
-                        if (_problem ?? c.error case final message?)
+                        if (_problem ??
+                                (c.error == null
+                                    ? null
+                                    : failureText(context.l10n, c.error!))
+                            case final message?)
                           Text(
                             message,
                             key: const Key('profile-error'),

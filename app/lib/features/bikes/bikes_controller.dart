@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/guard.dart';
 
 /// The member's bikes, and adding one.
@@ -12,7 +13,7 @@ class BikesController extends ChangeNotifier {
 
   List<BikeResponse> bikes = [];
   bool loading = false;
-  String? error;
+  Failure? error;
 
   Future<void> refresh() async {
     loading = true;
@@ -23,7 +24,7 @@ class BikesController extends ChangeNotifier {
         bikes = (await api.listBikes())?.bikes ?? [];
       },
       onUnauthorized,
-      what: 'load your bikes',
+      doing: FailureAction.loadBikes,
     );
     loading = false;
     notifyListeners();
@@ -37,7 +38,7 @@ class BikesController extends ChangeNotifier {
         id = (await api.createBike(bike))?.bike.id;
       },
       onUnauthorized,
-      what: 'add the bike',
+      doing: FailureAction.addBike,
     );
     if (id != null) await refresh();
     notifyListeners();
@@ -63,7 +64,7 @@ class BikeDetailController extends ChangeNotifier {
   List<ComponentTypeResponse> types = [];
   bool loading = true;
   bool notFound = false;
-  String? error;
+  Failure? error;
 
   Future<void> load() async {
     error = await guardCall(
@@ -77,7 +78,7 @@ class BikeDetailController extends ChangeNotifier {
         }
       },
       onUnauthorized,
-      what: 'load this bike',
+      doing: FailureAction.loadBike,
     );
     loading = false;
     notifyListeners();
@@ -85,13 +86,13 @@ class BikeDetailController extends ChangeNotifier {
 
   Future<bool> _change(
     Future<BikeDetailResponse?> Function() call,
-    String what,
+    FailureAction doing,
   ) async {
     BikeDetailResponse? result;
     error = await guardCall(
       () async => result = await call(),
       onUnauthorized,
-      what: what,
+      doing: doing,
     );
     if (result != null) detail = result;
     notifyListeners();
@@ -99,7 +100,7 @@ class BikeDetailController extends ChangeNotifier {
   }
 
   Future<bool> save(UpdateBikeRequest bike) =>
-      _change(() => api.updateBike(id, bike), 'save the bike');
+      _change(() => api.updateBike(id, bike), FailureAction.saveBike);
 
   /// Archiving keeps the rides and the history; the bike just stops being offered for new rides.
   Future<bool> setActive(bool active) {
@@ -122,7 +123,7 @@ class BikeDetailController extends ChangeNotifier {
     error = await guardCall(
       () => api.setDefaultBike(id),
       onUnauthorized,
-      what: 'set the default',
+      doing: FailureAction.setDefaultBike,
     );
     if (error == null) await load();
     notifyListeners();
@@ -133,23 +134,25 @@ class BikeDetailController extends ChangeNotifier {
     error = await guardCall(
       () => api.deleteBike(id),
       onUnauthorized,
-      what: 'delete the bike',
+      doing: FailureAction.deleteBike,
     );
     notifyListeners();
     return error == null;
   }
 
   Future<bool> addPart(CreateComponentRequest part) =>
-      _change(() => api.createComponent(id, part), 'add the part');
+      _change(() => api.createComponent(id, part), FailureAction.addPart);
 
-  Future<bool> editPart(String partId, UpdateComponentRequest part) =>
-      _change(() => api.updateComponent(id, partId, part), 'save the part');
+  Future<bool> editPart(String partId, UpdateComponentRequest part) => _change(
+    () => api.updateComponent(id, partId, part),
+    FailureAction.savePart,
+  );
 
   Future<bool> removePart(String partId) async {
     error = await guardCall(
       () => api.deleteComponent(id, partId),
       onUnauthorized,
-      what: 'remove the part',
+      doing: FailureAction.removePart,
     );
     if (error == null) await load();
     notifyListeners();

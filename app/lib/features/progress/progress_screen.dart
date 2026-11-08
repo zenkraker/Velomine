@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import 'goals.dart';
 import 'progress_controller.dart';
 import 'totals_chart.dart';
@@ -57,7 +59,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   Text('Progress', style: text.titleLarge),
                   if (c.error != null)
                     Text(
-                      c.error!,
+                      failureText(context.l10n, c.error!),
                       key: const Key('progress-error'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,

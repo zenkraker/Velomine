@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
+import '../../core/l10n.dart';
 import 'admin_controller.dart';
 
 /// The settings an admin can change, and (read-only) what only the server's environment sets.
@@ -71,7 +73,11 @@ class _SettingsTabState extends State<SettingsTab> {
       return Center(
         child: c.loading
             ? const CircularProgressIndicator()
-            : Text(c.error ?? 'No settings.'),
+            : Text(
+                c.error == null
+                    ? 'No settings.'
+                    : failureText(context.l10n, c.error!),
+              ),
       );
     }
     return ListView(
@@ -131,7 +137,7 @@ class _SettingsTabState extends State<SettingsTab> {
                 ),
                 if (c.error != null)
                   Text(
-                    c.error!,
+                    failureText(context.l10n, c.error!),
                     key: const Key('settings-error'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
@@ -165,11 +171,13 @@ class _SettingsTabState extends State<SettingsTab> {
                       label: const Text('Send a test email to me'),
                     ),
                   ),
-                if (c.testEmailResult case final result?)
+                if (c.testEmailSent || c.testEmailError != null)
                   Text(
-                    result,
+                    c.testEmailError == null
+                        ? 'Test email sent to your own address.'
+                        : failureText(context.l10n, c.testEmailError!),
                     key: const Key('test-email-result'),
-                    style: c.testEmailFailed
+                    style: c.testEmailError != null
                         ? TextStyle(color: Theme.of(context).colorScheme.error)
                         : null,
                   ),

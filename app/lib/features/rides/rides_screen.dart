@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'rides_controller.dart';
 
-String rideErrorText(String? code) => switch (code) {
-  'corrupt_file' => 'The file is damaged or incomplete.',
-  'invalid_file' => 'This is not a ride file.',
-  'unsupported_format' => 'Only FIT, GPX and TCX files are supported.',
-  'not_cycling' => 'This is not a cycling activity.',
-  'no_timestamps' => 'The file has no timestamps.',
-  'no_records' || 'too_short' => 'The file has no usable ride data.',
-  'file_too_large' => 'The file is too large.',
-  _ => 'The server could not read this file.',
+String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
+  'corrupt_file' => l10n.rideErrorCorrupt,
+  'invalid_file' => l10n.rideErrorInvalid,
+  'unsupported_format' => l10n.rideErrorUnsupported,
+  'not_cycling' => l10n.rideErrorNotCycling,
+  'no_timestamps' => l10n.rideErrorNoTimestamps,
+  'no_records' || 'too_short' => l10n.rideErrorNoRecords,
+  'file_too_large' => l10n.rideErrorTooLarge,
+  _ => l10n.rideErrorUnknown,
 };
 
 class RidesScreen extends StatefulWidget {
@@ -61,7 +64,7 @@ class _RidesScreenState extends State<RidesScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
-                      c.error!,
+                      failureText(context.l10n, c.error!),
                       key: const Key('rides-error'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
@@ -155,7 +158,7 @@ class RideCard extends StatelessWidget {
                 )
               else if (ride.status == 'failed')
                 Text(
-                  rideErrorText(ride.error),
+                  rideErrorText(context.l10n, ride.error),
                   key: const Key('ride-failed'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 )

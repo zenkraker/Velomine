@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/guard.dart';
 
 /// How many periods the totals show: about a quarter of weeks, a year of months, five years.
@@ -19,7 +20,7 @@ class ProgressController extends ChangeNotifier {
   TrainingResponse? training;
   List<GoalResponse> goals = [];
   bool loading = false;
-  String? error;
+  Failure? error;
 
   Future<void> refresh() async {
     loading = true;
@@ -37,7 +38,7 @@ class ProgressController extends ChangeNotifier {
         training = results[2] as TrainingResponse?;
       },
       onUnauthorized,
-      what: 'load your progress',
+      doing: FailureAction.loadProgress,
     );
     loading = false;
     notifyListeners();
@@ -61,7 +62,7 @@ class ProgressController extends ChangeNotifier {
     error = await guardCall(
       () => api.createGoal(goal),
       onUnauthorized,
-      what: 'add the goal',
+      doing: FailureAction.addGoal,
     );
     return _afterChange();
   }
@@ -70,7 +71,7 @@ class ProgressController extends ChangeNotifier {
     error = await guardCall(
       () => api.updateGoal(id, UpdateGoalRequest(target: target)),
       onUnauthorized,
-      what: 'change the goal',
+      doing: FailureAction.changeGoal,
     );
     return _afterChange();
   }
@@ -79,7 +80,7 @@ class ProgressController extends ChangeNotifier {
     error = await guardCall(
       () => api.deleteGoal(id),
       onUnauthorized,
-      what: 'delete the goal',
+      doing: FailureAction.deleteGoal,
     );
     return _afterChange();
   }

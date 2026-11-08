@@ -1,30 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
-/// Runs a call and turns failures into a message the screen can show; a 401 means the session ended.
-Future<String?> guardCall(
-  Future<void> Function() action,
+import 'failure.dart';
+
+/// Runs a call and keeps a failure as a kind for the screen to word; a 401 means the session ended.
+Future<Failure?> guardCall(
+  Future<void> Function() call,
   VoidCallback onUnauthorized, {
-  String what = 'do that',
+  FailureAction doing = FailureAction.general,
 }) async {
   try {
-    await action();
+    await call();
     return null;
   } on ApiException catch (e) {
     if (e.code == 401) {
       onUnauthorized();
       return null;
     }
-    if (e.code == 400) {
-      return 'The server did not accept that. Check the values.';
-    }
-    if (e.code == 404) return 'It no longer exists.';
-    if (e.code == 409) return 'That is not allowed.';
-    if (e.code == 502) {
-      return 'The mail server did not accept it. Check the email settings.';
-    }
-    return 'Could not $what (${e.code}). Try again.';
+    final kind = switch (e.code) {
+      400 => FailureKind.rejected,
+      404 => FailureKind.missing,
+      409 => FailureKind.conflict,
+      502 => FailureKind.mailRejected,
+      _ => FailureKind.failed,
+    };
+    return Failure(kind, code: e.code, action: doing);
   } on Object {
-    return 'Could not reach the server. Try again.';
+    return Failure(FailureKind.unreachable, action: doing);
   }
 }

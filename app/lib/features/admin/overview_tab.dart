@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import 'admin_controller.dart';
 
 /// Totals for the whole server. Counts only: an admin never sees whose rides they are.
@@ -16,7 +18,11 @@ class OverviewTab extends StatelessWidget {
       return Center(
         child: controller.loading
             ? const CircularProgressIndicator()
-            : Text(controller.error ?? 'No overview.'),
+            : Text(
+                controller.error == null
+                    ? 'No overview.'
+                    : failureText(context.l10n, controller.error!),
+              ),
       );
     }
     Widget tile(String key, String label, String value) => Card(

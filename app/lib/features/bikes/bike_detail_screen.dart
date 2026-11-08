@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import 'bike_forms.dart';
 import 'bikes_controller.dart';
@@ -158,7 +160,11 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
       return [
         if (c.loading) const Center(child: CircularProgressIndicator()),
         if (c.error != null)
-          Text(c.error!, key: const Key('bike-error'), style: errorStyle),
+          Text(
+            failureText(context.l10n, c.error!),
+            key: const Key('bike-error'),
+            style: errorStyle,
+          ),
       ];
     }
     final bike = detail.bike;
@@ -231,7 +237,11 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         ],
       ),
       if (c.error != null)
-        Text(c.error!, key: const Key('bike-error'), style: errorStyle),
+        Text(
+          failureText(context.l10n, c.error!),
+          key: const Key('bike-error'),
+          style: errorStyle,
+        ),
       Row(
         children: [
           Text('Parts', style: text.titleLarge),

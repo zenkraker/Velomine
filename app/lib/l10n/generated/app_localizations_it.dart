@@ -197,4 +197,193 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get setupSaveFailed => 'Impossibile salvare l\'indirizzo. Riprova.';
+
+  @override
+  String get failureRejected =>
+      'Il server non ha accettato la richiesta. Controlla i valori.';
+
+  @override
+  String get failureMissing => 'Non esiste più.';
+
+  @override
+  String get failureConflict => 'Non è consentito.';
+
+  @override
+  String get failureMail =>
+      'Il server di posta non l\'ha accettato. Controlla le impostazioni email.';
+
+  @override
+  String get failureWrongConfirmation =>
+      'Non corrisponde. Non è stato eliminato nulla.';
+
+  @override
+  String get failureLastAdmin =>
+      'Sei l\'unico amministratore. Nomina prima qualcun altro.';
+
+  @override
+  String get failureUnreachable =>
+      'Impossibile raggiungere il server. Riprova.';
+
+  @override
+  String failureFailed(String action, int code) {
+    return 'Impossibile $action ($code). Riprova.';
+  }
+
+  @override
+  String get actionGeneral => 'farlo';
+
+  @override
+  String get actionLoadRides => 'caricare le tue uscite';
+
+  @override
+  String get actionUploadRide => 'caricare questo file';
+
+  @override
+  String get actionLoadRide => 'caricare questa uscita';
+
+  @override
+  String get actionChangeRideBike => 'cambiare la bici';
+
+  @override
+  String get actionDeleteRide => 'eliminare l\'uscita';
+
+  @override
+  String get actionLoadBikes => 'caricare le tue bici';
+
+  @override
+  String get actionAddBike => 'aggiungere la bici';
+
+  @override
+  String get actionLoadBike => 'caricare questa bici';
+
+  @override
+  String get actionSaveBike => 'salvare la bici';
+
+  @override
+  String get actionSetDefaultBike => 'impostare la predefinita';
+
+  @override
+  String get actionDeleteBike => 'eliminare la bici';
+
+  @override
+  String get actionAddPart => 'aggiungere il componente';
+
+  @override
+  String get actionSavePart => 'salvare il componente';
+
+  @override
+  String get actionRemovePart => 'rimuovere il componente';
+
+  @override
+  String get actionLoadProgress => 'caricare i tuoi progressi';
+
+  @override
+  String get actionAddGoal => 'aggiungere l\'obiettivo';
+
+  @override
+  String get actionChangeGoal => 'modificare l\'obiettivo';
+
+  @override
+  String get actionDeleteGoal => 'eliminare l\'obiettivo';
+
+  @override
+  String get actionLoadAdmin => 'caricare le pagine admin';
+
+  @override
+  String get actionReloadAccounts => 'ricaricare gli account';
+
+  @override
+  String get actionApproveAccount => 'approvare l\'account';
+
+  @override
+  String get actionChangeRoles => 'cambiare i ruoli';
+
+  @override
+  String get actionLockAccount => 'bloccare l\'account';
+
+  @override
+  String get actionUnlockAccount => 'sbloccare l\'account';
+
+  @override
+  String get actionDeleteAccount => 'eliminare l\'account';
+
+  @override
+  String get actionSendTestEmail => 'inviare l\'email di prova';
+
+  @override
+  String get actionSaveSettings => 'salvare le impostazioni';
+
+  @override
+  String get actionLoadProfile => 'caricare il tuo profilo';
+
+  @override
+  String get actionPrepareData => 'preparare i tuoi dati';
+
+  @override
+  String get actionSaveProfile => 'salvare il tuo profilo';
+
+  @override
+  String get actionLoadNotifications => 'caricare le tue notifiche';
+
+  @override
+  String get actionMarkRead => 'segnarla come letta';
+
+  @override
+  String get actionMarkAllRead => 'segnarle come lette';
+
+  @override
+  String notificationRideReady(String subject) {
+    return 'La tua uscita $subject è pronta.';
+  }
+
+  @override
+  String notificationRideFailed(String subject) {
+    return 'Impossibile leggere $subject.';
+  }
+
+  @override
+  String notificationRideDuplicate(String subject) {
+    return '$subject era già stata caricata, quindi è nascosta.';
+  }
+
+  @override
+  String notificationSignupWaiting(String subject) {
+    return '$subject si è iscritto e attende l\'approvazione.';
+  }
+
+  @override
+  String notificationPartSoon(String subject) {
+    return '$subject è quasi usurato.';
+  }
+
+  @override
+  String notificationPartWorn(String subject) {
+    return '$subject è usurato. È ora di sostituirlo.';
+  }
+
+  @override
+  String get rideErrorCorrupt => 'Il file è danneggiato o incompleto.';
+
+  @override
+  String get rideErrorInvalid => 'Questo non è un file di un\'uscita.';
+
+  @override
+  String get rideErrorUnsupported =>
+      'Sono supportati solo i file FIT, GPX e TCX.';
+
+  @override
+  String get rideErrorNotCycling => 'Questa non è un\'attività di ciclismo.';
+
+  @override
+  String get rideErrorNoTimestamps => 'Il file non ha indicatori di tempo.';
+
+  @override
+  String get rideErrorNoRecords => 'Il file non contiene dati utilizzabili.';
+
+  @override
+  String get rideErrorTooLarge => 'Il file è troppo grande.';
+
+  @override
+  String get rideErrorUnknown =>
+      'Il server non è riuscito a leggere questo file.';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/failure.dart';
 import '../../core/guard.dart';
 
 /// The member's profile: what Velomine knows about them for training numbers and for their calendar.
@@ -21,13 +22,13 @@ class ProfileController extends ChangeNotifier {
   bool exporting = false;
   bool loading = true;
   bool saving = false;
-  String? error;
+  Failure? error;
 
   Future<void> load() async {
     error = await guardCall(
       () async => profile = await api.getProfile(),
       onUnauthorized,
-      what: 'load your profile',
+      doing: FailureAction.loadProfile,
     );
     loading = false;
     notifyListeners();
@@ -43,7 +44,7 @@ class ProfileController extends ChangeNotifier {
     error = await guardCall(
       () async => link = await api.createExportLink(),
       onUnauthorized,
-      what: 'prepare your data',
+      doing: FailureAction.prepareData,
     );
     exporting = false;
     notifyListeners();
@@ -61,15 +62,22 @@ class ProfileController extends ChangeNotifier {
     } on ApiException catch (e) {
       error = switch (e.code) {
         401 => null,
-        403 => 'That does not match. Nothing was deleted.',
-        409 => 'You are the only admin. Make someone else an admin first.',
-        _ => 'Could not delete the account (${e.code}). Try again.',
+        403 => const Failure(FailureKind.wrongConfirmation),
+        409 => const Failure(FailureKind.lastAdmin),
+        _ => Failure(
+          FailureKind.failed,
+          code: e.code,
+          action: FailureAction.deleteAccount,
+        ),
       };
       if (e.code == 401) onUnauthorized();
       notifyListeners();
       return false;
     } on Object {
-      error = 'Could not reach the server. Try again.';
+      error = const Failure(
+        FailureKind.unreachable,
+        action: FailureAction.deleteAccount,
+      );
       notifyListeners();
       return false;
     }
@@ -84,7 +92,7 @@ class ProfileController extends ChangeNotifier {
     error = await guardCall(
       () async => saved = await api.updateProfile(request),
       onUnauthorized,
-      what: 'save your profile',
+      doing: FailureAction.saveProfile,
     );
     if (saved != null) profile = saved;
     saving = false;
