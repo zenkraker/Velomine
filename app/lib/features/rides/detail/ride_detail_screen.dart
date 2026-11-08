@@ -5,6 +5,7 @@ import '../../../core/failure.dart';
 import '../../../core/format.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../rides_screen.dart';
 import 'ride_detail_controller.dart';
 import 'route_map.dart';
@@ -39,22 +40,21 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this ride?'),
-        content: const Text(
-          'The ride, its charts and the file you uploaded are removed. This cannot be undone.',
-        ),
+        title: Text(l10n.deleteRideTitle),
+        content: Text(l10n.deleteRideBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep it'),
+            child: Text(l10n.keepIt),
           ),
           FilledButton(
             key: const Key('confirm-delete'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -83,7 +83,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                         key: const Key('back'),
                         onPressed: widget.onBack,
                         icon: const Icon(Icons.arrow_back),
-                        label: const Text('Rides'),
+                        label: Text(context.l10n.navRides),
                       ),
                       const Spacer(),
                       if (c.ride != null)
@@ -91,7 +91,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                           key: const Key('delete'),
                           onPressed: _confirmDelete,
                           icon: const Icon(Icons.delete_outline),
-                          label: const Text('Delete'),
+                          label: Text(context.l10n.delete),
                           style: TextButton.styleFrom(
                             foregroundColor: Theme.of(context)
                                 .colorScheme
@@ -112,11 +112,12 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
 
   List<Widget> _body(BuildContext context, RideDetailController c) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final error = Theme.of(context).colorScheme.error;
     if (c.notFound) {
       return [
         Text(
-          'This ride does not exist, or it is not yours.',
+          l10n.rideNotFound,
           key: const Key('not-found'),
           style: text.titleMedium,
         ),
@@ -136,9 +137,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     if (ride == null) {
       return [
         Text(
-          c.error == null
-              ? 'Could not load this ride.'
-              : failureText(context.l10n, c.error!),
+          c.error == null ? l10n.couldNotLoadRide : failureText(l10n, c.error!),
           key: const Key('ride-error'),
           style: TextStyle(color: error),
         ),
@@ -159,25 +158,25 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
       ),
       if (c.error != null)
         Text(
-          failureText(context.l10n, c.error!),
+          failureText(l10n, c.error!),
           key: const Key('ride-error'),
           style: TextStyle(color: error),
         ),
       if (ride.status == 'processing')
-        const Row(
+        Row(
           spacing: 8,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
-            Text('Reading the file…', key: Key('processing')),
+            Text(l10n.readingFile, key: const Key('processing')),
           ],
         )
       else if (ride.status == 'failed')
         Text(
-          rideErrorText(context.l10n, ride.error),
+          rideErrorText(l10n, ride.error),
           key: const Key('ride-failed'),
           style: TextStyle(color: error),
         )
@@ -187,15 +186,14 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
             powerZones.isEmpty &&
             (ride.avgHeartRate != null || ride.avgPowerW != null))
           Text(
-            'Set your maximum heart rate and FTP in your profile to see zones '
-            'and training load.',
+            l10n.trainingHint,
             key: const Key('training-hint'),
             style: text.bodySmall,
           ),
         if (heartRateZones.isNotEmpty)
           _ZonesCard(
             key: const Key('heart-rate-zones'),
-            title: 'Heart rate zones',
+            title: l10n.heartRateZones,
             unit: 'bpm',
             zones: heartRateZones,
             colors: _heartRateZoneColors,
@@ -203,7 +201,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         if (powerZones.isNotEmpty)
           _ZonesCard(
             key: const Key('power-zones'),
-            title: 'Power zones',
+            title: l10n.powerZones,
             unit: 'W',
             zones: powerZones,
             colors: _powerZoneColors,
@@ -221,9 +219,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           ValueListenableBuilder<int?>(
             valueListenable: c.selected,
             builder: (_, index, _) => Text(
-              index == null
-                  ? 'Move over a chart, or touch and drag, to see the values along the ride.'
-                  : _moment(c, index),
+              index == null ? l10n.momentHint : _moment(l10n, c, index),
               key: const Key('moment'),
               style: text.bodyMedium?.copyWith(
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -244,10 +240,13 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     ];
   }
 
-  String _moment(RideDetailController c, int index) {
+  String _moment(AppLocalizations l10n, RideDetailController c, int index) {
     final d = c.data!;
     final distance = d.distance == null ? null : d.distance![index];
-    return 'At ${clock(d.time[index])}${distance == null ? '' : ' · ${km(distance)}'}';
+    return l10n.momentAt(
+      clock(d.time[index]),
+      distance == null ? '' : ' · ${km(distance)}',
+    );
   }
 }
 
@@ -259,42 +258,63 @@ class _Stats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = <(String, String)>[
-      ('Distance', km(ride.distanceM)),
-      ('Moving time', duration(ride.movingS)),
+    final l10n = context.l10n;
+    final tiles = <(String, String, String)>[
+      ('distance', l10n.statDistance, km(ride.distanceM)),
+      ('moving-time', l10n.statMovingTime, duration(ride.movingS)),
       if (ride.elapsedS != null &&
           ride.movingS != null &&
           ride.elapsedS! - ride.movingS! > 60)
-        ('Elapsed time', duration(ride.elapsedS)),
+        ('elapsed-time', l10n.statElapsedTime, duration(ride.elapsedS)),
       if (ride.elevationGainM != null)
-        ('Climbing', '${ride.elevationGainM!.round()} m'),
+        ('climbing', l10n.statClimbing, '${ride.elevationGainM!.round()} m'),
       if (ride.elevationLossM != null)
-        ('Descending', '${ride.elevationLossM!.round()} m'),
-      ('Average speed', kmh(ride.avgSpeedMs)),
-      if (ride.maxSpeedMs != null) ('Top speed', kmh(ride.maxSpeedMs)),
-      if (ride.avgPowerW != null) ('Average power', '${ride.avgPowerW} W'),
+        (
+          'descending',
+          l10n.statDescending,
+          '${ride.elevationLossM!.round()} m',
+        ),
+      ('average-speed', l10n.statAverageSpeed, kmh(ride.avgSpeedMs)),
+      if (ride.maxSpeedMs != null)
+        ('top-speed', l10n.statTopSpeed, kmh(ride.maxSpeedMs)),
+      if (ride.avgPowerW != null)
+        ('average-power', l10n.statAveragePower, '${ride.avgPowerW} W'),
       if (ride.normalizedPowerW != null)
-        ('Normalized power', '${ride.normalizedPowerW} W'),
-      if (ride.maxPowerW != null) ('Max power', '${ride.maxPowerW} W'),
+        (
+          'normalized-power',
+          l10n.statNormalizedPower,
+          '${ride.normalizedPowerW} W',
+        ),
+      if (ride.maxPowerW != null)
+        ('max-power', l10n.statMaxPower, '${ride.maxPowerW} W'),
       if (ride.intensityFactor != null)
-        ('Intensity', ride.intensityFactor!.toStringAsFixed(2)),
-      if (ride.tss != null) ('TSS', ride.tss!.round().toString()),
-      if (ride.trimp != null) ('TRIMP', ride.trimp!.round().toString()),
+        (
+          'intensity',
+          l10n.statIntensity,
+          ride.intensityFactor!.toStringAsFixed(2),
+        ),
+      if (ride.tss != null) ('tss', l10n.statTss, ride.tss!.round().toString()),
+      if (ride.trimp != null)
+        ('trimp', l10n.statTrimp, ride.trimp!.round().toString()),
       if (ride.avgHeartRate != null)
-        ('Average heart rate', '${ride.avgHeartRate} bpm'),
+        (
+          'average-heart-rate',
+          l10n.statAverageHeartRate,
+          '${ride.avgHeartRate} bpm',
+        ),
       if (ride.maxHeartRate != null)
-        ('Max heart rate', '${ride.maxHeartRate} bpm'),
+        ('max-heart-rate', l10n.statMaxHeartRate, '${ride.maxHeartRate} bpm'),
       if (ride.avgCadence != null)
-        ('Average cadence', '${ride.avgCadence} rpm'),
+        ('average-cadence', l10n.statAverageCadence, '${ride.avgCadence} rpm'),
     ];
     final text = Theme.of(context).textTheme;
     return Wrap(
       spacing: 12,
       runSpacing: 12,
       children: [
-        for (final (label, value) in tiles)
+        for (final (id, label, value) in tiles)
           Container(
-            key: Key('stat-$label'),
+            key: Key('stat-$id'),
             width: 150,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -311,16 +331,9 @@ class _Stats extends StatelessWidget {
             ),
           ),
         if (ride.speedSource == 'gps')
-          Text(
-            'Speed is worked out from GPS positions.',
-            style: text.bodySmall,
-          ),
+          Text(l10n.speedFromGps, style: text.bodySmall),
         if (ride.tss != null || ride.trimp != null)
-          Text(
-            'TSS uses your FTP; TRIMP is time in heart-rate zones. '
-            'Set both in your profile to see them.',
-            style: text.bodySmall,
-          ),
+          Text(l10n.loadHint, style: text.bodySmall),
       ],
     );
   }
@@ -344,6 +357,7 @@ class _ZonesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final maxSeconds = zones.fold<double>(
       0,
       (largest, zone) => zone.seconds > largest ? zone.seconds : largest,
@@ -365,8 +379,11 @@ class _ZonesCard extends StatelessWidget {
             const SizedBox(height: 12),
             for (final (index, zone) in zones.indexed) ...[
               Semantics(
-                label:
-                    'Zone ${zone.zone}, ${_range(zone)}, ${duration(zone.seconds)}',
+                label: l10n.zoneSemantics(
+                  zone.zone,
+                  _range(l10n, zone),
+                  duration(zone.seconds),
+                ),
                 child: Row(
                   children: [
                     SizedBox(
@@ -375,7 +392,7 @@ class _ZonesCard extends StatelessWidget {
                     ),
                     SizedBox(
                       width: 92,
-                      child: Text(_range(zone), style: text.labelSmall),
+                      child: Text(_range(l10n, zone), style: text.labelSmall),
                     ),
                     Expanded(
                       child: ClipRRect(
@@ -413,9 +430,9 @@ class _ZonesCard extends StatelessWidget {
     );
   }
 
-  String _range(ZoneTime zone) => zone.to == null
-      ? '≥ ${zone.from} $unit'
-      : '${zone.from}–${zone.to} $unit';
+  String _range(AppLocalizations l10n, ZoneTime zone) => zone.to == null
+      ? l10n.zoneRangeOpen(zone.from, unit)
+      : l10n.zoneRange(zone.from, zone.to!, unit);
 }
 
 const _heartRateZoneColors = [
@@ -453,9 +470,12 @@ class _BikePicker extends StatelessWidget {
     return DropdownButtonFormField<String?>(
       key: ValueKey('ride-bike-$value'),
       initialValue: value,
-      decoration: const InputDecoration(labelText: 'Bike'),
+      decoration: InputDecoration(labelText: context.l10n.bike),
       items: [
-        const DropdownMenuItem<String?>(value: null, child: Text('No bike')),
+        DropdownMenuItem<String?>(
+          value: null,
+          child: Text(context.l10n.noBike),
+        ),
         for (final b in bikes)
           DropdownMenuItem<String?>(value: b.id, child: Text(b.name)),
       ],

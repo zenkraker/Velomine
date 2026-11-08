@@ -53,7 +53,9 @@ class _RidesScreenState extends State<RidesScreen> {
             key: const Key('upload'),
             onPressed: c.uploading ? null : c.upload,
             icon: const Icon(Icons.upload_file),
-            label: Text(c.uploading ? 'Uploading…' : 'Upload ride'),
+            label: Text(
+              c.uploading ? context.l10n.uploading : context.l10n.uploadRide,
+            ),
           ),
           body: RefreshIndicator(
             onRefresh: c.refresh,
@@ -72,12 +74,12 @@ class _RidesScreenState extends State<RidesScreen> {
                     ),
                   ),
                 if (c.rides.isEmpty && !c.loading)
-                  const Padding(
-                    padding: EdgeInsets.all(32),
+                  Padding(
+                    padding: const EdgeInsets.all(32),
                     child: Center(
                       child: Text(
-                        'No rides yet. Upload a FIT, GPX or TCX file.',
-                        key: Key('no-rides'),
+                        context.l10n.noRides,
+                        key: const Key('no-rides'),
                       ),
                     ),
                   ),
@@ -87,7 +89,7 @@ class _RidesScreenState extends State<RidesScreen> {
                   TextButton(
                     key: const Key('load-more'),
                     onPressed: c.loadMore,
-                    child: const Text('Load more'),
+                    child: Text(context.l10n.loadMore),
                   ),
                 if (c.loading)
                   const Center(
@@ -114,12 +116,14 @@ class RideCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final ready = ride.status == 'ready';
     final facts = <String>[
       if (ready) ...[
         km(ride.distanceM),
         duration(ride.movingS),
-        if (ride.elevationGainM != null) '${ride.elevationGainM!.round()} m up',
+        if (ride.elevationGainM != null)
+          l10n.metresUp(ride.elevationGainM!.round()),
         kmh(ride.avgSpeedMs),
         if (ride.avgPowerW != null)
           '${ride.avgPowerW} W${ride.normalizedPowerW == null ? '' : ' (NP ${ride.normalizedPowerW})'}',
@@ -145,20 +149,20 @@ class RideCard extends StatelessWidget {
               Text(ride.fileName, style: text.bodySmall),
               const SizedBox(height: 8),
               if (ride.status == 'processing')
-                const Row(
+                Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    SizedBox(width: 8),
-                    Text('Reading the file…', key: Key('processing')),
+                    const SizedBox(width: 8),
+                    Text(l10n.readingFile, key: const Key('processing')),
                   ],
                 )
               else if (ride.status == 'failed')
                 Text(
-                  rideErrorText(context.l10n, ride.error),
+                  rideErrorText(l10n, ride.error),
                   key: const Key('ride-failed'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 )

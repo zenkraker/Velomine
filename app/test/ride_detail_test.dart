@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/rides/detail/ride_detail_controller.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
+import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
 
@@ -95,21 +96,21 @@ void main() {
     expect(find.byKey(const Key('power-zones')), findsOneWidget);
     expect(
       find.descendant(
-        of: find.byKey(const Key('stat-Intensity')),
+        of: find.byKey(const Key('stat-intensity')),
         matching: find.text('0.82'),
       ),
       findsOneWidget,
     );
     expect(
       find.descendant(
-        of: find.byKey(const Key('stat-TSS')),
+        of: find.byKey(const Key('stat-tss')),
         matching: find.text('62'),
       ),
       findsOneWidget,
     );
     expect(
       find.descendant(
-        of: find.byKey(const Key('stat-TRIMP')),
+        of: find.byKey(const Key('stat-trimp')),
         matching: find.text('48'),
       ),
       findsOneWidget,
@@ -208,6 +209,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: RideDetailScreen(
             controller: controller,
@@ -239,6 +242,8 @@ void main() {
     addTearDown(controller.dispose);
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: RideDetailScreen(
             controller: controller,

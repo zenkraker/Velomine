@@ -383,4 +383,166 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rideErrorUnknown => 'The server could not read this file.';
+
+  @override
+  String get uploadRide => 'Upload ride';
+
+  @override
+  String get uploading => 'Uploading…';
+
+  @override
+  String get noRides => 'No rides yet. Upload a FIT, GPX or TCX file.';
+
+  @override
+  String get loadMore => 'Load more';
+
+  @override
+  String get readingFile => 'Reading the file…';
+
+  @override
+  String metresUp(int metres) {
+    return '$metres m up';
+  }
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get deleteRideTitle => 'Delete this ride?';
+
+  @override
+  String get deleteRideBody =>
+      'The ride, its charts and the file you uploaded are removed. This cannot be undone.';
+
+  @override
+  String get keepIt => 'Keep it';
+
+  @override
+  String get rideNotFound => 'This ride does not exist, or it is not yours.';
+
+  @override
+  String get couldNotLoadRide => 'Could not load this ride.';
+
+  @override
+  String get trainingHint =>
+      'Set your maximum heart rate and FTP in your profile to see zones and training load.';
+
+  @override
+  String get heartRateZones => 'Heart rate zones';
+
+  @override
+  String get powerZones => 'Power zones';
+
+  @override
+  String get momentHint =>
+      'Move over a chart, or touch and drag, to see the values along the ride.';
+
+  @override
+  String momentAt(String time, String distance) {
+    return 'At $time$distance';
+  }
+
+  @override
+  String get statDistance => 'Distance';
+
+  @override
+  String get statMovingTime => 'Moving time';
+
+  @override
+  String get statElapsedTime => 'Elapsed time';
+
+  @override
+  String get statClimbing => 'Climbing';
+
+  @override
+  String get statDescending => 'Descending';
+
+  @override
+  String get statAverageSpeed => 'Average speed';
+
+  @override
+  String get statTopSpeed => 'Top speed';
+
+  @override
+  String get statAveragePower => 'Average power';
+
+  @override
+  String get statNormalizedPower => 'Normalized power';
+
+  @override
+  String get statMaxPower => 'Max power';
+
+  @override
+  String get statIntensity => 'Intensity';
+
+  @override
+  String get statTss => 'TSS';
+
+  @override
+  String get statTrimp => 'TRIMP';
+
+  @override
+  String get statAverageHeartRate => 'Average heart rate';
+
+  @override
+  String get statMaxHeartRate => 'Max heart rate';
+
+  @override
+  String get statAverageCadence => 'Average cadence';
+
+  @override
+  String get speedFromGps => 'Speed is worked out from GPS positions.';
+
+  @override
+  String get loadHint =>
+      'TSS uses your FTP; TRIMP is time in heart-rate zones. Set both in your profile to see them.';
+
+  @override
+  String zoneSemantics(int zone, String range, String duration) {
+    return 'Zone $zone, $range, $duration';
+  }
+
+  @override
+  String zoneRange(int from, int to, String unit) {
+    return '$from–$to $unit';
+  }
+
+  @override
+  String zoneRangeOpen(int from, String unit) {
+    return '≥ $from $unit';
+  }
+
+  @override
+  String get bike => 'Bike';
+
+  @override
+  String get noBike => 'No bike';
+
+  @override
+  String get mapOfRoute => 'Map of the route';
+
+  @override
+  String get seriesElevation => 'Elevation';
+
+  @override
+  String get seriesSpeed => 'Speed';
+
+  @override
+  String get seriesPower => 'Power';
+
+  @override
+  String get seriesHeartRate => 'Heart rate';
+
+  @override
+  String get seriesCadence => 'Cadence';
+
+  @override
+  String chartSemantics(String name, String low, String average, String high) {
+    return '$name chart: lowest $low, average $average, highest $high';
+  }
+
+  @override
+  String chartAverageMax(String average, String max) {
+    return 'avg $average · max $max';
+  }
 }

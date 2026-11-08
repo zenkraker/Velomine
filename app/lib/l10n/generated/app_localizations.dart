@@ -763,6 +763,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server could not read this file.'**
   String get rideErrorUnknown;
+
+  /// No description provided for @uploadRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload ride'**
+  String get uploadRide;
+
+  /// No description provided for @uploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get uploading;
+
+  /// No description provided for @noRides.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides yet. Upload a FIT, GPX or TCX file.'**
+  String get noRides;
+
+  /// No description provided for @loadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
+
+  /// No description provided for @readingFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the file…'**
+  String get readingFile;
+
+  /// No description provided for @metresUp.
+  ///
+  /// In en, this message translates to:
+  /// **'{metres} m up'**
+  String metresUp(int metres);
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteRideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this ride?'**
+  String get deleteRideTitle;
+
+  /// No description provided for @deleteRideBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride, its charts and the file you uploaded are removed. This cannot be undone.'**
+  String get deleteRideBody;
+
+  /// No description provided for @keepIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get keepIt;
+
+  /// No description provided for @rideNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride does not exist, or it is not yours.'**
+  String get rideNotFound;
+
+  /// No description provided for @couldNotLoadRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this ride.'**
+  String get couldNotLoadRide;
+
+  /// No description provided for @trainingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your maximum heart rate and FTP in your profile to see zones and training load.'**
+  String get trainingHint;
+
+  /// No description provided for @heartRateZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate zones'**
+  String get heartRateZones;
+
+  /// No description provided for @powerZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Power zones'**
+  String get powerZones;
+
+  /// No description provided for @momentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move over a chart, or touch and drag, to see the values along the ride.'**
+  String get momentHint;
+
+  /// No description provided for @momentAt.
+  ///
+  /// In en, this message translates to:
+  /// **'At {time}{distance}'**
+  String momentAt(String time, String distance);
+
+  /// No description provided for @statDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get statDistance;
+
+  /// No description provided for @statMovingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving time'**
+  String get statMovingTime;
+
+  /// No description provided for @statElapsedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Elapsed time'**
+  String get statElapsedTime;
+
+  /// No description provided for @statClimbing.
+  ///
+  /// In en, this message translates to:
+  /// **'Climbing'**
+  String get statClimbing;
+
+  /// No description provided for @statDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get statDescending;
+
+  /// No description provided for @statAverageSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Average speed'**
+  String get statAverageSpeed;
+
+  /// No description provided for @statTopSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top speed'**
+  String get statTopSpeed;
+
+  /// No description provided for @statAveragePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Average power'**
+  String get statAveragePower;
+
+  /// No description provided for @statNormalizedPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Normalized power'**
+  String get statNormalizedPower;
+
+  /// No description provided for @statMaxPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Max power'**
+  String get statMaxPower;
+
+  /// No description provided for @statIntensity.
+  ///
+  /// In en, this message translates to:
+  /// **'Intensity'**
+  String get statIntensity;
+
+  /// No description provided for @statTss.
+  ///
+  /// In en, this message translates to:
+  /// **'TSS'**
+  String get statTss;
+
+  /// No description provided for @statTrimp.
+  ///
+  /// In en, this message translates to:
+  /// **'TRIMP'**
+  String get statTrimp;
+
+  /// No description provided for @statAverageHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Average heart rate'**
+  String get statAverageHeartRate;
+
+  /// No description provided for @statMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Max heart rate'**
+  String get statMaxHeartRate;
+
+  /// No description provided for @statAverageCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Average cadence'**
+  String get statAverageCadence;
+
+  /// No description provided for @speedFromGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed is worked out from GPS positions.'**
+  String get speedFromGps;
+
+  /// No description provided for @loadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'TSS uses your FTP; TRIMP is time in heart-rate zones. Set both in your profile to see them.'**
+  String get loadHint;
+
+  /// No description provided for @zoneSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone {zone}, {range}, {duration}'**
+  String zoneSemantics(int zone, String range, String duration);
+
+  /// No description provided for @zoneRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{from}–{to} {unit}'**
+  String zoneRange(int from, int to, String unit);
+
+  /// No description provided for @zoneRangeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'≥ {from} {unit}'**
+  String zoneRangeOpen(int from, String unit);
+
+  /// No description provided for @bike.
+  ///
+  /// In en, this message translates to:
+  /// **'Bike'**
+  String get bike;
+
+  /// No description provided for @noBike.
+  ///
+  /// In en, this message translates to:
+  /// **'No bike'**
+  String get noBike;
+
+  /// No description provided for @mapOfRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Map of the route'**
+  String get mapOfRoute;
+
+  /// No description provided for @seriesElevation.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation'**
+  String get seriesElevation;
+
+  /// No description provided for @seriesSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get seriesSpeed;
+
+  /// No description provided for @seriesPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get seriesPower;
+
+  /// No description provided for @seriesHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get seriesHeartRate;
+
+  /// No description provided for @seriesCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Cadence'**
+  String get seriesCadence;
+
+  /// No description provided for @chartSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} chart: lowest {low}, average {average}, highest {high}'**
+  String chartSemantics(String name, String low, String average, String high);
+
+  /// No description provided for @chartAverageMax.
+  ///
+  /// In en, this message translates to:
+  /// **'avg {average} · max {max}'**
+  String chartAverageMax(String average, String max);
 }
 
 class _AppLocalizationsDelegate

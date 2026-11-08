@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/l10n.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'ride_series.dart';
 import 'scale.dart';
+
+/// The name of a signal in the language on screen. The id is what the ride file gave it.
+String seriesName(AppLocalizations l10n, Series series) => switch (series.id) {
+  'elevation' => l10n.seriesElevation,
+  'speed' => l10n.seriesSpeed,
+  'power' => l10n.seriesPower,
+  'heartrate' => l10n.seriesHeartRate,
+  'cadence' => l10n.seriesCadence,
+  _ => series.name,
+};
 
 /// A line chart of one signal against time. Hovering or touching it selects a moment, shared with the other charts
 /// and the map through [selected] (an index into the ride's samples).
@@ -33,9 +45,15 @@ class SeriesChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final name = seriesName(l10n, series);
     return Semantics(
-      label:
-          '${series.name} chart: lowest ${series.format(series.min)}, average ${series.format(series.average)}, highest ${series.format(series.max)}',
+      label: l10n.chartSemantics(
+        name,
+        series.format(series.min),
+        series.format(series.average),
+        series.format(series.max),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,13 +65,16 @@ class SeriesChart extends StatelessWidget {
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 8),
-              Text(series.name, style: text.titleSmall),
+              Text(name, style: text.titleSmall),
               const Spacer(),
               ValueListenableBuilder<int?>(
                 valueListenable: selected,
                 builder: (_, index, _) => Text(
                   index == null
-                      ? 'avg ${series.format(series.average)} · max ${series.format(series.max)}'
+                      ? l10n.chartAverageMax(
+                          series.format(series.average),
+                          series.format(series.max),
+                        )
                       : series.format(series.values[index]),
                   key: Key('readout-${series.id}'),
                   style: text.bodySmall?.copyWith(

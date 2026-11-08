@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:velomine/core/format.dart';
 
 void main() {
@@ -7,6 +8,13 @@ void main() {
     expect(km(150000), '150 km');
     expect(km(null), '–');
     expect(kmh(7.8), '28.1 km/h');
+  });
+
+  test('numbers follow the language: Italian uses a comma', () {
+    Intl.defaultLocale = 'it';
+    addTearDown(() => Intl.defaultLocale = null);
+    expect(km(42300), '42,3 km');
+    expect(kmh(7.8), '28,1 km/h');
   });
 
   test('durations are rounded to the nearest minute', () {

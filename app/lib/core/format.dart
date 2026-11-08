@@ -1,13 +1,18 @@
 import 'package:intl/intl.dart';
 
+/// A number in the language the app is showing (set through `Intl.defaultLocale`): "42.3", "42,3".
+/// No grouping separators, so a big distance still reads "1200 km" rather than "1,200 km".
+String _decimal(double value, int digits) =>
+    NumberFormat(digits == 0 ? '0' : '0.${'0' * digits}').format(value);
+
 /// Distances, durations and speeds for display. The server always sends metres, seconds and metres per second.
 String km(double? metres) => metres == null
     ? '–'
-    : '${(metres / 1000).toStringAsFixed(metres >= 100000 ? 0 : 1)} km';
+    : '${_decimal(metres / 1000, metres >= 100000 ? 0 : 1)} km';
 
 String kmh(double? metresPerSecond) => metresPerSecond == null
     ? '–'
-    : '${(metresPerSecond * 3.6).toStringAsFixed(1)} km/h';
+    : '${_decimal(metresPerSecond * 3.6, 1)} km/h';
 
 String duration(double? seconds) {
   if (seconds == null) return '–';
@@ -41,5 +46,5 @@ String bytes(num size) {
     value /= 1000;
     unit++;
   }
-  return '${value.toStringAsFixed(unit == 0 || value >= 100 ? 0 : 1)} ${units[unit]}';
+  return '${_decimal(value, unit == 0 || value >= 100 ? 0 : 1)} ${units[unit]}';
 }

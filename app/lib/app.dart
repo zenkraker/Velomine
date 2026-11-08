@@ -2,6 +2,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/hooks.dart';
@@ -291,10 +292,13 @@ class _VelomineAppState extends State<VelomineApp> {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: _router,
-        builder: (context, child) =>
-            widget.session.status == SessionStatus.loading
-            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-            : child!,
+        builder: (context, child) {
+          // Dates and numbers follow the language the app resolved to, not the machine's.
+          Intl.defaultLocale = Localizations.localeOf(context).toLanguageTag();
+          return widget.session.status == SessionStatus.loading
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : child!;
+        },
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
 import 'geo.dart';
 import 'ride_series.dart';
@@ -24,7 +25,7 @@ class RouteMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'Map of the route',
+      label: context.l10n.mapOfRoute,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: AspectRatio(

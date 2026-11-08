@@ -207,5 +207,133 @@
   "rideErrorNoTimestamps": "The file has no timestamps.",
   "rideErrorNoRecords": "The file has no usable ride data.",
   "rideErrorTooLarge": "The file is too large.",
-  "rideErrorUnknown": "The server could not read this file."
+  "rideErrorUnknown": "The server could not read this file.",
+
+  "uploadRide": "Upload ride",
+  "uploading": "Uploading…",
+  "noRides": "No rides yet. Upload a FIT, GPX or TCX file.",
+  "loadMore": "Load more",
+  "readingFile": "Reading the file…",
+  "metresUp": "{metres} m up",
+  "@metresUp": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "Delete",
+  "deleteRideTitle": "Delete this ride?",
+  "deleteRideBody": "The ride, its charts and the file you uploaded are removed. This cannot be undone.",
+  "keepIt": "Keep it",
+  "rideNotFound": "This ride does not exist, or it is not yours.",
+  "couldNotLoadRide": "Could not load this ride.",
+  "trainingHint": "Set your maximum heart rate and FTP in your profile to see zones and training load.",
+  "heartRateZones": "Heart rate zones",
+  "powerZones": "Power zones",
+  "momentHint": "Move over a chart, or touch and drag, to see the values along the ride.",
+  "momentAt": "At {time}{distance}",
+  "@momentAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "statDistance": "Distance",
+  "statMovingTime": "Moving time",
+  "statElapsedTime": "Elapsed time",
+  "statClimbing": "Climbing",
+  "statDescending": "Descending",
+  "statAverageSpeed": "Average speed",
+  "statTopSpeed": "Top speed",
+  "statAveragePower": "Average power",
+  "statNormalizedPower": "Normalized power",
+  "statMaxPower": "Max power",
+  "statIntensity": "Intensity",
+  "statTss": "TSS",
+  "statTrimp": "TRIMP",
+  "statAverageHeartRate": "Average heart rate",
+  "statMaxHeartRate": "Max heart rate",
+  "statAverageCadence": "Average cadence",
+  "speedFromGps": "Speed is worked out from GPS positions.",
+  "loadHint": "TSS uses your FTP; TRIMP is time in heart-rate zones. Set both in your profile to see them.",
+  "zoneSemantics": "Zone {zone}, {range}, {duration}",
+  "@zoneSemantics": {
+    "placeholders": {
+      "zone": {
+        "type": "int"
+      },
+      "range": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "zoneRange": "{from}–{to} {unit}",
+  "@zoneRange": {
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "zoneRangeOpen": "≥ {from} {unit}",
+  "@zoneRangeOpen": {
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "bike": "Bike",
+  "noBike": "No bike",
+  "mapOfRoute": "Map of the route",
+  "seriesElevation": "Elevation",
+  "seriesSpeed": "Speed",
+  "seriesPower": "Power",
+  "seriesHeartRate": "Heart rate",
+  "seriesCadence": "Cadence",
+  "chartSemantics": "{name} chart: lowest {low}, average {average}, highest {high}",
+  "@chartSemantics": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "low": {
+        "type": "String"
+      },
+      "average": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "chartAverageMax": "avg {average} · max {max}",
+  "@chartAverageMax": {
+    "placeholders": {
+      "average": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  }
 }
