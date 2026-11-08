@@ -797,4 +797,190 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bikeKindOther => 'Other';
+
+  @override
+  String get periodWeeks => 'Weeks';
+
+  @override
+  String get periodMonths => 'Months';
+
+  @override
+  String get periodYears => 'Years';
+
+  @override
+  String get thisWeek => 'This week';
+
+  @override
+  String get thisMonth => 'This month';
+
+  @override
+  String get thisYear => 'This year';
+
+  @override
+  String get periodWordWeek => 'week';
+
+  @override
+  String get periodWordMonth => 'month';
+
+  @override
+  String get periodWordYear => 'year';
+
+  @override
+  String periodTotals(int count, String duration, int elevation) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides',
+      one: '1 ride',
+      zero: 'No rides',
+    );
+    return '$_temp0 · $duration · $elevation m climbing';
+  }
+
+  @override
+  String get goals => 'Goals';
+
+  @override
+  String get addGoal => 'Add goal';
+
+  @override
+  String get noGoals =>
+      'No goals yet. Set a target for each week, month or year: distance, climbing, riding time or number of rides.';
+
+  @override
+  String get goalWeekly => 'Weekly';
+
+  @override
+  String get goalMonthly => 'Monthly';
+
+  @override
+  String get goalYearly => 'Yearly';
+
+  @override
+  String get goalMetricDistance => 'Distance';
+
+  @override
+  String get goalMetricElevation => 'Climbing';
+
+  @override
+  String get goalMetricTime => 'Riding time';
+
+  @override
+  String get goalMetricRides => 'Rides';
+
+  @override
+  String get goalUnitRides => 'rides';
+
+  @override
+  String goalRideCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides',
+      one: '1 ride',
+      zero: 'No rides',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalChange => 'Change goal';
+
+  @override
+  String get goalAdd => 'Add goal';
+
+  @override
+  String get goalEvery => 'Every';
+
+  @override
+  String get goalEveryWeek => 'week';
+
+  @override
+  String get goalEveryMonth => 'month';
+
+  @override
+  String get goalEveryYear => 'year';
+
+  @override
+  String get goalCount => 'Count';
+
+  @override
+  String get goalTarget => 'Target';
+
+  @override
+  String get errorGoalTarget => 'Enter a target above 0.';
+
+  @override
+  String goalTitle(String period, String metric) {
+    return '$period $metric';
+  }
+
+  @override
+  String get goalReached => 'Reached';
+
+  @override
+  String get goalChangeTarget => 'Change target';
+
+  @override
+  String get goalDelete => 'Delete goal';
+
+  @override
+  String goalSemantics(String metric) {
+    return '$metric goal';
+  }
+
+  @override
+  String goalProgress(String current, String target, int percent) {
+    return '$current of $target · $percent %';
+  }
+
+  @override
+  String totalsSemantics(String period, String distance) {
+    return 'Distance per $period. This $period: $distance.';
+  }
+
+  @override
+  String get trainingLoad => 'Training load';
+
+  @override
+  String get range30Days => '30 d';
+
+  @override
+  String get range90Days => '90 d';
+
+  @override
+  String get rangeOneYear => '1 y';
+
+  @override
+  String get trainingLoadHint =>
+      'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.';
+
+  @override
+  String get fitnessFatigueForm => 'Fitness, fatigue and form';
+
+  @override
+  String get fitness => 'Fitness';
+
+  @override
+  String get fatigue => 'Fatigue';
+
+  @override
+  String get form => 'Form';
+
+  @override
+  String fitnessSemantics(int fitness, int fatigue, int form) {
+    return 'Fitness $fitness, fatigue $fatigue, form $form.';
+  }
+
+  @override
+  String get dailyLoad => 'Daily load (TSS)';
+
+  @override
+  String dailyLoadSemantics(int days) {
+    return 'Daily training stress score for the last $days days.';
+  }
+
+  @override
+  String get trainingLoadHelp =>
+      'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
 }

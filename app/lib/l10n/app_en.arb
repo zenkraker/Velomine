@@ -515,5 +515,137 @@
   "bikeKindTimeTrial": "Time trial",
   "bikeKindTrack": "Track",
   "bikeKindCity": "City",
-  "bikeKindOther": "Other"
+  "bikeKindOther": "Other",
+
+  "periodWeeks": "Weeks",
+  "periodMonths": "Months",
+  "periodYears": "Years",
+  "thisWeek": "This week",
+  "thisMonth": "This month",
+  "thisYear": "This year",
+  "periodWordWeek": "week",
+  "periodWordMonth": "month",
+  "periodWordYear": "year",
+  "periodTotals": "{count, plural, =0{No rides} =1{1 ride} other{{count} rides}} · {duration} · {elevation} m climbing",
+  "@periodTotals": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "duration": {
+        "type": "String"
+      },
+      "elevation": {
+        "type": "int"
+      }
+    }
+  },
+  "goals": "Goals",
+  "addGoal": "Add goal",
+  "noGoals": "No goals yet. Set a target for each week, month or year: distance, climbing, riding time or number of rides.",
+  "goalWeekly": "Weekly",
+  "goalMonthly": "Monthly",
+  "goalYearly": "Yearly",
+  "goalMetricDistance": "Distance",
+  "goalMetricElevation": "Climbing",
+  "goalMetricTime": "Riding time",
+  "goalMetricRides": "Rides",
+  "goalUnitRides": "rides",
+  "goalRideCount": "{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}",
+  "@goalRideCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "goalChange": "Change goal",
+  "goalAdd": "Add goal",
+  "goalEvery": "Every",
+  "goalEveryWeek": "week",
+  "goalEveryMonth": "month",
+  "goalEveryYear": "year",
+  "goalCount": "Count",
+  "goalTarget": "Target",
+  "errorGoalTarget": "Enter a target above 0.",
+  "goalTitle": "{period} {metric}",
+  "@goalTitle": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "goalReached": "Reached",
+  "goalChangeTarget": "Change target",
+  "goalDelete": "Delete goal",
+  "goalSemantics": "{metric} goal",
+  "@goalSemantics": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "goalProgress": "{current} of {target} · {percent} %",
+  "@goalProgress": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "totalsSemantics": "Distance per {period}. This {period}: {distance}.",
+  "@totalsSemantics": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "trainingLoad": "Training load",
+  "range30Days": "30 d",
+  "range90Days": "90 d",
+  "rangeOneYear": "1 y",
+  "trainingLoadHint": "Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.",
+  "fitnessFatigueForm": "Fitness, fatigue and form",
+  "fitness": "Fitness",
+  "fatigue": "Fatigue",
+  "form": "Form",
+  "fitnessSemantics": "Fitness {fitness}, fatigue {fatigue}, form {form}.",
+  "@fitnessSemantics": {
+    "placeholders": {
+      "fitness": {
+        "type": "int"
+      },
+      "fatigue": {
+        "type": "int"
+      },
+      "form": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyLoad": "Daily load (TSS)",
+  "dailyLoadSemantics": "Daily training stress score for the last {days} days.",
+  "@dailyLoadSemantics": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "trainingLoadHelp": "Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue."
 }

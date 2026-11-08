@@ -56,7 +56,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 12,
                 children: [
-                  Text('Progress', style: text.titleLarge),
+                  Text(context.l10n.navProgress, style: text.titleLarge),
                   if (c.error != null)
                     Text(
                       failureText(context.l10n, c.error!),
@@ -67,10 +67,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ),
                   SegmentedButton<String>(
                     key: const Key('progress-period'),
-                    segments: const [
-                      ButtonSegment(value: 'week', label: Text('Weeks')),
-                      ButtonSegment(value: 'month', label: Text('Months')),
-                      ButtonSegment(value: 'year', label: Text('Years')),
+                    segments: [
+                      ButtonSegment(
+                        value: 'week',
+                        label: Text(context.l10n.periodWeeks),
+                      ),
+                      ButtonSegment(
+                        value: 'month',
+                        label: Text(context.l10n.periodMonths),
+                      ),
+                      ButtonSegment(
+                        value: 'year',
+                        label: Text(context.l10n.periodYears),
+                      ),
                     ],
                     selected: {c.period},
                     onSelectionChanged: (s) => c.setPeriod(s.single),
@@ -89,20 +98,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Expanded(child: Text('Goals', style: text.titleLarge)),
+                      Expanded(
+                        child: Text(context.l10n.goals, style: text.titleLarge),
+                      ),
                       FilledButton.tonalIcon(
                         key: const Key('add-goal'),
                         onPressed: _addGoal,
                         icon: const Icon(Icons.flag),
-                        label: const Text('Add goal'),
+                        label: Text(context.l10n.addGoal),
                       ),
                     ],
                   ),
                   if (c.goals.isEmpty && !c.loading)
-                    const Text(
-                      'No goals yet. Set a target for each week, month or year: distance, climbing, riding time or number of rides.',
-                      key: Key('no-goals'),
-                    ),
+                    Text(context.l10n.noGoals, key: const Key('no-goals')),
                   for (final goal in c.goals)
                     GoalCard(
                       goal: goal,
@@ -127,6 +135,7 @@ class _TotalsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final rows = totals.totals.reversed.toList();
     return Card(
       child: Column(
@@ -137,13 +146,19 @@ class _TotalsTable extends StatelessWidget {
               dense: true,
               title: Text(
                 i == 0
-                    ? 'This ${totals.period}'
+                    ? switch (totals.period) {
+                        'week' => l10n.thisWeek,
+                        'month' => l10n.thisMonth,
+                        _ => l10n.thisYear,
+                      }
                     : periodTitle(totals.period, t.start, t.end),
               ),
               subtitle: Text(
-                t.rides == 0
-                    ? 'No rides'
-                    : '${t.rides} ${t.rides == 1 ? 'ride' : 'rides'} · ${duration(t.movingS)} · ${t.elevationGainM.round()} m climbing',
+                l10n.periodTotals(
+                  t.rides,
+                  duration(t.movingS),
+                  t.elevationGainM.round(),
+                ),
               ),
               trailing: Text(
                 km(t.distanceM),

@@ -5,6 +5,14 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
+import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
+
+String _periodWord(AppLocalizations l10n, String period) => switch (period) {
+  'week' => l10n.periodWordWeek,
+  'month' => l10n.periodWordMonth,
+  _ => l10n.periodWordYear,
+};
 
 /// The short name of a period under its bar: "2 Nov" for a week, "Nov" for a month, "2026" for a year.
 String periodLabel(String period, DateTime start) => switch (period) {
@@ -36,10 +44,13 @@ class TotalsChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final label = Theme.of(context).textTheme.labelSmall!;
+    final l10n = context.l10n;
     final current = totals.isEmpty ? null : totals.last;
     return Semantics(
-      label:
-          'Distance per $period. This $period: ${km(current?.distanceM ?? 0)}.',
+      label: l10n.totalsSemantics(
+        _periodWord(l10n, period),
+        km(current?.distanceM ?? 0),
+      ),
       child: SizedBox(
         height: 180,
         child: CustomPaint(

@@ -801,4 +801,190 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bikeKindOther => 'Altro';
+
+  @override
+  String get periodWeeks => 'Settimane';
+
+  @override
+  String get periodMonths => 'Mesi';
+
+  @override
+  String get periodYears => 'Anni';
+
+  @override
+  String get thisWeek => 'Questa settimana';
+
+  @override
+  String get thisMonth => 'Questo mese';
+
+  @override
+  String get thisYear => 'Quest\'anno';
+
+  @override
+  String get periodWordWeek => 'settimana';
+
+  @override
+  String get periodWordMonth => 'mese';
+
+  @override
+  String get periodWordYear => 'anno';
+
+  @override
+  String periodTotals(int count, String duration, int elevation) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite',
+      one: '1 uscita',
+      zero: 'Nessuna uscita',
+    );
+    return '$_temp0 · $duration · $elevation m di dislivello';
+  }
+
+  @override
+  String get goals => 'Obiettivi';
+
+  @override
+  String get addGoal => 'Aggiungi obiettivo';
+
+  @override
+  String get noGoals =>
+      'Nessun obiettivo. Imposta un traguardo per ogni settimana, mese o anno: distanza, dislivello, tempo in bici o numero di uscite.';
+
+  @override
+  String get goalWeekly => 'settimanale';
+
+  @override
+  String get goalMonthly => 'mensile';
+
+  @override
+  String get goalYearly => 'annuale';
+
+  @override
+  String get goalMetricDistance => 'Distanza';
+
+  @override
+  String get goalMetricElevation => 'Dislivello';
+
+  @override
+  String get goalMetricTime => 'Tempo in bici';
+
+  @override
+  String get goalMetricRides => 'Uscite';
+
+  @override
+  String get goalUnitRides => 'uscite';
+
+  @override
+  String goalRideCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite',
+      one: '1 uscita',
+      zero: 'Nessuna uscita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalChange => 'Modifica obiettivo';
+
+  @override
+  String get goalAdd => 'Aggiungi obiettivo';
+
+  @override
+  String get goalEvery => 'Ogni';
+
+  @override
+  String get goalEveryWeek => 'settimana';
+
+  @override
+  String get goalEveryMonth => 'mese';
+
+  @override
+  String get goalEveryYear => 'anno';
+
+  @override
+  String get goalCount => 'Conteggio';
+
+  @override
+  String get goalTarget => 'Obiettivo';
+
+  @override
+  String get errorGoalTarget => 'Inserisci un obiettivo maggiore di 0.';
+
+  @override
+  String goalTitle(String period, String metric) {
+    return '$metric $period';
+  }
+
+  @override
+  String get goalReached => 'Raggiunto';
+
+  @override
+  String get goalChangeTarget => 'Modifica obiettivo';
+
+  @override
+  String get goalDelete => 'Elimina obiettivo';
+
+  @override
+  String goalSemantics(String metric) {
+    return 'Obiettivo: $metric';
+  }
+
+  @override
+  String goalProgress(String current, String target, int percent) {
+    return '$current di $target · $percent %';
+  }
+
+  @override
+  String totalsSemantics(String period, String distance) {
+    return 'Distanza per $period. Questo periodo: $distance.';
+  }
+
+  @override
+  String get trainingLoad => 'Carico di allenamento';
+
+  @override
+  String get range30Days => '30 g';
+
+  @override
+  String get range90Days => '90 g';
+
+  @override
+  String get rangeOneYear => '1 a';
+
+  @override
+  String get trainingLoadHint =>
+      'Imposta FTP (e frequenza cardiaca massima) nel profilo, poi carica un\'uscita per vedere il carico di allenamento.';
+
+  @override
+  String get fitnessFatigueForm => 'Fitness, fatica e forma';
+
+  @override
+  String get fitness => 'Fitness';
+
+  @override
+  String get fatigue => 'Fatica';
+
+  @override
+  String get form => 'Forma';
+
+  @override
+  String fitnessSemantics(int fitness, int fatigue, int form) {
+    return 'Fitness $fitness, fatica $fatigue, forma $form.';
+  }
+
+  @override
+  String get dailyLoad => 'Carico giornaliero (TSS)';
+
+  @override
+  String dailyLoadSemantics(int days) {
+    return 'Training stress score giornaliero negli ultimi $days giorni.';
+  }
+
+  @override
+  String get trainingLoadHelp =>
+      'La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.';
 }

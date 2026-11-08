@@ -3,25 +3,50 @@ import 'package:flutter/services.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
+import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
 
-const periodNames = {'week': 'Weekly', 'month': 'Monthly', 'year': 'Yearly'};
+const goalPeriodIds = ['week', 'month', 'year'];
 
-/// What a goal can count, with the unit the member types the target in and the factor to the server's SI value.
+/// What a goal can count, with the factor to the server's SI value.
 const goalMetrics = {
-  'distance': (name: 'Distance', unit: 'km', factor: 1000.0),
-  'elevation': (name: 'Climbing', unit: 'm', factor: 1.0),
-  'time': (name: 'Riding time', unit: 'h', factor: 3600.0),
-  'rides': (name: 'Rides', unit: 'rides', factor: 1.0),
+  'distance': 1000.0,
+  'elevation': 1.0,
+  'time': 3600.0,
+  'rides': 1.0,
+};
+
+String goalPeriodName(AppLocalizations l10n, String period) => switch (period) {
+  'week' => l10n.goalWeekly,
+  'month' => l10n.goalMonthly,
+  _ => l10n.goalYearly,
+};
+
+String goalMetricName(AppLocalizations l10n, String metric) => switch (metric) {
+  'distance' => l10n.goalMetricDistance,
+  'elevation' => l10n.goalMetricElevation,
+  'time' => l10n.goalMetricTime,
+  'rides' => l10n.goalMetricRides,
+  _ => metric,
+};
+
+String goalUnit(AppLocalizations l10n, String metric) => switch (metric) {
+  'distance' => 'km',
+  'elevation' => 'm',
+  'time' => 'h',
+  'rides' => l10n.goalUnitRides,
+  _ => '',
 };
 
 /// A goal value (metres, seconds or a count) as the member reads it.
-String goalValue(String metric, double value) => switch (metric) {
-  'distance' => km(value),
-  'elevation' => '${value.round()} m',
-  'time' => duration(value),
-  'rides' => '${value.round()} ${value.round() == 1 ? 'ride' : 'rides'}',
-  _ => value.toString(),
-};
+String goalValue(AppLocalizations l10n, String metric, double value) =>
+    switch (metric) {
+      'distance' => km(value),
+      'elevation' => '${value.round()} m',
+      'time' => duration(value),
+      'rides' => l10n.goalRideCount(value.round()),
+      _ => value.toString(),
+    };
 
 String _plain(double v) =>
     v == v.roundToDouble() ? v.toInt().toString() : v.toString();
@@ -51,9 +76,9 @@ class _GoalFormState extends State<_GoalForm> {
   late final _target = TextEditingController(
     text: widget.goal == null
         ? ''
-        : _plain(widget.goal!.target / goalMetrics[_metric]!.factor),
+        : _plain(widget.goal!.target / goalMetrics[_metric]!),
   );
-  String? _error;
+  bool _badTarget = false;
 
   @override
   void dispose() {
@@ -64,21 +89,22 @@ class _GoalFormState extends State<_GoalForm> {
   void _submit() {
     final value = double.tryParse(_target.text.trim().replaceAll(',', '.'));
     if (value == null || value <= 0) {
-      setState(() => _error = 'Enter a target above 0.');
+      setState(() => _badTarget = true);
       return;
     }
     Navigator.pop(context, (
       period: _period,
       metric: _metric,
-      target: value * goalMetrics[_metric]!.factor,
+      target: value * goalMetrics[_metric]!,
     ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final editing = widget.goal != null;
     return AlertDialog(
-      title: Text(editing ? 'Change goal' : 'Add goal'),
+      title: Text(editing ? l10n.goalChange : l10n.goalAdd),
       content: SizedBox(
         width: 360,
         child: Column(
@@ -88,10 +114,17 @@ class _GoalFormState extends State<_GoalForm> {
             DropdownButtonFormField<String>(
               key: const Key('goal-period'),
               initialValue: _period,
-              decoration: const InputDecoration(labelText: 'Every'),
+              decoration: InputDecoration(labelText: l10n.goalEvery),
               items: [
-                for (final p in ['week', 'month', 'year'])
-                  DropdownMenuItem(value: p, child: Text(p)),
+                for (final p in goalPeriodIds)
+                  DropdownMenuItem(
+                    value: p,
+                    child: Text(switch (p) {
+                      'week' => l10n.goalEveryWeek,
+                      'month' => l10n.goalEveryMonth,
+                      _ => l10n.goalEveryYear,
+                    }),
+                  ),
               ],
               onChanged: editing
                   ? null
@@ -100,10 +133,13 @@ class _GoalFormState extends State<_GoalForm> {
             DropdownButtonFormField<String>(
               key: const Key('goal-metric'),
               initialValue: _metric,
-              decoration: const InputDecoration(labelText: 'Count'),
+              decoration: InputDecoration(labelText: l10n.goalCount),
               items: [
-                for (final e in goalMetrics.entries)
-                  DropdownMenuItem(value: e.key, child: Text(e.value.name)),
+                for (final metric in goalMetrics.keys)
+                  DropdownMenuItem(
+                    value: metric,
+                    child: Text(goalMetricName(l10n, metric)),
+                  ),
               ],
               onChanged: editing
                   ? null
@@ -120,9 +156,9 @@ class _GoalFormState extends State<_GoalForm> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
               decoration: InputDecoration(
-                labelText: 'Target',
-                suffixText: goalMetrics[_metric]!.unit,
-                errorText: _error,
+                labelText: l10n.goalTarget,
+                suffixText: goalUnit(l10n, _metric),
+                errorText: _badTarget ? l10n.errorGoalTarget : null,
               ),
               onSubmitted: (_) => _submit(),
             ),
@@ -132,12 +168,12 @@ class _GoalFormState extends State<_GoalForm> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           key: const Key('goal-save'),
           onPressed: _submit,
-          child: const Text('Save'),
+          child: Text(l10n.save),
         ),
       ],
     );
@@ -161,7 +197,12 @@ class GoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final metric = goalMetrics[goal.metric]?.name ?? goal.metric;
+    final l10n = context.l10n;
+    final metric = goalMetricName(l10n, goal.metric);
+    final title = l10n.goalTitle(
+      goalPeriodName(l10n, goal.period),
+      metric.toLowerCase(),
+    );
     return Card(
       key: Key('goal-${goal.id}'),
       child: Padding(
@@ -174,24 +215,26 @@ class GoalCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${periodNames[goal.period] ?? goal.period} ${metric.toLowerCase()}',
+                    title.isEmpty
+                        ? title
+                        : title[0].toUpperCase() + title.substring(1),
                     style: text.titleMedium,
                   ),
                 ),
                 if (goal.reached)
                   Chip(
-                    label: const Text('Reached'),
+                    label: Text(l10n.goalReached),
                     backgroundColor: scheme.primaryContainer,
                   ),
                 IconButton(
                   key: Key('goal-edit-${goal.id}'),
-                  tooltip: 'Change target',
+                  tooltip: l10n.goalChangeTarget,
                   icon: const Icon(Icons.edit),
                   onPressed: onEdit,
                 ),
                 IconButton(
                   key: Key('goal-delete-${goal.id}'),
-                  tooltip: 'Delete goal',
+                  tooltip: l10n.goalDelete,
                   icon: const Icon(Icons.delete_outline),
                   onPressed: onDelete,
                 ),
@@ -203,11 +246,15 @@ class GoalCard extends StatelessWidget {
                 value: (goal.percent / 100).clamp(0, 1).toDouble(),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
-                semanticsLabel: '$metric goal',
+                semanticsLabel: l10n.goalSemantics(metric),
               ),
             ),
             Text(
-              '${goalValue(goal.metric, goal.current)} of ${goalValue(goal.metric, goal.target)} · ${goal.percent} %',
+              l10n.goalProgress(
+                goalValue(l10n, goal.metric, goal.current),
+                goalValue(l10n, goal.metric, goal.target),
+                goal.percent,
+              ),
               key: Key('goal-progress-${goal.id}'),
             ),
           ],

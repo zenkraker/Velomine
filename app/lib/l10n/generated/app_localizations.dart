@@ -1471,6 +1471,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get bikeKindOther;
+
+  /// No description provided for @periodWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Weeks'**
+  String get periodWeeks;
+
+  /// No description provided for @periodMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get periodMonths;
+
+  /// No description provided for @periodYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Years'**
+  String get periodYears;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get thisWeek;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get thisMonth;
+
+  /// No description provided for @thisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get thisYear;
+
+  /// No description provided for @periodWordWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'week'**
+  String get periodWordWeek;
+
+  /// No description provided for @periodWordMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'month'**
+  String get periodWordMonth;
+
+  /// No description provided for @periodWordYear.
+  ///
+  /// In en, this message translates to:
+  /// **'year'**
+  String get periodWordYear;
+
+  /// No description provided for @periodTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}} · {duration} · {elevation} m climbing'**
+  String periodTotals(int count, String duration, int elevation);
+
+  /// No description provided for @goals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get goals;
+
+  /// No description provided for @addGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add goal'**
+  String get addGoal;
+
+  /// No description provided for @noGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'No goals yet. Set a target for each week, month or year: distance, climbing, riding time or number of rides.'**
+  String get noGoals;
+
+  /// No description provided for @goalWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get goalWeekly;
+
+  /// No description provided for @goalMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get goalMonthly;
+
+  /// No description provided for @goalYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get goalYearly;
+
+  /// No description provided for @goalMetricDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get goalMetricDistance;
+
+  /// No description provided for @goalMetricElevation.
+  ///
+  /// In en, this message translates to:
+  /// **'Climbing'**
+  String get goalMetricElevation;
+
+  /// No description provided for @goalMetricTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Riding time'**
+  String get goalMetricTime;
+
+  /// No description provided for @goalMetricRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get goalMetricRides;
+
+  /// No description provided for @goalUnitRides.
+  ///
+  /// In en, this message translates to:
+  /// **'rides'**
+  String get goalUnitRides;
+
+  /// No description provided for @goalRideCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}'**
+  String goalRideCount(int count);
+
+  /// No description provided for @goalChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change goal'**
+  String get goalChange;
+
+  /// No description provided for @goalAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add goal'**
+  String get goalAdd;
+
+  /// No description provided for @goalEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Every'**
+  String get goalEvery;
+
+  /// No description provided for @goalEveryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'week'**
+  String get goalEveryWeek;
+
+  /// No description provided for @goalEveryMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'month'**
+  String get goalEveryMonth;
+
+  /// No description provided for @goalEveryYear.
+  ///
+  /// In en, this message translates to:
+  /// **'year'**
+  String get goalEveryYear;
+
+  /// No description provided for @goalCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Count'**
+  String get goalCount;
+
+  /// No description provided for @goalTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get goalTarget;
+
+  /// No description provided for @errorGoalTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a target above 0.'**
+  String get errorGoalTarget;
+
+  /// No description provided for @goalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{period} {metric}'**
+  String goalTitle(String period, String metric);
+
+  /// No description provided for @goalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached'**
+  String get goalReached;
+
+  /// No description provided for @goalChangeTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Change target'**
+  String get goalChangeTarget;
+
+  /// No description provided for @goalDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete goal'**
+  String get goalDelete;
+
+  /// No description provided for @goalSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{metric} goal'**
+  String goalSemantics(String metric);
+
+  /// No description provided for @goalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {target} · {percent} %'**
+  String goalProgress(String current, String target, int percent);
+
+  /// No description provided for @totalsSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per {period}. This {period}: {distance}.'**
+  String totalsSemantics(String period, String distance);
+
+  /// No description provided for @trainingLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Training load'**
+  String get trainingLoad;
+
+  /// No description provided for @range30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'30 d'**
+  String get range30Days;
+
+  /// No description provided for @range90Days.
+  ///
+  /// In en, this message translates to:
+  /// **'90 d'**
+  String get range90Days;
+
+  /// No description provided for @rangeOneYear.
+  ///
+  /// In en, this message translates to:
+  /// **'1 y'**
+  String get rangeOneYear;
+
+  /// No description provided for @trainingLoadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.'**
+  String get trainingLoadHint;
+
+  /// No description provided for @fitnessFatigueForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness, fatigue and form'**
+  String get fitnessFatigueForm;
+
+  /// No description provided for @fitness.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness'**
+  String get fitness;
+
+  /// No description provided for @fatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigue'**
+  String get fatigue;
+
+  /// No description provided for @form.
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get form;
+
+  /// No description provided for @fitnessSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness {fitness}, fatigue {fatigue}, form {form}.'**
+  String fitnessSemantics(int fitness, int fatigue, int form);
+
+  /// No description provided for @dailyLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily load (TSS)'**
+  String get dailyLoad;
+
+  /// No description provided for @dailyLoadSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily training stress score for the last {days} days.'**
+  String dailyLoadSemantics(int days);
+
+  /// No description provided for @trainingLoadHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.'**
+  String get trainingLoadHelp;
 }
 
 class _AppLocalizationsDelegate

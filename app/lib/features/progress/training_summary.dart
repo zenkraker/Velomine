@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
+import '../../core/l10n.dart';
 
 /// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
 class TrainingSummary extends StatelessWidget {
@@ -23,6 +24,7 @@ class TrainingSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final colors = [
       scheme.primary,
       const Color(0xFFE07A3F),
@@ -39,13 +41,15 @@ class TrainingSummary extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: Text('Training load', style: text.titleMedium)),
+                Expanded(
+                  child: Text(l10n.trainingLoad, style: text.titleMedium),
+                ),
                 SegmentedButton<int>(
                   key: const Key('training-range'),
-                  segments: const [
-                    ButtonSegment(value: 30, label: Text('30 d')),
-                    ButtonSegment(value: 90, label: Text('90 d')),
-                    ButtonSegment(value: 365, label: Text('1 y')),
+                  segments: [
+                    ButtonSegment(value: 30, label: Text(l10n.range30Days)),
+                    ButtonSegment(value: 90, label: Text(l10n.range90Days)),
+                    ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
                   ],
                   selected: {days},
                   onSelectionChanged: (selection) => onDays(selection.single),
@@ -68,12 +72,12 @@ class TrainingSummary extends StatelessWidget {
                   valueKey: const Key('training-trimp'),
                 ),
                 _Value(
-                  label: 'Rides',
+                  label: l10n.statRides,
                   value: training.rides.toString(),
                   valueKey: const Key('training-rides'),
                 ),
                 _Value(
-                  label: 'Distance',
+                  label: l10n.statDistance,
                   value: km(training.distanceM),
                   valueKey: const Key('training-distance'),
                 ),
@@ -83,8 +87,7 @@ class TrainingSummary extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  'Set your FTP (and maximum heart rate) in your profile, then '
-                  'upload a ride to see training load.',
+                  l10n.trainingLoadHint,
                   key: const Key('training-hint'),
                   style: text.bodySmall,
                 ),
@@ -93,10 +96,7 @@ class TrainingSummary extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    'Fitness, fatigue and form',
-                    style: text.titleSmall,
-                  ),
+                  child: Text(l10n.fitnessFatigueForm, style: text.titleSmall),
                 ),
                 Text(
                   '${DateFormat.MMMd().format(training.from)} – '
@@ -109,17 +109,18 @@ class TrainingSummary extends StatelessWidget {
             Row(
               spacing: 16,
               children: [
-                _LegendDot(color: colors[0], label: 'Fitness'),
-                _LegendDot(color: colors[1], label: 'Fatigue'),
-                _LegendDot(color: colors[2], label: 'Form'),
+                _LegendDot(color: colors[0], label: l10n.fitness),
+                _LegendDot(color: colors[1], label: l10n.fatigue),
+                _LegendDot(color: colors[2], label: l10n.form),
               ],
             ),
             const SizedBox(height: 6),
             Semantics(
-              label:
-                  'Fitness ${training.days.isEmpty ? 0 : training.days.last.fitness.round()}, '
-                  'fatigue ${training.days.isEmpty ? 0 : training.days.last.fatigue.round()}, '
-                  'form ${training.days.isEmpty ? 0 : training.days.last.form.round()}.',
+              label: l10n.fitnessSemantics(
+                training.days.isEmpty ? 0 : training.days.last.fitness.round(),
+                training.days.isEmpty ? 0 : training.days.last.fatigue.round(),
+                training.days.isEmpty ? 0 : training.days.last.form.round(),
+              ),
               child: SizedBox(
                 height: 170,
                 child: CustomPaint(
@@ -135,11 +136,10 @@ class TrainingSummary extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Daily load (TSS)', style: text.titleSmall),
+            Text(l10n.dailyLoad, style: text.titleSmall),
             const SizedBox(height: 6),
             Semantics(
-              label:
-                  'Daily training stress score for the last ${training.dayCount} days.',
+              label: l10n.dailyLoadSemantics(training.dayCount),
               child: SizedBox(
                 height: 120,
                 child: CustomPaint(
@@ -155,11 +155,7 @@ class TrainingSummary extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Fitness averages the last 42 days of load, fatigue the last 7. '
-              'Form is fitness minus fatigue.',
-              style: text.bodySmall,
-            ),
+            Text(l10n.trainingLoadHelp, style: text.bodySmall),
           ],
         ),
       ),
