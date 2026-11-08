@@ -162,6 +162,58 @@ class AnalyticsApi {
     return null;
   }
 
+  /// Performs an HTTP 'GET /api/v1/analytics/training' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [int] days:
+  Future<Response> getTrainingWithHttpInfo({ int? days, Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/training';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (days != null) {
+      queryParams.addAll(_queryParams('', 'days', days));
+    }
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [int] days:
+  Future<TrainingResponse?> getTraining({ int? days, Future<void>? abortTrigger, }) async {
+    final response = await getTrainingWithHttpInfo(days: days, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TrainingResponse',) as TrainingResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/analytics/goals' operation and returns the [Response].
   Future<Response> listGoalsWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations

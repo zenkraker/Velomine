@@ -67,6 +67,10 @@ public sealed class RideIngestionService(
         }
 
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
+        var profile = await db.Users.AsNoTracking()
+            .Where(u => u.Id == ride.UserId)
+            .Select(u => new { u.FtpW, u.MaxHeartRate })
+            .FirstAsync(ct);
         var used = false;
         var read = new List<Ride>();
         Guid? defaultBike = null;
@@ -81,7 +85,9 @@ public sealed class RideIngestionService(
                     file.DeviceNormalizedPowerW,
                     file.DeviceElapsedS,
                     file.DeviceMovingS,
-                    file.Pauses);
+                    file.Pauses,
+                    ftpW: profile.FtpW,
+                    maxHeartRate: profile.MaxHeartRate);
             }
             catch (RideParseException ex)
             {
@@ -96,8 +102,7 @@ public sealed class RideIngestionService(
             used = true;
             read.Add(target);
 
-            target.StartTime = file.StartTime;
-            target.UtcOffsetMinutes = file.UtcOffsetMinutes;
+            target.StartTime = file.StartTime;            target.UtcOffsetMinutes = file.UtcOffsetMinutes;
             target.Device = file.Device;
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
@@ -162,6 +167,9 @@ public sealed class RideIngestionService(
         ride.AvgPowerW = m.AvgPowerW;
         ride.MaxPowerW = m.MaxPowerW;
         ride.NormalizedPowerW = m.NormalizedPowerW;
+        ride.IntensityFactor = m.IntensityFactor;
+        ride.Tss = m.Tss;
+        ride.Trimp = m.Trimp;
         ride.AvgHeartRate = m.AvgHeartRate;
         ride.MaxHeartRate = m.MaxHeartRate;
         ride.AvgCadence = m.AvgCadence;

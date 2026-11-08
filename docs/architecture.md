@@ -76,7 +76,7 @@ app/                             Flutter app (section 9)
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months, a notification when a ride takes a part to 80 % or 100 % | v1; timed reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
-| Analytics | NP, IF, TSS, TRIMP, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, fitness/fatigue/form, readiness v2 |
+| Analytics | NP, IF, TSS, TRIMP, heart-rate and power zones, fitness/fatigue/form over a selected range, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, readiness v2 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |
 | Sharing | Share links and the server-rendered share pages | v1 |
 | Notifications | In-app notifications (ride read, failed or duplicate; part nearly worn or worn; sign-up waiting, for admins) and email (SMTP from environment variables, sent by a background service every 30 seconds; state on the notification row, no queue) | v1 |
@@ -139,6 +139,8 @@ All background work runs inside the server as hosted services:
 Nothing is queued in the database. A timed task recomputes what it needs from the data on each run, so a missed run is simply caught up next time.
 
 **Computed on read, never stored:** component wear (km, hours and months since fitting), goals and weekly/monthly/yearly totals are calculated from the rides when asked for, using each ride's local date and the member's first day of the week. The reminder timer runs the same calculation.
+
+**The exception is load:** when a ride is read, intensity factor, TSS and TRIMP are worked out from the member's FTP and maximum heart rate at that moment and stored on the ride, because the training dashboard adds them up across a date range. A ride read before the profile had those values gets them worked out when the ride page or the dashboard asks. Zone seconds are still worked out on every ride request from the current profile, so changing the maximum heart rate moves the boundaries immediately; stored load does not change retroactively.
 
 ## 7. Data
 

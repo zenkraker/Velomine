@@ -18,8 +18,58 @@ public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, Ride
     public override async Task HandleAsync(RideIdRequest req, CancellationToken ct)
     {
         var userId = User.UserId();
-        var ride = await db.Rides.AsNoTracking().FirstOrDefaultAsync(r => r.Id == req.Id && r.UserId == userId, ct);
-        if (ride is null) await Send.NotFoundAsync(ct);
-        else await Send.OkAsync(RideResponse.From(ride), ct);
+        var ride = await db.Rides.AsNoTracking()
+            .Include(r => r.Streams)
+            .Include(r => r.Owner)
+            .FirstOrDefaultAsync(r => r.Id == req.Id && r.UserId == userId, ct);
+        if (ride is null)
+        {
+            await Send.NotFoundAsync(ct);
+            return;
+        }
+
+        var response = RideResponse.From(ride);
+        if (ride.Streams is { } streams && ride.Owner is { } owner)
+        {
+            // Rides read before the profile had these values have no stored load; work it out now.
+            var (intensityFactor, tss) = TrainingLoad.PowerLoad(ride.NormalizedPowerW, ride.MovingS ?? 0, owner.FtpW);
+            if (response.Tss is null && tss is not null)
+            {
+                response = response with { Tss = tss, IntensityFactor = intensityFactor };
+            }
+
+            if (owner.MaxHeartRate is { } maxHeartRate && streams.HeartRate is { } heartRate)
+            {
+                var seconds = TrainingLoad.ZoneSeconds(
+                    heartRate,
+                    streams.Time,
+                    maxHeartRate,
+                    TrainingLoad.HeartRateFloor,
+                    TrainingLoad.HeartRateBounds);
+                response = response with
+                {
+                    HeartRateZones = TrainingLoad.Zones(
+                        seconds,
+                        maxHeartRate,
+                        TrainingLoad.HeartRateFloor,
+                        TrainingLoad.HeartRateBounds),
+                    Trimp = response.Trimp ?? TrainingLoad.Trimp(seconds),
+                };
+            }
+            if (owner.FtpW is { } ftpW && streams.Power is { } power)
+            {
+                response = response with
+                {
+                    PowerZones = TrainingLoad.Zones(
+                        power,
+                        streams.Time,
+                        ftpW,
+                        0,
+                        TrainingLoad.PowerBounds),
+                };
+            }
+        }
+
+        await Send.OkAsync(response, ct);
     }
 }

@@ -78,6 +78,8 @@ part 'model/sso_info_response.dart';
 part 'model/sso_status.dart';
 part 'model/token_response.dart';
 part 'model/totals_response.dart';
+part 'model/training_day.dart';
+part 'model/training_response.dart';
 part 'model/update_bike_request.dart';
 part 'model/update_component_request.dart';
 part 'model/update_goal_request.dart';
@@ -85,6 +87,7 @@ part 'model/update_profile_request.dart';
 part 'model/update_settings_request.dart';
 part 'model/upload_ride_response.dart';
 part 'model/user_summary.dart';
+part 'model/zone_time.dart';
 
 
 /// An [ApiClient] instance that uses the default values obtained from

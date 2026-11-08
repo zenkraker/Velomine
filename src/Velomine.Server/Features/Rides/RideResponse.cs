@@ -1,5 +1,8 @@
 namespace Velomine.Server.Features.Rides;
 
+/// <summary>Time in one training zone. <c>To</c> is null for the open-ended top zone. Boundaries are bpm or watts.</summary>
+public sealed record ZoneTime(int Zone, int From, int? To, double Seconds);
+
 /// <summary>A ride as the API shows it. Times are UTC; distances in metres, times in seconds, speeds in metres per second.</summary>
 public sealed record RideResponse(
     Guid Id,
@@ -22,10 +25,15 @@ public sealed record RideResponse(
     int? AvgPowerW,
     int? MaxPowerW,
     int? NormalizedPowerW,
+    double? IntensityFactor,
+    double? Tss,
+    double? Trimp,
     int? AvgHeartRate,
     int? MaxHeartRate,
     int? AvgCadence,
-    Guid? BikeId)
+    Guid? BikeId,
+    ZoneTime[]? HeartRateZones = null,
+    ZoneTime[]? PowerZones = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -48,6 +56,9 @@ public sealed record RideResponse(
         r.AvgPowerW,
         r.MaxPowerW,
         r.NormalizedPowerW,
+        r.IntensityFactor,
+        r.Tss,
+        r.Trimp,
         r.AvgHeartRate,
         r.MaxHeartRate,
         r.AvgCadence,

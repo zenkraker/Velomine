@@ -23,6 +23,25 @@ void main() {
         avgHeartRate: 148,
         avgCadence: 87,
         fileName: 'sunday.gpx',
+        intensityFactor: 0.82,
+        tss: 62.4,
+        trimp: 48.2,
+        heartRateZones: [
+          zoneJson(1, 74, 89, 600),
+          zoneJson(2, 90, 103, 1200),
+          zoneJson(3, 104, 118, 900),
+          zoneJson(4, 119, 133, 300),
+          zoneJson(5, 134, null, 60),
+        ],
+        powerZones: [
+          zoneJson(1, 0, 137, 900),
+          zoneJson(2, 138, 187, 1200),
+          zoneJson(3, 188, 224, 600),
+          zoneJson(4, 225, 262, 300),
+          zoneJson(5, 263, 299, 120),
+          zoneJson(6, 300, 374, 60),
+          zoneJson(7, 375, null, 20),
+        ],
       ),
     );
     server.streams['r1'] = streamsJson();
@@ -66,6 +85,39 @@ void main() {
       expect(server.requests, contains('GET /api/v1/rides/r1/streams'));
     },
   );
+
+  testWidgets('training load and zone times show when the profile has them', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('heart-rate-zones')), findsOneWidget);
+    expect(find.byKey(const Key('power-zones')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('stat-Intensity')),
+        matching: find.text('0.82'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('stat-TSS')),
+        matching: find.text('62'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('stat-TRIMP')),
+        matching: find.text('48'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Heart rate zones'), findsOneWidget);
+    expect(find.text('Power zones'), findsOneWidget);
+    expect(find.textContaining('TSS uses your FTP'), findsOneWidget);
+  });
 
   testWidgets(
     'touching a chart shows the values at that moment on every chart',

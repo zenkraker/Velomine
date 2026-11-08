@@ -77,6 +77,29 @@ void main() {
     expect(find.text('103 km'), findsWidgets); // 102.5 km, rounded
   });
 
+  testWidgets('training load shows its totals and can change range', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    expect(server.trainingRequests, [90]);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('training-tss'))).data,
+      '240',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const Key('training-trimp'))).data,
+      '180',
+    );
+    expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
+    expect(find.byKey(const Key('tss-chart')), findsOneWidget);
+
+    await tester.tap(find.text('30 d'));
+    await tester.pumpAndSettle();
+
+    expect(server.trainingRequests, [90, 30]);
+  });
+
   testWidgets('a goal is added in km and sent in metres, with its progress', (
     tester,
   ) async {

@@ -5,6 +5,7 @@ import '../../core/format.dart';
 import 'goals.dart';
 import 'progress_controller.dart';
 import 'totals_chart.dart';
+import 'training_summary.dart';
 
 /// Totals per week, month or year, and goals.
 class ProgressScreen extends StatefulWidget {
@@ -77,6 +78,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     _TotalsTable(totals: totals),
                   ] else if (c.loading)
                     const Center(child: CircularProgressIndicator()),
+                  if (c.training case final training?)
+                    TrainingSummary(
+                      training: training,
+                      days: c.trainingDays,
+                      onDays: c.setTrainingDays,
+                    ),
                   const SizedBox(height: 8),
                   Row(
                     children: [

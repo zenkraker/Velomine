@@ -52,6 +52,12 @@ class FakeServer {
   /// What GET /analytics/totals answers, by period; a missing period has no rides.
   final totals = <String, List<Map<String, Object?>>>{};
 
+  /// What GET /analytics/training answers; null uses [trainingJson].
+  Map<String, Object?>? training;
+
+  /// The day counts asked for by GET /analytics/training, in order.
+  final trainingRequests = <int>[];
+
   final goals = <Map<String, Object?>>[];
 
   /// How far each goal metric has got this period, for goal progress.
@@ -446,6 +452,13 @@ extension on FakeServer {
       return json({'period': period, 'totals': totals[period] ?? []});
     }
 
+    if (path == '/api/v1/analytics/training') {
+      final days =
+          int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90;
+      trainingRequests.add(days);
+      return json(training ?? trainingJson(days: days));
+    }
+
     Map<String, Object?> goalJson(Map<String, Object?> g) {
       final current = goalCurrent[g['metric']] ?? 0.0;
       final target = (g['target']! as num).toDouble();
@@ -726,6 +739,11 @@ Map<String, Object?> rideJson(
   int? avgHeartRate,
   int? avgCadence,
   String? bikeId,
+  double? intensityFactor,
+  double? tss,
+  double? trimp,
+  List<Map<String, Object?>> heartRateZones = const [],
+  List<Map<String, Object?>> powerZones = const [],
 }) => {
   'id': id,
   'status': status,
@@ -747,10 +765,57 @@ Map<String, Object?> rideJson(
   'avgPowerW': avgPowerW,
   'maxPowerW': null,
   'normalizedPowerW': normalizedPowerW,
+  'intensityFactor': intensityFactor,
+  'tss': tss,
+  'trimp': trimp,
   'avgHeartRate': avgHeartRate,
   'maxHeartRate': null,
   'avgCadence': avgCadence,
   'bikeId': bikeId,
+  'heartRateZones': heartRateZones,
+  'powerZones': powerZones,
+};
+
+/// One training zone as the ride detail receives it.
+Map<String, Object?> zoneJson(int zone, int from, int? to, double seconds) => {
+  'zone': zone,
+  'from': from,
+  'to': to,
+  'seconds': seconds,
+};
+
+/// What GET /analytics/training answers by default: a little load on three days.
+Map<String, Object?> trainingJson({
+  int days = 90,
+  double tss = 240,
+  double trimp = 180,
+  int rides = 3,
+  double distanceM = 80000,
+}) => {
+  'dayCount': days,
+  'from': '2026-08-07',
+  'to': '2026-11-04',
+  'rides': rides,
+  'distanceM': distanceM,
+  'movingS': 10800.0,
+  'elevationGainM': 600.0,
+  'tss': tss,
+  'trimp': trimp,
+  'days': [
+    for (var i = 0; i < 3; i++)
+      {
+        'date': '2026-11-0${2 + i}',
+        'rides': i == 2 ? 1 : 0,
+        'distanceM': i == 2 ? distanceM : 0.0,
+        'movingS': i == 2 ? 3600.0 : 0.0,
+        'elevationGainM': i == 2 ? 200.0 : 0.0,
+        'tss': i == 2 ? 60.0 : 0.0,
+        'trimp': i == 2 ? 45.0 : 0.0,
+        'fitness': 40.0 + i,
+        'fatigue': 30.0 + i,
+        'form': 10.0,
+      },
+  ],
 };
 
 /// Starts the app the way main.dart does, with the session restored first.

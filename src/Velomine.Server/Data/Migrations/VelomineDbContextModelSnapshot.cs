@@ -691,6 +691,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("idempotency_key");
 
+                    b.Property<double?>("IntensityFactor")
+                        .HasColumnType("double precision")
+                        .HasColumnName("intensity_factor");
+
                     b.Property<int?>("MaxHeartRate")
                         .HasColumnType("integer")
                         .HasColumnName("max_heart_rate");
@@ -725,6 +729,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
+
+                    b.Property<double?>("Trimp")
+                        .HasColumnType("double precision")
+                        .HasColumnName("trimp");
+
+                    b.Property<double?>("Tss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("tss");
 
                     b.Property<DateTimeOffset>("UploadedAt")
                         .HasColumnType("timestamp with time zone")

@@ -14,7 +14,9 @@ class ProgressController extends ChangeNotifier {
   final VoidCallback onUnauthorized;
 
   String period = 'week';
+  int trainingDays = 90;
   TotalsResponse? totals;
+  TrainingResponse? training;
   List<GoalResponse> goals = [];
   bool loading = false;
   String? error;
@@ -28,9 +30,11 @@ class ProgressController extends ChangeNotifier {
         final results = await Future.wait([
           api.getTotals(period, count: periodCounts[period]),
           api.listGoals(),
+          api.getTraining(days: trainingDays),
         ]);
         totals = results[0] as TotalsResponse?;
         goals = (results[1] as ListGoalsResponse?)?.goals ?? [];
+        training = results[2] as TrainingResponse?;
       },
       onUnauthorized,
       what: 'load your progress',
@@ -43,6 +47,13 @@ class ProgressController extends ChangeNotifier {
     if (value == period) return;
     period = value;
     totals = null;
+    await refresh();
+  }
+
+  Future<void> setTrainingDays(int value) async {
+    if (value == trainingDays) return;
+    trainingDays = value;
+    training = null;
     await refresh();
   }
 

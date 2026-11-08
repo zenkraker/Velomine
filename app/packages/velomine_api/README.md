@@ -92,6 +92,7 @@ Class | Method | HTTP request | Description
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
+*AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
 *BikesApi* | [**createBike**](doc//BikesApi.md#createbike) | **POST** /api/v1/bikes | 
@@ -159,6 +160,8 @@ Class | Method | HTTP request | Description
  - [SsoStatus](doc//SsoStatus.md)
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
+ - [TrainingDay](doc//TrainingDay.md)
+ - [TrainingResponse](doc//TrainingResponse.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
@@ -166,6 +169,7 @@ Class | Method | HTTP request | Description
  - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
+ - [ZoneTime](doc//ZoneTime.md)
 
 
 ## Documentation For Authorization

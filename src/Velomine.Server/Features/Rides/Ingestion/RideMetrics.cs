@@ -14,7 +14,10 @@ public sealed record RideMetricValues(
     int? NormalizedPowerW,
     int? AvgHeartRate,
     int? MaxHeartRate,
-    int? AvgCadence);
+    int? AvgCadence,
+    double? IntensityFactor = null,
+    double? Tss = null,
+    double? Trimp = null);
 
 /// <summary>
 /// The numbers shown for a ride, worked out from its samples. Pure functions, no I/O.
@@ -33,7 +36,9 @@ public static class RideMetrics
         int? deviceNormalizedPowerW = null,
         double? deviceElapsedS = null,
         double? deviceMovingS = null,
-        IReadOnlyList<PauseInterval>? pauses = null)
+        IReadOnlyList<PauseInterval>? pauses = null,
+        int? ftpW = null,
+        int? maxHeartRate = null)
     {
         if (samples.Count < 2) throw new RideParseException("too_short", "The ride has fewer than two samples.");
 
@@ -55,6 +60,11 @@ public static class RideMetrics
         var power = Resample(samples, s => s.Power, pause, paused);
         var heartRate = Resample(samples, s => s.HeartRate, pause, paused);
         var cadence = Resample(samples, s => s.Cadence, pause, paused).Where(c => c > 0).ToArray();
+        var normalizedPower = deviceNormalizedPowerW ?? NormalizedPower(power);
+        var (intensityFactor, tss) = TrainingLoad.PowerLoad(normalizedPower, moving, ftpW);
+        var heartRateZones = maxHeartRate is { } zoneMaxHr
+            ? TrainingLoad.ZoneSeconds(samples, s => s.HeartRate, zoneMaxHr, TrainingLoad.HeartRateFloor, TrainingLoad.HeartRateBounds)
+            : null;
 
         return new RideMetricValues(
             elapsed,
@@ -67,10 +77,13 @@ public static class RideMetrics
             source,
             power.Length > 0 ? (int)Math.Round(power.Average()) : null,
             samples.Max(s => s.Power) is { } maxPower ? maxPower : null,
-            deviceNormalizedPowerW ?? NormalizedPower(power),
+            normalizedPower,
             heartRate.Length > 0 ? (int)Math.Round(heartRate.Average()) : null,
             samples.Max(s => s.HeartRate) is { } maxHr ? maxHr : null,
-            cadence.Length > 0 ? (int)Math.Round(cadence.Average()) : null);
+            cadence.Length > 0 ? (int)Math.Round(cadence.Average()) : null,
+            intensityFactor,
+            tss,
+            TrainingLoad.Trimp(heartRateZones));
     }
 
     /// <summary>A gap this long between samples is a pause (the device stopped recording), not riding.</summary>

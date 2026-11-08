@@ -140,6 +140,9 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         ),
       ];
     }
+    final heartRateZones =
+        ride.heartRateZones.orElse(null) ?? const <ZoneTime>[];
+    final powerZones = ride.powerZones.orElse(null) ?? const <ZoneTime>[];
 
     return [
       Text(
@@ -176,6 +179,31 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         )
       else ...[
         _Stats(ride: ride),
+        if (heartRateZones.isEmpty &&
+            powerZones.isEmpty &&
+            (ride.avgHeartRate != null || ride.avgPowerW != null))
+          Text(
+            'Set your maximum heart rate and FTP in your profile to see zones '
+            'and training load.',
+            key: const Key('training-hint'),
+            style: text.bodySmall,
+          ),
+        if (heartRateZones.isNotEmpty)
+          _ZonesCard(
+            key: const Key('heart-rate-zones'),
+            title: 'Heart rate zones',
+            unit: 'bpm',
+            zones: heartRateZones,
+            colors: _heartRateZoneColors,
+          ),
+        if (powerZones.isNotEmpty)
+          _ZonesCard(
+            key: const Key('power-zones'),
+            title: 'Power zones',
+            unit: 'W',
+            zones: powerZones,
+            colors: _powerZoneColors,
+          ),
         if (c.bikes.isNotEmpty || ride.bikeId != null)
           _BikePicker(controller: c, ride: ride),
         if (c.data?.hasRoute ?? false)
@@ -244,6 +272,10 @@ class _Stats extends StatelessWidget {
       if (ride.normalizedPowerW != null)
         ('Normalized power', '${ride.normalizedPowerW} W'),
       if (ride.maxPowerW != null) ('Max power', '${ride.maxPowerW} W'),
+      if (ride.intensityFactor != null)
+        ('Intensity', ride.intensityFactor!.toStringAsFixed(2)),
+      if (ride.tss != null) ('TSS', ride.tss!.round().toString()),
+      if (ride.trimp != null) ('TRIMP', ride.trimp!.round().toString()),
       if (ride.avgHeartRate != null)
         ('Average heart rate', '${ride.avgHeartRate} bpm'),
       if (ride.maxHeartRate != null)
@@ -279,10 +311,126 @@ class _Stats extends StatelessWidget {
             'Speed is worked out from GPS positions.',
             style: text.bodySmall,
           ),
+        if (ride.tss != null || ride.trimp != null)
+          Text(
+            'TSS uses your FTP; TRIMP is time in heart-rate zones. '
+            'Set both in your profile to see them.',
+            style: text.bodySmall,
+          ),
       ],
     );
   }
 }
+
+/// Time in each training zone, as a bar per zone.
+class _ZonesCard extends StatelessWidget {
+  const _ZonesCard({
+    super.key,
+    required this.title,
+    required this.unit,
+    required this.zones,
+    required this.colors,
+  });
+
+  final String title;
+  final String unit;
+  final List<ZoneTime> zones;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final maxSeconds = zones.fold<double>(
+      0,
+      (largest, zone) => zone.seconds > largest ? zone.seconds : largest,
+    );
+    final total = zones.fold<double>(0, (sum, zone) => sum + zone.seconds);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(title, style: text.titleMedium),
+                const Spacer(),
+                Text(duration(total), style: text.bodySmall),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (final (index, zone) in zones.indexed) ...[
+              Semantics(
+                label:
+                    'Zone ${zone.zone}, ${_range(zone)}, ${duration(zone.seconds)}',
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 30,
+                      child: Text('Z${zone.zone}', style: text.labelMedium),
+                    ),
+                    SizedBox(
+                      width: 92,
+                      child: Text(_range(zone), style: text.labelSmall),
+                    ),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: maxSeconds <= 0
+                              ? 0
+                              : zone.seconds / maxSeconds,
+                          minHeight: 8,
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
+                          valueColor: AlwaysStoppedAnimation(
+                            colors[index % colors.length],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 56,
+                      child: Text(
+                        duration(zone.seconds),
+                        textAlign: TextAlign.right,
+                        style: text.labelSmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (index < zones.length - 1) const SizedBox(height: 6),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _range(ZoneTime zone) => zone.to == null
+      ? '≥ ${zone.from} $unit'
+      : '${zone.from}–${zone.to} $unit';
+}
+
+const _heartRateZoneColors = [
+  Color(0xFF4A90E2),
+  Color(0xFF4CAF50),
+  Color(0xFFF2C14E),
+  Color(0xFFF08A3C),
+  Color(0xFFC0392B),
+];
+
+const _powerZoneColors = [
+  Color(0xFF90A4AE),
+  Color(0xFF4A90E2),
+  Color(0xFF4CAF50),
+  Color(0xFFF2C14E),
+  Color(0xFFF08A3C),
+  Color(0xFFC0392B),
+  Color(0xFF8E44AD),
+];
 
 /// Which bike was ridden. An archived bike is only listed when this ride already uses it.
 class _BikePicker extends StatelessWidget {

@@ -75,6 +75,15 @@ public sealed class Ride
 
     public int? NormalizedPowerW { get; set; }
 
+    /// <summary>Normalized power divided by FTP, worked out when the ride was read.</summary>
+    public double? IntensityFactor { get; set; }
+
+    /// <summary>Training Stress Score from power, moving time and FTP, worked out when the ride was read.</summary>
+    public double? Tss { get; set; }
+
+    /// <summary>Zone-weighted heart-rate load in points: one per minute in Z1, five in Z5.</summary>
+    public double? Trimp { get; set; }
+
     public int? AvgHeartRate { get; set; }
 
     public int? MaxHeartRate { get; set; }

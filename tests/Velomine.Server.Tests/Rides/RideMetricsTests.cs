@@ -188,4 +188,47 @@ public sealed class RideMetricsTests
 
         Assert.Equal("too_short", error.Code);
     }
+
+    [Fact]
+    public void Tss_UsesNormalizedPowerFtpAndMovingTime()
+    {
+        // One hour at 200 W against an FTP of 250: IF 0.8, TSS 64.
+        var samples = Series(3600, i => new Sample(i, Power: 200));
+
+        var metrics = RideMetrics.Compute(samples, ftpW: 250);
+
+        Assert.Equal(0.8, metrics.IntensityFactor!.Value, 2);
+        Assert.Equal(64.0, metrics.Tss!.Value, 1);
+    }
+
+    [Fact]
+    public void Trimp_WeightsTimeInHigherZonesMore()
+    {
+        // 119 seconds at 60 % of a 200 bpm maximum is zone 2, worth two points a minute.
+        var samples = Series(120, i => new Sample(i, HeartRate: 120));
+
+        var metrics = RideMetrics.Compute(samples, maxHeartRate: 200);
+
+        Assert.Equal(4.0, metrics.Trimp!.Value, 1);
+    }
+
+    [Fact]
+    public void ZoneSeconds_SplitSamplesByHeartRateZone()
+    {
+        Sample[] samples =
+        [
+            new(0, HeartRate: 100),
+            new(10, HeartRate: 160),
+            new(20, HeartRate: 180),
+        ];
+
+        var seconds = TrainingLoad.ZoneSeconds(
+            samples,
+            s => s.HeartRate,
+            200,
+            TrainingLoad.HeartRateFloor,
+            TrainingLoad.HeartRateBounds);
+
+        Assert.Equal(new double[] { 10, 0, 0, 10, 0 }, seconds);
+    }
 }

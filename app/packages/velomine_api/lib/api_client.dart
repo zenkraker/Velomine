@@ -265,6 +265,10 @@ class ApiClient {
           return TokenResponse.fromJson(value);
         case 'TotalsResponse':
           return TotalsResponse.fromJson(value);
+        case 'TrainingDay':
+          return TrainingDay.fromJson(value);
+        case 'TrainingResponse':
+          return TrainingResponse.fromJson(value);
         case 'UpdateBikeRequest':
           return UpdateBikeRequest.fromJson(value);
         case 'UpdateComponentRequest':
@@ -279,6 +283,8 @@ class ApiClient {
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':
           return UserSummary.fromJson(value);
+        case 'ZoneTime':
+          return ZoneTime.fromJson(value);
         default:
           dynamic match;
           if (value is List && (match = _regList.firstMatch(targetType)?.group(1)) != null) {

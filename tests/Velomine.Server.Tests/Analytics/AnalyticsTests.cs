@@ -34,7 +34,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
 
     /// <summary>Saves a finished ride straight into the database, as if it had been uploaded and read.</summary>
     private static async Task AddRideAsync(TestApi api, Guid userId, string startUtc, double km, double hours = 1, double climbM = 0,
-        int? offsetMinutes = null, RideStatus status = RideStatus.Ready)
+        int? offsetMinutes = null, RideStatus status = RideStatus.Ready, double? tss = null, double? trimp = null, int? normalizedPowerW = null)
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -51,6 +51,9 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
             DistanceM = km * 1000,
             MovingS = hours * 3600,
             ElevationGainM = climbM,
+            Tss = tss,
+            Trimp = trimp,
+            NormalizedPowerW = normalizedPowerW,
         });
         await db.SaveChangesAsync(Ct);
     }
@@ -211,6 +214,58 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
         Assert.Empty((await other.GetFromJsonAsync<ListGoalsResponse>("/api/v1/analytics/goals", Ct))!.Goals);
         Assert.Equal(HttpStatusCode.NotFound, (await other.PutAsJsonAsync($"/api/v1/analytics/goals/{goal.Id}", new UpdateGoalRequest { Target = 1 }, Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await other.DeleteAsync($"/api/v1/analytics/goals/{goal.Id}", Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Training_AddsUpLoadAndBuildsFitnessAndForm()
+    {
+        await using var api = await StartAsync();
+        var (member, id) = await NewMemberAsync(api);
+        await AddRideAsync(api, id, "2026-11-03T07:00:00", 40, 1, tss: 100, trimp: 80);
+        await AddRideAsync(api, id, "2026-11-04T07:00:00", 20, 0.5, tss: 50, trimp: 40);
+
+        var training = await member.GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=7", Ct);
+
+        Assert.Equal(7, training!.DayCount);
+        Assert.Equal(new DateOnly(2026, 10, 29), training.From);
+        Assert.Equal(new DateOnly(2026, 11, 4), training.To);
+        Assert.Equal(2, training.Rides);
+        Assert.Equal(150, training.Tss);
+        Assert.Equal(120, training.Trimp);
+
+        var last = training.Days[^1];
+        Assert.Equal(new DateOnly(2026, 11, 4), last.Date);
+        Assert.Equal(50, last.Tss);
+        Assert.True(last.Fitness > 0);
+        Assert.True(last.Fatigue > last.Fitness);
+        Assert.Equal(last.Fitness - last.Fatigue, last.Form, 1);
+    }
+
+    [Fact]
+    public async Task Training_FillsLoadForRidesReadBeforeTheProfileHadFtp()
+    {
+        await using var api = await StartAsync();
+        var (member, id) = await NewMemberAsync(api);
+        await member.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", 250, null, null, null, "monday"), Ct);
+        await AddRideAsync(api, id, "2026-11-04T07:00:00", 40, 1, normalizedPowerW: 200);
+
+        var training = await member.GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=7", Ct);
+
+        Assert.Equal(64, training!.Tss);
+        Assert.Equal(64, training.Days[^1].Tss);
+        Assert.True(training.Days[^1].Fitness > 0);
+    }
+
+    [Fact]
+    public async Task Training_RejectsARangeLongerThanTwoYears()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await NewMemberAsync(api);
+
+        var response = await member.GetAsync("/api/v1/analytics/training?days=731", Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     private static async Task<GoalResponse> CreateAsync(HttpClient member, string period, string metric, double target)

@@ -61,6 +61,8 @@ lib/model/sso_info_response.dart
 lib/model/sso_status.dart
 lib/model/token_response.dart
 lib/model/totals_response.dart
+lib/model/training_day.dart
+lib/model/training_response.dart
 lib/model/update_bike_request.dart
 lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
@@ -68,5 +70,6 @@ lib/model/update_profile_request.dart
 lib/model/update_settings_request.dart
 lib/model/upload_ride_response.dart
 lib/model/user_summary.dart
+lib/model/zone_time.dart
 lib/optional.dart
 pubspec.yaml
