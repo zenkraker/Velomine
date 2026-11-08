@@ -23,6 +23,7 @@ object FitEncoder {
     private const val UINT32 = 0x86
     private const val UINT32Z = 0x8C
 
+    private const val INVALID_U8 = 0xFF
     private const val INVALID_U16 = 0xFFFF
     private const val INVALID_I32 = 0x7FFFFFFF
 
@@ -67,6 +68,7 @@ object FitEncoder {
             Field(0, 4, SINT32), // position lat
             Field(1, 4, SINT32), // position long
             Field(2, 2, UINT16), // altitude, 5 m offset 500
+            Field(3, 1, UINT8), // heart rate
         ),
     )
 
@@ -126,6 +128,7 @@ object FitEncoder {
             out.i32(semicircles(sample.latitude))
             out.i32(semicircles(sample.longitude))
             out.u16(altitude(sample.altitude))
+            out.writeByte(sample.heartRate?.coerceIn(1, INVALID_U8 - 1) ?: INVALID_U8)
         }
 
         writeDefinition(out, session)

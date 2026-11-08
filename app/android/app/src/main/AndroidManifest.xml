@@ -7,6 +7,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- The heart-rate strap uses the standard Heart Rate service; no location is derived from it. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
+    <!-- A phone without Bluetooth LE still records GPS rides. -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
     <application
         android:label="velomine"
         android:name="${applicationName}"
@@ -46,7 +55,7 @@
         <service
             android:name=".RecorderService"
             android:exported="false"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location|connectedDevice" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

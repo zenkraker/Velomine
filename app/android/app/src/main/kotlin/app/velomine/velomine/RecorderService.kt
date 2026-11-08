@@ -28,6 +28,8 @@ import android.util.Log
  */
 class RecorderService : Service(), LocationListener {
     private lateinit var store: RideStore
+    private lateinit var sensorStore: SensorStore
+    private var sensor: HeartRateSensor? = null
     private var active: ActiveRide? = null
     private var state = STATE_IDLE
     private var segmentStartedAt = 0L
@@ -46,6 +48,11 @@ class RecorderService : Service(), LocationListener {
         super.onCreate()
         log("service created")
         store = RideStore(this)
+        sensorStore = SensorStore(this)
+        sensorStore.read()?.let {
+            RecorderRuntime.sensorName = it.name
+            RecorderRuntime.sensorStatus = "paired"
+        }
         createNotificationChannel()
         RecorderRuntime.isRunning = true
     }
@@ -83,6 +90,7 @@ class RecorderService : Service(), LocationListener {
     override fun onDestroy() {
         log("service destroying active=${active?.id} state=$state")
         stopLocation()
+        stopSensor()
         val ride = active
         if (ride != null) {
             if (state == STATE_RECORDING || state == STATE_PAUSED) {
@@ -144,6 +152,7 @@ class RecorderService : Service(), LocationListener {
 
         startForegroundNotification()
         startLocation(manager)
+        startSensor()
         store.save(ride, STATE_RECORDING, endedAt = null, error = null)
         log("recording started, foreground notification shown")
         emit()
@@ -209,6 +218,7 @@ class RecorderService : Service(), LocationListener {
         autoPauseActive = false
         autoPause.reset()
         stopLocation()
+        stopSensor()
         ride.close()
 
         // Let finalize accept the ride even though the service is still alive for a moment.
@@ -269,8 +279,49 @@ class RecorderService : Service(), LocationListener {
         emit()
     }
 
-    private fun startLocation(manager: LocationManager) {
-        locationManager = manager
+    /** Opens the strap remembered for this phone. Recording never waits for it. */
+    private fun startSensor() {
+        val paired = sensorStore.read()
+        if (paired == null) {
+            RecorderRuntime.sensorName = null
+            RecorderRuntime.sensorStatus = "none"
+            RecorderRuntime.heartRateBpm = null
+            return
+        }
+        RecorderRuntime.sensorName = paired.name
+        RecorderRuntime.sensorStatus = "connecting"
+        RecorderRuntime.heartRateBpm = null
+        sensor = HeartRateSensor(
+            this,
+            object : HeartRateSensor.Listener {
+                override fun onSensorStatus(status: String) {
+                    RecorderRuntime.sensorStatus = status
+                    // A reading from before a drop must not be attached to later samples.
+                    if (status != "connected") RecorderRuntime.heartRateBpm = null
+                    emit()
+                }
+
+                override fun onHeartRate(bpm: Int) {
+                    RecorderRuntime.heartRateBpm = bpm
+                    emit()
+                }
+            },
+        ).also { it.connect(paired.address, paired.name) }
+        log("heart-rate strap: connecting to ${paired.name}")
+    }
+
+    private fun stopSensor() {
+        sensor?.close()
+        sensor = null
+        RecorderRuntime.heartRateBpm = null
+    }
+
+    /** Android 14 enforces the runtime prerequisite; the member granted Bluetooth when pairing. */
+    private fun canUseConnectedDeviceType(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+
+    private fun startLocation(manager: LocationManager) {        locationManager = manager
         log("requesting GPS updates every ${SAMPLE_INTERVAL_MS}ms")
         try {
             manager.requestLocationUpdates(
@@ -310,6 +361,7 @@ class RecorderService : Service(), LocationListener {
         active = null
         state = STATE_IDLE
         stopLocation()
+        stopSensor()
         RecorderRuntime.isRunning = false
         RecorderRuntime.reset()
         RecorderRuntime.error = code
@@ -355,6 +407,7 @@ class RecorderService : Service(), LocationListener {
             altitude = if (location.hasAltitude()) location.altitude else null,
             speed = if (location.hasSpeed()) location.speed.toDouble() else null,
             accuracy = if (location.hasAccuracy()) location.accuracy.toDouble() else null,
+            heartRate = RecorderRuntime.heartRateBpm,
         )
         ride.sample(sample)
         log(
@@ -424,11 +477,11 @@ class RecorderService : Service(), LocationListener {
     private fun startForegroundNotification() {
         val notification = notification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
-            )
+            var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            if (sensorStore.read() != null && canUseConnectedDeviceType()) {
+                types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            }
+            startForeground(NOTIFICATION_ID, notification, types)
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }

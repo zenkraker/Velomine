@@ -40,6 +40,17 @@ object RecorderRuntime {
     @Volatile
     var autoPaused: Boolean = false
 
+    /// The strap this phone remembers, if any. The connection itself is owned by the recorder service.
+    @Volatile
+    var sensorName: String? = null
+
+    /// "none", "paired" (remembered, not connected), "connecting", "connected", "off" (Bluetooth disabled) or "denied".
+    @Volatile
+    var sensorStatus: String = "none"
+
+    @Volatile
+    var heartRateBpm: Int? = null
+
     fun snapshot(): Map<String, Any?> {
         val start = startedAt
         val elapsed = if (start == null) {
@@ -58,6 +69,9 @@ object RecorderRuntime {
             "accuracyM" to accuracyM,
             "error" to error,
             "autoPaused" to autoPaused,
+            "sensorName" to sensorName,
+            "sensorStatus" to sensorStatus,
+            "heartRateBpm" to heartRateBpm,
         )
     }
 
@@ -72,6 +86,8 @@ object RecorderRuntime {
         accuracyM = null
         error = null
         autoPaused = false
+        heartRateBpm = null
+        sensorStatus = if (sensorName == null) "none" else "paired"
     }
 }
 

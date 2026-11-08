@@ -7,6 +7,8 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -15,11 +17,22 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var permissionResult: MethodChannel.Result? = null
+    private var sensorPermissionResult: MethodChannel.Result? = null
+    private var sensorScanResult: MethodChannel.Result? = null
+    private var sensorScanner: HeartRateScanner? = null
+    private val sensorScanHandler = Handler(Looper.getMainLooper())
+    private val sensorStore by lazy { SensorStore(applicationContext) }
     private val debug: Boolean
         get() = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        sensorStore.read()?.let {
+            if (!RecorderRuntime.isRunning) {
+                RecorderRuntime.sensorName = it.name
+                RecorderRuntime.sensorStatus = "paired"
+            }
+        }
         registerSecureStorage(flutterEngine)
         registerRecorder(flutterEngine)
     }
@@ -137,6 +150,10 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
                 }
+                "requestSensorPermissions" -> requestSensorPermissions(result)
+                "scanSensors" -> scanSensors(result)
+                "pairSensor" -> pairSensor(call.arguments, result)
+                "forgetSensor" -> forgetSensor(result)
                 else -> result.notImplemented()
             }
         }
@@ -156,6 +173,99 @@ class MainActivity : FlutterActivity() {
                 }
             },
         )
+    }
+
+    private fun requestSensorPermissions(result: MethodChannel.Result) {
+        if (hasSensorPermissions()) {
+            result.success(true)
+            return
+        }
+        if (sensorPermissionResult != null) {
+            result.error("busy", "A permission request is already open.", null)
+            return
+        }
+        sensorPermissionResult = result
+        requestPermissions(
+            arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+            ),
+            SENSOR_PERMISSION_REQUEST,
+        )
+    }
+
+    private fun hasSensorPermissions(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            (
+                checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) ==
+                    PackageManager.PERMISSION_GRANTED &&
+                    checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) ==
+                    PackageManager.PERMISSION_GRANTED
+            )
+
+    private fun scanSensors(result: MethodChannel.Result) {
+        if (!hasSensorPermissions()) {
+            result.error(
+                "bluetooth_denied",
+                "Allow nearby devices to find a heart-rate strap.",
+                null,
+            )
+            return
+        }
+        if (sensorScanResult != null) {
+            result.error("busy", "A scan is already running.", null)
+            return
+        }
+        val scanner = HeartRateScanner(this)
+        val problem = scanner.start()
+        if (problem != null) {
+            result.error(problem, sensorErrorText(problem), null)
+            return
+        }
+        sensorScanner = scanner
+        sensorScanResult = result
+        sensorScanHandler.postDelayed({
+            val found = scanner.stop().map { it.toMap() }
+            sensorScanner = null
+            val answer = sensorScanResult
+            sensorScanResult = null
+            log("sensor scan found ${found.size} strap(s)")
+            answer?.success(found)
+        }, SENSOR_SCAN_MS)
+    }
+
+    private fun pairSensor(arguments: Any?, result: MethodChannel.Result) {
+        val args = arguments as? Map<*, *>
+        val address = (args?.get("address") as? String)?.takeIf { it.isNotBlank() }
+        val name = (args?.get("name") as? String)?.takeIf { it.isNotBlank() } ?: address
+        if (address == null) {
+            result.error("bad_argument", "No strap was sent.", null)
+            return
+        }
+        sensorStore.save(PairedSensor(address, name ?: address))
+        RecorderRuntime.sensorName = name ?: address
+        RecorderRuntime.sensorStatus = "paired"
+        RecorderRuntime.heartRateBpm = null
+        RecorderEvents.emit()
+        log("paired strap ${name ?: address} at $address")
+        result.success(null)
+    }
+
+    private fun forgetSensor(result: MethodChannel.Result) {
+        sensorStore.clear()
+        RecorderRuntime.sensorName = null
+        RecorderRuntime.sensorStatus = "none"
+        RecorderRuntime.heartRateBpm = null
+        RecorderEvents.emit()
+        log("forgot the paired strap")
+        result.success(null)
+    }
+
+    private fun sensorErrorText(code: String): String = when (code) {
+        "bluetooth_off" -> "Turn on Bluetooth to find a heart-rate strap."
+        "bluetooth_denied" -> "Allow nearby devices to find a heart-rate strap."
+        "unsupported" -> "This phone has no Bluetooth LE."
+        else -> "Could not search for a heart-rate strap."
     }
 
     private fun recorderStartProblem(): String? {
@@ -213,12 +323,27 @@ class MainActivity : FlutterActivity() {
         requestPermissions(missing.toTypedArray(), PERMISSION_REQUEST)
     }
 
+    override fun onDestroy() {
+        sensorScanner?.stop()
+        sensorScanner = null
+        sensorScanResult = null
+        sensorPermissionResult = null
+        super.onDestroy()
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == SENSOR_PERMISSION_REQUEST) {
+            val granted = hasSensorPermissions()
+            log("sensor permission result granted=$granted")
+            sensorPermissionResult?.success(granted)
+            sensorPermissionResult = null
+            return
+        }
         if (requestCode != PERMISSION_REQUEST) return
 
         val locationGranted = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -249,5 +374,7 @@ class MainActivity : FlutterActivity() {
     private companion object {
         const val TAG = "VelomineRecorder"
         const val PERMISSION_REQUEST = 73
+        const val SENSOR_PERMISSION_REQUEST = 74
+        const val SENSOR_SCAN_MS = 8_000L
     }
 }

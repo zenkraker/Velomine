@@ -8,6 +8,7 @@ data class RawSample(
     val altitude: Double?,
     val speed: Double?,
     val accuracy: Double?,
+    val heartRate: Int? = null,
 )
 
 /** A pause, resume, start or stop marker in the raw file. */

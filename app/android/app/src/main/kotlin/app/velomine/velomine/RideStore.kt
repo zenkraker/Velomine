@@ -290,6 +290,7 @@ class RideStore(context: Context) {
                         altitude = json.doubleOrNull("alt"),
                         speed = json.doubleOrNull("speed"),
                         accuracy = json.doubleOrNull("accuracy"),
+                        heartRate = json.intOrNull("hr"),
                     )
                     "start", "pause", "resume", "stop" -> {
                         val kind = json.optString("type")
@@ -317,6 +318,9 @@ class RideStore(context: Context) {
 
     private fun JSONObject.doubleOrNull(key: String): Double? =
         if (isNull(key)) null else getDouble(key)
+
+    private fun JSONObject.intOrNull(key: String): Int? =
+        if (!has(key) || isNull(key)) null else getInt(key)
 
     private fun offsetMinutes(epochMillis: Long): Int =
         java.util.TimeZone.getDefault().getOffset(epochMillis) / 60_000
@@ -368,6 +372,7 @@ class ActiveRide(
             .put("alt", sample.altitude ?: JSONObject.NULL)
             .put("speed", sample.speed ?: JSONObject.NULL)
             .put("accuracy", sample.accuracy ?: JSONObject.NULL)
+            .put("hr", sample.heartRate ?: JSONObject.NULL)
         write(json)
     }
 
