@@ -72,11 +72,11 @@ app/                             Flutter app (section 9)
 | Area | What it holds | Scope |
 |------|---------------|-------|
 | Accounts | Users, roles (admin, member; the global `coach` role is kept for compatibility but grants nothing), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
-| Clubs | Several clubs per server, each with one owner, coaches and riders; one club per account; join by a rotatable code; roster visible to the club. Sharing per data type (rides, training, routes) to nobody or the club's coaches; leaving revokes grants; every coach view, including the roster and the ride list, is logged for the member. Whole-club reading comes with a member-facing club view. | v1 |
-| Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
+| Clubs | Several clubs per server, each with one owner, coaches and riders; one club per account; join by a rotatable code; roster visible to the club. Sharing per data type (rides, training, routes, wellbeing) to nobody or the club's coaches; leaving revokes grants; every coach view, including the roster, the ride list and wellbeing, is logged for the member. Whole-club reading comes with a member-facing club view. | v1 |
+| Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion. Best mean maximal power per duration is stored at ingest for the power curve. | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months, a notification when a ride takes a part to 80 % or 100 % | v1; timed reminders v2 |
-| Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
-| Analytics | NP, IF, TSS, TRIMP, heart-rate and power zones, fitness/fatigue/form over a selected range, manual FTP, totals, goals per week/month/year, and a coach's read-only view of a sharing athlete's range | v1; power curve, estimates, readiness v2 |
+| Wellbeing | Daily check-in (fatigue, soreness, mood, stress, motivation) and RPE and notes per ride, private by default and shared with coaches only when chosen. Explicit consent before the first save; included in export and deletion. | v1; cycle tracking v2 |
+| Analytics | NP, IF, TSS, TRIMP, heart-rate and power zones, fitness/fatigue/form over a selected range, manual FTP, totals, goals per week/month/year, a power curve with FTP and VO2max estimates, a load-and-wellbeing readiness view, and a coach's read-only view of a sharing athlete's range, curve and wellbeing | v1 |
 | Privacy | Privacy zones, start/end trimming, per-stream switches. The seam exists: a non-owner view goes through `Features/Privacy/`, and routes stay hidden until the member shares them. | seam v1; zones v1 next |
 | Sharing | Share links and the server-rendered share pages | v1 |
 | Notifications | In-app notifications (ride read, failed or duplicate; part nearly worn or worn; sign-up waiting, for admins) and email (SMTP from environment variables, sent by a background service every 30 seconds; state on the notification row, no queue) | v1 |
@@ -140,7 +140,7 @@ Nothing is queued in the database. A timed task recomputes what it needs from th
 
 **Computed on read, never stored:** component wear (km, hours and months since fitting), goals and weekly/monthly/yearly totals are calculated from the rides when asked for, using each ride's local date and the member's first day of the week. The reminder timer runs the same calculation.
 
-**The exception is load:** when a ride is read, intensity factor, TSS and TRIMP are worked out from the member's FTP and maximum heart rate at that moment and stored on the ride, because the training dashboard adds them up across a date range. A ride read before the profile had those values gets them worked out when the ride page or the dashboard asks. Zone seconds are still worked out on every ride request from the current profile, so changing the maximum heart rate moves the boundaries immediately; stored load does not change retroactively.
+**The exceptions are load and best efforts:** when a ride is read, intensity factor, TSS and TRIMP are worked out from the member's FTP and maximum heart rate at that moment and stored on the ride, because the training dashboard adds them up across a date range. Best mean maximal power for each curve duration is stored per ride too (`rides.ride_power_bests`), so a range curve is one small query instead of every power stream. A startup backfill fills in rides read before this existed. A ride read before the profile had FTP or maximum heart rate gets load worked out when the ride page or the dashboard asks. Zone seconds are still worked out on every ride request from the current profile, so changing the maximum heart rate moves the boundaries immediately; stored load does not change retroactively.
 
 ## 7. Data
 
@@ -155,6 +155,8 @@ erDiagram
   RIDE ||--o{ STREAM : has
   RIDE ||--o{ LAP : has
   RIDE ||--o{ PHOTO : has
+  RIDE ||--o| RIDE_FEEL : "felt as"
+  RIDE ||--o{ POWER_BEST : has
   RIDE ||--o{ SHARE_LINK : "shared by"
   USER ||--o{ CHECK_IN : daily
   USER ||--o{ PRIVACY_ZONE : defines
@@ -169,9 +171,11 @@ erDiagram
 - Keys are `uuid`; rides recorded on the phone keep the phone's id.
 - Rides carry an EF Core concurrency token, so two edits of the same ride can't silently overwrite each other.
 - Streams are the largest data. **Decided: one row per ride in `rides.ride_streams`, with one PostgreSQL array column per signal** (time, latitude, longitude, altitude, speed, distance, heart rate, power, cadence, temperature), all the same length and aligned by index; a signal the file does not have is null. A 5-hour ride at 1 Hz is about 18,000 samples per signal, read with a single row fetch. Not benchmarked against one row per sample; revisit if queries across many rides need to filter on single samples.
+- Best efforts live in `rides.ride_power_bests` (one row per ride and duration, zero values not stored). The power curve takes the maximum per duration over the member's ready rides in the range, so it never reads the arrays.
+- Wellbeing lives in `wellbeing.daily_check_ins` (one row per member and local day, scores 1–5) and `wellbeing.ride_feel` (one row per ride, RPE 1–10 and an optional note). Consent lives on the user with its version; a new version asks again. Free-text notes are only ever returned to the owner; a coach sees scores and RPE.
 - A bulk import (v2, Strava export) has one import row with files done and failed, for the progress bar.
 - **Export and account deletion** are one slice each and cover every area a member owns.
-  - *Export:* `POST /accounts/me/export-link` returns a path with a protected, two-minute token (Data Protection, purpose `velomine.export`); `GET /accounts/export/{token}` needs no other sign-in and streams a ZIP: `profile.json`, `bikes.json` (with parts), `rides.json`, `goals.json`, `notifications.json`, a `README.txt` and `files/`, every original ride file byte for byte (they hold all the samples, so the stream table is not exported separately). The ZIP is built in a temporary file, so a large library is never held in memory. The link exists so the phone app can hand the download to the system browser, which needs no new library. Nothing secret goes in: no password hash, no security stamp, nobody else's data.
+  - *Export:* `POST /accounts/me/export-link` returns a path with a protected, two-minute token (Data Protection, purpose `velomine.export`); `GET /accounts/export/{token}` needs no other sign-in and streams a ZIP: `profile.json`, `bikes.json` (with parts), `rides.json`, `goals.json`, `notifications.json`, `wellbeing.json` (check-ins, ride RPE and notes, consent), a `README.txt` and `files/`, every original ride file byte for byte (they hold all the samples, so the stream table is not exported separately). The ZIP is built in a temporary file, so a large library is never held in memory. The link exists so the phone app can hand the download to the system browser, which needs no new library. Nothing secret goes in: no password hash, no security stamp, nobody else's data.
   - *Deletion:* `POST /accounts/me/delete`, confirmed with the password, or by typing the email for an account that has none (single sign-on). The only admin cannot delete themselves. `AccountDeletion` deletes the user, the database cascades to everything they own, then removes each ride file no other ride uses. Admins use the same service to delete an account.
 
 ## 8. API
@@ -194,7 +198,7 @@ erDiagram
 - Every non-owner view is logged and visible to the member.
 - Club visibility is a grant, not a privilege. A membership shows the roster; rides, training and routes are each `none` (the default) or `coaches`. The seam already understands a `club` audience, but nothing offers it until a member-facing club view exists. Coaches reach an athlete only through `GET /clubs/{clubId}/athletes...`, which checks the same club and an active grant and answers 404 otherwise. Admins get nothing from that path. Each shared kind stands alone: a coach given rides but not training sees no load, and one given training but not rides sees no ride dates or counts. Routes need their own grant even when rides are shared; without it the streams keep every signal except latitude and longitude, so charts work but no map or position is served.
 - Cycle tracking (v2) is encrypted with ASP.NET Core Data Protection, never appears in share links, and has its own grant.
-- Wellbeing and cycle data are health data: explicit consent before first use.
+- Wellbeing and cycle data are health data: explicit consent before first use, and again when the terms version changes. Check-ins and RPE can be shared with coaches; free-text notes never leave the owner. The readiness score is member-only: a coach sees the load and the shared check-ins, not a composite advice.
 - Built-in ASP.NET Core rate limiting on login and upload. Secrets only in environment variables. No telemetry or third-party calls unless an admin turns them on.
 
 ## 10. Flutter apps
@@ -218,7 +222,8 @@ app/
 - **Languages:** English and Italian through Flutter's `gen-l10n` (`lib/l10n/app_en.arb`, `app_it.arb`). The app follows the device language until someone picks one; the choice is kept on the device, like the theme, and the number and date formats follow it. Server-rendered email is still English.
 - **Web app:** built by the Dockerfile and served by the server itself from `wwwroot`, at the same address as the API. That makes the session cookie work without cross-origin setup, and single sign-on returns to the same site. Any path that is not an API path falls back to `index.html`.
 - **Sign-in state:** the web app keeps its session in the cookie the server sets. The phone app asks for the server address once, keeps the refresh token in Android Keystore or the iOS Keychain through a small native channel, and exchanges it for a new access token at launch. The access token stays in memory; the refresh token is never written to preferences, backups or logs. A server that cannot be reached keeps the token for the next try; a refused one clears it.
-- **Ride detail:** the numbers, a map and one chart per signal the ride has. Samples come from `GET /api/v1/rides/{id}/streams`, which averages a long ride down to at most 1,500 points (`maxPoints`, up to 5,000) so a 10-hour ride is still a small download. The charts and the map share one selected moment, so moving over a chart moves a marker on the map. Speed is worked out from positions when the file has none.
+- **Ride detail:** the numbers, a map and one chart per signal the ride has. Samples come from `GET /api/v1/rides/{id}/streams`, which averages a long ride down to at most 1,500 points (`maxPoints`, up to 5,000) so a 10-hour ride is still a small download. The charts and the map share one selected moment, so moving over a chart moves a marker on the map. Speed is worked out from positions when the file has none. The owner can add an RPE and a note, which a coach later sees only as the RPE.
+- **Progress:** readiness for today, the daily wellbeing check-in (with consent first), the power curve with FTP and VO2max suggestions, then the training dashboard, totals and goals. Readiness combines form, the seven-day ramp and recent load; a check-in and the last ride's RPE adjust it when they exist.
 - **Map background:** off by default. When an admin sets `Velomine__Map__TileUrl` (and the provider's credit in `Velomine__Map__Attribution`), the server tells clients through `GET /api/v1/server`, and the app loads tiles from that address and shows the credit. With no address the route is drawn alone and no map server is contacted.
 - **Platform split:** recording, Bluetooth and local storage are mobile only. The web app adds drag-and-drop upload and admin screens.
 
