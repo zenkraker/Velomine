@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'bike_forms.dart';
 import 'bikes_controller.dart';
+import 'component_names.dart';
 
 class BikeDetailScreen extends StatefulWidget {
   const BikeDetailScreen({
@@ -94,7 +95,11 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.removePartTitle(part.typeName.toLowerCase())),
+        title: Text(
+          l10n.removePartTitle(
+            componentTypeName(l10n, part.type, part.typeName).toLowerCase(),
+          ),
+        ),
         content: Text(l10n.removePartBody),
         actions: [
           TextButton(
@@ -348,6 +353,7 @@ class _PartCard extends StatelessWidget {
     final l10n = context.l10n;
     final color = wearColor(context, part.status);
     final make = [part.brand, part.model].whereType<String>().join(' ');
+    final typeName = componentTypeName(l10n, part.type, part.typeName);
     return Card(
       key: Key('part-${part.id}'),
       child: Padding(
@@ -360,7 +366,7 @@ class _PartCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    make.isEmpty ? part.typeName : '${part.typeName} · $make',
+                    make.isEmpty ? typeName : '$typeName · $make',
                     style: text.titleMedium,
                   ),
                 ),

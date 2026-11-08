@@ -112,4 +112,53 @@ void main() {
     expect(find.text('Rides'), findsWidgets);
     expect(store.value, 'system');
   });
+
+  testWidgets('the sign-in screen is Italian too', (tester) async {
+    final server = FakeServer();
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      languageChoice: LanguageChoice(store: MemoryLanguageStore('it')),
+    );
+
+    expect(find.text('Accedi'), findsOneWidget);
+    expect(find.text('Crea un account'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
+  });
+
+  testWidgets('progress and dates render in Italian', (tester) async {
+    final server = FakeServer();
+    server.signInBrowser(server.add('rider@example.com'));
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      languageChoice: LanguageChoice(store: MemoryLanguageStore('it')),
+    );
+
+    await tester.tap(find.text('Progressi'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Carico di allenamento'), findsOneWidget);
+    expect(find.text('Obiettivi'), findsOneWidget);
+    // The training range end (4 Nov 2026) in Italian: a short month name, not "Nov".
+    expect(find.textContaining('4 nov'), findsOneWidget);
+  });
+
+  testWidgets('the rides list is Italian, including its empty state', (
+    tester,
+  ) async {
+    final server = FakeServer();
+    server.signInBrowser(server.add('rider@example.com'));
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      languageChoice: LanguageChoice(store: MemoryLanguageStore('it')),
+    );
+
+    expect(
+      find.text('Nessuna uscita. Carica un file FIT, GPX o TCX.'),
+      findsOneWidget,
+    );
+    expect(find.text('Carica uscita'), findsOneWidget);
+  });
 }

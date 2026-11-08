@@ -831,12 +831,14 @@ Future<void> startApp(
   Future<void> Function()? onChangeServer,
 }) async {
   await tester.runAsync(session.restore);
+  final language =
+      languageChoice ?? LanguageChoice(store: MemoryLanguageStore());
+  await language.load();
   await tester.pumpWidget(
     VelomineApp(
       session: session,
       themeChoice: themeChoice ?? ThemeChoice(store: MemoryThemeStore()),
-      languageChoice:
-          languageChoice ?? LanguageChoice(store: MemoryLanguageStore()),
+      languageChoice: language,
       pickFile: pickFile ?? () async => null,
       startSso: startSso ?? () async {},
       openLink: openLink ?? (_) async {},

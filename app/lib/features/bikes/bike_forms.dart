@@ -3,6 +3,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'component_names.dart';
 
 const bikeKindIds = [
   'road',
@@ -458,8 +459,15 @@ class _PartFormState extends State<_PartForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final replacingName = widget.replacing == null
+        ? ''
+        : componentTypeName(
+            l10n,
+            widget.replacing!.type,
+            widget.replacing!.typeName,
+          );
     final title = widget.replacing != null
-        ? l10n.replacePartTitle(widget.replacing!.typeName.toLowerCase())
+        ? l10n.replacePartTitle(replacingName.toLowerCase())
         : widget.part != null
         ? l10n.editPartTitle
         : l10n.addPartTitle;
@@ -487,7 +495,10 @@ class _PartFormState extends State<_PartForm> {
                   for (final t in widget.types)
                     DropdownMenuItem(
                       value: t.id,
-                      child: Text('${t.name} (${t.group})'),
+                      child: Text(
+                        '${componentTypeName(l10n, t.id, t.name)} '
+                        '(${componentGroupName(l10n, t.group)})',
+                      ),
                     ),
                 ],
                 onChanged: widget.replacing != null ? null : _pickType,

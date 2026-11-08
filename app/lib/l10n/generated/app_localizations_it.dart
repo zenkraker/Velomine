@@ -803,6 +803,132 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bikeKindOther => 'Altro';
 
   @override
+  String get partChain => 'Catena';
+
+  @override
+  String get partCassette => 'Cassetta';
+
+  @override
+  String get partChainring => 'Corona';
+
+  @override
+  String get partCrankset => 'Guarnitura';
+
+  @override
+  String get partBottomBracket => 'Movimento centrale';
+
+  @override
+  String get partFrontDerailleur => 'Deragliatore anteriore';
+
+  @override
+  String get partRearDerailleur => 'Deragliatore posteriore';
+
+  @override
+  String get partDerailleurHanger => 'Forcellino deragliatore';
+
+  @override
+  String get partShifters => 'Comandi del cambio';
+
+  @override
+  String get partShiftCables => 'Cavi del cambio';
+
+  @override
+  String get partPedals => 'Pedali';
+
+  @override
+  String get partFrontTire => 'Copertone anteriore';
+
+  @override
+  String get partRearTire => 'Copertone posteriore';
+
+  @override
+  String get partTubelessSealant => 'Liquido tubeless';
+
+  @override
+  String get partInnerTubes => 'Camere d\'aria';
+
+  @override
+  String get partWheelset => 'Ruote';
+
+  @override
+  String get partHubService => 'Manutenzione mozzi';
+
+  @override
+  String get partFrontBrakePads => 'Pastiglie freno anteriori';
+
+  @override
+  String get partRearBrakePads => 'Pastiglie freno posteriori';
+
+  @override
+  String get partFrontRotor => 'Disco freno anteriore';
+
+  @override
+  String get partRearRotor => 'Disco freno posteriore';
+
+  @override
+  String get partBrakeFluid => 'Olio freni';
+
+  @override
+  String get partBrakeCables => 'Cavi freno';
+
+  @override
+  String get partHandlebarTape => 'Nastro manubrio o manopole';
+
+  @override
+  String get partHandlebar => 'Manubrio';
+
+  @override
+  String get partStem => 'Attacco manubrio';
+
+  @override
+  String get partHeadset => 'Serie sterzo';
+
+  @override
+  String get partSaddle => 'Sella';
+
+  @override
+  String get partSeatpost => 'Reggisella';
+
+  @override
+  String get partForkService => 'Manutenzione forcella';
+
+  @override
+  String get partShockService => 'Manutenzione ammortizzatore';
+
+  @override
+  String get partDropperPostService => 'Manutenzione reggisella telescopico';
+
+  @override
+  String get partEBattery => 'Batteria e-bike';
+
+  @override
+  String get partEMotor => 'Motore e-bike';
+
+  @override
+  String get partOther => 'Altro componente';
+
+  @override
+  String get partGroupDrivetrain => 'Trasmissione';
+
+  @override
+  String get partGroupWheels => 'Ruote';
+
+  @override
+  String get partGroupBrakes => 'Freni';
+
+  @override
+  String get partGroupCockpit => 'Cockpit';
+
+  @override
+  String get partGroupSuspension => 'Sospensioni';
+
+  @override
+  String get partGroupElectric => 'Elettrico';
+
+  @override
+  String get partGroupOther => 'Altro';
+
+  @override
   String get periodWeeks => 'Settimane';
 
   @override

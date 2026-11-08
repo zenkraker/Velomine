@@ -1472,6 +1472,258 @@ abstract class AppLocalizations {
   /// **'Other'**
   String get bikeKindOther;
 
+  /// No description provided for @partChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Chain'**
+  String get partChain;
+
+  /// No description provided for @partCassette.
+  ///
+  /// In en, this message translates to:
+  /// **'Cassette'**
+  String get partCassette;
+
+  /// No description provided for @partChainring.
+  ///
+  /// In en, this message translates to:
+  /// **'Chainring'**
+  String get partChainring;
+
+  /// No description provided for @partCrankset.
+  ///
+  /// In en, this message translates to:
+  /// **'Crankset'**
+  String get partCrankset;
+
+  /// No description provided for @partBottomBracket.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom bracket'**
+  String get partBottomBracket;
+
+  /// No description provided for @partFrontDerailleur.
+  ///
+  /// In en, this message translates to:
+  /// **'Front derailleur'**
+  String get partFrontDerailleur;
+
+  /// No description provided for @partRearDerailleur.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear derailleur'**
+  String get partRearDerailleur;
+
+  /// No description provided for @partDerailleurHanger.
+  ///
+  /// In en, this message translates to:
+  /// **'Derailleur hanger'**
+  String get partDerailleurHanger;
+
+  /// No description provided for @partShifters.
+  ///
+  /// In en, this message translates to:
+  /// **'Shifters'**
+  String get partShifters;
+
+  /// No description provided for @partShiftCables.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift cables'**
+  String get partShiftCables;
+
+  /// No description provided for @partPedals.
+  ///
+  /// In en, this message translates to:
+  /// **'Pedals'**
+  String get partPedals;
+
+  /// No description provided for @partFrontTire.
+  ///
+  /// In en, this message translates to:
+  /// **'Front tire'**
+  String get partFrontTire;
+
+  /// No description provided for @partRearTire.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear tire'**
+  String get partRearTire;
+
+  /// No description provided for @partTubelessSealant.
+  ///
+  /// In en, this message translates to:
+  /// **'Tubeless sealant'**
+  String get partTubelessSealant;
+
+  /// No description provided for @partInnerTubes.
+  ///
+  /// In en, this message translates to:
+  /// **'Inner tubes'**
+  String get partInnerTubes;
+
+  /// No description provided for @partWheelset.
+  ///
+  /// In en, this message translates to:
+  /// **'Wheelset'**
+  String get partWheelset;
+
+  /// No description provided for @partHubService.
+  ///
+  /// In en, this message translates to:
+  /// **'Hub service'**
+  String get partHubService;
+
+  /// No description provided for @partFrontBrakePads.
+  ///
+  /// In en, this message translates to:
+  /// **'Front brake pads'**
+  String get partFrontBrakePads;
+
+  /// No description provided for @partRearBrakePads.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear brake pads'**
+  String get partRearBrakePads;
+
+  /// No description provided for @partFrontRotor.
+  ///
+  /// In en, this message translates to:
+  /// **'Front rotor'**
+  String get partFrontRotor;
+
+  /// No description provided for @partRearRotor.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear rotor'**
+  String get partRearRotor;
+
+  /// No description provided for @partBrakeFluid.
+  ///
+  /// In en, this message translates to:
+  /// **'Brake fluid'**
+  String get partBrakeFluid;
+
+  /// No description provided for @partBrakeCables.
+  ///
+  /// In en, this message translates to:
+  /// **'Brake cables'**
+  String get partBrakeCables;
+
+  /// No description provided for @partHandlebarTape.
+  ///
+  /// In en, this message translates to:
+  /// **'Handlebar tape or grips'**
+  String get partHandlebarTape;
+
+  /// No description provided for @partHandlebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Handlebar'**
+  String get partHandlebar;
+
+  /// No description provided for @partStem.
+  ///
+  /// In en, this message translates to:
+  /// **'Stem'**
+  String get partStem;
+
+  /// No description provided for @partHeadset.
+  ///
+  /// In en, this message translates to:
+  /// **'Headset'**
+  String get partHeadset;
+
+  /// No description provided for @partSaddle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saddle'**
+  String get partSaddle;
+
+  /// No description provided for @partSeatpost.
+  ///
+  /// In en, this message translates to:
+  /// **'Seatpost'**
+  String get partSeatpost;
+
+  /// No description provided for @partForkService.
+  ///
+  /// In en, this message translates to:
+  /// **'Fork service'**
+  String get partForkService;
+
+  /// No description provided for @partShockService.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear shock service'**
+  String get partShockService;
+
+  /// No description provided for @partDropperPostService.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropper post service'**
+  String get partDropperPostService;
+
+  /// No description provided for @partEBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'E-bike battery'**
+  String get partEBattery;
+
+  /// No description provided for @partEMotor.
+  ///
+  /// In en, this message translates to:
+  /// **'E-bike motor'**
+  String get partEMotor;
+
+  /// No description provided for @partOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other part'**
+  String get partOther;
+
+  /// No description provided for @partGroupDrivetrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Drivetrain'**
+  String get partGroupDrivetrain;
+
+  /// No description provided for @partGroupWheels.
+  ///
+  /// In en, this message translates to:
+  /// **'Wheels'**
+  String get partGroupWheels;
+
+  /// No description provided for @partGroupBrakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Brakes'**
+  String get partGroupBrakes;
+
+  /// No description provided for @partGroupCockpit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cockpit'**
+  String get partGroupCockpit;
+
+  /// No description provided for @partGroupSuspension.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspension'**
+  String get partGroupSuspension;
+
+  /// No description provided for @partGroupElectric.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get partGroupElectric;
+
+  /// No description provided for @partGroupOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get partGroupOther;
+
   /// No description provided for @periodWeeks.
   ///
   /// In en, this message translates to:

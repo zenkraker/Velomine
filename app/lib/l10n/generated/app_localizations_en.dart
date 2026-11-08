@@ -799,6 +799,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bikeKindOther => 'Other';
 
   @override
+  String get partChain => 'Chain';
+
+  @override
+  String get partCassette => 'Cassette';
+
+  @override
+  String get partChainring => 'Chainring';
+
+  @override
+  String get partCrankset => 'Crankset';
+
+  @override
+  String get partBottomBracket => 'Bottom bracket';
+
+  @override
+  String get partFrontDerailleur => 'Front derailleur';
+
+  @override
+  String get partRearDerailleur => 'Rear derailleur';
+
+  @override
+  String get partDerailleurHanger => 'Derailleur hanger';
+
+  @override
+  String get partShifters => 'Shifters';
+
+  @override
+  String get partShiftCables => 'Shift cables';
+
+  @override
+  String get partPedals => 'Pedals';
+
+  @override
+  String get partFrontTire => 'Front tire';
+
+  @override
+  String get partRearTire => 'Rear tire';
+
+  @override
+  String get partTubelessSealant => 'Tubeless sealant';
+
+  @override
+  String get partInnerTubes => 'Inner tubes';
+
+  @override
+  String get partWheelset => 'Wheelset';
+
+  @override
+  String get partHubService => 'Hub service';
+
+  @override
+  String get partFrontBrakePads => 'Front brake pads';
+
+  @override
+  String get partRearBrakePads => 'Rear brake pads';
+
+  @override
+  String get partFrontRotor => 'Front rotor';
+
+  @override
+  String get partRearRotor => 'Rear rotor';
+
+  @override
+  String get partBrakeFluid => 'Brake fluid';
+
+  @override
+  String get partBrakeCables => 'Brake cables';
+
+  @override
+  String get partHandlebarTape => 'Handlebar tape or grips';
+
+  @override
+  String get partHandlebar => 'Handlebar';
+
+  @override
+  String get partStem => 'Stem';
+
+  @override
+  String get partHeadset => 'Headset';
+
+  @override
+  String get partSaddle => 'Saddle';
+
+  @override
+  String get partSeatpost => 'Seatpost';
+
+  @override
+  String get partForkService => 'Fork service';
+
+  @override
+  String get partShockService => 'Rear shock service';
+
+  @override
+  String get partDropperPostService => 'Dropper post service';
+
+  @override
+  String get partEBattery => 'E-bike battery';
+
+  @override
+  String get partEMotor => 'E-bike motor';
+
+  @override
+  String get partOther => 'Other part';
+
+  @override
+  String get partGroupDrivetrain => 'Drivetrain';
+
+  @override
+  String get partGroupWheels => 'Wheels';
+
+  @override
+  String get partGroupBrakes => 'Brakes';
+
+  @override
+  String get partGroupCockpit => 'Cockpit';
+
+  @override
+  String get partGroupSuspension => 'Suspension';
+
+  @override
+  String get partGroupElectric => 'Electric';
+
+  @override
+  String get partGroupOther => 'Other';
+
+  @override
   String get periodWeeks => 'Weeks';
 
   @override
