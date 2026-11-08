@@ -175,7 +175,7 @@ class _VelomineAppState extends State<VelomineApp> {
       if (path.startsWith('/club/athletes') && _club.club == null) {
         return '/club';
       }
-      if (path == '/join') return '/rides';
+      if (path == '/join' && _club.club != null) return '/rides';
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
       if (path == '/admin' && !session.isAdmin) return '/rides';
