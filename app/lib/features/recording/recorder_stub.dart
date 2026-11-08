@@ -11,7 +11,22 @@ class UnsupportedRecorder implements Recorder {
   );
 
   @override
+  bool get sensorsSupported => false;
+
+  @override
   Future<bool> requestPermissions() async => false;
+
+  @override
+  Future<bool> requestSensorPermissions() async => false;
+
+  @override
+  Future<List<SensorInfo>> scanSensors() async => const [];
+
+  @override
+  Future<void> pairSensor(SensorInfo sensor) async => _unsupported;
+
+  @override
+  Future<void> forgetSensor() async {}
 
   @override
   Future<void> start({bool autoPause = true}) async => _unsupported;

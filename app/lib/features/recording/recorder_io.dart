@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'recorder.dart';
@@ -7,6 +8,9 @@ import 'recorder_log.dart';
 class NativeRecorder implements Recorder {
   static const _channel = MethodChannel('velomine/recorder');
   static const _events = EventChannel('velomine/recorder/events');
+
+  @override
+  bool get sensorsSupported => defaultTargetPlatform == TargetPlatform.android;
 
   @override
   Future<bool> requestPermissions() async {
@@ -78,6 +82,47 @@ class NativeRecorder implements Recorder {
         );
         return snapshot;
       });
+
+  @override
+  Future<bool> requestSensorPermissions() async {
+    recorderLog('sensor permissions: asking');
+    final granted = await _call<bool>(
+      () => _channel.invokeMethod<bool>('requestSensorPermissions'),
+    );
+    recorderLog('sensor permissions: granted=$granted');
+    return granted;
+  }
+
+  @override
+  Future<List<SensorInfo>> scanSensors() async {
+    recorderLog('sensors: scanning');
+    final list = await _call<List<dynamic>>(
+      () => _channel.invokeMethod<List<dynamic>>('scanSensors'),
+    );
+    final sensors = [
+      for (final item in list)
+        SensorInfo.fromMap(Map<String, dynamic>.from(item as Map)),
+    ];
+    recorderLog('sensors: found ${sensors.length}');
+    return sensors;
+  }
+
+  @override
+  Future<void> pairSensor(SensorInfo sensor) async {
+    recorderLog('sensors: pairing ${sensor.name}');
+    await _callVoid(
+      () => _channel.invokeMethod<void>('pairSensor', {
+        'address': sensor.address,
+        'name': sensor.name,
+      }),
+    );
+  }
+
+  @override
+  Future<void> forgetSensor() async {
+    recorderLog('sensors: forgetting the strap');
+    await _callVoid(() => _channel.invokeMethod<void>('forgetSensor'));
+  }
 
   @override
   Future<List<LocalRide>> listRides() async {

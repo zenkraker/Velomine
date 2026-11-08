@@ -1,5 +1,20 @@
 import 'dart:typed_data';
 
+/// A heart-rate strap found while pairing. [address] is the phone's identifier for it and stays on the phone.
+class SensorInfo {
+  const SensorInfo({required this.address, required this.name, this.rssi});
+
+  final String address;
+  final String name;
+  final int? rssi;
+
+  static SensorInfo fromMap(Map<String, dynamic> map) => SensorInfo(
+    address: map['address'] as String? ?? '',
+    name: map['name'] as String? ?? 'Heart-rate strap',
+    rssi: (map['rssi'] as num?)?.toInt(),
+  );
+}
+
 /// The live state of the phone's recorder.
 class RecorderSnapshot {
   const RecorderSnapshot({
@@ -13,6 +28,9 @@ class RecorderSnapshot {
     this.accuracyM,
     this.error,
     this.autoPaused = false,
+    this.sensorName,
+    this.sensorStatus = 'none',
+    this.heartRateBpm,
   });
 
   final String state;
@@ -28,9 +46,20 @@ class RecorderSnapshot {
   /// The pause was made by the speed monitor, not by the member.
   final bool autoPaused;
 
+  /// The strap this phone remembers, if any.
+  final String? sensorName;
+
+  /// "none", "paired", "connecting", "connected", "off" or "denied".
+  final String sensorStatus;
+
+  /// The latest reading, only while the strap is connected during a ride.
+  final int? heartRateBpm;
+
   bool get isRecording => state == 'recording';
   bool get isPaused => state == 'paused';
   bool get isIdle => state == 'idle';
+
+  bool get sensorConnected => sensorStatus == 'connected';
 
   static RecorderSnapshot fromMap(Map<String, dynamic> map) {
     final started = map['startedAt'] as num?;
@@ -47,6 +76,9 @@ class RecorderSnapshot {
       accuracyM: (map['accuracyM'] as num?)?.toDouble(),
       error: map['error'] as String?,
       autoPaused: map['autoPaused'] as bool? ?? false,
+      sensorName: map['sensorName'] as String?,
+      sensorStatus: map['sensorStatus'] as String? ?? 'none',
+      heartRateBpm: (map['heartRateBpm'] as num?)?.toInt(),
     );
   }
 }
@@ -121,6 +153,9 @@ class RecorderException implements Exception {
 
 /// The phone recorder. Android implements it with a foreground service; the web has no recorder.
 abstract interface class Recorder {
+  /// Whether this platform can pair Bluetooth sensors (phone only).
+  bool get sensorsSupported;
+
   Future<bool> requestPermissions();
 
   Future<void> start({bool autoPause = true});
@@ -134,6 +169,17 @@ abstract interface class Recorder {
   Future<RecorderSnapshot> state();
 
   Stream<RecorderSnapshot> get events;
+
+  /// Asks for the nearby-devices permissions the pairing screen needs.
+  Future<bool> requestSensorPermissions();
+
+  /// Scans for a few seconds and returns the heart-rate straps found.
+  Future<List<SensorInfo>> scanSensors();
+
+  /// Remembers [sensor] for the next rides. Connecting is left to the recorder service.
+  Future<void> pairSensor(SensorInfo sensor);
+
+  Future<void> forgetSensor();
 
   Future<List<LocalRide>> listRides();
 

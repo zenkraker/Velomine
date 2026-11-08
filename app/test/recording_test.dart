@@ -18,7 +18,12 @@ class FakeRecorder implements Recorder {
     distanceM: 0,
   );
   final rides = <LocalRide>[];
+  final sensors = <SensorInfo>[];
   bool permission = true;
+  bool sensorPermission = true;
+  bool sensorSupport = true;
+  SensorInfo? pairedSensor;
+  int sensorScans = 0;
   bool? lastAutoPause;
   int starts = 0;
   int pauses = 0;
@@ -34,8 +39,61 @@ class FakeRecorder implements Recorder {
     _events.add(next);
   }
 
+  RecorderSnapshot _copy({
+    required String? sensorName,
+    required String sensorStatus,
+    int? heartRateBpm,
+  }) {
+    final current = snapshot;
+    return RecorderSnapshot(
+      state: current.state,
+      rideId: current.rideId,
+      startedAt: current.startedAt,
+      elapsedS: current.elapsedS,
+      movingS: current.movingS,
+      distanceM: current.distanceM,
+      speedMs: current.speedMs,
+      accuracyM: current.accuracyM,
+      error: current.error,
+      autoPaused: current.autoPaused,
+      sensorName: sensorName,
+      sensorStatus: sensorStatus,
+      heartRateBpm: heartRateBpm ?? current.heartRateBpm,
+    );
+  }
+
+  @override
+  bool get sensorsSupported => sensorSupport;
+
   @override
   Future<bool> requestPermissions() async => permission;
+
+  @override
+  Future<bool> requestSensorPermissions() async => sensorPermission;
+
+  @override
+  Future<List<SensorInfo>> scanSensors() async {
+    sensorScans++;
+    return [...sensors];
+  }
+
+  @override
+  Future<void> pairSensor(SensorInfo sensor) async {
+    pairedSensor = sensor;
+    _emit(
+      _copy(
+        sensorName: sensor.name,
+        sensorStatus: 'paired',
+        heartRateBpm: null,
+      ),
+    );
+  }
+
+  @override
+  Future<void> forgetSensor() async {
+    pairedSensor = null;
+    _emit(_copy(sensorName: null, sensorStatus: 'none', heartRateBpm: null));
+  }
 
   @override
   Future<void> start({bool autoPause = true}) async {
@@ -308,5 +366,122 @@ void main() {
 
     expect(recorder.deleted, ['ride-1']);
     expect(find.byKey(const Key('local-ride-ride-1')), findsNothing);
+  });
+
+  testWidgets('finds and remembers a heart-rate strap', (tester) async {
+    final recorder = FakeRecorder()
+      ..sensors.add(
+        const SensorInfo(
+          address: 'AA:BB:CC:DD:EE:FF',
+          name: 'Polar H10 1A2B3C',
+          rssi: -52,
+        ),
+      );
+    await pump(tester, recorder);
+
+    expect(find.byKey(const Key('pair-sensor')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pair-sensor')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('sensor-sheet')), findsOneWidget);
+    expect(recorder.sensorScans, 1);
+    expect(find.text('Polar H10 1A2B3C'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('sensor-AA:BB:CC:DD:EE:FF')));
+    await tester.pumpAndSettle();
+
+    expect(recorder.pairedSensor?.name, 'Polar H10 1A2B3C');
+    expect(find.byKey(const Key('sensor-sheet')), findsNothing);
+    expect(find.byKey(const Key('forget-sensor')), findsOneWidget);
+    expect(find.text('Polar H10 1A2B3C'), findsOneWidget);
+  });
+
+  testWidgets('a paired strap can be forgotten', (tester) async {
+    final recorder = FakeRecorder()
+      ..snapshot = const RecorderSnapshot(
+        state: 'idle',
+        elapsedS: 0,
+        movingS: 0,
+        distanceM: 0,
+        sensorName: 'Polar H10 1A2B3C',
+        sensorStatus: 'paired',
+      );
+    await pump(tester, recorder);
+
+    await tester.tap(find.byKey(const Key('forget-sensor')));
+    await tester.pumpAndSettle();
+
+    expect(recorder.pairedSensor, isNull);
+    expect(find.byKey(const Key('pair-sensor')), findsOneWidget);
+  });
+
+  testWidgets('the sensor row is hidden where sensors are unsupported', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder()..sensorSupport = false;
+    await pump(tester, recorder);
+
+    expect(find.byKey(const Key('pair-sensor')), findsNothing);
+    expect(find.text('Heart-rate strap'), findsNothing);
+  });
+
+  testWidgets('a refused nearby-devices permission is explained', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder()..sensorPermission = false;
+    await pump(tester, recorder);
+
+    await tester.tap(find.byKey(const Key('pair-sensor')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('sensor-sheet-error')), findsOneWidget);
+    expect(find.textContaining('Allow nearby devices'), findsOneWidget);
+    expect(recorder.sensorScans, 0);
+  });
+
+  testWidgets('the live card shows the heart rate and strap status', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder();
+    await pump(tester, recorder);
+
+    recorder.emit(
+      const RecorderSnapshot(
+        state: 'recording',
+        rideId: 'ride-live',
+        elapsedS: 12,
+        movingS: 10,
+        distanceM: 80,
+        sensorName: 'Polar H10',
+        sensorStatus: 'connected',
+        heartRateBpm: 148,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<Text>(find.byKey(const Key('readout-heartrate'))).data,
+      '148 bpm',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const Key('sensor-status'))).data,
+      'Connected',
+    );
+  });
+
+  test('a snapshot reads the paired strap from the phone', () {
+    final snapshot = RecorderSnapshot.fromMap({
+      'state': 'recording',
+      'elapsedS': 3,
+      'movingS': 2,
+      'distanceM': 10,
+      'sensorName': 'Polar H10 1A2B3C',
+      'sensorStatus': 'connected',
+      'heartRateBpm': 141,
+    });
+
+    expect(snapshot.sensorName, 'Polar H10 1A2B3C');
+    expect(snapshot.sensorConnected, isTrue);
+    expect(snapshot.heartRateBpm, 141);
   });
 }

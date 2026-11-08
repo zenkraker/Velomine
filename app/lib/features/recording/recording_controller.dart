@@ -16,6 +16,10 @@ String recorderErrorText(String? code) => switch (code) {
   'fit_failed' => 'The ride could not be saved.',
   'still_recording' => 'Stop the ride before finishing it.',
   'not_found' => 'That ride is no longer on this phone.',
+  'bluetooth_off' => 'Turn on Bluetooth to use a heart-rate strap.',
+  'bluetooth_denied' =>
+    'Allow nearby devices so the app can find your heart-rate strap.',
+  'sensor_not_found' => 'That strap is no longer nearby.',
   _ => 'The recorder could not do that. Try again.',
 };
 
@@ -133,6 +137,41 @@ class RecordingController extends ChangeNotifier {
     autoPause = value;
     recorderLog('controller: autoPause set to $value');
     await settingsStore.writeAutoPause(value);
+    _notify();
+  }
+
+  Future<bool> requestSensorPermissions() =>
+      recorder.requestSensorPermissions();
+
+  Future<List<SensorInfo>> scanSensors() => recorder.scanSensors();
+
+  Future<void> pairSensor(SensorInfo sensor) async {
+    recorderLog('controller: pair ${sensor.name} at ${sensor.address}');
+    try {
+      await recorder.pairSensor(sensor);
+      state = await recorder.state();
+      error = null;
+    } on RecorderException catch (e) {
+      recorderLog('controller: pair failed ${e.code} ${e.message}');
+      _setError(recorderErrorText(e.code));
+    } on Object catch (e) {
+      recorderLog('controller: pair failed $e');
+      _setError(recorderErrorText(null));
+    }
+    _notify();
+  }
+
+  Future<void> forgetSensor() async {
+    recorderLog('controller: forget the strap');
+    try {
+      await recorder.forgetSensor();
+      state = await recorder.state();
+      error = null;
+    } on RecorderException catch (e) {
+      _setError(recorderErrorText(e.code));
+    } on Object {
+      _setError(recorderErrorText(null));
+    }
     _notify();
   }
 

@@ -66,6 +66,19 @@ class _RecordingScreenState extends State<RecordingScreen> {
     super.dispose();
   }
 
+  Future<void> _pairSensor() async {
+    final sensor = await showModalBottomSheet<SensorInfo>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _SensorSheet(
+        requestPermission: _controller.requestSensorPermissions,
+        scan: _controller.scanSensors,
+      ),
+    );
+    if (sensor == null) return;
+    await _controller.pairSensor(sensor);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -81,6 +94,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
               if (live)
                 _LiveCard(
                   state: state,
+                  sensorsSupported: _recorder.sensorsSupported,
                   busy: _controller.busy,
                   onPause: _controller.pause,
                   onResume: _controller.resume,
@@ -93,6 +107,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   autoPause: _controller.autoPause,
                   onAutoPause: _controller.setAutoPause,
                   onStart: _controller.start,
+                  sensorsSupported: _recorder.sensorsSupported,
+                  sensorName: state.sensorName,
+                  sensorStatus: state.sensorStatus,
+                  onPair: _pairSensor,
+                  onForget: _controller.forgetSensor,
                 ),
               if (_controller.error != null) ...[
                 const SizedBox(height: 12),
@@ -146,6 +165,11 @@ class _StartCard extends StatelessWidget {
     required this.autoPause,
     required this.onAutoPause,
     required this.onStart,
+    required this.sensorsSupported,
+    required this.sensorName,
+    required this.sensorStatus,
+    required this.onPair,
+    required this.onForget,
   });
 
   final bool busy;
@@ -153,6 +177,11 @@ class _StartCard extends StatelessWidget {
   final bool autoPause;
   final Future<void> Function(bool value) onAutoPause;
   final Future<void> Function() onStart;
+  final bool sensorsSupported;
+  final String? sensorName;
+  final String sensorStatus;
+  final VoidCallback onPair;
+  final Future<void> Function() onForget;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +217,16 @@ class _StartCard extends StatelessWidget {
               value: autoPause,
               onChanged: busy || loading ? null : onAutoPause,
             ),
+            if (sensorsSupported) ...[
+              const Divider(height: 32),
+              _SensorTile(
+                name: sensorName,
+                status: sensorStatus,
+                busy: busy || loading,
+                onPair: onPair,
+                onForget: onForget,
+              ),
+            ],
           ],
         ),
       ),
@@ -195,9 +234,68 @@ class _StartCard extends StatelessWidget {
   }
 }
 
+/// The paired strap on the start card. Pairing is remembered; the connection belongs to the ride.
+class _SensorTile extends StatelessWidget {
+  const _SensorTile({
+    required this.name,
+    required this.status,
+    required this.busy,
+    required this.onPair,
+    required this.onForget,
+  });
+
+  final String? name;
+  final String status;
+  final bool busy;
+  final VoidCallback onPair;
+  final Future<void> Function() onForget;
+
+  @override
+  Widget build(BuildContext context) {
+    final paired = name != null;
+    final connected = status == 'connected';
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        paired ? Icons.favorite : Icons.monitor_heart_outlined,
+        color: connected ? Theme.of(context).colorScheme.error : null,
+      ),
+      title: Text(name ?? 'Heart-rate strap'),
+      subtitle: Text(
+        paired
+            ? sensorStatusText(status)
+            : 'None paired. Optional: heart rate is saved with the ride.',
+      ),
+      trailing: TextButton(
+        key: Key(paired ? 'forget-sensor' : 'pair-sensor'),
+        onPressed: busy
+            ? null
+            : () {
+                if (paired) {
+                  onForget();
+                } else {
+                  onPair();
+                }
+              },
+        child: Text(paired ? 'Forget' : 'Pair'),
+      ),
+    );
+  }
+}
+
+/// What the status codes from the phone mean to a member.
+String sensorStatusText(String status) => switch (status) {
+  'connected' => 'Connected',
+  'connecting' => 'Connecting…',
+  'off' => 'Bluetooth is off',
+  'denied' => 'Nearby devices not allowed',
+  _ => 'Connects when you start a ride',
+};
+
 class _LiveCard extends StatelessWidget {
   const _LiveCard({
     required this.state,
+    required this.sensorsSupported,
     required this.busy,
     required this.onPause,
     required this.onResume,
@@ -205,6 +303,7 @@ class _LiveCard extends StatelessWidget {
   });
 
   final RecorderSnapshot state;
+  final bool sensorsSupported;
   final bool busy;
   final Future<void> Function() onPause;
   final Future<void> Function() onResume;
@@ -264,8 +363,43 @@ class _LiveCard extends StatelessWidget {
                       ? '–'
                       : '±${state.accuracyM!.round()} m',
                 ),
+                if (state.sensorName != null)
+                  _Value(
+                    label: 'Heart rate',
+                    value: state.heartRateBpm == null
+                        ? '–'
+                        : '${state.heartRateBpm} bpm',
+                    valueKey: const Key('readout-heartrate'),
+                  ),
               ],
             ),
+            if (sensorsSupported && state.sensorName != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    state.sensorConnected
+                        ? Icons.favorite
+                        : Icons.monitor_heart_outlined,
+                    size: 16,
+                    color: state.sensorConnected
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    state.sensorName!,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    sensorStatusText(state.sensorStatus),
+                    key: const Key('sensor-status'),
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 20),
             Row(
               children: [
@@ -292,10 +426,11 @@ class _LiveCard extends StatelessWidget {
 }
 
 class _Value extends StatelessWidget {
-  const _Value({required this.label, required this.value});
+  const _Value({required this.label, required this.value, this.valueKey});
 
   final String label;
   final String value;
+  final Key? valueKey;
 
   @override
   Widget build(BuildContext context) {
@@ -303,7 +438,11 @@ class _Value extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: Theme.of(context).textTheme.labelMedium),
-        Text(value, style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          value,
+          key: valueKey,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
       ],
     );
   }
@@ -431,6 +570,132 @@ class _LocalRideCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Finds a strap and returns the one the member taps. Pairing is saved by the recorder, not here.
+class _SensorSheet extends StatefulWidget {
+  const _SensorSheet({required this.requestPermission, required this.scan});
+
+  final Future<bool> Function() requestPermission;
+  final Future<List<SensorInfo>> Function() scan;
+
+  @override
+  State<_SensorSheet> createState() => _SensorSheetState();
+}
+
+class _SensorSheetState extends State<_SensorSheet> {
+  List<SensorInfo>? _found;
+  String? _error;
+  bool _scanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scan();
+  }
+
+  Future<void> _scan() async {
+    setState(() {
+      _scanning = true;
+      _error = null;
+      _found = null;
+    });
+    try {
+      final granted = await widget.requestPermission();
+      if (!mounted) return;
+      if (!granted) {
+        setState(() {
+          _scanning = false;
+          _error = recorderErrorText('bluetooth_denied');
+        });
+        return;
+      }
+      final found = await widget.scan();
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+        _found = found;
+      });
+    } on RecorderException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+        _error = recorderErrorText(e.code);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+        _error = recorderErrorText(null);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final found = _found;
+    return SafeArea(
+      key: const Key('sensor-sheet'),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pair a heart-rate strap',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Wear the strap so it wakes up, then pick it below. It is '
+              'remembered for your next rides.',
+            ),
+            const SizedBox(height: 16),
+            if (_scanning) ...[
+              const LinearProgressIndicator(),
+              const SizedBox(height: 12),
+              const Text('Searching for straps…', key: Key('sensor-searching')),
+            ],
+            if (_error != null)
+              Text(
+                _error!,
+                key: const Key('sensor-sheet-error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (found != null && found.isEmpty && !_scanning)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'No straps found. Make sure the strap is worn and Bluetooth '
+                  'is on.',
+                  key: Key('sensor-none'),
+                ),
+              ),
+            for (final sensor in found ?? const <SensorInfo>[])
+              ListTile(
+                key: Key('sensor-${sensor.address}'),
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.favorite),
+                title: Text(sensor.name),
+                subtitle: Text(sensor.address),
+                trailing: sensor.rssi == null
+                    ? null
+                    : Text('${sensor.rssi} dBm'),
+                onTap: () => Navigator.of(context).pop(sensor),
+              ),
+            const SizedBox(height: 8),
+            if (!_scanning)
+              TextButton(
+                key: const Key('sensor-scan-again'),
+                onPressed: _scan,
+                child: const Text('Search again'),
+              ),
+          ],
+        ),
       ),
     );
   }

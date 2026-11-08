@@ -8,7 +8,22 @@ import 'package:velomine_api/api.dart';
 
 class QueueRecorder implements Recorder {
   @override
+  bool get sensorsSupported => false;
+
+  @override
   Future<bool> requestPermissions() async => true;
+
+  @override
+  Future<bool> requestSensorPermissions() async => false;
+
+  @override
+  Future<List<SensorInfo>> scanSensors() async => const [];
+
+  @override
+  Future<void> pairSensor(SensorInfo sensor) async {}
+
+  @override
+  Future<void> forgetSensor() async {}
 
   @override
   Future<void> start({bool autoPause = true}) async {}
