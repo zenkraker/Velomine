@@ -9,6 +9,7 @@ using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
+using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Data;
 
@@ -36,6 +37,10 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<Club> Clubs => Set<Club>();
 
     public DbSet<ClubMembership> ClubMemberships => Set<ClubMembership>();
+
+    public DbSet<ShareGrant> ShareGrants => Set<ShareGrant>();
+
+    public DbSet<ShareView> ShareViews => Set<ShareView>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

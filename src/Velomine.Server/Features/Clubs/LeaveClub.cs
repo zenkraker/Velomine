@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Features.Clubs;
 
@@ -32,6 +33,8 @@ public sealed class LeaveClub(VelomineDbContext db) : EndpointWithoutRequest
         }
 
         db.ClubMemberships.Remove(membership);
+        // Leaving revokes everything the member shared with that club.
+        db.ShareGrants.RemoveRange(db.ShareGrants.Where(g => g.MemberId == userId));
         await db.SaveChangesAsync(ct);
         await Send.NoContentAsync(ct);
     }

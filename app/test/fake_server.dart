@@ -72,6 +72,14 @@ class FakeServer {
   String joinCode = 'JOIN1234';
   bool clubActive = true;
 
+  /// What the (single) fake club member shares, and who looked.
+  final sharingChoices = <String, String>{
+    'rides': 'none',
+    'analytics': 'none',
+    'routes': 'none',
+  };
+  final shareViews = <Map<String, Object?>>[];
+
   /// What the admin settings screen is told, and the read-only status of what only the environment sets.
   final adminSettings = <String, Object?>{
     'signUpEnabled': true,
@@ -433,11 +441,19 @@ extension on FakeServer {
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
         !path.startsWith('/api/v1/club') &&
+        !path.startsWith('/api/v1/clubs') &&
+        !path.startsWith('/api/v1/sharing') &&
         !path.startsWith('/api/v1/admin')) {
       return null;
     }
-    if (path.startsWith('/api/v1/club')) {
+    if (path.startsWith('/api/v1/clubs')) {
+      return _coach(request, path, caller, json);
+    }
+    if (path == '/api/v1/club' || path.startsWith('/api/v1/club/')) {
       return _club(request, path, caller, json);
+    }
+    if (path.startsWith('/api/v1/sharing')) {
+      return _sharing(request, path, json);
     }
     if (path.startsWith('/api/v1/admin')) {
       if (!caller.roles.contains('admin')) return http.Response('', 403);
@@ -643,6 +659,108 @@ extension on FakeServer {
         'role': role,
         'joinedAt': '2026-11-02T08:00:00Z',
       });
+    }
+    return http.Response('', 404);
+  }
+
+  http.Response _sharing(
+    http.Request request,
+    String path,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    if (path == '/api/v1/sharing/views') {
+      return json({'views': shareViews});
+    }
+    if (path == '/api/v1/sharing') {
+      if (request.method == 'PUT') {
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        sharingChoices.addAll(body.cast<String, String>());
+      }
+      return json(sharingChoices);
+    }
+    return http.Response('', 404);
+  }
+
+  http.Response _coach(
+    http.Request request,
+    String path,
+    FakeAccount caller,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    final role = clubRoles[caller.email];
+    if (role != 'owner' && role != 'coach') return http.Response('', 404);
+
+    Map<String, Object?> summary(FakeAccount a) => {
+      'userId': a.id,
+      'displayName': a.name,
+      'sharesRides': sharingChoices['rides'] != 'none',
+      'sharesAnalytics': sharingChoices['analytics'] != 'none',
+      'sharesRoutes': sharingChoices['routes'] != 'none',
+      'lastRideAt': rides.isEmpty ? null : rides.first['startTime'],
+      'rides': rides.length,
+      'distanceM': rides.fold<double>(
+        0,
+        (sum, r) => sum + ((r['distanceM'] as num?)?.toDouble() ?? 0),
+      ),
+      'tss7': 60.0,
+      'tss42': 240.0,
+    };
+
+    final rideStreams = RegExp(
+      r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/rides/([^/]+)/streams$',
+    ).firstMatch(path);
+    final ride = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/rides/([^/]+)$')
+        .firstMatch(path);
+    if (rideStreams != null || ride != null) {
+      final match = rideStreams ?? ride!;
+      if (sharingChoices['rides'] == 'none') return http.Response('', 404);
+      final found = rides.where((r) => r['id'] == match.group(2));
+      if (found.isEmpty) return http.Response('', 404);
+      if (ride != null) return json(found.first);
+      final stream = streams[match.group(2)];
+      if (stream == null) return http.Response('', 409);
+      final hidden = sharingChoices['routes'] == 'none';
+      return json({
+        ...stream,
+        if (hidden) 'latitude': null,
+        if (hidden) 'longitude': null,
+      });
+    }
+
+    final ridesList = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/rides$')
+        .firstMatch(path);
+    if (ridesList != null) {
+      if (sharingChoices['rides'] == 'none') return http.Response('', 404);
+      return json({'rides': rides, 'next': null});
+    }
+
+    final training = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/training$')
+        .firstMatch(path);
+    if (training != null) {
+      if (sharingChoices['analytics'] == 'none') return http.Response('', 404);
+      final days =
+          int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90;
+      return json(trainingJson(days: days));
+    }
+
+    final one = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)$')
+        .firstMatch(path);
+    if (one != null) {
+      final found = accounts.values
+          .where((a) => a.id == one.group(1))
+          .firstOrNull;
+      if (found == null) return http.Response('', 404);
+      return json(summary(found));
+    }
+
+    if (RegExp(r'^/api/v1/clubs/[^/]+/athletes$').hasMatch(path)) {
+      final athletes = accounts.values
+          .where(
+            (a) => a.email != caller.email && clubRoles.containsKey(a.email),
+          )
+          .map(summary)
+          .toList();
+      return json({'athletes': athletes});
     }
     return http.Response('', 404);
   }

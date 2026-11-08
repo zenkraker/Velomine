@@ -72,6 +72,11 @@ enum FailureAction {
   createClub,
   updateClub,
   setClubOwner,
+  loadSharing,
+  saveSharing,
+  loadAthletes,
+  loadAthlete,
+  loadCoachRide,
 }
 
 class Failure {
@@ -127,6 +132,11 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.createClub => l10n.actionCreateClub,
       FailureAction.updateClub => l10n.actionUpdateClub,
       FailureAction.setClubOwner => l10n.actionSetClubOwner,
+      FailureAction.loadSharing => l10n.actionLoadSharing,
+      FailureAction.saveSharing => l10n.actionSaveSharing,
+      FailureAction.loadAthletes => l10n.actionLoadAthletes,
+      FailureAction.loadAthlete => l10n.actionLoadAthlete,
+      FailureAction.loadCoachRide => l10n.actionLoadCoachRide,
     };
 
 /// The sentence for a failure in the language on screen.

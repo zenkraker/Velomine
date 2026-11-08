@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+
+import '../../core/failure.dart';
+import '../../core/format.dart';
+import '../../core/l10n.dart';
+import 'coach_controllers.dart';
+
+/// The athletes in this club who share rides or training.
+class CoachAthletesScreen extends StatefulWidget {
+  const CoachAthletesScreen({
+    super.key,
+    required this.controller,
+    required this.clubId,
+    required this.onOpen,
+  });
+
+  final CoachAthletesController controller;
+  final String clubId;
+  final void Function(String userId) onOpen;
+
+  @override
+  State<CoachAthletesScreen> createState() => _CoachAthletesScreenState();
+}
+
+class _CoachAthletesScreenState extends State<CoachAthletesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.refresh(widget.clubId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.controller;
+    return ListenableBuilder(
+      listenable: c,
+      builder: (context, _) {
+        final l10n = context.l10n;
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 12,
+                  children: [
+                    Text(
+                      l10n.athletesTitle,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    if (c.error != null)
+                      Text(
+                        failureText(l10n, c.error!),
+                        key: const Key('coach-athletes-error'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    if (c.loading && c.athletes.isEmpty)
+                      const Center(child: CircularProgressIndicator())
+                    else if (c.athletes.isEmpty)
+                      Text(l10n.athletesEmpty, key: const Key('no-athletes')),
+                    for (final athlete in c.athletes)
+                      Card(
+                        key: Key('athlete-${athlete.userId}'),
+                        child: ListTile(
+                          leading: const Icon(Icons.person_outline),
+                          title: Text(athlete.displayName),
+                          subtitle: Text(
+                            [
+                              athlete.lastRideAt == null
+                                  ? l10n.lastRideNever
+                                  : l10n.lastRideOn(
+                                      dateTime(athlete.lastRideAt),
+                                    ),
+                              '${l10n.days7}: ${athlete.tss7.round()} TSS',
+                              '${l10n.days42}: ${athlete.tss42.round()} TSS',
+                            ].join(' · '),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => widget.onOpen(athlete.userId),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

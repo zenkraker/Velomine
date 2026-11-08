@@ -22,6 +22,10 @@ import 'features/auth/sso_callback_screen.dart';
 import 'features/club/club_controller.dart';
 import 'features/club/club_screen.dart';
 import 'features/club/join_club_screen.dart';
+import 'features/coach/coach_athlete_screen.dart';
+import 'features/coach/coach_athletes_screen.dart';
+import 'features/coach/coach_controllers.dart';
+import 'features/coach/coach_ride_screen.dart';
 import 'features/notifications/notifications_controller.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/profile/profile_controller.dart';
@@ -34,6 +38,7 @@ import 'features/rides/detail/ride_detail_controller.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
 import 'features/rides/rides_controller.dart';
 import 'features/rides/rides_screen.dart';
+import 'features/sharing/sharing_controller.dart';
 import 'home_shell.dart';
 
 Future<XFile?> _pickRideFile() => openFile(
@@ -122,6 +127,11 @@ class _VelomineAppState extends State<VelomineApp> {
     onUnauthorized: widget.session.sessionExpired,
   );
 
+  late final SharingController _sharing = SharingController(
+    api: widget.session.sharing,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -137,6 +147,7 @@ class _VelomineAppState extends State<VelomineApp> {
     } else {
       if (_notifications.running) _notifications.stop();
       if (_club.loaded) _club.reset();
+      if (_sharing.loaded) _sharing.reset();
     }
   }
 
@@ -160,6 +171,9 @@ class _VelomineAppState extends State<VelomineApp> {
       // An admin has no club of their own until they make one, and still needs the admin pages.
       if (!session.isAdmin && _club.loaded && _club.club == null) {
         return path == '/join' ? null : '/join';
+      }
+      if (path.startsWith('/club/athletes') && _club.club == null) {
+        return '/club';
       }
       if (path == '/join') return '/rides';
       if (open.contains(path) || path == '/') return '/rides';
@@ -245,8 +259,45 @@ class _VelomineAppState extends State<VelomineApp> {
             path: '/club',
             builder: (context, _) => ClubScreen(
               controller: _club,
+              sharing: _sharing,
               serverUrl: widget.session.serverUrl,
               onJoin: () => context.go('/join'),
+              onOpenAthletes: () => context.go('/club/athletes'),
+            ),
+          ),
+          GoRoute(
+            path: '/club/athletes',
+            builder: (context, _) => _CoachAthletesPage(
+              session: widget.session,
+              clubId: _club.club!.id,
+              onOpen: (id) => context.go('/club/athletes/$id'),
+            ),
+          ),
+          GoRoute(
+            path: '/club/athletes/:id',
+            builder: (context, state) => _CoachAthletePage(
+              key: ValueKey(state.pathParameters['id']),
+              session: widget.session,
+              clubId: _club.club!.id,
+              userId: state.pathParameters['id']!,
+              onBack: () => context.go('/club/athletes'),
+              onOpenRide: (rideId) => context.go(
+                '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/club/athletes/:id/rides/:rideId',
+            builder: (context, state) => _CoachRidePage(
+              key: ValueKey(
+                '${state.pathParameters['id']}-${state.pathParameters['rideId']}',
+              ),
+              session: widget.session,
+              clubId: _club.club!.id,
+              userId: state.pathParameters['id']!,
+              rideId: state.pathParameters['rideId']!,
+              onBack: () =>
+                  context.go('/club/athletes/${state.pathParameters['id']}'),
             ),
           ),
           GoRoute(
@@ -303,6 +354,7 @@ class _VelomineAppState extends State<VelomineApp> {
     _admin.dispose();
     _notifications.dispose();
     _club.dispose();
+    _sharing.dispose();
     super.dispose();
   }
 
@@ -332,6 +384,133 @@ class _VelomineAppState extends State<VelomineApp> {
               : child!;
         },
       ),
+    );
+  }
+}
+
+/// Owns the athlete list controller, so it lives exactly as long as the screen does.
+class _CoachAthletesPage extends StatefulWidget {
+  const _CoachAthletesPage({
+    required this.session,
+    required this.clubId,
+    required this.onOpen,
+  });
+
+  final Session session;
+  final String clubId;
+  final void Function(String userId) onOpen;
+
+  @override
+  State<_CoachAthletesPage> createState() => _CoachAthletesPageState();
+}
+
+class _CoachAthletesPageState extends State<_CoachAthletesPage> {
+  late final CoachAthletesController _controller = CoachAthletesController(
+    api: widget.session.coach,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => CoachAthletesScreen(
+    controller: _controller,
+    clubId: widget.clubId,
+    onOpen: widget.onOpen,
+  );
+}
+
+/// Owns one athlete's controller.
+class _CoachAthletePage extends StatefulWidget {
+  const _CoachAthletePage({
+    super.key,
+    required this.session,
+    required this.clubId,
+    required this.userId,
+    required this.onBack,
+    required this.onOpenRide,
+  });
+
+  final Session session;
+  final String clubId;
+  final String userId;
+  final VoidCallback onBack;
+  final void Function(String rideId) onOpenRide;
+
+  @override
+  State<_CoachAthletePage> createState() => _CoachAthletePageState();
+}
+
+class _CoachAthletePageState extends State<_CoachAthletePage> {
+  late final CoachAthleteController _controller = CoachAthleteController(
+    api: widget.session.coach,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => CoachAthleteScreen(
+    controller: _controller,
+    clubId: widget.clubId,
+    userId: widget.userId,
+    onBack: widget.onBack,
+    onOpenRide: widget.onOpenRide,
+  );
+}
+
+/// Owns one shared ride's controller.
+class _CoachRidePage extends StatefulWidget {
+  const _CoachRidePage({
+    super.key,
+    required this.session,
+    required this.clubId,
+    required this.userId,
+    required this.rideId,
+    required this.onBack,
+  });
+
+  final Session session;
+  final String clubId;
+  final String userId;
+  final String rideId;
+  final VoidCallback onBack;
+
+  @override
+  State<_CoachRidePage> createState() => _CoachRidePageState();
+}
+
+class _CoachRidePageState extends State<_CoachRidePage> {
+  late final CoachRideController _controller = CoachRideController(
+    api: widget.session.coach,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = widget.session.serverInfo;
+    return CoachRideScreen(
+      controller: _controller,
+      clubId: widget.clubId,
+      userId: widget.userId,
+      rideId: widget.rideId,
+      onBack: widget.onBack,
+      tileUrl: info?.mapTileUrl,
+      attribution: info?.mapAttribution,
     );
   }
 }

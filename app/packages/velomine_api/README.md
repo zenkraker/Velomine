@@ -114,6 +114,12 @@ Class | Method | HTTP request | Description
 *ClubApi* | [**leaveClub**](doc//ClubApi.md#leaveclub) | **POST** /api/v1/club/leave | 
 *ClubApi* | [**rotateJoinCode**](doc//ClubApi.md#rotatejoincode) | **POST** /api/v1/club/join-code | 
 *ClubApi* | [**setClubMemberRole**](doc//ClubApi.md#setclubmemberrole) | **PUT** /api/v1/club/members/{userId}/role | 
+*ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
+*ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
+*ClubsApi* | [**coachGetCoachRideStreams**](doc//ClubsApi.md#coachgetcoachridestreams) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/streams | 
+*ClubsApi* | [**coachGetCoachTraining**](doc//ClubsApi.md#coachgetcoachtraining) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/training | 
+*ClubsApi* | [**coachListCoachAthletes**](doc//ClubsApi.md#coachlistcoachathletes) | **GET** /api/v1/clubs/{clubId}/athletes | 
+*ClubsApi* | [**coachListCoachRides**](doc//ClubsApi.md#coachlistcoachrides) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides | 
 *NotificationsApi* | [**listNotifications**](doc//NotificationsApi.md#listnotifications) | **GET** /api/v1/notifications | 
 *NotificationsApi* | [**markAllNotificationsRead**](doc//NotificationsApi.md#markallnotificationsread) | **POST** /api/v1/notifications/read | 
 *NotificationsApi* | [**markNotificationRead**](doc//NotificationsApi.md#marknotificationread) | **POST** /api/v1/notifications/{id}/read | 
@@ -124,6 +130,9 @@ Class | Method | HTTP request | Description
 *RidesApi* | [**setRideBike**](doc//RidesApi.md#setridebike) | **PUT** /api/v1/rides/{id}/bike | 
 *RidesApi* | [**uploadRide**](doc//RidesApi.md#uploadride) | **POST** /api/v1/rides/uploads | 
 *ServerApi* | [**getServerInfo**](doc//ServerApi.md#getserverinfo) | **GET** /api/v1/server | 
+*SharingApi* | [**getShareViews**](doc//SharingApi.md#getshareviews) | **GET** /api/v1/sharing/views | 
+*SharingApi* | [**getSharing**](doc//SharingApi.md#getsharing) | **GET** /api/v1/sharing | 
+*SharingApi* | [**updateSharing**](doc//SharingApi.md#updatesharing) | **PUT** /api/v1/sharing | 
 
 
 ## Documentation For Models
@@ -135,6 +144,8 @@ Class | Method | HTTP request | Description
  - [BikeResponse](doc//BikeResponse.md)
  - [ClubMemberResponse](doc//ClubMemberResponse.md)
  - [ClubResponse](doc//ClubResponse.md)
+ - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
+ - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)
  - [ComponentTypeResponse](doc//ComponentTypeResponse.md)
  - [CreateBikeRequest](doc//CreateBikeRequest.md)
@@ -174,6 +185,9 @@ Class | Method | HTTP request | Description
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
+ - [ShareViewResponse](doc//ShareViewResponse.md)
+ - [ShareViewsResponse](doc//ShareViewsResponse.md)
+ - [SharingResponse](doc//SharingResponse.md)
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
@@ -187,6 +201,7 @@ Class | Method | HTTP request | Description
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
  - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
+ - [UpdateSharingRequest](doc//UpdateSharingRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
  - [ZoneTime](doc//ZoneTime.md)

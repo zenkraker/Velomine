@@ -357,6 +357,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSetClubOwner => 'name the owner';
 
   @override
+  String get actionLoadSharing => 'load your sharing choices';
+
+  @override
+  String get actionSaveSharing => 'save your sharing choices';
+
+  @override
+  String get actionLoadAthletes => 'load the athletes';
+
+  @override
+  String get actionLoadAthlete => 'load the athlete';
+
+  @override
+  String get actionLoadCoachRide => 'load this ride';
+
+  @override
   String get navClub => 'Club';
 
   @override
@@ -450,6 +465,97 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get sharingTitle => 'What you share';
+
+  @override
+  String get sharingHelp =>
+      'Only what you turn on leaves your account. Your club always sees your name and place in the roster.';
+
+  @override
+  String get shareRides => 'Rides';
+
+  @override
+  String get shareAnalytics => 'Training';
+
+  @override
+  String get shareRoutes => 'Routes';
+
+  @override
+  String get audienceNone => 'Nobody';
+
+  @override
+  String get audienceCoaches => 'My coaches';
+
+  @override
+  String get audienceClub => 'Whole club';
+
+  @override
+  String get viewsTitle => 'Who looked';
+
+  @override
+  String get viewsEmpty => 'Nobody has looked yet.';
+
+  @override
+  String get viewSummary => 'Summary';
+
+  @override
+  String get viewTraining => 'Training';
+
+  @override
+  String get viewRide => 'Ride';
+
+  @override
+  String get viewRoute => 'Route';
+
+  @override
+  String get athletesTitle => 'Athletes';
+
+  @override
+  String get coachViewAthletes => 'View athletes';
+
+  @override
+  String get athletesEmpty =>
+      'No athletes are sharing with you yet. Members turn sharing on in their Club tab.';
+
+  @override
+  String lastRideOn(String date) {
+    return 'Last ride $date';
+  }
+
+  @override
+  String get lastRideNever => 'No rides yet';
+
+  @override
+  String get days7 => '7 days';
+
+  @override
+  String get days42 => '42 days';
+
+  @override
+  String get sharesRides => 'Rides';
+
+  @override
+  String get sharesTraining => 'Training';
+
+  @override
+  String get sharesRoutes => 'Routes';
+
+  @override
+  String get coachAthleteNotFound => 'This athlete is not sharing with you.';
+
+  @override
+  String get coachRideNotFound => 'This ride is not shared with you.';
+
+  @override
+  String get coachReadOnly => 'Shared by the athlete, read-only.';
+
+  @override
+  String get coachNoRides => 'No rides shared yet.';
+
+  @override
+  String get routeNotShared => 'The athlete has not shared the route.';
 
   @override
   String get adminClubs => 'Clubs';

@@ -734,6 +734,36 @@ abstract class AppLocalizations {
   /// **'name the owner'**
   String get actionSetClubOwner;
 
+  /// No description provided for @actionLoadSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'load your sharing choices'**
+  String get actionLoadSharing;
+
+  /// No description provided for @actionSaveSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'save your sharing choices'**
+  String get actionSaveSharing;
+
+  /// No description provided for @actionLoadAthletes.
+  ///
+  /// In en, this message translates to:
+  /// **'load the athletes'**
+  String get actionLoadAthletes;
+
+  /// No description provided for @actionLoadAthlete.
+  ///
+  /// In en, this message translates to:
+  /// **'load the athlete'**
+  String get actionLoadAthlete;
+
+  /// No description provided for @actionLoadCoachRide.
+  ///
+  /// In en, this message translates to:
+  /// **'load this ride'**
+  String get actionLoadCoachRide;
+
   /// No description provided for @navClub.
   ///
   /// In en, this message translates to:
@@ -895,6 +925,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 member} other{{count} members}}'**
   String clubMemberCount(int count);
+
+  /// No description provided for @sharingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you share'**
+  String get sharingTitle;
+
+  /// No description provided for @sharingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only what you turn on leaves your account. Your club always sees your name and place in the roster.'**
+  String get sharingHelp;
+
+  /// No description provided for @shareRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get shareRides;
+
+  /// No description provided for @shareAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get shareAnalytics;
+
+  /// No description provided for @shareRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Routes'**
+  String get shareRoutes;
+
+  /// No description provided for @audienceNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody'**
+  String get audienceNone;
+
+  /// No description provided for @audienceCoaches.
+  ///
+  /// In en, this message translates to:
+  /// **'My coaches'**
+  String get audienceCoaches;
+
+  /// No description provided for @audienceClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole club'**
+  String get audienceClub;
+
+  /// No description provided for @viewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who looked'**
+  String get viewsTitle;
+
+  /// No description provided for @viewsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has looked yet.'**
+  String get viewsEmpty;
+
+  /// No description provided for @viewSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get viewSummary;
+
+  /// No description provided for @viewTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get viewTraining;
+
+  /// No description provided for @viewRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride'**
+  String get viewRide;
+
+  /// No description provided for @viewRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get viewRoute;
+
+  /// No description provided for @athletesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Athletes'**
+  String get athletesTitle;
+
+  /// No description provided for @coachViewAthletes.
+  ///
+  /// In en, this message translates to:
+  /// **'View athletes'**
+  String get coachViewAthletes;
+
+  /// No description provided for @athletesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No athletes are sharing with you yet. Members turn sharing on in their Club tab.'**
+  String get athletesEmpty;
+
+  /// No description provided for @lastRideOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Last ride {date}'**
+  String lastRideOn(String date);
+
+  /// No description provided for @lastRideNever.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides yet'**
+  String get lastRideNever;
+
+  /// No description provided for @days7.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get days7;
+
+  /// No description provided for @days42.
+  ///
+  /// In en, this message translates to:
+  /// **'42 days'**
+  String get days42;
+
+  /// No description provided for @sharesRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get sharesRides;
+
+  /// No description provided for @sharesTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get sharesTraining;
+
+  /// No description provided for @sharesRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Routes'**
+  String get sharesRoutes;
+
+  /// No description provided for @coachAthleteNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This athlete is not sharing with you.'**
+  String get coachAthleteNotFound;
+
+  /// No description provided for @coachRideNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride is not shared with you.'**
+  String get coachRideNotFound;
+
+  /// No description provided for @coachReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by the athlete, read-only.'**
+  String get coachReadOnly;
+
+  /// No description provided for @coachNoRides.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides shared yet.'**
+  String get coachNoRides;
+
+  /// No description provided for @routeNotShared.
+  ///
+  /// In en, this message translates to:
+  /// **'The athlete has not shared the route.'**
+  String get routeNotShared;
 
   /// No description provided for @adminClubs.
   ///

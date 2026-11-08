@@ -10,9 +10,11 @@ lib/api/admin_api.dart
 lib/api/analytics_api.dart
 lib/api/bikes_api.dart
 lib/api/club_api.dart
+lib/api/clubs_api.dart
 lib/api/notifications_api.dart
 lib/api/rides_api.dart
 lib/api/server_api.dart
+lib/api/sharing_api.dart
 lib/api_client.dart
 lib/api_exception.dart
 lib/api_helper.dart
@@ -28,6 +30,8 @@ lib/model/bike_detail_response.dart
 lib/model/bike_response.dart
 lib/model/club_member_response.dart
 lib/model/club_response.dart
+lib/model/coach_athlete_response.dart
+lib/model/coach_athletes_response.dart
 lib/model/component_response.dart
 lib/model/component_type_response.dart
 lib/model/create_bike_request.dart
@@ -67,6 +71,9 @@ lib/model/set_club_owner_request.dart
 lib/model/set_ride_bike_request.dart
 lib/model/set_user_roles_request.dart
 lib/model/settings_response.dart
+lib/model/share_view_response.dart
+lib/model/share_views_response.dart
+lib/model/sharing_response.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart
@@ -80,6 +87,7 @@ lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
 lib/model/update_profile_request.dart
 lib/model/update_settings_request.dart
+lib/model/update_sharing_request.dart
 lib/model/upload_ride_response.dart
 lib/model/user_summary.dart
 lib/model/zone_time.dart

@@ -359,6 +359,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionSetClubOwner => 'nominare il proprietario';
 
   @override
+  String get actionLoadSharing => 'caricare le tue scelte di condivisione';
+
+  @override
+  String get actionSaveSharing => 'salvare le tue scelte di condivisione';
+
+  @override
+  String get actionLoadAthletes => 'caricare gli atleti';
+
+  @override
+  String get actionLoadAthlete => 'caricare l\'atleta';
+
+  @override
+  String get actionLoadCoachRide => 'caricare questa uscita';
+
+  @override
   String get navClub => 'Club';
 
   @override
@@ -453,6 +468,97 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get sharingTitle => 'Cosa condividi';
+
+  @override
+  String get sharingHelp =>
+      'Esce dal tuo account solo ciò che attivi. Il club vede sempre il tuo nome e il tuo posto nella lista.';
+
+  @override
+  String get shareRides => 'Uscite';
+
+  @override
+  String get shareAnalytics => 'Allenamento';
+
+  @override
+  String get shareRoutes => 'Percorsi';
+
+  @override
+  String get audienceNone => 'Nessuno';
+
+  @override
+  String get audienceCoaches => 'I miei allenatori';
+
+  @override
+  String get audienceClub => 'Tutto il club';
+
+  @override
+  String get viewsTitle => 'Chi ha guardato';
+
+  @override
+  String get viewsEmpty => 'Nessuno ha ancora guardato.';
+
+  @override
+  String get viewSummary => 'Riepilogo';
+
+  @override
+  String get viewTraining => 'Allenamento';
+
+  @override
+  String get viewRide => 'Uscita';
+
+  @override
+  String get viewRoute => 'Percorso';
+
+  @override
+  String get athletesTitle => 'Atleti';
+
+  @override
+  String get coachViewAthletes => 'Vedi atleti';
+
+  @override
+  String get athletesEmpty =>
+      'Nessun atleta condivide ancora con te. I membri attivano la condivisione nella scheda Club.';
+
+  @override
+  String lastRideOn(String date) {
+    return 'Ultima uscita $date';
+  }
+
+  @override
+  String get lastRideNever => 'Nessuna uscita';
+
+  @override
+  String get days7 => '7 giorni';
+
+  @override
+  String get days42 => '42 giorni';
+
+  @override
+  String get sharesRides => 'Uscite';
+
+  @override
+  String get sharesTraining => 'Allenamento';
+
+  @override
+  String get sharesRoutes => 'Percorsi';
+
+  @override
+  String get coachAthleteNotFound => 'Questo atleta non condivide con te.';
+
+  @override
+  String get coachRideNotFound => 'Questa uscita non è condivisa con te.';
+
+  @override
+  String get coachReadOnly => 'Condivisa dall\'atleta, sola lettura.';
+
+  @override
+  String get coachNoRides => 'Nessuna uscita condivisa.';
+
+  @override
+  String get routeNotShared => 'L\'atleta non ha condiviso il percorso.';
 
   @override
   String get adminClubs => 'Club';

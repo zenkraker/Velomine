@@ -197,6 +197,10 @@ class ApiClient {
           return ClubMemberResponse.fromJson(value);
         case 'ClubResponse':
           return ClubResponse.fromJson(value);
+        case 'CoachAthleteResponse':
+          return CoachAthleteResponse.fromJson(value);
+        case 'CoachAthletesResponse':
+          return CoachAthletesResponse.fromJson(value);
         case 'ComponentResponse':
           return ComponentResponse.fromJson(value);
         case 'ComponentTypeResponse':
@@ -275,6 +279,12 @@ class ApiClient {
           return SetUserRolesRequest.fromJson(value);
         case 'SettingsResponse':
           return SettingsResponse.fromJson(value);
+        case 'ShareViewResponse':
+          return ShareViewResponse.fromJson(value);
+        case 'ShareViewsResponse':
+          return ShareViewsResponse.fromJson(value);
+        case 'SharingResponse':
+          return SharingResponse.fromJson(value);
         case 'SmtpStatus':
           return SmtpStatus.fromJson(value);
         case 'SsoInfoResponse':
@@ -301,6 +311,8 @@ class ApiClient {
           return UpdateProfileRequest.fromJson(value);
         case 'UpdateSettingsRequest':
           return UpdateSettingsRequest.fromJson(value);
+        case 'UpdateSharingRequest':
+          return UpdateSharingRequest.fromJson(value);
         case 'UploadRideResponse':
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':

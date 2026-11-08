@@ -72,12 +72,12 @@ app/                             Flutter app (section 9)
 | Area | What it holds | Scope |
 |------|---------------|-------|
 | Accounts | Users, roles (admin, member; the global `coach` role is kept for compatibility but grants nothing), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
-| Clubs | Several clubs per server, each with one owner, coaches and riders; one club per account; join by a rotatable code; roster visible to the club. Share grants per data type and audience, revocation and view log follow. | clubs v1; grants v1 next |
+| Clubs | Several clubs per server, each with one owner, coaches and riders; one club per account; join by a rotatable code; roster visible to the club. Sharing per data type (rides, training, routes) with audiences nobody, the coaches or the whole club; leaving revokes grants; every coach view is logged for the member. | v1 |
 | Rides | Rides, ride types, streams, laps, HR and power zones, photos, upload and ingestion | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, one default bike per member, parts, wear by km, hours and months, a notification when a ride takes a part to 80 % or 100 % | v1; timed reminders v2 |
 | Wellbeing | Daily check-in, RPE and notes per ride | v1; cycle tracking v2 |
-| Analytics | NP, IF, TSS, TRIMP, heart-rate and power zones, fitness/fatigue/form over a selected range, manual FTP, totals, goals per week/month/year | v1; power curve, estimates, readiness v2 |
-| Privacy | Privacy zones, start/end trimming, per-stream switches | v1 |
+| Analytics | NP, IF, TSS, TRIMP, heart-rate and power zones, fitness/fatigue/form over a selected range, manual FTP, totals, goals per week/month/year, and a coach's read-only view of a sharing athlete's range | v1; power curve, estimates, readiness v2 |
+| Privacy | Privacy zones, start/end trimming, per-stream switches. The seam exists: a non-owner view goes through `Features/Privacy/`, and routes stay hidden until the member shares them. | seam v1; zones v1 next |
 | Sharing | Share links and the server-rendered share pages | v1 |
 | Notifications | In-app notifications (ride read, failed or duplicate; part nearly worn or worn; sign-up waiting, for admins) and email (SMTP from environment variables, sent by a background service every 30 seconds; state on the notification row, no queue) | v1 |
 | Admin | User management (approve, roles, lock, delete), settings an admin can change in the app (sign-up, approval, map tiles; saved in the database over the environment defaults), a server overview, a test email. **SMTP and OIDC are set only with environment variables and shown read-only: credentials are never stored in the database or returned by the API.** Not built: an SSRF guard for the SMTP host (private relays are the normal case). | v1 |
@@ -192,6 +192,7 @@ erDiagram
 - Images on share pages (thumbnails, photos) use signed, expiring URLs from Data Protection (`ITimeLimitedDataProtector`, one purpose per feature). Hiding a map never deletes the file; non-owners just never get a URL for it.
 - Outbound URLs entered by an admin (tile server, OIDC issuer, geocoder, connectors) are refused if they point to private or loopback addresses, unless the admin explicitly allows it.
 - Every non-owner view is logged and visible to the member.
+- Club visibility is a grant, not a privilege. A membership shows the roster; rides, training and routes are each `none` (the default), `coaches` or `club`. Coaches reach an athlete only through `GET /clubs/{clubId}/athletes...`, which checks the same club and an active grant and answers 404 otherwise. Admins get nothing from that path. Routes need their own grant even when rides are shared; without it the streams keep every signal except latitude and longitude, so charts work but no map or position is served.
 - Cycle tracking (v2) is encrypted with ASP.NET Core Data Protection, never appears in share links, and has its own grant.
 - Wellbeing and cycle data are health data: explicit consent before first use.
 - Built-in ASP.NET Core rate limiting on login and upload. Secrets only in environment variables. No telemetry or third-party calls unless an admin turns them on.
@@ -205,7 +206,7 @@ app/
   lib/
     main.dart
     core/       session (sign-in state), theme, formatting, language; charts, maps
-    features/   auth/, rides/, bikes/, progress/, admin/, club/, notifications/, recording/
+    features/   auth/, rides/, bikes/, progress/, admin/, club/, coach/, sharing/, notifications/, recording/
   packages/
     velomine_api/   the generated API client (never edited by hand)
   android/      Kotlin recorder service

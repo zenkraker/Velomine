@@ -159,6 +159,11 @@
   "actionCreateClub": "create the club",
   "actionUpdateClub": "change the club",
   "actionSetClubOwner": "name the owner",
+  "actionLoadSharing": "load your sharing choices",
+  "actionSaveSharing": "save your sharing choices",
+  "actionLoadAthletes": "load the athletes",
+  "actionLoadAthlete": "load the athlete",
+  "actionLoadCoachRide": "load this ride",
 
   "navClub": "Club",
   "joinTitle": "Join a club",
@@ -194,6 +199,44 @@
       }
     }
   },
+
+  "sharingTitle": "What you share",
+  "sharingHelp": "Only what you turn on leaves your account. Your club always sees your name and place in the roster.",
+  "shareRides": "Rides",
+  "shareAnalytics": "Training",
+  "shareRoutes": "Routes",
+  "audienceNone": "Nobody",
+  "audienceCoaches": "My coaches",
+  "audienceClub": "Whole club",
+  "viewsTitle": "Who looked",
+  "viewsEmpty": "Nobody has looked yet.",
+  "viewSummary": "Summary",
+  "viewTraining": "Training",
+  "viewRide": "Ride",
+  "viewRoute": "Route",
+
+  "athletesTitle": "Athletes",
+  "coachViewAthletes": "View athletes",
+  "athletesEmpty": "No athletes are sharing with you yet. Members turn sharing on in their Club tab.",
+  "lastRideOn": "Last ride {date}",
+  "@lastRideOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "lastRideNever": "No rides yet",
+  "days7": "7 days",
+  "days42": "42 days",
+  "sharesRides": "Rides",
+  "sharesTraining": "Training",
+  "sharesRoutes": "Routes",
+  "coachAthleteNotFound": "This athlete is not sharing with you.",
+  "coachRideNotFound": "This ride is not shared with you.",
+  "coachReadOnly": "Shared by the athlete, read-only.",
+  "coachNoRides": "No rides shared yet.",
+  "routeNotShared": "The athlete has not shared the route.",
 
   "adminClubs": "Clubs",
   "adminCreateClub": "Create club",

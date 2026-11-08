@@ -13,6 +13,9 @@ void main() {
   ) async {
     final rider = server.add('rider@example.com', clubRole: null);
     server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
 
     // No club, so the app goes straight to the join page.
@@ -38,6 +41,7 @@ void main() {
     expect(find.byKey(Key('member-${rider.id}')), findsOneWidget);
     expect(find.byKey(const Key('join-code-value')), findsNothing);
 
+    await tester.ensureVisible(find.byKey(const Key('leave-club')));
     await tester.tap(find.byKey(const Key('leave-club')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirm-leave-club')));

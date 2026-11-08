@@ -917,6 +917,99 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("ride_streams", "rides");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareGrant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("audience");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("data_type");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grants");
+
+                    b.HasIndex("ClubId")
+                        .HasDatabaseName("ix_grants_club_id");
+
+                    b.HasIndex("MemberId", "DataType")
+                        .IsUnique()
+                        .HasDatabaseName("ix_grants_member_id_data_type");
+
+                    b.ToTable("grants", "sharing", t =>
+                        {
+                            t.HasCheckConstraint("ck_share_grants_audience", "audience IN ('coaches', 'club')");
+
+                            t.HasCheckConstraint("ck_share_grants_data_type", "data_type IN ('rides', 'analytics', 'routes')");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("at");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid>("ViewerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("viewer_id");
+
+                    b.Property<string>("ViewerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("viewer_name");
+
+                    b.Property<string>("What")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("what");
+
+                    b.HasKey("Id")
+                        .HasName("pk_view_log");
+
+                    b.HasIndex("MemberId", "At")
+                        .HasDatabaseName("ix_view_log_member_id_at");
+
+                    b.ToTable("view_log", "sharing");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -1089,6 +1182,26 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ride_streams_rides_ride_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareGrant", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_grants_users_member_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareView", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_view_log_users_member_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>

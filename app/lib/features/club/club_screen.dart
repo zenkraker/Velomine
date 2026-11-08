@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/failure.dart';
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../sharing/sharing_controller.dart';
 import 'club_controller.dart';
 
 String clubRoleName(AppLocalizations l10n, String role) => switch (role) {
@@ -12,18 +14,67 @@ String clubRoleName(AppLocalizations l10n, String role) => switch (role) {
   _ => l10n.clubMemberRole,
 };
 
+String _audienceName(AppLocalizations l10n, String audience) =>
+    switch (audience) {
+      'coaches' => l10n.audienceCoaches,
+      'club' => l10n.audienceClub,
+      _ => l10n.audienceNone,
+    };
+
+String _viewName(AppLocalizations l10n, String what) => switch (what) {
+  'training' => l10n.viewTraining,
+  'ride' => l10n.viewRide,
+  'route' => l10n.viewRoute,
+  _ => l10n.viewSummary,
+};
+
 /// The member's club: the roster, their own place in it, and (for the owner) the join code.
-class ClubScreen extends StatelessWidget {
+class ClubScreen extends StatefulWidget {
   const ClubScreen({
     super.key,
     required this.controller,
+    required this.sharing,
     required this.serverUrl,
     required this.onJoin,
+    required this.onOpenAthletes,
   });
 
   final ClubController controller;
+  final SharingController sharing;
   final String serverUrl;
   final VoidCallback onJoin;
+  final VoidCallback onOpenAthletes;
+
+  @override
+  State<ClubScreen> createState() => _ClubScreenState();
+}
+
+class _ClubScreenState extends State<ClubScreen> {
+  ClubController get controller => widget.controller;
+  SharingController get sharing => widget.sharing;
+
+  String? _askedFor;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.addListener(_loadSharingIfNeeded);
+    _loadSharingIfNeeded();
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(_loadSharingIfNeeded);
+    super.dispose();
+  }
+
+  /// Sharing belongs to the club; read it once the club is known.
+  void _loadSharingIfNeeded() {
+    final club = controller.club;
+    if (club == null || _askedFor == club.id) return;
+    _askedFor = club.id;
+    sharing.refresh();
+  }
 
   Future<void> _rotateCode(BuildContext context) async {
     final l10n = context.l10n;
@@ -67,15 +118,20 @@ class ClubScreen extends StatelessWidget {
         ],
       ),
     );
-    if (sure == true && await controller.leave() != null) {
-      // The failure stays on the screen; a successful leave takes the router to the join page.
+    if (sure == true) {
+      final failure = await controller.leave();
+      if (failure == null) {
+        sharing.reset();
+        _askedFor = null;
+      }
     }
   }
 
   void _copy(BuildContext context, String code) {
     final l10n = context.l10n;
-    final link = '$serverUrl/join?code=$code';
-    Clipboard.setData(ClipboardData(text: link));
+    Clipboard.setData(
+      ClipboardData(text: '${widget.serverUrl}/join?code=$code'),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.clubCopied),
@@ -87,7 +143,7 @@ class ClubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: controller,
+      listenable: Listenable.merge([controller, sharing]),
       builder: (context, _) {
         final l10n = context.l10n;
         final club = controller.club;
@@ -125,7 +181,7 @@ class ClubScreen extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: FilledButton.icon(
                               key: const Key('go-join-club'),
-                              onPressed: onJoin,
+                              onPressed: widget.onJoin,
                               icon: const Icon(Icons.group_add),
                               label: Text(l10n.joinTitle),
                             ),
@@ -141,6 +197,7 @@ class ClubScreen extends StatelessWidget {
         }
 
         final owner = club.myRole == 'owner';
+        final coach = owner || club.myRole == 'coach';
         final members = club.members;
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -270,6 +327,24 @@ class ClubScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (coach) ...[
+                      Text(
+                        l10n.athletesTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.people_outline),
+                          title: Text(l10n.athletesTitle),
+                          trailing: TextButton(
+                            key: const Key('open-athletes'),
+                            onPressed: widget.onOpenAthletes,
+                            child: Text(l10n.coachViewAthletes),
+                          ),
+                        ),
+                      ),
+                    ],
+                    _SharingCard(sharing: sharing),
                     if (!owner)
                       Align(
                         alignment: Alignment.centerLeft,
@@ -299,6 +374,109 @@ class ClubScreen extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _SharingCard extends StatelessWidget {
+  const _SharingCard({required this.sharing});
+
+  final SharingController sharing;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    Widget choice(
+      String label,
+      String value,
+      String key,
+      Future<void> Function(String) onChanged,
+    ) => InputDecorator(
+      decoration: InputDecoration(labelText: label),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          key: Key(key),
+          value: value,
+          isExpanded: true,
+          items: [
+            for (final audience in ['none', 'coaches', 'club'])
+              DropdownMenuItem(
+                value: audience,
+                child: Text(_audienceName(l10n, audience)),
+              ),
+          ],
+          onChanged: sharing.saving
+              ? null
+              : (v) {
+                  if (v != null) onChanged(v);
+                },
+        ),
+      ),
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 12,
+          children: [
+            Text(
+              l10n.sharingTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text(
+              l10n.sharingHelp,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (sharing.loading && !sharing.loaded)
+              const Center(child: CircularProgressIndicator())
+            else ...[
+              choice(
+                l10n.shareRides,
+                sharing.rides,
+                'share-rides',
+                (v) => sharing.choose(rides: v),
+              ),
+              choice(
+                l10n.shareAnalytics,
+                sharing.analytics,
+                'share-analytics',
+                (v) => sharing.choose(analytics: v),
+              ),
+              choice(
+                l10n.shareRoutes,
+                sharing.routes,
+                'share-routes',
+                (v) => sharing.choose(routes: v),
+              ),
+            ],
+            if (sharing.error != null)
+              Text(
+                failureText(l10n, sharing.error!),
+                key: const Key('sharing-error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            const Divider(),
+            Text(
+              l10n.viewsTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            if (sharing.views.isEmpty)
+              Text(l10n.viewsEmpty)
+            else
+              for (final view in sharing.views)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.visibility_outlined, size: 18),
+                  title: Text(view.viewerName),
+                  subtitle: Text(_viewName(l10n, view.what)),
+                  trailing: Text(dateTime(view.at)),
+                ),
+          ],
+        ),
+      ),
     );
   }
 }
