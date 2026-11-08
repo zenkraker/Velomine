@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
 import 'app.dart';
+import 'core/language_choice.dart';
 import 'core/server_config.dart';
 import 'core/session.dart';
 import 'core/session_auth.dart';
@@ -12,6 +13,7 @@ import 'core/theme.dart';
 import 'core/theme_choice.dart';
 import 'core/token_store.dart';
 import 'features/auth/server_setup_screen.dart';
+import 'l10n/generated/app_localizations.dart';
 
 /// The top of the app: choose a server on a phone, then build a session for that address.
 class VelomineRoot extends StatefulWidget {
@@ -20,11 +22,13 @@ class VelomineRoot extends StatefulWidget {
     required this.config,
     required this.tokenStore,
     required this.themeChoice,
+    required this.languageChoice,
   });
 
   final ServerConfig config;
   final TokenStore tokenStore;
   final ThemeChoice themeChoice;
+  final LanguageChoice languageChoice;
 
   @override
   State<VelomineRoot> createState() => _VelomineRootState();
@@ -34,7 +38,11 @@ class _VelomineRootState extends State<VelomineRoot> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([widget.config, widget.themeChoice]),
+      listenable: Listenable.merge([
+        widget.config,
+        widget.themeChoice,
+        widget.languageChoice,
+      ]),
       builder: (context, _) {
         final baseUrl = widget.config.baseUrl;
 
@@ -44,6 +52,9 @@ class _VelomineRootState extends State<VelomineRoot> {
             theme: dayTheme(),
             darkTheme: nightTheme(),
             themeMode: widget.themeChoice.mode,
+            locale: widget.languageChoice.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: ServerSetupScreen(
               initialUrl:
                   widget.config.previousUrl ?? widget.config.suggestedUrl,
@@ -58,6 +69,7 @@ class _VelomineRootState extends State<VelomineRoot> {
           config: widget.config,
           tokenStore: widget.tokenStore,
           themeChoice: widget.themeChoice,
+          languageChoice: widget.languageChoice,
         );
       },
     );
@@ -72,12 +84,14 @@ class _SessionHost extends StatefulWidget {
     required this.config,
     required this.tokenStore,
     required this.themeChoice,
+    required this.languageChoice,
   });
 
   final String baseUrl;
   final ServerConfig config;
   final TokenStore tokenStore;
   final ThemeChoice themeChoice;
+  final LanguageChoice languageChoice;
 
   @override
   State<_SessionHost> createState() => _SessionHostState();
@@ -121,6 +135,7 @@ class _SessionHostState extends State<_SessionHost> {
   Widget build(BuildContext context) => VelomineApp(
     session: _session,
     themeChoice: widget.themeChoice,
+    languageChoice: widget.languageChoice,
     onChangeServer: kIsWeb ? null : _changeServer,
   );
 }

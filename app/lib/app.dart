@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/hooks.dart';
+import 'core/language_choice.dart';
 import 'core/session.dart';
 import 'core/theme.dart';
 import 'core/theme_choice.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'features/admin/admin_controller.dart';
 import 'features/admin/admin_screen.dart';
 import 'features/auth/register_screen.dart';
@@ -57,6 +59,7 @@ class VelomineApp extends StatefulWidget {
     super.key,
     required this.session,
     required this.themeChoice,
+    required this.languageChoice,
     this.pickFile = _pickRideFile,
     this.startSso,
     this.openLink = _openLink,
@@ -67,6 +70,7 @@ class VelomineApp extends StatefulWidget {
 
   final Session session;
   final ThemeChoice themeChoice;
+  final LanguageChoice languageChoice;
   final FilePicker pickFile;
   final SsoStarter? startSso;
   final LinkOpener openLink;
@@ -154,6 +158,7 @@ class _VelomineAppState extends State<VelomineApp> {
         builder: (_, _) => SignInScreen(
           session: widget.session,
           startSso: _startSso,
+          languageChoice: widget.languageChoice,
           onChangeServer: widget.onChangeServer,
         ),
       ),
@@ -175,6 +180,7 @@ class _VelomineAppState extends State<VelomineApp> {
           session: widget.session,
           notifications: _notifications,
           themeChoice: widget.themeChoice,
+          languageChoice: widget.languageChoice,
           location: state.uri.path,
           child: child,
         ),
@@ -271,12 +277,19 @@ class _VelomineAppState extends State<VelomineApp> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([widget.session, widget.themeChoice]),
+      listenable: Listenable.merge([
+        widget.session,
+        widget.themeChoice,
+        widget.languageChoice,
+      ]),
       builder: (context, _) => MaterialApp.router(
         title: 'Velomine',
         theme: dayTheme(),
         darkTheme: nightTheme(),
         themeMode: widget.themeChoice.mode,
+        locale: widget.languageChoice.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: _router,
         builder: (context, child) =>
             widget.session.status == SessionStatus.loading

@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/l10n.dart';
+import 'core/language_choice.dart';
 import 'core/session.dart';
 import 'core/theme_choice.dart';
 import 'features/notifications/notifications_controller.dart';
@@ -14,6 +16,7 @@ class HomeShell extends StatelessWidget {
     required this.session,
     required this.notifications,
     required this.themeChoice,
+    required this.languageChoice,
     required this.location,
     required this.child,
   });
@@ -21,6 +24,7 @@ class HomeShell extends StatelessWidget {
   final Session session;
   final NotificationsController notifications;
   final ThemeChoice themeChoice;
+  final LanguageChoice languageChoice;
   final String location;
   final Widget child;
 
@@ -41,14 +45,15 @@ class HomeShell extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Velomine'),
         actions: [
+          LanguageChoiceButton(choice: languageChoice),
           ThemeChoiceButton(choice: themeChoice),
           ListenableBuilder(
             listenable: notifications,
             builder: (context, _) => IconButton(
               key: const Key('open-notifications'),
               tooltip: notifications.unread == 0
-                  ? 'Notifications'
-                  : 'Notifications, ${notifications.unread} unread',
+                  ? context.l10n.notifications
+                  : context.l10n.notificationsUnread(notifications.unread),
               isSelected: location == '/notifications',
               icon: Badge(
                 isLabelVisible: notifications.unread > 0,
@@ -67,7 +72,7 @@ class HomeShell extends StatelessWidget {
             ),
           IconButton(
             key: const Key('sign-out'),
-            tooltip: 'Sign out',
+            tooltip: context.l10n.signOut,
             icon: const Icon(Icons.logout),
             onPressed: session.signOut,
           ),
@@ -81,27 +86,27 @@ class HomeShell extends StatelessWidget {
         indicatorColor: selected < 0 ? Colors.transparent : null,
         onDestinationSelected: (i) => context.go(destinations[i]),
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.directions_bike),
-            label: 'Rides',
+          NavigationDestination(
+            icon: const Icon(Icons.directions_bike),
+            label: context.l10n.navRides,
           ),
           if (!kIsWeb)
-            const NavigationDestination(
-              icon: Icon(Icons.fiber_manual_record),
-              label: 'Record',
+            NavigationDestination(
+              icon: const Icon(Icons.fiber_manual_record),
+              label: context.l10n.navRecord,
             ),
-          const NavigationDestination(
-            icon: Icon(Icons.insights),
-            label: 'Progress',
+          NavigationDestination(
+            icon: const Icon(Icons.insights),
+            label: context.l10n.navProgress,
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.pedal_bike),
-            label: 'Bikes',
+          NavigationDestination(
+            icon: const Icon(Icons.pedal_bike),
+            label: context.l10n.navBikes,
           ),
           if (session.isAdmin)
-            const NavigationDestination(
-              icon: Icon(Icons.admin_panel_settings),
-              label: 'Admin',
+            NavigationDestination(
+              icon: const Icon(Icons.admin_panel_settings),
+              label: context.l10n.navAdmin,
             ),
         ],
       ),

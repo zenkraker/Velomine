@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
+import 'core/language_choice.dart';
 import 'core/server_config.dart';
 import 'core/theme_choice.dart';
 import 'core/token_store_factory.dart';
@@ -18,6 +19,9 @@ Future<void> main() async {
   final themeChoice = ThemeChoice();
   await themeChoice.load();
 
+  final languageChoice = LanguageChoice();
+  await languageChoice.load();
+
   final tokenStore = createTokenStore();
   // Keychain entries survive an uninstall on iOS. With no server chosen there is no session to restore,
   // so drop any token that belonged to the removed installation.
@@ -28,6 +32,7 @@ Future<void> main() async {
       config: config,
       tokenStore: tokenStore,
       themeChoice: themeChoice,
+      languageChoice: languageChoice,
     ),
   );
 }

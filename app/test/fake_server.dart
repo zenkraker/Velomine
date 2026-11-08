@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
 import 'package:velomine/core/hooks.dart';
+import 'package:velomine/core/language_choice.dart';
 import 'package:velomine/core/pkce.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/session_auth.dart';
@@ -825,6 +826,7 @@ Future<void> startApp(
   FilePicker? pickFile,
   SsoStarter? startSso,
   ThemeChoice? themeChoice,
+  LanguageChoice? languageChoice,
   LinkOpener? openLink,
   Future<void> Function()? onChangeServer,
 }) async {
@@ -833,6 +835,8 @@ Future<void> startApp(
     VelomineApp(
       session: session,
       themeChoice: themeChoice ?? ThemeChoice(store: MemoryThemeStore()),
+      languageChoice:
+          languageChoice ?? LanguageChoice(store: MemoryLanguageStore()),
       pickFile: pickFile ?? () async => null,
       startSso: startSso ?? () async {},
       openLink: openLink ?? (_) async {},
@@ -862,6 +866,19 @@ class MemoryTokenStore implements TokenStore {
 /// Keeps the theme choice in memory instead of the device's preferences.
 class MemoryThemeStore implements ThemeChoiceStore {
   MemoryThemeStore([this.value]);
+
+  String? value;
+
+  @override
+  Future<String?> read() async => value;
+
+  @override
+  Future<void> write(String value) async => this.value = value;
+}
+
+/// Keeps the language choice in memory instead of the device's preferences.
+class MemoryLanguageStore implements LanguageChoiceStore {
+  MemoryLanguageStore([this.value]);
 
   String? value;
 

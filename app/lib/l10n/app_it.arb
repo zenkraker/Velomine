@@ -1,0 +1,23 @@
+{
+  "@@locale": "it",
+
+  "navRides": "Uscite",
+  "navRecord": "Registra",
+  "navProgress": "Progressi",
+  "navBikes": "Bici",
+  "navAdmin": "Admin",
+
+  "notifications": "Notifiche",
+  "notificationsUnread": "Notifiche, {count} non lette",
+  "signOut": "Esci",
+
+  "themeTooltip": "Tema: {name}",
+  "themeSystem": "Segui il dispositivo",
+  "themeLight": "Giorno",
+  "themeDark": "Notte",
+
+  "languageTooltip": "Lingua: {name}",
+  "languageSystem": "Segui il dispositivo",
+  "languageEnglish": "English",
+  "languageItalian": "Italiano"
+}

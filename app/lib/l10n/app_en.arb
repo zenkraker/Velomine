@@ -1,0 +1,44 @@
+{
+  "@@locale": "en",
+
+  "navRides": "Rides",
+  "navRecord": "Record",
+  "navProgress": "Progress",
+  "navBikes": "Bikes",
+  "navAdmin": "Admin",
+
+  "notifications": "Notifications",
+  "notificationsUnread": "Notifications, {count} unread",
+  "@notificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Sign out",
+
+  "themeTooltip": "Theme: {name}",
+  "@themeTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themeSystem": "Follow this device",
+  "themeLight": "Day",
+  "themeDark": "Night",
+
+  "languageTooltip": "Language: {name}",
+  "@languageTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSystem": "Follow this device",
+  "languageEnglish": "English",
+  "languageItalian": "Italiano"
+}

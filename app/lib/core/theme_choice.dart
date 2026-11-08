@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n.dart';
+
 /// Day, night, or whatever the device is set to. Kept on this device only: the same member may want the night
 /// theme on the phone and the day theme on a laptop, and the choice applies before anyone signs in.
 class ThemeChoice extends ChangeNotifier {
@@ -8,12 +10,6 @@ class ThemeChoice extends ChangeNotifier {
 
   final ThemeChoiceStore _store;
   ThemeMode mode = ThemeMode.system;
-
-  static const names = {
-    ThemeMode.system: 'Follow this device',
-    ThemeMode.light: 'Day',
-    ThemeMode.dark: 'Night',
-  };
 
   Future<void> load() async {
     final saved = await _store.read();
@@ -71,12 +67,18 @@ class ThemeChoiceButton extends StatelessWidget {
     ThemeMode.system => Icons.brightness_auto_outlined,
   };
 
+  static String _name(BuildContext context, ThemeMode mode) => switch (mode) {
+    ThemeMode.light => context.l10n.themeLight,
+    ThemeMode.dark => context.l10n.themeDark,
+    ThemeMode.system => context.l10n.themeSystem,
+  };
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: choice,
     builder: (context, _) => PopupMenuButton<ThemeMode>(
       key: const Key('theme-choice'),
-      tooltip: 'Theme: ${ThemeChoice.names[choice.mode]}',
+      tooltip: context.l10n.themeTooltip(_name(context, choice.mode)),
       icon: Icon(_icon(choice.mode)),
       initialValue: choice.mode,
       onSelected: choice.choose,
@@ -87,7 +89,7 @@ class ThemeChoiceButton extends StatelessWidget {
             value: m,
             child: ListTile(
               leading: Icon(_icon(m)),
-              title: Text(ThemeChoice.names[m]!),
+              title: Text(_name(context, m)),
               trailing: m == choice.mode ? const Icon(Icons.check) : null,
               contentPadding: EdgeInsets.zero,
             ),
