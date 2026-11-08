@@ -1249,4 +1249,208 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unread => 'Unread';
+
+  @override
+  String get recordRide => 'Record a ride';
+
+  @override
+  String get recordIntro =>
+      'The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.';
+
+  @override
+  String get starting => 'Starting…';
+
+  @override
+  String get startRecording => 'Start recording';
+
+  @override
+  String get pauseWhenStopped => 'Pause when stopped';
+
+  @override
+  String get pauseWhenStoppedHelp =>
+      'After 3 seconds at 0.1 km/h or slower; resumes above it.';
+
+  @override
+  String get heartRateStrap => 'Heart-rate strap';
+
+  @override
+  String get nonePaired =>
+      'None paired. Optional: heart rate is saved with the ride.';
+
+  @override
+  String get forget => 'Forget';
+
+  @override
+  String get pair => 'Pair';
+
+  @override
+  String get sensorConnected => 'Connected';
+
+  @override
+  String get sensorConnecting => 'Connecting…';
+
+  @override
+  String get bluetoothOffState => 'Bluetooth is off';
+
+  @override
+  String get sensorDeniedState => 'Nearby devices not allowed';
+
+  @override
+  String get sensorConnectsOnStart => 'Connects when you start a ride';
+
+  @override
+  String get autoPaused => 'Auto-paused';
+
+  @override
+  String get paused => 'Paused';
+
+  @override
+  String get recording => 'Recording';
+
+  @override
+  String get moving => 'Moving';
+
+  @override
+  String get gps => 'GPS';
+
+  @override
+  String get heartRate => 'Heart rate';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get stopAndSave => 'Stop and save';
+
+  @override
+  String get onThisPhone => 'On this phone';
+
+  @override
+  String get noLocalRides => 'No rides recorded on this phone yet.';
+
+  @override
+  String get uploaded => 'Uploaded';
+
+  @override
+  String get serverReading => 'Server is reading it…';
+
+  @override
+  String get waitingToUpload => 'Waiting to upload';
+
+  @override
+  String get uploadFailed => 'Upload failed';
+
+  @override
+  String get readyToUpload => 'Ready to upload';
+
+  @override
+  String get recordingOnPhone => 'Recording on this phone';
+
+  @override
+  String get interrupted => 'Interrupted';
+
+  @override
+  String get couldNotBeSaved => 'Could not be saved';
+
+  @override
+  String get interruptedHelp =>
+      'The recording stopped unexpectedly. Finish it to keep the ride.';
+
+  @override
+  String get finish => 'Finish';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get upload => 'Upload';
+
+  @override
+  String get deleteFromPhone => 'Delete this ride from the phone';
+
+  @override
+  String get pairStrapTitle => 'Pair a heart-rate strap';
+
+  @override
+  String get pairStrapHelp =>
+      'Wear the strap so it wakes up, then pick it below. It is remembered for your next rides.';
+
+  @override
+  String get searchingStraps => 'Searching for straps…';
+
+  @override
+  String get noStraps =>
+      'No straps found. Make sure the strap is worn and Bluetooth is on.';
+
+  @override
+  String get searchAgain => 'Search again';
+
+  @override
+  String get recorderPermission =>
+      'Allow precise location, and notifications if asked, so the ride can keep recording.';
+
+  @override
+  String get recorderGpsOff => 'Turn on location (GPS) to record a ride.';
+
+  @override
+  String get recorderLocationFailed =>
+      'The phone could not start location updates.';
+
+  @override
+  String get recorderUnsupported => 'Recording is only available on the phone.';
+
+  @override
+  String get recorderTooShort => 'The ride was too short to save.';
+
+  @override
+  String get recorderFitFailed => 'The ride could not be saved.';
+
+  @override
+  String get recorderStillRecording => 'Stop the ride before finishing it.';
+
+  @override
+  String get recorderRideNotFound => 'That ride is no longer on this phone.';
+
+  @override
+  String get recorderBluetoothOff =>
+      'Turn on Bluetooth to use a heart-rate strap.';
+
+  @override
+  String get recorderBluetoothDenied =>
+      'Allow nearby devices so the app can find your heart-rate strap.';
+
+  @override
+  String get recorderSensorNotFound => 'That strap is no longer nearby.';
+
+  @override
+  String get recorderFailed => 'The recorder could not do that. Try again.';
+
+  @override
+  String get recorderUnreadable => 'Could not read the recorder.';
+
+  @override
+  String get uploadNoFile => 'The FIT file is missing on this phone.';
+
+  @override
+  String get uploadOffline => 'Could not reach the server. Try again.';
+
+  @override
+  String get uploadSignIn => 'Sign in again to upload.';
+
+  @override
+  String get uploadTimeout => 'The server took too long to read the ride.';
+
+  @override
+  String get uploadServerFailed => 'The server could not read this ride.';
+
+  @override
+  String uploadHttpRefused(String code) {
+    return 'The server refused the upload ($code).';
+  }
+
+  @override
+  String get uploadFailedGeneric => 'Upload failed. Try again.';
 }

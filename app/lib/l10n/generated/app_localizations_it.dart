@@ -1255,4 +1255,216 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get unread => 'Non letta';
+
+  @override
+  String get recordRide => 'Registra un\'uscita';
+
+  @override
+  String get recordIntro =>
+      'Il telefono continua a registrare anche con lo schermo spento. L\'uscita viene salvata prima su questo telefono; poi si aggiunge il caricamento.';
+
+  @override
+  String get starting => 'Avvio…';
+
+  @override
+  String get startRecording => 'Inizia a registrare';
+
+  @override
+  String get pauseWhenStopped => 'Pausa quando ti fermi';
+
+  @override
+  String get pauseWhenStoppedHelp =>
+      'Dopo 3 secondi a 0,1 km/h o meno; riprende sopra questa velocità.';
+
+  @override
+  String get heartRateStrap => 'Fascia cardio';
+
+  @override
+  String get nonePaired =>
+      'Nessuna abbinata. Facoltativa: la frequenza cardiaca viene salvata con l\'uscita.';
+
+  @override
+  String get forget => 'Dimentica';
+
+  @override
+  String get pair => 'Abbina';
+
+  @override
+  String get sensorConnected => 'Connessa';
+
+  @override
+  String get sensorConnecting => 'Connessione…';
+
+  @override
+  String get bluetoothOffState => 'Il Bluetooth è spento';
+
+  @override
+  String get sensorDeniedState => 'Dispositivi nelle vicinanze non consentiti';
+
+  @override
+  String get sensorConnectsOnStart => 'Si connette quando inizi un\'uscita';
+
+  @override
+  String get autoPaused => 'In pausa automatica';
+
+  @override
+  String get paused => 'In pausa';
+
+  @override
+  String get recording => 'Registrazione';
+
+  @override
+  String get moving => 'In movimento';
+
+  @override
+  String get gps => 'GPS';
+
+  @override
+  String get heartRate => 'Frequenza cardiaca';
+
+  @override
+  String get resume => 'Riprendi';
+
+  @override
+  String get pause => 'Pausa';
+
+  @override
+  String get stopAndSave => 'Ferma e salva';
+
+  @override
+  String get onThisPhone => 'Su questo telefono';
+
+  @override
+  String get noLocalRides => 'Nessuna uscita registrata su questo telefono.';
+
+  @override
+  String get uploaded => 'Caricata';
+
+  @override
+  String get serverReading => 'Il server la sta leggendo…';
+
+  @override
+  String get waitingToUpload => 'In attesa di caricamento';
+
+  @override
+  String get uploadFailed => 'Caricamento non riuscito';
+
+  @override
+  String get readyToUpload => 'Pronta per il caricamento';
+
+  @override
+  String get recordingOnPhone => 'Registrazione su questo telefono';
+
+  @override
+  String get interrupted => 'Interrotta';
+
+  @override
+  String get couldNotBeSaved => 'Salvataggio non riuscito';
+
+  @override
+  String get interruptedHelp =>
+      'La registrazione si è fermata inaspettatamente. Completa per conservare l\'uscita.';
+
+  @override
+  String get finish => 'Completa';
+
+  @override
+  String get retry => 'Riprova';
+
+  @override
+  String get upload => 'Carica';
+
+  @override
+  String get deleteFromPhone => 'Elimina questa uscita dal telefono';
+
+  @override
+  String get pairStrapTitle => 'Abbina una fascia cardio';
+
+  @override
+  String get pairStrapHelp =>
+      'Indossa la fascia perché si attivi, poi sceglila qui sotto. Verrà ricordata per le prossime uscite.';
+
+  @override
+  String get searchingStraps => 'Ricerca delle fasce…';
+
+  @override
+  String get noStraps =>
+      'Nessuna fascia trovata. Controlla che la fascia sia indossata e il Bluetooth acceso.';
+
+  @override
+  String get searchAgain => 'Cerca di nuovo';
+
+  @override
+  String get recorderPermission =>
+      'Consenti la posizione precisa, e le notifiche se richieste, così l\'uscita può continuare a registrare.';
+
+  @override
+  String get recorderGpsOff =>
+      'Attiva la posizione (GPS) per registrare un\'uscita.';
+
+  @override
+  String get recorderLocationFailed =>
+      'Il telefono non è riuscito ad avviare gli aggiornamenti di posizione.';
+
+  @override
+  String get recorderUnsupported =>
+      'La registrazione è disponibile solo sul telefono.';
+
+  @override
+  String get recorderTooShort =>
+      'L\'uscita era troppo breve per essere salvata.';
+
+  @override
+  String get recorderFitFailed => 'Non è stato possibile salvare l\'uscita.';
+
+  @override
+  String get recorderStillRecording => 'Ferma l\'uscita prima di completarla.';
+
+  @override
+  String get recorderRideNotFound =>
+      'Quell\'uscita non è più su questo telefono.';
+
+  @override
+  String get recorderBluetoothOff =>
+      'Attiva il Bluetooth per usare una fascia cardio.';
+
+  @override
+  String get recorderBluetoothDenied =>
+      'Consenti i dispositivi nelle vicinanze così l\'app può trovare la fascia cardio.';
+
+  @override
+  String get recorderSensorNotFound =>
+      'Quella fascia non è più nelle vicinanze.';
+
+  @override
+  String get recorderFailed =>
+      'Il registratore non è riuscito a farlo. Riprova.';
+
+  @override
+  String get recorderUnreadable => 'Impossibile leggere il registratore.';
+
+  @override
+  String get uploadNoFile => 'Il file FIT manca su questo telefono.';
+
+  @override
+  String get uploadOffline => 'Impossibile raggiungere il server. Riprova.';
+
+  @override
+  String get uploadSignIn => 'Accedi di nuovo per caricare.';
+
+  @override
+  String get uploadTimeout =>
+      'Il server ha impiegato troppo tempo a leggere l\'uscita.';
+
+  @override
+  String get uploadServerFailed =>
+      'Il server non è riuscito a leggere questa uscita.';
+
+  @override
+  String uploadHttpRefused(String code) {
+    return 'Il server ha rifiutato il caricamento ($code).';
+  }
+
+  @override
+  String get uploadFailedGeneric => 'Caricamento non riuscito. Riprova.';
 }

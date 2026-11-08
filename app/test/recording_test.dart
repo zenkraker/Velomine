@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/recording/recorder.dart';
 import 'package:velomine/features/recording/recorder_settings.dart';
 import 'package:velomine/features/recording/recording_screen.dart';
+import 'package:velomine/l10n/generated/app_localizations.dart';
 
 class FakeRecorder implements Recorder {
   FakeRecorder();
@@ -235,6 +236,8 @@ void main() {
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: RecordingScreen(recorder: recorder, settingsStore: settings),
       ),
     );

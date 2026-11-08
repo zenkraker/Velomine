@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
+import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'recorder.dart';
 import 'recorder_factory.dart';
 import 'recorder_settings.dart';
@@ -113,26 +115,26 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   onPair: _pairSensor,
                   onForget: _controller.forgetSensor,
                 ),
-              if (_controller.error != null) ...[
+              if (_controller.errorCode != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  _controller.error!,
+                  recorderErrorText(context.l10n, _controller.errorCode),
                   key: const Key('record-error'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ],
               const SizedBox(height: 24),
               Text(
-                'On this phone',
+                context.l10n.onThisPhone,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
               if (_controller.rides.isEmpty && !_controller.loading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
-                    'No rides recorded on this phone yet.',
-                    key: Key('no-local-rides'),
+                    context.l10n.noLocalRides,
+                    key: const Key('no-local-rides'),
                   ),
                 )
               else
@@ -185,6 +187,7 @@ class _StartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -192,28 +195,23 @@ class _StartCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Record a ride',
+              l10n.recordRide,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'The phone keeps recording with the screen off. Your ride is saved '
-              'on this phone first; uploads are added next.',
-            ),
+            Text(l10n.recordIntro),
             const SizedBox(height: 20),
             FilledButton.icon(
               key: const Key('record-start'),
               onPressed: busy || loading ? null : onStart,
               icon: const Icon(Icons.play_arrow),
-              label: Text(busy ? 'Starting…' : 'Start recording'),
+              label: Text(busy ? l10n.starting : l10n.startRecording),
             ),
             SwitchListTile(
               key: const Key('auto-pause-switch'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Pause when stopped'),
-              subtitle: const Text(
-                'After 3 seconds at 0.1 km/h or slower; resumes above it.',
-              ),
+              title: Text(l10n.pauseWhenStopped),
+              subtitle: Text(l10n.pauseWhenStoppedHelp),
               value: autoPause,
               onChanged: busy || loading ? null : onAutoPause,
             ),
@@ -252,6 +250,7 @@ class _SensorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final paired = name != null;
     final connected = status == 'connected';
     return ListTile(
@@ -260,12 +259,8 @@ class _SensorTile extends StatelessWidget {
         paired ? Icons.favorite : Icons.monitor_heart_outlined,
         color: connected ? Theme.of(context).colorScheme.error : null,
       ),
-      title: Text(name ?? 'Heart-rate strap'),
-      subtitle: Text(
-        paired
-            ? sensorStatusText(status)
-            : 'None paired. Optional: heart rate is saved with the ride.',
-      ),
+      title: Text(name ?? l10n.heartRateStrap),
+      subtitle: Text(paired ? sensorStatusText(l10n, status) : l10n.nonePaired),
       trailing: TextButton(
         key: Key(paired ? 'forget-sensor' : 'pair-sensor'),
         onPressed: busy
@@ -277,20 +272,21 @@ class _SensorTile extends StatelessWidget {
                   onPair();
                 }
               },
-        child: Text(paired ? 'Forget' : 'Pair'),
+        child: Text(paired ? l10n.forget : l10n.pair),
       ),
     );
   }
 }
 
 /// What the status codes from the phone mean to a member.
-String sensorStatusText(String status) => switch (status) {
-  'connected' => 'Connected',
-  'connecting' => 'Connecting…',
-  'off' => 'Bluetooth is off',
-  'denied' => 'Nearby devices not allowed',
-  _ => 'Connects when you start a ride',
-};
+String sensorStatusText(AppLocalizations l10n, String status) =>
+    switch (status) {
+      'connected' => l10n.sensorConnected,
+      'connecting' => l10n.sensorConnecting,
+      'off' => l10n.bluetoothOffState,
+      'denied' => l10n.sensorDeniedState,
+      _ => l10n.sensorConnectsOnStart,
+    };
 
 class _LiveCard extends StatelessWidget {
   const _LiveCard({
@@ -311,6 +307,7 @@ class _LiveCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final paused = state.isPaused;
     final autoPaused = paused && state.autoPaused;
     return Card(
@@ -334,10 +331,10 @@ class _LiveCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   autoPaused
-                      ? 'Auto-paused'
+                      ? l10n.autoPaused
                       : paused
-                      ? 'Paused'
-                      : 'Recording',
+                      ? l10n.paused
+                      : l10n.recording,
                   key: const Key('record-state'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
@@ -354,18 +351,18 @@ class _LiveCard extends StatelessWidget {
               spacing: 24,
               runSpacing: 8,
               children: [
-                _Value(label: 'Moving', value: stopwatch(state.movingS)),
-                _Value(label: 'Distance', value: km(state.distanceM)),
-                _Value(label: 'Speed', value: kmh(state.speedMs)),
+                _Value(label: l10n.moving, value: stopwatch(state.movingS)),
+                _Value(label: l10n.statDistance, value: km(state.distanceM)),
+                _Value(label: l10n.statAverageSpeed, value: kmh(state.speedMs)),
                 _Value(
-                  label: 'GPS',
+                  label: l10n.gps,
                   value: state.accuracyM == null
                       ? '–'
                       : '±${state.accuracyM!.round()} m',
                 ),
                 if (state.sensorName != null)
                   _Value(
-                    label: 'Heart rate',
+                    label: l10n.heartRate,
                     value: state.heartRateBpm == null
                         ? '–'
                         : '${state.heartRateBpm} bpm',
@@ -393,7 +390,7 @@ class _LiveCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    sensorStatusText(state.sensorStatus),
+                    sensorStatusText(l10n, state.sensorStatus),
                     key: const Key('sensor-status'),
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
@@ -407,14 +404,14 @@ class _LiveCard extends StatelessWidget {
                   key: Key(paused ? 'record-resume' : 'record-pause'),
                   onPressed: busy ? null : (paused ? onResume : onPause),
                   icon: Icon(paused ? Icons.play_arrow : Icons.pause),
-                  label: Text(paused ? 'Resume' : 'Pause'),
+                  label: Text(paused ? l10n.resume : l10n.pause),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
                   key: const Key('record-stop'),
                   onPressed: busy ? null : onStop,
                   icon: const Icon(Icons.stop),
-                  label: const Text('Stop and save'),
+                  label: Text(l10n.stopAndSave),
                 ),
               ],
             ),
@@ -471,48 +468,47 @@ class _LocalRideCard extends StatelessWidget {
 
   bool get _failed => upload?.isFailed == true || ride.uploadState == 'failed';
 
-  String _stateText() {
-    if (_uploaded) return 'Uploaded';
+  String _stateText(AppLocalizations l10n) {
+    if (_uploaded) return l10n.uploaded;
     if (upload != null) {
       return switch (upload!.state) {
-        UploadState.uploading => 'Uploading…',
-        UploadState.processing => 'Server is reading it…',
-        UploadState.queued => 'Waiting to upload',
-        UploadState.failed => 'Upload failed',
-        _ => 'Ready to upload',
+        UploadState.uploading => l10n.uploading,
+        UploadState.processing => l10n.serverReading,
+        UploadState.queued => l10n.waitingToUpload,
+        UploadState.failed => l10n.uploadFailed,
+        _ => l10n.readyToUpload,
       };
     }
     return switch (ride.uploadState) {
-      UploadState.uploading => 'Uploading…',
-      UploadState.processing => 'Server is reading it…',
-      UploadState.failed => 'Upload failed',
-      _ => _rideStateText(),
+      UploadState.uploading => l10n.uploading,
+      UploadState.processing => l10n.serverReading,
+      UploadState.failed => l10n.uploadFailed,
+      _ => _rideStateText(l10n),
     };
   }
 
-  String _rideStateText() => switch (ride.state) {
-    'recording' => 'Recording on this phone',
-    'paused' => 'Paused',
-    'ready' => 'Ready to upload',
-    'interrupted' => 'Interrupted',
-    'failed' => 'Could not be saved',
+  String _rideStateText(AppLocalizations l10n) => switch (ride.state) {
+    'recording' => l10n.recordingOnPhone,
+    'paused' => l10n.paused,
+    'ready' => l10n.readyToUpload,
+    'interrupted' => l10n.interrupted,
+    'failed' => l10n.couldNotBeSaved,
     _ => ride.state,
   };
 
-  String? _errorText() {
+  String? _errorText(AppLocalizations l10n) {
     if (_failed) {
-      return uploadErrorText(upload?.error ?? ride.uploadError);
+      return uploadErrorText(l10n, upload?.error ?? ride.uploadError);
     }
-    if (ride.isFailed) return recorderErrorText(ride.error);
-    if (ride.isInterrupted) {
-      return 'The recording stopped unexpectedly. Finish it to keep the ride.';
-    }
+    if (ride.isFailed) return recorderErrorText(l10n, ride.error);
+    if (ride.isInterrupted) return l10n.interruptedHelp;
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final error = _errorText();
+    final l10n = context.l10n;
+    final error = _errorText(l10n);
     final uploading =
         ride.uploadState == UploadState.uploading ||
         ride.uploadState == UploadState.processing ||
@@ -526,7 +522,7 @@ class _LocalRideCard extends StatelessWidget {
           ListTile(
             title: Text(dateTime(ride.startedAt)),
             subtitle: Text(
-              '${_stateText()} · ${km(ride.distanceM)} · ${stopwatch(ride.movingS)}'
+              '${_stateText(l10n)} · ${km(ride.distanceM)} · ${stopwatch(ride.movingS)}'
               '${error == null ? '' : '\n$error'}',
             ),
             isThreeLine: error != null,
@@ -546,7 +542,7 @@ class _LocalRideCard extends StatelessWidget {
                   TextButton(
                     key: Key('finalize-${ride.id}'),
                     onPressed: busy ? null : onFinalize,
-                    child: const Text('Finish'),
+                    child: Text(l10n.finish),
                   ),
                 if (canUpload)
                   TextButton(
@@ -558,11 +554,11 @@ class _LocalRideCard extends StatelessWidget {
                         : _failed
                         ? onRetryUpload
                         : onUpload,
-                    child: Text(_failed ? 'Retry' : 'Upload'),
+                    child: Text(_failed ? l10n.retry : l10n.upload),
                   ),
                 IconButton(
                   key: Key('delete-${ride.id}'),
-                  tooltip: 'Delete this ride from the phone',
+                  tooltip: l10n.deleteFromPhone,
                   onPressed: busy ? null : onDelete,
                   icon: const Icon(Icons.delete_outline),
                 ),
@@ -588,7 +584,7 @@ class _SensorSheet extends StatefulWidget {
 
 class _SensorSheetState extends State<_SensorSheet> {
   List<SensorInfo>? _found;
-  String? _error;
+  String? _errorCode;
   bool _scanning = false;
 
   @override
@@ -600,7 +596,7 @@ class _SensorSheetState extends State<_SensorSheet> {
   Future<void> _scan() async {
     setState(() {
       _scanning = true;
-      _error = null;
+      _errorCode = null;
       _found = null;
     });
     try {
@@ -609,7 +605,7 @@ class _SensorSheetState extends State<_SensorSheet> {
       if (!granted) {
         setState(() {
           _scanning = false;
-          _error = recorderErrorText('bluetooth_denied');
+          _errorCode = 'bluetooth_denied';
         });
         return;
       }
@@ -623,19 +619,20 @@ class _SensorSheetState extends State<_SensorSheet> {
       if (!mounted) return;
       setState(() {
         _scanning = false;
-        _error = recorderErrorText(e.code);
+        _errorCode = e.code;
       });
     } on Object {
       if (!mounted) return;
       setState(() {
         _scanning = false;
-        _error = recorderErrorText(null);
+        _errorCode = null;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final found = _found;
     return SafeArea(
       key: const Key('sensor-sheet'),
@@ -646,34 +643,27 @@ class _SensorSheetState extends State<_SensorSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Pair a heart-rate strap',
+              l10n.pairStrapTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Wear the strap so it wakes up, then pick it below. It is '
-              'remembered for your next rides.',
-            ),
+            Text(l10n.pairStrapHelp),
             const SizedBox(height: 16),
             if (_scanning) ...[
               const LinearProgressIndicator(),
               const SizedBox(height: 12),
-              const Text('Searching for straps…', key: Key('sensor-searching')),
+              Text(l10n.searchingStraps, key: const Key('sensor-searching')),
             ],
-            if (_error != null)
+            if (_errorCode != null || _found == null && !_scanning)
               Text(
-                _error!,
+                recorderErrorText(l10n, _errorCode),
                 key: const Key('sensor-sheet-error'),
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             if (found != null && found.isEmpty && !_scanning)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  'No straps found. Make sure the strap is worn and Bluetooth '
-                  'is on.',
-                  key: Key('sensor-none'),
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(l10n.noStraps, key: const Key('sensor-none')),
               ),
             for (final sensor in found ?? const <SensorInfo>[])
               ListTile(
@@ -692,7 +682,7 @@ class _SensorSheetState extends State<_SensorSheet> {
               TextButton(
                 key: const Key('sensor-scan-again'),
                 onPressed: _scan,
-                child: const Text('Search again'),
+                child: Text(l10n.searchAgain),
               ),
           ],
         ),
@@ -701,13 +691,14 @@ class _SensorSheetState extends State<_SensorSheet> {
   }
 }
 
-String uploadErrorText(String? code) => switch (code) {
-  'no_file' => 'The FIT file is missing on this phone.',
-  'offline' => 'Could not reach the server. Try again.',
-  'sign_in' => 'Sign in again to upload.',
-  'timeout' => 'The server took too long to read the ride.',
-  'server_failed' => 'The server could not read this ride.',
-  _ when code?.startsWith('http_') == true =>
-    'The server refused the upload (${code!.substring(5)}).',
-  _ => 'Upload failed. Try again.',
+String uploadErrorText(AppLocalizations l10n, String? code) => switch (code) {
+  'no_file' => l10n.uploadNoFile,
+  'offline' => l10n.uploadOffline,
+  'sign_in' => l10n.uploadSignIn,
+  'timeout' => l10n.uploadTimeout,
+  'server_failed' => l10n.uploadServerFailed,
+  _ when code?.startsWith('http_') == true => l10n.uploadHttpRefused(
+    code!.substring(5),
+  ),
+  _ => l10n.uploadFailedGeneric,
 };

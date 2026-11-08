@@ -2251,6 +2251,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unread'**
   String get unread;
+
+  /// No description provided for @recordRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a ride'**
+  String get recordRide;
+
+  /// No description provided for @recordIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.'**
+  String get recordIntro;
+
+  /// No description provided for @starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get starting;
+
+  /// No description provided for @startRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording'**
+  String get startRecording;
+
+  /// No description provided for @pauseWhenStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause when stopped'**
+  String get pauseWhenStopped;
+
+  /// No description provided for @pauseWhenStoppedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'After 3 seconds at 0.1 km/h or slower; resumes above it.'**
+  String get pauseWhenStoppedHelp;
+
+  /// No description provided for @heartRateStrap.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart-rate strap'**
+  String get heartRateStrap;
+
+  /// No description provided for @nonePaired.
+  ///
+  /// In en, this message translates to:
+  /// **'None paired. Optional: heart rate is saved with the ride.'**
+  String get nonePaired;
+
+  /// No description provided for @forget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget'**
+  String get forget;
+
+  /// No description provided for @pair.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair'**
+  String get pair;
+
+  /// No description provided for @sensorConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get sensorConnected;
+
+  /// No description provided for @sensorConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get sensorConnecting;
+
+  /// No description provided for @bluetoothOffState.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth is off'**
+  String get bluetoothOffState;
+
+  /// No description provided for @sensorDeniedState.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby devices not allowed'**
+  String get sensorDeniedState;
+
+  /// No description provided for @sensorConnectsOnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Connects when you start a ride'**
+  String get sensorConnectsOnStart;
+
+  /// No description provided for @autoPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-paused'**
+  String get autoPaused;
+
+  /// No description provided for @paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get paused;
+
+  /// No description provided for @recording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get recording;
+
+  /// No description provided for @moving.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving'**
+  String get moving;
+
+  /// No description provided for @gps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get gps;
+
+  /// No description provided for @heartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get heartRate;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @stopAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and save'**
+  String get stopAndSave;
+
+  /// No description provided for @onThisPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get onThisPhone;
+
+  /// No description provided for @noLocalRides.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides recorded on this phone yet.'**
+  String get noLocalRides;
+
+  /// No description provided for @uploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded'**
+  String get uploaded;
+
+  /// No description provided for @serverReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Server is reading it…'**
+  String get serverReading;
+
+  /// No description provided for @waitingToUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to upload'**
+  String get waitingToUpload;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get uploadFailed;
+
+  /// No description provided for @readyToUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to upload'**
+  String get readyToUpload;
+
+  /// No description provided for @recordingOnPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording on this phone'**
+  String get recordingOnPhone;
+
+  /// No description provided for @interrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted'**
+  String get interrupted;
+
+  /// No description provided for @couldNotBeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not be saved'**
+  String get couldNotBeSaved;
+
+  /// No description provided for @interruptedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The recording stopped unexpectedly. Finish it to keep the ride.'**
+  String get interruptedHelp;
+
+  /// No description provided for @finish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finish;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @upload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get upload;
+
+  /// No description provided for @deleteFromPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this ride from the phone'**
+  String get deleteFromPhone;
+
+  /// No description provided for @pairStrapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a heart-rate strap'**
+  String get pairStrapTitle;
+
+  /// No description provided for @pairStrapHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Wear the strap so it wakes up, then pick it below. It is remembered for your next rides.'**
+  String get pairStrapHelp;
+
+  /// No description provided for @searchingStraps.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for straps…'**
+  String get searchingStraps;
+
+  /// No description provided for @noStraps.
+  ///
+  /// In en, this message translates to:
+  /// **'No straps found. Make sure the strap is worn and Bluetooth is on.'**
+  String get noStraps;
+
+  /// No description provided for @searchAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Search again'**
+  String get searchAgain;
+
+  /// No description provided for @recorderPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow precise location, and notifications if asked, so the ride can keep recording.'**
+  String get recorderPermission;
+
+  /// No description provided for @recorderGpsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on location (GPS) to record a ride.'**
+  String get recorderGpsOff;
+
+  /// No description provided for @recorderLocationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone could not start location updates.'**
+  String get recorderLocationFailed;
+
+  /// No description provided for @recorderUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording is only available on the phone.'**
+  String get recorderUnsupported;
+
+  /// No description provided for @recorderTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride was too short to save.'**
+  String get recorderTooShort;
+
+  /// No description provided for @recorderFitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride could not be saved.'**
+  String get recorderFitFailed;
+
+  /// No description provided for @recorderStillRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the ride before finishing it.'**
+  String get recorderStillRecording;
+
+  /// No description provided for @recorderRideNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That ride is no longer on this phone.'**
+  String get recorderRideNotFound;
+
+  /// No description provided for @recorderBluetoothOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Bluetooth to use a heart-rate strap.'**
+  String get recorderBluetoothOff;
+
+  /// No description provided for @recorderBluetoothDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow nearby devices so the app can find your heart-rate strap.'**
+  String get recorderBluetoothDenied;
+
+  /// No description provided for @recorderSensorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That strap is no longer nearby.'**
+  String get recorderSensorNotFound;
+
+  /// No description provided for @recorderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The recorder could not do that. Try again.'**
+  String get recorderFailed;
+
+  /// No description provided for @recorderUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the recorder.'**
+  String get recorderUnreadable;
+
+  /// No description provided for @uploadNoFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The FIT file is missing on this phone.'**
+  String get uploadNoFile;
+
+  /// No description provided for @uploadOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Try again.'**
+  String get uploadOffline;
+
+  /// No description provided for @uploadSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to upload.'**
+  String get uploadSignIn;
+
+  /// No description provided for @uploadTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The server took too long to read the ride.'**
+  String get uploadTimeout;
+
+  /// No description provided for @uploadServerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server could not read this ride.'**
+  String get uploadServerFailed;
+
+  /// No description provided for @uploadHttpRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused the upload ({code}).'**
+  String uploadHttpRefused(String code);
+
+  /// No description provided for @uploadFailedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed. Try again.'**
+  String get uploadFailedGeneric;
 }
 
 class _AppLocalizationsDelegate

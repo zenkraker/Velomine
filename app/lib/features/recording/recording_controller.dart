@@ -2,25 +2,26 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import 'recorder.dart';
 import 'recorder_log.dart';
 import 'recorder_settings.dart';
 import 'upload_queue.dart';
 
-String recorderErrorText(String? code) => switch (code) {
-  'permission' => 'Allow precise location, and notifications if asked, so the ride can keep recording.',
-  'gps_off' => 'Turn on location (GPS) to record a ride.',
-  'location' => 'The phone could not start location updates.',
-  'unsupported' => 'Recording is only available on the phone.',
-  'too_short' => 'The ride was too short to save.',
-  'fit_failed' => 'The ride could not be saved.',
-  'still_recording' => 'Stop the ride before finishing it.',
-  'not_found' => 'That ride is no longer on this phone.',
-  'bluetooth_off' => 'Turn on Bluetooth to use a heart-rate strap.',
-  'bluetooth_denied' =>
-    'Allow nearby devices so the app can find your heart-rate strap.',
-  'sensor_not_found' => 'That strap is no longer nearby.',
-  _ => 'The recorder could not do that. Try again.',
+String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
+  'permission' => l10n.recorderPermission,
+  'gps_off' => l10n.recorderGpsOff,
+  'location' => l10n.recorderLocationFailed,
+  'unsupported' => l10n.recorderUnsupported,
+  'too_short' => l10n.recorderTooShort,
+  'fit_failed' => l10n.recorderFitFailed,
+  'still_recording' => l10n.recorderStillRecording,
+  'not_found' => l10n.recorderRideNotFound,
+  'bluetooth_off' => l10n.recorderBluetoothOff,
+  'bluetooth_denied' => l10n.recorderBluetoothDenied,
+  'sensor_not_found' => l10n.recorderSensorNotFound,
+  'recorder_unreadable' => l10n.recorderUnreadable,
+  _ => l10n.recorderFailed,
 };
 
 /// Drives the recording screen. The native service keeps recording when this screen is closed; opening it again
@@ -46,7 +47,7 @@ class RecordingController extends ChangeNotifier {
   List<LocalRide> rides = [];
   bool loading = false;
   bool busy = false;
-  String? error;
+  String? errorCode;
 
   StreamSubscription<RecorderSnapshot>? _events;
   bool _started = false;
@@ -61,7 +62,7 @@ class RecordingController extends ChangeNotifier {
       _onSnapshot,
       onError: (Object error) {
         recorderLog('controller: event stream error $error');
-        _setError('Could not read the recorder.');
+        _setError('recorder_unreadable');
       },
     );
     autoPause = await settingsStore.readAutoPause() ?? true;
@@ -81,7 +82,7 @@ class RecordingController extends ChangeNotifier {
     try {
       state = await recorder.state();
       rides = await recorder.listRides();
-      error = state.error == null ? null : recorderErrorText(state.error);
+      errorCode = state.error;
       recorderLog(
         'controller: refresh done state=${state.state} rides=${rides.length}',
       );
@@ -94,10 +95,10 @@ class RecordingController extends ChangeNotifier {
       }
     } on RecorderException catch (e) {
       recorderLog('controller: refresh failed ${e.code} ${e.message}');
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object catch (e) {
       recorderLog('controller: refresh failed $e');
-      _setError('Could not read the recorder.');
+      _setError('recorder_unreadable');
     } finally {
       loading = false;
       _notify();
@@ -108,13 +109,13 @@ class RecordingController extends ChangeNotifier {
     if (busy) return;
     recorderLog('controller: start');
     busy = true;
-    error = null;
+    errorCode = null;
     _notify();
     try {
       final granted = await recorder.requestPermissions();
       recorderLog('controller: start permission=$granted');
       if (!granted) {
-        _setError(recorderErrorText('permission'));
+        _setError('permission');
         return;
       }
       await recorder.start(autoPause: autoPause);
@@ -123,10 +124,10 @@ class RecordingController extends ChangeNotifier {
       recorderLog('controller: start done state=${state.state}');
     } on RecorderException catch (e) {
       recorderLog('controller: start failed ${e.code} ${e.message}');
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object catch (e) {
       recorderLog('controller: start failed $e');
-      _setError(recorderErrorText(null));
+      _setError(null);
     } finally {
       busy = false;
       _notify();
@@ -150,13 +151,13 @@ class RecordingController extends ChangeNotifier {
     try {
       await recorder.pairSensor(sensor);
       state = await recorder.state();
-      error = null;
+      errorCode = null;
     } on RecorderException catch (e) {
       recorderLog('controller: pair failed ${e.code} ${e.message}');
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object catch (e) {
       recorderLog('controller: pair failed $e');
-      _setError(recorderErrorText(null));
+      _setError(null);
     }
     _notify();
   }
@@ -166,11 +167,11 @@ class RecordingController extends ChangeNotifier {
     try {
       await recorder.forgetSensor();
       state = await recorder.state();
-      error = null;
+      errorCode = null;
     } on RecorderException catch (e) {
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object {
-      _setError(recorderErrorText(null));
+      _setError(null);
     }
     _notify();
   }
@@ -201,12 +202,12 @@ class RecordingController extends ChangeNotifier {
     if (busy) return;
     recorderLog('controller: finalize $id');
     busy = true;
-    error = null;
+    errorCode = null;
     _notify();
     try {
       final ride = await recorder.finalizeRide(id);
       if (ride != null && ride.isFailed) {
-        _setError(recorderErrorText(ride.error));
+        _setError(ride.error);
       }
       rides = await recorder.listRides();
       if (ride?.isReady == true && uploads != null) {
@@ -214,9 +215,9 @@ class RecordingController extends ChangeNotifier {
         await uploads!.enqueue(id);
       }
     } on RecorderException catch (e) {
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object {
-      _setError(recorderErrorText(null));
+      _setError(null);
     } finally {
       busy = false;
       _notify();
@@ -227,19 +228,19 @@ class RecordingController extends ChangeNotifier {
     if (busy) return;
     recorderLog('controller: delete $id');
     busy = true;
-    error = null;
+    errorCode = null;
     _notify();
     try {
       if (!await recorder.deleteRide(id)) {
-        _setError(recorderErrorText('not_found'));
+        _setError('not_found');
       } else {
         uploads?.forget(id);
       }
       rides = await recorder.listRides();
     } on RecorderException catch (e) {
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object {
-      _setError(recorderErrorText(null));
+      _setError(null);
     } finally {
       busy = false;
       _notify();
@@ -249,7 +250,7 @@ class RecordingController extends ChangeNotifier {
   Future<void> _act(Future<void> Function() action) async {
     if (busy) return;
     busy = true;
-    error = null;
+    errorCode = null;
     _notify();
     try {
       await action();
@@ -257,10 +258,10 @@ class RecordingController extends ChangeNotifier {
       recorderLog('controller: action done state=${state.state}');
     } on RecorderException catch (e) {
       recorderLog('controller: action failed ${e.code} ${e.message}');
-      _setError(recorderErrorText(e.code));
+      _setError(e.code);
     } on Object catch (e) {
       recorderLog('controller: action failed $e');
-      _setError(recorderErrorText(null));
+      _setError(null);
     } finally {
       busy = false;
       _notify();
@@ -280,7 +281,7 @@ class RecordingController extends ChangeNotifier {
     state = await recorder.state();
     if (state.isIdle) {
       recorderLog('controller: wait running timed out');
-      _setError(recorderErrorText(null));
+      _setError(null);
     }
   }
 
@@ -294,9 +295,9 @@ class RecordingController extends ChangeNotifier {
     );
     state = snapshot;
     if (snapshot.error != null) {
-      _setError(recorderErrorText(snapshot.error));
+      _setError(snapshot.error);
     } else {
-      error = null;
+      errorCode = null;
       _notify();
     }
     // A stopped service reports idle; read the finished local ride again.
@@ -320,9 +321,9 @@ class RecordingController extends ChangeNotifier {
     }
   }
 
-  void _setError(String message) {
-    recorderLog('controller: error $message');
-    error = message;
+  void _setError(String? code) {
+    recorderLog('controller: error ');
+    errorCode = code;
     _notify();
   }
 
