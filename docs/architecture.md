@@ -11,7 +11,6 @@ This document describes the design, not progress. Scope labels (v1, v2) only say
 - **Private by default.** Nothing a member records is visible to anyone else until the member shares it, and every share can be revoked.
 - **Members own their data.** Full export (original files + JSON) and complete deletion.
 - **Don't reinvent the wheel.** Use what .NET, ASP.NET Core, EF Core and official Microsoft libraries already provide. Write it yourself only when nothing official fits.
-- **Clean-room.** Endurain's ideas, never its code.
 
 ## 2. System context
 
@@ -123,7 +122,7 @@ Built in `Features/Rides/Ingestion/RideMetrics.cs`. A gap between samples longer
 
 Each formula is covered by tests against known values.
 
-- **NP:** the device's NP from the FIT file when present. Otherwise a 30-second rolling average over the power stream resampled to 1 Hz, then the mean of the fourth powers, then the fourth root. (Endurain skips the rolling average, which overstates NP on spiky rides.) IF and TSS come from NP and FTP.
+- **NP:** the device's NP from the FIT file when present. Otherwise a 30-second rolling average over the power stream resampled to 1 Hz, then the mean of the fourth powers, then the fourth root. The rolling average keeps spiky rides from overstating NP. IF and TSS come from NP and FTP.
 - **Max speed:** the maximum of 5-sample sliding medians, so one GPS glitch never becomes the max.
 - **Elevation gain and loss:** median filter, then moving average, then the sum of changes above a threshold.
 - **Moving time:** the sum of gaps between samples, skipping pauses and duplicate or out-of-order timestamps.

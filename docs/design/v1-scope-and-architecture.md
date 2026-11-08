@@ -4,7 +4,7 @@ Nov 1, 2026 · @Alex
 
 ## Decisions so far
 
-Velomine is a self-hosted, cycling-only platform for clubs and teams. Rides are private by default, a coach can be given access, and wellbeing tracking focuses on how the rider feels. It is a clean-room rewrite: Endurain's ideas, not its AGPL code.
+Velomine is a self-hosted, cycling-only platform for clubs and teams. Rides are private by default, a coach can be given access, and wellbeing tracking focuses on how the rider feels.
 
 | Topic | Decision | What it means |
 | --- | --- | --- |
@@ -18,56 +18,55 @@ Velomine is a self-hosted, cycling-only platform for clubs and teams. Rides are 
 
 **Dependency rule (all apps):** official libraries first. A community library is added only after a written evaluation and the owner's approval. The rule lives in the repository's `AGENTS.md`. Known cases that will need approval: Flutter has no official Bluetooth LE plugin, so the BLE library (for example universal\_ble) must go through the evaluation.
 
-## Endurain features: keep, change or drop
+## What v1 includes
 
-Roughly half of Endurain carries over, mostly reshaped for cycling. The multi-sport, health-logging and social-feed parts are dropped. Based on Endurain v0.20.2 and its Flutter app v0.10.2.
+Everything below is cycling-first, and every feature is shaped for clubs and teams.
 
-| Endurain feature | Verdict | Velomine version |
-| --- | --- | --- |
-| Ingestion pipeline (parse, enrich, dedupe, save, emit event) | Keep | Same design in .NET: one upload endpoint, async jobs, `Idempotency-Key`, background subscribers. |
-| FIT, GPX, TCX import | Change | FIT first. GPX reads every common extension, including `PowerInWatts` and `gpxtpx:speed`, both of which Endurain misses. |
-| 47 activity types | Change | About 8 cycling types: road, gravel, MTB, e-bike, e-MTB, indoor, virtual, commute. |
-| Streams (HR, power, cadence, speed, elevation, temperature, map) | Keep | Plus a speed source flag: wheel sensor or GPS. |
-| HR zones and time in zone | Keep | Plus power zones. |
-| Laps | Keep | — |
-| Workout sets and steps, exercise titles | Drop | Gym and running concepts. |
-| Activity media (photos) | Keep | Photos on a ride. |
-| Thumbnails, reverse geocoding | Keep | — |
-| Strava sync and bulk import | Change | Bulk import of a Strava export to migrate history. Ongoing sync is optional, given Strava's API limits. |
-| Garmin Connect (unofficial login) | Change | Garmin's official personal key: activities as FIT files. |
-| Gear and components (shoes, wetsuits, racquets…) | Change | Bikes only, with our own list of 35 bike part types (chain, tyres, pads, fork service…) and typical lifetimes as suggestions. Wear by distance, hours and months, computed from the rides; reminders come in v2. Wheel circumference per bike. |
-| Default gear per activity type | Change | One default bike per member, copied onto a ride at import. A default per ride type waits until ride types exist. |
-| Goals and summaries | Keep | Weekly, monthly, yearly totals, cycling only. Goals per week, month or year (distance, elevation, time or number of rides), in v1. |
-| Followers, feed, follow requests | Drop | Replaced by share links, clubs and coaches. |
-| Public activity pages | Change | Share link per ride, with optional expiry and privacy zones. |
-| Per-stream privacy switches | Keep | Applied to share links and coach views. |
-| Health: weight, steps, sleep, water, fasting, bowel log, targets | Drop | Replaced by wellness check-in, ride RPE and cycle tracking. Weight becomes a profile field. |
-| Notifications | Keep | New types: component worn out, coach request, import failed. |
-| Auth: local login, MFA, SSO (OIDC), sign-up approval, password reset, API keys, sessions | Keep | All needed for clubs. Add passkeys, on Endurain's roadmap. |
-| Roles | Change | Admin, member, coach. |
-| Profile export and import | Keep | Full export, including original files. |
-| Server settings, custom map tiles, email | Keep | — |
-| Multi-language UI | Keep | Start with English and Italian. |
-| Mobile app: native background recorder, local-first save, upload queue | Keep | Same approach, rewritten. |
-| Mobile app: BLE heart rate, power, cadence | Change | Also wheel speed from the speed sensor, which Endurain skips. |
-| Mobile app: HealthKit and Health Connect workout import | Drop for now | Cycling rides come from the phone, a bike computer or connectors. |
-| Mobile app: auto-pause, audio announcements | Keep | — |
+| Area | v1 |
+| --- | --- |
+| Ingestion | One upload endpoint, async jobs, `Idempotency-Key` and background subscribers: parse, enrich, dedupe, save, emit an event. |
+| File formats | FIT first, then GPX and TCX. GPX reads every common extension, including `PowerInWatts` and `gpxtpx:speed`. |
+| Ride types | About 8 cycling types: road, gravel, MTB, e-bike, e-MTB, indoor, virtual, commute. |
+| Streams | HR, power, cadence, speed, elevation, temperature and map, plus a speed source flag: wheel sensor or GPS. |
+| Zones | HR zones and time in zone, plus power zones. |
+| Laps | Yes. |
+| Photos | Photos on a ride. |
+| Thumbnails, reverse geocoding | Yes. |
+| Strava | Bulk import of a Strava export to migrate history. Ongoing sync is optional, given Strava's API limits. |
+| Garmin Connect | Garmin's official personal key: activities as FIT files. |
+| Bikes and components | Bikes only, with our own list of 35 bike part types (chain, tyres, pads, fork service…) and typical lifetimes as suggestions. Wear by distance, hours and months, computed from the rides; reminders come in v2. Wheel circumference per bike. |
+| Default bike | One default bike per member, copied onto a ride at import. A default per ride type waits until ride types exist. |
+| Goals and summaries | Weekly, monthly and yearly totals, cycling only. Goals per week, month or year (distance, elevation, time or number of rides), in v1. |
+| Share links | One link per ride, with optional expiry and privacy zones, instead of public pages and a feed. |
+| Per-stream privacy | Applied to share links and coach views. |
+| Notifications | Component worn out, coach request, import failed. |
+| Auth | Local login, MFA, SSO (OIDC), sign-up approval, password reset, API keys and sessions, plus passkeys. |
+| Roles | Admin, member and coach. |
+| Profile export and import | Full export, including original files. |
+| Server | Server settings, custom map tiles and email. |
+| Languages | Multi-language UI, starting with English and Italian. |
+| Phone recorder | Native background recorder, local-first save and an upload queue. |
+| Phone sensors | BLE heart rate, power and cadence, plus wheel speed from the speed sensor. |
+| Phone extras | Auto-pause and audio announcements. |
+| Phone health import | Not in v1: rides come from the phone, a bike computer or connectors. |
+
+Out of scope: gym and running concepts, a social feed with followers, and health logging (steps, sleep, water, fasting, bowel log). Clubs and coaches replace followers, and the wellness check-in replaces health logging.
 
 ## Velomine-only features
 
-These are what make Velomine worth building instead of running Endurain. Each comes from a gap found in the analysis or a decision above.
+These are Velomine's differentiators. Each comes from a decision above.
 
 | Feature | What it does | Why |
 | --- | --- | --- |
 | Wheel-sensor speed and distance | Uses CSC wheel revolutions and the bike's circumference; GPS only as a fallback | Accurate distance in the woods with single-band GPS. |
-| Cycling analytics | NP, IF, TSS, FTP estimate, power curve, VO2max estimate, TRIMP, fitness/fatigue/form | Endurain stops at averages and normalized power. |
+| Cycling analytics | NP, IF, TSS, FTP estimate, power curve, VO2max estimate, TRIMP, fitness/fatigue/form | Turns recorded streams into training guidance. |
 | Readiness view | Combines training load, wellness check-in and recent RPE into ride hard / ride easy / rest | The point of collecting wellbeing data. |
 | Wellness check-in | Daily 1–5 scores in about 20 seconds; RPE and notes after each ride | Chosen health area. |
 | Cycle tracking | Optional menstrual phase as context on charts; encrypted, never in share links, coach sees it only if granted separately | Chosen health area; most sensitive data on the server. |
 | Clubs and coaches | Members join a club; the club has coaches. Nothing is visible by default: the member opts in per data type (rides, analytics, wellbeing, cycle tracking) and per audience (club or a coach). Revocable; every view logged | Clubs and coaches together, private by default. |
-| Privacy zones | Like Strava's map visibility: hide up to 1 mile around saved addresses (home, work), and optionally hide the start and end of every ride wherever it is. Applied to share links and to what clubs and coaches see; the owner always sees the full track | Endurain can only hide the whole map. |
+| Privacy zones | Like Strava's map visibility: hide up to 1 mile around saved addresses (home, work), and optionally hide the start and end of every ride wherever it is. Applied to share links and to what clubs and coaches see; the owner always sees the full track | Keeps home and other saved places out of every shared view. |
 | Share links | One link per ride, optional expiry, respects privacy switches | Replaces public pages and the feed. |
-| Component maintenance | Wear by km, hours or months, with notifications | Endurain shows a wear bar only. |
+| Component maintenance | Wear by km, hours or months, with notifications | Warns before a part fails, not after. |
 | Connectors | Garmin personal key, Wahoo cloud, watched Dropbox or Nextcloud folder | Automatic sync for bike computer owners (use case A). |
 | Desktop and web upload | Drag and drop, plus a small USB tool for Bryton and others | Covers every bike computer. |
 
@@ -153,7 +152,7 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 
 - [ ] **Weight:** confirm it lives as a single profile field. W/kg, VO2max and calories need it.
 - [ ] **Health data and the law:** wellness and cycle data are health data. A club running a server for its members holds health data about them, which in the EU is a special category under GDPR and needs explicit consent. Velomine should ship consent screens, export and deletion by design; check the legal side with someone qualified.
-- [ ] **Licence for Velomine:** AGPL-3.0 (keeps forks open, like Endurain) or MIT (easier for others to reuse)?
+- [ ] **Licence for Velomine:** AGPL-3.0 (keeps forks open) or MIT (easier for others to reuse)?
 - [ ] **Hosting:** self-host only, or also a hosted instance? "No paywall" needs a funding model for any hosted version.
 - [ ] **Strava:** one-time import of an export only, or ongoing sync despite Strava's API limits?
 - [ ] **Languages:** English and Italian first (assumption)?

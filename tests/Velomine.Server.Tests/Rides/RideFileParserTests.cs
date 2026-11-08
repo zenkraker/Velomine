@@ -93,7 +93,7 @@ public sealed class RideFileParserTests
     }
 
     [Theory]
-    [InlineData("<gpxpx:PowerExtension><gpxpx:PowerInWatts>240</gpxpx:PowerInWatts></gpxpx:PowerExtension>")] // Garmin: the case Endurain misses
+    [InlineData("<gpxpx:PowerExtension><gpxpx:PowerInWatts>240</gpxpx:PowerInWatts></gpxpx:PowerExtension>")] // Garmin: power in its own namespace
     [InlineData("<power>240</power>")]
     [InlineData("<gpxtpx:TrackPointExtension><gpxtpx:power>240</gpxtpx:power></gpxtpx:TrackPointExtension>")]
     [InlineData("<watts>240</watts>")]

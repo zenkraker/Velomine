@@ -122,8 +122,6 @@ Code is in [app/](app/README.md). Its API client is generated: after changing an
 - [Development environment](docs/development.md)
 - [Architecture](docs/architecture.md)
 - [v1 scope and architecture](docs/design/v1-scope-and-architecture.md)
-- [Endurain feature analysis (v0.20.2)](docs/research/endurain-feature-analysis-v0.20.2.md)
-- [Endurain porting comparison](docs/research/endurain-porting-comparison.md)
 - [Brand directions](docs/design/brand-directions.html)
 
 ## Contributing
