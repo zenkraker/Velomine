@@ -23,10 +23,20 @@ class NativeRecorder implements Recorder {
   }
 
   @override
-  Future<void> start({bool autoPause = true}) async {
-    recorderLog('start: sending autoPause=$autoPause');
+  Future<void> start({
+    bool autoPause = true,
+    String rideType = 'road',
+    bool ebike = false,
+  }) async {
+    recorderLog(
+      'start: sending autoPause=$autoPause rideType=$rideType ebike=$ebike',
+    );
     await _callVoid(
-      () => _channel.invokeMethod<void>('start', {'autoPause': autoPause}),
+      () => _channel.invokeMethod<void>('start', {
+        'autoPause': autoPause,
+        'rideType': rideType,
+        'ebike': ebike,
+      }),
     );
     recorderLog('start: returned');
   }

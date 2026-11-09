@@ -22,11 +22,18 @@ class RideStore(context: Context) {
     private val ridesDir = File(context.noBackupFilesDir, "rides")
     private val debug = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
-    fun create(startedAt: Long = System.currentTimeMillis()): ActiveRide {
+    fun create(
+        startedAt: Long = System.currentTimeMillis(),
+        rideType: String = "road",
+        ebike: Boolean = false,
+    ): ActiveRide {
         val id = UUID.randomUUID().toString()
         val dir = File(ridesDir, id).apply { mkdirs() }
-        val ride = ActiveRide(id, dir, startedAt, offsetMinutes(startedAt))
-        log("create ride $id dir=${dir.absolutePath} startedAt=$startedAt offset=${ride.offsetMinutes}")
+        val ride = ActiveRide(id, dir, startedAt, offsetMinutes(startedAt), rideType, ebike)
+        log(
+            "create ride $id dir=${dir.absolutePath} startedAt=$startedAt " +
+                "offset=${ride.offsetMinutes} rideType=$rideType ebike=$ebike",
+        )
         ride.event("start", startedAt)
         save(ride, "recording", endedAt = null, error = null)
         return ride
@@ -48,6 +55,8 @@ class RideStore(context: Context) {
             .put("distanceM", distanceM)
             .put("movingS", movingMs / 1000.0)
             .put("timeZoneOffsetMinutes", ride.offsetMinutes)
+            .put("rideType", ride.rideType)
+            .put("ebike", ride.ebike)
             .put("error", error)
         log(
             "save ride ${ride.id} state=$state endedAt=$endedAt distance=$distanceM " +
@@ -95,6 +104,8 @@ class RideStore(context: Context) {
             offsetMinutes = sidecar.optInt("timeZoneOffsetMinutes", 0),
             samples = parsed.samples,
             events = parsed.events,
+            rideType = sidecar.optString("rideType", "road"),
+            ebike = sidecar.optBoolean("ebike", false),
         )
 
         return try {
@@ -353,6 +364,8 @@ class ActiveRide(
     val dir: File,
     val startedAt: Long,
     val offsetMinutes: Int,
+    val rideType: String,
+    val ebike: Boolean,
 ) {
     private val writer = BufferedWriter(FileWriter(File(dir, "raw.jsonl"), true))
 

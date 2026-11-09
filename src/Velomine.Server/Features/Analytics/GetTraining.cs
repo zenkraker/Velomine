@@ -3,6 +3,8 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Rides;
+using RideEnvironments = Velomine.Server.Features.Rides.Environments;
 
 namespace Velomine.Server.Features.Analytics;
 
@@ -11,6 +13,22 @@ public sealed class TrainingRequest
     /// <summary>How many days to show, ending today: 7 to 730, default 90.</summary>
     [QueryParam]
     public int? Days { get; set; }
+
+    /// <summary>road, gravel, mountain or track.</summary>
+    [QueryParam]
+    public string? Discipline { get; set; }
+
+    /// <summary>none or ebike.</summary>
+    [QueryParam]
+    public string? Assist { get; set; }
+
+    /// <summary>outdoor, indoor or virtual.</summary>
+    [QueryParam]
+    public string? Environment { get; set; }
+
+    /// <summary>True or false for a commute, omitted for every ride.</summary>
+    [QueryParam]
+    public bool? Commute { get; set; }
 }
 
 /// <summary>One day of training: what was ridden and what it cost. Fitness, fatigue and form are the usual CTL, ATL and TSB.</summary>
@@ -43,6 +61,12 @@ public sealed class TrainingValidator : Validator<TrainingRequest>
     public TrainingValidator()
     {
         RuleFor(x => x.Days).InclusiveBetween(7, 730).When(x => x.Days.HasValue);
+        RuleFor(x => x.Discipline).Must(v => v is null || Disciplines.All.Contains(v))
+            .WithMessage("Choose road, gravel, mountain or track.");
+        RuleFor(x => x.Assist).Must(v => v is null || Assists.All.Contains(v))
+            .WithMessage("Choose none or ebike.");
+        RuleFor(x => x.Environment).Must(v => v is null || RideEnvironments.All.Contains(v))
+            .WithMessage("Choose outdoor, indoor or virtual.");
     }
 }
 
@@ -62,7 +86,13 @@ public sealed class GetTraining(VelomineDbContext db, TimeProvider time) : Endpo
     {
         var clock = await MemberClock.ForAsync(db, User.UserId(), time, ct);
         await Send.OkAsync(
-            await TrainingRange.LoadAsync(db, User.UserId(), clock, req.Days ?? 90, ct),
+            await TrainingRange.LoadAsync(
+                db,
+                User.UserId(),
+                clock,
+                req.Days ?? 90,
+                ct,
+                new RideFilter(req.Discipline, req.Assist, req.Environment, req.Commute)),
             ct);
     }
 }

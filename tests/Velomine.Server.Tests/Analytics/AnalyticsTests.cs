@@ -34,7 +34,8 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
 
     /// <summary>Saves a finished ride straight into the database, as if it had been uploaded and read.</summary>
     private static async Task AddRideAsync(TestApi api, Guid userId, string startUtc, double km, double hours = 1, double climbM = 0,
-        int? offsetMinutes = null, RideStatus status = RideStatus.Ready, double? tss = null, double? trimp = null, int? normalizedPowerW = null)
+        int? offsetMinutes = null, RideStatus status = RideStatus.Ready, double? tss = null, double? trimp = null, int? normalizedPowerW = null,
+        string? discipline = null, string? assist = null, string? environment = null, bool? commute = null)
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -54,6 +55,10 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
             Tss = tss,
             Trimp = trimp,
             NormalizedPowerW = normalizedPowerW,
+            Discipline = discipline,
+            Assist = assist,
+            Environment = environment,
+            Commute = commute,
         });
         await db.SaveChangesAsync(Ct);
     }
@@ -126,6 +131,9 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     [InlineData("period=fortnight")]
     [InlineData("period=week&count=0")]
     [InlineData("period=week&count=61")]
+    [InlineData("period=week&discipline=rowing")]
+    [InlineData("period=week&assist=rocket")]
+    [InlineData("period=week&environment=moon")]
     public async Task GetTotals_ShouldRejectTheRequest_WhenTheQueryIsInvalid(string query)
     {
         await using var api = await StartAsync();
@@ -138,8 +146,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     public async Task GetTotals_ShouldCountOnlyMyRides_WhenOthersHaveRides()
     {
         await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);
-        var (_, otherId) = await NewMemberAsync(api);
+        var (member, _) = await NewMemberAsync(api);        var (_, otherId) = await NewMemberAsync(api);
         await AddRideAsync(api, otherId, "2026-11-03T08:00:00", 80);
 
         var totals = await member.GetFromJsonAsync<TotalsResponse>("/api/v1/analytics/totals?period=week&count=1", Ct);
@@ -266,6 +273,36 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
         var response = await member.GetAsync("/api/v1/analytics/training?days=731", Ct);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetTotals_ShouldCountOnlyTheChosenDimension_WhenFiltered()
+    {
+        await using var api = await StartAsync();
+        var (member, id) = await NewMemberAsync(api);
+        await AddRideAsync(api, id, "2026-11-02T07:00:00", 40, 1, discipline: "road");
+        await AddRideAsync(api, id, "2026-11-03T07:00:00", 20, 1, discipline: "gravel");
+        await AddRideAsync(api, id, "2026-11-04T07:00:00", 10, 1, discipline: "mountain");
+
+        var road = await member.GetFromJsonAsync<TotalsResponse>("/api/v1/analytics/totals?period=week&count=1&discipline=road", Ct);
+
+        var period = Assert.Single(road!.Totals);
+        Assert.Equal(1, period.Rides);
+        Assert.Equal(40_000, period.DistanceM);
+    }
+
+    [Fact]
+    public async Task GetTraining_ShouldUseOnlyTheChosenDimension_WhenFiltered()
+    {
+        await using var api = await StartAsync();
+        var (member, id) = await NewMemberAsync(api);
+        await AddRideAsync(api, id, "2026-11-03T07:00:00", 40, 1, discipline: "road", tss: 50);
+        await AddRideAsync(api, id, "2026-11-04T07:00:00", 20, 1, discipline: "gravel", tss: 30);
+
+        var training = await member.GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=7&discipline=gravel", Ct);
+
+        Assert.Equal(1, training!.Rides);
+        Assert.Equal(30, training.Tss);
     }
 
     private static async Task<GoalResponse> CreateAsync(HttpClient member, string period, string metric, double target)

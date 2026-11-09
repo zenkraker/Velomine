@@ -26,7 +26,11 @@ class QueueRecorder implements Recorder {
   Future<void> forgetSensor() async {}
 
   @override
-  Future<void> start({bool autoPause = true}) async {}
+  Future<void> start({
+    bool autoPause = true,
+    String rideType = 'road',
+    bool ebike = false,
+  }) async {}
 
   @override
   Future<void> pause() async {}

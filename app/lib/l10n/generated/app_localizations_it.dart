@@ -2138,4 +2138,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lap => 'Giro';
+
+  @override
+  String get recorderRideType => 'Tipo di uscita';
+
+  @override
+  String get recorderEbike => 'E-bike';
+
+  @override
+  String get recorderEbikeHelp =>
+      'Conta come assistita e preferisce la tua e-bike.';
 }

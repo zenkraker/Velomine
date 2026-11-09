@@ -15,7 +15,8 @@ public static class TrainingRange
         Guid userId,
         MemberClock clock,
         int days,
-        CancellationToken ct)
+        CancellationToken ct,
+        RideFilter filter = default)
     {
         var to = clock.Today;
         var from = to.AddDays(-(days - 1));
@@ -25,7 +26,7 @@ public static class TrainingRange
             .Where(u => u.Id == userId)
             .Select(u => u.FtpW)
             .FirstAsync(ct);
-        var rides = await RideDays.LoadAsync(db, userId, clock, warmup, to.AddDays(1), ct, ftpW: ftpW);
+        var rides = await RideDays.LoadAsync(db, userId, clock, warmup, to.AddDays(1), ct, ftpW: ftpW, filter: filter);
         var byDate = rides
             .GroupBy(r => r.LocalDate)
             .ToDictionary(

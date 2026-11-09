@@ -78,11 +78,16 @@ class MainActivity : FlutterActivity() {
                         result.error(problem, "The recorder cannot start.", null)
                         return@setMethodCallHandler
                     }
-                    val autoPause = (call.arguments as? Map<*, *>)?.get("autoPause") as? Boolean ?: true
+                    val args = call.arguments as? Map<*, *>
+                    val autoPause = args?.get("autoPause") as? Boolean ?: true
+                    val rideType = args?.get("rideType") as? String ?: "road"
+                    val ebike = args?.get("ebike") as? Boolean ?: false
                     startRecorderService(
                         RecorderService.ACTION_START,
                         foreground = true,
                         autoPause = autoPause,
+                        rideType = rideType,
+                        ebike = ebike,
                     )
                     result.success(true)
                 }
@@ -283,11 +288,18 @@ class MainActivity : FlutterActivity() {
         action: String,
         foreground: Boolean,
         autoPause: Boolean = true,
+        rideType: String = "road",
+        ebike: Boolean = false,
     ) {
-        log("starting recorder service action=$action foreground=$foreground autoPause=$autoPause")
+        log(
+            "starting recorder service action=$action foreground=$foreground " +
+                "autoPause=$autoPause rideType=$rideType ebike=$ebike",
+        )
         val intent = Intent(this, RecorderService::class.java)
             .setAction(action)
             .putExtra(RecorderService.EXTRA_AUTO_PAUSE, autoPause)
+            .putExtra(RecorderService.EXTRA_RIDE_TYPE, rideType)
+            .putExtra(RecorderService.EXTRA_EBIKE, ebike)
         if (foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {

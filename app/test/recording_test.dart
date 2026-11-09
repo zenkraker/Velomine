@@ -26,6 +26,8 @@ class FakeRecorder implements Recorder {
   SensorInfo? pairedSensor;
   int sensorScans = 0;
   bool? lastAutoPause;
+  String? lastRideType;
+  bool? lastEbike;
   int starts = 0;
   int pauses = 0;
   int resumes = 0;
@@ -97,9 +99,15 @@ class FakeRecorder implements Recorder {
   }
 
   @override
-  Future<void> start({bool autoPause = true}) async {
+  Future<void> start({
+    bool autoPause = true,
+    String rideType = 'road',
+    bool ebike = false,
+  }) async {
     starts++;
     lastAutoPause = autoPause;
+    lastRideType = rideType;
+    lastEbike = ebike;
     _emit(
       RecorderSnapshot(
         state: 'recording',
@@ -220,12 +228,26 @@ class MemoryRecorderSettings implements RecorderSettingsStore {
   MemoryRecorderSettings([this.autoPause]);
 
   bool? autoPause;
+  String? rideType;
+  bool? ebike;
 
   @override
   Future<bool?> readAutoPause() async => autoPause;
 
   @override
   Future<void> writeAutoPause(bool value) async => autoPause = value;
+
+  @override
+  Future<String?> readRideType() async => rideType;
+
+  @override
+  Future<void> writeRideType(String value) async => rideType = value;
+
+  @override
+  Future<bool?> readEbike() async => ebike;
+
+  @override
+  Future<void> writeEbike(bool value) async => ebike = value;
 }
 
 void main() {
@@ -234,6 +256,9 @@ void main() {
     FakeRecorder recorder, {
     RecorderSettingsStore? settings,
   }) async {
+    tester.view.physicalSize = const Size(1000, 2200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -490,5 +515,30 @@ void main() {
     expect(snapshot.sensorName, 'Polar H10 1A2B3C');
     expect(snapshot.sensorConnected, isTrue);
     expect(snapshot.heartRateBpm, 141);
+  });
+
+  testWidgets('RecordingScreen_ShouldSendTheRideTypeAndEbike_WhenStarting', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final recorder = FakeRecorder();
+    final settings = MemoryRecorderSettings();
+    await pump(tester, recorder, settings: settings);
+
+    await tester.tap(find.byKey(const Key('record-ride-type')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gravel').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('record-ebike-switch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('record-start')));
+    await tester.pumpAndSettle();
+
+    expect(recorder.lastRideType, 'gravel');
+    expect(recorder.lastEbike, isTrue);
+    expect(settings.rideType, 'gravel');
+    expect(settings.ebike, isTrue);
   });
 }

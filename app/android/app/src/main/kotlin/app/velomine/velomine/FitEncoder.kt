@@ -135,8 +135,8 @@ object FitEncoder {
         out.writeByte(session.localType)
         out.u32(fitSeconds(ride.endMs))
         out.u32(fitSeconds(ride.startMs))
-        out.writeByte(2) // cycling
-        out.writeByte(0) // generic
+        out.writeByte(if (ride.ebike) 21 else 2) // sport: e-biking or cycling
+        out.writeByte(subSport(ride.rideType))
         out.u32(ride.elapsedMs.coerceAtLeast(0))
         out.u32(ride.movingMs.coerceAtLeast(0))
 
@@ -166,6 +166,17 @@ object FitEncoder {
         file[file.size - 2] = (crc and 0xFF).toByte()
         file[file.size - 1] = ((crc ushr 8) and 0xFF).toByte()
         return file
+    }
+
+    /// The FIT sub-sport for the type chosen on the phone. Values come from the FIT profile.
+    private fun subSport(rideType: String): Int = when (rideType) {
+        "gravel" -> 46
+        "mountain" -> 8
+        "track" -> 13
+        "indoor" -> 6
+        "virtual" -> 58
+        "commute" -> 48
+        else -> 7 // road
     }
 
     private fun normalizedEvents(ride: RawRide): List<RawEvent> {

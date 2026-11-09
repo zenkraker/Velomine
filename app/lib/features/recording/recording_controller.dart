@@ -37,6 +37,8 @@ class RecordingController extends ChangeNotifier {
   final RideUploadQueue? uploads;
   final RecorderSettingsStore settingsStore;
   bool autoPause = true;
+  String rideType = 'road';
+  bool ebike = false;
 
   RecorderSnapshot state = const RecorderSnapshot(
     state: 'idle',
@@ -66,7 +68,11 @@ class RecordingController extends ChangeNotifier {
       },
     );
     autoPause = await settingsStore.readAutoPause() ?? true;
-    recorderLog('controller: autoPause=$autoPause');
+    rideType = await settingsStore.readRideType() ?? 'road';
+    ebike = await settingsStore.readEbike() ?? false;
+    recorderLog(
+      'controller: autoPause=$autoPause rideType=$rideType ebike=$ebike',
+    );
     if (uploads != null) {
       await uploads!.init();
       uploads!.addListener(_notify);
@@ -118,7 +124,11 @@ class RecordingController extends ChangeNotifier {
         _setError('permission');
         return;
       }
-      await recorder.start(autoPause: autoPause);
+      await recorder.start(
+        autoPause: autoPause,
+        rideType: rideType,
+        ebike: ebike,
+      );
       recorderLog('controller: start native call returned; waiting for state');
       await _waitForRunning();
       recorderLog('controller: start done state=${state.state}');
@@ -138,6 +148,20 @@ class RecordingController extends ChangeNotifier {
     autoPause = value;
     recorderLog('controller: autoPause set to $value');
     await settingsStore.writeAutoPause(value);
+    _notify();
+  }
+
+  Future<void> setRideType(String value) async {
+    rideType = value;
+    recorderLog('controller: rideType set to $value');
+    await settingsStore.writeRideType(value);
+    _notify();
+  }
+
+  Future<void> setEbike(bool value) async {
+    ebike = value;
+    recorderLog('controller: ebike set to $value');
+    await settingsStore.writeEbike(value);
     _notify();
   }
 

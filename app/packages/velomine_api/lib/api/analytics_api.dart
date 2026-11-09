@@ -205,7 +205,15 @@ class AnalyticsApi {
   /// * [String] period (required):
   ///
   /// * [int] count:
-  Future<Response> getTotalsWithHttpInfo(String period, { int? count, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] discipline:
+  ///
+  /// * [String] assist:
+  ///
+  /// * [String] environment:
+  ///
+  /// * [bool] commute:
+  Future<Response> getTotalsWithHttpInfo(String period, { int? count, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/analytics/totals';
 
@@ -219,6 +227,18 @@ class AnalyticsApi {
       queryParams.addAll(_queryParams('', 'period', period));
     if (count != null) {
       queryParams.addAll(_queryParams('', 'count', count));
+    }
+    if (discipline != null) {
+      queryParams.addAll(_queryParams('', 'discipline', discipline));
+    }
+    if (assist != null) {
+      queryParams.addAll(_queryParams('', 'assist', assist));
+    }
+    if (environment != null) {
+      queryParams.addAll(_queryParams('', 'environment', environment));
+    }
+    if (commute != null) {
+      queryParams.addAll(_queryParams('', 'commute', commute));
     }
 
     const contentTypes = <String>[];
@@ -241,8 +261,16 @@ class AnalyticsApi {
   /// * [String] period (required):
   ///
   /// * [int] count:
-  Future<TotalsResponse?> getTotals(String period, { int? count, Future<void>? abortTrigger, }) async {
-    final response = await getTotalsWithHttpInfo(period, count: count, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] discipline:
+  ///
+  /// * [String] assist:
+  ///
+  /// * [String] environment:
+  ///
+  /// * [bool] commute:
+  Future<TotalsResponse?> getTotals(String period, { int? count, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
+    final response = await getTotalsWithHttpInfo(period, count: count, discipline: discipline, assist: assist, environment: environment, commute: commute, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -260,7 +288,15 @@ class AnalyticsApi {
   /// Parameters:
   ///
   /// * [int] days:
-  Future<Response> getTrainingWithHttpInfo({ int? days, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] discipline:
+  ///
+  /// * [String] assist:
+  ///
+  /// * [String] environment:
+  ///
+  /// * [bool] commute:
+  Future<Response> getTrainingWithHttpInfo({ int? days, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/analytics/training';
 
@@ -273,6 +309,18 @@ class AnalyticsApi {
 
     if (days != null) {
       queryParams.addAll(_queryParams('', 'days', days));
+    }
+    if (discipline != null) {
+      queryParams.addAll(_queryParams('', 'discipline', discipline));
+    }
+    if (assist != null) {
+      queryParams.addAll(_queryParams('', 'assist', assist));
+    }
+    if (environment != null) {
+      queryParams.addAll(_queryParams('', 'environment', environment));
+    }
+    if (commute != null) {
+      queryParams.addAll(_queryParams('', 'commute', commute));
     }
 
     const contentTypes = <String>[];
@@ -293,8 +341,16 @@ class AnalyticsApi {
   /// Parameters:
   ///
   /// * [int] days:
-  Future<TrainingResponse?> getTraining({ int? days, Future<void>? abortTrigger, }) async {
-    final response = await getTrainingWithHttpInfo(days: days, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] discipline:
+  ///
+  /// * [String] assist:
+  ///
+  /// * [String] environment:
+  ///
+  /// * [bool] commute:
+  Future<TrainingResponse?> getTraining({ int? days, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
+    final response = await getTrainingWithHttpInfo(days: days, discipline: discipline, assist: assist, environment: environment, commute: commute, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

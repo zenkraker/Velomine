@@ -158,7 +158,11 @@ abstract interface class Recorder {
 
   Future<bool> requestPermissions();
 
-  Future<void> start({bool autoPause = true});
+  Future<void> start({
+    bool autoPause = true,
+    String rideType = 'road',
+    bool ebike = false,
+  });
 
   Future<void> pause();
 

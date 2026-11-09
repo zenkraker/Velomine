@@ -4,6 +4,7 @@ using Dynastream.Fit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
@@ -513,5 +514,44 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync($"/api/v1/rides/{Guid.NewGuid()}/laps", Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await alice.GetAsync($"/api/v1/rides/{failed.Id}/laps", Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync($"/api/v1/rides/{ready.Id}/laps", Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadRide_ShouldUseTheBikeForItsDimensions_WhenTheMemberHasSeveral()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var userId = (await member.GetFromJsonAsync<Server.Features.Accounts.MeResponse>("/api/v1/accounts/me", Ct))!.Id;
+
+        Bike bike(string name, string kind, bool isDefault, int minute) => new()
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = userId,
+            Name = name,
+            Kind = kind,
+            IsDefault = isDefault,
+            IsActive = true,
+            WheelCircumferenceMm = 2100,
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(minute),
+        };
+        var road = bike("Road", "road", isDefault: true, 1);
+        var mountain = bike("Mountain", "mountain", isDefault: false, 2);
+        var ebike = bike("E-bike", "ebike", isDefault: false, 3);
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            db.Bikes.AddRange(road, mountain, ebike);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        var roadRide = await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(1), 60, SubSport: SubSport.Road)));
+        var mountainRide = await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(2), 60, SubSport: SubSport.Mountain)));
+        var ebikeRide = await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(3), 60, Sport.EBiking)));
+        var indoorRide = await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(4), 60, SubSport: SubSport.IndoorCycling)));
+
+        Assert.Equal(road.Id, roadRide.BikeId);
+        Assert.Equal(mountain.Id, mountainRide.BikeId);
+        Assert.Equal(ebike.Id, ebikeRide.BikeId);
+        Assert.Equal(road.Id, indoorRide.BikeId); // no kind for indoor: the single default
     }
 }

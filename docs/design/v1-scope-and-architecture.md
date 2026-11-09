@@ -36,7 +36,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | Strava | Bulk import of a Strava export to migrate history. Ongoing sync is optional, given Strava's API limits. |
 | Garmin Connect | Garmin's official personal key: activities as FIT files. |
 | Bikes and components | Bikes only, with our own list of 35 bike part types (chain, tyres, pads, fork service…) and typical lifetimes as suggestions. Wear by distance, hours and months, computed from the rides; reminders come in v2. Wheel circumference per bike. |
-| Default bike | One default bike per member, copied onto a ride at import. A default per ride dimension waits for its own slice. |
+| Default bike | One default bike per member, copied onto a ride at import. A ride also takes a bike of the matching kind (e-bike, mountain, gravel, track, city); the single default is the fallback when that kind has no active bike. |
 | Goals and summaries | Weekly, monthly and yearly totals, cycling only. Goals per week, month or year (distance, elevation, time or number of rides), in v1. |
 | Share links | One link per ride, with optional expiry and privacy zones, instead of public pages and a feed. |
 | Per-stream privacy | Applied to share links and coach views. |

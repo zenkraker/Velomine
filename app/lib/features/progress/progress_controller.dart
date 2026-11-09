@@ -24,6 +24,7 @@ class ProgressController extends ChangeNotifier {
   String period = 'week';
   int trainingDays = 90;
   int powerDays = 90;
+  String? discipline;
   TotalsResponse? totals;
   TrainingResponse? training;
   PowerCurveResponse? powerCurve;
@@ -47,9 +48,13 @@ class ProgressController extends ChangeNotifier {
     final failure = await guardCall(
       () async {
         final results = await Future.wait([
-          api.getTotals(period, count: periodCounts[period]),
+          api.getTotals(
+            period,
+            count: periodCounts[period],
+            discipline: discipline,
+          ),
           api.listGoals(),
-          api.getTraining(days: trainingDays),
+          api.getTraining(days: trainingDays, discipline: discipline),
           api.getPowerCurve(days: powerDays),
           api.getReadiness(),
           wellbeing.getWellbeing(),
@@ -92,6 +97,15 @@ class ProgressController extends ChangeNotifier {
     if (value == period) return;
     period = value;
     totals = null;
+    await refresh();
+  }
+
+  /// Shows only one surface in the totals and the training dashboard, or every ride when [value] is null.
+  Future<void> setDiscipline(String? value) async {
+    if (value == discipline) return;
+    discipline = value;
+    totals = null;
+    training = null;
     await refresh();
   }
 

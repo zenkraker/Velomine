@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
@@ -71,9 +72,12 @@ public sealed class RideIngestionService(
             .Where(u => u.Id == ride.UserId)
             .Select(u => new { u.FtpW, u.MaxHeartRate })
             .FirstAsync(ct);
+        var memberBikes = await db.Bikes.AsNoTracking()
+            .Where(b => b.UserId == ride.UserId && b.IsActive)
+            .OrderBy(b => b.CreatedAt)
+            .ToListAsync(ct);
         var used = false;
         var read = new List<Ride>();
-        Guid? defaultBike = null;
         string? lastError = null;
         foreach (var file in parsed)
         {
@@ -123,8 +127,7 @@ public sealed class RideIngestionService(
             }
 
             Apply(target, metrics);
-            target.BikeId ??= defaultBike ??= await db.Bikes.AsNoTracking()
-                .Where(b => b.UserId == ride.UserId && b.IsDefault && b.IsActive).Select(b => (Guid?)b.Id).FirstOrDefaultAsync(ct);
+            target.BikeId ??= DefaultBike.For(memberBikes, file.Discipline, file.Assist, file.Environment, file.Commute);
             target.Status = RideStatus.Ready;
             target.Streams = ToStreams(file.Samples);
             target.Laps.Clear();

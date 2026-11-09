@@ -107,7 +107,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   busy: _controller.busy,
                   loading: _controller.loading,
                   autoPause: _controller.autoPause,
+                  rideType: _controller.rideType,
+                  ebike: _controller.ebike,
                   onAutoPause: _controller.setAutoPause,
+                  onRideType: _controller.setRideType,
+                  onEbike: _controller.setEbike,
                   onStart: _controller.start,
                   sensorsSupported: _recorder.sensorsSupported,
                   sensorName: state.sensorName,
@@ -165,7 +169,11 @@ class _StartCard extends StatelessWidget {
     required this.busy,
     required this.loading,
     required this.autoPause,
+    required this.rideType,
+    required this.ebike,
     required this.onAutoPause,
+    required this.onRideType,
+    required this.onEbike,
     required this.onStart,
     required this.sensorsSupported,
     required this.sensorName,
@@ -177,7 +185,11 @@ class _StartCard extends StatelessWidget {
   final bool busy;
   final bool loading;
   final bool autoPause;
+  final String rideType;
+  final bool ebike;
   final Future<void> Function(bool value) onAutoPause;
+  final Future<void> Function(String value) onRideType;
+  final Future<void> Function(bool value) onEbike;
   final Future<void> Function() onStart;
   final bool sensorsSupported;
   final String? sensorName;
@@ -206,6 +218,60 @@ class _StartCard extends StatelessWidget {
               onPressed: busy || loading ? null : onStart,
               icon: const Icon(Icons.play_arrow),
               label: Text(busy ? l10n.starting : l10n.startRecording),
+            ),
+            const SizedBox(height: 12),
+            InputDecorator(
+              decoration: InputDecoration(labelText: l10n.recorderRideType),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  key: const Key('record-ride-type'),
+                  value: rideType,
+                  isExpanded: true,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'road',
+                      child: Text(l10n.bikeKindRoad),
+                    ),
+                    DropdownMenuItem(
+                      value: 'gravel',
+                      child: Text(l10n.bikeKindGravel),
+                    ),
+                    DropdownMenuItem(
+                      value: 'mountain',
+                      child: Text(l10n.bikeKindMountain),
+                    ),
+                    DropdownMenuItem(
+                      value: 'track',
+                      child: Text(l10n.bikeKindTrack),
+                    ),
+                    DropdownMenuItem(
+                      value: 'indoor',
+                      child: Text(l10n.rideTypeIndoor),
+                    ),
+                    DropdownMenuItem(
+                      value: 'virtual',
+                      child: Text(l10n.rideTypeVirtual),
+                    ),
+                    DropdownMenuItem(
+                      value: 'commute',
+                      child: Text(l10n.rideTypeCommute),
+                    ),
+                  ],
+                  onChanged: busy || loading
+                      ? null
+                      : (value) {
+                          if (value != null) onRideType(value);
+                        },
+                ),
+              ),
+            ),
+            SwitchListTile(
+              key: const Key('record-ebike-switch'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.recorderEbike),
+              subtitle: Text(l10n.recorderEbikeHelp),
+              value: ebike,
+              onChanged: busy || loading ? null : onEbike,
             ),
             SwitchListTile(
               key: const Key('auto-pause-switch'),

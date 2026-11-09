@@ -29,7 +29,11 @@ class UnsupportedRecorder implements Recorder {
   Future<void> forgetSensor() async {}
 
   @override
-  Future<void> start({bool autoPause = true}) async => _unsupported;
+  Future<void> start({
+    bool autoPause = true,
+    String rideType = 'road',
+    bool ebike = false,
+  }) async => _unsupported;
 
   @override
   Future<void> pause() async => _unsupported;

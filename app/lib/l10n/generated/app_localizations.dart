@@ -3901,6 +3901,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lap'**
   String get lap;
+
+  /// No description provided for @recorderRideType.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride type'**
+  String get recorderRideType;
+
+  /// No description provided for @recorderEbike.
+  ///
+  /// In en, this message translates to:
+  /// **'E-bike'**
+  String get recorderEbike;
+
+  /// No description provided for @recorderEbikeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts as assisted and prefers your e-bike.'**
+  String get recorderEbikeHelp;
 }
 
 class _AppLocalizationsDelegate

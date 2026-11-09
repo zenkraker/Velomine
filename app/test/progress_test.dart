@@ -227,4 +227,15 @@ void main() {
     expect(find.byKey(const Key('readiness-card')), findsOneWidget);
     expect(find.text('How you feel'), findsOneWidget);
   });
+
+  testWidgets('ProgressScreen_ShouldAskForOneDiscipline_WhenAFilterIsChosen', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await tester.tap(find.byKey(const Key('progress-filter-gravel')));
+    await tester.pumpAndSettle();
+
+    expect(server.analyticsFilters, contains('gravel'));
+  });
 }

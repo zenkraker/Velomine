@@ -2123,4 +2123,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lap => 'Lap';
+
+  @override
+  String get recorderRideType => 'Ride type';
+
+  @override
+  String get recorderEbike => 'E-bike';
+
+  @override
+  String get recorderEbikeHelp => 'Counts as assisted and prefers your e-bike.';
 }

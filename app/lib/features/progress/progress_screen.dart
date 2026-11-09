@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../rides/ride_type_chips.dart';
 import 'goals.dart';
 import 'power_summary.dart';
 import 'progress_controller.dart';
@@ -60,6 +61,30 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 spacing: 12,
                 children: [
                   Text(context.l10n.navProgress, style: text.titleLarge),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      ChoiceChip(
+                        key: const Key('progress-filter-all'),
+                        label: Text(context.l10n.rideFilterAll),
+                        selected: c.discipline == null,
+                        onSelected: (_) => c.setDiscipline(null),
+                      ),
+                      for (final discipline in [
+                        'road',
+                        'gravel',
+                        'mountain',
+                        'track',
+                      ])
+                        ChoiceChip(
+                          key: Key('progress-filter-$discipline'),
+                          label: Text(disciplineName(context.l10n, discipline)),
+                          selected: c.discipline == discipline,
+                          onSelected: (_) => c.setDiscipline(discipline),
+                        ),
+                    ],
+                  ),
                   if (c.error != null)
                     Text(
                       failureText(context.l10n, c.error!),

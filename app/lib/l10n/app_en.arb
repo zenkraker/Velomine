@@ -1118,5 +1118,8 @@
   "yes": "Yes",
   "no": "No",
   "lapsTitle": "Laps",
-  "lap": "Lap"
+  "lap": "Lap",
+  "recorderRideType": "Ride type",
+  "recorderEbike": "E-bike",
+  "recorderEbikeHelp": "Counts as assisted and prefers your e-bike."
 }

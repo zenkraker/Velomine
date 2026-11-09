@@ -678,5 +678,8 @@
   "yes": "Sì",
   "no": "No",
   "lapsTitle": "Giri",
-  "lap": "Giro"
+  "lap": "Giro",
+  "recorderRideType": "Tipo di uscita",
+  "recorderEbike": "E-bike",
+  "recorderEbikeHelp": "Conta come assistita e preferisce la tua e-bike."
 }

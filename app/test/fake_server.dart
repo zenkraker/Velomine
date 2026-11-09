@@ -61,6 +61,9 @@ class FakeServer {
   /// The day counts asked for by GET /analytics/training, in order.
   final trainingRequests = <int>[];
 
+  /// The discipline each totals or training request asked for, in order; null means every ride.
+  final analyticsFilters = <String?>[];
+
   final goals = <Map<String, Object?>>[];
 
   /// How far each goal metric has got this period, for goal progress.
@@ -602,6 +605,7 @@ extension on FakeServer {
 
     if (path == '/api/v1/analytics/totals') {
       final period = request.url.queryParameters['period']!;
+      analyticsFilters.add(request.url.queryParameters['discipline']);
       return json({'period': period, 'totals': totals[period] ?? []});
     }
 
@@ -609,6 +613,7 @@ extension on FakeServer {
       final days =
           int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90;
       trainingRequests.add(days);
+      analyticsFilters.add(request.url.queryParameters['discipline']);
       return json(training ?? trainingJson(days: days));
     }
 

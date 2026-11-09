@@ -21,6 +21,8 @@ data class RawRide(
     val offsetMinutes: Int,
     val samples: List<RawSample>,
     val events: List<RawEvent>,
+    val rideType: String = "road",
+    val ebike: Boolean = false,
 ) {
     val elapsedMs: Long
         get() = (endMs - startMs).coerceAtLeast(0)
