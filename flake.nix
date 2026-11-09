@@ -2,15 +2,8 @@
   description = "Velomine dev environment (CachyOS + Nix)";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  # Official Dart and Flutter agent skills (BSD-3-Clause). Pinned in flake.lock;
-  # the dev shell links them into .claude/skills for Claude Code and OpenCode.
-  inputs.flutter-agent-plugins = {
-    url = "github:flutter/agent-plugins";
-    flake = false;
-  };
-
   outputs =
-    { nixpkgs, flutter-agent-plugins, ... }:
+    { nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -98,8 +91,14 @@
           android.androidsdk
           pkgs.jdk17 # Gradle 9 / AGP 9 need Java 17+; also runs the OpenAPI generator JAR
 
-          # AI coding agents and the tooling they share
-          pkgs.nodejs # ponytail's hooks
+          # AI coding agents and the tooling they share.
+          # Agent plugins are recommended, not pinned here: ponytail
+          # (@dietrichgebert/ponytail, configured in opencode.json and
+          # .claude/settings.json) and the official Flutter agent plugin
+          # (Flutter/Dart skills plus the `dart mcp-server` MCP server used by
+          # .mcp.json and opencode.json). Install them per agent; see
+          # docs/development.md.
+          pkgs.nodejs # ponytail's Claude Code hooks
           pkgs.codegraph
           opencode # local override (see above); alternative to Claude Code
 
@@ -149,15 +148,6 @@
 
           # Flutter web debugging uses the browser installed on your host.
           export CHROME_EXECUTABLE="$(command -v chromium || command -v google-chrome-stable || command -v google-chrome || true)"
-
-          # Official Dart/Flutter agent skills, pinned by the flake input. Link them
-          # beside the project's own skills so Claude Code and OpenCode discover them.
-          # The links are git-ignored, so refresh them with `direnv reload`.
-          mkdir -p "$REPO/.claude/skills"
-          find "$REPO/.claude/skills" -maxdepth 1 -type l -lname "${flutter-agent-plugins}/*" -delete
-          for skill in ${flutter-agent-plugins}/skills/*/; do
-            ln -sfn "''${skill%/}" "$REPO/.claude/skills/$(basename "$skill")"
-          done
 
           (cd "$REPO" && dotnet tool restore > /dev/null 2>&1) || true
         '';

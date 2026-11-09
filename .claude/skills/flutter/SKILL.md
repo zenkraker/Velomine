@@ -16,7 +16,7 @@ The Dart MCP server ships with the pinned Flutter SDK and is started by `.mcp.js
 - `list_devices`, `launch_app`, `get_app_logs`, `get_runtime_errors`, `hot_reload`, `hot_restart`, `stop_app` for a running app.
 - `dtd`, `lsp`, `vm_service`, `widget_inspector` for runtime inspection.
 
-The flake links the official Flutter/Dart skills into `.claude/skills/` (names starting `flutter-` or `dart-`). Load the matching one before the task, for example `flutter-add-widget-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-setup-declarative-routing`, `flutter-setup-localization`, `dart-add-unit-test` or `dart-run-static-analysis`. This project's skill wins where they conflict, especially on dependencies, state management and the generated API client.
+The official Flutter/Dart skills are installed in each agent (the Flutter agent plugin), not by the dev shell. Load the matching one before the task, for example `flutter-add-widget-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-setup-declarative-routing`, `flutter-setup-localization`, `dart-add-unit-test` or `dart-run-static-analysis`. This project's skill wins where they conflict, especially on dependencies, state management and the generated API client.
 
 ## Rules
 

@@ -12,6 +12,7 @@
 | MailKit (brings `MimeKit` and its cryptography dependencies) | 4.18.x | 2026-11-05, by the owner, evaluation waived | none | Sends notification and test emails over SMTP. Referenced only from the one `IEmailSender` implementation. SMTP settings (including the password) come from environment variables only, never the database. Patch and minor updates allowed; re-evaluate on a major update. |
 | Dex (container image `ghcr.io/dexidp/dex:v2.46.1`) | 2.46.1 | 2026-11-02, by the owner | [dex.md](dex.md) | **Dev and tests only** (docker-compose and Testcontainers); never in a shared or production environment; port bound to `127.0.0.1`. Pin 2.46.x or later, never 2.41.1 or older. |
 | geolocator | 14.1.x | 2026-11-09, by the owner | [geolocator.md](geolocator.md) | Android, iOS and web only; one position on demand, never a continuous stream; coordinates are used only for the opt-in club directory (inter-club layer, v2) and never stored. Keep the saved-home-location fallback for denied permission or a non-secure context. Re-evaluate on a major update. |
+| @dietrichgebert/ponytail | 5.3.3 | 2026-11-09, by the owner | [ponytail.md](ponytail.md) | Agent plugin only (OpenCode and Claude Code). Exact version pinned in `opencode.json`; update deliberately and re-evaluate on a major update. Its rules never override `AGENTS.md`. |
 
 ## Needs an evaluation before use
 

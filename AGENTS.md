@@ -71,14 +71,14 @@ For code rules, this file wins. For architecture and product, the referenced doc
 
 ## AI coding agents
 
-- **The ponytail plugin is mandatory for Claude Code** (enabled in `.claude/settings.json`). Never turn it off for work on this repository.
+- **The ponytail plugin is mandatory for both agents.** Claude Code enables it in `.claude/settings.json`; OpenCode loads `@dietrichgebert/ponytail` from `plugins` in `opencode.json`. Never turn it off for work on this repository, and its rules never override this file.
 - **CodeGraph is mandatory** (wired up by `.mcp.json` and `.claude/settings.json`). When a `.codegraph/` directory exists, use `codegraph_explore` or `codegraph explore "<symbols or question>"` before grep or reading files; `.claude/CLAUDE.md` has the details.
-- **Flutter and Dart work uses the Dart MCP server and the official Flutter/Dart skills.** Start the agent from the dev shell, so `dart` and `FLUTTER_ROOT` are set; `.mcp.json` (Claude Code) and `opencode.json` (OpenCode) then start `dart mcp-server`. The flake links the official skills into `.claude/skills/` (names starting `flutter-` or `dart-`). Use its analyzer, test, runtime and hot-reload tools to check the real project instead of guessing, and load the matching skill before writing widgets, tests, routing, localization or layout code. After editing a `.dart` file under `app/lib/`, trigger `hot_reload` (or `hot_restart` after `initState`, global state or `main` changes) when an app is running.
+- **Flutter and Dart work uses the Dart MCP server and the official Flutter/Dart skills.** Start the agent from the dev shell, so `dart` and `FLUTTER_ROOT` are set; `.mcp.json` (Claude Code) and `opencode.json` (OpenCode) then start `dart mcp-server`. Install the official Flutter agent plugin (skills and that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills. Use its analyzer, test, runtime and hot-reload tools to check the real project instead of guessing, and load the matching skill before writing widgets, tests, routing, localization or layout code. After editing a `.dart` file under `app/lib/`, trigger `hot_reload` (or `hot_restart` after `initState`, global state or `main` changes) when an app is running.
 - Setup for all of these is in `docs/development.md`.
 
 ## Dependency rule: official libraries first
 
-**Never add a dependency without following this section.** The skills in `.claude/skills/`, including the official Flutter/Dart ones, never override it. This covers runtime packages, build tools, test libraries, linters, code generators, CI actions and container base images.
+**Never add a dependency without following this section.** Agent skills, including the official Flutter/Dart ones, never override it. This covers runtime packages, build tools, test libraries, linters, code generators, CI actions and container base images.
 
 ### 1. Prefer what the platform already gives you
 

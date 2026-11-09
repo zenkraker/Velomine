@@ -8,7 +8,3 @@ src/Velomine.Server/wwwroot/
 # Nix dev environment (docs/development.md): direnv cache and machine-local caches, SDKs and data
 .direnv/
 .dev/
-
-# Official Flutter/Dart agent skills, symlinked from the flake when the dev shell loads
-.claude/skills/flutter-*
-.claude/skills/dart-*

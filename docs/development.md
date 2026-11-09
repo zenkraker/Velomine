@@ -37,14 +37,15 @@ You only need a few ideas to use this setup.
 | Flutter | 3.47.9 with Dart 3.13.7 | The official release with the **same version and checksum as the `Dockerfile`**. Not the nixpkgs build, which lags behind (3.47.4 with Dart 3.13.3, too old for `app/pubspec.yaml`). It is unpacked once into `.dev/`, because Flutter writes into its own folder. |
 | Android SDK | platform 36, build tools 36.0.0, NDK 28.2.13676358, CMake 3.22.1, emulator, Play Store image (x86_64) | The versions Flutter 3.47's Gradle plugin asks for |
 | Java | JDK 17 | Gradle 9 and the Android Gradle Plugin 9 need Java 17 or newer. It also runs the OpenAPI generator JAR. |
-| Node.js | from nixpkgs | The ponytail plugin's hooks (see [AGENTS.md](../AGENTS.md)) |
+| Node.js | from nixpkgs | Ponytail's Claude Code hooks (see [AGENTS.md](../AGENTS.md)) |
 | CodeGraph | from nixpkgs | Required by AGENTS.md, so there's no `curl … \| sh` install |
 | OpenCode | from nixpkgs | AI coding agent, an alternative to Claude Code |
-| Flutter/Dart agent skills | pinned `flutter/agent-plugins` (BSD-3-Clause) | Official skills for Claude Code and OpenCode, linked into `.claude/skills/` when the shell loads. The Dart MCP server ships with the pinned Flutter SDK (`dart mcp-server`), so it needs no separate package. |
 | VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code and OpenCode V2. It is the same Microsoft build as `visual-studio-code-bin`. |
 | psql | 17 | Same major version as the `postgres:17` container |
 | just | from nixpkgs | Runs the commands in the `justfile` |
 | nixd | from nixpkgs | Language server for editing `flake.nix` |
+
+Agent plugins are not part of the dev shell: ponytail and the official Flutter plugin (Flutter/Dart skills plus the `dart mcp-server` MCP server) are installed in each agent itself. Step 5 has the details.
 
 The flake targets `x86_64-linux`. iOS builds need macOS with Xcode, which this setup cannot provide.
 
@@ -127,7 +128,7 @@ Ponytail keeps changes small (smallest complete change, YAGNI, stdlib first). It
 
 CodeGraph indexes the code into a local symbol graph and gives Claude MCP tools (`codegraph_explore`, `codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook, so `codegraph` must be on PATH when Claude Code starts: start it from the dev shell. Without Nix, install it with `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`.
 
-OpenCode reads `AGENTS.md` directly and takes its MCP servers from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. The flake also links the official Flutter and Dart skills into `.claude/skills/`, so both agents discover them next to the project's own skills.
+OpenCode reads `AGENTS.md` directly and takes its MCP servers and plugins from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. OpenCode needs no install command for ponytail: the `plugins` entry loads `@dietrichgebert/ponytail` from npm on first start and keeps it active in every session of this repository. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
 
 The dev shell points the NuGet, pub, Gradle and Android caches, the unpacked Flutter SDK and the server's ride files into `.dev/`.
 
@@ -212,7 +213,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 
 - **Flutter:** change `flutterVersion` and `sha256` in `flake.nix` **and** `FLUTTER_VERSION` and `FLUTTER_SHA256` in the `Dockerfile`, in the same commit. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). Run `direnv reload`. The new version unpacks into its own `.dev/flutter-<version>` folder, so delete the old one. A new minor version (3.48 rather than 3.47.x) may ask for newer Android SDK or NDK versions. See *Troubleshooting*.
 - **Everything from nixpkgs** (.NET SDK, Java, Node, psql, CodeGraph, just, the Android packages): `nix flake update nixpkgs`, then commit the new `flake.lock` on its own.
-- **Flutter/Dart agent skills:** `nix flake update flutter-agent-plugins`, then restart the agent. The shell relinks them into `.claude/skills/`.
+- **Agent plugins:** OpenCode updates ponytail with `opencode plugin update @dietrichgebert/ponytail`; change the pinned version in `opencode.json` after reading the changelog. Claude Code and the official Flutter plugin update through their own plugin commands.
 - **Before committing a flake change:** run `nix fmt flake.nix` and `nix flake check --no-build`.
 - **PostgreSQL:** psql's major version follows the `postgres` image in `docker-compose.yml`. Change both together.
 

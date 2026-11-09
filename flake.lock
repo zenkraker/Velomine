@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "flutter-agent-plugins": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1793825731,
-        "narHash": "sha256-lxRzt3Gw2xyQz7+LvfHC8zxGooTjf5t0QN4zjzJdh08=",
-        "owner": "flutter",
-        "repo": "agent-plugins",
-        "rev": "b7d5a0be4195b82fe073620fb52f594b0809eacf",
-        "type": "github"
-      },
-      "original": {
-        "owner": "flutter",
-        "repo": "agent-plugins",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1793726008,
@@ -34,7 +18,6 @@
     },
     "root": {
       "inputs": {
-        "flutter-agent-plugins": "flutter-agent-plugins",
         "nixpkgs": "nixpkgs"
       }
     }
