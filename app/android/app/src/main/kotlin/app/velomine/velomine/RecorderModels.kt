@@ -11,6 +11,20 @@ data class RawSample(
     val heartRate: Int? = null,
 )
 
+/**
+ * A fix with a larger accuracy radius is not where the rider is: using it invents a jump between two positions.
+ * Thirty metres still records a rider under trees, but keeps a cold or obstructed first fix out of the ride.
+ */
+const val MAX_SAMPLE_ACCURACY_M = 30.0
+
+internal fun RawSample.hasReliablePosition(): Boolean =
+    accuracy == null || accuracy <= MAX_SAMPLE_ACCURACY_M
+
+/** Keeps the moment and its heart rate, but drops a position the phone could not trust. */
+internal fun RawSample.withoutUnreliablePosition(): RawSample =
+    if (hasReliablePosition()) this
+    else copy(latitude = null, longitude = null, speed = null)
+
 /** A pause, resume, start or stop marker in the raw file. */
 data class RawEvent(val kind: String, val timeMs: Long)
 
@@ -61,9 +75,9 @@ data class RawRide(
                 ) {
                     continue
                 }
+                if (!before.hasReliablePosition() || !after.hasReliablePosition()) continue
                 if (pauses.any { it.first < after.timeMs && it.second > before.timeMs }) continue
                 if (after.timeMs - before.timeMs > MAX_DISTANCE_GAP_MS) continue
-                if (after.accuracy != null && after.accuracy > MAX_DISTANCE_ACCURACY_M) continue
                 total += haversine(
                     before.latitude,
                     before.longitude,
@@ -102,6 +116,5 @@ data class RawRide(
 
     private companion object {
         const val MAX_DISTANCE_GAP_MS = 30_000L
-        const val MAX_DISTANCE_ACCURACY_M = 70.0
     }
 }

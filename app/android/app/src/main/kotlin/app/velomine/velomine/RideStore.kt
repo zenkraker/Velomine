@@ -89,11 +89,12 @@ class RideStore(context: Context) {
         }
 
         val parsed = readRaw(dir)
+        val samples = parsed.samples.map { it.withoutUnreliablePosition() }
         log(
-            "finalize $id parsed samples=${parsed.samples.size} events=${parsed.events.size} " +
-                "start=${parsed.startMs} end=${parsed.endMs}",
+            "finalize $id parsed samples=${parsed.samples.size} usable=${samples.size} " +
+                "events=${parsed.events.size} start=${parsed.startMs} end=${parsed.endMs}",
         )
-        if (parsed.samples.size < 2) {
+        if (samples.size < 2) {
             log("finalize $id failed: too few samples")
             return writeFailed(dir, sidecar, "too_short")
         }
@@ -104,7 +105,7 @@ class RideStore(context: Context) {
             startMs = startedAt,
             endMs = endedAt,
             offsetMinutes = sidecar.optInt("timeZoneOffsetMinutes", 0),
-            samples = parsed.samples,
+            samples = samples,
             events = parsed.events,
             rideType = sidecar.optString("rideType", "road"),
             ebike = sidecar.optBoolean("ebike", false),

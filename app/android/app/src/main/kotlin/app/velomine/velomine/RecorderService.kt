@@ -377,6 +377,14 @@ class RecorderService : Service(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
+        val accuracy = if (location.hasAccuracy()) location.accuracy.toDouble() else null
+        RecorderRuntime.accuracyM = accuracy
+        if (accuracy != null && accuracy > MAX_SAMPLE_ACCURACY_M) {
+            log("ignore poor fix accuracy=$accuracy time=${location.time}")
+            RecorderEvents.emit()
+            return
+        }
+
         val speedKmh = if (location.hasSpeed()) location.speed * 3.6 else null
         val monotonicNow = SystemClock.elapsedRealtime()
 
@@ -423,15 +431,12 @@ class RecorderService : Service(), LocationListener {
 
         val previous = lastLocation
         if (previous != null && location.time - previous.time in 1..MAX_DISTANCE_GAP_MS) {
-            val accurateEnough = !location.hasAccuracy() || location.accuracy <= MAX_DISTANCE_ACCURACY_M
-            if (accurateEnough) {
-                ride.distanceM += haversine(
-                    previous.latitude,
-                    previous.longitude,
-                    location.latitude,
-                    location.longitude,
-                )
-            }
+            ride.distanceM += haversine(
+                previous.latitude,
+                previous.longitude,
+                location.latitude,
+                location.longitude,
+            )
         }
         lastLocation = location
 
@@ -439,7 +444,6 @@ class RecorderService : Service(), LocationListener {
         RecorderRuntime.distanceM = ride.distanceM
         RecorderRuntime.movingMs = accumulatedMovingMs + (now - segmentStartedAt).coerceAtLeast(0)
         RecorderRuntime.speedMs = if (location.hasSpeed()) location.speed.toDouble() else null
-        RecorderRuntime.accuracyM = if (location.hasAccuracy()) location.accuracy.toDouble() else null
         RecorderRuntime.error = null
 
         if (now - lastNotificationAt >= NOTIFICATION_UPDATE_MS) {
@@ -595,7 +599,6 @@ class RecorderService : Service(), LocationListener {
         private const val NOTIFICATION_ID = 41
         private const val SAMPLE_INTERVAL_MS = 1_000L
         private const val MAX_DISTANCE_GAP_MS = 30_000L
-        private const val MAX_DISTANCE_ACCURACY_M = 70f
         private const val NOTIFICATION_UPDATE_MS = 5_000L
 
         private const val STATE_IDLE = "idle"

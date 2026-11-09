@@ -47,6 +47,8 @@ kotlin {
 dependencies {
     // Official AndroidX library: uploads queued rides while the app is not open.
     implementation("androidx.work:work-runtime-ktx:2.10.1")
+    // Official Kotlin test library, for the recorder's pure helpers.
+    testImplementation(kotlin("test"))
 }
 
 flutter {
