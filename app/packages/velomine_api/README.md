@@ -65,11 +65,13 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountsApi* | [**approveUser**](doc//AccountsApi.md#approveuser) | **POST** /api/v1/accounts/users/{id}/approve | 
+*AccountsApi* | [**changePassword**](doc//AccountsApi.md#changepassword) | **PUT** /api/v1/accounts/me/password | 
 *AccountsApi* | [**createExportLink**](doc//AccountsApi.md#createexportlink) | **POST** /api/v1/accounts/me/export-link | 
 *AccountsApi* | [**deleteMyAccount**](doc//AccountsApi.md#deletemyaccount) | **POST** /api/v1/accounts/me/delete | 
 *AccountsApi* | [**downloadExport**](doc//AccountsApi.md#downloadexport) | **GET** /api/v1/accounts/export/{token} | 
 *AccountsApi* | [**exchangeSsoCode**](doc//AccountsApi.md#exchangessocode) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
+*AccountsApi* | [**forgotPassword**](doc//AccountsApi.md#forgotpassword) | **POST** /api/v1/accounts/password/forgot | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
 *AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
@@ -78,6 +80,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**logout**](doc//AccountsApi.md#logout) | **POST** /api/v1/accounts/logout | 
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
+*AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
@@ -85,6 +88,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**clubsListAdminClubs**](doc//AdminApi.md#clubslistadminclubs) | **GET** /api/v1/admin/clubs | 
 *AdminApi* | [**clubsSetClubOwner**](doc//AdminApi.md#clubssetclubowner) | **PUT** /api/v1/admin/clubs/{id}/owner | 
 *AdminApi* | [**clubsUpdateClub**](doc//AdminApi.md#clubsupdateclub) | **PUT** /api/v1/admin/clubs/{id} | 
+*AdminApi* | [**createPasswordResetLink**](doc//AdminApi.md#createpasswordresetlink) | **POST** /api/v1/admin/users/{id}/password-reset-link | 
 *AdminApi* | [**deleteUser**](doc//AdminApi.md#deleteuser) | **DELETE** /api/v1/admin/users/{id} | 
 *AdminApi* | [**getOverview**](doc//AdminApi.md#getoverview) | **GET** /api/v1/admin/overview | 
 *AdminApi* | [**getSettings**](doc//AdminApi.md#getsettings) | **GET** /api/v1/admin/settings | 
@@ -112,10 +116,18 @@ Class | Method | HTTP request | Description
 *BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
+*ClubApi* | [**approveJoinRequest**](doc//ClubApi.md#approvejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/approve | 
+*ClubApi* | [**cancelJoinRequest**](doc//ClubApi.md#canceljoinrequest) | **DELETE** /api/v1/club/join-request | 
+*ClubApi* | [**declineJoinRequest**](doc//ClubApi.md#declinejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/decline | 
 *ClubApi* | [**getMyClub**](doc//ClubApi.md#getmyclub) | **GET** /api/v1/club | 
+*ClubApi* | [**getMyJoinRequest**](doc//ClubApi.md#getmyjoinrequest) | **GET** /api/v1/club/join-request | 
 *ClubApi* | [**joinClub**](doc//ClubApi.md#joinclub) | **POST** /api/v1/club/join | 
 *ClubApi* | [**leaveClub**](doc//ClubApi.md#leaveclub) | **POST** /api/v1/club/leave | 
+*ClubApi* | [**listJoinRequests**](doc//ClubApi.md#listjoinrequests) | **GET** /api/v1/club/join-requests | 
+*ClubApi* | [**nearbyClubs**](doc//ClubApi.md#nearbyclubs) | **POST** /api/v1/club/nearby | 
+*ClubApi* | [**requestToJoin**](doc//ClubApi.md#requesttojoin) | **POST** /api/v1/club/join-request | 
 *ClubApi* | [**rotateJoinCode**](doc//ClubApi.md#rotatejoincode) | **POST** /api/v1/club/join-code | 
+*ClubApi* | [**setClubLocation**](doc//ClubApi.md#setclublocation) | **PUT** /api/v1/club/location | 
 *ClubApi* | [**setClubMemberRole**](doc//ClubApi.md#setclubmemberrole) | **PUT** /api/v1/club/members/{userId}/role | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
 *ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
@@ -157,6 +169,7 @@ Class | Method | HTTP request | Description
  - [AdminUserSummary](doc//AdminUserSummary.md)
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
+ - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
  - [CheckInResponse](doc//CheckInResponse.md)
  - [CheckInsResponse](doc//CheckInsResponse.md)
  - [ClubMemberResponse](doc//ClubMemberResponse.md)
@@ -174,10 +187,13 @@ Class | Method | HTTP request | Description
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
+ - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
  - [FtpEstimate](doc//FtpEstimate.md)
  - [GoalResponse](doc//GoalResponse.md)
  - [JoinClubRequest](doc//JoinClubRequest.md)
  - [JoinCodeResponse](doc//JoinCodeResponse.md)
+ - [JoinRequestResponse](doc//JoinRequestResponse.md)
+ - [JoinRequestsResponse](doc//JoinRequestsResponse.md)
  - [LapResponse](doc//LapResponse.md)
  - [ListAdminUsersResponse](doc//ListAdminUsersResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
@@ -188,8 +204,14 @@ Class | Method | HTTP request | Description
  - [LoginRequest](doc//LoginRequest.md)
  - [MeResponse](doc//MeResponse.md)
  - [MyClubResponse](doc//MyClubResponse.md)
+ - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
+ - [NearbyClubResponse](doc//NearbyClubResponse.md)
+ - [NearbyClubsRequest](doc//NearbyClubsRequest.md)
+ - [NearbyClubsResponse](doc//NearbyClubsResponse.md)
  - [NotificationResponse](doc//NotificationResponse.md)
  - [OverviewResponse](doc//OverviewResponse.md)
+ - [PasswordResetLinkResponse](doc//PasswordResetLinkResponse.md)
+ - [PendingJoinRequestResponse](doc//PendingJoinRequestResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
  - [PowerCurvePoint](doc//PowerCurvePoint.md)
  - [PowerCurveResponse](doc//PowerCurveResponse.md)
@@ -200,6 +222,8 @@ Class | Method | HTTP request | Description
  - [RefreshRequest](doc//RefreshRequest.md)
  - [RegisterRequest](doc//RegisterRequest.md)
  - [RegisterResponse](doc//RegisterResponse.md)
+ - [RequestToJoinRequest](doc//RequestToJoinRequest.md)
+ - [ResetPasswordRequest](doc//ResetPasswordRequest.md)
  - [RideFeelResponse](doc//RideFeelResponse.md)
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
@@ -207,6 +231,7 @@ Class | Method | HTTP request | Description
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
+ - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)

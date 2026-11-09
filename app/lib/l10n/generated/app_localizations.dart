@@ -806,6 +806,12 @@ abstract class AppLocalizations {
   /// **'Join'**
   String get joinAction;
 
+  /// No description provided for @joinSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without a club'**
+  String get joinSkip;
+
   /// No description provided for @joinInvalid.
   ///
   /// In en, this message translates to:
@@ -827,7 +833,7 @@ abstract class AppLocalizations {
   /// No description provided for @clubNoneBody.
   ///
   /// In en, this message translates to:
-  /// **'Join with the code from your club\'s owner.'**
+  /// **'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.'**
   String get clubNoneBody;
 
   /// No description provided for @clubInactive.
@@ -1843,6 +1849,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 
   /// No description provided for @save.
   ///
@@ -3919,6 +3931,588 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Counts as assisted and prefers your e-bike.'**
   String get recorderEbikeHelp;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the email address of your account. If it can be reset, we will send a link.'**
+  String get forgotPasswordHelp;
+
+  /// No description provided for @forgotPasswordSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for that address, we sent a link to reset the password. Check your spam folder too.'**
+  String get forgotPasswordSent;
+
+  /// No description provided for @forgotPasswordUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server is not set up to send email. Ask your club admin to reset your password.'**
+  String get forgotPasswordUnavailable;
+
+  /// No description provided for @forgotPasswordTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in a few minutes.'**
+  String get forgotPasswordTooMany;
+
+  /// No description provided for @forgotPasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the reset. Try again.'**
+  String get forgotPasswordFailed;
+
+  /// No description provided for @errorEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address.'**
+  String get errorEnterEmail;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get sendResetLink;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password of at least 10 characters.'**
+  String get resetPasswordHelp;
+
+  /// No description provided for @setNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set new password'**
+  String get setNewPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The two passwords are not the same.'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 10 characters.'**
+  String get passwordTooShort;
+
+  /// No description provided for @resetPasswordInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is not valid or has expired. Ask for a new one.'**
+  String get resetPasswordInvalid;
+
+  /// No description provided for @resetPasswordDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password is changed. Sign in with the new one.'**
+  String get resetPasswordDone;
+
+  /// No description provided for @goToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to sign in'**
+  String get goToSignIn;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePassword;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPassword;
+
+  /// No description provided for @passwordWrongCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The current password is not right.'**
+  String get passwordWrongCurrent;
+
+  /// No description provided for @passwordNoPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'This account signs in with single sign-on.'**
+  String get passwordNoPassword;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password is changed. Sign in again on this device.'**
+  String get passwordChanged;
+
+  /// No description provided for @passwordChangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the password. Try again.'**
+  String get passwordChangeFailed;
+
+  /// No description provided for @actionChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'change your password'**
+  String get actionChangePassword;
+
+  /// No description provided for @actionResetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'reset this password'**
+  String get actionResetPassword;
+
+  /// No description provided for @resetPasswordLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get resetPasswordLink;
+
+  /// No description provided for @resetPasswordLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset link for {name}'**
+  String resetPasswordLinkTitle(String name);
+
+  /// No description provided for @resetPasswordLinkHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this link to the member. It works once and expires in 30 minutes.'**
+  String get resetPasswordLinkHelp;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get linkCopied;
+
+  /// No description provided for @resetPasswordLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not make a reset link. Try again.'**
+  String get resetPasswordLinkFailed;
+
+  /// No description provided for @actionLoadNearbyClubs.
+  ///
+  /// In en, this message translates to:
+  /// **'find clubs near you'**
+  String get actionLoadNearbyClubs;
+
+  /// No description provided for @actionRequestJoinClub.
+  ///
+  /// In en, this message translates to:
+  /// **'ask to join the club'**
+  String get actionRequestJoinClub;
+
+  /// No description provided for @actionCancelJoinRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'cancel your request'**
+  String get actionCancelJoinRequest;
+
+  /// No description provided for @actionLoadJoinRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'load the join requests'**
+  String get actionLoadJoinRequests;
+
+  /// No description provided for @actionApproveJoinRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'approve the request'**
+  String get actionApproveJoinRequest;
+
+  /// No description provided for @actionDeclineJoinRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'decline the request'**
+  String get actionDeclineJoinRequest;
+
+  /// No description provided for @clubSeeNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'See clubs near you'**
+  String get clubSeeNearby;
+
+  /// No description provided for @clubLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Club location'**
+  String get clubLocation;
+
+  /// No description provided for @clubLocationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the club meets. Only used to show the club to riders nearby.'**
+  String get clubLocationHelp;
+
+  /// No description provided for @clubLocationNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No location yet'**
+  String get clubLocationNone;
+
+  /// No description provided for @clubLocationSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose on the map'**
+  String get clubLocationSet;
+
+  /// No description provided for @clubLocationChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change location'**
+  String get clubLocationChange;
+
+  /// No description provided for @clubDiscoverable.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this club to riders nearby'**
+  String get clubDiscoverable;
+
+  /// No description provided for @clubDiscoverableHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Riders without a club can find it by distance and ask to join.'**
+  String get clubDiscoverableHelp;
+
+  /// No description provided for @locationPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a point'**
+  String get locationPickerTitle;
+
+  /// No description provided for @locationPickerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the map until the pin is on the place.'**
+  String get locationPickerHelp;
+
+  /// No description provided for @locationPickerUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this point'**
+  String get locationPickerUse;
+
+  /// No description provided for @locationPickerCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my current location'**
+  String get locationPickerCurrent;
+
+  /// No description provided for @locationCurrentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your device did not share its position.'**
+  String get locationCurrentUnavailable;
+
+  /// No description provided for @locationCoordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude, longitude'**
+  String get locationCoordinates;
+
+  /// No description provided for @locationLatitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get locationLatitude;
+
+  /// No description provided for @locationLongitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get locationLongitude;
+
+  /// No description provided for @locationCoordinatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example 45.4642, 9.1900'**
+  String get locationCoordinatesHint;
+
+  /// No description provided for @locationCoordinatesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use two numbers like 45.4642, 9.1900.'**
+  String get locationCoordinatesInvalid;
+
+  /// No description provided for @locationNoMap.
+  ///
+  /// In en, this message translates to:
+  /// **'This server has no map background, so enter the coordinates.'**
+  String get locationNoMap;
+
+  /// No description provided for @locationMapFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the map to the place first.'**
+  String get locationMapFirst;
+
+  /// No description provided for @nearbyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs near you'**
+  String get nearbyTitle;
+
+  /// No description provided for @nearbyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride at your own pace. Join a club whenever you want; you can leave any time and your rides stay yours.'**
+  String get nearbyIntro;
+
+  /// No description provided for @nearbyLocating.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your position…'**
+  String get nearbyLocating;
+
+  /// No description provided for @nearbyLocationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your position is used only to sort clubs by distance and is not kept on the server.'**
+  String get nearbyLocationHelp;
+
+  /// No description provided for @nearbyUseDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my position'**
+  String get nearbyUseDevice;
+
+  /// No description provided for @nearbySetHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a location'**
+  String get nearbySetHome;
+
+  /// No description provided for @nearbyHomeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Using your saved location.'**
+  String get nearbyHomeUsed;
+
+  /// No description provided for @nearbyRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Within {km} km'**
+  String nearbyRadius(int km);
+
+  /// No description provided for @nearbyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No clubs within {km} km. Ride on your own for now, or look farther.'**
+  String nearbyEmpty(int km);
+
+  /// No description provided for @nearbyDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'~{km} km'**
+  String nearbyDistance(int km);
+
+  /// No description provided for @nearbyAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask to join'**
+  String get nearbyAsk;
+
+  /// No description provided for @nearbyRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get nearbyRequested;
+
+  /// No description provided for @nearbyCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel request'**
+  String get nearbyCancel;
+
+  /// No description provided for @nearbyRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask to join {club}'**
+  String nearbyRequestTitle(String club);
+
+  /// No description provided for @nearbyRequestNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A word for the owner (optional)'**
+  String get nearbyRequestNote;
+
+  /// No description provided for @nearbyRequestSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get nearbyRequestSend;
+
+  /// No description provided for @nearbyRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. The owner decides when they can.'**
+  String get nearbyRequestSent;
+
+  /// No description provided for @nearbyPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {club}'**
+  String nearbyPendingTitle(String club);
+
+  /// No description provided for @nearbyPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is with the club\'s owner.'**
+  String get nearbyPendingBody;
+
+  /// No description provided for @nearbyWiden.
+  ///
+  /// In en, this message translates to:
+  /// **'Look farther'**
+  String get nearbyWiden;
+
+  /// No description provided for @nearbyReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw your request to {club}?'**
+  String nearbyReplaceTitle(String club);
+
+  /// No description provided for @nearbyReplaceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can have one open request. Asking another club withdraws this one.'**
+  String get nearbyReplaceBody;
+
+  /// No description provided for @soloHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride at your own pace'**
+  String get soloHintTitle;
+
+  /// No description provided for @soloHintBody.
+  ///
+  /// In en, this message translates to:
+  /// **'There are clubs near you when you want one.'**
+  String get soloHintBody;
+
+  /// No description provided for @soloHintSee.
+  ///
+  /// In en, this message translates to:
+  /// **'See clubs'**
+  String get soloHintSee;
+
+  /// No description provided for @soloHintDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get soloHintDismiss;
+
+  /// No description provided for @joinRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join requests'**
+  String get joinRequestsTitle;
+
+  /// No description provided for @joinRequestsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No one is waiting to join.'**
+  String get joinRequestsEmpty;
+
+  /// No description provided for @joinRequestApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get joinRequestApprove;
+
+  /// No description provided for @joinRequestDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get joinRequestDecline;
+
+  /// No description provided for @joinRequestApproveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let {name} in?'**
+  String joinRequestApproveTitle(String name);
+
+  /// No description provided for @joinRequestApproveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They become a rider. Your rides stay yours; sharing is still their choice.'**
+  String get joinRequestApproveBody;
+
+  /// No description provided for @joinRequestDeclineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline {name}?'**
+  String joinRequestDeclineTitle(String name);
+
+  /// No description provided for @joinRequestDeclineBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They are told, without a reason.'**
+  String get joinRequestDeclineBody;
+
+  /// No description provided for @notificationClubJoinRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} asked to join your club.'**
+  String notificationClubJoinRequest(String name);
+
+  /// No description provided for @notificationClubJoinApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'{club} accepted you. Welcome!'**
+  String notificationClubJoinApproved(String club);
+
+  /// No description provided for @notificationClubJoinDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'{club} declined your request.'**
+  String notificationClubJoinDeclined(String club);
 }
 
 class _AppLocalizationsDelegate

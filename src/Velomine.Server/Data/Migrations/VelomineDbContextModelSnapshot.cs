@@ -567,11 +567,23 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsDiscoverable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_discoverable");
+
                     b.Property<string>("JoinCode")
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("join_code");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -593,6 +605,52 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("clubs", "clubs", t =>
                         {
                             t.HasCheckConstraint("ck_clubs_join_code", "char_length(join_code) >= 6");
+
+                            t.HasCheckConstraint("ck_clubs_latitude", "latitude IS NULL OR (latitude BETWEEN -90 AND 90)");
+
+                            t.HasCheckConstraint("ck_clubs_location", "(latitude IS NULL) = (longitude IS NULL)");
+
+                            t.HasCheckConstraint("ck_clubs_longitude", "longitude IS NULL OR (longitude BETWEEN -180 AND 180)");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubJoinRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_join_requests");
+
+                    b.HasIndex("ClubId")
+                        .HasDatabaseName("ix_join_requests_club_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_join_requests_user_id");
+
+                    b.ToTable("join_requests", "clubs", t =>
+                        {
+                            t.HasCheckConstraint("ck_club_join_requests_note", "note IS NULL OR char_length(note) <= 300");
                         });
                 });
 
@@ -1309,6 +1367,27 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_bike_components_bikes_bike_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubJoinRequest", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_join_requests_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_join_requests_users_user_id");
+
+                    b.Navigation("Club");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubMembership", b =>

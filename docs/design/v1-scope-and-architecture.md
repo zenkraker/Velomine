@@ -11,7 +11,7 @@ Velomine is a cycling-only training platform for clubs and teams, on-premise or 
 | Sports | Cycling only | Road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific. |
 | Users | Clubs and teams | Many accounts per server, admin role, invites with admin approval. SSO (OIDC) is built in and on by default from v1, alongside local accounts. |
 | Social | Private + share links | Rides private by default. One ride can be shared by link. Privacy zones hide home and other saved places, and optionally the start and end of every ride. No feed or followers. |
-| Clubs and coaches | Yes | Clubs include coaches. A club has members and coaches, but everything a member records stays private. The member decides what to share and with whom: the whole club or only a coach; rides, analytics or wellbeing. Every share can be revoked. |
+| Clubs and coaches | Optional | A rider can use Velomine on their own; a club is opt-in. Clubs include coaches, but everything a member records stays private. The member decides what to share and with whom: the whole club or only a coach; rides, analytics or wellbeing. Every share can be revoked. An owner may open a club to nearby discovery; riders still ask and the owner approves. |
 | Health | Wellness + session feel, cycle tracking | Daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride, menstrual phase as optional and highly protected context. |
 | Body data | Weight in the profile (assumption) | Not chosen as a health area, but W/kg, VO2max estimate and calories need it. Kept as a single profile field, not a tracked series. |
 | Name and brand | Velomine, direction D | Contour × Night Ride: Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
@@ -21,7 +21,7 @@ Velomine is a cycling-only training platform for clubs and teams, on-premise or 
 
 ## What v1 includes
 
-Everything below is cycling-first, and every feature is shaped for clubs and teams.
+Everything below is cycling-first, and every feature is shaped for clubs and teams. A rider without a club is a supported starting point, not a half-configured account: the same personal tools, with the club as an opt-in step.
 
 | Area | v1 |
 | --- | --- |
@@ -43,6 +43,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | Notifications | Component worn out, coach request, import failed. |
 | Auth | Local login, MFA, SSO (OIDC), sign-up approval, password reset, API keys and sessions, plus passkeys. |
 | Roles | Admin, member and coach. |
+| Solo riders and discovery | Any account works without a club. A club owner may set the club's location and open it to discovery; riders without a club see nearby clubs (device position, or a point saved on the device), ask one at a time, and the owner approves or declines. |
 | Profile export and import | Full export, including original files. |
 | Server | Server settings, custom map tiles and email. |
 | Languages | Multi-language UI, starting with English and Italian. |
@@ -64,7 +65,7 @@ These are Velomine's differentiators. Each comes from a decision above.
 | Readiness view | Combines training load, wellness check-in and recent RPE into ride hard / ride easy / rest | The point of collecting wellbeing data. |
 | Wellness check-in | Daily 1–5 scores in about 20 seconds; RPE and notes after each ride | Chosen health area. |
 | Cycle tracking | Optional menstrual phase as context on charts; encrypted, never in share links, coach sees it only if granted separately | Chosen health area; most sensitive data on the server. |
-| Clubs and coaches | Members join a club; the club has coaches. Nothing is visible by default: the member opts in per data type (rides, analytics, wellbeing, cycle tracking) and per audience (club or a coach). Revocable; every view logged | Clubs and coaches together, private by default. |
+| Clubs and coaches | A club has coaches and riders, and a rider may use Velomine without one. Nothing is visible by default: the member opts in per data type (rides, analytics, wellbeing, cycle tracking) and per audience (club or a coach). Revocable; every view logged. Owners may open a club to nearby discovery; joining is still a request the owner answers | Clubs and coaches together, private by default, solo riding included. |
 | Privacy zones | Like Strava's map visibility: hide up to 1 mile around saved addresses (home, work), and optionally hide the start and end of every ride wherever it is. Applied to share links and to what clubs and coaches see; the owner always sees the full track | Keeps home and other saved places out of every shared view. |
 | Share links | One link per ride, optional expiry, respects privacy switches | Replaces public pages and the feed. |
 | Component maintenance | Wear by km, hours or months, with notifications | Warns before a part fails, not after. |

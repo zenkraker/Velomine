@@ -101,6 +101,9 @@ class _NotificationTile extends StatelessWidget {
     'ride_duplicate' => Icons.content_copy,
     'signup_waiting' => Icons.person_add_alt,
     'part_soon' || 'part_worn' => Icons.build_outlined,
+    'club_join_request' => Icons.person_add_alt,
+    'club_join_approved' => Icons.check_circle_outline,
+    'club_join_declined' => Icons.info_outline,
     _ => Icons.notifications_none,
   };
 

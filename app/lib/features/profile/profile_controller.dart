@@ -22,6 +22,7 @@ class ProfileController extends ChangeNotifier {
   bool exporting = false;
   bool loading = true;
   bool saving = false;
+  bool changingPassword = false;
   Failure? error;
 
   Future<void> load() async {
@@ -99,5 +100,26 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
     if (error == null) onSaved?.call();
     return error == null;
+  }
+
+  /// Changes the password. Returns null on success, or the failure for the dialog to word.
+  Future<Failure?> changePassword(String current, String newPassword) async {
+    changingPassword = true;
+    error = null;
+    notifyListeners();
+    final failure = await guardCall(
+      () => api.changePassword(
+        ChangePasswordRequest(
+          currentPassword: current,
+          newPassword: newPassword,
+        ),
+      ),
+      onUnauthorized,
+      doing: FailureAction.changePassword,
+    );
+    changingPassword = false;
+    error = failure;
+    notifyListeners();
+    return failure;
   }
 }

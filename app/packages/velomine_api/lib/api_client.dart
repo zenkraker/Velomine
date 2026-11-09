@@ -193,6 +193,8 @@ class ApiClient {
           return BikeDetailResponse.fromJson(value);
         case 'BikeResponse':
           return BikeResponse.fromJson(value);
+        case 'ChangePasswordRequest':
+          return ChangePasswordRequest.fromJson(value);
         case 'CheckInResponse':
           return CheckInResponse.fromJson(value);
         case 'CheckInsResponse':
@@ -227,6 +229,8 @@ class ApiClient {
           return ExchangeSsoCodeRequest.fromJson(value);
         case 'ExportLinkResponse':
           return ExportLinkResponse.fromJson(value);
+        case 'ForgotPasswordRequest':
+          return ForgotPasswordRequest.fromJson(value);
         case 'FtpEstimate':
           return FtpEstimate.fromJson(value);
         case 'GoalResponse':
@@ -235,6 +239,10 @@ class ApiClient {
           return JoinClubRequest.fromJson(value);
         case 'JoinCodeResponse':
           return JoinCodeResponse.fromJson(value);
+        case 'JoinRequestResponse':
+          return JoinRequestResponse.fromJson(value);
+        case 'JoinRequestsResponse':
+          return JoinRequestsResponse.fromJson(value);
         case 'LapResponse':
           return LapResponse.fromJson(value);
         case 'ListAdminUsersResponse':
@@ -255,10 +263,22 @@ class ApiClient {
           return MeResponse.fromJson(value);
         case 'MyClubResponse':
           return MyClubResponse.fromJson(value);
+        case 'MyJoinRequestResponse':
+          return MyJoinRequestResponse.fromJson(value);
+        case 'NearbyClubResponse':
+          return NearbyClubResponse.fromJson(value);
+        case 'NearbyClubsRequest':
+          return NearbyClubsRequest.fromJson(value);
+        case 'NearbyClubsResponse':
+          return NearbyClubsResponse.fromJson(value);
         case 'NotificationResponse':
           return NotificationResponse.fromJson(value);
         case 'OverviewResponse':
           return OverviewResponse.fromJson(value);
+        case 'PasswordResetLinkResponse':
+          return PasswordResetLinkResponse.fromJson(value);
+        case 'PendingJoinRequestResponse':
+          return PendingJoinRequestResponse.fromJson(value);
         case 'PeriodTotals':
           return PeriodTotals.fromJson(value);
         case 'PowerCurvePoint':
@@ -279,6 +299,10 @@ class ApiClient {
           return RegisterRequest.fromJson(value);
         case 'RegisterResponse':
           return RegisterResponse.fromJson(value);
+        case 'RequestToJoinRequest':
+          return RequestToJoinRequest.fromJson(value);
+        case 'ResetPasswordRequest':
+          return ResetPasswordRequest.fromJson(value);
         case 'RideFeelResponse':
           return RideFeelResponse.fromJson(value);
         case 'RideLapsResponse':
@@ -293,6 +317,8 @@ class ApiClient {
           return SaveRideFeelRequest.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
+        case 'SetClubLocationRequest':
+          return SetClubLocationRequest.fromJson(value);
         case 'SetClubMemberRoleRequest':
           return SetClubMemberRoleRequest.fromJson(value);
         case 'SetClubOwnerRequest':

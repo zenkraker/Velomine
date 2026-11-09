@@ -148,6 +148,14 @@ class _SignInScreenState extends State<SignInScreen> {
                       decoration: InputDecoration(labelText: l10n.password),
                       onSubmitted: (_) => _signIn(),
                     ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        key: const Key('forgot-password'),
+                        onPressed: () => context.go('/forgot-password'),
+                        child: Text(l10n.forgotPassword),
+                      ),
+                    ),
                     if (message != null) ...[
                       const SizedBox(height: 12),
                       Text(

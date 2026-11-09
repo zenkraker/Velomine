@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
@@ -6,11 +7,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
+import 'package:velomine/core/home_location.dart';
 import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/language_choice.dart';
+import 'package:velomine/core/location_service.dart';
 import 'package:velomine/core/pkce.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/session_auth.dart';
+import 'package:velomine/core/solo_hint.dart';
 import 'package:velomine/core/theme_choice.dart';
 import 'package:velomine/core/token_store.dart';
 import 'package:velomine_api/api.dart';
@@ -27,7 +31,7 @@ class FakeAccount {
 
   final String id;
   final String email;
-  final String password;
+  String password;
   final String name;
   bool approved;
   bool locked = false;
@@ -76,6 +80,12 @@ class FakeServer {
   String clubName = 'Test Club';
   String joinCode = 'JOIN1234';
   bool clubActive = true;
+  double? clubLatitude;
+  double? clubLongitude;
+  bool clubDiscoverable = false;
+
+  /// Pending asks to join, with the same shape the real server sends.
+  final joinRequests = <Map<String, Object?>>[];
 
   /// What the (single) fake club member shares, and who looked.
   final sharingChoices = <String, String>{
@@ -105,6 +115,12 @@ class FakeServer {
 
   /// How many export download links were asked for.
   int exportLinks = 0;
+
+  /// Addresses that asked for a password reset link.
+  final passwordResetEmails = <String>[];
+
+  /// Tokens the fake accepts for a reset; any other token is refused.
+  final passwordResetTokens = <String>{'good'};
 
   /// Simulates a server that cannot be reached: every request fails before it is handled.
   bool unreachable = false;
@@ -296,8 +312,40 @@ class FakeServer {
       );
       return json({'id': account.id, 'isApproved': account.approved}, 201);
     }
+    if (path == '/api/v1/accounts/password/forgot') {
+      if (!smtpConfigured) {
+        return http.Response('{"detail":"email not configured"}', 503);
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      passwordResetEmails.add(body['email']! as String);
+      return http.Response('', 202);
+    }
+    if (path == '/api/v1/accounts/password/reset') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final account = accounts[body['email']];
+      final token = body['token'] as String?;
+      if (account == null ||
+          token == null ||
+          !passwordResetTokens.remove(token)) {
+        return http.Response('{"detail":"invalid token"}', 400);
+      }
+      account.password = body['newPassword']! as String;
+      return http.Response('', 204);
+    }
 
     if (caller == null) return http.Response('', 401);
+
+    if (path == '/api/v1/accounts/me/password' && request.method == 'PUT') {
+      if (caller.password.isEmpty) {
+        return http.Response('{"detail":"no password"}', 409);
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      if (body['currentPassword'] != caller.password) {
+        return http.Response('{"detail":"wrong password"}', 400);
+      }
+      caller.password = body['newPassword']! as String;
+      return http.Response('', 204);
+    }
 
     if (path == '/api/v1/accounts/me') {
       return json({
@@ -684,6 +732,9 @@ extension on FakeServer {
       'name': clubName,
       'joinCode': joinCode,
       'isActive': clubActive,
+      'latitude': clubLatitude,
+      'longitude': clubLongitude,
+      'isDiscoverable': clubDiscoverable,
       'createdAt': '2026-11-02T08:00:00Z',
       'memberCount': clubRoles.length,
       'ownerId': owner?.id,
@@ -725,6 +776,9 @@ extension on FakeServer {
       'isActive': clubActive,
       'myRole': role,
       'joinCode': role == 'owner' ? joinCode : null,
+      'latitude': clubLatitude,
+      'longitude': clubLongitude,
+      'isDiscoverable': clubDiscoverable,
       'members': [
         for (final a in members)
           {
@@ -795,7 +849,132 @@ extension on FakeServer {
         'joinedAt': '2026-11-02T08:00:00Z',
       });
     }
+
+    if (path == '/api/v1/club/location' && request.method == 'PUT') {
+      if (clubRoles[caller.email] != 'owner') return http.Response('', 403);
+      clubLatitude = (body['latitude'] as num?)?.toDouble();
+      clubLongitude = (body['longitude'] as num?)?.toDouble();
+      clubDiscoverable = body['isDiscoverable'] == true;
+      return json({'club': _myClubJson(caller)});
+    }
+
+    if (path == '/api/v1/club/nearby' && request.method == 'POST') {
+      if (clubRoles.containsKey(caller.email)) {
+        return http.Response('{"detail":"already in a club"}', 409);
+      }
+      if (!clubActive ||
+          !clubDiscoverable ||
+          clubLatitude == null ||
+          clubLongitude == null) {
+        return json({'clubs': []});
+      }
+      final latitude = (body['latitude']! as num).toDouble();
+      final longitude = (body['longitude']! as num).toDouble();
+      final radius = (body['radiusKm']! as num).toInt();
+      final distance = _distanceKm(
+        latitude,
+        longitude,
+        clubLatitude!,
+        clubLongitude!,
+      );
+      if (distance > radius) return json({'clubs': []});
+      return json({
+        'clubs': [
+          {
+            'id': 'club-1',
+            'name': clubName,
+            'memberCount': clubRoles.length,
+            'distanceKm': double.parse(distance.toStringAsFixed(1)),
+          },
+        ],
+      });
+    }
+
+    if (path == '/api/v1/club/join-request' && request.method == 'GET') {
+      return json({'request': _myJoinRequest(caller)});
+    }
+    if (path == '/api/v1/club/join-request' && request.method == 'POST') {
+      if (clubRoles.containsKey(caller.email)) {
+        return http.Response('{"detail":"already in a club"}', 409);
+      }
+      if (!clubActive || !clubDiscoverable) return http.Response('', 404);
+      joinRequests.removeWhere((r) => r['userId'] == caller.id);
+      joinRequests.add({
+        'id': 'join-${joinRequests.length + 1}',
+        'clubId': 'club-1',
+        'userId': caller.id,
+        'displayName': caller.name,
+        'note': body['note'],
+        'createdAt': '2026-11-09T10:00:00Z',
+      });
+      return json({'request': _myJoinRequest(caller)});
+    }
+    if (path == '/api/v1/club/join-request' && request.method == 'DELETE') {
+      joinRequests.removeWhere((r) => r['userId'] == caller.id);
+      return http.Response('', 204);
+    }
+
+    if (path == '/api/v1/club/join-requests' && request.method == 'GET') {
+      if (clubRoles[caller.email] != 'owner') return http.Response('', 403);
+      return json({
+        'requests': [
+          for (final r in joinRequests)
+            {
+              'id': r['id'],
+              'userId': r['userId'],
+              'displayName': r['displayName'],
+              'note': r['note'],
+              'createdAt': r['createdAt'],
+            },
+        ],
+      });
+    }
+
+    final decision = RegExp(
+      r'^/api/v1/club/join-requests/([^/]+)/(approve|decline)$',
+    ).firstMatch(path);
+    if (decision != null) {
+      if (clubRoles[caller.email] != 'owner') return http.Response('', 403);
+      final index = joinRequests.indexWhere(
+        (r) => r['id'] == decision.group(1),
+      );
+      if (index < 0) return http.Response('', 404);
+      final ask = joinRequests.removeAt(index);
+      if (decision.group(2) == 'approve') {
+        final user = accounts.values
+            .where((a) => a.id == ask['userId'])
+            .firstOrNull;
+        if (user != null) clubRoles[user.email] = 'member';
+      }
+      return http.Response('', 204);
+    }
+
     return http.Response('', 404);
+  }
+
+  Map<String, Object?>? _myJoinRequest(FakeAccount me) {
+    final ask = joinRequests.where((r) => r['userId'] == me.id).firstOrNull;
+    if (ask == null) return null;
+    return {
+      'id': ask['id'],
+      'clubId': ask['clubId'],
+      'clubName': clubName,
+      'note': ask['note'],
+      'createdAt': ask['createdAt'],
+    };
+  }
+
+  static double _distanceKm(
+    double latitude,
+    double longitude,
+    double otherLatitude,
+    double otherLongitude,
+  ) {
+    const earthKm = 6371.0;
+    final dLat = (otherLatitude - latitude) * math.pi / 180;
+    final dLon = (otherLongitude - longitude) * math.pi / 180;
+    final x = dLon * math.cos((latitude + otherLatitude) / 2 * math.pi / 180);
+    return earthKm * math.sqrt(dLat * dLat + x * x);
   }
 
   http.Response _wellbeing(
@@ -1116,6 +1295,20 @@ extension on FakeServer {
         },
       });
     }
+    final resetLink = RegExp(
+      r'^/api/v1/admin/users/([^/]+)/password-reset-link$',
+    ).firstMatch(path);
+    if (resetLink != null) {
+      final found = accounts.values.where((a) => a.id == resetLink.group(1));
+      if (found.isEmpty) return http.Response('', 404);
+      final target = found.first;
+      if (target.password.isEmpty) return http.Response('', 409);
+      passwordResetTokens.add('good');
+      return json({
+        'link': 'http://server/reset-password#token=good&email=${target.email}',
+        'expiresAt': '2026-11-09T12:30:00Z',
+      });
+    }
     final one = RegExp(
       r'^/api/v1/admin/users/([^/]+)(?:/(roles|lock|unlock))?$',
     ).firstMatch(path);
@@ -1404,11 +1597,18 @@ Future<void> startApp(
   LanguageChoice? languageChoice,
   LinkOpener? openLink,
   Future<void> Function()? onChangeServer,
+  LocationService? locationService,
+  HomeLocation? homeLocation,
+  SoloHint? soloHint,
 }) async {
   await tester.runAsync(session.restore);
   final language =
       languageChoice ?? LanguageChoice(store: MemoryLanguageStore());
   await language.load();
+  final home = homeLocation ?? HomeLocation(store: MemoryHomeLocationStore());
+  await home.load(session.me?.id ?? 'test');
+  final solo = soloHint ?? SoloHint(store: MemorySoloHintStore());
+  await solo.load();
   await tester.pumpWidget(
     VelomineApp(
       session: session,
@@ -1418,10 +1618,46 @@ Future<void> startApp(
       startSso: startSso ?? () async {},
       openLink: openLink ?? (_) async {},
       onChangeServer: onChangeServer,
+      locationService: locationService ?? FakeLocationService(),
+      homeLocation: home,
+      soloHint: solo,
       uploadPollInterval: const Duration(milliseconds: 10),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class FakeLocationService implements LocationService {
+  FakeLocationService([this.position]);
+
+  GeoPoint? position;
+
+  @override
+  Future<GeoPoint?> current() async => position;
+}
+
+class MemoryHomeLocationStore implements HomeLocationStore {
+  GeoPoint? value;
+
+  @override
+  Future<GeoPoint?> read(String account) async => value;
+
+  @override
+  Future<void> write(String account, GeoPoint position) async =>
+      value = position;
+
+  @override
+  Future<void> clear(String account) async => value = null;
+}
+
+class MemorySoloHintStore implements SoloHintStore {
+  bool value = false;
+
+  @override
+  Future<bool> read() async => value;
+
+  @override
+  Future<void> write() async => value = true;
 }
 
 /// Keeps the refresh token in memory instead of the platform's secure storage.

@@ -396,6 +396,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get joinAction => 'Entra';
 
   @override
+  String get joinSkip => 'Continua senza club';
+
+  @override
   String get joinInvalid =>
       'Il codice non è corretto, oppure il club non accetta nuovi membri.';
 
@@ -406,7 +409,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubNoneTitle => 'Non sei ancora in un club';
 
   @override
-  String get clubNoneBody => 'Entra con il codice del proprietario del club.';
+  String get clubNoneBody =>
+      'Velomine funziona anche da soli. Entra in un club quando vuoi uscire in gruppo e condividere con i suoi coach.';
 
   @override
   String get clubInactive =>
@@ -1001,6 +1005,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get cancel => 'Annulla';
+
+  @override
+  String get close => 'Chiudi';
 
   @override
   String get save => 'Salva';
@@ -2148,4 +2155,344 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get recorderEbikeHelp =>
       'Conta come assistita e preferisce la tua e-bike.';
+
+  @override
+  String get forgotPassword => 'Password dimenticata?';
+
+  @override
+  String get forgotPasswordTitle => 'Reimposta la password';
+
+  @override
+  String get forgotPasswordHelp =>
+      'Inserisci l\'indirizzo email del tuo account. Se può essere reimpostata, ti invieremo un link.';
+
+  @override
+  String get forgotPasswordSent =>
+      'Se esiste un account per quell\'indirizzo, abbiamo inviato un link per reimpostare la password. Controlla anche lo spam.';
+
+  @override
+  String get forgotPasswordUnavailable =>
+      'Questo server non è configurato per inviare email. Chiedi a un amministratore del club di reimpostare la password.';
+
+  @override
+  String get forgotPasswordTooMany =>
+      'Troppi tentativi. Riprova tra qualche minuto.';
+
+  @override
+  String get forgotPasswordFailed =>
+      'Non è stato possibile avviare il ripristino. Riprova.';
+
+  @override
+  String get errorEnterEmail => 'Inserisci il tuo indirizzo email.';
+
+  @override
+  String get sendResetLink => 'Invia il link';
+
+  @override
+  String get resetPasswordTitle => 'Scegli una nuova password';
+
+  @override
+  String get resetPasswordHelp => 'Scegli una password di almeno 10 caratteri.';
+
+  @override
+  String get setNewPassword => 'Imposta la nuova password';
+
+  @override
+  String get newPassword => 'Nuova password';
+
+  @override
+  String get confirmPassword => 'Conferma password';
+
+  @override
+  String get passwordsDoNotMatch => 'Le due password non coincidono.';
+
+  @override
+  String get passwordTooShort => 'Usa almeno 10 caratteri.';
+
+  @override
+  String get resetPasswordInvalid =>
+      'Questo link non è valido o è scaduto. Chiedine uno nuovo.';
+
+  @override
+  String get resetPasswordDone => 'Password cambiata. Accedi con quella nuova.';
+
+  @override
+  String get goToSignIn => 'Vai all\'accesso';
+
+  @override
+  String get changePassword => 'Cambia password';
+
+  @override
+  String get changePasswordTitle => 'Cambia password';
+
+  @override
+  String get currentPassword => 'Password attuale';
+
+  @override
+  String get passwordWrongCurrent => 'La password attuale non è corretta.';
+
+  @override
+  String get passwordNoPassword =>
+      'Questo account accede con il single sign-on.';
+
+  @override
+  String get passwordChanged =>
+      'Password cambiata. Accedi di nuovo su questo dispositivo.';
+
+  @override
+  String get passwordChangeFailed =>
+      'Non è stato possibile cambiare la password. Riprova.';
+
+  @override
+  String get actionChangePassword => 'cambiare la password';
+
+  @override
+  String get actionResetPassword => 'reimpostare questa password';
+
+  @override
+  String get resetPasswordLink => 'Reimposta password';
+
+  @override
+  String resetPasswordLinkTitle(String name) {
+    return 'Link di reimpostazione per $name';
+  }
+
+  @override
+  String get resetPasswordLinkHelp =>
+      'Invia questo link al membro. Funziona una volta e scade dopo 30 minuti.';
+
+  @override
+  String get copyLink => 'Copia link';
+
+  @override
+  String get linkCopied => 'Copiato';
+
+  @override
+  String get resetPasswordLinkFailed =>
+      'Non è stato possibile creare il link. Riprova.';
+
+  @override
+  String get actionLoadNearbyClubs => 'trovare i club vicino a te';
+
+  @override
+  String get actionRequestJoinClub => 'chiedere di entrare nel club';
+
+  @override
+  String get actionCancelJoinRequest => 'annullare la richiesta';
+
+  @override
+  String get actionLoadJoinRequests => 'caricare le richieste di ingresso';
+
+  @override
+  String get actionApproveJoinRequest => 'approvare la richiesta';
+
+  @override
+  String get actionDeclineJoinRequest => 'rifiutare la richiesta';
+
+  @override
+  String get clubSeeNearby => 'Vedi i club vicino a te';
+
+  @override
+  String get clubLocation => 'Posizione del club';
+
+  @override
+  String get clubLocationHelp =>
+      'Dove si ritrova il club. Serve solo a mostrarlo ai corridori vicini.';
+
+  @override
+  String get clubLocationNone => 'Nessuna posizione';
+
+  @override
+  String get clubLocationSet => 'Scegli sulla mappa';
+
+  @override
+  String get clubLocationChange => 'Cambia posizione';
+
+  @override
+  String get clubDiscoverable => 'Mostra questo club ai corridori vicini';
+
+  @override
+  String get clubDiscoverableHelp =>
+      'I corridori senza club possono trovarlo per distanza e chiedere di entrare.';
+
+  @override
+  String get locationPickerTitle => 'Scegli un punto';
+
+  @override
+  String get locationPickerHelp =>
+      'Sposta la mappa finché il segnaposto è sul posto.';
+
+  @override
+  String get locationPickerUse => 'Usa questo punto';
+
+  @override
+  String get locationPickerCurrent => 'Usa la mia posizione';
+
+  @override
+  String get locationCurrentUnavailable =>
+      'Il dispositivo non ha condiviso la posizione.';
+
+  @override
+  String get locationCoordinates => 'Latitudine, longitudine';
+
+  @override
+  String get locationLatitude => 'Latitudine';
+
+  @override
+  String get locationLongitude => 'Longitudine';
+
+  @override
+  String get locationCoordinatesHint => 'Per esempio 45.4642, 9.1900';
+
+  @override
+  String get locationCoordinatesInvalid =>
+      'Usa due numeri come 45.4642, 9.1900.';
+
+  @override
+  String get locationNoMap =>
+      'Questo server non ha uno sfondo mappa: inserisci le coordinate.';
+
+  @override
+  String get locationMapFirst => 'Prima sposta la mappa sul posto.';
+
+  @override
+  String get nearbyTitle => 'Club vicino a te';
+
+  @override
+  String get nearbyIntro =>
+      'Pedala al tuo ritmo. Entra in un club quando vuoi: puoi uscire quando vuoi e le tue uscite restano tue.';
+
+  @override
+  String get nearbyLocating => 'Sto cercando la tua posizione…';
+
+  @override
+  String get nearbyLocationHelp =>
+      'La tua posizione serve solo a ordinare i club per distanza e non viene conservata sul server.';
+
+  @override
+  String get nearbyUseDevice => 'Usa la mia posizione';
+
+  @override
+  String get nearbySetHome => 'Imposta una posizione';
+
+  @override
+  String get nearbyHomeUsed => 'Uso la posizione salvata.';
+
+  @override
+  String nearbyRadius(int km) {
+    return 'Entro $km km';
+  }
+
+  @override
+  String nearbyEmpty(int km) {
+    return 'Nessun club entro $km km. Pedala per conto tuo, oppure cerca più lontano.';
+  }
+
+  @override
+  String nearbyDistance(int km) {
+    return '~$km km';
+  }
+
+  @override
+  String get nearbyAsk => 'Chiedi di entrare';
+
+  @override
+  String get nearbyRequested => 'Richiesto';
+
+  @override
+  String get nearbyCancel => 'Annulla richiesta';
+
+  @override
+  String nearbyRequestTitle(String club) {
+    return 'Chiedi di entrare in $club';
+  }
+
+  @override
+  String get nearbyRequestNote =>
+      'Due parole per il proprietario (facoltative)';
+
+  @override
+  String get nearbyRequestSend => 'Invia richiesta';
+
+  @override
+  String get nearbyRequestSent =>
+      'Richiesta inviata. Il proprietario deciderà quando può.';
+
+  @override
+  String nearbyPendingTitle(String club) {
+    return 'In attesa di $club';
+  }
+
+  @override
+  String get nearbyPendingBody =>
+      'La tua richiesta è al proprietario del club.';
+
+  @override
+  String get nearbyWiden => 'Cerca più lontano';
+
+  @override
+  String nearbyReplaceTitle(String club) {
+    return 'Annullare la richiesta a $club?';
+  }
+
+  @override
+  String get nearbyReplaceBody =>
+      'Puoi avere una sola richiesta aperta. Chiedendo a un altro club, questa viene annullata.';
+
+  @override
+  String get soloHintTitle => 'Pedala al tuo ritmo';
+
+  @override
+  String get soloHintBody =>
+      'Ci sono club vicino a te, quando ne avrai voglia.';
+
+  @override
+  String get soloHintSee => 'Vedi i club';
+
+  @override
+  String get soloHintDismiss => 'Non ora';
+
+  @override
+  String get joinRequestsTitle => 'Richieste di ingresso';
+
+  @override
+  String get joinRequestsEmpty => 'Nessuno è in attesa di entrare.';
+
+  @override
+  String get joinRequestApprove => 'Approva';
+
+  @override
+  String get joinRequestDecline => 'Rifiuta';
+
+  @override
+  String joinRequestApproveTitle(String name) {
+    return 'Far entrare $name?';
+  }
+
+  @override
+  String get joinRequestApproveBody =>
+      'Diventa un corridore. Le tue uscite restano tue; la condivisione resta una sua scelta.';
+
+  @override
+  String joinRequestDeclineTitle(String name) {
+    return 'Rifiutare $name?';
+  }
+
+  @override
+  String get joinRequestDeclineBody => 'Verrà avvisato, senza motivazione.';
+
+  @override
+  String notificationClubJoinRequest(String name) {
+    return '$name ha chiesto di entrare nel tuo club.';
+  }
+
+  @override
+  String notificationClubJoinApproved(String club) {
+    return '$club ti ha accettato. Benvenuto!';
+  }
+
+  @override
+  String notificationClubJoinDeclined(String club) {
+    return '$club ha rifiutato la tua richiesta.';
+  }
 }

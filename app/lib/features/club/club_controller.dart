@@ -102,6 +102,35 @@ class ClubController extends ChangeNotifier {
     return failure;
   }
 
+  /// Saves where the club meets and whether riders nearby may find it. Null coordinates clear the point.
+  Future<Failure?> setLocation(
+    double? latitude,
+    double? longitude, {
+    required bool isDiscoverable,
+  }) async {
+    busy = true;
+    notifyListeners();
+    MyClubResponse? my;
+    final failure = await guardCall(
+      () async => my = await api.setClubLocation(
+        SetClubLocationRequest(
+          latitude: Optional.present(latitude),
+          longitude: Optional.present(longitude),
+          isDiscoverable: isDiscoverable,
+        ),
+      ),
+      onUnauthorized,
+      doing: FailureAction.updateClub,
+    );
+    if (failure == null) {
+      club = my?.club;
+      loaded = true;
+    }
+    busy = false;
+    notifyListeners();
+    return failure;
+  }
+
   Future<Failure?> setRole(String userId, String role) async {
     busy = true;
     notifyListeners();

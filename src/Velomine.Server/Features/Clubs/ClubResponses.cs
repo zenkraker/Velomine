@@ -12,6 +12,9 @@ public sealed record ClubResponse(
     bool IsActive,
     string MyRole,
     string? JoinCode,
+    double? Latitude,
+    double? Longitude,
+    bool IsDiscoverable,
     ClubMemberResponse[] Members);
 
 /// <summary>Null when the signed-in account is not in a club yet.</summary>
@@ -23,6 +26,9 @@ public sealed record AdminClubResponse(
     string Name,
     string JoinCode,
     bool IsActive,
+    double? Latitude,
+    double? Longitude,
+    bool IsDiscoverable,
     DateTimeOffset CreatedAt,
     int MemberCount,
     Guid? OwnerId,
@@ -68,6 +74,9 @@ public static class ClubQueries
             club.IsActive,
             myRole,
             myRole == ClubRoles.Owner ? club.JoinCode : null,
+            club.Latitude,
+            club.Longitude,
+            club.IsDiscoverable,
             roster);
     }
 
@@ -89,6 +98,9 @@ public static class ClubQueries
             club.Name,
             club.JoinCode,
             club.IsActive,
+            club.Latitude,
+            club.Longitude,
+            club.IsDiscoverable,
             club.CreatedAt,
             members.Count,
             owner?.UserId,

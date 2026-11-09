@@ -17,6 +17,9 @@ class AdminClubResponse {
     required this.name,
     required this.joinCode,
     required this.isActive,
+    required this.latitude,
+    required this.longitude,
+    required this.isDiscoverable,
     required this.createdAt,
     required this.memberCount,
     required this.ownerId,
@@ -33,6 +36,12 @@ class AdminClubResponse {
   final String joinCode;
 
   final bool isActive;
+
+  final double? latitude;
+
+  final double? longitude;
+
+  final bool isDiscoverable;
 
   final DateTime createdAt;
 
@@ -54,6 +63,9 @@ class AdminClubResponse {
     other.name == name &&
     other.joinCode == joinCode &&
     other.isActive == isActive &&
+    other.latitude == latitude &&
+    other.longitude == longitude &&
+    other.isDiscoverable == isDiscoverable &&
     other.createdAt == createdAt &&
     other.memberCount == memberCount &&
     other.ownerId == ownerId &&
@@ -69,6 +81,9 @@ class AdminClubResponse {
     (name.hashCode) +
     (joinCode.hashCode) +
     (isActive.hashCode) +
+    (latitude == null ? 0 : latitude!.hashCode) +
+    (longitude == null ? 0 : longitude!.hashCode) +
+    (isDiscoverable.hashCode) +
     (createdAt.hashCode) +
     (memberCount.hashCode) +
     (ownerId == null ? 0 : ownerId!.hashCode) +
@@ -78,7 +93,7 @@ class AdminClubResponse {
     (members.hashCode);
 
   @override
-  String toString() => 'AdminClubResponse[id=$id, name=$name, joinCode=$joinCode, isActive=$isActive, createdAt=$createdAt, memberCount=$memberCount, ownerId=$ownerId, ownerName=$ownerName, ownerEmail=$ownerEmail, ownerRole=$ownerRole, members=$members]';
+  String toString() => 'AdminClubResponse[id=$id, name=$name, joinCode=$joinCode, isActive=$isActive, latitude=$latitude, longitude=$longitude, isDiscoverable=$isDiscoverable, createdAt=$createdAt, memberCount=$memberCount, ownerId=$ownerId, ownerName=$ownerName, ownerEmail=$ownerEmail, ownerRole=$ownerRole, members=$members]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -86,6 +101,17 @@ class AdminClubResponse {
       json[r'name'] = this.name;
       json[r'joinCode'] = this.joinCode;
       json[r'isActive'] = this.isActive;
+    if (this.latitude != null) {
+      json[r'latitude'] = this.latitude;
+    } else {
+      json[r'latitude'] = null;
+    }
+    if (this.longitude != null) {
+      json[r'longitude'] = this.longitude;
+    } else {
+      json[r'longitude'] = null;
+    }
+      json[r'isDiscoverable'] = this.isDiscoverable;
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
       json[r'memberCount'] = this.memberCount;
     if (this.ownerId != null) {
@@ -119,6 +145,11 @@ class AdminClubResponse {
     String? name,
     String? joinCode,
     bool? isActive,
+    double? latitude,
+    bool latitudeSetToNull = false,
+    double? longitude,
+    bool longitudeSetToNull = false,
+    bool? isDiscoverable,
     DateTime? createdAt,
     int? memberCount,
     String? ownerId,
@@ -135,6 +166,9 @@ class AdminClubResponse {
     name: name ?? this.name,
     joinCode: joinCode ?? this.joinCode,
     isActive: isActive ?? this.isActive,
+    latitude: latitudeSetToNull ? null : latitude ?? this.latitude,
+    longitude: longitudeSetToNull ? null : longitude ?? this.longitude,
+    isDiscoverable: isDiscoverable ?? this.isDiscoverable,
     createdAt: createdAt ?? this.createdAt,
     memberCount: memberCount ?? this.memberCount,
     ownerId: ownerIdSetToNull ? null : ownerId ?? this.ownerId,
@@ -163,6 +197,10 @@ class AdminClubResponse {
         assert(json[r'joinCode'] != null, 'Required key "AdminClubResponse[joinCode]" has a null value in JSON.');
         assert(json.containsKey(r'isActive'), 'Required key "AdminClubResponse[isActive]" is missing from JSON.');
         assert(json[r'isActive'] != null, 'Required key "AdminClubResponse[isActive]" has a null value in JSON.');
+        assert(json.containsKey(r'latitude'), 'Required key "AdminClubResponse[latitude]" is missing from JSON.');
+        assert(json.containsKey(r'longitude'), 'Required key "AdminClubResponse[longitude]" is missing from JSON.');
+        assert(json.containsKey(r'isDiscoverable'), 'Required key "AdminClubResponse[isDiscoverable]" is missing from JSON.');
+        assert(json[r'isDiscoverable'] != null, 'Required key "AdminClubResponse[isDiscoverable]" has a null value in JSON.');
         assert(json.containsKey(r'createdAt'), 'Required key "AdminClubResponse[createdAt]" is missing from JSON.');
         assert(json[r'createdAt'] != null, 'Required key "AdminClubResponse[createdAt]" has a null value in JSON.');
         assert(json.containsKey(r'memberCount'), 'Required key "AdminClubResponse[memberCount]" is missing from JSON.');
@@ -181,6 +219,9 @@ class AdminClubResponse {
         name: mapValueOfType<String>(json, r'name')!,
         joinCode: mapValueOfType<String>(json, r'joinCode')!,
         isActive: mapValueOfType<bool>(json, r'isActive')!,
+        latitude: mapValueOfType<double>(json, r'latitude'),
+        longitude: mapValueOfType<double>(json, r'longitude'),
+        isDiscoverable: mapValueOfType<bool>(json, r'isDiscoverable')!,
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         memberCount: mapValueOfType<int>(json, r'memberCount')!,
         ownerId: mapValueOfType<String>(json, r'ownerId'),
@@ -239,6 +280,9 @@ class AdminClubResponse {
     'name',
     'joinCode',
     'isActive',
+    'latitude',
+    'longitude',
+    'isDiscoverable',
     'createdAt',
     'memberCount',
     'ownerId',

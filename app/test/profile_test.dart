@@ -149,6 +149,31 @@ void main() {
     expect(find.byKey(const Key('export-started')), findsOneWidget);
   });
 
+  testWidgets('ProfileScreen_ShouldSignOut_WhenThePasswordIsChanged', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tapVisible(tester, 'change-password');
+    await tester.enterText(
+      find.byKey(const Key('current-password')),
+      'Rider-pass-123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('new-password')),
+      'New-password-1',
+    );
+    await tester.enterText(
+      find.byKey(const Key('confirm-password')),
+      'New-password-1',
+    );
+    await tester.tap(find.byKey(const Key('confirm-change-password')));
+    await tester.pumpAndSettle();
+
+    expect(server.accounts['rider@example.com']!.password, 'New-password-1');
+    expect(find.byKey(const Key('sign-in')), findsOneWidget);
+  });
+
   group('deleting the account', () {
     Future<void> openDelete(WidgetTester tester) async {
       await openProfile(tester);

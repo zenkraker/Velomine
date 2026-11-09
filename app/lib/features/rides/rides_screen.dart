@@ -24,12 +24,20 @@ class RidesScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.onOpen,
+    this.showSoloCard = false,
+    this.onOpenClubs,
+    this.onDismissSoloCard,
   });
 
   final RidesController controller;
 
   /// Called with a ride's id when its card is pressed.
   final void Function(String id) onOpen;
+
+  /// Whether to point a rider without a club at the nearby clubs.
+  final bool showSoloCard;
+  final VoidCallback? onOpenClubs;
+  final VoidCallback? onDismissSoloCard;
 
   @override
   State<RidesScreen> createState() => _RidesScreenState();
@@ -71,6 +79,47 @@ class _RidesScreenState extends State<RidesScreen> {
                       key: const Key('rides-error'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                if (widget.showSoloCard && widget.onOpenClubs != null)
+                  Card(
+                    key: const Key('solo-club-card'),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 4,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  context.l10n.soloHintTitle,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                              ),
+                              IconButton(
+                                key: const Key('dismiss-solo-card'),
+                                tooltip: context.l10n.soloHintDismiss,
+                                onPressed: widget.onDismissSoloCard,
+                                icon: const Icon(Icons.close),
+                              ),
+                            ],
+                          ),
+                          Text(context.l10n.soloHintBody),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              key: const Key('open-nearby-from-rides'),
+                              onPressed: widget.onOpenClubs,
+                              icon: const Icon(Icons.explore_outlined),
+                              label: Text(context.l10n.soloHintSee),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

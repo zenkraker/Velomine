@@ -172,10 +172,11 @@
   "joinIntro": "Ask your club's owner for the join code, or open the link they shared.",
   "joinCode": "Join code",
   "joinAction": "Join",
+  "joinSkip": "Continue without a club",
   "joinInvalid": "That code is not right, or the club is not taking new members.",
   "joinAlready": "Your account is already in a club.",
   "clubNoneTitle": "You are not in a club yet",
-  "clubNoneBody": "Join with the code from your club's owner.",
+  "clubNoneBody": "Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.",
   "clubInactive": "This club is not active. Joining is closed.",
   "clubOwner": "Owner",
   "clubCoach": "Coach",
@@ -580,6 +581,7 @@
   "errorWheelRange": "The wheel circumference is 1000 to 2600 mm.",
   "errorInitialDistance": "Distance before Velomine must be 0 or more.",
   "cancel": "Cancel",
+  "close": "Close",
   "save": "Save",
 
   "replacePartTitle": "Replace {name}",
@@ -1121,5 +1123,194 @@
   "lap": "Lap",
   "recorderRideType": "Ride type",
   "recorderEbike": "E-bike",
-  "recorderEbikeHelp": "Counts as assisted and prefers your e-bike."
+  "recorderEbikeHelp": "Counts as assisted and prefers your e-bike.",
+
+  "forgotPassword": "Forgot password?",
+  "forgotPasswordTitle": "Reset your password",
+  "forgotPasswordHelp": "Enter the email address of your account. If it can be reset, we will send a link.",
+  "forgotPasswordSent": "If an account exists for that address, we sent a link to reset the password. Check your spam folder too.",
+  "forgotPasswordUnavailable": "This server is not set up to send email. Ask your club admin to reset your password.",
+  "forgotPasswordTooMany": "Too many attempts. Try again in a few minutes.",
+  "forgotPasswordFailed": "Could not start the reset. Try again.",
+  "errorEnterEmail": "Enter your email address.",
+  "sendResetLink": "Send reset link",
+  "resetPasswordTitle": "Choose a new password",
+  "resetPasswordHelp": "Choose a password of at least 10 characters.",
+  "setNewPassword": "Set new password",
+  "newPassword": "New password",
+  "confirmPassword": "Confirm password",
+  "passwordsDoNotMatch": "The two passwords are not the same.",
+  "passwordTooShort": "Use at least 10 characters.",
+  "resetPasswordInvalid": "This link is not valid or has expired. Ask for a new one.",
+  "resetPasswordDone": "Your password is changed. Sign in with the new one.",
+  "goToSignIn": "Go to sign in",
+  "changePassword": "Change password",
+  "changePasswordTitle": "Change password",
+  "currentPassword": "Current password",
+  "passwordWrongCurrent": "The current password is not right.",
+  "passwordNoPassword": "This account signs in with single sign-on.",
+  "passwordChanged": "Your password is changed. Sign in again on this device.",
+  "passwordChangeFailed": "Could not change the password. Try again.",
+  "actionChangePassword": "change your password",
+  "actionResetPassword": "reset this password",
+  "resetPasswordLink": "Reset password",
+  "resetPasswordLinkTitle": "Password reset link for {name}",
+  "@resetPasswordLinkTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordLinkHelp": "Send this link to the member. It works once and expires in 30 minutes.",
+  "copyLink": "Copy link",
+  "linkCopied": "Copied",
+  "resetPasswordLinkFailed": "Could not make a reset link. Try again.",
+
+  "actionLoadNearbyClubs": "find clubs near you",
+  "actionRequestJoinClub": "ask to join the club",
+  "actionCancelJoinRequest": "cancel your request",
+  "actionLoadJoinRequests": "load the join requests",
+  "actionApproveJoinRequest": "approve the request",
+  "actionDeclineJoinRequest": "decline the request",
+
+  "clubSeeNearby": "See clubs near you",
+  "clubLocation": "Club location",
+  "clubLocationHelp": "Where the club meets. Only used to show the club to riders nearby.",
+  "clubLocationNone": "No location yet",
+  "clubLocationSet": "Choose on the map",
+  "clubLocationChange": "Change location",
+  "clubDiscoverable": "Show this club to riders nearby",
+  "clubDiscoverableHelp": "Riders without a club can find it by distance and ask to join.",
+
+  "locationPickerTitle": "Pick a point",
+  "locationPickerHelp": "Drag the map until the pin is on the place.",
+  "locationPickerUse": "Use this point",
+  "locationPickerCurrent": "Use my current location",
+  "locationCurrentUnavailable": "Your device did not share its position.",
+  "locationCoordinates": "Latitude, longitude",
+  "locationLatitude": "Latitude",
+  "locationLongitude": "Longitude",
+  "locationCoordinatesHint": "For example 45.4642, 9.1900",
+  "locationCoordinatesInvalid": "Use two numbers like 45.4642, 9.1900.",
+  "locationNoMap": "This server has no map background, so enter the coordinates.",
+  "locationMapFirst": "Drag the map to the place first.",
+
+  "nearbyTitle": "Clubs near you",
+  "nearbyIntro": "Ride at your own pace. Join a club whenever you want; you can leave any time and your rides stay yours.",
+  "nearbyLocating": "Finding your position…",
+  "nearbyLocationHelp": "Your position is used only to sort clubs by distance and is not kept on the server.",
+  "nearbyUseDevice": "Use my position",
+  "nearbySetHome": "Set a location",
+  "nearbyHomeUsed": "Using your saved location.",
+  "nearbyRadius": "Within {km} km",
+  "@nearbyRadius": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "nearbyEmpty": "No clubs within {km} km. Ride on your own for now, or look farther.",
+  "@nearbyEmpty": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "nearbyDistance": "~{km} km",
+  "@nearbyDistance": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "nearbyAsk": "Ask to join",
+  "nearbyRequested": "Requested",
+  "nearbyCancel": "Cancel request",
+  "nearbyRequestTitle": "Ask to join {club}",
+  "@nearbyRequestTitle": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "nearbyRequestNote": "A word for the owner (optional)",
+  "nearbyRequestSend": "Send request",
+  "nearbyRequestSent": "Request sent. The owner decides when they can.",
+  "nearbyPendingTitle": "Waiting for {club}",
+  "@nearbyPendingTitle": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "nearbyPendingBody": "Your request is with the club's owner.",
+  "nearbyWiden": "Look farther",
+  "nearbyReplaceTitle": "Withdraw your request to {club}?",
+  "@nearbyReplaceTitle": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "nearbyReplaceBody": "You can have one open request. Asking another club withdraws this one.",
+
+  "soloHintTitle": "Ride at your own pace",
+  "soloHintBody": "There are clubs near you when you want one.",
+  "soloHintSee": "See clubs",
+  "soloHintDismiss": "Not now",
+
+  "joinRequestsTitle": "Join requests",
+  "joinRequestsEmpty": "No one is waiting to join.",
+  "joinRequestApprove": "Approve",
+  "joinRequestDecline": "Decline",
+  "joinRequestApproveTitle": "Let {name} in?",
+  "@joinRequestApproveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinRequestApproveBody": "They become a rider. Your rides stay yours; sharing is still their choice.",
+  "joinRequestDeclineTitle": "Decline {name}?",
+  "@joinRequestDeclineTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinRequestDeclineBody": "They are told, without a reason.",
+
+  "notificationClubJoinRequest": "{name} asked to join your club.",
+  "@notificationClubJoinRequest": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubJoinApproved": "{club} accepted you. Welcome!",
+  "@notificationClubJoinApproved": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubJoinDeclined": "{club} declined your request.",
+  "@notificationClubJoinDeclined": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  }
 }

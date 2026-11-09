@@ -43,6 +43,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<ClubMembership> ClubMemberships => Set<ClubMembership>();
 
+    public DbSet<ClubJoinRequest> ClubJoinRequests => Set<ClubJoinRequest>();
+
     public DbSet<ShareGrant> ShareGrants => Set<ShareGrant>();
 
     public DbSet<ShareView> ShareViews => Set<ShareView>();

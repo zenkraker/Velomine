@@ -18,6 +18,9 @@ class ClubResponse {
     required this.isActive,
     required this.myRole,
     required this.joinCode,
+    required this.latitude,
+    required this.longitude,
+    required this.isDiscoverable,
     this.members = const [],
   });
 
@@ -31,6 +34,12 @@ class ClubResponse {
 
   final String? joinCode;
 
+  final double? latitude;
+
+  final double? longitude;
+
+  final bool isDiscoverable;
+
   final List<ClubMemberResponse> members;
 
   @override
@@ -40,6 +49,9 @@ class ClubResponse {
     other.isActive == isActive &&
     other.myRole == myRole &&
     other.joinCode == joinCode &&
+    other.latitude == latitude &&
+    other.longitude == longitude &&
+    other.isDiscoverable == isDiscoverable &&
     _deepEquality.equals(other.members, members);
 
   @override
@@ -50,10 +62,13 @@ class ClubResponse {
     (isActive.hashCode) +
     (myRole.hashCode) +
     (joinCode == null ? 0 : joinCode!.hashCode) +
+    (latitude == null ? 0 : latitude!.hashCode) +
+    (longitude == null ? 0 : longitude!.hashCode) +
+    (isDiscoverable.hashCode) +
     (members.hashCode);
 
   @override
-  String toString() => 'ClubResponse[id=$id, name=$name, isActive=$isActive, myRole=$myRole, joinCode=$joinCode, members=$members]';
+  String toString() => 'ClubResponse[id=$id, name=$name, isActive=$isActive, myRole=$myRole, joinCode=$joinCode, latitude=$latitude, longitude=$longitude, isDiscoverable=$isDiscoverable, members=$members]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -66,6 +81,17 @@ class ClubResponse {
     } else {
       json[r'joinCode'] = null;
     }
+    if (this.latitude != null) {
+      json[r'latitude'] = this.latitude;
+    } else {
+      json[r'latitude'] = null;
+    }
+    if (this.longitude != null) {
+      json[r'longitude'] = this.longitude;
+    } else {
+      json[r'longitude'] = null;
+    }
+      json[r'isDiscoverable'] = this.isDiscoverable;
       json[r'members'] = this.members;
     return json;
   }
@@ -79,6 +105,11 @@ class ClubResponse {
     String? myRole,
     String? joinCode,
     bool joinCodeSetToNull = false,
+    double? latitude,
+    bool latitudeSetToNull = false,
+    double? longitude,
+    bool longitudeSetToNull = false,
+    bool? isDiscoverable,
     List<ClubMemberResponse>? members,
   }) => ClubResponse(
     id: id ?? this.id,
@@ -86,6 +117,9 @@ class ClubResponse {
     isActive: isActive ?? this.isActive,
     myRole: myRole ?? this.myRole,
     joinCode: joinCodeSetToNull ? null : joinCode ?? this.joinCode,
+    latitude: latitudeSetToNull ? null : latitude ?? this.latitude,
+    longitude: longitudeSetToNull ? null : longitude ?? this.longitude,
+    isDiscoverable: isDiscoverable ?? this.isDiscoverable,
     members: members ?? this.members,
   );
 
@@ -109,6 +143,10 @@ class ClubResponse {
         assert(json.containsKey(r'myRole'), 'Required key "ClubResponse[myRole]" is missing from JSON.');
         assert(json[r'myRole'] != null, 'Required key "ClubResponse[myRole]" has a null value in JSON.');
         assert(json.containsKey(r'joinCode'), 'Required key "ClubResponse[joinCode]" is missing from JSON.');
+        assert(json.containsKey(r'latitude'), 'Required key "ClubResponse[latitude]" is missing from JSON.');
+        assert(json.containsKey(r'longitude'), 'Required key "ClubResponse[longitude]" is missing from JSON.');
+        assert(json.containsKey(r'isDiscoverable'), 'Required key "ClubResponse[isDiscoverable]" is missing from JSON.');
+        assert(json[r'isDiscoverable'] != null, 'Required key "ClubResponse[isDiscoverable]" has a null value in JSON.');
         assert(json.containsKey(r'members'), 'Required key "ClubResponse[members]" is missing from JSON.');
         assert(json[r'members'] != null, 'Required key "ClubResponse[members]" has a null value in JSON.');
         return true;
@@ -120,6 +158,9 @@ class ClubResponse {
         isActive: mapValueOfType<bool>(json, r'isActive')!,
         myRole: mapValueOfType<String>(json, r'myRole')!,
         joinCode: mapValueOfType<String>(json, r'joinCode'),
+        latitude: mapValueOfType<double>(json, r'latitude'),
+        longitude: mapValueOfType<double>(json, r'longitude'),
+        isDiscoverable: mapValueOfType<bool>(json, r'isDiscoverable')!,
         members: ClubMemberResponse.listFromJson(json[r'members']),
       );
     }
@@ -173,6 +214,9 @@ class ClubResponse {
     'isActive',
     'myRole',
     'joinCode',
+    'latitude',
+    'longitude',
+    'isDiscoverable',
     'members',
   };
 }

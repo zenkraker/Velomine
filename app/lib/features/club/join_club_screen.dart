@@ -11,6 +11,7 @@ class JoinClubScreen extends StatefulWidget {
     required this.controller,
     this.initialCode = '',
     this.onJoined,
+    this.onSkip,
   });
 
   final ClubController controller;
@@ -18,6 +19,9 @@ class JoinClubScreen extends StatefulWidget {
 
   /// Called once the membership exists, so an invite code kept for this visit can be forgotten.
   final VoidCallback? onJoined;
+
+  /// Called when someone chooses to carry on without a club; null hides the way out (an invite link).
+  final VoidCallback? onSkip;
 
   @override
   State<JoinClubScreen> createState() => _JoinClubScreenState();
@@ -103,6 +107,14 @@ class _JoinClubScreenState extends State<JoinClubScreen> {
                   onPressed: widget.controller.busy ? null : _join,
                   child: Text(l10n.joinAction),
                 ),
+                if (widget.onSkip != null) ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    key: const Key('skip-join'),
+                    onPressed: widget.controller.busy ? null : widget.onSkip,
+                    child: Text(l10n.joinSkip),
+                  ),
+                ],
               ],
             ),
           ),

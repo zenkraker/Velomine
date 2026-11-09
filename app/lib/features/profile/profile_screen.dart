@@ -38,6 +38,7 @@ class ProfileScreen extends StatefulWidget {
     required this.emailAvailable,
     required this.openLink,
     required this.onAccountDeleted,
+    required this.onPasswordChanged,
     required this.serverUrl,
   });
 
@@ -54,6 +55,9 @@ class ProfileScreen extends StatefulWidget {
 
   /// Called once the account is gone, so the app can leave the signed-in screens.
   final VoidCallback onAccountDeleted;
+
+  /// Called after a password change: the security stamp moved, so every session must sign in again.
+  final VoidCallback onPasswordChanged;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -116,6 +120,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (path == null) return;
     await widget.openLink(Uri.parse('${widget.serverUrl}$path'));
     if (mounted) setState(() => _exported = true);
+  }
+
+  Future<void> _changePassword() async {
+    final changed = await showDialog<bool>(
+      context: context,
+      builder: (_) => _ChangePasswordDialog(controller: widget.controller),
+    );
+    if (changed == true) widget.onPasswordChanged();
   }
 
   Future<void> _delete() async {
@@ -310,6 +322,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: Text(l10n.save),
                             ),
                           ),
+                          if (c.profile?.hasPassword ?? false) ...[
+                            const Divider(),
+                            Text(
+                              l10n.changePasswordTitle,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: OutlinedButton.icon(
+                                key: const Key('change-password'),
+                                onPressed: c.changingPassword
+                                    ? null
+                                    : _changePassword,
+                                icon: const Icon(Icons.lock_reset),
+                                label: Text(l10n.changePassword),
+                              ),
+                            ),
+                          ],
                           const Divider(),
                           Text(
                             l10n.yourData,
@@ -351,6 +381,120 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Asks for the current password and the new one. On success the app signs out, because the security stamp moved.
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog({required this.controller});
+
+  final ProfileController controller;
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _current = TextEditingController();
+  final _new = TextEditingController();
+  final _confirm = TextEditingController();
+  String? _error;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _current.dispose();
+    _new.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = context.l10n;
+    if (_new.text.length < 10) {
+      setState(() => _error = l10n.passwordTooShort);
+      return;
+    }
+    if (_new.text != _confirm.text) {
+      setState(() => _error = l10n.passwordsDoNotMatch);
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final failure = await widget.controller.changePassword(
+      _current.text,
+      _new.text,
+    );
+    if (!mounted) return;
+    if (failure == null) {
+      Navigator.pop(context, true);
+      return;
+    }
+
+    setState(() {
+      _busy = false;
+      _error = switch (failure.code) {
+        409 => l10n.passwordNoPassword,
+        400 => l10n.passwordWrongCurrent,
+        _ => l10n.passwordChangeFailed,
+      };
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.changePasswordTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          TextField(
+            key: const Key('current-password'),
+            controller: _current,
+            obscureText: true,
+            autofillHints: const [AutofillHints.password],
+            decoration: InputDecoration(labelText: l10n.currentPassword),
+          ),
+          TextField(
+            key: const Key('new-password'),
+            controller: _new,
+            obscureText: true,
+            autofillHints: const [AutofillHints.newPassword],
+            decoration: InputDecoration(labelText: l10n.newPassword),
+          ),
+          TextField(
+            key: const Key('confirm-password'),
+            controller: _confirm,
+            obscureText: true,
+            autofillHints: const [AutofillHints.newPassword],
+            decoration: InputDecoration(labelText: l10n.confirmPassword),
+            onSubmitted: (_) => _submit(),
+          ),
+          if (_error != null)
+            Text(
+              _error!,
+              key: const Key('change-password-error'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('confirm-change-password'),
+          onPressed: _busy ? null : _submit,
+          child: Text(l10n.changePassword),
+        ),
+      ],
     );
   }
 }

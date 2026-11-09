@@ -57,6 +57,46 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'PUT /api/v1/accounts/me/password' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [ChangePasswordRequest] changePasswordRequest (required):
+  Future<Response> changePasswordWithHttpInfo(ChangePasswordRequest changePasswordRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/password';
+
+    // ignore: prefer_final_locals
+    Object? postBody = changePasswordRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [ChangePasswordRequest] changePasswordRequest (required):
+  Future<void> changePassword(ChangePasswordRequest changePasswordRequest, { Future<void>? abortTrigger, }) async {
+    final response = await changePasswordWithHttpInfo(changePasswordRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/me/export-link' operation and returns the [Response].
   Future<Response> createExportLinkWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -274,6 +314,46 @@ class AccountsApi {
   /// * [String] codeChallenge:
   Future<void> finishSso({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
     final response = await finishSsoWithHttpInfo(returnUrl: returnUrl, codeChallenge: codeChallenge, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'POST /api/v1/accounts/password/forgot' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [ForgotPasswordRequest] forgotPasswordRequest (required):
+  Future<Response> forgotPasswordWithHttpInfo(ForgotPasswordRequest forgotPasswordRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/password/forgot';
+
+    // ignore: prefer_final_locals
+    Object? postBody = forgotPasswordRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [ForgotPasswordRequest] forgotPasswordRequest (required):
+  Future<void> forgotPassword(ForgotPasswordRequest forgotPasswordRequest, { Future<void>? abortTrigger, }) async {
+    final response = await forgotPasswordWithHttpInfo(forgotPasswordRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -634,6 +714,46 @@ class AccountsApi {
     
     }
     return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/accounts/password/reset' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [ResetPasswordRequest] resetPasswordRequest (required):
+  Future<Response> resetPasswordWithHttpInfo(ResetPasswordRequest resetPasswordRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/password/reset';
+
+    // ignore: prefer_final_locals
+    Object? postBody = resetPasswordRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [ResetPasswordRequest] resetPasswordRequest (required):
+  Future<void> resetPassword(ResetPasswordRequest resetPasswordRequest, { Future<void>? abortTrigger, }) async {
+    final response = await resetPasswordWithHttpInfo(resetPasswordRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Performs an HTTP 'PUT /api/v1/accounts/me/ftp' operation and returns the [Response].

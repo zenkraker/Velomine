@@ -19,6 +19,7 @@ Background documents. Read the relevant one before designing a feature. When a d
 | Document | Read it for |
 |----------|-------------|
 | `docs/architecture.md` | System architecture: modules, ingestion pipeline, jobs, data model, API, security, apps |
+| `docs/design/values.md` | Product values, principles and decision tests. Read before adding, cutting or pricing a feature. |
 | `docs/design/v1-scope-and-architecture.md` | Product scope, feature decisions, tech stack and architecture |
 | `docs/design/brand-directions.html` | Brand: name, colours, type and day/night themes (open in a browser) |
 | `docs/development.md` | The Nix development environment: how it works, setup (including Claude Code, OpenCode, ponytail, CodeGraph and the Flutter/Dart MCP server), daily commands, updating tools |

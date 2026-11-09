@@ -26,6 +26,15 @@ public static class NotificationTypes
 
     /// <summary>A part has reached one of its limits. Refers to the bike and the part.</summary>
     public const string PartWorn = "part_worn";
+
+    /// <summary>For a club owner: a rider asked to join. The subject is the rider's display name.</summary>
+    public const string ClubJoinRequest = "club_join_request";
+
+    /// <summary>The club's owner let the rider in. The subject is the club's name.</summary>
+    public const string ClubJoinApproved = "club_join_approved";
+
+    /// <summary>The club's owner said no. The subject is the club's name.</summary>
+    public const string ClubJoinDeclined = "club_join_declined";
 }
 
 public sealed class Notification

@@ -2,7 +2,7 @@
 
 How Velomine is built: server, apps, share pages and deployment. Keep it simple: one server, one database, vertical slices.
 
-This document describes the design, not progress. Scope labels (v1, v2) only say which release a part belongs to; the plan is in [v1 scope and architecture](design/v1-scope-and-architecture.md). Rules in [`AGENTS.md`](../AGENTS.md) override anything here.
+This document describes the design, not progress. Scope labels (v1, v2) only say which release a part belongs to; the plan is in [v1 scope and architecture](design/v1-scope-and-architecture.md), the product rules are in [values](design/values.md), and inter-club ideas are in [v2](design/v2.md). Rules in [`AGENTS.md`](../AGENTS.md) override anything here.
 
 ## 1. Goals and constraints
 
@@ -71,8 +71,8 @@ app/                             Flutter app (section 9)
 
 | Area | What it holds | Scope |
 |------|---------------|-------|
-| Accounts | Users, roles (admin, member; the global `coach` role is kept for compatibility but grants nothing), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", profile (weight) | v1; passkeys v2 |
-| Clubs | Several clubs per server, each with one owner, coaches and riders; one club per account; join by a rotatable code; roster visible to the club. Sharing per data type (rides, training, routes, wellbeing) to nobody or the club's coaches; leaving revokes grants; every coach view, including the roster, the ride list and wellbeing, is logged for the member. Whole-club reading comes with a member-facing club view. | v1 |
+| Accounts | Users, roles (admin, member; the global `coach` role is kept for compatibility but grants nothing), invites with admin approval, MFA, OIDC login, scoped API keys, session list with "log out other devices", password reset by email or a one-time admin link, profile (weight) | v1; passkeys v2 |
+| Clubs | Several clubs per server, each with one owner, coaches and riders; at most one club per account, and riding without a club is a first-class state; join by a rotatable code or by asking a discoverable club. The owner sets the club's point and may open it to discovery; a rider without a club sees active discoverable clubs within a radius (rounded distance, never coordinates) and asks one at a time. The owner approves or declines and the rider is notified. Roster visible to the club. Sharing per data type (rides, training, routes, wellbeing) to nobody or the club's coaches; leaving revokes grants; every coach view, including the roster, the ride list and wellbeing, is logged for the member. Whole-club reading comes with a member-facing club view. | v1 |
 | Rides | Rides, four optional dimensions (surface, e-bike, indoor/virtual, commute) inferred from the file and editable by the member, streams, laps with numbers recomputed from the samples, HR and power zones, photos, upload and ingestion. Best mean maximal power per duration is stored at ingest for the power curve. | v1; connectors v2 |
 | Bikes | Bikes, wheel circumference, one default bike per member, a bike of the matching kind chosen from the ride's dimensions (e-bike, mountain, gravel, track, city) with the single default as fallback, parts, wear by km, hours and months, a notification when a ride takes a part to 80 % or 100 % | v1; timed reminders v2 |
 | Wellbeing | Daily check-in (fatigue, soreness, mood, stress, motivation) and RPE and notes per ride, private by default and shared with coaches only when chosen. Explicit consent before the first save; included in export and deletion. | v1; cycle tracking v2 |
@@ -163,9 +163,13 @@ erDiagram
   USER ||--o{ SHARE_GRANT : gives
   CLUB ||--o{ MEMBERSHIP : has
   USER ||--o| MEMBERSHIP : "one club per account"
+  CLUB ||--o{ JOIN_REQUEST : receives
+  USER ||--o| JOIN_REQUEST : "one open ask"
 ```
 
 - A club has one owner, any number of coaches and riders, and a join code the owner can rotate. The instance admin creates clubs and names (or moves) the owner; the owner promotes coaches. A membership alone shows the roster and nothing else: any ride or training data needs a sharing grant.
+
+- A rider without a club keeps every personal tool. An owner may set the club's point and open it to discovery; `POST /club/nearby` returns only active, discoverable clubs within the radius, with a rounded distance and never coordinates. A rider has one open ask at a time; asking another club moves it. The owner approves (which creates the membership) or declines, and either answer notifies the rider. Joining with a code withdraws the ask.
 
 - Instants are `timestamptz` in UTC; a ride also stores its local time zone offset. SI units internally.
 - Keys are `uuid`; rides recorded on the phone keep the phone's id.
@@ -188,6 +192,7 @@ erDiagram
 - Auth: Identity cookie for the web app, bearer tokens for the mobile app, scoped API keys (`X-API-Key`) for tools such as the USB uploader.
 - Single sign-on: Microsoft's OpenID Connect handler (authorization code with PKCE) signs the browser in through a provider the admin configures; the account is then found, linked by verified email, or created, and a normal Identity cookie session starts.
 - **Single sign-on on the phone** (RFC 8252): the app makes a PKCE pair and opens `GET /accounts/sso/login?codeChallenge=...` in the system browser (`url_launcher`, never an in-app web view). After the provider login the server redirects to `com.velomine.app:/sso-callback?code=...` (or `?sso_error=...`): a private-use scheme named after a domain we control, reversed, registered in `AndroidManifest.xml` and `Info.plist`; Flutter hands the link to `go_router`. The app posts the code and its secret verifier to `POST /accounts/sso/token` and gets the same bearer tokens as a password sign-in. The code lives two minutes in server memory, works once, and only with the verifier that matches the challenge, so another app that catches the redirect (several apps can claim one scheme) cannot use it. Chosen over https App Links and Universal Links because those need a domain the server's owner has verified, which a server on a LAN or `localhost` does not have. If the app is closed while the browser is open, the verifier is lost and the member starts again. *Tested on the Android emulator; the iOS setup is written but not run yet.*
+- **Password reset:** `POST /accounts/password/forgot` always answers `202` when SMTP is configured, so it never tells a stranger who is registered; an account with no password gets single sign-on instructions instead of a token. The email link is `/reset-password#token=...&email=...`: the fragment keeps the token out of server logs and Referer headers. Identity's token works once and lasts 30 minutes; `POST /accounts/password/reset` sets the password, and `PUT /accounts/me/password` changes it with the current password as confirmation. Both move the security stamp, so every refresh token and cookie session ends. A server without SMTP answers `503`, and an admin can make the same one-time link from *Admin → Accounts*; the link is shown once and the server logs that it happened. The link is built from the request's scheme and host, so a reverse proxy must set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`. There is no new dependency and no migration.
 
 ## 9. Security and privacy
 
@@ -199,7 +204,7 @@ erDiagram
 - Club visibility is a grant, not a privilege. A membership shows the roster; rides, training and routes are each `none` (the default) or `coaches`. The seam already understands a `club` audience, but nothing offers it until a member-facing club view exists. Coaches reach an athlete only through `GET /clubs/{clubId}/athletes...`, which checks the same club and an active grant and answers 404 otherwise. Admins get nothing from that path. Each shared kind stands alone: a coach given rides but not training sees no load, and one given training but not rides sees no ride dates or counts. Routes need their own grant even when rides are shared; without it the streams keep every signal except latitude and longitude, so charts work but no map or position is served.
 - Cycle tracking (v2) is encrypted with ASP.NET Core Data Protection, never appears in share links, and has its own grant.
 - Wellbeing and cycle data are health data: explicit consent before first use, and again when the terms version changes. Check-ins and RPE can be shared with coaches; free-text notes never leave the owner. The readiness score is member-only: a coach sees the load and the shared check-ins, not a composite advice.
-- Built-in ASP.NET Core rate limiting on login and upload. Secrets only in environment variables. No telemetry or third-party calls unless an admin turns them on.
+- Built-in ASP.NET Core rate limiting on login and upload, plus an in-memory limit on the two anonymous password endpoints. Secrets only in environment variables. No telemetry or third-party calls unless an admin turns them on.
 
 ## 10. Flutter apps
 

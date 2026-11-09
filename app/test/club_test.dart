@@ -18,8 +18,14 @@ void main() {
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
 
-    // No club, so the app goes straight to the join page.
-    expect(find.text('Join a club'), findsOneWidget);
+    // No club: the app goes straight to the rides, so riding alone is the default.
+    expect(find.text('Rides'), findsWidgets);
+
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    expect(find.text('You are not in a club yet'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('go-join-club')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('join-code')), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('join-code')), 'WRONG123');
@@ -47,8 +53,27 @@ void main() {
     await tester.tap(find.byKey(const Key('confirm-leave-club')));
     await tester.pumpAndSettle();
 
-    // Back to the join page, with no membership left.
-    expect(find.text('Join a club'), findsOneWidget);
+    // Back to the club tab's empty state, with no membership left.
+    expect(find.text('You are not in a club yet'), findsOneWidget);
+    expect(server.clubRoles.containsKey(rider.email), isFalse);
+  });
+
+  testWidgets('JoinClubScreen_ShouldReturnToRides_WhenSkipped', (tester) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('go-join-club')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('skip-join')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rides'), findsWidgets);
     expect(server.clubRoles.containsKey(rider.email), isFalse);
   });
 
@@ -70,6 +95,8 @@ void main() {
     expect(find.byKey(const Key('join-code-value')), findsOneWidget);
     expect(find.text(server.joinCode), findsOneWidget);
 
+    await tester.ensureVisible(find.byKey(Key('member-menu-${rider.id}')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(Key('member-menu-${rider.id}')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Make coach'));

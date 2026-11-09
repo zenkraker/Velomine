@@ -92,6 +92,18 @@ class AdminController extends ChangeNotifier {
   Future<bool> delete(AdminUserSummary u) =>
       _change(() => api.deleteUser(u.id), FailureAction.deleteAccount);
 
+  /// Makes a one-time reset link an admin can hand to a member. Returns it, or null when [error] says why.
+  Future<String?> createPasswordResetLink(AdminUserSummary u) async {
+    PasswordResetLinkResponse? link;
+    error = await guardCall(
+      () async => link = await api.createPasswordResetLink(u.id),
+      onUnauthorized,
+      doing: FailureAction.resetPassword,
+    );
+    notifyListeners();
+    return error == null ? link?.link : null;
+  }
+
   /// Sends a test email to the signed-in admin and records how it went for the settings screen.
   Future<void> sendTestEmail() async {
     testEmailSent = false;

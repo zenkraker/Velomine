@@ -65,6 +65,20 @@ class MapView {
     return MapView(bounds: bounds, size: size, zoom: fitZoom(bounds, size));
   }
 
+  /// A view centred on [center], for panning and picking a point.
+  MapView.centered({
+    required LatLon center,
+    required this.size,
+    required this.zoom,
+  }) : bounds = (
+         north: center.lat,
+         south: center.lat,
+         east: center.lon,
+         west: center.lon,
+       ),
+       originX = worldX(center.lon, zoom) - size.width / 2,
+       originY = worldY(center.lat, zoom) - size.height / 2;
+
   final Bounds bounds;
   final Size size;
   final int zoom;
@@ -75,6 +89,17 @@ class MapView {
 
   Offset project(LatLon p) =>
       Offset(worldX(p.lon, zoom) - originX, worldY(p.lat, zoom) - originY);
+
+  /// The latitude and longitude under a point on screen.
+  LatLon unproject(Offset offset) {
+    final scale = tileSize * math.pow(2, zoom);
+    final x = originX + offset.dx;
+    final y = originY + offset.dy;
+    final lon = x / scale * 360 - 180;
+    final n = math.pi * (1 - 2 * y / scale);
+    final lat = 180 / math.pi * math.atan((math.exp(n) - math.exp(-n)) / 2);
+    return (lat: lat.clamp(-85, 85), lon: lon);
+  }
 
   /// The map tiles that cover the view, each with its address and position on screen.
   List<MapTile> tiles(String urlTemplate) {

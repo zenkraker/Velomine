@@ -22,6 +22,9 @@ public static class AccountsSetup
         services.AddScoped<AccountDeletion>();
         services.AddScoped<AccountExport>();
         services.AddSingleton<ExportTokens>();
+        services.AddScoped<PasswordResetLinks>();
+        services.AddSingleton<PasswordResetThrottle>();
+        services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = PasswordResetLinks.Lifetime);
 
         // Cookie for the web app, bearer token for the mobile app and tools. The Identity endpoints
         // themselves are not mapped: the slices in Features/Accounts own the routes.

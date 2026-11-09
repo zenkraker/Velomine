@@ -5,15 +5,20 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'core/home_location.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
+import 'core/location_service.dart';
 import 'core/session.dart';
+import 'core/solo_hint.dart';
 import 'core/theme.dart';
 import 'core/theme_choice.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/admin/admin_controller.dart';
 import 'features/admin/admin_screen.dart';
 import 'features/auth/register_screen.dart';
+import 'features/auth/forgot_password_screen.dart';
+import 'features/auth/reset_password_screen.dart';
 import 'features/bikes/bike_detail_screen.dart';
 import 'features/bikes/bikes_controller.dart';
 import 'features/bikes/bikes_screen.dart';
@@ -22,6 +27,9 @@ import 'features/auth/sso_callback_screen.dart';
 import 'features/club/club_controller.dart';
 import 'features/club/club_screen.dart';
 import 'features/club/join_club_screen.dart';
+import 'features/club/join_requests_controller.dart';
+import 'features/club/nearby_clubs_controller.dart';
+import 'features/club/nearby_clubs_screen.dart';
 import 'features/coach/coach_athlete_screen.dart';
 import 'features/coach/coach_athletes_screen.dart';
 import 'features/coach/coach_controllers.dart';
@@ -78,6 +86,9 @@ class VelomineApp extends StatefulWidget {
     this.onChangeServer,
     this.uploadPollInterval = const Duration(seconds: 1),
     this.notificationPollInterval = const Duration(minutes: 1),
+    this.locationService,
+    this.homeLocation,
+    this.soloHint,
   });
 
   final Session session;
@@ -89,6 +100,13 @@ class VelomineApp extends StatefulWidget {
   final Future<void> Function()? onChangeServer;
   final Duration uploadPollInterval;
   final Duration notificationPollInterval;
+
+  /// Tests pass a fixed position; the app uses the device by default.
+  final LocationService? locationService;
+
+  /// The saved fallback point and the "nearby clubs" card's dismissal, both kept on this device.
+  final HomeLocation? homeLocation;
+  final SoloHint? soloHint;
 
   @override
   State<VelomineApp> createState() => _VelomineAppState();
@@ -137,11 +155,29 @@ class _VelomineAppState extends State<VelomineApp> {
     onUnauthorized: widget.session.sessionExpired,
   );
 
+  late final NearbyClubsController _nearby = NearbyClubsController(
+    api: widget.session.clubs,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  late final JoinRequestsController _joinRequests = JoinRequestsController(
+    api: widget.session.clubs,
+    onUnauthorized: widget.session.sessionExpired,
+  );
+
+  late final LocationService _locationService =
+      widget.locationService ?? const DeviceLocationService();
+
+  late final HomeLocation _homeLocation = widget.homeLocation ?? HomeLocation();
+
+  late final SoloHint _soloHint = widget.soloHint ?? SoloHint();
+
   @override
   void initState() {
     super.initState();
     widget.session.addListener(_followSession);
     _followSession();
+    _soloHint.load();
   }
 
   /// Notifications are checked while someone is signed in, and forgotten when they sign out.
@@ -149,10 +185,17 @@ class _VelomineAppState extends State<VelomineApp> {
     if (widget.session.status == SessionStatus.signedIn) {
       _notifications.start();
       if (!_club.loaded) _club.refresh();
+      final id = widget.session.me?.id;
+      if (id != null) _homeLocation.load(id);
     } else {
       if (_notifications.running) _notifications.stop();
       if (_club.loaded) _club.reset();
       if (_sharing.loaded) _sharing.reset();
+      _nearby.reset();
+      _joinRequests.reset();
+      if (widget.session.status == SessionStatus.signedOut) {
+        _homeLocation.forget();
+      }
     }
   }
 
@@ -164,11 +207,17 @@ class _VelomineAppState extends State<VelomineApp> {
 
   late final GoRouter _router = GoRouter(
     initialLocation: '/',
-    refreshListenable: Listenable.merge([widget.session, _club]),
+    refreshListenable: Listenable.merge([widget.session, _club, _soloHint]),
     redirect: (context, state) {
       final session = widget.session;
       final path = state.uri.path;
-      const open = {'/sign-in', '/register', '/sso-callback'};
+      const open = {
+        '/sign-in',
+        '/register',
+        '/sso-callback',
+        '/forgot-password',
+        '/reset-password',
+      };
       if (session.status == SessionStatus.loading) return null;
       if (session.status == SessionStatus.signedOut) {
         if (path == '/join') {
@@ -177,20 +226,27 @@ class _VelomineAppState extends State<VelomineApp> {
         }
         return open.contains(path) ? null : '/sign-in';
       }
-      // An admin has no club of their own until they make one, and still needs the admin pages.
+      // Riding without a club is fine: only an invite link kept from a signed-out visit sends someone to the join page.
       if (session.pendingJoinCode != null && _club.club != null) {
         session.pendingJoinCode = null;
       }
-      if (!session.isAdmin && _club.loaded && _club.club == null) {
+      if (session.pendingJoinCode != null &&
+          _club.loaded &&
+          _club.club == null) {
         return path == '/join' ? null : '/join';
       }
       if (path.startsWith('/club/athletes') && _club.club == null) {
+        return '/club';
+      }
+      if (path == '/clubs' && _club.loaded && _club.club != null) {
         return '/club';
       }
       if (path == '/join' && _club.club != null) {
         session.pendingJoinCode = null;
         return '/rides';
       }
+      // A reset link works even when the browser still has a session: the stamp changes and signs it out.
+      if (path == '/reset-password') return null;
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
       if (path == '/admin' && !session.isAdmin) return '/rides';
@@ -217,6 +273,10 @@ class _VelomineAppState extends State<VelomineApp> {
                 ? code
                 : (widget.session.pendingJoinCode ?? ''),
             onJoined: () => widget.session.pendingJoinCode = null,
+            onSkip: () {
+              widget.session.pendingJoinCode = null;
+              context.go('/rides');
+            },
           );
         },
       ),
@@ -233,6 +293,38 @@ class _VelomineAppState extends State<VelomineApp> {
         path: '/register',
         builder: (_, _) => RegisterScreen(session: widget.session),
       ),
+      GoRoute(
+        path: '/clubs',
+        builder: (_, _) => NearbyClubsScreen(
+          controller: _nearby,
+          locationService: _locationService,
+          homeLocation: _homeLocation,
+          userId: widget.session.me?.id ?? '',
+          onBack: () => context.go('/club'),
+          tileUrl: widget.session.serverInfo?.mapTileUrl,
+          attribution: widget.session.serverInfo?.mapAttribution,
+        ),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) => ForgotPasswordScreen(session: widget.session),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (_, state) {
+          final fragment = state.uri.fragment.isNotEmpty
+              ? state.uri.fragment
+              : Uri.base.fragment;
+          final params = fragment.isNotEmpty
+              ? Uri.splitQueryString(fragment)
+              : state.uri.queryParameters;
+          return ResetPasswordScreen(
+            session: widget.session,
+            token: params['token'],
+            email: params['email'],
+          );
+        },
+      ),
       ShellRoute(
         builder: (_, state, child) => HomeShell(
           session: widget.session,
@@ -245,9 +337,16 @@ class _VelomineAppState extends State<VelomineApp> {
         routes: [
           GoRoute(
             path: '/rides',
-            builder: (context, _) => RidesScreen(
-              controller: _rides,
-              onOpen: (id) => context.go('/rides/$id'),
+            builder: (context, _) => ListenableBuilder(
+              listenable: Listenable.merge([_club, _soloHint]),
+              builder: (context, _) => RidesScreen(
+                controller: _rides,
+                onOpen: (id) => context.go('/rides/$id'),
+                showSoloCard:
+                    _club.loaded && _club.club == null && !_soloHint.dismissed,
+                onOpenClubs: () => context.go('/clubs'),
+                onDismissSoloCard: _soloHint.dismiss,
+              ),
             ),
           ),
           GoRoute(
@@ -281,9 +380,15 @@ class _VelomineAppState extends State<VelomineApp> {
             builder: (context, _) => ClubScreen(
               controller: _club,
               sharing: _sharing,
+              requests: _joinRequests,
+              nearby: _nearby,
               serverUrl: widget.session.serverUrl,
               onJoin: () => context.go('/join'),
+              onOpenClubs: () => context.go('/clubs'),
               onOpenAthletes: () => context.go('/club/athletes'),
+              locationService: _locationService,
+              tileUrl: widget.session.serverInfo?.mapTileUrl,
+              attribution: widget.session.serverInfo?.mapAttribution,
             ),
           ),
           GoRoute(
@@ -376,6 +481,10 @@ class _VelomineAppState extends State<VelomineApp> {
     _notifications.dispose();
     _club.dispose();
     _sharing.dispose();
+    _nearby.dispose();
+    _joinRequests.dispose();
+    _homeLocation.dispose();
+    _soloHint.dispose();
     super.dispose();
   }
 
@@ -387,6 +496,7 @@ class _VelomineAppState extends State<VelomineApp> {
         widget.themeChoice,
         widget.languageChoice,
         _club,
+        _soloHint,
       ]),
       builder: (context, _) => MaterialApp.router(
         title: 'Velomine',
@@ -662,5 +772,7 @@ class _ProfilePageState extends State<_ProfilePage> {
     openLink: widget.openLink,
     // The account is gone: sign out, which sends the app to the sign-in screen.
     onAccountDeleted: widget.session.signOut,
+    // The password changed and every session ended; the same sign-out is the right move.
+    onPasswordChanged: widget.session.signOut,
   );
 }

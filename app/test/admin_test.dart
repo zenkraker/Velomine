@@ -81,6 +81,19 @@ void main() {
     expect(find.text('Coach'), findsOneWidget);
   });
 
+  testWidgets('AccountsTab_ShouldShowOneTimeResetLink_WhenAnAdminAsks', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', name: 'Rider');
+    await openAdmin(tester);
+
+    await menu(tester, rider, 'reset-password');
+
+    expect(find.byKey(const Key('reset-link')), findsOneWidget);
+    expect(find.textContaining('token=good'), findsOneWidget);
+    expect(find.textContaining('30 minutes'), findsOneWidget);
+  });
+
   testWidgets('AccountsTab_ShouldLockAndUnlock_WhenUsed', (tester) async {
     final rider = server.add('rider@example.com', name: 'Rider');
     await openAdmin(tester);

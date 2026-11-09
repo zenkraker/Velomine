@@ -13,6 +13,14 @@ public sealed class Club
     /// <summary>A disabled club keeps its members and data but takes no new joins.</summary>
     public bool IsActive { get; set; } = true;
 
+    /// <summary>Where the club meets, when its owner set it. Both coordinates or neither.</summary>
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
+
+    /// <summary>Whether riders without a club may find this club by distance and ask to join.</summary>
+    public bool IsDiscoverable { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>The instance admin who created it. The day-to-day owner is the owner membership.</summary>

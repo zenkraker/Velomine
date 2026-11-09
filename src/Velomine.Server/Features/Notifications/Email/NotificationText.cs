@@ -11,6 +11,9 @@ public static class NotificationText
         NotificationTypes.SignUpWaiting => $"{n.Subject} signed up and is waiting for approval.",
         NotificationTypes.PartSoon => $"{n.Subject} is nearly worn.",
         NotificationTypes.PartWorn => $"{n.Subject} is worn out. Time to replace it.",
+        NotificationTypes.ClubJoinRequest => $"{n.Subject} asked to join your club.",
+        NotificationTypes.ClubJoinApproved => $"{n.Subject} accepted you. Welcome!",
+        NotificationTypes.ClubJoinDeclined => $"{n.Subject} declined your request to join.",
         _ => n.Subject,
     };
 

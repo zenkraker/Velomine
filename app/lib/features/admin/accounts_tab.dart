@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
@@ -53,6 +54,15 @@ class AccountsTab extends StatelessWidget {
       ),
     );
     if (sure ?? false) await controller.delete(user);
+  }
+
+  Future<void> _resetLink(BuildContext context, AdminUserSummary user) async {
+    final link = await controller.createPasswordResetLink(user);
+    if (link == null || !context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _ResetLinkDialog(user: user, link: link),
+    );
   }
 
   @override
@@ -123,6 +133,7 @@ class AccountsTab extends StatelessWidget {
                   'roles' => _roles(context, user),
                   'lock' => controller.lock(user),
                   'unlock' => controller.unlock(user),
+                  'reset-password' => _resetLink(context, user),
                   _ => _delete(context, user),
                 },
                 itemBuilder: (_) => [
@@ -144,6 +155,11 @@ class AccountsTab extends StatelessWidget {
                       child: Text(l10n.lockAccount),
                     ),
                   PopupMenuItem(
+                    key: Key('reset-password-${user.id}'),
+                    value: 'reset-password',
+                    child: Text(l10n.resetPasswordLink),
+                  ),
+                  PopupMenuItem(
                     key: Key('delete-${user.id}'),
                     value: 'delete',
                     child: Text(l10n.deleteAccountAction),
@@ -151,6 +167,57 @@ class AccountsTab extends StatelessWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// Shows the one-time link so the admin can copy it. The server does not store it; this dialog is the only copy.
+class _ResetLinkDialog extends StatefulWidget {
+  const _ResetLinkDialog({required this.user, required this.link});
+
+  final AdminUserSummary user;
+  final String link;
+
+  @override
+  State<_ResetLinkDialog> createState() => _ResetLinkDialogState();
+}
+
+class _ResetLinkDialogState extends State<_ResetLinkDialog> {
+  bool _copied = false;
+
+  Future<void> _copy() async {
+    await Clipboard.setData(ClipboardData(text: widget.link));
+    if (mounted) setState(() => _copied = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.resetPasswordLinkTitle(widget.user.displayName)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 12,
+        children: [
+          Text(l10n.resetPasswordLinkHelp),
+          SelectableText(
+            widget.link,
+            key: const Key('reset-link'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _copy,
+          child: Text(_copied ? l10n.linkCopied : l10n.copyLink),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.close),
+        ),
+      ],
     );
   }
 }

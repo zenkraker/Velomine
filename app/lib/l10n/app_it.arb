@@ -127,10 +127,11 @@
   "joinIntro": "Chiedi il codice di accesso al proprietario del club, oppure apri il link che ha condiviso.",
   "joinCode": "Codice di accesso",
   "joinAction": "Entra",
+  "joinSkip": "Continua senza club",
   "joinInvalid": "Il codice non è corretto, oppure il club non accetta nuovi membri.",
   "joinAlready": "Il tuo account è già in un club.",
   "clubNoneTitle": "Non sei ancora in un club",
-  "clubNoneBody": "Entra con il codice del proprietario del club.",
+  "clubNoneBody": "Velomine funziona anche da soli. Entra in un club quando vuoi uscire in gruppo e condividere con i suoi coach.",
   "clubInactive": "Questo club non è attivo. Le iscrizioni sono chiuse.",
   "clubOwner": "Proprietario",
   "clubCoach": "Allenatore",
@@ -308,6 +309,7 @@
   "errorWheelRange": "La circonferenza ruota è tra 1000 e 2600 mm.",
   "errorInitialDistance": "La distanza prima di Velomine deve essere 0 o più.",
   "cancel": "Annulla",
+  "close": "Chiudi",
   "save": "Salva",
 
   "replacePartTitle": "Sostituisci {name}",
@@ -681,5 +683,194 @@
   "lap": "Giro",
   "recorderRideType": "Tipo di uscita",
   "recorderEbike": "E-bike",
-  "recorderEbikeHelp": "Conta come assistita e preferisce la tua e-bike."
+  "recorderEbikeHelp": "Conta come assistita e preferisce la tua e-bike.",
+
+  "forgotPassword": "Password dimenticata?",
+  "forgotPasswordTitle": "Reimposta la password",
+  "forgotPasswordHelp": "Inserisci l'indirizzo email del tuo account. Se può essere reimpostata, ti invieremo un link.",
+  "forgotPasswordSent": "Se esiste un account per quell'indirizzo, abbiamo inviato un link per reimpostare la password. Controlla anche lo spam.",
+  "forgotPasswordUnavailable": "Questo server non è configurato per inviare email. Chiedi a un amministratore del club di reimpostare la password.",
+  "forgotPasswordTooMany": "Troppi tentativi. Riprova tra qualche minuto.",
+  "forgotPasswordFailed": "Non è stato possibile avviare il ripristino. Riprova.",
+  "errorEnterEmail": "Inserisci il tuo indirizzo email.",
+  "sendResetLink": "Invia il link",
+  "resetPasswordTitle": "Scegli una nuova password",
+  "resetPasswordHelp": "Scegli una password di almeno 10 caratteri.",
+  "setNewPassword": "Imposta la nuova password",
+  "newPassword": "Nuova password",
+  "confirmPassword": "Conferma password",
+  "passwordsDoNotMatch": "Le due password non coincidono.",
+  "passwordTooShort": "Usa almeno 10 caratteri.",
+  "resetPasswordInvalid": "Questo link non è valido o è scaduto. Chiedine uno nuovo.",
+  "resetPasswordDone": "Password cambiata. Accedi con quella nuova.",
+  "goToSignIn": "Vai all'accesso",
+  "changePassword": "Cambia password",
+  "changePasswordTitle": "Cambia password",
+  "currentPassword": "Password attuale",
+  "passwordWrongCurrent": "La password attuale non è corretta.",
+  "passwordNoPassword": "Questo account accede con il single sign-on.",
+  "passwordChanged": "Password cambiata. Accedi di nuovo su questo dispositivo.",
+  "passwordChangeFailed": "Non è stato possibile cambiare la password. Riprova.",
+  "actionChangePassword": "cambiare la password",
+  "actionResetPassword": "reimpostare questa password",
+  "resetPasswordLink": "Reimposta password",
+  "resetPasswordLinkTitle": "Link di reimpostazione per {name}",
+  "@resetPasswordLinkTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPasswordLinkHelp": "Invia questo link al membro. Funziona una volta e scade dopo 30 minuti.",
+  "copyLink": "Copia link",
+  "linkCopied": "Copiato",
+  "resetPasswordLinkFailed": "Non è stato possibile creare il link. Riprova.",
+
+  "actionLoadNearbyClubs": "trovare i club vicino a te",
+  "actionRequestJoinClub": "chiedere di entrare nel club",
+  "actionCancelJoinRequest": "annullare la richiesta",
+  "actionLoadJoinRequests": "caricare le richieste di ingresso",
+  "actionApproveJoinRequest": "approvare la richiesta",
+  "actionDeclineJoinRequest": "rifiutare la richiesta",
+
+  "clubSeeNearby": "Vedi i club vicino a te",
+  "clubLocation": "Posizione del club",
+  "clubLocationHelp": "Dove si ritrova il club. Serve solo a mostrarlo ai corridori vicini.",
+  "clubLocationNone": "Nessuna posizione",
+  "clubLocationSet": "Scegli sulla mappa",
+  "clubLocationChange": "Cambia posizione",
+  "clubDiscoverable": "Mostra questo club ai corridori vicini",
+  "clubDiscoverableHelp": "I corridori senza club possono trovarlo per distanza e chiedere di entrare.",
+
+  "locationPickerTitle": "Scegli un punto",
+  "locationPickerHelp": "Sposta la mappa finché il segnaposto è sul posto.",
+  "locationPickerUse": "Usa questo punto",
+  "locationPickerCurrent": "Usa la mia posizione",
+  "locationCurrentUnavailable": "Il dispositivo non ha condiviso la posizione.",
+  "locationCoordinates": "Latitudine, longitudine",
+  "locationLatitude": "Latitudine",
+  "locationLongitude": "Longitudine",
+  "locationCoordinatesHint": "Per esempio 45.4642, 9.1900",
+  "locationCoordinatesInvalid": "Usa due numeri come 45.4642, 9.1900.",
+  "locationNoMap": "Questo server non ha uno sfondo mappa: inserisci le coordinate.",
+  "locationMapFirst": "Prima sposta la mappa sul posto.",
+
+  "nearbyTitle": "Club vicino a te",
+  "nearbyIntro": "Pedala al tuo ritmo. Entra in un club quando vuoi: puoi uscire quando vuoi e le tue uscite restano tue.",
+  "nearbyLocating": "Sto cercando la tua posizione…",
+  "nearbyLocationHelp": "La tua posizione serve solo a ordinare i club per distanza e non viene conservata sul server.",
+  "nearbyUseDevice": "Usa la mia posizione",
+  "nearbySetHome": "Imposta una posizione",
+  "nearbyHomeUsed": "Uso la posizione salvata.",
+  "nearbyRadius": "Entro {km} km",
+  "@nearbyRadius": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "nearbyEmpty": "Nessun club entro {km} km. Pedala per conto tuo, oppure cerca più lontano.",
+  "@nearbyEmpty": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "nearbyDistance": "~{km} km",
+  "@nearbyDistance": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "nearbyAsk": "Chiedi di entrare",
+  "nearbyRequested": "Richiesto",
+  "nearbyCancel": "Annulla richiesta",
+  "nearbyRequestTitle": "Chiedi di entrare in {club}",
+  "@nearbyRequestTitle": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "nearbyRequestNote": "Due parole per il proprietario (facoltative)",
+  "nearbyRequestSend": "Invia richiesta",
+  "nearbyRequestSent": "Richiesta inviata. Il proprietario deciderà quando può.",
+  "nearbyPendingTitle": "In attesa di {club}",
+  "@nearbyPendingTitle": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "nearbyPendingBody": "La tua richiesta è al proprietario del club.",
+  "nearbyWiden": "Cerca più lontano",
+  "nearbyReplaceTitle": "Annullare la richiesta a {club}?",
+  "@nearbyReplaceTitle": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "nearbyReplaceBody": "Puoi avere una sola richiesta aperta. Chiedendo a un altro club, questa viene annullata.",
+
+  "soloHintTitle": "Pedala al tuo ritmo",
+  "soloHintBody": "Ci sono club vicino a te, quando ne avrai voglia.",
+  "soloHintSee": "Vedi i club",
+  "soloHintDismiss": "Non ora",
+
+  "joinRequestsTitle": "Richieste di ingresso",
+  "joinRequestsEmpty": "Nessuno è in attesa di entrare.",
+  "joinRequestApprove": "Approva",
+  "joinRequestDecline": "Rifiuta",
+  "joinRequestApproveTitle": "Far entrare {name}?",
+  "@joinRequestApproveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinRequestApproveBody": "Diventa un corridore. Le tue uscite restano tue; la condivisione resta una sua scelta.",
+  "joinRequestDeclineTitle": "Rifiutare {name}?",
+  "@joinRequestDeclineTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinRequestDeclineBody": "Verrà avvisato, senza motivazione.",
+
+  "notificationClubJoinRequest": "{name} ha chiesto di entrare nel tuo club.",
+  "@notificationClubJoinRequest": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubJoinApproved": "{club} ti ha accettato. Benvenuto!",
+  "@notificationClubJoinApproved": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubJoinDeclined": "{club} ha rifiutato la tua richiesta.",
+  "@notificationClubJoinDeclined": {
+    "placeholders": {
+      "club": {
+        "type": "String"
+      }
+    }
+  }
 }

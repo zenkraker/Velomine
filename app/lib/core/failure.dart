@@ -80,6 +80,14 @@ enum FailureAction {
   loadAthletes,
   loadAthlete,
   loadCoachRide,
+  changePassword,
+  resetPassword,
+  loadNearbyClubs,
+  requestJoinClub,
+  cancelJoinRequest,
+  loadJoinRequests,
+  approveJoinRequest,
+  declineJoinRequest,
 }
 
 class Failure {
@@ -151,6 +159,14 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.loadAthletes => l10n.actionLoadAthletes,
       FailureAction.loadAthlete => l10n.actionLoadAthlete,
       FailureAction.loadCoachRide => l10n.actionLoadCoachRide,
+      FailureAction.changePassword => l10n.actionChangePassword,
+      FailureAction.resetPassword => l10n.actionResetPassword,
+      FailureAction.loadNearbyClubs => l10n.actionLoadNearbyClubs,
+      FailureAction.requestJoinClub => l10n.actionRequestJoinClub,
+      FailureAction.cancelJoinRequest => l10n.actionCancelJoinRequest,
+      FailureAction.loadJoinRequests => l10n.actionLoadJoinRequests,
+      FailureAction.approveJoinRequest => l10n.actionApproveJoinRequest,
+      FailureAction.declineJoinRequest => l10n.actionDeclineJoinRequest,
     };
 
 /// The sentence for a failure in the language on screen.

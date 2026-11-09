@@ -45,6 +45,10 @@ public sealed class JoinClub(VelomineDbContext db, TimeProvider time) : Endpoint
             return;
         }
 
+        // A code join answers any ask the rider had open elsewhere.
+        var pending = await db.ClubJoinRequests.FirstOrDefaultAsync(r => r.UserId == userId, ct);
+        if (pending is not null) db.ClubJoinRequests.Remove(pending);
+
         db.ClubMemberships.Add(new ClubMembership
         {
             Id = Guid.NewGuid(),

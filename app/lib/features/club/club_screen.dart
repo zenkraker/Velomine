@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/location_service.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../sharing/sharing_controller.dart';
 import 'club_controller.dart';
+import 'join_requests_controller.dart';
+import 'location_picker.dart';
+import 'nearby_clubs_controller.dart';
 
 String clubRoleName(AppLocalizations l10n, String role) => switch (role) {
   'owner' => l10n.clubOwner,
@@ -36,16 +41,28 @@ class ClubScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.sharing,
+    required this.requests,
+    required this.nearby,
     required this.serverUrl,
     required this.onJoin,
+    required this.onOpenClubs,
     required this.onOpenAthletes,
+    required this.locationService,
+    this.tileUrl,
+    this.attribution,
   });
 
   final ClubController controller;
   final SharingController sharing;
+  final JoinRequestsController requests;
+  final NearbyClubsController nearby;
   final String serverUrl;
   final VoidCallback onJoin;
+  final VoidCallback onOpenClubs;
   final VoidCallback onOpenAthletes;
+  final LocationService locationService;
+  final String? tileUrl;
+  final String? attribution;
 
   @override
   State<ClubScreen> createState() => _ClubScreenState();
@@ -54,28 +71,41 @@ class ClubScreen extends StatefulWidget {
 class _ClubScreenState extends State<ClubScreen> {
   ClubController get controller => widget.controller;
   SharingController get sharing => widget.sharing;
+  JoinRequestsController get requests => widget.requests;
+  NearbyClubsController get nearby => widget.nearby;
 
   String? _askedFor;
+  bool _askedForPending = false;
 
   @override
   void initState() {
     super.initState();
-    controller.addListener(_loadSharingIfNeeded);
-    _loadSharingIfNeeded();
+    controller.addListener(_loadClubPartsIfNeeded);
+    _loadClubPartsIfNeeded();
   }
 
   @override
   void dispose() {
-    controller.removeListener(_loadSharingIfNeeded);
+    controller.removeListener(_loadClubPartsIfNeeded);
     super.dispose();
   }
 
-  /// Sharing belongs to the club; read it once the club is known.
-  void _loadSharingIfNeeded() {
+  /// Sharing belongs to the club, and the owner's inbox does too; read them once the club is known.
+  /// Without a club, read the rider's open ask so the empty state can show it.
+  void _loadClubPartsIfNeeded() {
     final club = controller.club;
-    if (club == null || _askedFor == club.id) return;
+    if (club == null) {
+      if (controller.loaded && !_askedForPending) {
+        _askedForPending = true;
+        nearby.loadRequest();
+      }
+      return;
+    }
+
+    if (_askedFor == club.id) return;
     _askedFor = club.id;
     sharing.refresh();
+    if (club.myRole == 'owner') requests.refresh();
   }
 
   Future<void> _rotateCode(BuildContext context) async {
@@ -124,6 +154,7 @@ class _ClubScreenState extends State<ClubScreen> {
       final failure = await controller.leave();
       if (failure == null) {
         sharing.reset();
+        requests.reset();
         _askedFor = null;
       }
     }
@@ -142,10 +173,255 @@ class _ClubScreenState extends State<ClubScreen> {
     );
   }
 
+  Future<GeoPoint?> _pick(GeoPoint? initial) => Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => LocationPickerScreen(
+        initial: initial,
+        tileUrl: widget.tileUrl,
+        attribution: widget.attribution,
+        locationService: widget.locationService,
+      ),
+    ),
+  );
+
+  Future<void> _saveLocation(
+    ClubResponse club, {
+    required bool isDiscoverable,
+    GeoPoint? point,
+  }) async {
+    final selected =
+        point ??
+        await _pick(
+          club.latitude == null || club.longitude == null
+              ? null
+              : (latitude: club.latitude!, longitude: club.longitude!),
+        );
+    if (selected == null || !mounted) return;
+    final failure = await controller.setLocation(
+      selected.latitude,
+      selected.longitude,
+      isDiscoverable: isDiscoverable,
+    );
+    if (failure != null && mounted) _showFailure(failure);
+  }
+
+  Future<void> _toggleDiscoverable(ClubResponse club, bool value) async {
+    // Turning discovery on needs a point first, so ask for one and save both at once.
+    if (value && (club.latitude == null || club.longitude == null)) {
+      await _saveLocation(club, isDiscoverable: true);
+      return;
+    }
+
+    final failure = await controller.setLocation(
+      club.latitude,
+      club.longitude,
+      isDiscoverable: value,
+    );
+    if (failure != null && mounted) _showFailure(failure);
+  }
+
+  Future<void> _decideJoinRequest(
+    JoinRequestResponse request, {
+    required bool approve,
+  }) async {
+    final l10n = context.l10n;
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          approve
+              ? l10n.joinRequestApproveTitle(request.displayName)
+              : l10n.joinRequestDeclineTitle(request.displayName),
+        ),
+        content: Text(
+          approve ? l10n.joinRequestApproveBody : l10n.joinRequestDeclineBody,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: Key(
+              approve
+                  ? 'confirm-approve-${request.id}'
+                  : 'confirm-decline-${request.id}',
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              approve ? l10n.joinRequestApprove : l10n.joinRequestDecline,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (sure != true || !mounted) return;
+
+    final failure = approve
+        ? await requests.approve(request.id)
+        : await requests.decline(request.id);
+    if (failure == null) {
+      await controller.refresh();
+    } else if (mounted) {
+      _showFailure(failure);
+    }
+  }
+
+  Future<void> _cancelPending() async {
+    final failure = await nearby.cancelRequest();
+    if (!mounted || failure == null) return;
+    _showFailure(failure);
+  }
+
+  void _showFailure(Failure failure) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(failureText(context.l10n, failure))));
+  }
+
+  Widget _requestsCard(BuildContext context) {
+    final l10n = context.l10n;
+    return Card(
+      key: const Key('join-requests-card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.joinRequestsTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                IconButton(
+                  key: const Key('refresh-join-requests'),
+                  tooltip: l10n.actionLoadJoinRequests,
+                  onPressed: requests.loading ? null : requests.refresh,
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
+            ),
+            if (requests.error != null)
+              Text(
+                failureText(l10n, requests.error!),
+                key: const Key('join-requests-error'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (requests.loading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (requests.requests.isEmpty)
+              Text(
+                l10n.joinRequestsEmpty,
+                key: const Key('join-requests-empty'),
+              )
+            else
+              for (final request in requests.requests) ...[
+                const Divider(),
+                Text(
+                  request.displayName,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                if (request.note != null) Text('“${request.note}”'),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton(
+                        key: Key('decline-${request.id}'),
+                        onPressed: requests.busy
+                            ? null
+                            : () => _decideJoinRequest(request, approve: false),
+                        child: Text(l10n.joinRequestDecline),
+                      ),
+                      FilledButton.tonal(
+                        key: Key('approve-${request.id}'),
+                        onPressed: requests.busy
+                            ? null
+                            : () => _decideJoinRequest(request, approve: true),
+                        child: Text(l10n.joinRequestApprove),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _locationCard(BuildContext context, ClubResponse club) {
+    final l10n = context.l10n;
+    final hasPoint = club.latitude != null && club.longitude != null;
+    return Card(
+      key: const Key('club-location-card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8,
+          children: [
+            Text(
+              l10n.clubLocation,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text(
+              l10n.clubLocationHelp,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              hasPoint
+                  ? '${club.latitude!.toStringAsFixed(5)}, '
+                        '${club.longitude!.toStringAsFixed(5)}'
+                  : l10n.clubLocationNone,
+              key: const Key('club-location-value'),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                key: const Key('set-club-location'),
+                onPressed: controller.busy
+                    ? null
+                    : () => _saveLocation(
+                        club,
+                        isDiscoverable: club.isDiscoverable,
+                      ),
+                icon: const Icon(Icons.place),
+                label: Text(
+                  hasPoint ? l10n.clubLocationChange : l10n.clubLocationSet,
+                ),
+              ),
+            ),
+            SwitchListTile(
+              key: const Key('club-discoverable'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.clubDiscoverable),
+              subtitle: Text(l10n.clubDiscoverableHelp),
+              value: club.isDiscoverable,
+              onChanged: controller.busy
+                  ? null
+                  : (value) => _toggleDiscoverable(club, value),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([controller, sharing]),
+      listenable: Listenable.merge([controller, sharing, requests, nearby]),
       builder: (context, _) {
         final l10n = context.l10n;
         final club = controller.club;
@@ -171,6 +447,24 @@ class _ClubScreenState extends State<ClubScreen> {
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           Text(l10n.clubNoneBody),
+                          if (nearby.request != null) ...[
+                            const Divider(),
+                            Text(
+                              l10n.nearbyPendingTitle(nearby.request!.clubName),
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(l10n.nearbyPendingBody),
+                            if (nearby.request!.note != null)
+                              Text('“${nearby.request!.note}”'),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                key: const Key('cancel-join-request'),
+                                onPressed: nearby.busy ? null : _cancelPending,
+                                child: Text(l10n.nearbyCancel),
+                              ),
+                            ),
+                          ],
                           if (controller.error != null)
                             Text(
                               failureText(l10n, controller.error!),
@@ -179,14 +473,23 @@ class _ClubScreenState extends State<ClubScreen> {
                                 color: Theme.of(context).colorScheme.error,
                               ),
                             ),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: FilledButton.icon(
-                              key: const Key('go-join-club'),
-                              onPressed: widget.onJoin,
-                              icon: const Icon(Icons.group_add),
-                              label: Text(l10n.joinTitle),
-                            ),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              FilledButton.icon(
+                                key: const Key('go-nearby-clubs'),
+                                onPressed: widget.onOpenClubs,
+                                icon: const Icon(Icons.explore_outlined),
+                                label: Text(l10n.clubSeeNearby),
+                              ),
+                              OutlinedButton.icon(
+                                key: const Key('go-join-club'),
+                                onPressed: widget.onJoin,
+                                icon: const Icon(Icons.group_add),
+                                label: Text(l10n.joinTitle),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -241,6 +544,7 @@ class _ClubScreenState extends State<ClubScreen> {
                           color: Theme.of(context).colorScheme.error,
                         ),
                       ),
+                    if (owner) _requestsCard(context),
                     if (owner && club.joinCode != null) ...[
                       Card(
                         child: Padding(
@@ -288,6 +592,7 @@ class _ClubScreenState extends State<ClubScreen> {
                         ),
                       ),
                     ],
+                    if (owner) _locationCard(context, club),
                     Text(
                       l10n.clubMembers,
                       style: Theme.of(context).textTheme.titleMedium,
