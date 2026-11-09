@@ -47,7 +47,7 @@ public sealed class RideIngestionService(
 
     private async Task ProcessAsync(VelomineDbContext db, Guid id, CancellationToken ct)
     {
-        var ride = await db.Rides.FirstOrDefaultAsync(r => r.Id == id && r.Status == RideStatus.Processing, ct);
+        var ride = await db.Rides.Include(r => r.Laps).FirstOrDefaultAsync(r => r.Id == id && r.Status == RideStatus.Processing, ct);
         if (ride is null) return;
 
         IReadOnlyList<ParsedRide> parsed;
@@ -104,6 +104,10 @@ public sealed class RideIngestionService(
 
             target.StartTime = file.StartTime;            target.UtcOffsetMinutes = file.UtcOffsetMinutes;
             target.Device = file.Device;
+            target.Discipline = file.Discipline;
+            target.Assist = file.Assist;
+            target.Environment = file.Environment;
+            target.Commute = file.Commute;
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
 
@@ -123,6 +127,8 @@ public sealed class RideIngestionService(
                 .Where(b => b.UserId == ride.UserId && b.IsDefault && b.IsActive).Select(b => (Guid?)b.Id).FirstOrDefaultAsync(ct);
             target.Status = RideStatus.Ready;
             target.Streams = ToStreams(file.Samples);
+            target.Laps.Clear();
+            target.Laps.AddRange(LapMetrics.Build(target.Id, file.Laps, file.Samples, file.Pauses, profile.FtpW, profile.MaxHeartRate));
             target.PowerBests.Clear();
             var bests = metrics.PowerBests ?? [];
             for (var i = 0; i < bests.Length && i < PowerBests.Durations.Length; i++)

@@ -27,6 +27,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<RidePowerBest> RidePowerBests => Set<RidePowerBest>();
 
+    public DbSet<RideLap> RideLaps => Set<RideLap>();
+
     public DbSet<Bike> Bikes => Set<Bike>();
 
     public DbSet<BikeComponent> BikeComponents => Set<BikeComponent>();

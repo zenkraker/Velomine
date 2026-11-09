@@ -376,4 +376,142 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         var ride = await WaitAsync(again, listed!.Rides.Single().Id);
         Assert.Equal("ready", ride.Status);
     }
+
+    [Fact]
+    public async Task UploadRide_ShouldStoreTheDimensions_WhenTheFitSessionHasASubSport()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60, Sport.EBiking, SubSport: SubSport.EBikeMountain)));
+
+        Assert.Equal("mountain", ride.Discipline);
+        Assert.Equal("ebike", ride.Assist);
+        Assert.Equal("outdoor", ride.Environment);
+        Assert.Null(ride.Commute);
+    }
+
+    [Fact]
+    public async Task SetRideType_ShouldChangeTheDimensions_WhenTheMemberOwnsTheRide()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
+
+        var response = await member.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/type", new
+        {
+            Discipline = "mountain",
+            Assist = "ebike",
+            Environment = "indoor",
+            Commute = true,
+        }, Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var changed = await response.Content.ReadFromJsonAsync<RideResponse>(Ct);
+        Assert.Equal("mountain", changed!.Discipline);
+        Assert.Equal("ebike", changed.Assist);
+        Assert.Equal("indoor", changed.Environment);
+        Assert.True(changed.Commute);
+
+        var again = await member.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct);
+        Assert.Equal("mountain", again!.Discipline);
+        Assert.Equal("ebike", again.Assist);
+        Assert.Equal("indoor", again.Environment);
+        Assert.True(again.Commute);
+    }
+
+    [Fact]
+    public async Task SetRideType_ShouldRejectAnUnknownDiscipline_WhenTheBodyHasOne()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
+
+        var response = await member.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/type", new { Discipline = "rowing" }, Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetRideType_ShouldReturnNotFound_WhenTheRideBelongsToSomeoneElse()
+    {
+        await using var api = await StartAsync();
+        var alice = await NewMemberAsync(api);
+        var bob = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 60)));
+
+        var response = await bob.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/type", new { Discipline = "gravel" }, Ct);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListRides_ShouldApplyEveryDimensionFilter_WhenSeveralAreGiven()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(1), 60, SubSport: SubSport.Road)));
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(2), 60, SubSport: SubSport.GravelCycling)));
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(3), 60, Sport.EBiking, SubSport: SubSport.EBikeMountain)));
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddDays(4), 60, SubSport: SubSport.IndoorCycling)));
+
+        var gravel = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?discipline=gravel", Ct);
+        Assert.Equal("gravel", Assert.Single(gravel!.Rides).Discipline);
+
+        var indoor = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?environment=indoor", Ct);
+        Assert.Equal("indoor", Assert.Single(indoor!.Rides).Environment);
+
+        var eMountain = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?discipline=mountain&assist=ebike", Ct);
+        Assert.Equal("mountain", Assert.Single(eMountain!.Rides).Discipline);
+
+        var none = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?discipline=road&assist=ebike", Ct);
+        Assert.Empty(none!.Rides);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await member.GetAsync("/api/v1/rides?discipline=rowing", Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadRide_ShouldStoreComputedLaps_WhenTheFileHasThem()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120, LapSeconds: [60, 60])));
+
+        var laps = await member.GetFromJsonAsync<RideLapsResponse>($"/api/v1/rides/{ride.Id}/laps", Ct);
+
+        Assert.Equal([1, 2], laps!.Laps.Select(l => l.Index).ToArray());
+        Assert.Equal(0, laps.Laps[0].StartS);
+        Assert.Equal(60, laps.Laps[0].EndS);
+        Assert.Equal(60, laps.Laps[1].StartS);
+        Assert.Equal(119, laps.Laps[1].EndS);
+        Assert.InRange(laps.Laps.Sum(l => l.DistanceM), ride.DistanceM!.Value - 1, ride.DistanceM.Value + 1);
+        Assert.InRange(laps.Laps.Sum(l => l.MovingS), ride.MovingS!.Value - 2, ride.MovingS.Value + 2);
+    }
+
+    [Fact]
+    public async Task GetRideLaps_ShouldReturnNone_WhenTheFileHasNoLaps()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
+
+        var laps = await member.GetFromJsonAsync<RideLapsResponse>($"/api/v1/rides/{ride.Id}/laps", Ct);
+
+        Assert.Empty(laps!.Laps);
+    }
+
+    [Fact]
+    public async Task GetRideLaps_ShouldBeHiddenOrRefused_WhenTheRideIsNotReadyOrNotMine()
+    {
+        await using var api = await StartAsync();
+        var alice = await NewMemberAsync(api);
+        var bob = await NewMemberAsync(api);
+        var ready = await UploadAndWaitAsync(alice, Fit(new FitSession(Start, 60)));
+        var failed = await UploadAndWaitAsync(alice, Bytes("not a ride"), "note.txt");
+
+        Assert.Equal(HttpStatusCode.NotFound, (await bob.GetAsync($"/api/v1/rides/{ready.Id}/laps", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync($"/api/v1/rides/{Guid.NewGuid()}/laps", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await alice.GetAsync($"/api/v1/rides/{failed.Id}/laps", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync($"/api/v1/rides/{ready.Id}/laps", Ct)).StatusCode);
+    }
 }

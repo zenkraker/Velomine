@@ -50,6 +50,7 @@ lib/model/ftp_estimate.dart
 lib/model/goal_response.dart
 lib/model/join_club_request.dart
 lib/model/join_code_response.dart
+lib/model/lap_response.dart
 lib/model/list_admin_users_response.dart
 lib/model/list_bikes_response.dart
 lib/model/list_component_types_response.dart
@@ -65,8 +66,6 @@ lib/model/period_totals.dart
 lib/model/power_curve_point.dart
 lib/model/power_curve_response.dart
 lib/model/problem_details.dart
-lib/model/problem_details2.dart
-lib/model/problem_details2_errors_inner.dart
 lib/model/profile_response.dart
 lib/model/readiness_factor.dart
 lib/model/readiness_response.dart
@@ -74,6 +73,7 @@ lib/model/refresh_request.dart
 lib/model/register_request.dart
 lib/model/register_response.dart
 lib/model/ride_feel_response.dart
+lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
 lib/model/save_check_in_request.dart
@@ -83,6 +83,7 @@ lib/model/set_club_member_role_request.dart
 lib/model/set_club_owner_request.dart
 lib/model/set_ftp_request.dart
 lib/model/set_ride_bike_request.dart
+lib/model/set_ride_type_request.dart
 lib/model/set_user_roles_request.dart
 lib/model/settings_response.dart
 lib/model/share_view_response.dart

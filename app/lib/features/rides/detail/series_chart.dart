@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'lap_range.dart';
 import 'ride_series.dart';
 import 'scale.dart';
 
@@ -23,12 +24,14 @@ class SeriesChart extends StatelessWidget {
     required this.series,
     required this.time,
     required this.selected,
+    required this.selectedLap,
     required this.color,
   });
 
   final Series series;
   final List<double> time;
   final ValueNotifier<int?> selected;
+  final ValueNotifier<LapRange?> selectedLap;
   final Color color;
 
   static const double height = 130;
@@ -103,6 +106,7 @@ class SeriesChart extends StatelessWidget {
                       series: series,
                       time: time,
                       selected: selected,
+                      selectedLap: selectedLap,
                       color: color,
                       textStyle:
                           (text.labelSmall ?? const TextStyle(fontSize: 11))
@@ -130,15 +134,17 @@ class _ChartPainter extends CustomPainter {
     required this.series,
     required this.time,
     required this.selected,
+    required this.selectedLap,
     required this.color,
     required this.textStyle,
     required this.gridColor,
     required this.background,
-  }) : super(repaint: selected);
+  }) : super(repaint: Listenable.merge([selected, selectedLap]));
 
   final Series series;
   final List<double> time;
   final ValueNotifier<int?> selected;
+  final ValueNotifier<LapRange?> selectedLap;
   final Color color;
   final TextStyle textStyle;
   final Color gridColor;
@@ -187,6 +193,17 @@ class _ChartPainter extends CustomPainter {
         alignRight: false,
         centerY: false,
         centerX: true,
+      );
+    }
+
+    // The selected lap, shaded behind the line.
+    final lap = selectedLap.value;
+    if (lap != null) {
+      final left = x(lap.startS.clamp(t0, t1));
+      final right = x(lap.endS.clamp(t0, t1));
+      canvas.drawRect(
+        Rect.fromLTRB(left, plot.top, right, plot.bottom),
+        Paint()..color = color.withValues(alpha: 0.1),
       );
     }
 
@@ -276,6 +293,7 @@ class _ChartPainter extends CustomPainter {
       old.series != series ||
       old.time != time ||
       old.color != color ||
+      old.selectedLap != selectedLap ||
       old.background != background ||
       old.gridColor != gridColor ||
       old.textStyle != textStyle;

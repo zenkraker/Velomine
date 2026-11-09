@@ -23,8 +23,9 @@ public static class FitParser
         stream.Position = 0;
 
         var records = new List<Raw>();
-        var sessions = new List<(System.DateTime Start, double Elapsed, double? Timer, Sport? Sport, int? NormalizedPower)>();
+        var sessions = new List<(System.DateTime Start, double Elapsed, double? Timer, Sport? Sport, SubSport? SubSport, int? NormalizedPower)>();
         var timerEvents = new List<(System.DateTime Time, EventType Type)>();
+        var lapMessages = new List<(System.DateTime Start, double Elapsed)>();
         string? device = null;
         int? offsetMinutes = null;
 
@@ -56,6 +57,7 @@ public static class FitParser
                 session.GetTotalElapsedTime() ?? 0,
                 session.GetTotalTimerTime(),
                 session.GetSport(),
+                session.GetSubSport(),
                 session.GetNormalizedPower()));
         };
         broadcaster.EventMesgEvent += (_, e) =>
@@ -64,6 +66,15 @@ public static class FitParser
             if (timer.GetEvent() != Event.Timer) return;
             if (timer.GetTimestamp() is not { } stamp || timer.GetEventType() is not { } type) return;
             timerEvents.Add((stamp.GetDateTime(), type));
+        };
+        broadcaster.LapMesgEvent += (_, e) =>
+        {
+            var lap = (LapMesg)e.mesg;
+            if (lap.GetStartTime() is not { } start) return;
+            var elapsed = lap.GetTotalElapsedTime() ?? 0;
+            if (elapsed <= 0 && lap.GetTimestamp() is { } stamp)
+                elapsed = (float)(stamp.GetDateTime() - start.GetDateTime()).TotalSeconds;
+            lapMessages.Add((start.GetDateTime(), elapsed));
         };
         broadcaster.FileIdMesgEvent += (_, e) => device ??= ManufacturerName(((FileIdMesg)e.mesg).GetManufacturer());
         broadcaster.ActivityMesgEvent += (_, e) =>
@@ -87,7 +98,7 @@ public static class FitParser
         var rides = new List<ParsedRide>();
         if (sessions.Count == 0)
         {
-            rides.Add(Build(records, device, offsetMinutes, normalizedPower: null, timerEvents));
+            rides.Add(Build(records, device, offsetMinutes, normalizedPower: null, timerEvents, laps: lapMessages));
         }
         else
         {
@@ -107,7 +118,10 @@ public static class FitParser
                         session.NormalizedPower,
                         timerEvents.Where(e => e.Time >= session.Start && e.Time <= end),
                         session.Elapsed,
-                        session.Timer));
+                        session.Timer,
+                        session.Sport,
+                        session.SubSport,
+                        lapMessages.Where(l => l.Start >= session.Start.AddSeconds(-1) && l.Start <= end)));
                 }
             }
         }
@@ -130,24 +144,79 @@ public static class FitParser
         int? normalizedPower,
         IEnumerable<(System.DateTime Time, EventType Type)> timerEvents,
         double? deviceElapsedS = null,
-        double? deviceMovingS = null)
+        double? deviceMovingS = null,
+        Sport? sport = null,
+        SubSport? subSport = null,
+        IEnumerable<(System.DateTime Start, double Elapsed)>? laps = null)
     {
         var first = records.Min(r => r.Time);
         var last = records.Max(r => r.Time);
         var eventList = timerEvents.ToList();
         var pauseEnd = eventList.Select(e => e.Time).DefaultIfEmpty(last).Max();
+        var hasPositions = records.Any(r => r.Sample.Latitude is not null && r.Sample.Longitude is not null);
+        var dimensions = Dimensions(sport, subSport, hasPositions);
+        var lastS = (last - first).TotalSeconds;
+        var parsedLaps = (laps ?? [])
+            .OrderBy(l => l.Start)
+            .Select(l =>
+            {
+                var start = (l.Start - first).TotalSeconds;
+                var end = start + l.Elapsed;
+                return new ParsedLap(Math.Max(0, start), Math.Min(lastS, end));
+            })
+            .Where(l => l.EndS > l.StartS)
+            .ToList();
         var samples = records.OrderBy(r => r.Time).Select(r => r.Sample with { T = (r.Time - first).TotalSeconds }).ToList();
         return new ParsedRide
         {
             StartTime = new DateTimeOffset(System.DateTime.SpecifyKind(first, DateTimeKind.Utc)),
             UtcOffsetMinutes = offsetMinutes,
             Device = device,
+            Discipline = dimensions.Discipline,
+            Assist = dimensions.Assist,
+            Environment = dimensions.Environment,
+            Commute = dimensions.Commute,
             DeviceNormalizedPowerW = normalizedPower is > 0 ? normalizedPower : null,
             DeviceElapsedS = deviceElapsedS is > 0 ? deviceElapsedS : null,
             DeviceMovingS = deviceMovingS is > 0 ? deviceMovingS : null,
             Pauses = BuildPauses(eventList, first, pauseEnd),
+            Laps = parsedLaps,
             Samples = samples,
         };
+    }
+
+    /// <summary>
+    /// Maps the session's sport and sub-sport onto the four dimensions. A sub-sport is the activity profile the
+    /// rider picked on the device; when it is absent, nothing about the surface is guessed.
+    /// </summary>
+    private static RideDimensions Dimensions(Sport? sport, SubSport? subSport, bool hasPositions)
+    {
+        string? discipline = subSport switch
+        {
+            SubSport.Road or SubSport.Street => Disciplines.Road,
+            SubSport.GravelCycling => Disciplines.Gravel,
+            SubSport.Mountain or SubSport.Trail or SubSport.Downhill or SubSport.Cyclocross or SubSport.EBikeMountain or SubSport.EBikeEnduro => Disciplines.Mountain,
+            SubSport.TrackCycling => Disciplines.Track,
+            _ => null,
+        };
+
+        string? assist = sport switch
+        {
+            Sport.Cycling => Assists.None,
+            Sport.EBiking => Assists.EBike,
+            _ => null,
+        };
+
+        string? environment = subSport switch
+        {
+            SubSport.IndoorCycling or SubSport.Spin => Environments.Indoor,
+            SubSport.VirtualActivity => Environments.Virtual,
+            _ => hasPositions ? Environments.Outdoor : null,
+        };
+
+        bool? commute = subSport == SubSport.Commuting ? true : null;
+
+        return new RideDimensions(discipline, assist, environment, commute);
     }
 
     /// <summary>Turns timer stop/start events into paused intervals relative to the first sample.</summary>

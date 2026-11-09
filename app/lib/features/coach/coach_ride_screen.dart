@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../rides/detail/lap_table.dart';
 import '../rides/detail/route_map.dart';
 import '../rides/detail/series_chart.dart';
+import '../rides/ride_type_chips.dart';
 import 'coach_controllers.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
@@ -84,6 +86,7 @@ class _CoachRideScreenState extends State<CoachRideScreen> {
                         style: text.headlineSmall,
                       ),
                       Text(l10n.coachReadOnly, style: text.bodySmall),
+                      if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
                       Wrap(
                         spacing: 24,
                         runSpacing: 12,
@@ -123,10 +126,13 @@ class _CoachRideScreenState extends State<CoachRideScreen> {
                             color: Theme.of(context).colorScheme.error,
                           ),
                         ),
+                      if (c.laps.isNotEmpty)
+                        LapTable(laps: c.laps, selectedLap: c.selectedLap),
                       if (c.data != null && c.data!.hasRoute)
                         RouteMap(
                           data: c.data!,
                           selected: c.selected,
+                          selectedLap: c.selectedLap,
                           tileUrl: widget.tileUrl,
                           attribution: widget.attribution,
                         )
@@ -142,6 +148,7 @@ class _CoachRideScreenState extends State<CoachRideScreen> {
                             series: series,
                             time: c.data!.time,
                             selected: c.selected,
+                            selectedLap: c.selectedLap,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                     ],

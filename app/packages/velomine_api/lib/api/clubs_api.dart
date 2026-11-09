@@ -191,6 +191,65 @@ class ClubsApi {
     return null;
   }
 
+  /// Performs an HTTP 'GET /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/laps' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] clubId (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [String] rideId (required):
+  Future<Response> coachGetCoachRideLapsWithHttpInfo(String clubId, String userId, String rideId, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/laps'
+      .replaceAll('{clubId}', clubId)
+      .replaceAll('{userId}', userId)
+      .replaceAll('{rideId}', rideId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] clubId (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [String] rideId (required):
+  Future<RideLapsResponse?> coachGetCoachRideLaps(String clubId, String userId, String rideId, { Future<void>? abortTrigger, }) async {
+    final response = await coachGetCoachRideLapsWithHttpInfo(clubId, userId, rideId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RideLapsResponse',) as RideLapsResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/streams' operation and returns the [Response].
   /// Parameters:
   ///

@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'rides_controller.dart';
+import 'ride_type_chips.dart';
 
 String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
   'corrupt_file' => l10n.rideErrorCorrupt,
@@ -73,6 +74,38 @@ class _RidesScreenState extends State<RidesScreen> {
                       ),
                     ),
                   ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      spacing: 8,
+                      children: [
+                        ChoiceChip(
+                          key: const Key('filter-all'),
+                          label: Text(context.l10n.rideFilterAll),
+                          selected: c.disciplineFilter == null,
+                          onSelected: (_) => c.setDisciplineFilter(null),
+                        ),
+                        for (final discipline in [
+                          'road',
+                          'gravel',
+                          'mountain',
+                          'track',
+                        ])
+                          ChoiceChip(
+                            key: Key('filter-$discipline'),
+                            label: Text(
+                              disciplineName(context.l10n, discipline),
+                            ),
+                            selected: c.disciplineFilter == discipline,
+                            onSelected: (_) =>
+                                c.setDisciplineFilter(discipline),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
                 if (c.rides.isEmpty && !c.loading)
                   Padding(
                     padding: const EdgeInsets.all(32),
@@ -147,6 +180,10 @@ class RideCard extends StatelessWidget {
                 style: text.titleMedium,
               ),
               Text(ride.fileName, style: text.bodySmall),
+              if (ready && rideTypeIsSet(ride)) ...[
+                const SizedBox(height: 6),
+                RideTypeChips(ride: ride),
+              ],
               const SizedBox(height: 8),
               if (ride.status == 'processing')
                 Row(

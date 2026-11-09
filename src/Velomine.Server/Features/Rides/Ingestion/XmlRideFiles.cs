@@ -39,11 +39,27 @@ internal static class XmlRideFiles
     public static short? Short(double? value) => value is { } v && Math.Abs(v) < short.MaxValue ? (short)Math.Round(v) : null;
 
     /// <summary>Samples are in time order, one per second at most is not required, but time must not go backwards.</summary>
-    public static ParsedRide Build(DateTimeOffset start, List<(DateTimeOffset Time, Sample Sample)> points, string? device = null)
+    public static ParsedRide Build(
+        DateTimeOffset start,
+        List<(DateTimeOffset Time, Sample Sample)> points,
+        string? device = null,
+        RideDimensions? dimensions = null,
+        IReadOnlyList<ParsedLap>? laps = null)
     {
         var ordered = points.OrderBy(p => p.Time).ToList();
         var first = ordered[0].Time;
         var samples = ordered.Select(p => p.Sample with { T = (p.Time - first).TotalSeconds }).ToList();
-        return new ParsedRide { StartTime = first, Samples = samples, Device = device };
+        var d = dimensions ?? RideDimensions.Unset;
+        return new ParsedRide
+        {
+            StartTime = first,
+            Samples = samples,
+            Device = device,
+            Discipline = d.Discipline,
+            Assist = d.Assist,
+            Environment = d.Environment,
+            Commute = d.Commute,
+            Laps = laps ?? [],
+        };
     }
 }

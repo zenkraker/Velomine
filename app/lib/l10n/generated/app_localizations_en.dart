@@ -2065,4 +2065,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachPowerCurve => 'Power curve';
+
+  @override
+  String get rideFilterAll => 'All';
+
+  @override
+  String get rideTypeTitle => 'Ride details';
+
+  @override
+  String get rideTypeHelp =>
+      'What kind of ride was it? Everything here is optional.';
+
+  @override
+  String get rideTypeDiscipline => 'Surface';
+
+  @override
+  String get rideTypeAssist => 'E-bike';
+
+  @override
+  String get rideTypeEnvironment => 'Where';
+
+  @override
+  String get rideTypeCommute => 'Commute';
+
+  @override
+  String get rideTypeNotSet => 'Set ride details';
+
+  @override
+  String get rideTypeEdit => 'Edit ride details';
+
+  @override
+  String get rideTypeUnset => 'Not set';
+
+  @override
+  String get rideTypeNoAssist => 'No e-bike';
+
+  @override
+  String get rideTypeOutdoor => 'Outdoor';
+
+  @override
+  String get rideTypeIndoor => 'Indoor';
+
+  @override
+  String get rideTypeVirtual => 'Virtual';
+
+  @override
+  String get actionChangeRideType => 'change this ride\'s details';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get lapsTitle => 'Laps';
+
+  @override
+  String get lap => 'Lap';
 }

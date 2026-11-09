@@ -20,7 +20,14 @@ public static class GpxParser
                 points.Add((time, ReadPoint(point)));
             }
 
-            if (points.Count >= 2) rides.Add(XmlRideFiles.Build(points[0].Item1, points));
+            if (points.Count >= 2)
+            {
+                var dimensions = RideDimensions.FromText(track.First("type")?.Value);
+                var hasPositions = points.Any(p => p.Item2.Latitude is not null && p.Item2.Longitude is not null);
+                if (dimensions.Environment is null && hasPositions)
+                    dimensions = dimensions with { Environment = Environments.Outdoor };
+                rides.Add(XmlRideFiles.Build(points[0].Item1, points, dimensions: dimensions));
+            }
         }
 
         if (rides.Count == 0)

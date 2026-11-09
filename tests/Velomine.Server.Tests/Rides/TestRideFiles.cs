@@ -17,7 +17,9 @@ public static class TestRideFiles
         Sport Sport = Sport.Cycling,
         ushort? NormalizedPower = null,
         int? TimerSeconds = null,
-        IReadOnlyList<(int Start, int Stop)>? Pauses = null);
+        IReadOnlyList<(int Start, int Stop)>? Pauses = null,
+        SubSport SubSport = SubSport.Generic,
+        IReadOnlyList<int>? LapSeconds = null);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -61,12 +63,28 @@ public static class TestRideFiles
             var end = session.Start.AddSeconds(session.Seconds);
             WriteTimer(encode, end, EventType.StopAll);
 
+            var lapStart = session.Start;
+            foreach (var seconds in session.LapSeconds ?? [])
+            {
+                var lapEnd = lapStart.AddSeconds(seconds);
+                var lap = new LapMesg();
+                lap.SetTimestamp(new Dynastream.Fit.DateTime(lapEnd));
+                lap.SetStartTime(new Dynastream.Fit.DateTime(lapStart));
+                lap.SetTotalElapsedTime(seconds);
+                lap.SetTotalTimerTime(seconds);
+                lap.SetSport(session.Sport);
+                lap.SetSubSport(session.SubSport);
+                encode.Write(lap);
+                lapStart = lapEnd;
+            }
+
             var summary = new SessionMesg();
             summary.SetTimestamp(new Dynastream.Fit.DateTime(end));
             summary.SetStartTime(new Dynastream.Fit.DateTime(session.Start));
             summary.SetTotalElapsedTime(session.Seconds);
             summary.SetTotalTimerTime(session.TimerSeconds ?? session.Seconds);
             summary.SetSport(session.Sport);
+            summary.SetSubSport(session.SubSport);
             if (session.NormalizedPower is { } np) summary.SetNormalizedPower(np);
             encode.Write(summary);
         }
@@ -93,9 +111,10 @@ public static class TestRideFiles
     }
 
     /// <summary>A GPX track of <paramref name="count"/> points, one second apart, riding north at 8 m/s.</summary>
-    public static string Gpx(int count, Func<int, string>? extensions = null, string trackName = "Test ride", DateTime? start = null, bool withTime = true)
+    public static string Gpx(int count, Func<int, string>? extensions = null, string trackName = "Test ride", DateTime? start = null, bool withTime = true, string? type = null)
     {
         var t0 = start ?? Start;
+        var typeElement = type is null ? "" : $"<type>{type}</type>";
         var points = new StringBuilder();
         for (var i = 0; i < count; i++)
         {
@@ -109,27 +128,50 @@ public static class TestRideFiles
             <gpx version="1.1" creator="test" xmlns="http://www.topografix.com/GPX/1/1"
                  xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
                  xmlns:gpxpx="http://www.garmin.com/xmlschemas/PowerExtension/v1">
-              <trk><name>{trackName}</name><trkseg>{points}</trkseg></trk>
+              <trk><name>{trackName}</name>{typeElement}<trkseg>{points}</trkseg></trk>
             </gpx>
             """;
     }
 
-    public static string Tcx(string sport, int count) => $"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"
-                                xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
-          <Activities><Activity Sport="{sport}"><Id>{Start:yyyy-MM-ddTHH:mm:ssZ}</Id>
-            <Lap StartTime="{Start:yyyy-MM-ddTHH:mm:ssZ}"><Track>
-        {string.Concat(Enumerable.Range(0, count).Select(i => $"""
-              <Trackpoint><Time>{Start.AddSeconds(i):yyyy-MM-ddTHH:mm:ssZ}</Time>
-                <Position><LatitudeDegrees>{(46.0 + i * 8 / 111_195.0).ToString("F6", CultureInfo.InvariantCulture)}</LatitudeDegrees><LongitudeDegrees>11.0</LongitudeDegrees></Position>
-                <AltitudeMeters>{(300 + i * 0.1).ToString("F1", CultureInfo.InvariantCulture)}</AltitudeMeters><DistanceMeters>{i * 8}</DistanceMeters>
-                <HeartRateBpm><Value>150</Value></HeartRateBpm><Cadence>90</Cadence>
-                <Extensions><ns3:TPX><ns3:Speed>8</ns3:Speed><ns3:Watts>200</ns3:Watts></ns3:TPX></Extensions></Trackpoint>
-        """))}
-            </Track></Lap></Activity></Activities>
-        </TrainingCenterDatabase>
-        """;
+    public static string Tcx(string sport, int count, IReadOnlyList<int>? lapSeconds = null)
+    {
+        var laps = lapSeconds ?? [count];
+        var lapXml = new StringBuilder();
+        var index = 0;
+        foreach (var seconds in laps)
+        {
+            var start = Start.AddSeconds(index);
+            var points = new StringBuilder();
+            var end = Math.Min(count, index + seconds);
+            for (var i = index; i < end; i++)
+            {
+                points.Append(CultureInfo.InvariantCulture, $"""
+                      <Trackpoint><Time>{Start.AddSeconds(i):yyyy-MM-ddTHH:mm:ssZ}</Time>
+                        <Position><LatitudeDegrees>{(46.0 + i * 8 / 111_195.0).ToString("F6", CultureInfo.InvariantCulture)}</LatitudeDegrees><LongitudeDegrees>11.0</LongitudeDegrees></Position>
+                        <AltitudeMeters>{(300 + i * 0.1).ToString("F1", CultureInfo.InvariantCulture)}</AltitudeMeters><DistanceMeters>{i * 8}</DistanceMeters>
+                        <HeartRateBpm><Value>150</Value></HeartRateBpm><Cadence>90</Cadence>
+                        <Extensions><ns3:TPX><ns3:Speed>8</ns3:Speed><ns3:Watts>200</ns3:Watts></ns3:TPX></Extensions></Trackpoint>
+                """);
+            }
+
+            lapXml.Append($"""
+                <Lap StartTime="{start:yyyy-MM-ddTHH:mm:ssZ}"><TotalTimeSeconds>{seconds}</TotalTimeSeconds><Track>
+                {points}
+                </Track></Lap>
+                """);
+            index += seconds;
+        }
+
+        return $"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"
+                                    xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
+              <Activities><Activity Sport="{sport}"><Id>{Start:yyyy-MM-ddTHH:mm:ssZ}</Id>
+                {lapXml}
+              </Activity></Activities>
+            </TrainingCenterDatabase>
+            """;
+    }
 
     public static byte[] Gzip(byte[] data)
     {

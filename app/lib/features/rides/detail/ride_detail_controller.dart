@@ -3,6 +3,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/guard.dart';
+import 'lap_range.dart';
 import 'ride_series.dart';
 
 /// One ride: its numbers, its samples for the charts and map, and deleting it.
@@ -24,7 +25,13 @@ class RideDetailController extends ChangeNotifier {
   /// The moment picked on a chart (an index into the samples), shared by every chart and the map.
   final selected = ValueNotifier<int?>(null);
 
+  /// The lap picked in the table, shaded on every chart and on the map.
+  final selectedLap = ValueNotifier<LapRange?>(null);
+
   RideResponse? ride;
+
+  /// The ride's laps, empty when the file has none or they could not be loaded.
+  List<LapResponse> laps = [];
 
   /// The member's bikes, to pick the one ridden. Empty when they could not be loaded: the ride still shows.
   List<BikeResponse> bikes = [];
@@ -52,6 +59,14 @@ class RideDetailController extends ChangeNotifier {
         if (ride!.status == 'ready') {
           final streams = await api.getRideStreams(id, maxPoints: 1200);
           if (streams != null) data = RideSeries.from(streams);
+          try {
+            laps = (await api.getRideLaps(id))?.laps ?? [];
+          } on ApiException catch (e) {
+            if (e.code == 401) onUnauthorized();
+            laps = [];
+          } on Object {
+            laps = [];
+          }
           try {
             bikes = (await bikesApi.listBikes())?.bikes ?? [];
           } on Object {
@@ -114,6 +129,36 @@ class RideDetailController extends ChangeNotifier {
       );
     }
     notifyListeners();
+  }
+
+  /// Sets the four independent ride dimensions. Every argument is sent, including null, so the sheet
+  /// always writes the four values it shows. Returns whether the server accepted them.
+  Future<bool> setType({
+    String? discipline,
+    String? assist,
+    String? environment,
+    bool? commute,
+  }) async {
+    final failure = await guardCall(
+      () async {
+        ride =
+            await api.setRideType(
+              id,
+              SetRideTypeRequest(
+                discipline: Optional.present(discipline),
+                assist: Optional.present(assist),
+                environment: Optional.present(environment),
+                commute: Optional.present(commute),
+              ),
+            ) ??
+            ride;
+      },
+      onUnauthorized,
+      doing: FailureAction.changeRideType,
+    );
+    error = failure;
+    notifyListeners();
+    return failure == null;
   }
 
   /// Returns whether the RPE and note were saved.
@@ -184,6 +229,7 @@ class RideDetailController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     selected.dispose();
+    selectedLap.dispose();
     super.dispose();
   }
 }

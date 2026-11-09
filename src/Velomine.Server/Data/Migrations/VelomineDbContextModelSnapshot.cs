@@ -716,6 +716,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Assist")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("assist");
+
                     b.Property<int?>("AvgCadence")
                         .HasColumnType("integer")
                         .HasColumnName("avg_cadence");
@@ -736,6 +741,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("bike_id");
 
+                    b.Property<bool?>("Commute")
+                        .HasColumnType("boolean")
+                        .HasColumnName("commute");
+
                     b.Property<string>("DedupKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -745,6 +754,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("device");
+
+                    b.Property<string>("Discipline")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("discipline");
 
                     b.Property<double?>("DistanceM")
                         .HasColumnType("double precision")
@@ -765,6 +779,11 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<double?>("ElevationLossM")
                         .HasColumnType("double precision")
                         .HasColumnName("elevation_loss_m");
+
+                    b.Property<string>("Environment")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("environment");
 
                     b.Property<string>("Error")
                         .HasMaxLength(64)
@@ -862,6 +881,9 @@ namespace Velomine.Server.Data.Migrations
                     b.HasIndex("UserId", "DedupKey")
                         .HasDatabaseName("ix_rides_user_id_dedup_key");
 
+                    b.HasIndex("UserId", "Discipline")
+                        .HasDatabaseName("ix_rides_user_id_discipline");
+
                     b.HasIndex("UserId", "IdempotencyKey")
                         .IsUnique()
                         .HasDatabaseName("ix_rides_user_id_idempotency_key");
@@ -870,6 +892,74 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_rides_user_id_start_time");
 
                     b.ToTable("rides", "rides");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Rides.RideLap", b =>
+                {
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
+
+                    b.Property<int?>("AvgCadence")
+                        .HasColumnType("integer")
+                        .HasColumnName("avg_cadence");
+
+                    b.Property<int?>("AvgHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("avg_heart_rate");
+
+                    b.Property<int?>("AvgPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("avg_power_w");
+
+                    b.Property<double?>("AvgSpeedMs")
+                        .HasColumnType("double precision")
+                        .HasColumnName("avg_speed_ms");
+
+                    b.Property<double>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<double>("DurationS")
+                        .HasColumnType("double precision")
+                        .HasColumnName("duration_s");
+
+                    b.Property<double?>("ElevationGainM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("elevation_gain_m");
+
+                    b.Property<double>("EndS")
+                        .HasColumnType("double precision")
+                        .HasColumnName("end_s");
+
+                    b.Property<int?>("MaxHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_heart_rate");
+
+                    b.Property<int?>("MaxPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_power_w");
+
+                    b.Property<double?>("MaxSpeedMs")
+                        .HasColumnType("double precision")
+                        .HasColumnName("max_speed_ms");
+
+                    b.Property<double>("MovingS")
+                        .HasColumnType("double precision")
+                        .HasColumnName("moving_s");
+
+                    b.Property<double>("StartS")
+                        .HasColumnType("double precision")
+                        .HasColumnName("start_s");
+
+                    b.HasKey("RideId", "Index")
+                        .HasName("pk_ride_laps");
+
+                    b.ToTable("ride_laps", "rides");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.RidePowerBest", b =>
@@ -1294,6 +1384,16 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Rides.RideLap", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany("Laps")
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ride_laps_rides_ride_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.RidePowerBest", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Rides.Ride", null)
@@ -1366,6 +1466,8 @@ namespace Velomine.Server.Data.Migrations
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
+                    b.Navigation("Laps");
+
                     b.Navigation("PowerBests");
 
                     b.Navigation("Streams");

@@ -9,17 +9,44 @@ namespace Velomine.Server.Features.Rides;
 public sealed class ListRidesRequest
 {
     /// <summary>The Next value from the previous page. Omit for the newest rides.</summary>
+    [QueryParam]
     public string? Cursor { get; set; }
 
     /// <summary>How many rides to return, 1 to 200. Default 50.</summary>
+    [QueryParam]
     public int? Limit { get; set; }
+
+    /// <summary>road, gravel, mountain or track.</summary>
+    [QueryParam]
+    public string? Discipline { get; set; }
+
+    /// <summary>none or ebike.</summary>
+    [QueryParam]
+    public string? Assist { get; set; }
+
+    /// <summary>outdoor, indoor or virtual.</summary>
+    [QueryParam]
+    public string? Environment { get; set; }
+
+    /// <summary>True or false for a commute, omitted for every ride.</summary>
+    [QueryParam]
+    public bool? Commute { get; set; }
 }
 
 public sealed record ListRidesResponse(RideResponse[] Rides, string? Next);
 
 public sealed class ListRidesValidator : Validator<ListRidesRequest>
 {
-    public ListRidesValidator() => RuleFor(x => x.Limit).InclusiveBetween(1, 200).When(x => x.Limit.HasValue);
+    public ListRidesValidator()
+    {
+        RuleFor(x => x.Limit).InclusiveBetween(1, 200).When(x => x.Limit.HasValue);
+        RuleFor(x => x.Discipline).Must(v => v is null || Disciplines.All.Contains(v))
+            .WithMessage("Choose road, gravel, mountain or track.");
+        RuleFor(x => x.Assist).Must(v => v is null || Assists.All.Contains(v))
+            .WithMessage("Choose none or ebike.");
+        RuleFor(x => x.Environment).Must(v => v is null || Environments.All.Contains(v))
+            .WithMessage("Choose outdoor, indoor or virtual.");
+    }
 }
 
 /// <summary>
@@ -28,7 +55,11 @@ public sealed class ListRidesValidator : Validator<ListRidesRequest>
 /// </summary>
 public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest, ListRidesResponse>
 {
-    public override void Configure() => Get("rides");
+    public override void Configure()
+    {
+        Get("rides");
+        Description(d => d.Produces<ListRidesResponse>(200).ProducesProblem(400).Produces(401), clearDefaults: true);
+    }
 
     public override async Task HandleAsync(ListRidesRequest req, CancellationToken ct)
     {
@@ -49,6 +80,11 @@ public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest,
             var lastTime = new DateTimeOffset(ticks, TimeSpan.Zero);
             query = query.Where(r => (r.StartTime ?? r.UploadedAt) < lastTime || ((r.StartTime ?? r.UploadedAt) == lastTime && r.Id.CompareTo(lastId) < 0));
         }
+
+        if (req.Discipline is not null) query = query.Where(r => r.Discipline == req.Discipline);
+        if (req.Assist is not null) query = query.Where(r => r.Assist == req.Assist);
+        if (req.Environment is not null) query = query.Where(r => r.Environment == req.Environment);
+        if (req.Commute is { } commute) query = query.Where(r => r.Commute == commute);
 
         var page = await query
             .OrderByDescending(r => r.StartTime ?? r.UploadedAt)

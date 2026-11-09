@@ -7,6 +7,9 @@ import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../rides_screen.dart';
+import '../ride_type_chips.dart';
+import '../ride_type_sheet.dart';
+import 'lap_table.dart';
 import 'ride_detail_controller.dart';
 import 'ride_feel_card.dart';
 import 'route_map.dart';
@@ -182,7 +185,26 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           style: TextStyle(color: error),
         )
       else ...[
+        Row(
+          children: [
+            Expanded(
+              child: rideTypeIsSet(ride)
+                  ? RideTypeChips(ride: ride)
+                  : const SizedBox.shrink(),
+            ),
+            TextButton.icon(
+              key: const Key('edit-ride-type'),
+              onPressed: () => showRideTypeSheet(context, c),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: Text(
+                rideTypeIsSet(ride) ? l10n.rideTypeEdit : l10n.rideTypeNotSet,
+              ),
+            ),
+          ],
+        ),
         _Stats(ride: ride),
+        if (c.laps.isNotEmpty)
+          LapTable(laps: c.laps, selectedLap: c.selectedLap),
         if (heartRateZones.isEmpty &&
             powerZones.isEmpty &&
             (ride.avgHeartRate != null || ride.avgPowerW != null))
@@ -219,6 +241,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           RouteMap(
             data: c.data!,
             selected: c.selected,
+            selectedLap: c.selectedLap,
             tileUrl: widget.tileUrl,
             attribution: widget.attribution,
           ),
@@ -238,6 +261,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
               series: series,
               time: c.data!.time,
               selected: c.selected,
+              selectedLap: c.selectedLap,
               color:
                   VelomineColors.of(context).series[series.id] ??
                   Theme.of(context).colorScheme.primary,

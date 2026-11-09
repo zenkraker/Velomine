@@ -3,6 +3,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/guard.dart';
+import '../rides/detail/lap_range.dart';
 import '../rides/detail/ride_series.dart';
 
 /// The athletes a coach may look at: club members who shared rides or training.
@@ -166,7 +167,9 @@ class CoachRideController extends ChangeNotifier {
   final VoidCallback onUnauthorized;
 
   final selected = ValueNotifier<int?>(null);
+  final selectedLap = ValueNotifier<LapRange?>(null);
   RideResponse? ride;
+  List<LapResponse> laps = [];
   RideSeries? data;
   bool loading = true;
   bool notFound = false;
@@ -192,6 +195,15 @@ class CoachRideController extends ChangeNotifier {
           if (streams != null) data = RideSeries.from(streams);
         } on ApiException {
           // No samples (still being read, or the file had none): the numbers still show.
+        }
+        try {
+          laps =
+              (await api.coachGetCoachRideLaps(clubId, userId, rideId))?.laps ??
+              [];
+        } on ApiException {
+          laps = [];
+        } on Object {
+          laps = [];
         }
       }
     } on ApiException catch (e) {
@@ -219,6 +231,7 @@ class CoachRideController extends ChangeNotifier {
   @override
   void dispose() {
     selected.dispose();
+    selectedLap.dispose();
     super.dispose();
   }
 }

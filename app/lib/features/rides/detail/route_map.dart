@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
 import 'geo.dart';
+import 'lap_range.dart';
 import 'ride_series.dart';
 
 /// The route on a map. With a tile address (an admin turns it on) the map has a background of map tiles; without one
@@ -12,12 +13,14 @@ class RouteMap extends StatelessWidget {
     super.key,
     required this.data,
     required this.selected,
+    required this.selectedLap,
     this.tileUrl,
     this.attribution,
   });
 
   final RideSeries data;
   final ValueNotifier<int?> selected;
+  final ValueNotifier<LapRange?> selectedLap;
   final String? tileUrl;
   final String? attribution;
 
@@ -61,6 +64,7 @@ class RouteMap extends StatelessWidget {
                           view: view,
                           data: data,
                           selected: selected,
+                          selectedLap: selectedLap,
                           colors: VelomineColors.of(context),
                         ),
                       ),
@@ -103,14 +107,16 @@ class _RoutePainter extends CustomPainter {
     required this.view,
     required this.data,
     required this.selected,
+    required this.selectedLap,
     required this.colors,
-  }) : super(repaint: selected);
+  }) : super(repaint: Listenable.merge([selected, selectedLap]));
 
   final VelomineColors colors;
 
   final MapView view;
   final RideSeries data;
   final ValueNotifier<int?> selected;
+  final ValueNotifier<LapRange?> selectedLap;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -142,6 +148,36 @@ class _RoutePainter extends CustomPainter {
     _dot(canvas, view.project(data.route.first), colors.route, 7); // start
     _dot(canvas, view.project(data.route.last), colors.finish, 7); // finish
 
+    // The selected lap, drawn over the route.
+    final lap = selectedLap.value;
+    if (lap != null) {
+      final highlight = Path();
+      var open = false;
+      for (var i = 0; i < data.route.length; i++) {
+        final t = data.time[data.routeIndex[i]];
+        if (t < lap.startS || t > lap.endS) {
+          open = false;
+          continue;
+        }
+        final p = view.project(data.route[i]);
+        if (!open) {
+          highlight.moveTo(p.dx, p.dy);
+          open = true;
+        } else {
+          highlight.lineTo(p.dx, p.dy);
+        }
+      }
+      canvas.drawPath(
+        highlight,
+        Paint()
+          ..color = colors.finish
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
     final index = selected.value;
     if (index != null) {
       final at = data.routePointAt(index);
@@ -161,5 +197,8 @@ class _RoutePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RoutePainter old) =>
-      old.view != view || old.data != data || old.colors != colors;
+      old.view != view ||
+      old.data != data ||
+      old.colors != colors ||
+      old.selectedLap != selectedLap;
 }

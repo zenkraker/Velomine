@@ -2081,4 +2081,61 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get coachPowerCurve => 'Curva di potenza';
+
+  @override
+  String get rideFilterAll => 'Tutte';
+
+  @override
+  String get rideTypeTitle => 'Dettagli uscita';
+
+  @override
+  String get rideTypeHelp => 'Che tipo di uscita era? Tutto è facoltativo.';
+
+  @override
+  String get rideTypeDiscipline => 'Superficie';
+
+  @override
+  String get rideTypeAssist => 'E-bike';
+
+  @override
+  String get rideTypeEnvironment => 'Dove';
+
+  @override
+  String get rideTypeCommute => 'Casa-lavoro';
+
+  @override
+  String get rideTypeNotSet => 'Imposta i dettagli';
+
+  @override
+  String get rideTypeEdit => 'Modifica i dettagli';
+
+  @override
+  String get rideTypeUnset => 'Non indicato';
+
+  @override
+  String get rideTypeNoAssist => 'Senza e-bike';
+
+  @override
+  String get rideTypeOutdoor => 'All\'aperto';
+
+  @override
+  String get rideTypeIndoor => 'Indoor';
+
+  @override
+  String get rideTypeVirtual => 'Virtuale';
+
+  @override
+  String get actionChangeRideType => 'cambiare i dettagli di questa uscita';
+
+  @override
+  String get yes => 'Sì';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get lapsTitle => 'Giri';
+
+  @override
+  String get lap => 'Giro';
 }

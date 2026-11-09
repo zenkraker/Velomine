@@ -22,6 +22,10 @@ class RideResponse {
     required this.startTime,
     required this.utcOffsetMinutes,
     required this.device,
+    required this.discipline,
+    required this.assist,
+    required this.environment,
+    required this.commute,
     required this.distanceM,
     required this.elapsedS,
     required this.movingS,
@@ -61,6 +65,14 @@ class RideResponse {
   final int? utcOffsetMinutes;
 
   final String? device;
+
+  final String? discipline;
+
+  final String? assist;
+
+  final String? environment;
+
+  final bool? commute;
 
   final double? distanceM;
 
@@ -113,6 +125,10 @@ class RideResponse {
     other.startTime == startTime &&
     other.utcOffsetMinutes == utcOffsetMinutes &&
     other.device == device &&
+    other.discipline == discipline &&
+    other.assist == assist &&
+    other.environment == environment &&
+    other.commute == commute &&
     other.distanceM == distanceM &&
     other.elapsedS == elapsedS &&
     other.movingS == movingS &&
@@ -146,6 +162,10 @@ class RideResponse {
     (startTime == null ? 0 : startTime!.hashCode) +
     (utcOffsetMinutes == null ? 0 : utcOffsetMinutes!.hashCode) +
     (device == null ? 0 : device!.hashCode) +
+    (discipline == null ? 0 : discipline!.hashCode) +
+    (assist == null ? 0 : assist!.hashCode) +
+    (environment == null ? 0 : environment!.hashCode) +
+    (commute == null ? 0 : commute!.hashCode) +
     (distanceM == null ? 0 : distanceM!.hashCode) +
     (elapsedS == null ? 0 : elapsedS!.hashCode) +
     (movingS == null ? 0 : movingS!.hashCode) +
@@ -168,7 +188,7 @@ class RideResponse {
     (powerZones.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, heartRateZones=$heartRateZones, powerZones=$powerZones]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, heartRateZones=$heartRateZones, powerZones=$powerZones]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -200,6 +220,26 @@ class RideResponse {
       json[r'device'] = this.device;
     } else {
       json[r'device'] = null;
+    }
+    if (this.discipline != null) {
+      json[r'discipline'] = this.discipline;
+    } else {
+      json[r'discipline'] = null;
+    }
+    if (this.assist != null) {
+      json[r'assist'] = this.assist;
+    } else {
+      json[r'assist'] = null;
+    }
+    if (this.environment != null) {
+      json[r'environment'] = this.environment;
+    } else {
+      json[r'environment'] = null;
+    }
+    if (this.commute != null) {
+      json[r'commute'] = this.commute;
+    } else {
+      json[r'commute'] = null;
     }
     if (this.distanceM != null) {
       json[r'distanceM'] = this.distanceM;
@@ -319,6 +359,14 @@ class RideResponse {
     bool utcOffsetMinutesSetToNull = false,
     String? device,
     bool deviceSetToNull = false,
+    String? discipline,
+    bool disciplineSetToNull = false,
+    String? assist,
+    bool assistSetToNull = false,
+    String? environment,
+    bool environmentSetToNull = false,
+    bool? commute,
+    bool commuteSetToNull = false,
     double? distanceM,
     bool distanceMSetToNull = false,
     double? elapsedS,
@@ -367,6 +415,10 @@ class RideResponse {
     startTime: startTimeSetToNull ? null : startTime ?? this.startTime,
     utcOffsetMinutes: utcOffsetMinutesSetToNull ? null : utcOffsetMinutes ?? this.utcOffsetMinutes,
     device: deviceSetToNull ? null : device ?? this.device,
+    discipline: disciplineSetToNull ? null : discipline ?? this.discipline,
+    assist: assistSetToNull ? null : assist ?? this.assist,
+    environment: environmentSetToNull ? null : environment ?? this.environment,
+    commute: commuteSetToNull ? null : commute ?? this.commute,
     distanceM: distanceMSetToNull ? null : distanceM ?? this.distanceM,
     elapsedS: elapsedSSetToNull ? null : elapsedS ?? this.elapsedS,
     movingS: movingSSetToNull ? null : movingS ?? this.movingS,
@@ -413,6 +465,10 @@ class RideResponse {
         assert(json.containsKey(r'startTime'), 'Required key "RideResponse[startTime]" is missing from JSON.');
         assert(json.containsKey(r'utcOffsetMinutes'), 'Required key "RideResponse[utcOffsetMinutes]" is missing from JSON.');
         assert(json.containsKey(r'device'), 'Required key "RideResponse[device]" is missing from JSON.');
+        assert(json.containsKey(r'discipline'), 'Required key "RideResponse[discipline]" is missing from JSON.');
+        assert(json.containsKey(r'assist'), 'Required key "RideResponse[assist]" is missing from JSON.');
+        assert(json.containsKey(r'environment'), 'Required key "RideResponse[environment]" is missing from JSON.');
+        assert(json.containsKey(r'commute'), 'Required key "RideResponse[commute]" is missing from JSON.');
         assert(json.containsKey(r'distanceM'), 'Required key "RideResponse[distanceM]" is missing from JSON.');
         assert(json.containsKey(r'elapsedS'), 'Required key "RideResponse[elapsedS]" is missing from JSON.');
         assert(json.containsKey(r'movingS'), 'Required key "RideResponse[movingS]" is missing from JSON.');
@@ -444,6 +500,10 @@ class RideResponse {
         startTime: mapDateTime(json, r'startTime', r''),
         utcOffsetMinutes: mapValueOfType<int>(json, r'utcOffsetMinutes'),
         device: mapValueOfType<String>(json, r'device'),
+        discipline: mapValueOfType<String>(json, r'discipline'),
+        assist: mapValueOfType<String>(json, r'assist'),
+        environment: mapValueOfType<String>(json, r'environment'),
+        commute: mapValueOfType<bool>(json, r'commute'),
         distanceM: mapValueOfType<double>(json, r'distanceM'),
         elapsedS: mapValueOfType<double>(json, r'elapsedS'),
         movingS: mapValueOfType<double>(json, r'movingS'),
@@ -520,6 +580,10 @@ class RideResponse {
     'startTime',
     'utcOffsetMinutes',
     'device',
+    'discipline',
+    'assist',
+    'environment',
+    'commute',
     'distanceM',
     'elapsedS',
     'movingS',

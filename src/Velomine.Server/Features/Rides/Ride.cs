@@ -53,6 +53,18 @@ public sealed class Ride
 
     public string? Device { get; set; }
 
+    /// <summary>road, gravel, mountain or track; null when the file and the member have not said.</summary>
+    public string? Discipline { get; set; }
+
+    /// <summary>none or ebike; null when unknown.</summary>
+    public string? Assist { get; set; }
+
+    /// <summary>outdoor, indoor or virtual; null when unknown.</summary>
+    public string? Environment { get; set; }
+
+    /// <summary>True for a commute; null when not stated.</summary>
+    public bool? Commute { get; set; }
+
     public double? DistanceM { get; set; }
 
     public double? ElapsedS { get; set; }
@@ -99,6 +111,9 @@ public sealed class Ride
     public User? Owner { get; set; }
 
     public RideStreams? Streams { get; set; }
+
+    /// <summary>Lap boundaries and numbers; empty when the file has no laps.</summary>
+    public List<RideLap> Laps { get; set; } = [];
 
     /// <summary>Best mean maximal power for the durations a power curve shows, worked out when the ride is read.</summary>
     public List<RidePowerBest> PowerBests { get; set; } = [];

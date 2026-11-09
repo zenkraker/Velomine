@@ -47,6 +47,8 @@ class FakeServer {
       <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
   final streams =
       <String, Map<String, Object?>>{}; // a ride's samples, by ride id
+  final rideLaps =
+      <String, List<Map<String, Object?>>>{}; // a ride's laps, by ride id
   /// Profiles by email; a missing one is the default (nothing set, weeks from Monday).
   final profiles = <String, Map<String, Object?>>{};
 
@@ -331,7 +333,11 @@ class FakeServer {
     if (moreReply != null) return moreReply;
 
     if (path == '/api/v1/rides' && request.method == 'GET') {
-      return json({'rides': rides, 'next': null});
+      final discipline = request.url.queryParameters['discipline'];
+      final found = discipline == null
+          ? rides
+          : rides.where((r) => r['discipline'] == discipline).toList();
+      return json({'rides': found, 'next': null});
     }
     if (path == '/api/v1/rides/uploads') {
       rides.insert(
@@ -346,10 +352,23 @@ class FakeServer {
       final body = streams[samples.group(1)];
       return body == null ? http.Response('', 409) : json(body);
     }
+    final laps = RegExp(r'^/api/v1/rides/([^/]+)/laps$').firstMatch(path);
+    if (laps != null) {
+      return json({'laps': rideLaps[laps.group(1)] ?? []});
+    }
     final rideBike = RegExp(r'^/api/v1/rides/([^/]+)/bike$').firstMatch(path);
     if (rideBike != null && request.method == 'PUT') {
       final ride = rides.firstWhere((r) => r['id'] == rideBike.group(1));
       ride['bikeId'] = (jsonDecode(request.body) as Map)['bikeId'];
+      return json(ride);
+    }
+    final rideType = RegExp(r'^/api/v1/rides/([^/]+)/type$').firstMatch(path);
+    if (rideType != null && request.method == 'PUT') {
+      final ride = rides.firstWhere((r) => r['id'] == rideType.group(1));
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      for (final key in ['discipline', 'assist', 'environment', 'commute']) {
+        ride[key] = body[key];
+      }
       return json(ride);
     }
     final rideFeel = RegExp(r'^/api/v1/rides/([^/]+)/feel$').firstMatch(path);
@@ -875,6 +894,13 @@ extension on FakeServer {
       'tss42': sharingChoices['analytics'] != 'none' ? 240.0 : null,
     };
 
+    final coachLaps = RegExp(
+      r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/rides/([^/]+)/laps$',
+    ).firstMatch(path);
+    if (coachLaps != null) {
+      if (sharingChoices['rides'] == 'none') return http.Response('', 404);
+      return json({'laps': rideLaps[coachLaps.group(2)] ?? []});
+    }
     final rideStreams = RegExp(
       r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/rides/([^/]+)/streams$',
     ).firstMatch(path);
@@ -1255,6 +1281,10 @@ Map<String, Object?> rideJson(
   double? trimp,
   List<Map<String, Object?>> heartRateZones = const [],
   List<Map<String, Object?>> powerZones = const [],
+  String? discipline,
+  String? assist,
+  String? environment,
+  bool? commute,
 }) => {
   'id': id,
   'status': status,
@@ -1265,6 +1295,10 @@ Map<String, Object?> rideJson(
   'startTime': status == 'ready' ? '2026-11-01T07:30:00Z' : null,
   'utcOffsetMinutes': null,
   'device': null,
+  'discipline': discipline,
+  'assist': assist,
+  'environment': environment,
+  'commute': commute,
   'distanceM': distanceM,
   'elapsedS': movingS,
   'movingS': movingS,
@@ -1293,6 +1327,32 @@ Map<String, Object?> zoneJson(int zone, int from, int? to, double seconds) => {
   'from': from,
   'to': to,
   'seconds': seconds,
+};
+
+/// One lap as the ride detail receives it.
+Map<String, Object?> lapJson(
+  int index, {
+  double startS = 0,
+  double endS = 600,
+  double? movingS = 600,
+  double distanceM = 5000,
+  double? avgSpeedMs = 8,
+  int? avgPowerW = 200,
+}) => {
+  'index': index,
+  'startS': startS,
+  'endS': endS,
+  'durationS': endS - startS,
+  'movingS': movingS ?? endS - startS,
+  'distanceM': distanceM,
+  'avgSpeedMs': avgSpeedMs,
+  'maxSpeedMs': avgSpeedMs,
+  'avgPowerW': avgPowerW,
+  'maxPowerW': avgPowerW,
+  'avgHeartRate': 150,
+  'maxHeartRate': 160,
+  'avgCadence': 90,
+  'elevationGainM': 10.0,
 };
 
 /// What GET /analytics/training answers by default: a little load on three days.

@@ -106,6 +106,55 @@ class RidesApi {
     return null;
   }
 
+  /// Performs an HTTP 'GET /api/v1/rides/{id}/laps' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getRideLapsWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/rides/{id}/laps'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<RideLapsResponse?> getRideLaps(String id, { Future<void>? abortTrigger, }) async {
+    final response = await getRideLapsWithHttpInfo(id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RideLapsResponse',) as RideLapsResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/rides/{id}/streams' operation and returns the [Response].
   /// Parameters:
   ///
@@ -169,7 +218,15 @@ class RidesApi {
   /// * [String] cursor:
   ///
   /// * [int] limit:
-  Future<Response> listRidesWithHttpInfo({ String? cursor, int? limit, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] discipline:
+  ///
+  /// * [String] assist:
+  ///
+  /// * [String] environment:
+  ///
+  /// * [bool] commute:
+  Future<Response> listRidesWithHttpInfo({ String? cursor, int? limit, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/rides';
 
@@ -185,6 +242,18 @@ class RidesApi {
     }
     if (limit != null) {
       queryParams.addAll(_queryParams('', 'limit', limit));
+    }
+    if (discipline != null) {
+      queryParams.addAll(_queryParams('', 'discipline', discipline));
+    }
+    if (assist != null) {
+      queryParams.addAll(_queryParams('', 'assist', assist));
+    }
+    if (environment != null) {
+      queryParams.addAll(_queryParams('', 'environment', environment));
+    }
+    if (commute != null) {
+      queryParams.addAll(_queryParams('', 'commute', commute));
     }
 
     const contentTypes = <String>[];
@@ -207,8 +276,16 @@ class RidesApi {
   /// * [String] cursor:
   ///
   /// * [int] limit:
-  Future<ListRidesResponse?> listRides({ String? cursor, int? limit, Future<void>? abortTrigger, }) async {
-    final response = await listRidesWithHttpInfo(cursor: cursor, limit: limit, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] discipline:
+  ///
+  /// * [String] assist:
+  ///
+  /// * [String] environment:
+  ///
+  /// * [bool] commute:
+  Future<ListRidesResponse?> listRides({ String? cursor, int? limit, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
+    final response = await listRidesWithHttpInfo(cursor: cursor, limit: limit, discipline: discipline, assist: assist, environment: environment, commute: commute, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -262,6 +339,59 @@ class RidesApi {
   /// * [SetRideBikeRequest] setRideBikeRequest (required):
   Future<RideResponse?> setRideBike(String id, SetRideBikeRequest setRideBikeRequest, { Future<void>? abortTrigger, }) async {
     final response = await setRideBikeWithHttpInfo(id, setRideBikeRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RideResponse',) as RideResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/rides/{id}/type' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SetRideTypeRequest] setRideTypeRequest (required):
+  Future<Response> setRideTypeWithHttpInfo(String id, SetRideTypeRequest setRideTypeRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/rides/{id}/type'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setRideTypeRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SetRideTypeRequest] setRideTypeRequest (required):
+  Future<RideResponse?> setRideType(String id, SetRideTypeRequest setRideTypeRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setRideTypeWithHttpInfo(id, setRideTypeRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

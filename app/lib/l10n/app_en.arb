@@ -1098,5 +1098,25 @@
   "coachWellbeing": "Wellbeing",
   "coachWellbeingEmpty": "Wellbeing was shared, but there are no check-ins yet.",
   "coachWellbeingNoNotes": "Scores and RPE only. Notes stay private.",
-  "coachPowerCurve": "Power curve"
+  "coachPowerCurve": "Power curve",
+
+  "rideFilterAll": "All",
+  "rideTypeTitle": "Ride details",
+  "rideTypeHelp": "What kind of ride was it? Everything here is optional.",
+  "rideTypeDiscipline": "Surface",
+  "rideTypeAssist": "E-bike",
+  "rideTypeEnvironment": "Where",
+  "rideTypeCommute": "Commute",
+  "rideTypeNotSet": "Set ride details",
+  "rideTypeEdit": "Edit ride details",
+  "rideTypeUnset": "Not set",
+  "rideTypeNoAssist": "No e-bike",
+  "rideTypeOutdoor": "Outdoor",
+  "rideTypeIndoor": "Indoor",
+  "rideTypeVirtual": "Virtual",
+  "actionChangeRideType": "change this ride's details",
+  "yes": "Yes",
+  "no": "No",
+  "lapsTitle": "Laps",
+  "lap": "Lap"
 }

@@ -27,7 +27,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | --- | --- |
 | Ingestion | One upload endpoint, async jobs, `Idempotency-Key` and background subscribers: parse, enrich, dedupe, save, emit an event. |
 | File formats | FIT first, then GPX and TCX. GPX reads every common extension, including `PowerInWatts` and `gpxtpx:speed`. |
-| Ride types | About 8 cycling types: road, gravel, MTB, e-bike, e-MTB, indoor, virtual, commute. |
+| Ride types | Four independent dimensions: surface (road, gravel, mountain, track), e-bike (none or assisted), environment (outdoor, indoor, virtual) and a commute flag. The older eight labels (e-MTB, virtual, commute…) are derived from these, so an e-MTB is mountain + e-bike and a commute can also be training. |
 | Streams | HR, power, cadence, speed, elevation, temperature and map, plus a speed source flag: wheel sensor or GPS. |
 | Zones | HR zones and time in zone, plus power zones. |
 | Laps | Yes. |
@@ -36,7 +36,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | Strava | Bulk import of a Strava export to migrate history. Ongoing sync is optional, given Strava's API limits. |
 | Garmin Connect | Garmin's official personal key: activities as FIT files. |
 | Bikes and components | Bikes only, with our own list of 35 bike part types (chain, tyres, pads, fork service…) and typical lifetimes as suggestions. Wear by distance, hours and months, computed from the rides; reminders come in v2. Wheel circumference per bike. |
-| Default bike | One default bike per member, copied onto a ride at import. A default per ride type waits until ride types exist. |
+| Default bike | One default bike per member, copied onto a ride at import. A default per ride dimension waits for its own slice. |
 | Goals and summaries | Weekly, monthly and yearly totals, cycling only. Goals per week, month or year (distance, elevation, time or number of rides), in v1. |
 | Share links | One link per ride, with optional expiry and privacy zones, instead of public pages and a feed. |
 | Per-stream privacy | Applied to share links and coach views. |
@@ -124,7 +124,7 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 
 1. Server core: accounts, MFA, SSO with OIDC, roles (admin, member, coach), clubs with members and coaches, Docker image.
 2. Ingestion: upload endpoint with async jobs and idempotency, FIT and GPX parsing including every sensor extension, deduplication.
-3. Rides: map, stream charts, HR and power zones, laps, photos, ride types for cycling.
+3. Rides: map, stream charts, HR and power zones, laps, photos, ride dimensions for cycling.
 4. Bikes: bikes with wheel circumference, components with wear by km, hours or months.
 5. Mobile app: native recorder, Bluetooth heart rate, speed/cadence (wheel and crank) and power, local-first save, upload queue, auto-pause, day and night themes.
 6. Web app (Flutter web): rides, bikes, profile, club and admin screens, drag-and-drop upload.

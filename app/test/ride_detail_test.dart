@@ -46,6 +46,10 @@ void main() {
       ),
     );
     server.streams['r1'] = streamsJson();
+    server.rideLaps['r1'] = [
+      lapJson(1, startS: 0, endS: 2700, distanceM: 21000),
+      lapJson(2, startS: 2700, endS: 5400, distanceM: 21300),
+    ];
   });
 
   Future<void> open(WidgetTester tester, {String id = 'r1'}) async {
@@ -366,5 +370,57 @@ void main() {
     expect(server.rideFeels['r1']?['rpe'], 7);
     expect(server.rideFeels['r1']?['notes'], 'Felt strong');
     expect(find.byKey(const Key('ride-feel-saved')), findsOneWidget);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldPromptForDetails_WhenTheRideHasNoDimensions',
+    (tester) async {
+      await open(tester);
+
+      expect(find.byKey(const Key('edit-ride-type')), findsOneWidget);
+      expect(find.text('Set ride details'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldSaveAndShowTheSurface_WhenTheSheetIsUsed',
+    (tester) async {
+      await open(tester);
+
+      await tester.tap(find.byKey(const Key('edit-ride-type')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('ride-type-discipline')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Gravel').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('ride-type-save')));
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('PUT /api/v1/rides/r1/type'));
+      expect(
+        find.byKey(const Key('ride-type-discipline-gravel')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldShowLapsAndSelectOne_WhenItHasThem', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('laps')), findsOneWidget);
+    expect(find.byKey(const Key('lap-1')), findsOneWidget);
+    expect(find.byKey(const Key('lap-2')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('lap-2')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('lap-2')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('lap-2-selected')), findsOneWidget);
   });
 }

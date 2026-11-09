@@ -19,6 +19,9 @@ public readonly record struct PauseInterval(double StartS, double EndS)
     public double DurationS => Math.Max(0, EndS - StartS);
 }
 
+/// <summary>One lap of a ride, in seconds relative to the ride's first sample. Laps come from the file; the numbers are recomputed from the samples.</summary>
+public readonly record struct ParsedLap(double StartS, double EndS);
+
 /// <summary>What every file format is turned into. Parsers know nothing about the database.</summary>
 public sealed class ParsedRide
 {
@@ -27,6 +30,18 @@ public sealed class ParsedRide
     public int? UtcOffsetMinutes { get; init; }
 
     public string? Device { get; init; }
+
+    /// <summary>road, gravel, mountain or track; null when the file does not say.</summary>
+    public string? Discipline { get; init; }
+
+    /// <summary>none or ebike; null when the file does not say.</summary>
+    public string? Assist { get; init; }
+
+    /// <summary>outdoor, indoor or virtual; null when the file does not say.</summary>
+    public string? Environment { get; init; }
+
+    /// <summary>True for a commute; null when the file does not say.</summary>
+    public bool? Commute { get; init; }
 
     /// <summary>Normalized power the recording device worked out itself (FIT sessions), preferred over our own.</summary>
     public int? DeviceNormalizedPowerW { get; init; }
@@ -38,6 +53,9 @@ public sealed class ParsedRide
 
     /// <summary>Timer stop/start intervals (auto-pause or manual pauses), relative to the first sample.</summary>
     public IReadOnlyList<PauseInterval> Pauses { get; init; } = [];
+
+    /// <summary>Lap boundaries the file recorded, relative to the first sample. Empty when the file has no laps.</summary>
+    public IReadOnlyList<ParsedLap> Laps { get; init; } = [];
 
     public required IReadOnlyList<Sample> Samples { get; init; }
 }

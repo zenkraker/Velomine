@@ -50,6 +50,18 @@ public sealed class RideFileParserTests
     }
 
     [Fact]
+    public void FitParser_ShouldReadLapBoundaries_WhenTheFileHasLaps()
+    {
+        var ride = Assert.Single(RideFileParser.Parse(Fit(new FitSession(Start, 120, LapSeconds: [60, 60]))));
+
+        Assert.Equal(2, ride.Laps.Count);
+        Assert.Equal(0, ride.Laps[0].StartS);
+        Assert.Equal(60, ride.Laps[0].EndS);
+        Assert.Equal(60, ride.Laps[1].StartS);
+        Assert.Equal(119, ride.Laps[1].EndS); // clamped to the last sample
+    }
+
+    [Fact]
     public void FitParser_ShouldReturnTwoRides_WhenTheFileHasTwoSessions()
     {
         var second = Start.AddHours(2);
@@ -132,6 +144,18 @@ public sealed class RideFileParserTests
         Assert.Equal(8f, sample.Speed);
         Assert.Equal(80f, sample.Distance);
         Assert.Equal(60, ride.Samples.Count);
+    }
+
+    [Fact]
+    public void TcxParser_ShouldReadLapBoundaries_WhenTheActivityHasLaps()
+    {
+        var ride = Assert.Single(RideFileParser.Parse(Bytes(Tcx("Biking", 90, [45, 45]))));
+
+        Assert.Equal(2, ride.Laps.Count);
+        Assert.Equal(0, ride.Laps[0].StartS);
+        Assert.Equal(45, ride.Laps[0].EndS);
+        Assert.Equal(45, ride.Laps[1].StartS);
+        Assert.Equal(90, ride.Laps[1].EndS);
     }
 
     [Fact]

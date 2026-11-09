@@ -84,4 +84,51 @@ void main() {
 
     expect(server.requests, isNot(contains('POST /api/v1/rides/uploads')));
   });
+
+  testWidgets(
+    'RidesScreen_ShouldShowTheRideTypeChips_WhenTheRideHasDimensions',
+    (tester) async {
+      server.rides.add(
+        rideJson(
+          'r3',
+          'ready',
+          discipline: 'gravel',
+          assist: 'ebike',
+          environment: 'indoor',
+          commute: true,
+        ),
+      );
+      await startApp(tester, server.session(useCookies: true));
+
+      for (final key in [
+        'discipline-gravel',
+        'assist-ebike',
+        'environment-indoor',
+        'commute',
+      ]) {
+        expect(find.byKey(Key('ride-type-$key')), findsOneWidget, reason: key);
+      }
+    },
+  );
+
+  testWidgets(
+    'RidesScreen_ShouldShowOnlyOneSurface_WhenTheGravelFilterIsChosen',
+    (tester) async {
+      server.rides.add(
+        rideJson('r1', 'ready', fileName: 'road.fit', discipline: 'road'),
+      );
+      server.rides.add(
+        rideJson('r2', 'ready', fileName: 'gravel.fit', discipline: 'gravel'),
+      );
+      await startApp(tester, server.session(useCookies: true));
+      expect(find.text('road.fit'), findsOneWidget);
+      expect(find.text('gravel.fit'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('filter-gravel')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('gravel.fit'), findsOneWidget);
+      expect(find.text('road.fit'), findsNothing);
+    },
+  );
 }

@@ -658,5 +658,25 @@
   "coachWellbeing": "Benessere",
   "coachWellbeingEmpty": "Il benessere è condiviso, ma non ci sono ancora check-in.",
   "coachWellbeingNoNotes": "Solo punteggi e RPE. Le note restano private.",
-  "coachPowerCurve": "Curva di potenza"
+  "coachPowerCurve": "Curva di potenza",
+
+  "rideFilterAll": "Tutte",
+  "rideTypeTitle": "Dettagli uscita",
+  "rideTypeHelp": "Che tipo di uscita era? Tutto è facoltativo.",
+  "rideTypeDiscipline": "Superficie",
+  "rideTypeAssist": "E-bike",
+  "rideTypeEnvironment": "Dove",
+  "rideTypeCommute": "Casa-lavoro",
+  "rideTypeNotSet": "Imposta i dettagli",
+  "rideTypeEdit": "Modifica i dettagli",
+  "rideTypeUnset": "Non indicato",
+  "rideTypeNoAssist": "Senza e-bike",
+  "rideTypeOutdoor": "All'aperto",
+  "rideTypeIndoor": "Indoor",
+  "rideTypeVirtual": "Virtuale",
+  "actionChangeRideType": "cambiare i dettagli di questa uscita",
+  "yes": "Sì",
+  "no": "No",
+  "lapsTitle": "Giri",
+  "lap": "Giro"
 }

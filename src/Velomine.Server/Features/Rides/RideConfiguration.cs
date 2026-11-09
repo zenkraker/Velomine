@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Velomine.Server.Features.Rides;
 
-public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityTypeConfiguration<RideStreams>, IEntityTypeConfiguration<RidePowerBest>
+public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityTypeConfiguration<RideStreams>, IEntityTypeConfiguration<RidePowerBest>, IEntityTypeConfiguration<RideLap>
 {
     public void Configure(EntityTypeBuilder<Ride> ride)
     {
@@ -17,10 +17,14 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.Property(r => r.FileName).HasMaxLength(256);
         ride.Property(r => r.DedupKey).HasMaxLength(128);
         ride.Property(r => r.Device).HasMaxLength(128);
+        ride.Property(r => r.Discipline).HasMaxLength(16);
+        ride.Property(r => r.Assist).HasMaxLength(16);
+        ride.Property(r => r.Environment).HasMaxLength(16);
         ride.Property(r => r.Version).IsRowVersion();
 
         ride.HasOne(r => r.Owner).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         ride.HasOne(r => r.Streams).WithOne().HasForeignKey<RideStreams>(s => s.RideId).OnDelete(DeleteBehavior.Cascade);
+        ride.HasMany(r => r.Laps).WithOne().HasForeignKey(l => l.RideId).OnDelete(DeleteBehavior.Cascade);
 
         ride.HasOne<Bikes.Bike>().WithMany().HasForeignKey(r => r.BikeId).OnDelete(DeleteBehavior.SetNull);
         ride.HasIndex(r => r.BikeId);
@@ -28,6 +32,7 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.HasIndex(r => new { r.UserId, r.IdempotencyKey }).IsUnique();
         ride.HasIndex(r => new { r.UserId, r.DedupKey });
         ride.HasIndex(r => new { r.UserId, r.StartTime });
+        ride.HasIndex(r => new { r.UserId, r.Discipline });
     }
 
     public void Configure(EntityTypeBuilder<RideStreams> streams)
@@ -52,5 +57,11 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         best.HasKey(b => new { b.RideId, b.DurationS });
         best.Property(b => b.Watts).IsRequired();
         best.HasOne<Ride>().WithMany(r => r.PowerBests).HasForeignKey(b => b.RideId).OnDelete(DeleteBehavior.Cascade);
+    }
+
+    public void Configure(EntityTypeBuilder<RideLap> lap)
+    {
+        lap.ToTable("ride_laps", "rides");
+        lap.HasKey(l => new { l.RideId, l.Index });
     }
 }

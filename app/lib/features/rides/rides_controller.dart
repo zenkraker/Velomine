@@ -24,6 +24,7 @@ class RidesController extends ChangeNotifier {
 
   List<RideResponse> rides = [];
   String? next;
+  String? disciplineFilter;
   bool loading = false;
   bool uploading = false;
   Failure? error;
@@ -33,7 +34,7 @@ class RidesController extends ChangeNotifier {
     error = null;
     notifyListeners();
     await _guard(() async {
-      final page = await api.listRides();
+      final page = await api.listRides(discipline: disciplineFilter);
       rides = page?.rides ?? [];
       next = page?.next;
     }, FailureAction.loadRides);
@@ -46,12 +47,22 @@ class RidesController extends ChangeNotifier {
     loading = true;
     notifyListeners();
     await _guard(() async {
-      final page = await api.listRides(cursor: next);
+      final page = await api.listRides(
+        cursor: next,
+        discipline: disciplineFilter,
+      );
       rides = [...rides, ...?page?.rides];
       next = page?.next;
     }, FailureAction.loadRides);
     loading = false;
     notifyListeners();
+  }
+
+  /// Shows only one surface, or every ride when [value] is null.
+  Future<void> setDisciplineFilter(String? value) async {
+    if (disciplineFilter == value) return;
+    disciplineFilter = value;
+    await refresh();
   }
 
   /// Picks a file, uploads it, then watches the ride until the server has read it.

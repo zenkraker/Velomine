@@ -293,4 +293,26 @@ public sealed class SharingTests(PostgresFixture postgres)
         var sharing = await athlete.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
         Assert.Equal(new SharingResponse("none", "none", "none", "none"), sharing);
     }
+
+    [Fact]
+    public async Task GetCoachRideLaps_ShouldReturnTheAthletesLaps_WhenRidesAreShared()
+    {
+        await using var api = await StartAsync();
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(api, owner);
+        var athlete = await NewMemberAsync(api);
+        await JoinAsync(athlete, club);
+        (await ShareAsync(athlete, "coaches")).EnsureSuccessStatusCode();
+        var ride = await UploadAndWaitAsync(
+            athlete.Client,
+            Fit(new FitSession(Start, 120, LapSeconds: [60, 60])));
+
+        var laps = await owner.Client.GetFromJsonAsync<RideLapsResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}/laps", Ct);
+        Assert.Equal(2, laps!.Laps.Length);
+
+        (await ShareAsync(athlete, "none")).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NotFound, (await owner.Client.GetAsync(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}/laps", Ct)).StatusCode);
+    }
 }

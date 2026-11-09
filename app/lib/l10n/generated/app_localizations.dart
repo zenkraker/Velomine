@@ -3787,6 +3787,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Power curve'**
   String get coachPowerCurve;
+
+  /// No description provided for @rideFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get rideFilterAll;
+
+  /// No description provided for @rideTypeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride details'**
+  String get rideTypeTitle;
+
+  /// No description provided for @rideTypeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of ride was it? Everything here is optional.'**
+  String get rideTypeHelp;
+
+  /// No description provided for @rideTypeDiscipline.
+  ///
+  /// In en, this message translates to:
+  /// **'Surface'**
+  String get rideTypeDiscipline;
+
+  /// No description provided for @rideTypeAssist.
+  ///
+  /// In en, this message translates to:
+  /// **'E-bike'**
+  String get rideTypeAssist;
+
+  /// No description provided for @rideTypeEnvironment.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get rideTypeEnvironment;
+
+  /// No description provided for @rideTypeCommute.
+  ///
+  /// In en, this message translates to:
+  /// **'Commute'**
+  String get rideTypeCommute;
+
+  /// No description provided for @rideTypeNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set ride details'**
+  String get rideTypeNotSet;
+
+  /// No description provided for @rideTypeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit ride details'**
+  String get rideTypeEdit;
+
+  /// No description provided for @rideTypeUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get rideTypeUnset;
+
+  /// No description provided for @rideTypeNoAssist.
+  ///
+  /// In en, this message translates to:
+  /// **'No e-bike'**
+  String get rideTypeNoAssist;
+
+  /// No description provided for @rideTypeOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdoor'**
+  String get rideTypeOutdoor;
+
+  /// No description provided for @rideTypeIndoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Indoor'**
+  String get rideTypeIndoor;
+
+  /// No description provided for @rideTypeVirtual.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual'**
+  String get rideTypeVirtual;
+
+  /// No description provided for @actionChangeRideType.
+  ///
+  /// In en, this message translates to:
+  /// **'change this ride\'s details'**
+  String get actionChangeRideType;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// No description provided for @lapsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Laps'**
+  String get lapsTitle;
+
+  /// No description provided for @lap.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap'**
+  String get lap;
 }
 
 class _AppLocalizationsDelegate
