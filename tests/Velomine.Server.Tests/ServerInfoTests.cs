@@ -40,6 +40,22 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task ServerInfo_ShouldUseTheAppProjectDsn_WhenItIsConfigured()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Telemetry:Enabled", "true");
+            b.UseSetting("Velomine:Telemetry:Sentry:Dsn", "https://server@example.invalid/1");
+            b.UseSetting("Velomine:Telemetry:Sentry:AppDsn", "https://app@example.invalid/2");
+        });
+
+        var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
+
+        Assert.True(info!.TelemetryEnabled);
+        Assert.Equal("https://app@example.invalid/2", info.SentryDsn);
+    }
+
+    [Fact]
     public async Task ServerInfo_ShouldOfferTheDefaultMap_WhenNothingIsConfigured()
     {
         await using var api = await TestApi.StartAsync(postgres);

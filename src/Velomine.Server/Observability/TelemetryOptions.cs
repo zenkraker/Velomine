@@ -13,11 +13,21 @@ public sealed class TelemetryOptions
     public double TraceSampleRatio { get; set; } = 0.05;
 
     public bool IsActive => Enabled && !string.IsNullOrWhiteSpace(Sentry.Dsn);
+
+    /// <summary>The DSN the app receives. Falls back to the server DSN for a single-project setup.</summary>
+    public string? EffectiveAppDsn =>
+        string.IsNullOrWhiteSpace(Sentry.AppDsn) ? Sentry.Dsn : Sentry.AppDsn;
+
+    public bool IsAppActive => Enabled && !string.IsNullOrWhiteSpace(EffectiveAppDsn);
 }
 
 public sealed class SentryTelemetryOptions
 {
+    /// <summary>The server project DSN. Empty leaves server telemetry off.</summary>
     public string? Dsn { get; set; }
+
+    /// <summary>The Flutter app project DSN. Empty falls back to <see cref="Dsn"/>.</summary>
+    public string? AppDsn { get; set; }
 
     public string Environment { get; set; } = "production";
 

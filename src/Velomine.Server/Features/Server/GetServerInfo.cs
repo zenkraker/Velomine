@@ -38,8 +38,8 @@ public sealed class GetServerInfo(
             map.Value.EffectiveTileUrl,
             map.Value.EffectiveAttribution,
             smtp.Value.Configured,
-            options.IsActive,
-            options.IsActive ? options.Sentry.Dsn : null,
+            options.IsAppActive,
+            options.IsAppActive ? options.EffectiveAppDsn : null,
             TelemetryTerms.Version), ct);
     }
 }

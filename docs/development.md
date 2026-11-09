@@ -169,9 +169,10 @@ If you need `project-management` for a setup task, run it explicitly with
 `MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
 
 Telemetry is off in the development server by default. To try the server path, set
-`Velomine__Telemetry__Enabled=true` and `Velomine__Telemetry__Sentry__Dsn=<dsn>` in the environment; the app
-reads the DSN from `GET /api/v1/server` only after a member opts in under **Profile → Privacy** and restarts.
-A self-hosted server with no DSN sends nothing.
+`Velomine__Telemetry__Enabled=true`, `Velomine__Telemetry__Sentry__Dsn=<server dsn>` and
+`Velomine__Telemetry__Sentry__AppDsn=<app dsn>` in the environment; the app reads the app DSN from
+`GET /api/v1/server` only after a member opts in under **Profile → Privacy** and restarts. If `AppDsn` is unset it
+falls back to `Dsn`, so one project still works. A self-hosted server with no DSN sends nothing.
 
 Release builds do not upload debug symbols or web source maps yet. When you want readable release stack traces,
 add the Sentry Dart Plugin and pass `SENTRY_AUTH_TOKEN` as a build secret; it is deliberately not enabled by
