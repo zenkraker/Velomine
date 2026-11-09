@@ -16,6 +16,8 @@ class CreateComponentRequest {
     required this.type,
     this.brand = const Optional.absent(),
     this.model = const Optional.absent(),
+    this.mpn = const Optional.absent(),
+    this.gtin = const Optional.absent(),
     required this.installedOn,
     this.removedOn = const Optional.absent(),
     this.expectedDistanceM = const Optional.absent(),
@@ -40,6 +42,22 @@ class CreateComponentRequest {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   final Optional<String?> model;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> mpn;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> gtin;
 
   final DateTime installedOn;
 
@@ -83,6 +101,8 @@ class CreateComponentRequest {
     other.type == type &&
     other.brand == brand &&
     other.model == model &&
+    other.mpn == mpn &&
+    other.gtin == gtin &&
     other.installedOn == installedOn &&
     other.removedOn == removedOn &&
     other.expectedDistanceM == expectedDistanceM &&
@@ -95,6 +115,8 @@ class CreateComponentRequest {
     (type.hashCode) +
     (brand == null ? 0 : brand!.hashCode) +
     (model == null ? 0 : model!.hashCode) +
+    (mpn == null ? 0 : mpn!.hashCode) +
+    (gtin == null ? 0 : gtin!.hashCode) +
     (installedOn.hashCode) +
     (removedOn == null ? 0 : removedOn!.hashCode) +
     (expectedDistanceM == null ? 0 : expectedDistanceM!.hashCode) +
@@ -102,7 +124,7 @@ class CreateComponentRequest {
     (expectedMonths == null ? 0 : expectedMonths!.hashCode);
 
   @override
-  String toString() => 'CreateComponentRequest[type=$type, brand=$brand, model=$model, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths]';
+  String toString() => 'CreateComponentRequest[type=$type, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -114,6 +136,14 @@ class CreateComponentRequest {
     if (this.model.isPresent) {
       final value = this.model.value;
       json[r'model'] = value;
+    }
+    if (this.mpn.isPresent) {
+      final value = this.mpn.value;
+      json[r'mpn'] = value;
+    }
+    if (this.gtin.isPresent) {
+      final value = this.gtin.value;
+      json[r'gtin'] = value;
     }
       json[r'installedOn'] = _dateFormatter.format(this.installedOn);
     if (this.removedOn.isPresent) {
@@ -141,6 +171,8 @@ class CreateComponentRequest {
     String? type,
     Optional<String?>? brand,
     Optional<String?>? model,
+    Optional<String?>? mpn,
+    Optional<String?>? gtin,
     DateTime? installedOn,
     Optional<DateTime?>? removedOn,
     Optional<double?>? expectedDistanceM,
@@ -150,6 +182,8 @@ class CreateComponentRequest {
     type: type ?? this.type,
     brand: brand ?? this.brand,
     model: model ?? this.model,
+    mpn: mpn ?? this.mpn,
+    gtin: gtin ?? this.gtin,
     installedOn: installedOn ?? this.installedOn,
     removedOn: removedOn ?? this.removedOn,
     expectedDistanceM: expectedDistanceM ?? this.expectedDistanceM,
@@ -179,6 +213,8 @@ class CreateComponentRequest {
         type: mapValueOfType<String>(json, r'type')!,
         brand: json.containsKey(r'brand') ? Optional.present(mapValueOfType<String>(json, r'brand')) : const Optional.absent(),
         model: json.containsKey(r'model') ? Optional.present(mapValueOfType<String>(json, r'model')) : const Optional.absent(),
+        mpn: json.containsKey(r'mpn') ? Optional.present(mapValueOfType<String>(json, r'mpn')) : const Optional.absent(),
+        gtin: json.containsKey(r'gtin') ? Optional.present(mapValueOfType<String>(json, r'gtin')) : const Optional.absent(),
         installedOn: mapDateTime(json, r'installedOn', r'')!,
         removedOn: json.containsKey(r'removedOn') ? Optional.present(mapDateTime(json, r'removedOn', r'')) : const Optional.absent(),
         expectedDistanceM: json.containsKey(r'expectedDistanceM') ? Optional.present(mapValueOfType<double>(json, r'expectedDistanceM')) : const Optional.absent(),

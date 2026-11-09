@@ -12,6 +12,9 @@ public interface IBikeFields
     string Name { get; }
     string? Brand { get; }
     string? Model { get; }
+    int? ModelYear { get; }
+    string? BuildSpec { get; }
+    string? FrameSize { get; }
     string Kind { get; }
     int WheelCircumferenceMm { get; }
     double InitialDistanceM { get; }
@@ -25,6 +28,15 @@ public sealed class CreateBikeRequest : IBikeFields
     public string? Brand { get; set; }
 
     public string? Model { get; set; }
+
+    /// <summary>The model year, such as 2023.</summary>
+    public int? ModelYear { get; set; }
+
+    /// <summary>The build or specification level within the model, such as "SL 7".</summary>
+    public string? BuildSpec { get; set; }
+
+    /// <summary>The frame size in the brand's own form: 56, M, S3, 17.5".</summary>
+    public string? FrameSize { get; set; }
 
     /// <summary>road, gravel, mountain, ebike, timetrial, track, city or other.</summary>
     public required string Kind { get; set; }
@@ -50,6 +62,15 @@ public sealed class UpdateBikeRequest : IBikeFields
 
     public string? Model { get; set; }
 
+    /// <summary>The model year, such as 2023.</summary>
+    public int? ModelYear { get; set; }
+
+    /// <summary>The build or specification level within the model, such as "SL 7".</summary>
+    public string? BuildSpec { get; set; }
+
+    /// <summary>The frame size in the brand's own form: 56, M, S3, 17.5".</summary>
+    public string? FrameSize { get; set; }
+
     /// <summary>road, gravel, mountain, ebike, timetrial, track, city or other.</summary>
     public required string Kind { get; set; }
 
@@ -72,6 +93,9 @@ public class BikeFieldsValidator<T> : Validator<T> where T : IBikeFields
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Brand).MaximumLength(100);
         RuleFor(x => x.Model).MaximumLength(100);
+        RuleFor(x => x.ModelYear).InclusiveBetween(1900, 2100).When(x => x.ModelYear.HasValue);
+        RuleFor(x => x.BuildSpec).MaximumLength(60);
+        RuleFor(x => x.FrameSize).MaximumLength(24);
         RuleFor(x => x.Kind).Must(k => BikeKinds.All.Contains(k)).WithMessage("Choose one of: " + string.Join(", ", BikeKinds.All) + ".");
         RuleFor(x => x.WheelCircumferenceMm).InclusiveBetween(1000, 2600);
         RuleFor(x => x.InitialDistanceM).InclusiveBetween(0, 10_000_000);
@@ -100,6 +124,9 @@ public sealed class CreateBike(VelomineDbContext db, TimeProvider time) : Endpoi
             Name = req.Name.Trim(),
             Brand = req.Brand?.Trim(),
             Model = req.Model?.Trim(),
+            ModelYear = req.ModelYear,
+            BuildSpec = req.BuildSpec?.Trim(),
+            FrameSize = req.FrameSize?.Trim(),
             Kind = req.Kind,
             WheelCircumferenceMm = req.WheelCircumferenceMm,
             InitialDistanceM = req.InitialDistanceM,
@@ -135,6 +162,9 @@ public sealed class UpdateBike(VelomineDbContext db, TimeProvider time) : Endpoi
         bike.Name = req.Name.Trim();
         bike.Brand = req.Brand?.Trim();
         bike.Model = req.Model?.Trim();
+        bike.ModelYear = req.ModelYear;
+        bike.BuildSpec = req.BuildSpec?.Trim();
+        bike.FrameSize = req.FrameSize?.Trim();
         bike.Kind = req.Kind;
         bike.WheelCircumferenceMm = req.WheelCircumferenceMm;
         bike.InitialDistanceM = req.InitialDistanceM;

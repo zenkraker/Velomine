@@ -19,6 +19,15 @@ public sealed class Bike
 
     public string? Model { get; set; }
 
+    /// <summary>The model year the make and model belong to.</summary>
+    public int? ModelYear { get; set; }
+
+    /// <summary>The build or specification level within the model, such as "SL 7" or "Comp".</summary>
+    public string? BuildSpec { get; set; }
+
+    /// <summary>The frame size, in whatever form the brand uses: 56, M, S3, 17.5".</summary>
+    public string? FrameSize { get; set; }
+
     /// <summary>One of <see cref="BikeKinds.All"/>.</summary>
     public string Kind { get; set; } = "road";
 
@@ -58,6 +67,15 @@ public sealed class BikeComponent
     public string? Brand { get; set; }
 
     public string? Model { get; set; }
+
+    /// <summary>The manufacturer part number, the code a mechanic looks up: "CN-M8100".</summary>
+    public string? Mpn { get; set; }
+
+    /// <summary>The barcode on the packaging, normalised to GTIN-14. Only parts bought boxed have one.</summary>
+    public string? Gtin { get; set; }
+
+    /// <summary>The catalogue entry this part is, when the club already knows it.</summary>
+    public Guid? PartId { get; set; }
 
     public DateOnly InstalledOn { get; set; }
 

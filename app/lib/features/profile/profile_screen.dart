@@ -5,6 +5,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
+import '../../core/language_choice.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 import 'profile_controller.dart';
@@ -40,9 +41,13 @@ class ProfileScreen extends StatefulWidget {
     required this.onAccountDeleted,
     required this.onPasswordChanged,
     required this.serverUrl,
+    required this.language,
   });
 
   final ProfileController controller;
+
+  /// The account's language. The profile is the only place it can be changed.
+  final LanguageChoice language;
 
   /// The server this session belongs to, used for the export download link.
   final String serverUrl;
@@ -292,6 +297,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                             onChanged: (v) =>
                                 setState(() => _firstDay = v ?? _firstDay),
+                          ),
+                          ListenableBuilder(
+                            listenable: widget.language,
+                            builder: (context, _) {
+                              final device = Localizations.localeOf(context)
+                                  .languageCode;
+                              final current =
+                                  widget.language.code ??
+                                  (LanguageChoice.supported.contains(device)
+                                      ? device
+                                      : 'en');
+                              return InputDecorator(
+                                decoration: InputDecoration(
+                                  labelText: l10n.language,
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    key: const Key('profile-language'),
+                                    value: current,
+                                    isExpanded: true,
+                                    items: [
+                                      for (final code
+                                          in LanguageChoice.supported)
+                                        DropdownMenuItem(
+                                          value: code,
+                                          child: Text(switch (code) {
+                                            'it' => l10n.languageItalian,
+                                            _ => l10n.languageEnglish,
+                                          }),
+                                        ),
+                                    ],
+                                    onChanged: (code) {
+                                      if (code != null) {
+                                        widget.language.choose(code);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           SwitchListTile(
                             key: const Key('profile-email'),

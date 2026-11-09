@@ -51,6 +51,8 @@ class FakeServer {
   final bikes = <Map<String, Object?>>[];
   final parts =
       <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
+  /// What the "find a known part" field offers, as the server would return it.
+  final partCatalogue = <Map<String, Object?>>[];
   final streams =
       <String, Map<String, Object?>>{}; // a ride's samples, by ride id
   final rideLaps =
@@ -1382,13 +1384,51 @@ extension on FakeServer {
       'isDefault': false,
       'brand': null,
       'model': null,
+      'modelYear': null,
+      'buildSpec': null,
+      'frameSize': null,
       'purchasedOn': null,
       ...b,
     };
+    Map<String, Object?> partJson(Map<String, Object?> p) => {
+      'brand': null,
+      'model': null,
+      'mpn': null,
+      'gtin': null,
+      'partId': null,
+      'removedOn': null,
+      'expectedDistanceM': null,
+      'expectedHours': null,
+      'expectedMonths': null,
+      'usedDistanceM': 0.0,
+      'usedHours': 0.0,
+      'usedMonths': 0.0,
+      'wearPercent': null,
+      'status': 'ok',
+      ...p,
+    };
     Map<String, Object?> detail(String id) => {
       'bike': bikeJson(bikes.firstWhere((b) => b['id'] == id)),
-      'components': parts[id] ?? [],
+      'components': [
+        for (final p in parts[id] ?? const <Map<String, Object?>>[])
+          partJson(p),
+      ],
     };
+
+    if (path == '/api/v1/bikes/parts') {
+      final q = (request.url.queryParameters['q'] ?? '').toLowerCase();
+      final type = request.url.queryParameters['type'];
+      final matches = partCatalogue
+          .where((p) {
+            final name = '${p['brand']} ${p['model']}'.toLowerCase();
+            final mpn = (p['mpn'] as String?)?.toLowerCase() ?? '';
+            return (q.isEmpty || name.contains(q) || mpn.contains(q)) &&
+                (type == null || p['type'] == type);
+          })
+          .take(8)
+          .toList();
+      return json({'parts': matches});
+    }
 
     if (path == '/api/v1/bikes/component-types') {
       return json({
@@ -1436,6 +1476,9 @@ extension on FakeServer {
           'typeName': body['type'] == 'chain' ? 'Chain' : 'Tubeless sealant',
           'brand': null,
           'model': null,
+          'mpn': null,
+          'gtin': null,
+          'partId': null,
           'removedOn': null,
           'expectedDistanceM': null,
           'expectedHours': null,
@@ -1631,9 +1674,7 @@ Future<void> startApp(
   SoloHint? soloHint,
 }) async {
   await tester.runAsync(session.restore);
-  final language =
-      languageChoice ?? LanguageChoice(store: MemoryLanguageStore());
-  await language.load();
+  final language = languageChoice ?? LanguageChoice();
   final home = homeLocation ?? HomeLocation(store: MemoryHomeLocationStore());
   await home.load(session.me?.id ?? 'test');
   final solo = soloHint ?? SoloHint(store: MemorySoloHintStore());
@@ -1719,18 +1760,6 @@ class MemoryThemeStore implements ThemeChoiceStore {
 }
 
 /// Keeps the language choice in memory instead of the device's preferences.
-class MemoryLanguageStore implements LanguageChoiceStore {
-  MemoryLanguageStore([this.value]);
-
-  String? value;
-
-  @override
-  Future<String?> read() async => value;
-
-  @override
-  Future<void> write(String value) async => this.value = value;
-}
-
 Future<XFile?> fakeRideFile() async => XFile.fromData(
   Uint8List.fromList(utf8.encode('<gpx/>')),
   name: 'morning.gpx',

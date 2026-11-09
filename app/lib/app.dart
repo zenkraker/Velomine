@@ -191,17 +191,13 @@ class _VelomineAppState extends State<VelomineApp> {
     }
   }
 
-  /// Applies the account's language on sign-in; with no account choice yet, carries this device's choice to it.
+  /// Applies the account's language on sign-in. With no account choice the app follows the device.
   void _applyAccountLanguage() {
     if (_languageSynced) return;
     final me = widget.session.me;
     if (me == null) return;
     _languageSynced = true;
-    if (me.language != null) {
-      widget.languageChoice.adopt(me.language);
-    } else if (widget.languageChoice.code != null) {
-      widget.session.setLanguage(widget.languageChoice.code);
-    }
+    if (me.language != null) widget.languageChoice.adopt(me.language);
   }
 
   /// Notifications are checked while someone is signed in, and forgotten when they sign out.
@@ -220,6 +216,7 @@ class _VelomineAppState extends State<VelomineApp> {
       _joinRequests.reset();
       if (widget.session.status == SessionStatus.signedOut) {
         _homeLocation.forget();
+        widget.languageChoice.forget();
         _languageSynced = false;
       }
     }
@@ -285,7 +282,6 @@ class _VelomineAppState extends State<VelomineApp> {
         builder: (_, _) => SignInScreen(
           session: widget.session,
           startSso: _startSso,
-          languageChoice: widget.languageChoice,
           onChangeServer: widget.onChangeServer,
         ),
       ),
@@ -358,7 +354,6 @@ class _VelomineAppState extends State<VelomineApp> {
           session: widget.session,
           notifications: _notifications,
           themeChoice: widget.themeChoice,
-          languageChoice: widget.languageChoice,
           location: state.uri.path,
           child: child,
         ),
@@ -470,6 +465,7 @@ class _VelomineAppState extends State<VelomineApp> {
               session: widget.session,
               openLink: widget.openLink,
               serverUrl: widget.session.serverUrl,
+              language: widget.languageChoice,
             ),
           ),
           GoRoute(
@@ -772,11 +768,13 @@ class _ProfilePage extends StatefulWidget {
     required this.session,
     required this.openLink,
     required this.serverUrl,
+    required this.language,
   });
 
   final Session session;
   final LinkOpener openLink;
   final String serverUrl;
+  final LanguageChoice language;
 
   @override
   State<_ProfilePage> createState() => _ProfilePageState();
@@ -801,6 +799,7 @@ class _ProfilePageState extends State<_ProfilePage> {
     serverUrl: widget.serverUrl,
     emailAvailable: widget.session.serverInfo?.emailAvailable ?? false,
     openLink: widget.openLink,
+    language: widget.language,
     // The account is gone: sign out, which sends the app to the sign-in screen.
     onAccountDeleted: widget.session.signOut,
     // The password changed and every session ended; the same sign-out is the right move.

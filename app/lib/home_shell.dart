@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/l10n.dart';
-import 'core/language_choice.dart';
 import 'core/session.dart';
 import 'core/theme_choice.dart';
 import 'features/notifications/notifications_controller.dart';
@@ -16,7 +15,6 @@ class HomeShell extends StatelessWidget {
     required this.session,
     required this.notifications,
     required this.themeChoice,
-    required this.languageChoice,
     required this.location,
     required this.child,
   });
@@ -24,7 +22,6 @@ class HomeShell extends StatelessWidget {
   final Session session;
   final NotificationsController notifications;
   final ThemeChoice themeChoice;
-  final LanguageChoice languageChoice;
   final String location;
   final Widget child;
 
@@ -46,7 +43,6 @@ class HomeShell extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Velomine'),
         actions: [
-          LanguageChoiceButton(choice: languageChoice),
           ThemeChoiceButton(choice: themeChoice),
           ListenableBuilder(
             listenable: notifications,

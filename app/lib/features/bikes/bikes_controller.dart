@@ -110,6 +110,9 @@ class BikeDetailController extends ChangeNotifier {
         name: b.name,
         brand: Optional.present(b.brand),
         model: Optional.present(b.model),
+        modelYear: Optional.present(b.modelYear),
+        buildSpec: Optional.present(b.buildSpec),
+        frameSize: Optional.present(b.frameSize),
         kind: b.kind,
         wheelCircumferenceMm: b.wheelCircumferenceMm,
         initialDistanceM: b.initialDistanceM,
@@ -142,6 +145,16 @@ class BikeDetailController extends ChangeNotifier {
 
   Future<bool> addPart(CreateComponentRequest part) =>
       _change(() => api.createComponent(id, part), FailureAction.addPart);
+
+  /// The parts this club has used before, for the "find a known part" field. A failed lookup just offers nothing.
+  Future<List<PartResponse>> searchParts(String query, String? type) async {
+    try {
+      final response = await api.searchParts(q: query, type: type, limit: 8);
+      return response?.parts ?? const [];
+    } catch (_) {
+      return const [];
+    }
+  }
 
   Future<bool> editPart(String partId, UpdateComponentRequest part) => _change(
     () => api.updateComponent(id, partId, part),

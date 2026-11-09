@@ -275,6 +275,8 @@ class ApiClient {
           return NotificationResponse.fromJson(value);
         case 'OverviewResponse':
           return OverviewResponse.fromJson(value);
+        case 'PartResponse':
+          return PartResponse.fromJson(value);
         case 'PasswordResetLinkResponse':
           return PasswordResetLinkResponse.fromJson(value);
         case 'PendingJoinRequestResponse':
@@ -315,6 +317,8 @@ class ApiClient {
           return SaveCheckInRequest.fromJson(value);
         case 'SaveRideFeelRequest':
           return SaveRideFeelRequest.fromJson(value);
+        case 'SearchPartsResponse':
+          return SearchPartsResponse.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
         case 'SetClubLocationRequest':

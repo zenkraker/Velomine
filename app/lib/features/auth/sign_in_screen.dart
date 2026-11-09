@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
-import '../../core/language_choice.dart';
 import '../../core/session.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -32,13 +31,11 @@ class SignInScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.startSso,
-    required this.languageChoice,
     this.onChangeServer,
   });
 
   final Session session;
   final SsoStarter startSso;
-  final LanguageChoice languageChoice;
   final Future<void> Function()? onChangeServer;
 
   @override
@@ -90,13 +87,6 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          Positioned(
-            top: 8,
-            right: 8,
-            child: SafeArea(
-              child: LanguageChoiceButton(choice: widget.languageChoice),
-            ),
-          ),
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),

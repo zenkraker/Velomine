@@ -16,6 +16,9 @@ class UpdateBikeRequest {
     required this.name,
     this.brand = const Optional.absent(),
     this.model = const Optional.absent(),
+    this.modelYear = const Optional.absent(),
+    this.buildSpec = const Optional.absent(),
+    this.frameSize = const Optional.absent(),
     required this.kind,
     required this.wheelCircumferenceMm,
     required this.initialDistanceM,
@@ -40,6 +43,32 @@ class UpdateBikeRequest {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   final Optional<String?> model;
+
+  /// Minimum value: 1900
+  /// Maximum value: 2100
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> modelYear;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> buildSpec;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> frameSize;
 
   final String kind;
 
@@ -72,6 +101,9 @@ class UpdateBikeRequest {
     other.name == name &&
     other.brand == brand &&
     other.model == model &&
+    other.modelYear == modelYear &&
+    other.buildSpec == buildSpec &&
+    other.frameSize == frameSize &&
     other.kind == kind &&
     other.wheelCircumferenceMm == wheelCircumferenceMm &&
     other.initialDistanceM == initialDistanceM &&
@@ -84,6 +116,9 @@ class UpdateBikeRequest {
     (name.hashCode) +
     (brand == null ? 0 : brand!.hashCode) +
     (model == null ? 0 : model!.hashCode) +
+    (modelYear == null ? 0 : modelYear!.hashCode) +
+    (buildSpec == null ? 0 : buildSpec!.hashCode) +
+    (frameSize == null ? 0 : frameSize!.hashCode) +
     (kind.hashCode) +
     (wheelCircumferenceMm.hashCode) +
     (initialDistanceM.hashCode) +
@@ -91,7 +126,7 @@ class UpdateBikeRequest {
     (isActive == null ? 0 : isActive!.hashCode);
 
   @override
-  String toString() => 'UpdateBikeRequest[name=$name, brand=$brand, model=$model, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isActive=$isActive]';
+  String toString() => 'UpdateBikeRequest[name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isActive=$isActive]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -103,6 +138,18 @@ class UpdateBikeRequest {
     if (this.model.isPresent) {
       final value = this.model.value;
       json[r'model'] = value;
+    }
+    if (this.modelYear.isPresent) {
+      final value = this.modelYear.value;
+      json[r'modelYear'] = value;
+    }
+    if (this.buildSpec.isPresent) {
+      final value = this.buildSpec.value;
+      json[r'buildSpec'] = value;
+    }
+    if (this.frameSize.isPresent) {
+      final value = this.frameSize.value;
+      json[r'frameSize'] = value;
     }
       json[r'kind'] = this.kind;
       json[r'wheelCircumferenceMm'] = this.wheelCircumferenceMm;
@@ -124,6 +171,9 @@ class UpdateBikeRequest {
     String? name,
     Optional<String?>? brand,
     Optional<String?>? model,
+    Optional<int?>? modelYear,
+    Optional<String?>? buildSpec,
+    Optional<String?>? frameSize,
     String? kind,
     int? wheelCircumferenceMm,
     double? initialDistanceM,
@@ -133,6 +183,9 @@ class UpdateBikeRequest {
     name: name ?? this.name,
     brand: brand ?? this.brand,
     model: model ?? this.model,
+    modelYear: modelYear ?? this.modelYear,
+    buildSpec: buildSpec ?? this.buildSpec,
+    frameSize: frameSize ?? this.frameSize,
     kind: kind ?? this.kind,
     wheelCircumferenceMm: wheelCircumferenceMm ?? this.wheelCircumferenceMm,
     initialDistanceM: initialDistanceM ?? this.initialDistanceM,
@@ -166,6 +219,9 @@ class UpdateBikeRequest {
         name: mapValueOfType<String>(json, r'name')!,
         brand: json.containsKey(r'brand') ? Optional.present(mapValueOfType<String>(json, r'brand')) : const Optional.absent(),
         model: json.containsKey(r'model') ? Optional.present(mapValueOfType<String>(json, r'model')) : const Optional.absent(),
+        modelYear: json.containsKey(r'modelYear') ? Optional.present(json[r'modelYear'] == null ? null : int.parse('${json[r'modelYear']}')) : const Optional.absent(),
+        buildSpec: json.containsKey(r'buildSpec') ? Optional.present(mapValueOfType<String>(json, r'buildSpec')) : const Optional.absent(),
+        frameSize: json.containsKey(r'frameSize') ? Optional.present(mapValueOfType<String>(json, r'frameSize')) : const Optional.absent(),
         kind: mapValueOfType<String>(json, r'kind')!,
         wheelCircumferenceMm: mapValueOfType<int>(json, r'wheelCircumferenceMm')!,
         initialDistanceM: mapValueOfType<double>(json, r'initialDistanceM')!,

@@ -12,7 +12,7 @@ void main() {
   testWidgets('App_ShouldApplyTheAccountLanguage_WhenSignedIn', (tester) async {
     final rider = server.add('rider@example.com', language: 'it');
     server.signInBrowser(rider);
-    final choice = LanguageChoice(store: MemoryLanguageStore());
+    final choice = LanguageChoice();
 
     await startApp(
       tester,
@@ -23,24 +23,22 @@ void main() {
     expect(choice.code, 'it');
   });
 
-  testWidgets('LanguageChoiceButton_ShouldSaveToTheAccount_WhenChanged', (
+  testWidgets('App_ShouldForgetTheAccountLanguage_WhenSignedOut', (
     tester,
   ) async {
-    final rider = server.add('rider@example.com');
+    final rider = server.add('rider@example.com', language: 'it');
     server.signInBrowser(rider);
-    final choice = LanguageChoice(store: MemoryLanguageStore());
+    final choice = LanguageChoice();
     await startApp(
       tester,
       server.session(useCookies: true),
       languageChoice: choice,
     );
+    expect(choice.code, 'it');
 
-    await tester.tap(find.byKey(const Key('language-choice')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('language-en')));
+    await tester.tap(find.byKey(const Key('sign-out')));
     await tester.pumpAndSettle();
 
-    expect(choice.code, 'en');
-    expect(server.accounts[rider.email]!.language, 'en');
+    expect(choice.code, isNull);
   });
 }

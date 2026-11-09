@@ -66,7 +66,12 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
   }
 
   Future<void> _addPart() async {
-    final data = await showPartForm(context, types: c.types, today: c.today);
+    final data = await showPartForm(
+      context,
+      types: c.types,
+      today: c.today,
+      search: c.searchParts,
+    );
     if (data != null) await c.addPart(data.toCreate());
   }
 
@@ -75,6 +80,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
       context,
       types: c.types,
       today: c.today,
+      search: c.searchParts,
       part: part,
     );
     if (data != null) await c.editPart(part.id, data.toUpdate());
@@ -85,6 +91,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
       context,
       types: c.types,
       today: c.today,
+      search: c.searchParts,
       replacing: part,
     );
     if (data != null) await c.replacePart(part, data.toCreate());
@@ -175,6 +182,11 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
     }
     final bike = detail.bike;
     final make = [bike.brand, bike.model].whereType<String>().join(' ');
+    final model = [
+      if (bike.modelYear != null) '${bike.modelYear}',
+      bike.buildSpec,
+      if (bike.frameSize != null) bike.frameSize!,
+    ].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
     final current = detail.components
         .where((p) => p.removedOn == null)
         .toList();
@@ -194,6 +206,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         [
           bikeKindName(l10n, bike.kind),
           if (make.isNotEmpty) make,
+          if (model.isNotEmpty) model,
           l10n.wheelLabel(bike.wheelCircumferenceMm),
         ].join(' · '),
       ),

@@ -20,7 +20,6 @@ Future<void> main() async {
   await themeChoice.load();
 
   final languageChoice = LanguageChoice();
-  await languageChoice.load();
 
   final tokenStore = createTokenStore();
   // Keychain entries survive an uninstall on iOS. With no server chosen there is no session to restore,

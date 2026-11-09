@@ -247,4 +247,63 @@ void main() {
 
     expect(find.byKey(const Key('not-found')), findsOneWidget);
   });
+
+  testWidgets('BikesScreen_ShouldSaveTheModelYearAndSize_WhenFilled', (
+    tester,
+  ) async {
+    await openBikes(tester);
+    await tester.tap(find.byKey(const Key('add-bike')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('bike-name')), 'Climber');
+    await tester.enterText(find.byKey(const Key('bike-brand')), 'Trek');
+    await tester.enterText(find.byKey(const Key('bike-model')), 'Domane');
+    await tester.enterText(find.byKey(const Key('bike-year')), '2023');
+    await tester.enterText(find.byKey(const Key('bike-spec')), 'SL 7');
+    await tester.enterText(find.byKey(const Key('bike-size')), '56');
+    await tester.tap(find.byKey(const Key('bike-save')));
+    await tester.pumpAndSettle();
+
+    final bike = server.bikes.single;
+    expect(bike['brand'], 'Trek');
+    expect(bike['model'], 'Domane');
+    expect(bike['modelYear'], 2023);
+    expect(bike['buildSpec'], 'SL 7');
+    expect(bike['frameSize'], '56');
+  });
+
+  testWidgets('BikeDetailScreen_ShouldFillThePart_WhenAKnownPartIsPicked', (
+    tester,
+  ) async {
+    server.partCatalogue.add({
+      'id': 'part-known',
+      'type': 'chain',
+      'brand': 'Shimano',
+      'model': 'Ultegra CN-M8100',
+      'mpn': 'CN-M8100',
+      'gtin': null,
+      'confirmations': 2,
+    });
+    await openBikes(tester);
+    await addBike(tester, 'Climber');
+
+    await tester.tap(find.byKey(const Key('add-part')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('part-search')), 'Shimano');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Shimano Ultegra CN-M8100').last);
+    await tester.pumpAndSettle();
+
+    String field(String key) =>
+        tester.widget<TextField>(find.byKey(Key(key))).controller!.text;
+    expect(field('part-brand'), 'Shimano');
+    expect(field('part-model'), 'Ultegra CN-M8100');
+    expect(field('part-mpn'), 'CN-M8100');
+
+    await tester.tap(find.byKey(const Key('part-save')));
+    await tester.pumpAndSettle();
+
+    final part = server.parts['bike-1']!.single;
+    expect(part['type'], 'chain');
+    expect(part['mpn'], 'CN-M8100');
+  });
 }

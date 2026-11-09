@@ -33,6 +33,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<BikeComponent> BikeComponents => Set<BikeComponent>();
 
+    public DbSet<Part> Parts => Set<Part>();
+
     public DbSet<Goal> Goals => Set<Goal>();
 
     public DbSet<ServerSettings> ServerSettings => Set<ServerSettings>();

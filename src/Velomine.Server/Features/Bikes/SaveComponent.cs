@@ -12,6 +12,8 @@ public interface IComponentFields
     string Type { get; }
     string? Brand { get; }
     string? Model { get; }
+    string? Mpn { get; }
+    string? Gtin { get; }
     DateOnly InstalledOn { get; }
     DateOnly? RemovedOn { get; }
     double? ExpectedDistanceM { get; }
@@ -30,6 +32,12 @@ public sealed class CreateComponentRequest : IComponentFields
     public string? Brand { get; set; }
 
     public string? Model { get; set; }
+
+    /// <summary>The manufacturer part number, such as "CN-M8100". Optional, but it is what identifies the part.</summary>
+    public string? Mpn { get; set; }
+
+    /// <summary>The barcode on the packaging. Optional; a valid GTIN identifies the part on its own.</summary>
+    public string? Gtin { get; set; }
 
     /// <summary>The day it was fitted. Rides from this day on count towards its wear.</summary>
     public required DateOnly InstalledOn { get; set; }
@@ -61,6 +69,12 @@ public sealed class UpdateComponentRequest : IComponentFields
 
     public string? Model { get; set; }
 
+    /// <summary>The manufacturer part number, such as "CN-M8100". Optional, but it is what identifies the part.</summary>
+    public string? Mpn { get; set; }
+
+    /// <summary>The barcode on the packaging. Optional; a valid GTIN identifies the part on its own.</summary>
+    public string? Gtin { get; set; }
+
     /// <summary>The day it was fitted. Rides from this day on count towards its wear.</summary>
     public required DateOnly InstalledOn { get; set; }
 
@@ -82,6 +96,10 @@ public class ComponentFieldsValidator<T> : Validator<T> where T : IComponentFiel
         RuleFor(x => x.Type).Must(ComponentTypes.Ids.Contains).WithMessage("Unknown part type.");
         RuleFor(x => x.Brand).MaximumLength(100);
         RuleFor(x => x.Model).MaximumLength(100);
+        RuleFor(x => x.Mpn).MaximumLength(64);
+        RuleFor(x => x.Gtin).MaximumLength(20);
+        RuleFor(x => x.Gtin).Must(g => string.IsNullOrWhiteSpace(g) || PartIdentity.TryNormaliseGtin(g, out _))
+            .WithMessage("That is not a valid GTIN.");
         RuleFor(x => x.RemovedOn).GreaterThanOrEqualTo(x => x.InstalledOn).When(x => x.RemovedOn.HasValue)
             .WithMessage("A part cannot be removed before it was installed.");
         RuleFor(x => x.ExpectedDistanceM).GreaterThan(0).When(x => x.ExpectedDistanceM.HasValue);
@@ -114,6 +132,7 @@ public sealed class CreateComponent(VelomineDbContext db, TimeProvider time) : E
 
         var component = new BikeComponent { Id = Guid.CreateVersion7(), BikeId = bike.Id };
         Apply(component, req);
+        component.PartId = await PartCatalogue.LinkAsync(db, component, time, confirm: true, ct);
         db.BikeComponents.Add(component); // Add explicitly: EF would treat a new child with a preset key as existing
         await db.SaveChangesAsync(ct);
         await Send.CreatedAtAsync<GetBike>(new { id = bike.Id }, await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), cancellation: ct);
@@ -124,6 +143,8 @@ public sealed class CreateComponent(VelomineDbContext db, TimeProvider time) : E
         c.Type = req.Type;
         c.Brand = req.Brand?.Trim();
         c.Model = req.Model?.Trim();
+        c.Mpn = PartIdentity.NormaliseMpn(req.Mpn);
+        c.Gtin = PartIdentity.TryNormaliseGtin(req.Gtin, out var gtin) ? gtin : null;
         c.InstalledOn = req.InstalledOn;
         c.RemovedOn = req.RemovedOn;
         c.ExpectedDistanceM = req.ExpectedDistanceM;
@@ -152,6 +173,7 @@ public sealed class UpdateComponent(VelomineDbContext db, TimeProvider time) : E
         }
 
         CreateComponent.Apply(component, req);
+        component.PartId = await PartCatalogue.LinkAsync(db, component, time, confirm: false, ct);
         await db.SaveChangesAsync(ct);
         await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }

@@ -50,12 +50,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get themeDark => 'Notte';
 
   @override
-  String languageTooltip(String name) {
-    return 'Lingua: $name';
-  }
-
-  @override
-  String get languageSystem => 'Segui il dispositivo';
+  String get language => 'Lingua';
 
   @override
   String get languageEnglish => 'English';
@@ -972,6 +967,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get model => 'Modello';
 
   @override
+  String get modelYear => 'Anno del modello';
+
+  @override
+  String get buildSpec => 'Allestimento o specifica';
+
+  @override
+  String get frameSize => 'Taglia telaio';
+
+  @override
+  String get modelYearHelper => 'Per esempio 2023. Facoltativo.';
+
+  @override
+  String get buildSpecHelper =>
+      'Per esempio SL 7, Comp o il nome del gruppo. Facoltativo.';
+
+  @override
+  String get frameSizeHelper =>
+      'Nella forma usata dalla marca: 56, M, S3, 17,5\". Facoltativo.';
+
+  @override
   String get wheelCircumference => 'Circonferenza ruota (mm)';
 
   @override
@@ -995,6 +1010,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get errorBikeName => 'Dai un nome alla bici.';
+
+  @override
+  String get errorModelYear =>
+      'L\'anno del modello è tra 1900 e 2100, oppure vuoto.';
 
   @override
   String get errorWheelRange => 'La circonferenza ruota è tra 1000 e 2600 mm.';
@@ -1027,6 +1046,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get partLabel => 'Componente';
 
   @override
+  String get findPart => 'Cerca un componente conosciuto';
+
+  @override
+  String get findPartHint => 'Marca, modello o codice';
+
+  @override
+  String get mpn => 'Codice produttore (MPN)';
+
+  @override
+  String get gtin => 'Codice a barre (GTIN)';
+
+  @override
+  String get mpnHelper =>
+      'Il codice stampato sul componente, per esempio CN-M8100. Facoltativo.';
+
+  @override
+  String get gtinHelper =>
+      'Il numero sotto il codice a barre sulla confezione. Facoltativo.';
+
+  @override
   String get stillOnBike => 'Ancora sulla bici';
 
   @override
@@ -1057,6 +1096,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get errorRemovedBeforeInstalled =>
       'Non può essere rimosso prima di essere installato.';
+
+  @override
+  String get errorGtin =>
+      'Un GTIN ha 8, 12, 13 o 14 cifre e una cifra di controllo valida.';
 
   @override
   String get bikeKindRoad => 'Strada';

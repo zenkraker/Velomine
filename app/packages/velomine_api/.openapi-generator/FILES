@@ -70,6 +70,7 @@ lib/model/nearby_clubs_request.dart
 lib/model/nearby_clubs_response.dart
 lib/model/notification_response.dart
 lib/model/overview_response.dart
+lib/model/part_response.dart
 lib/model/password_reset_link_response.dart
 lib/model/pending_join_request_response.dart
 lib/model/period_totals.dart
@@ -90,6 +91,7 @@ lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
 lib/model/save_check_in_request.dart
 lib/model/save_ride_feel_request.dart
+lib/model/search_parts_response.dart
 lib/model/server_info_response.dart
 lib/model/set_club_location_request.dart
 lib/model/set_club_member_role_request.dart

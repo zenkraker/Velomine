@@ -30,15 +30,7 @@
   "themeLight": "Day",
   "themeDark": "Night",
 
-  "languageTooltip": "Language: {name}",
-  "@languageTooltip": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "languageSystem": "Follow this device",
+  "language": "Language",
   "languageEnglish": "English",
   "languageItalian": "Italiano",
 
@@ -564,6 +556,12 @@
   "kind": "Kind",
   "brand": "Brand",
   "model": "Model",
+  "modelYear": "Model year",
+  "buildSpec": "Build or spec",
+  "frameSize": "Frame size",
+  "modelYearHelper": "Such as 2023. Optional.",
+  "buildSpecHelper": "Such as SL 7, Comp or the groupset name. Optional.",
+  "frameSizeHelper": "In the brand's own form: 56, M, S3, 17.5\". Optional.",
   "wheelCircumference": "Wheel circumference (mm)",
   "wheelHelper": "Typical values below; measure one roll of your own wheel for the exact number.",
   "initialDistance": "Distance before Velomine (km)",
@@ -578,6 +576,7 @@
     }
   },
   "errorBikeName": "Give the bike a name.",
+  "errorModelYear": "The model year is 1900 to 2100, or empty.",
   "errorWheelRange": "The wheel circumference is 1000 to 2600 mm.",
   "errorInitialDistance": "Distance before Velomine must be 0 or more.",
   "cancel": "Cancel",
@@ -595,6 +594,12 @@
   "editPartTitle": "Edit part",
   "addPartTitle": "Add a part",
   "partLabel": "Part",
+  "findPart": "Find a known part",
+  "findPartHint": "Brand, model or part number",
+  "mpn": "Part number (MPN)",
+  "gtin": "Barcode (GTIN)",
+  "mpnHelper": "The code on the part, such as CN-M8100. Optional.",
+  "gtinHelper": "The number under the barcode on the box. Optional.",
   "stillOnBike": "Still on the bike",
   "removedOn": "Removed {date}",
   "@removedOn": {
@@ -611,6 +616,7 @@
   "errorChoosePart": "Choose what kind of part it is.",
   "errorLimits": "Limits must be numbers above 0, or empty.",
   "errorRemovedBeforeInstalled": "It cannot be removed before it was installed.",
+  "errorGtin": "A GTIN is 8, 12, 13 or 14 digits with a valid check digit.",
 
   "bikeKindRoad": "Road",
   "bikeKindGravel": "Gravel",

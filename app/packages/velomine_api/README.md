@@ -114,6 +114,7 @@ Class | Method | HTTP request | Description
 *BikesApi* | [**getBike**](doc//BikesApi.md#getbike) | **GET** /api/v1/bikes/{id} | 
 *BikesApi* | [**listBikes**](doc//BikesApi.md#listbikes) | **GET** /api/v1/bikes | 
 *BikesApi* | [**listComponentTypes**](doc//BikesApi.md#listcomponenttypes) | **GET** /api/v1/bikes/component-types | 
+*BikesApi* | [**searchParts**](doc//BikesApi.md#searchparts) | **GET** /api/v1/bikes/parts | 
 *BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
@@ -211,6 +212,7 @@ Class | Method | HTTP request | Description
  - [NearbyClubsResponse](doc//NearbyClubsResponse.md)
  - [NotificationResponse](doc//NotificationResponse.md)
  - [OverviewResponse](doc//OverviewResponse.md)
+ - [PartResponse](doc//PartResponse.md)
  - [PasswordResetLinkResponse](doc//PasswordResetLinkResponse.md)
  - [PendingJoinRequestResponse](doc//PendingJoinRequestResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
@@ -231,6 +233,7 @@ Class | Method | HTTP request | Description
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
+ - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)

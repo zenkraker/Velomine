@@ -170,17 +170,11 @@ abstract class AppLocalizations {
   /// **'Night'**
   String get themeDark;
 
-  /// No description provided for @languageTooltip.
+  /// No description provided for @language.
   ///
   /// In en, this message translates to:
-  /// **'Language: {name}'**
-  String languageTooltip(String name);
-
-  /// No description provided for @languageSystem.
-  ///
-  /// In en, this message translates to:
-  /// **'Follow this device'**
-  String get languageSystem;
+  /// **'Language'**
+  String get language;
 
   /// No description provided for @languageEnglish.
   ///
@@ -1790,6 +1784,42 @@ abstract class AppLocalizations {
   /// **'Model'**
   String get model;
 
+  /// No description provided for @modelYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Model year'**
+  String get modelYear;
+
+  /// No description provided for @buildSpec.
+  ///
+  /// In en, this message translates to:
+  /// **'Build or spec'**
+  String get buildSpec;
+
+  /// No description provided for @frameSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame size'**
+  String get frameSize;
+
+  /// No description provided for @modelYearHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Such as 2023. Optional.'**
+  String get modelYearHelper;
+
+  /// No description provided for @buildSpecHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Such as SL 7, Comp or the groupset name. Optional.'**
+  String get buildSpecHelper;
+
+  /// No description provided for @frameSizeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'In the brand\'s own form: 56, M, S3, 17.5\". Optional.'**
+  String get frameSizeHelper;
+
   /// No description provided for @wheelCircumference.
   ///
   /// In en, this message translates to:
@@ -1831,6 +1861,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Give the bike a name.'**
   String get errorBikeName;
+
+  /// No description provided for @errorModelYear.
+  ///
+  /// In en, this message translates to:
+  /// **'The model year is 1900 to 2100, or empty.'**
+  String get errorModelYear;
 
   /// No description provided for @errorWheelRange.
   ///
@@ -1886,6 +1922,42 @@ abstract class AppLocalizations {
   /// **'Part'**
   String get partLabel;
 
+  /// No description provided for @findPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a known part'**
+  String get findPart;
+
+  /// No description provided for @findPartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand, model or part number'**
+  String get findPartHint;
+
+  /// No description provided for @mpn.
+  ///
+  /// In en, this message translates to:
+  /// **'Part number (MPN)'**
+  String get mpn;
+
+  /// No description provided for @gtin.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode (GTIN)'**
+  String get gtin;
+
+  /// No description provided for @mpnHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The code on the part, such as CN-M8100. Optional.'**
+  String get mpnHelper;
+
+  /// No description provided for @gtinHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The number under the barcode on the box. Optional.'**
+  String get gtinHelper;
+
   /// No description provided for @stillOnBike.
   ///
   /// In en, this message translates to:
@@ -1939,6 +2011,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It cannot be removed before it was installed.'**
   String get errorRemovedBeforeInstalled;
+
+  /// No description provided for @errorGtin.
+  ///
+  /// In en, this message translates to:
+  /// **'A GTIN is 8, 12, 13 or 14 digits with a valid check digit.'**
+  String get errorGtin;
 
   /// No description provided for @bikeKindRoad.
   ///

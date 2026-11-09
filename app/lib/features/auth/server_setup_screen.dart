@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import '../../core/language_choice.dart';
 import '../../core/server_config.dart';
 
 enum _Problem { invalidAddress, unreachable, saveFailed }
@@ -14,7 +13,6 @@ class ServerSetupScreen extends StatefulWidget {
     required this.onSaved,
     this.initialUrl = '',
     this.check,
-    this.languageChoice,
   });
 
   final String initialUrl;
@@ -22,9 +20,6 @@ class ServerSetupScreen extends StatefulWidget {
 
   /// Tests replace the network check. The real one asks the server who it is.
   final Future<ServerInfoResponse?> Function(String url)? check;
-
-  /// Shown when the app has a language to switch; tests may leave it out.
-  final LanguageChoice? languageChoice;
 
   @override
   State<ServerSetupScreen> createState() => _ServerSetupScreenState();
@@ -168,22 +163,6 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
         ),
       ),
     );
-    final languageChoice = widget.languageChoice;
-    return Scaffold(
-      body: languageChoice == null
-          ? form
-          : Stack(
-              children: [
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: SafeArea(
-                    child: LanguageChoiceButton(choice: languageChoice),
-                  ),
-                ),
-                form,
-              ],
-            ),
-    );
+    return Scaffold(body: form);
   }
 }

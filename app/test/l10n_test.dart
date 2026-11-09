@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:velomine/core/language_choice.dart';
 
 import 'fake_server.dart';
 
@@ -55,19 +54,6 @@ void main() {
     }
   });
 
-  test(
-    'LanguageChoice_ShouldReadSavedLanguageAndFallBackToDevice_WhenLoaded',
-    () async {
-      final italian = LanguageChoice(store: MemoryLanguageStore('it'));
-      await italian.load();
-      expect(italian.locale, const Locale('it'));
-
-      final odd = LanguageChoice(store: MemoryLanguageStore('de'));
-      await odd.load();
-      expect(odd.locale, isNull);
-    },
-  );
-
   testWidgets('AppLocalizations_ShouldFollowDeviceLanguage_WhenNoneIsChosen', (
     tester,
   ) async {
@@ -81,45 +67,37 @@ void main() {
     expect(find.text('Rides'), findsNothing);
   });
 
-  testWidgets('AppLocalizations_ShouldSwitchAndKeepLanguage_WhenOneIsChosen', (
+  testWidgets('ProfileScreen_ShouldSwitchTheLanguage_WhenOneIsChosen', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final server = FakeServer();
-    server.signInBrowser(server.add('rider@example.com'));
-    final store = MemoryLanguageStore();
-    await startApp(
-      tester,
-      server.session(useCookies: true),
-      languageChoice: LanguageChoice(store: store),
-    );
+    final rider = server.add('rider@example.com');
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
 
     expect(find.text('Rides'), findsWidgets);
 
-    await tester.tap(find.byKey(const Key('language-choice')));
+    await tester.tap(find.byKey(const Key('open-profile')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('language-it')));
+    await tester.ensureVisible(find.byKey(const Key('profile-language')));
+    await tester.tap(find.byKey(const Key('profile-language')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Italiano').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Uscite'), findsWidgets);
     expect(find.text('Rides'), findsNothing);
-    expect(store.value, 'it');
-
-    // Back to following the device, which in tests is English.
-    await tester.tap(find.byKey(const Key('language-choice')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('language-system')));
-    await tester.pumpAndSettle();
-    expect(find.text('Rides'), findsWidgets);
-    expect(store.value, 'system');
+    expect(server.accounts[rider.email]!.language, 'it');
   });
 
   testWidgets('L10n_ShouldLocalizeSignInScreen_WhenItalian', (tester) async {
+    tester.platformDispatcher.localesTestValue = [const Locale('it')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     final server = FakeServer();
-    await startApp(
-      tester,
-      server.session(useCookies: true),
-      languageChoice: LanguageChoice(store: MemoryLanguageStore('it')),
-    );
+    await startApp(tester, server.session(useCookies: true));
 
     expect(find.text('Accedi'), findsOneWidget);
     expect(find.text('Crea un account'), findsOneWidget);
@@ -128,12 +106,8 @@ void main() {
 
   testWidgets('L10n_ShouldLocalizeProgressDates_WhenItalian', (tester) async {
     final server = FakeServer();
-    server.signInBrowser(server.add('rider@example.com'));
-    await startApp(
-      tester,
-      server.session(useCookies: true),
-      languageChoice: LanguageChoice(store: MemoryLanguageStore('it')),
-    );
+    server.signInBrowser(server.add('rider@example.com', language: 'it'));
+    await startApp(tester, server.session(useCookies: true));
 
     await tester.tap(find.text('Progressi'));
     await tester.pumpAndSettle();
@@ -148,12 +122,8 @@ void main() {
     tester,
   ) async {
     final server = FakeServer();
-    server.signInBrowser(server.add('rider@example.com'));
-    await startApp(
-      tester,
-      server.session(useCookies: true),
-      languageChoice: LanguageChoice(store: MemoryLanguageStore('it')),
-    );
+    server.signInBrowser(server.add('rider@example.com', language: 'it'));
+    await startApp(tester, server.session(useCookies: true));
 
     expect(
       find.text('Nessuna uscita. Carica un file FIT, GPX o TCX.'),

@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'component_names.dart';
+import 'part_identity.dart';
 
 const bikeKindIds = [
   'road',
@@ -44,7 +45,7 @@ String? _text(String value) => value.trim().isEmpty ? null : value.trim();
 double? _number(String value) =>
     double.tryParse(value.trim().replaceAll(',', '.'));
 
-enum _BikeProblem { name, wheelRange, initialDistance }
+enum _BikeProblem { name, year, wheelRange, initialDistance }
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -56,6 +57,9 @@ class BikeFormData {
     required this.name,
     this.brand,
     this.model,
+    this.modelYear,
+    this.buildSpec,
+    this.frameSize,
     required this.kind,
     required this.wheelMm,
     required this.initialKm,
@@ -65,6 +69,9 @@ class BikeFormData {
   final String name;
   final String? brand;
   final String? model;
+  final int? modelYear;
+  final String? buildSpec;
+  final String? frameSize;
   final String kind;
   final int wheelMm;
   final double initialKm;
@@ -74,6 +81,9 @@ class BikeFormData {
     name: name,
     brand: Optional.present(brand),
     model: Optional.present(model),
+    modelYear: Optional.present(modelYear),
+    buildSpec: Optional.present(buildSpec),
+    frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
     initialDistanceM: initialKm * 1000,
@@ -84,6 +94,9 @@ class BikeFormData {
     name: name,
     brand: Optional.present(brand),
     model: Optional.present(model),
+    modelYear: Optional.present(modelYear),
+    buildSpec: Optional.present(buildSpec),
+    frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
     initialDistanceM: initialKm * 1000,
@@ -122,6 +135,11 @@ class _BikeFormState extends State<_BikeForm> {
   late final _name = TextEditingController(text: widget.bike?.name);
   late final _brand = TextEditingController(text: widget.bike?.brand);
   late final _model = TextEditingController(text: widget.bike?.model);
+  late final _year = TextEditingController(
+    text: widget.bike?.modelYear?.toString(),
+  );
+  late final _spec = TextEditingController(text: widget.bike?.buildSpec);
+  late final _size = TextEditingController(text: widget.bike?.frameSize);
   late final _wheel = TextEditingController(
     text: '${widget.bike?.wheelCircumferenceMm ?? 2105}',
   );
@@ -139,6 +157,9 @@ class _BikeFormState extends State<_BikeForm> {
     _name.dispose();
     _brand.dispose();
     _model.dispose();
+    _year.dispose();
+    _spec.dispose();
+    _size.dispose();
     _wheel.dispose();
     _initial.dispose();
     super.dispose();
@@ -147,8 +168,14 @@ class _BikeFormState extends State<_BikeForm> {
   void _submit() {
     final wheel = int.tryParse(_wheel.text.trim());
     final initial = _initial.text.trim().isEmpty ? 0.0 : _number(_initial.text);
+    final year = _year.text.trim().isEmpty
+        ? null
+        : int.tryParse(_year.text.trim());
     if (_name.text.trim().isEmpty) {
       setState(() => _problem = _BikeProblem.name);
+    } else if (_year.text.trim().isNotEmpty &&
+        (year == null || year < 1900 || year > 2100)) {
+      setState(() => _problem = _BikeProblem.year);
     } else if (wheel == null || wheel < 1000 || wheel > 2600) {
       setState(() => _problem = _BikeProblem.wheelRange);
     } else if (initial == null || initial < 0) {
@@ -160,6 +187,9 @@ class _BikeFormState extends State<_BikeForm> {
           name: _name.text.trim(),
           brand: _text(_brand.text),
           model: _text(_model.text),
+          modelYear: year,
+          buildSpec: _text(_spec.text),
+          frameSize: _text(_size.text),
           kind: _kind,
           wheelMm: wheel,
           initialKm: initial,
@@ -175,6 +205,7 @@ class _BikeFormState extends State<_BikeForm> {
     final problem = switch (_problem) {
       null => null,
       _BikeProblem.name => l10n.errorBikeName,
+      _BikeProblem.year => l10n.errorModelYear,
       _BikeProblem.wheelRange => l10n.errorWheelRange,
       _BikeProblem.initialDistance => l10n.errorInitialDistance,
     };
@@ -223,6 +254,43 @@ class _BikeFormState extends State<_BikeForm> {
                     ),
                   ),
                 ],
+              ),
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('bike-year'),
+                      controller: _year,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l10n.modelYear,
+                        helperText: l10n.modelYearHelper,
+                        helperMaxLines: 2,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('bike-size'),
+                      controller: _size,
+                      decoration: InputDecoration(
+                        labelText: l10n.frameSize,
+                        helperText: l10n.frameSizeHelper,
+                        helperMaxLines: 2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              TextField(
+                key: const Key('bike-spec'),
+                controller: _spec,
+                decoration: InputDecoration(
+                  labelText: l10n.buildSpec,
+                  helperText: l10n.buildSpecHelper,
+                  helperMaxLines: 2,
+                ),
               ),
               TextField(
                 key: const Key('bike-wheel'),
@@ -303,6 +371,8 @@ class PartFormData {
     required this.type,
     this.brand,
     this.model,
+    this.mpn,
+    this.gtin,
     required this.installedOn,
     this.removedOn,
     this.expectedKm,
@@ -313,6 +383,8 @@ class PartFormData {
   final String type;
   final String? brand;
   final String? model;
+  final String? mpn;
+  final String? gtin;
   final DateTime installedOn;
   final DateTime? removedOn;
   final double? expectedKm;
@@ -323,6 +395,8 @@ class PartFormData {
     type: type,
     brand: Optional.present(brand),
     model: Optional.present(model),
+    mpn: Optional.present(mpn),
+    gtin: Optional.present(gtin),
     installedOn: installedOn,
     removedOn: Optional.present(removedOn),
     expectedDistanceM: Optional.present(
@@ -336,6 +410,8 @@ class PartFormData {
     type: type,
     brand: Optional.present(brand),
     model: Optional.present(model),
+    mpn: Optional.present(mpn),
+    gtin: Optional.present(gtin),
     installedOn: installedOn,
     removedOn: Optional.present(removedOn),
     expectedDistanceM: Optional.present(
@@ -347,28 +423,38 @@ class PartFormData {
 }
 
 /// Add a part, change one ([part]), or fit a new one of the same kind ([replacing]: starts from the old limits, installed today).
+/// [search] offers the parts the club has used before as the member types.
 Future<PartFormData?> showPartForm(
   BuildContext context, {
   required List<ComponentTypeResponse> types,
   required DateTime today,
+  required Future<List<PartResponse>> Function(String query, String? type)
+  search,
   ComponentResponse? part,
   ComponentResponse? replacing,
 }) => showDialog<PartFormData>(
   context: context,
-  builder: (_) =>
-      _PartForm(types: types, today: today, part: part, replacing: replacing),
+  builder: (_) => _PartForm(
+    types: types,
+    today: today,
+    search: search,
+    part: part,
+    replacing: replacing,
+  ),
 );
 
 class _PartForm extends StatefulWidget {
   const _PartForm({
     required this.types,
     required this.today,
+    required this.search,
     this.part,
     this.replacing,
   });
 
   final List<ComponentTypeResponse> types;
   final DateTime today;
+  final Future<List<PartResponse>> Function(String query, String? type) search;
   final ComponentResponse? part;
   final ComponentResponse? replacing;
 
@@ -380,13 +466,15 @@ String _fmt(num? v) => v == null
     ? ''
     : (v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1));
 
-enum _PartProblem { type, limits, removedBeforeInstalled }
+enum _PartProblem { type, limits, gtin, removedBeforeInstalled }
 
 class _PartFormState extends State<_PartForm> {
   late final ComponentResponse? _from = widget.part ?? widget.replacing;
   late String? _type = _from?.type;
   late final _brand = TextEditingController(text: widget.part?.brand);
   late final _model = TextEditingController(text: widget.part?.model);
+  late final _mpn = TextEditingController(text: widget.part?.mpn);
+  late final _gtin = TextEditingController(text: widget.part?.gtin);
   late final _km = TextEditingController(
     text: _fmt(
       _from?.expectedDistanceM == null
@@ -404,10 +492,45 @@ class _PartFormState extends State<_PartForm> {
   void dispose() {
     _brand.dispose();
     _model.dispose();
+    _mpn.dispose();
+    _gtin.dispose();
     _km.dispose();
     _hours.dispose();
     _months.dispose();
     super.dispose();
+  }
+
+  /// A known part fills what the club already knows about it, so the member only confirms the dates and limits.
+  void _applyKnownPart(PartResponse part) {
+    setState(() {
+      if (widget.replacing == null) {
+        _type = part.type;
+        if (widget.part == null) {
+          final t = widget.types.where((t) => t.id == part.type).firstOrNull;
+          if (t != null) {
+            _km.text = _fmt(
+              t.typicalDistanceM == null ? null : t.typicalDistanceM! / 1000,
+            );
+            _hours.text = _fmt(t.typicalHours);
+            _months.text = _fmt(t.typicalMonths);
+          }
+        }
+      }
+      _brand.text = part.brand;
+      _model.text = part.model;
+      _mpn.text = part.mpn ?? '';
+      _gtin.text = part.gtin ?? '';
+    });
+  }
+
+  /// Waits for a pause in typing before asking the server, and ignores answers that arrive after a newer keystroke.
+  int _searchSeq = 0;
+
+  Future<Iterable<PartResponse>> _searchOptions(String text) async {
+    final seq = ++_searchSeq;
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (seq != _searchSeq) return const <PartResponse>[];
+    return widget.search(text, _type);
   }
 
   /// Picking a kind of part offers its typical limits, unless the member already typed some.
@@ -431,12 +554,15 @@ class _PartFormState extends State<_PartForm> {
     }
 
     final km = limit(_km), hours = limit(_hours), months = limit(_months);
+    final gtin = _text(_gtin.text);
     bool bad(double? v, TextEditingController c) =>
         c.text.trim().isNotEmpty && (v == null || v <= 0);
     if (_type == null) {
       setState(() => _problem = _PartProblem.type);
     } else if (bad(km, _km) || bad(hours, _hours) || bad(months, _months)) {
       setState(() => _problem = _PartProblem.limits);
+    } else if (gtin != null && !isValidGtin(gtin)) {
+      setState(() => _problem = _PartProblem.gtin);
     } else if (_removed != null && _removed!.isBefore(_installed)) {
       setState(() => _problem = _PartProblem.removedBeforeInstalled);
     } else {
@@ -446,6 +572,8 @@ class _PartFormState extends State<_PartForm> {
           type: _type!,
           brand: _text(_brand.text),
           model: _text(_model.text),
+          mpn: _text(_mpn.text),
+          gtin: gtin,
           installedOn: _installed,
           removedOn: _removed,
           expectedKm: km,
@@ -475,6 +603,7 @@ class _PartFormState extends State<_PartForm> {
       null => null,
       _PartProblem.type => l10n.errorChoosePart,
       _PartProblem.limits => l10n.errorLimits,
+      _PartProblem.gtin => l10n.errorGtin,
       _PartProblem.removedBeforeInstalled => l10n.errorRemovedBeforeInstalled,
     };
     return AlertDialog(
@@ -486,6 +615,27 @@ class _PartFormState extends State<_PartForm> {
             mainAxisSize: MainAxisSize.min,
             spacing: 12,
             children: [
+              Autocomplete<PartResponse>(
+                optionsBuilder: (value) async {
+                  final text = value.text.trim();
+                  if (text.length < 2) return const <PartResponse>[];
+                  return _searchOptions(text);
+                },
+                displayStringForOption: (p) =>
+                    [p.brand, p.model].where((s) => s.isNotEmpty).join(' '),
+                fieldViewBuilder:
+                    (context, controller, focusNode, onFieldSubmitted) =>
+                        TextField(
+                          key: const Key('part-search'),
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: l10n.findPart,
+                            hintText: l10n.findPartHint,
+                          ),
+                        ),
+                onSelected: _applyKnownPart,
+              ),
               DropdownButtonFormField<String>(
                 key: const Key('part-type'),
                 initialValue: _type,
@@ -518,6 +668,34 @@ class _PartFormState extends State<_PartForm> {
                       key: const Key('part-model'),
                       controller: _model,
                       decoration: InputDecoration(labelText: l10n.model),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('part-mpn'),
+                      controller: _mpn,
+                      decoration: InputDecoration(
+                        labelText: l10n.mpn,
+                        helperText: l10n.mpnHelper,
+                        helperMaxLines: 2,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('part-gtin'),
+                      controller: _gtin,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l10n.gtin,
+                        helperText: l10n.gtinHelper,
+                        helperMaxLines: 2,
+                      ),
                     ),
                   ),
                 ],

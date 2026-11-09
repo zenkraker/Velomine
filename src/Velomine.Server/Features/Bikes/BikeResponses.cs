@@ -11,6 +11,9 @@ public sealed record BikeResponse(
     string Name,
     string? Brand,
     string? Model,
+    int? ModelYear,
+    string? BuildSpec,
+    string? FrameSize,
     string Kind,
     int WheelCircumferenceMm,
     double InitialDistanceM,
@@ -28,6 +31,9 @@ public sealed record ComponentResponse(
     string TypeName,
     string? Brand,
     string? Model,
+    string? Mpn,
+    string? Gtin,
+    Guid? PartId,
     DateOnly InstalledOn,
     DateOnly? RemovedOn,
     double? ExpectedDistanceM,
@@ -55,7 +61,7 @@ public static class BikeQueries
         return [.. bikes.Select(b =>
         {
             totals.TryGetValue(b.Id, out var t);
-            return new BikeResponse(b.Id, b.Name, b.Brand, b.Model, b.Kind, b.WheelCircumferenceMm, b.InitialDistanceM, b.PurchasedOn,
+            return new BikeResponse(b.Id, b.Name, b.Brand, b.Model, b.ModelYear, b.BuildSpec, b.FrameSize, b.Kind, b.WheelCircumferenceMm, b.InitialDistanceM, b.PurchasedOn,
                 b.IsDefault, b.IsActive, t?.Count ?? 0, b.InitialDistanceM + (t?.Distance ?? 0), t?.Moving ?? 0);
         })];
     }
@@ -85,6 +91,7 @@ public static class BikeQueries
             .ToList();
 
     public static ComponentResponse Component(BikeComponent c, ComponentWear w) => new(
-        c.Id, c.Type, ComponentTypes.NameOf(c.Type), c.Brand, c.Model, c.InstalledOn, c.RemovedOn,
+        c.Id, c.Type, ComponentTypes.NameOf(c.Type), c.Brand, c.Model, c.Mpn, c.Gtin, c.PartId,
+        c.InstalledOn, c.RemovedOn,
         c.ExpectedDistanceM, c.ExpectedHours, c.ExpectedMonths, w.DistanceM, w.Hours, w.Months, w.Percent, w.Status);
 }

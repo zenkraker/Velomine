@@ -17,6 +17,9 @@ class BikeResponse {
     required this.name,
     required this.brand,
     required this.model,
+    required this.modelYear,
+    required this.buildSpec,
+    required this.frameSize,
     required this.kind,
     required this.wheelCircumferenceMm,
     required this.initialDistanceM,
@@ -35,6 +38,12 @@ class BikeResponse {
   final String? brand;
 
   final String? model;
+
+  final int? modelYear;
+
+  final String? buildSpec;
+
+  final String? frameSize;
 
   final String kind;
 
@@ -60,6 +69,9 @@ class BikeResponse {
     other.name == name &&
     other.brand == brand &&
     other.model == model &&
+    other.modelYear == modelYear &&
+    other.buildSpec == buildSpec &&
+    other.frameSize == frameSize &&
     other.kind == kind &&
     other.wheelCircumferenceMm == wheelCircumferenceMm &&
     other.initialDistanceM == initialDistanceM &&
@@ -77,6 +89,9 @@ class BikeResponse {
     (name.hashCode) +
     (brand == null ? 0 : brand!.hashCode) +
     (model == null ? 0 : model!.hashCode) +
+    (modelYear == null ? 0 : modelYear!.hashCode) +
+    (buildSpec == null ? 0 : buildSpec!.hashCode) +
+    (frameSize == null ? 0 : frameSize!.hashCode) +
     (kind.hashCode) +
     (wheelCircumferenceMm.hashCode) +
     (initialDistanceM.hashCode) +
@@ -88,7 +103,7 @@ class BikeResponse {
     (movingS.hashCode);
 
   @override
-  String toString() => 'BikeResponse[id=$id, name=$name, brand=$brand, model=$model, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isDefault=$isDefault, isActive=$isActive, rideCount=$rideCount, distanceM=$distanceM, movingS=$movingS]';
+  String toString() => 'BikeResponse[id=$id, name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isDefault=$isDefault, isActive=$isActive, rideCount=$rideCount, distanceM=$distanceM, movingS=$movingS]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -103,6 +118,21 @@ class BikeResponse {
       json[r'model'] = this.model;
     } else {
       json[r'model'] = null;
+    }
+    if (this.modelYear != null) {
+      json[r'modelYear'] = this.modelYear;
+    } else {
+      json[r'modelYear'] = null;
+    }
+    if (this.buildSpec != null) {
+      json[r'buildSpec'] = this.buildSpec;
+    } else {
+      json[r'buildSpec'] = null;
+    }
+    if (this.frameSize != null) {
+      json[r'frameSize'] = this.frameSize;
+    } else {
+      json[r'frameSize'] = null;
     }
       json[r'kind'] = this.kind;
       json[r'wheelCircumferenceMm'] = this.wheelCircumferenceMm;
@@ -129,6 +159,12 @@ class BikeResponse {
     bool brandSetToNull = false,
     String? model,
     bool modelSetToNull = false,
+    int? modelYear,
+    bool modelYearSetToNull = false,
+    String? buildSpec,
+    bool buildSpecSetToNull = false,
+    String? frameSize,
+    bool frameSizeSetToNull = false,
     String? kind,
     int? wheelCircumferenceMm,
     double? initialDistanceM,
@@ -144,6 +180,9 @@ class BikeResponse {
     name: name ?? this.name,
     brand: brandSetToNull ? null : brand ?? this.brand,
     model: modelSetToNull ? null : model ?? this.model,
+    modelYear: modelYearSetToNull ? null : modelYear ?? this.modelYear,
+    buildSpec: buildSpecSetToNull ? null : buildSpec ?? this.buildSpec,
+    frameSize: frameSizeSetToNull ? null : frameSize ?? this.frameSize,
     kind: kind ?? this.kind,
     wheelCircumferenceMm: wheelCircumferenceMm ?? this.wheelCircumferenceMm,
     initialDistanceM: initialDistanceM ?? this.initialDistanceM,
@@ -172,6 +211,9 @@ class BikeResponse {
         assert(json[r'name'] != null, 'Required key "BikeResponse[name]" has a null value in JSON.');
         assert(json.containsKey(r'brand'), 'Required key "BikeResponse[brand]" is missing from JSON.');
         assert(json.containsKey(r'model'), 'Required key "BikeResponse[model]" is missing from JSON.');
+        assert(json.containsKey(r'modelYear'), 'Required key "BikeResponse[modelYear]" is missing from JSON.');
+        assert(json.containsKey(r'buildSpec'), 'Required key "BikeResponse[buildSpec]" is missing from JSON.');
+        assert(json.containsKey(r'frameSize'), 'Required key "BikeResponse[frameSize]" is missing from JSON.');
         assert(json.containsKey(r'kind'), 'Required key "BikeResponse[kind]" is missing from JSON.');
         assert(json[r'kind'] != null, 'Required key "BikeResponse[kind]" has a null value in JSON.');
         assert(json.containsKey(r'wheelCircumferenceMm'), 'Required key "BikeResponse[wheelCircumferenceMm]" is missing from JSON.');
@@ -197,6 +239,9 @@ class BikeResponse {
         name: mapValueOfType<String>(json, r'name')!,
         brand: mapValueOfType<String>(json, r'brand'),
         model: mapValueOfType<String>(json, r'model'),
+        modelYear: mapValueOfType<int>(json, r'modelYear'),
+        buildSpec: mapValueOfType<String>(json, r'buildSpec'),
+        frameSize: mapValueOfType<String>(json, r'frameSize'),
         kind: mapValueOfType<String>(json, r'kind')!,
         wheelCircumferenceMm: mapValueOfType<int>(json, r'wheelCircumferenceMm')!,
         initialDistanceM: mapValueOfType<double>(json, r'initialDistanceM')!,
@@ -257,6 +302,9 @@ class BikeResponse {
     'name',
     'brand',
     'model',
+    'modelYear',
+    'buildSpec',
+    'frameSize',
     'kind',
     'wheelCircumferenceMm',
     'initialDistanceM',

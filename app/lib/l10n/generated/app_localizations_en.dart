@@ -50,12 +50,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeDark => 'Night';
 
   @override
-  String languageTooltip(String name) {
-    return 'Language: $name';
-  }
-
-  @override
-  String get languageSystem => 'Follow this device';
+  String get language => 'Language';
 
   @override
   String get languageEnglish => 'English';
@@ -968,6 +963,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get model => 'Model';
 
   @override
+  String get modelYear => 'Model year';
+
+  @override
+  String get buildSpec => 'Build or spec';
+
+  @override
+  String get frameSize => 'Frame size';
+
+  @override
+  String get modelYearHelper => 'Such as 2023. Optional.';
+
+  @override
+  String get buildSpecHelper =>
+      'Such as SL 7, Comp or the groupset name. Optional.';
+
+  @override
+  String get frameSizeHelper =>
+      'In the brand\'s own form: 56, M, S3, 17.5\". Optional.';
+
+  @override
   String get wheelCircumference => 'Wheel circumference (mm)';
 
   @override
@@ -991,6 +1006,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorBikeName => 'Give the bike a name.';
+
+  @override
+  String get errorModelYear => 'The model year is 1900 to 2100, or empty.';
 
   @override
   String get errorWheelRange => 'The wheel circumference is 1000 to 2600 mm.';
@@ -1023,6 +1041,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partLabel => 'Part';
 
   @override
+  String get findPart => 'Find a known part';
+
+  @override
+  String get findPartHint => 'Brand, model or part number';
+
+  @override
+  String get mpn => 'Part number (MPN)';
+
+  @override
+  String get gtin => 'Barcode (GTIN)';
+
+  @override
+  String get mpnHelper => 'The code on the part, such as CN-M8100. Optional.';
+
+  @override
+  String get gtinHelper => 'The number under the barcode on the box. Optional.';
+
+  @override
   String get stillOnBike => 'Still on the bike';
 
   @override
@@ -1052,6 +1088,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorRemovedBeforeInstalled =>
       'It cannot be removed before it was installed.';
+
+  @override
+  String get errorGtin =>
+      'A GTIN is 8, 12, 13 or 14 digits with a valid check digit.';
 
   @override
   String get bikeKindRoad => 'Road';
