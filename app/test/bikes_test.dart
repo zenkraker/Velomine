@@ -271,6 +271,127 @@ void main() {
     expect(bike['frameSize'], '56');
   });
 
+  testWidgets('BikeDetailScreen_ShouldKeepAPartCustom_WhenCustomIsChecked', (
+    tester,
+  ) async {
+    await openBikes(tester);
+    await addBike(tester, 'Climber');
+    await tester.tap(find.byKey(const Key('add-part')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('part-type')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chain (Drivetrain)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('part-custom')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('part-save')));
+    await tester.pumpAndSettle();
+
+    final part = server.parts['bike-1']!.single;
+    expect(part['isCustom'], isTrue);
+    expect(find.text('Custom'), findsOneWidget);
+  });
+
+  testWidgets('BikeDetailScreen_ShouldSaveTheBuildAsATemplate_WhenNamed', (
+    tester,
+  ) async {
+    await openBikes(tester);
+    await addBike(tester, 'Climber');
+    await tester.tap(find.byKey(const Key('add-part')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('part-type')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chain (Drivetrain)').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('part-save')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('save-template')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('template-name')),
+      'Gravel build',
+    );
+    await tester.tap(find.byKey(const Key('template-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.templates.single['name'], 'Gravel build');
+    expect((server.templates.single['parts'] as List), hasLength(1));
+    expect((server.templates.single['parts'] as List).single['type'], 'chain');
+  });
+
+  testWidgets(
+    'BikeDetailScreen_ShouldFillOnlyMissingParts_WhenATemplateIsApplied',
+    (tester) async {
+      server.templates.add({
+        'id': 'template-1',
+        'name': 'Gravel build',
+        'createdAt': '2026-11-09T08:00:00Z',
+        'parts': [
+          {
+            'id': 'tplpart-1',
+            'type': 'chain',
+            'typeName': 'Chain',
+            'brand': 'Shimano',
+            'model': 'CN-M8100',
+            'mpn': 'CN-M8100',
+            'gtin': null,
+            'expectedDistanceM': 4000000.0,
+            'expectedHours': null,
+            'expectedMonths': null,
+          },
+          {
+            'id': 'tplpart-2',
+            'type': 'cassette',
+            'typeName': 'Cassette',
+            'brand': 'Shimano',
+            'model': 'CS-M8100',
+            'mpn': 'CS-M8100',
+            'gtin': null,
+            'expectedDistanceM': 12000000.0,
+            'expectedHours': null,
+            'expectedMonths': null,
+          },
+        ],
+      });
+      await openBikes(tester);
+      await addBike(tester, 'Climber');
+      await tester.tap(find.byKey(const Key('add-part')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('part-type')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chain (Drivetrain)').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('part-save')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('apply-template')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('template-template-1')));
+      await tester.pumpAndSettle();
+
+      final parts = server.parts['bike-1']!;
+      expect(parts, hasLength(2));
+      expect(parts.where((p) => p['type'] == 'chain'), hasLength(1));
+      expect(
+        parts.singleWhere((p) => p['type'] == 'cassette')['mpn'],
+        'CS-M8100',
+      );
+    },
+  );
+
+  testWidgets('BikeDetailScreen_ShouldExplainTemplates_WhenThereAreNone', (
+    tester,
+  ) async {
+    await openBikes(tester);
+    await addBike(tester, 'Climber');
+
+    await tester.tap(find.byKey(const Key('apply-template')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('no-templates')), findsOneWidget);
+  });
+
   testWidgets('BikeDetailScreen_ShouldFillThePart_WhenAKnownPartIsPicked', (
     tester,
   ) async {
