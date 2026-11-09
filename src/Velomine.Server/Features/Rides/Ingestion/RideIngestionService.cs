@@ -176,6 +176,7 @@ public sealed class RideIngestionService(
                     Watts = bests[i],
                 });
             }
+            target.PowerBestsBackfilledAt = time.GetUtcNow();
         }
 
         if (!used)

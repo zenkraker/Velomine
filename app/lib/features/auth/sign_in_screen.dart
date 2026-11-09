@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -156,7 +157,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       onPressed: s.command.running ? null : _signIn,
                       child: Text(l10n.signIn),
                     ),
-                    if (sso?.enabled ?? false) ...[
+                    if (kIsWeb
+                        ? (sso?.enabled ?? false)
+                        : (sso?.appSsoEnabled ?? false)) ...[
                       const SizedBox(height: 12),
                       OutlinedButton(
                         key: const Key('sso'),

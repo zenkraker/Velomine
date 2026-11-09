@@ -1,35 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:velomine/core/pkce.dart';
+import 'package:http/http.dart' as http;
+import 'package:velomine/core/app_sso.dart';
 
 import 'fake_server.dart';
 
 void main() {
   late FakeServer server;
+  late FakeAccount rider;
 
   setUp(() {
     server = FakeServer()..ssoEnabled = true;
-    server.add('rider@sso.test', name: 'SSO Rider');
-  });
-
-  /// The phone ends up on this link when the browser hands the sign-in back.
-  void openLink(WidgetTester tester, String link) =>
-      GoRouter.of(tester.element(find.byType(Scaffold).first)).go(link);
-
-  test('Pkce_ShouldMatchRfc7636AppendixB_WhenBuiltFromVerifier', () {
-    final pkce = Pkce.fromVerifier(
-      'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
-    );
-    expect(pkce.challenge, 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
-  });
-
-  test('Pkce_ShouldGenerate43UrlSafeCharsThatNeverRepeat_WhenGenerating', () {
-    final a = Pkce.generate();
-    final b = Pkce.generate();
-    expect(a.verifier, matches(RegExp(r'^[A-Za-z0-9_-]{43}$')));
-    expect(a.challenge, matches(RegExp(r'^[A-Za-z0-9_-]{43}$')));
-    expect(a.verifier, isNot(b.verifier));
+    rider = server.add('rider@sso.test', name: 'SSO Rider');
   });
 
   testWidgets('SsoApp_ShouldOfferSingleSignOn_WhenSignInScreenIsShown', (
@@ -39,89 +21,88 @@ void main() {
     expect(find.byKey(const Key('sso')), findsOneWidget);
   });
 
-  testWidgets('SsoApp_ShouldPutChallengeNotSecretInUrl_WhenBuildingSsoUrl', (
+  testWidgets('SsoApp_ShouldHideSingleSignOn_WhenTheAppClientIsNotConfigured', (
     tester,
   ) async {
-    final session = server.session(
-      useCookies: false,
-      serverUrl: 'https://velo.example',
-    );
-    final url = session.appSsoUrl();
-
-    expect(url.path, '/api/v1/accounts/sso/login');
-    expect(url.host, 'velo.example');
-    expect(url.queryParameters.keys, ['codeChallenge']);
-    expect(
-      url.queryParameters['codeChallenge'],
-      matches(RegExp(r'^[A-Za-z0-9_-]{43}$')),
-    );
+    server.appSsoEnabled = false;
+    await startApp(tester, server.session(useCookies: false));
+    expect(find.byKey(const Key('sso')), findsNothing);
   });
 
-  testWidgets('SsoApp_ShouldSignMemberIn_WhenBrowserHandsBackLink', (
+  testWidgets('SsoApp_ShouldSignMemberIn_WhenTheProviderReturnsAToken', (
     tester,
   ) async {
-    final session = server.session(useCookies: false);
-    server.ssoChallenge = session.appSsoUrl().queryParameters['codeChallenge'];
-    server.ssoCodes['good-code'] = server.accounts['rider@sso.test']!;
-    await startApp(tester, session);
+    final appSso = FakeAppSso(
+      const AppSsoResult.success(
+        idToken: 'id-token',
+        accessToken: 'access-token',
+      ),
+    );
+    server.ssoTokens['id-token'] = rider;
+    final session = server.session(useCookies: false, appSso: appSso);
+    await startApp(tester, session, startSso: session.signInWithSso);
 
-    openLink(tester, '/sso-callback?code=good-code');
+    await tester.tap(find.byKey(const Key('sso')));
     await tester.pumpAndSettle();
 
+    expect(appSso.calls, 1);
+    expect(appSso.lastConfig?.authority, 'http://idp.test');
+    expect(appSso.lastConfig?.clientId, 'velomine-app');
+    expect(appSso.lastConfig?.redirectUri, 'com.velomine.app:/sso-callback');
+    expect(appSso.lastConfig?.scopes, ['openid', 'profile', 'email']);
     expect(session.me?.email, 'rider@sso.test');
-    expect(find.text('SSO Rider'), findsWidgets); // the signed-in title bar
-    expect(find.byKey(const Key('sign-out')), findsOneWidget);
     expect(server.requests, contains('POST /api/v1/accounts/sso/token'));
+    expect(find.byKey(const Key('sign-out')), findsOneWidget);
   });
 
-  testWidgets('SsoApp_ShouldReturnToSignInWithReason_WhenCodeIsWrongOrUsed', (
+  testWidgets('SsoApp_ShouldShowTheReason_WhenTheExchangeFails', (
     tester,
   ) async {
-    final session = server.session(useCookies: false);
-    server.ssoChallenge = session.appSsoUrl().queryParameters['codeChallenge'];
-    await startApp(tester, session);
-
-    openLink(tester, '/sso-callback?code=stolen-or-old');
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('sso')), findsOneWidget); // back on sign-in
-    expect(
-      find.text('Single sign-on did not work. Try again.'),
-      findsOneWidget,
+    final appSso = FakeAppSso(const AppSsoResult.success(idToken: 'bad-token'));
+    server.ssoTokenResponses['bad-token'] = http.Response(
+      '{"error":"not_approved"}',
+      403,
+      headers: {'content-type': 'application/json'},
     );
-    expect(session.me, isNull);
-  });
+    final session = server.session(useCookies: false, appSso: appSso);
+    await startApp(tester, session, startSso: session.signInWithSso);
 
-  testWidgets('SsoApp_ShouldNotSignIn_WhenNoSignInWasStartedHere', (
-    tester,
-  ) async {
-    final session = server.session(useCookies: false);
-    server.ssoCodes['good-code'] = server.accounts['rider@sso.test']!;
-    await startApp(
-      tester,
-      session,
-    ); // appSsoUrl was never called: no secret to prove the code with
-
-    openLink(tester, '/sso-callback?code=good-code');
+    await tester.tap(find.byKey(const Key('sso')));
     await tester.pumpAndSettle();
 
     expect(session.me, isNull);
     expect(find.byKey(const Key('sso')), findsOneWidget);
+    expect(
+      find.text('Your account is waiting for an admin to approve it.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('SsoApp_ShouldStayOnSignIn_WhenTheProviderIsCancelled', (
+    tester,
+  ) async {
+    final appSso = FakeAppSso(const AppSsoResult.cancelled());
+    final session = server.session(useCookies: false, appSso: appSso);
+    await startApp(tester, session, startSso: session.signInWithSso);
+
+    await tester.tap(find.byKey(const Key('sso')));
+    await tester.pumpAndSettle();
+
+    expect(session.me, isNull);
+    expect(session.ssoError, isNull);
     expect(server.requests, isNot(contains('POST /api/v1/accounts/sso/token')));
   });
 
-  testWidgets(
-    'SsoApp_ShouldShowTheReasonFromTheServer_WhenCallbackReportsError',
-    (tester) async {
-      await startApp(tester, server.session(useCookies: false));
-
-      openLink(tester, '/sso-callback?sso_error=not_approved');
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Your account is waiting for an admin to approve it.'),
-        findsOneWidget,
-      );
-    },
-  );
+  testWidgets('SsoApp_ShouldShowTheWebReason_WhenTheBrowserReturnsOne', (
+    tester,
+  ) async {
+    await startApp(
+      tester,
+      server.session(useCookies: false, ssoError: 'not_approved'),
+    );
+    expect(
+      find.text('Your account is waiting for an admin to approve it.'),
+      findsOneWidget,
+    );
+  });
 }

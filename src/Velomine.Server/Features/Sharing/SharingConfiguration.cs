@@ -29,5 +29,7 @@ public sealed class SharingConfiguration : IEntityTypeConfiguration<ShareGrant>,
         view.Property(v => v.What).HasMaxLength(24);
         view.HasOne<Accounts.User>().WithMany().HasForeignKey(v => v.MemberId).OnDelete(DeleteBehavior.Cascade);
         view.HasIndex(v => new { v.MemberId, v.At });
+        // The retention job deletes by time across every member, which the member-first index cannot serve.
+        view.HasIndex(v => v.At);
     }
 }

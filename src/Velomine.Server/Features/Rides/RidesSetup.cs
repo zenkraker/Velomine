@@ -9,10 +9,11 @@ public static class RidesSetup
         services.AddOptions<RidesOptions>().BindConfiguration("Velomine");
         services.AddSingleton<RideFileStore>();
         services.AddSingleton<IngestionQueue>();
+        services.AddSingleton<PowerBestsBackfill>();
         if (configuration.GetValue("Velomine:Background:Enabled", true))
         {
             services.AddHostedService<RideIngestionService>();
-            services.AddHostedService<PowerBestsBackfill>();
+            services.AddHostedService(sp => sp.GetRequiredService<PowerBestsBackfill>());
         }
         return services;
     }

@@ -51,7 +51,7 @@ lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
 lib/model/create_template_request.dart
 lib/model/delete_my_account_request.dart
-lib/model/exchange_sso_code_request.dart
+lib/model/exchange_sso_token_request.dart
 lib/model/export_link_response.dart
 lib/model/forgot_password_request.dart
 lib/model/ftp_estimate.dart

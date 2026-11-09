@@ -28,6 +28,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // flutter_appauth's RedirectUriReceiverActivity claims this scheme.
+        manifestPlaceholders.putAll(mapOf("appAuthRedirectScheme" to "com.velomine.app"))
     }
 
     buildTypes {

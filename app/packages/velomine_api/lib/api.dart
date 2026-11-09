@@ -68,7 +68,7 @@ part 'model/create_component_request.dart';
 part 'model/create_goal_request.dart';
 part 'model/create_template_request.dart';
 part 'model/delete_my_account_request.dart';
-part 'model/exchange_sso_code_request.dart';
+part 'model/exchange_sso_token_request.dart';
 part 'model/export_link_response.dart';
 part 'model/forgot_password_request.dart';
 part 'model/ftp_estimate.dart';

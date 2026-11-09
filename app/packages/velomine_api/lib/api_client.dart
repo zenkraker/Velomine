@@ -237,8 +237,8 @@ class ApiClient {
           return CreateTemplateRequest.fromJson(value);
         case 'DeleteMyAccountRequest':
           return DeleteMyAccountRequest.fromJson(value);
-        case 'ExchangeSsoCodeRequest':
-          return ExchangeSsoCodeRequest.fromJson(value);
+        case 'ExchangeSsoTokenRequest':
+          return ExchangeSsoTokenRequest.fromJson(value);
         case 'ExportLinkResponse':
           return ExportLinkResponse.fromJson(value);
         case 'ForgotPasswordRequest':

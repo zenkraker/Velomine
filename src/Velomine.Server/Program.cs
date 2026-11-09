@@ -13,6 +13,7 @@ using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Server;
+using Velomine.Server.Features.Sharing;
 using Velomine.Server.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,7 @@ builder.Services.AddDataProtection()
 builder.Services.AddAccounts(builder.Configuration);
 builder.Services.AddAdmin(builder.Configuration);
 builder.Services.AddRides(builder.Configuration);
+builder.Services.AddSharing(builder.Configuration);
 builder.Services.AddBikes(builder.Configuration);
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
+import 'app_sso.dart';
 import 'hooks.dart';
 import 'location_service.dart';
 import 'server_config.dart';
@@ -38,6 +39,7 @@ Session session(Ref ref) {
   final session = Session(
     client: client,
     auth: auth,
+    appSso: createAppSso(),
     useCookies: kIsWeb,
     serverUrl: baseUrl,
     ssoError: Uri.base.queryParameters['sso_error'],

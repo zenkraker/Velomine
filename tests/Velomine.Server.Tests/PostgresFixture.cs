@@ -58,4 +58,4 @@ public sealed class PostgresFixture : IAsyncLifetime
 }
 
 [CollectionDefinition("postgres")]
-public sealed class PostgresCollection : ICollectionFixture<PostgresFixture>, ICollectionFixture<DexFixture>;
+public sealed class PostgresCollection : ICollectionFixture<PostgresFixture>, ICollectionFixture<DexFixture>, ICollectionFixture<FakeOidcFixture>;

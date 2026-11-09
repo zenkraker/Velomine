@@ -45,6 +45,9 @@ public sealed class Ride
 
     public DateTimeOffset UploadedAt { get; set; }
 
+    /// <summary>When the startup backfill finished with this ride; null only for old rides it has not reached yet.</summary>
+    public DateTimeOffset? PowerBestsBackfilledAt { get; set; }
+
     /// <summary>Always UTC.</summary>
     public DateTimeOffset? StartTime { get; set; }
 

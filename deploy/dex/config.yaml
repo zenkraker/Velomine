@@ -27,6 +27,12 @@ staticClients:
     redirectURIs:
       # If you change VELOMINE_PORT in .env, change the port here too.
       - http://localhost:8080/signin-oidc
+  # The phone is a public native client (no secret); PKCE protects the code exchange.
+  - id: velomine-app
+    name: Velomine phone
+    public: true
+    redirectURIs:
+      - com.velomine.app:/sso-callback
 
 staticPasswords:
   # bcrypt hash of the word "password" (the example hash from Dex's own documentation).

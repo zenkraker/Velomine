@@ -36,6 +36,10 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
             .HasDatabaseName("ux_rides_user_dedup_key");
         ride.HasIndex(r => new { r.UserId, r.StartTime });
         ride.HasIndex(r => new { r.UserId, r.Discipline });
+        // The backfill reads only unprocessed rides; a partial index keeps each batch from scanning the history.
+        ride.HasIndex(r => r.Id)
+            .HasFilter("status = 'Ready' AND power_bests_backfilled_at IS NULL")
+            .HasDatabaseName("ix_rides_power_bests_backfill");
     }
 
     public void Configure(EntityTypeBuilder<RideStreams> streams)

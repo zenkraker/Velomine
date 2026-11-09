@@ -18,7 +18,8 @@ public static class AccountsSetup
         services.AddOptions<SsoOptions>().BindConfiguration("Velomine:Sso");
         services.AddSingleton(TimeProvider.System);
         services.AddMemoryCache();
-        services.AddSingleton<SsoAppCodes>();
+        services.AddSingleton<SsoTokenValidator>();
+        services.AddHttpClient("sso-userinfo", client => client.Timeout = TimeSpan.FromSeconds(10));
         services.AddScoped<AccountDeletion>();
         services.AddScoped<AccountExport>();
         services.AddSingleton<ExportTokens>();
@@ -48,7 +49,7 @@ public static class AccountsSetup
     // The provider's settings are read now because the OpenID Connect handler must be registered at startup.
     private static void AddSso(IServiceCollection services, SsoOptions sso)
     {
-        if (!sso.Enabled) return;
+        if (!sso.WebEnabled) return;
 
         // Identity already provides the short-lived external cookie the provider sign-in lands in.
         services.AddAuthentication().AddOpenIdConnect(SsoOptions.Scheme, o =>

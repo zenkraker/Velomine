@@ -223,13 +223,13 @@ class AccountsApi {
   /// Performs an HTTP 'POST /api/v1/accounts/sso/token' operation and returns the [Response].
   /// Parameters:
   ///
-  /// * [ExchangeSsoCodeRequest] exchangeSsoCodeRequest (required):
-  Future<Response> exchangeSsoCodeWithHttpInfo(ExchangeSsoCodeRequest exchangeSsoCodeRequest, { Future<void>? abortTrigger, }) async {
+  /// * [ExchangeSsoTokenRequest] exchangeSsoTokenRequest (required):
+  Future<Response> exchangeSsoTokenWithHttpInfo(ExchangeSsoTokenRequest exchangeSsoTokenRequest, { Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/accounts/sso/token';
 
     // ignore: prefer_final_locals
-    Object? postBody = exchangeSsoCodeRequest;
+    Object? postBody = exchangeSsoTokenRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
@@ -252,9 +252,9 @@ class AccountsApi {
 
   /// Parameters:
   ///
-  /// * [ExchangeSsoCodeRequest] exchangeSsoCodeRequest (required):
-  Future<TokenResponse?> exchangeSsoCode(ExchangeSsoCodeRequest exchangeSsoCodeRequest, { Future<void>? abortTrigger, }) async {
-    final response = await exchangeSsoCodeWithHttpInfo(exchangeSsoCodeRequest, abortTrigger: abortTrigger,);
+  /// * [ExchangeSsoTokenRequest] exchangeSsoTokenRequest (required):
+  Future<TokenResponse?> exchangeSsoToken(ExchangeSsoTokenRequest exchangeSsoTokenRequest, { Future<void>? abortTrigger, }) async {
+    final response = await exchangeSsoTokenWithHttpInfo(exchangeSsoTokenRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -272,9 +272,7 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  ///
-  /// * [String] codeChallenge:
-  Future<Response> finishSsoWithHttpInfo({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
+  Future<Response> finishSsoWithHttpInfo({ String? returnUrl, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/accounts/sso/callback';
 
@@ -287,9 +285,6 @@ class AccountsApi {
 
     if (returnUrl != null) {
       queryParams.addAll(_queryParams('', 'returnUrl', returnUrl));
-    }
-    if (codeChallenge != null) {
-      queryParams.addAll(_queryParams('', 'codeChallenge', codeChallenge));
     }
 
     const contentTypes = <String>[];
@@ -310,10 +305,8 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  ///
-  /// * [String] codeChallenge:
-  Future<void> finishSso({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
-    final response = await finishSsoWithHttpInfo(returnUrl: returnUrl, codeChallenge: codeChallenge, abortTrigger: abortTrigger,);
+  Future<void> finishSso({ String? returnUrl, Future<void>? abortTrigger, }) async {
+    final response = await finishSsoWithHttpInfo(returnUrl: returnUrl, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -946,9 +939,7 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  ///
-  /// * [String] codeChallenge:
-  Future<Response> startSsoWithHttpInfo({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
+  Future<Response> startSsoWithHttpInfo({ String? returnUrl, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/accounts/sso/login';
 
@@ -961,9 +952,6 @@ class AccountsApi {
 
     if (returnUrl != null) {
       queryParams.addAll(_queryParams('', 'returnUrl', returnUrl));
-    }
-    if (codeChallenge != null) {
-      queryParams.addAll(_queryParams('', 'codeChallenge', codeChallenge));
     }
 
     const contentTypes = <String>[];
@@ -984,10 +972,8 @@ class AccountsApi {
   /// Parameters:
   ///
   /// * [String] returnUrl:
-  ///
-  /// * [String] codeChallenge:
-  Future<void> startSso({ String? returnUrl, String? codeChallenge, Future<void>? abortTrigger, }) async {
-    final response = await startSsoWithHttpInfo(returnUrl: returnUrl, codeChallenge: codeChallenge, abortTrigger: abortTrigger,);
+  Future<void> startSso({ String? returnUrl, Future<void>? abortTrigger, }) async {
+    final response = await startSsoWithHttpInfo(returnUrl: returnUrl, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

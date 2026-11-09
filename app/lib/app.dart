@@ -27,7 +27,6 @@ import 'features/bikes/bike_detail_screen.dart';
 import 'features/bikes/bikes_screen.dart';
 import 'features/bikes/bikes_view_models.dart';
 import 'features/auth/sign_in_screen.dart';
-import 'features/auth/sso_callback_screen.dart';
 import 'features/club/club_view_model.dart';
 import 'features/club/club_screen.dart';
 import 'features/club/join_club_screen.dart';
@@ -62,13 +61,7 @@ final ssoStarterProvider = Provider<SsoStarter>((ref) {
       await launchUrl(login, webOnlyWindowName: '_self');
     };
   }
-  return () async {
-    // The system browser signs in and hands back through the app's own link.
-    await launchUrl(
-      ref.read(sessionProvider).appSsoUrl(),
-      mode: LaunchMode.externalApplication,
-    );
-  };
+  return () => ref.read(sessionProvider).signInWithSso();
 });
 
 /// Opens the data export in the system browser. Tests override it.
@@ -140,7 +133,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       const open = {
         '/sign-in',
         '/register',
-        '/sso-callback',
         '/forgot-password',
         '/reset-password',
       };
@@ -201,14 +193,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             },
           );
         },
-      ),
-      GoRoute(
-        path: '/sso-callback',
-        builder: (context, state) => SsoCallbackScreen(
-          code: state.uri.queryParameters['code'],
-          error: state.uri.queryParameters['sso_error'],
-          onFailed: () => context.go('/sign-in'),
-        ),
       ),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(

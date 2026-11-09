@@ -9,10 +9,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
+import 'package:velomine/core/app_sso.dart';
 import 'package:velomine/core/home_location.dart';
 import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/location_service.dart';
-import 'package:velomine/core/pkce.dart';
 import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/session_auth.dart';
@@ -51,6 +51,7 @@ class FakeServer {
   final rides = <Map<String, Object?>>[];
   final requests = <String>[]; // "METHOD /path", in order
   bool ssoEnabled = false;
+  bool appSsoEnabled = true;
   bool telemetryEnabled = false;
   String? sentryDsn;
   String tileUrl = 'https://tiles.example/{z}/{x}/{y}.png'; // what GET /server offers as the map
@@ -150,9 +151,9 @@ class FakeServer {
   int testEmailStatus = 204;
   bool ssoConfigured = false;
 
-  /// One-time codes the browser sign-in could have handed back, and the PKCE challenge the app sent for them.
-  final ssoCodes = <String, FakeAccount>{};
-  String? ssoChallenge;
+  /// Provider ID tokens the app may exchange, and canned exchange responses for failure cases.
+  final ssoTokens = <String, FakeAccount>{};
+  final ssoTokenResponses = <String, http.Response>{};
   FakeAccount? _cookieUser;
   int _pollsLeft = 1;
 
@@ -199,6 +200,7 @@ class FakeServer {
     TokenStore? tokenStore,
     DateTime Function()? now,
     String serverUrl = 'http://server',
+    AppSso? appSso,
   }) {
     final baseUrl = serverUrl;
     final auth = SessionAuth(
@@ -213,6 +215,7 @@ class FakeServer {
     return Session(
       client: api,
       auth: auth,
+      appSso: appSso ?? FakeAppSso(),
       useCookies: useCookies,
       serverUrl: baseUrl,
       ssoError: ssoError,
@@ -258,10 +261,16 @@ class FakeServer {
     }
 
     if (path == '/api/v1/accounts/sso') {
+      final app = ssoEnabled && appSsoEnabled;
       return json({
         'enabled': ssoEnabled,
         'displayName': ssoEnabled ? 'Test IdP' : null,
         'loginUrl': ssoEnabled ? '/api/v1/accounts/sso/login' : null,
+        'appSsoEnabled': app,
+        'appAuthority': app ? 'http://idp.test' : null,
+        'appClientId': app ? 'velomine-app' : null,
+        'appScopes': app ? ['openid', 'profile', 'email'] : <String>[],
+        'appRedirectUri': app ? 'com.velomine.app:/sso-callback' : null,
       });
     }
 
@@ -306,11 +315,17 @@ class FakeServer {
     }
     if (path == '/api/v1/accounts/sso/token') {
       final body = jsonDecode(request.body) as Map<String, Object?>;
-      final account = ssoCodes.remove(body['code']); // a code is good once
-      final proven =
-          Pkce.fromVerifier(body['codeVerifier']! as String).challenge ==
-          ssoChallenge;
-      if (account == null || !proven) return http.Response('', 401);
+      final idToken = body['idToken'] as String?;
+      final canned = idToken == null ? null : ssoTokenResponses[idToken];
+      if (canned != null) return canned;
+      final account = idToken == null ? null : ssoTokens[idToken];
+      if (account == null) return http.Response('', 401);
+      if (!account.approved) {
+        return http.Response('{"error":"not_approved"}', 403);
+      }
+      if (account.locked) {
+        return http.Response('{"error":"locked_out"}', 423);
+      }
       return json({
         'tokenType': 'Bearer',
         'accessToken': 't-${account.email}',
@@ -1984,4 +1999,20 @@ Map<String, Object?> streamsJson({
     'cadence': cadence ? each((_) => 90) : null,
     'temperature': null,
   };
+}
+
+/// A stand-in for the native AppAuth plugin, so tests never touch a platform channel.
+class FakeAppSso implements AppSso {
+  FakeAppSso([this.result = const AppSsoResult.failed()]);
+
+  AppSsoResult result;
+  AppSsoConfig? lastConfig;
+  int calls = 0;
+
+  @override
+  Future<AppSsoResult> signIn(AppSsoConfig config) async {
+    calls++;
+    lastConfig = config;
+    return result;
+  }
 }

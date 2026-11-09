@@ -19,11 +19,17 @@ namespace Velomine.Server.Tests;
 
 /// <summary>Members own their data: they can take all of it out, and delete their account with everything in it.</summary>
 [Collection("postgres")]
-public sealed class DataOwnershipTests(PostgresFixture postgres)
+public sealed class DataOwnershipTests(PostgresFixture postgres, FakeOidcFixture oidc)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
+    {
+        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+        b.UseSetting("Velomine:Sso:Authority", FakeOidcFixture.Authority);
+        b.UseSetting("Velomine:Sso:AppClientId", FakeOidcFixture.AppClientId);
+        b.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");
+    });
 
     private sealed record Member(string Email, Guid Id, HttpClient Client);
 
@@ -201,10 +207,12 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
             id = user.Id;
         }
 
-        // The phone's sign-in hands out tokens for such an account (see SsoTests); play that part.
-        const string verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
-        var code = api.Services.GetRequiredService<SsoAppCodes>().Issue(id, "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
-        var exchanged = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/sso/token", new ExchangeSsoCodeRequest(code, verifier), Ct);
+        // The phone's sign-in hands out tokens for such an account (see SsoAppTests); play that part.
+        await oidc.EnsureStartedAsync();
+        var idToken = oidc.SignToken($"data-ownership-{id:N}", email);
+        var exchanged = await api.CreateClient().PostAsJsonAsync(
+            "/api/v1/accounts/sso/token", new ExchangeSsoTokenRequest(idToken, null), Ct);
+        exchanged.EnsureSuccessStatusCode();
         var token = (await exchanged.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("accessToken").GetString();
         var client = api.CreateClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token);

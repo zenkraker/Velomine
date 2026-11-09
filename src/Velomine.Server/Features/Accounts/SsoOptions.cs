@@ -2,7 +2,7 @@ namespace Velomine.Server.Features.Accounts;
 
 /// <summary>
 /// Bound from "Velomine:Sso" (environment: Velomine__Sso__Authority, ...). Any OpenID Connect provider works.
-/// SSO is on when an Authority is set. The provider must allow the redirect URI {server}/signin-oidc.
+/// The web uses a confidential client; the phone is a public native client with PKCE and its own redirect URI.
 /// </summary>
 public sealed class SsoOptions
 {
@@ -11,9 +11,19 @@ public sealed class SsoOptions
 
     public string? Authority { get; set; }
 
+    /// <summary>The web client. The server completes the browser redirect.</summary>
     public string? ClientId { get; set; }
 
     public string? ClientSecret { get; set; }
+
+    /// <summary>The public native client the phone app signs in with. No secret.</summary>
+    public string? AppClientId { get; set; }
+
+    /// <summary>Scopes the phone asks the provider for.</summary>
+    public string[] AppScopes { get; set; } = ["openid", "profile", "email"];
+
+    /// <summary>The phone's private-use redirect URI, registered on the provider.</summary>
+    public string AppRedirectUri { get; set; } = "com.velomine.app:/sso-callback";
 
     /// <summary>The text for the sign-in button.</summary>
     public string DisplayName { get; set; } = "Single sign-on";
@@ -25,4 +35,9 @@ public sealed class SsoOptions
     public bool AllowInsecureHttp { get; set; }
 
     public bool Enabled => !string.IsNullOrWhiteSpace(Authority);
+
+    /// <summary>The web flow needs the confidential client; a direct-only server sets only AppClientId.</summary>
+    public bool WebEnabled => Enabled && !string.IsNullOrWhiteSpace(ClientId);
+
+    public bool AppSsoEnabled => Enabled && !string.IsNullOrWhiteSpace(AppClientId);
 }

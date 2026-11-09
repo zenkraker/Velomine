@@ -1354,6 +1354,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("normalized_power_w");
 
+                    b.Property<DateTimeOffset?>("PowerBestsBackfilledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("power_bests_backfilled_at");
+
                     b.Property<string>("SpeedSource")
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
@@ -1400,6 +1404,10 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("BikeId")
                         .HasDatabaseName("ix_rides_bike_id");
+
+                    b.HasIndex("Id")
+                        .HasDatabaseName("ix_rides_power_bests_backfill")
+                        .HasFilter("status = 'Ready' AND power_bests_backfilled_at IS NULL");
 
                     b.HasIndex("UserId", "DedupKey")
                         .IsUnique()
@@ -1646,6 +1654,9 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_view_log");
+
+                    b.HasIndex("At")
+                        .HasDatabaseName("ix_view_log_at");
 
                     b.HasIndex("MemberId", "At")
                         .HasDatabaseName("ix_view_log_member_id_at");

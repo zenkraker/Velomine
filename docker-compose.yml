@@ -55,6 +55,7 @@ services:
       Velomine__Sso__Authority: http://dex.localhost:5556/dex
       Velomine__Sso__ClientId: velomine
       Velomine__Sso__ClientSecret: velomine-dev-secret
+      Velomine__Sso__AppClientId: velomine-app
       Velomine__Sso__DisplayName: Dex (local test)
       Velomine__Sso__AllowInsecureHttp: "true"
       # Background work (ride ingestion, email, catalogue sync) runs on one instance only. On every other API

@@ -43,6 +43,7 @@ server: deps
     export Velomine__Sso__Authority=http://dex.localhost:5556/dex
     export Velomine__Sso__ClientId=velomine
     export Velomine__Sso__ClientSecret=velomine-dev-secret
+    export Velomine__Sso__AppClientId=velomine-app
     export Velomine__Sso__DisplayName="Dex (local test)"
     export Velomine__Sso__AllowInsecureHttp=true
     exec dotnet watch run --project src/Velomine.Server
@@ -55,9 +56,10 @@ web:
 emu:
     flutter emulators --launch {{avd}}
 
-# run the app on the emulator; adb reverse lets it reach the server at localhost:8080
+# run the app on the emulator; adb reverse lets it reach the server and local Dex at localhost
 android:
     adb reverse tcp:8080 tcp:8080
+    adb reverse tcp:5556 tcp:5556
     cd app && flutter run
 
 # add an EF Core migration: just migration AddSomething

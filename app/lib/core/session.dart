@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:velomine_api/api.dart';
 
-import 'pkce.dart';
+import 'app_sso.dart';
 import 'session_auth.dart';
 
 enum SessionStatus { loading, signedOut, signedIn }
@@ -56,6 +57,7 @@ class Session {
   Session({
     required ApiClient client,
     required this.auth,
+    required this.appSso,
     required this.useCookies,
     required this.serverUrl,
     this.ssoError,
@@ -89,13 +91,14 @@ class Session {
   final NotificationsApi notifications;
   final ServerApi server;
   final SessionAuth auth;
+  final AppSso appSso;
   final bool useCookies;
 
   /// The address this session belongs to, without a trailing slash.
   final String serverUrl;
 
-  /// The reason single sign-on did not work: the server's `?sso_error=...` on the web, the same reason in the link
-  /// the phone is handed back through. The sign-in screen explains it.
+  /// The reason single sign-on did not work: the server's `?sso_error=...` on the web, or the code the phone's
+  /// exchange returned. The sign-in screen explains it.
   String? ssoError;
 
   /// Clears that reason once the member tries to sign in again.
@@ -111,9 +114,6 @@ class Session {
     ssoError = reason;
     _notify();
   }
-
-  /// The secret of the sign-in the phone started in the browser; the code that comes back is only good with it.
-  String? _ssoVerifier;
 
   /// A join code from an invite link, kept while a signed-out visitor signs in, so the link still works afterwards.
   String? pendingJoinCode;
@@ -222,31 +222,59 @@ class Session {
     }
   }
 
-  /// The address to open in the phone's browser to sign in with single sign-on. The browser ends up on the app's own
-  /// link (`com.velomine.app:/sso-callback?code=...`), which [finishAppSso] turns into a session.
-  Uri appSsoUrl() {
-    final pkce = Pkce.generate();
-    _ssoVerifier = pkce.verifier;
-    return Uri.parse('$serverUrl/api/v1/accounts/sso/login')
-        .replace(queryParameters: {'codeChallenge': pkce.challenge});
-  }
+  /// Signs in directly against the provider as a public client, then exchanges its ID token for Velomine tokens.
+  Future<void> signInWithSso() async {
+    final info = sso;
+    if (info == null ||
+        !info.appSsoEnabled ||
+        info.appAuthority == null ||
+        info.appClientId == null ||
+        info.appRedirectUri == null) {
+      reportSsoError('failed');
+      return;
+    }
 
-  /// Trades the one-time code from the browser for a session. Returns null on success, or the reason in the same
-  /// words as `?sso_error=`.
-  Future<String?> finishAppSso(String code) async {
-    final verifier = _ssoVerifier;
-    _ssoVerifier = null; // a code is good once
-    if (verifier == null) return 'failed'; // the app was closed while the browser was open: start again
+    clearSsoError();
+    final AppSsoResult result;
+    try {
+      result = await appSso.signIn(
+        AppSsoConfig(
+          authority: info.appAuthority!,
+          clientId: info.appClientId!,
+          redirectUri: info.appRedirectUri!,
+          scopes: info.appScopes,
+        ),
+      );
+    } on Object {
+      reportSsoError('failed');
+      return;
+    }
+    if (result.outcome == AppSsoOutcome.cancelled) return;
+    final idToken = result.idToken;
+    if (result.outcome != AppSsoOutcome.success || idToken == null) {
+      reportSsoError('failed');
+      return;
+    }
 
     TokenResponse? token;
     try {
-      token = await accounts.exchangeSsoCode(
-        ExchangeSsoCodeRequest(code: code, codeVerifier: verifier),
+      token = await accounts.exchangeSsoToken(
+        ExchangeSsoTokenRequest(
+          idToken: idToken,
+          accessToken: result.accessToken,
+        ),
       );
+    } on ApiException catch (e) {
+      reportSsoError(_ssoErrorCode(e) ?? 'failed');
+      return;
     } on Object {
-      return 'failed';
+      reportSsoError('failed');
+      return;
     }
-    if (token == null) return 'failed';
+    if (token == null) {
+      reportSsoError('failed');
+      return;
+    }
 
     await auth.accept(token);
     try {
@@ -254,7 +282,8 @@ class Session {
     } on ApiException catch (e) {
       if (e.code == 401) {
         await auth.clear();
-        return 'failed';
+        reportSsoError('failed');
+        return;
       }
     } on Object {
       // The token is good; the next screen will read the member again.
@@ -262,7 +291,20 @@ class Session {
 
     status = SessionStatus.signedIn;
     _notify();
-    return null;
+  }
+
+  /// The server's `{ "error": "..." }` body, so the screen shows the same words as the web callback.
+  static String? _ssoErrorCode(ApiException error) {
+    final body = error.message;
+    if (body == null || body.isEmpty) return null;
+    try {
+      final json = jsonDecode(body);
+      return json is Map && json['error'] is String
+          ? json['error'] as String
+          : null;
+    } on FormatException {
+      return null;
+    }
   }
 
   /// Saves the chosen language on the account so every device follows it. Null means "follow the device".

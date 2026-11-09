@@ -69,7 +69,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**createExportLink**](doc//AccountsApi.md#createexportlink) | **POST** /api/v1/accounts/me/export-link | 
 *AccountsApi* | [**deleteMyAccount**](doc//AccountsApi.md#deletemyaccount) | **POST** /api/v1/accounts/me/delete | 
 *AccountsApi* | [**downloadExport**](doc//AccountsApi.md#downloadexport) | **GET** /api/v1/accounts/export/{token} | 
-*AccountsApi* | [**exchangeSsoCode**](doc//AccountsApi.md#exchangessocode) | **POST** /api/v1/accounts/sso/token | 
+*AccountsApi* | [**exchangeSsoToken**](doc//AccountsApi.md#exchangessotoken) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**forgotPassword**](doc//AccountsApi.md#forgotpassword) | **POST** /api/v1/accounts/password/forgot | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
@@ -203,7 +203,7 @@ Class | Method | HTTP request | Description
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
- - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
+ - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
  - [FtpEstimate](doc//FtpEstimate.md)
