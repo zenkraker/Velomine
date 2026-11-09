@@ -454,10 +454,6 @@
   "signUp": "Registrazione",
   "peopleCanCreate": "Le persone possono creare account",
   "newAccountsApproval": "I nuovi account devono essere approvati da un amministratore",
-  "mapBackground": "Sfondo mappa",
-  "tileAddress": "Indirizzo dei riquadri",
-  "tileHelper": "Vuoto disegna solo il percorso e non contatta nessun server di mappe. Leggi prima le regole d'uso del fornitore.",
-  "creditShown": "Credito mostrato sulla mappa",
   "envVariables": "Impostato con variabili d'ambiente",
   "secretsHelp": "Contengono password e segreti, quindi non vengono mai salvati nel database né modificati da qui. Modifica l'ambiente del server e riavvialo.",
   "sendTestEmail": "Inviami un'email di prova",
@@ -478,8 +474,17 @@
   "profileTitle": "Profilo",
   "ftpHelper": "Soglia funzionale di potenza. Usata per il carico di allenamento e le zone di potenza.",
   "weight": "Peso",
-  "maxHeartRate": "Frequenza cardiaca massima",
-  "maxHeartRateHelper": "Le zone di frequenza cardiaca si calcolano da qui.",
+  "birthYear": "Anno di nascita",
+  "birthYearHelper": "La frequenza cardiaca massima si stima da qui con la formula di Tanaka (208 − 0,7 × età).",
+  "estimatedMaxHeartRate": "Frequenza cardiaca massima stimata: {bpm} bpm",
+  "@estimatedMaxHeartRate": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "estimatedMaxHeartRateNone": "Aggiungi il tuo anno di nascita per stimarla.",
   "timeZone": "Fuso orario",
   "timeZoneHelper": "Decide in quale giorno conta un'uscita quando il file non lo indica. Vuoto significa UTC.",
   "firstDayOfWeek": "La settimana inizia di",
@@ -494,7 +499,7 @@
   "errorEnterName": "Inserisci il tuo nome.",
   "errorFtp": "L'FTP è tra 30 e 1000 watt.",
   "errorWeight": "Il peso è tra 20 e 300 kg.",
-  "errorMaxHeartRate": "La frequenza cardiaca massima è tra 100 e 240 bpm.",
+  "errorBirthYear": "Inserisci un anno di nascita tra il 1900 e dieci anni fa.",
   "deleteAccountTitle": "Eliminare il tuo account?",
   "deleteAccountBody": "Elimina per sempre il tuo account e tutto ciò che contiene: uscite e file, bici, obiettivi e notifiche. Scarica prima i tuoi dati se vuoi conservarli. Non si può annullare.",
   "yourPassword": "La tua password",
@@ -748,12 +753,6 @@
   "locationPickerUse": "Usa questo punto",
   "locationPickerCurrent": "Usa la mia posizione",
   "locationCurrentUnavailable": "Il dispositivo non ha condiviso la posizione.",
-  "locationCoordinates": "Latitudine, longitudine",
-  "locationLatitude": "Latitudine",
-  "locationLongitude": "Longitudine",
-  "locationCoordinatesHint": "Per esempio 45.4642, 9.1900",
-  "locationCoordinatesInvalid": "Usa due numeri come 45.4642, 9.1900.",
-  "locationNoMap": "Questo server non ha uno sfondo mappa: inserisci le coordinate.",
   "locationMapFirst": "Prima sposta la mappa sul posto.",
 
   "nearbyTitle": "Club vicino a te",

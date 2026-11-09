@@ -28,7 +28,7 @@ public sealed class PowerCurveTests(PostgresFixture postgres)
     private static Task SetProfileAsync(HttpClient client, int ftpW, double weightKg) =>
         client.PutAsJsonAsync(
             "/api/v1/accounts/me/profile",
-            new UpdateProfileRequest("Rider", ftpW, weightKg, 190, "UTC", "monday"),
+            new UpdateProfileRequest("Rider", ftpW, weightKg, 2000, "UTC", "monday"),
             Ct);
 
     private static async Task UploadAsync(HttpClient client, byte[] file)

@@ -16,7 +16,7 @@ class UpdateProfileRequest {
     required this.displayName,
     required this.ftpW,
     required this.weightKg,
-    required this.maxHeartRate,
+    required this.birthYear,
     required this.timeZone,
     required this.firstDayOfWeek,
     this.emailNotifications = const Optional.absent(),
@@ -32,9 +32,9 @@ class UpdateProfileRequest {
   /// Maximum value: 300
   final double? weightKg;
 
-  /// Minimum value: 100
-  /// Maximum value: 240
-  final int? maxHeartRate;
+  /// Minimum value: 1900
+  /// Maximum value: 2016
+  final int? birthYear;
 
   final String? timeZone;
 
@@ -53,7 +53,7 @@ class UpdateProfileRequest {
     other.displayName == displayName &&
     other.ftpW == ftpW &&
     other.weightKg == weightKg &&
-    other.maxHeartRate == maxHeartRate &&
+    other.birthYear == birthYear &&
     other.timeZone == timeZone &&
     other.firstDayOfWeek == firstDayOfWeek &&
     other.emailNotifications == emailNotifications;
@@ -64,13 +64,13 @@ class UpdateProfileRequest {
     (displayName.hashCode) +
     (ftpW == null ? 0 : ftpW!.hashCode) +
     (weightKg == null ? 0 : weightKg!.hashCode) +
-    (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
+    (birthYear == null ? 0 : birthYear!.hashCode) +
     (timeZone == null ? 0 : timeZone!.hashCode) +
     (firstDayOfWeek.hashCode) +
     (emailNotifications == null ? 0 : emailNotifications!.hashCode);
 
   @override
-  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications]';
+  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -85,10 +85,10 @@ class UpdateProfileRequest {
     } else {
       json[r'weightKg'] = null;
     }
-    if (this.maxHeartRate != null) {
-      json[r'maxHeartRate'] = this.maxHeartRate;
+    if (this.birthYear != null) {
+      json[r'birthYear'] = this.birthYear;
     } else {
-      json[r'maxHeartRate'] = null;
+      json[r'birthYear'] = null;
     }
     if (this.timeZone != null) {
       json[r'timeZone'] = this.timeZone;
@@ -111,8 +111,8 @@ class UpdateProfileRequest {
     bool ftpWSetToNull = false,
     double? weightKg,
     bool weightKgSetToNull = false,
-    int? maxHeartRate,
-    bool maxHeartRateSetToNull = false,
+    int? birthYear,
+    bool birthYearSetToNull = false,
     String? timeZone,
     bool timeZoneSetToNull = false,
     String? firstDayOfWeek,
@@ -121,7 +121,7 @@ class UpdateProfileRequest {
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
     weightKg: weightKgSetToNull ? null : weightKg ?? this.weightKg,
-    maxHeartRate: maxHeartRateSetToNull ? null : maxHeartRate ?? this.maxHeartRate,
+    birthYear: birthYearSetToNull ? null : birthYear ?? this.birthYear,
     timeZone: timeZoneSetToNull ? null : timeZone ?? this.timeZone,
     firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
     emailNotifications: emailNotifications ?? this.emailNotifications,
@@ -142,7 +142,7 @@ class UpdateProfileRequest {
         assert(json[r'displayName'] != null, 'Required key "UpdateProfileRequest[displayName]" has a null value in JSON.');
         assert(json.containsKey(r'ftpW'), 'Required key "UpdateProfileRequest[ftpW]" is missing from JSON.');
         assert(json.containsKey(r'weightKg'), 'Required key "UpdateProfileRequest[weightKg]" is missing from JSON.');
-        assert(json.containsKey(r'maxHeartRate'), 'Required key "UpdateProfileRequest[maxHeartRate]" is missing from JSON.');
+        assert(json.containsKey(r'birthYear'), 'Required key "UpdateProfileRequest[birthYear]" is missing from JSON.');
         assert(json.containsKey(r'timeZone'), 'Required key "UpdateProfileRequest[timeZone]" is missing from JSON.');
         assert(json.containsKey(r'firstDayOfWeek'), 'Required key "UpdateProfileRequest[firstDayOfWeek]" is missing from JSON.');
         assert(json[r'firstDayOfWeek'] != null, 'Required key "UpdateProfileRequest[firstDayOfWeek]" has a null value in JSON.');
@@ -153,7 +153,7 @@ class UpdateProfileRequest {
         displayName: mapValueOfType<String>(json, r'displayName')!,
         ftpW: mapValueOfType<int>(json, r'ftpW'),
         weightKg: mapValueOfType<double>(json, r'weightKg'),
-        maxHeartRate: mapValueOfType<int>(json, r'maxHeartRate'),
+        birthYear: mapValueOfType<int>(json, r'birthYear'),
         timeZone: mapValueOfType<String>(json, r'timeZone'),
         firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
         emailNotifications: json.containsKey(r'emailNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailNotifications')) : const Optional.absent(),
@@ -207,7 +207,7 @@ class UpdateProfileRequest {
     'displayName',
     'ftpW',
     'weightKg',
-    'maxHeartRate',
+    'birthYear',
     'timeZone',
     'firstDayOfWeek',
   };

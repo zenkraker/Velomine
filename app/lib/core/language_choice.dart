@@ -3,13 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n.dart';
 
-/// English, Italian, or whatever the device is set to. Kept on this device only, like the theme: it applies
-/// before anyone signs in, and the choice is remembered for the next launch.
+/// English, Italian, or whatever the device is set to. The choice is kept per account on the server, so it
+/// follows the member to every device; the value on this device is only what applies before sign-in.
 class LanguageChoice extends ChangeNotifier {
   LanguageChoice({LanguageChoiceStore? store})
     : _store = store ?? _Preferences();
 
   final LanguageChoiceStore _store;
+
+  /// Called after an explicit choice, so the app can save it to the signed-in account. The app sets it.
+  Future<void> Function(String? code)? onChanged;
 
   /// A language code such as `en` or `it`; null means follow the device.
   String? code;
@@ -30,6 +33,16 @@ class LanguageChoice extends ChangeNotifier {
 
   Future<void> choose(String? value) async {
     code = _known(value);
+    notifyListeners();
+    await _store.write(code ?? 'system');
+    await onChanged?.call(code);
+  }
+
+  /// Applies the account's choice without sending it back to the server.
+  Future<void> adopt(String? value) async {
+    final next = _known(value);
+    if (next == code) return;
+    code = next;
     notifyListeners();
     await _store.write(code ?? 'system');
   }

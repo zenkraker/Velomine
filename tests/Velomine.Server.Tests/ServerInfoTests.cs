@@ -20,27 +20,34 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task ServerInfo_ShouldOfferNoMapTiles_WhenNoUsableTileAddressIsSet()
+    public async Task ServerInfo_ShouldOfferTheDefaultMap_WhenNothingIsConfigured()
     {
-        await using var off = await TestApi.StartAsync(postgres);
-        var none = await off.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
-        Assert.Null(none!.MapTileUrl);
+        await using var api = await TestApi.StartAsync(postgres);
+        var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
 
-        await using var on = await TestApi.StartAsync(postgres, b =>
+        Assert.Equal(MapOptions.DefaultTileUrl, info!.MapTileUrl);
+        Assert.Equal(MapOptions.DefaultAttribution, info.MapAttribution);
+    }
+
+    [Fact]
+    public async Task ServerInfo_ShouldUseTheConfiguredMap_WhenItIsUsable()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b =>
         {
             b.UseSetting("Velomine:Map:TileUrl", "https://tiles.example/{z}/{x}/{y}.png");
             b.UseSetting("Velomine:Map:Attribution", "© Example Maps");
         });
-        var set = await on.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
-        Assert.Equal("https://tiles.example/{z}/{x}/{y}.png", set!.MapTileUrl);
-        Assert.Equal("© Example Maps", set.MapAttribution);
+        var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
+
+        Assert.Equal("https://tiles.example/{z}/{x}/{y}.png", info!.MapTileUrl);
+        Assert.Equal("© Example Maps", info.MapAttribution);
     }
 
     [Theory]
     [InlineData("https://tiles.example/map.png")] // no {z}/{x}/{y}
     [InlineData("tiles.example/{z}/{x}/{y}.png")] // not an address
     [InlineData("javascript:alert({z}{x}{y})")] // not http or https
-    public async Task ServerInfo_ShouldIgnoreTheTileAddress_WhenItIsUnusable(string tileUrl)
+    public async Task ServerInfo_ShouldFallBackToTheDefaultMap_WhenTheTileAddressIsUnusable(string tileUrl)
     {
         await using var api = await TestApi.StartAsync(postgres, b =>
         {
@@ -50,8 +57,8 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
 
         var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
 
-        Assert.Null(info!.MapTileUrl);
-        Assert.Null(info.MapAttribution);
+        Assert.Equal(MapOptions.DefaultTileUrl, info!.MapTileUrl);
+        Assert.Equal(MapOptions.DefaultAttribution, info.MapAttribution);
     }
 
     [Fact]

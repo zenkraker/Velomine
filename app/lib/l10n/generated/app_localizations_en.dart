@@ -1471,19 +1471,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'New accounts need an admin to approve them';
 
   @override
-  String get mapBackground => 'Map background';
-
-  @override
-  String get tileAddress => 'Tile address';
-
-  @override
-  String get tileHelper =>
-      'Empty draws the route alone and contacts no map server. Read the provider\'s usage rules first.';
-
-  @override
-  String get creditShown => 'Credit shown on the map';
-
-  @override
   String get envVariables => 'Set with environment variables';
 
   @override
@@ -1553,10 +1540,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weight => 'Weight';
 
   @override
-  String get maxHeartRate => 'Maximum heart rate';
+  String get birthYear => 'Year of birth';
 
   @override
-  String get maxHeartRateHelper => 'Heart rate zones are worked out from it.';
+  String get birthYearHelper =>
+      'Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).';
+
+  @override
+  String estimatedMaxHeartRate(int bpm) {
+    return 'Estimated maximum heart rate: $bpm bpm';
+  }
+
+  @override
+  String get estimatedMaxHeartRateNone =>
+      'Add your year of birth to estimate it.';
 
   @override
   String get timeZone => 'Time zone';
@@ -1606,7 +1603,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorWeight => 'Weight is 20 to 300 kg.';
 
   @override
-  String get errorMaxHeartRate => 'Maximum heart rate is 100 to 240 bpm.';
+  String get errorBirthYear =>
+      'Enter a year of birth between 1900 and ten years ago.';
 
   @override
   String get deleteAccountTitle => 'Delete your account?';
@@ -2315,26 +2313,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get locationCurrentUnavailable =>
       'Your device did not share its position.';
-
-  @override
-  String get locationCoordinates => 'Latitude, longitude';
-
-  @override
-  String get locationLatitude => 'Latitude';
-
-  @override
-  String get locationLongitude => 'Longitude';
-
-  @override
-  String get locationCoordinatesHint => 'For example 45.4642, 9.1900';
-
-  @override
-  String get locationCoordinatesInvalid =>
-      'Use two numbers like 45.4642, 9.1900.';
-
-  @override
-  String get locationNoMap =>
-      'This server has no map background, so enter the coordinates.';
 
   @override
   String get locationMapFirst => 'Drag the map to the place first.';

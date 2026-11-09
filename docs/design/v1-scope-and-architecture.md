@@ -4,18 +4,18 @@ Nov 1, 2026 · @Alex
 
 ## Decisions so far
 
-Velomine is a cycling-only training platform for clubs and teams, on-premise or in the cloud. Rides are private by default, a coach can be given access, and wellbeing tracking focuses on how the rider feels.
+Velomine is a cycling-only training platform for clubs and teams. Cloud is the default: one shared deployment with a database per club. Self-hosted and on-premise are first-class options using the same image. Rides are private by default, a coach can be given access, and wellbeing tracking focuses on how the rider feels.
 
 | Topic | Decision | What it means |
 | --- | --- | --- |
 | Sports | Cycling only | Road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific. |
-| Users | Clubs and teams | Many accounts per server, admin role, invites with admin approval. SSO (OIDC) is built in and on by default from v1, alongside local accounts. |
+| Users | Clubs and teams | Many accounts per club, one club per account in that database, club admin role, invites with admin approval. SSO (OIDC) is built in and on by default from v1, alongside local accounts. |
 | Social | Private + share links | Rides private by default. One ride can be shared by link. Privacy zones hide home and other saved places, and optionally the start and end of every ride. No feed or followers. |
-| Clubs and coaches | Optional | A rider can use Velomine on their own; a club is opt-in. Clubs include coaches, but everything a member records stays private. The member decides what to share and with whom: the whole club or only a coach; rides, analytics or wellbeing. Every share can be revoked. An owner may open a club to nearby discovery; riders still ask and the owner approves. |
+| Clubs and coaches | Optional | One club per database. A rider can use Velomine on their own; a club is opt-in. Clubs include coaches, but everything a member records stays private. The member decides what to share and with whom: the club's coaches; rides, analytics, routes or wellbeing. Whole-club reading needs a member-facing club view. Every share can be revoked. Cross-club discovery is an opt-in directory or federation feature, not a local query. |
 | Health | Wellness + session feel, cycle tracking | Daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride, menstrual phase as optional and highly protected context. |
 | Body data | Weight in the profile (assumption) | Not chosen as a health area, but W/kg, VO2max estimate and calories need it. Kept as a single profile field, not a tracked series. |
 | Name and brand | Velomine, direction D | Contour × Night Ride: Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
-| Hosting and price | On-premise or cloud | The club chooses a server it controls or a dedicated cloud instance. A one-time activation fee, then a yearly fee per member. No feature paywall; the data stays the member's. |
+| Hosting and price | Managed cloud or self-host | Cloud: one shared Velomine deployment with one database and role per club on a managed PostgreSQL cluster. Self-host: the same image as a single-tenant instance. A one-time activation fee, then a yearly fee per club; a self-hosted club pays a licence. Pricing is published before a club commits, and comparable clubs pay the same. No feature paywall; the data stays the member's. |
 
 **Dependency rule (all apps):** official libraries first. A community library is added only after a written evaluation and the owner's approval. The rule lives in the repository's `AGENTS.md`. Known cases that will need approval: Flutter has no official Bluetooth LE plugin, so the BLE library (for example universal\_ble) must go through the evaluation.
 
@@ -25,7 +25,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 
 | Area | v1 |
 | --- | --- |
-| Ingestion | One upload endpoint, async jobs, `Idempotency-Key` and background subscribers: parse, enrich, dedupe, save, emit an event. |
+| Ingestion | One upload endpoint, async jobs, `Idempotency-Key` and a tenant-aware background worker: parse, enrich, dedupe, save, notify. |
 | File formats | FIT first, then GPX and TCX. GPX reads every common extension, including `PowerInWatts` and `gpxtpx:speed`. |
 | Ride types | Four independent dimensions: surface (road, gravel, mountain, track), e-bike (none or assisted), environment (outdoor, indoor, virtual) and a commute flag. The older eight labels (e-MTB, virtual, commute…) are derived from these, so an e-MTB is mountain + e-bike and a commute can also be training. |
 | Streams | HR, power, cadence, speed, elevation, temperature and map, plus a speed source flag: wheel sensor or GPS. |
@@ -41,12 +41,12 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | Share links | One link per ride, with optional expiry and privacy zones, instead of public pages and a feed. |
 | Per-stream privacy | Applied to share links and coach views. |
 | Notifications | Component worn out, coach request, import failed. |
-| Auth | Local login, MFA, SSO (OIDC), sign-up approval, password reset, API keys and sessions, plus passkeys. |
-| Roles | Admin, member and coach. |
-| Solo riders and discovery | Any account works without a club. A club owner may set the club's location and open it to discovery; riders without a club see nearby clubs (device position, or a point saved on the device), ask one at a time, and the owner approves or declines. |
+| Auth | Local login, MFA, SSO (OIDC) per club host, sign-up approval, password reset, API keys and sessions, plus passkeys. |
+| Roles | Club admin, member and coach. |
+| Solo riders | Any account works without a club on that club's host: personal tools, rides and wellbeing, with the club as an opt-in step. Discovery and joining across clubs are part of the inter-club layer (v2). |
 | Profile export and import | Full export, including original files. |
-| Server | Server settings, custom map tiles and email. |
-| Languages | Multi-language UI, starting with English and Italian. |
+| Server | Per-club settings, email and single sign-on; platform defaults with per-club override. Maps are always on (OpenStreetMap by default, a private tile server when the operator sets one). |
+| Languages | Multi-language UI, starting with English and Italian. The language is an account setting, so a choice on one device follows the member to every device. |
 | Phone recorder | Native background recorder, local-first save and an upload queue. |
 | Phone sensors | BLE heart rate, power and cadence, plus wheel speed from the speed sensor. |
 | Phone extras | Auto-pause and audio announcements. |
@@ -65,7 +65,7 @@ These are Velomine's differentiators. Each comes from a decision above.
 | Readiness view | Combines training load, wellness check-in and recent RPE into ride hard / ride easy / rest | The point of collecting wellbeing data. |
 | Wellness check-in | Daily 1–5 scores in about 20 seconds; RPE and notes after each ride | Chosen health area. |
 | Cycle tracking | Optional menstrual phase as context on charts; encrypted, never in share links, coach sees it only if granted separately | Chosen health area; most sensitive data on the server. |
-| Clubs and coaches | A club has coaches and riders, and a rider may use Velomine without one. Nothing is visible by default: the member opts in per data type (rides, analytics, wellbeing, cycle tracking) and per audience (club or a coach). Revocable; every view logged. Owners may open a club to nearby discovery; joining is still a request the owner answers | Clubs and coaches together, private by default, solo riding included. |
+| Clubs and coaches | A club has coaches and riders, and a rider may use Velomine without one. Nothing is visible by default: the member opts in per data type (rides, analytics, routes, wellbeing, cycle tracking) and per audience (the club's coaches today; whole-club reading later). Revocable; every view logged. Discovery and joining across clubs are part of the inter-club layer (v2). | Clubs and coaches together, private by default, solo riding included. |
 | Privacy zones | Like Strava's map visibility: hide up to 1 mile around saved addresses (home, work), and optionally hide the start and end of every ride wherever it is. Applied to share links and to what clubs and coaches see; the owner always sees the full track | Keeps home and other saved places out of every shared view. |
 | Share links | One link per ride, optional expiry, respects privacy switches | Replaces public pages and the feed. |
 | Component maintenance | Wear by km, hours or months, with notifications | Warns before a part fails, not after. |
@@ -82,9 +82,9 @@ Recommendation: .NET 10 for the server, and Flutter for everything a logged-in u
 - **API:** ASP.NET Core minimal APIs with an OpenAPI document, from which the Dart client is generated.
 - **Data:** PostgreSQL with EF Core.
 - **FIT parsing:** Garmin's official FIT C# SDK, on NuGet as `Garmin.FIT.Sdk` ([NuGet](https://nuget.org/packages/Garmin.FIT.Sdk/21.158.0)). It targets .NET Standard 2.0, so it runs on .NET 10.
-- **Background work:** hosted services with a PostgreSQL-backed job table: ingestion, thumbnails, geocoding, connector polling, maintenance reminders.
+- **Background work:** hosted services with an in-memory channel and timers: ingestion, thumbnails, geocoding, connector polling, maintenance reminders. Each unit of work resolves one tenant; nothing is queued in the database.
 - **Auth:** ASP.NET Core Identity with MFA, external OIDC login for SSO, scoped API keys, and passkeys, built into Identity since .NET 10 ([Microsoft docs](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/passkeys)).
-- **Deploy:** one Docker image for amd64 and arm64, plus PostgreSQL.
+- **Deploy:** one Docker image (amd64; the Flutter web stage is Linux x64). Cloud runs one shared deployment over a managed PostgreSQL cluster with one database per club; self-host runs the same image single-tenant.
 
 ### Mobile apps: Flutter
 
@@ -102,7 +102,7 @@ As decided: Flutter UI, sensor pairing over Bluetooth LE, uploads, plus a native
 | Accessibility, text selection, browser feel | Weaker; improving | Native web |
 | Team effort | One stack: Dart for app and web | Two stacks: Dart and TypeScript |
 
-**Decision: Flutter web** for the user, coach and admin web app. Velomine runs on the club's server or a dedicated cloud instance and everything is behind login, so SEO does not matter, and one design system and API client for phone and web halves the UI work. The weaknesses are handled outside Flutter:
+**Decision: Flutter web** for the user, coach and admin web app. Velomine runs as a managed cloud tenant or on the club's own server, and everything is behind login, so SEO does not matter, and one design system and API client for phone and web halves the UI work. The weaknesses are handled outside Flutter:
 
 - **Share links:** small HTML pages rendered by the .NET server, with Open Graph tags so a shared ride previews properly in chats.
 - **Landing page and docs:** static HTML.
@@ -111,9 +111,9 @@ As decided: Flutter UI, sensor pairing over Bluetooth LE, uploads, plus a native
 
 ## Architecture
 
-Every client talks to one .NET 10 server. The apps use the REST API, bike computer files go through the same ingestion pipeline, and share links are plain HTML pages the server renders.
+Every client talks to its club's host. Cloud serves all clubs from one shared .NET 10 deployment, with one database and role per club; self-host runs the same image for one club. The apps use the REST API, bike computer files go through the same ingestion pipeline, and share links are plain HTML pages the server renders.
 
-&#91;embedded content: Velomine architecture · 4 clients, 1 server, 2 stores\]
+&#91;embedded content: Velomine architecture · 4 clients, 1 shared app, one database per club\]
 
 Original FIT files are always kept, so any ride can be re-parsed when the parser improves.
 
@@ -123,7 +123,7 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 
 **v1: ride, record, share**
 
-1. Server core: accounts, MFA, SSO with OIDC, roles (admin, member, coach), clubs with members and coaches, Docker image.
+1. Server core: tenancy (one shared deployment, one database per club), accounts, MFA, SSO with OIDC, roles (club admin, member, coach), clubs with members and coaches, Docker image.
 2. Ingestion: upload endpoint with async jobs and idempotency, FIT and GPX parsing including every sensor extension, deduplication.
 3. Rides: map, stream charts, HR and power zones, laps, photos, ride dimensions for cycling.
 4. Bikes: bikes with wheel circumference, components with wear by km, hours or months.

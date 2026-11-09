@@ -17,8 +17,8 @@ class NearbyClubsScreen extends StatefulWidget {
     required this.homeLocation,
     required this.userId,
     required this.onBack,
-    this.tileUrl,
-    this.attribution,
+    required this.tileUrl,
+    required this.attribution,
   });
 
   final NearbyClubsController controller;
@@ -29,8 +29,8 @@ class NearbyClubsScreen extends StatefulWidget {
   final String userId;
 
   final VoidCallback onBack;
-  final String? tileUrl;
-  final String? attribution;
+  final String tileUrl;
+  final String attribution;
 
   @override
   State<NearbyClubsScreen> createState() => _NearbyClubsScreenState();
@@ -258,6 +258,13 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                       tooltip: l10n.nearbyUseDevice,
                       onPressed: _start,
                       icon: const Icon(Icons.my_location),
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton.filledTonal(
+                      key: const Key('nearby-set-location'),
+                      tooltip: l10n.nearbySetHome,
+                      onPressed: _setSavedLocation,
+                      icon: const Icon(Icons.edit_location_alt_outlined),
                     ),
                   ],
                 ),

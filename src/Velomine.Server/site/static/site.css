@@ -1687,6 +1687,75 @@ a {
   color: rgba(233, 235, 228, 0.7);
 }
 
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+}
+
+.footer-legal a {
+  color: rgba(233, 235, 228, 0.7);
+  font-size: 0.76rem;
+  text-decoration: none;
+}
+
+.footer-legal a:hover {
+  color: var(--volt);
+}
+
+/* Long-form pages */
+
+.legal-body {
+  max-width: 760px;
+}
+
+.legal-body h2 {
+  margin: 2.2rem 0 0.6rem;
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.legal-body h2:first-child {
+  margin-top: 0;
+}
+
+.legal-body h3 {
+  margin: 1.6rem 0 0.4rem;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.legal-body p,
+.legal-body li {
+  color: rgba(24, 32, 30, 0.78);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.legal-body ul {
+  margin: 0.6rem 0 1rem;
+  padding-left: 1.2rem;
+}
+
+.legal-body li {
+  margin: 0.35rem 0;
+}
+
+.legal-body a {
+  color: var(--teal);
+}
+
+.legal-meta {
+  margin-top: 2.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(201, 191, 174, 0.7);
+  color: rgba(24, 32, 30, 0.58);
+  font-size: 0.85rem;
+}
+
 /* Subpages */
 
 .page-hero {

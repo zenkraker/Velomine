@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy — Velomine</title>
+  <meta name="description" content="What Velomine collects, why, how long it keeps it, and how a member gets it back or deletes it.">
+  <meta name="theme-color" content="#F0EEE9">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Privacy — Velomine">
+  <meta property="og:description" content="What Velomine collects, why, how long it keeps it, and how a member gets it back or deletes it.">
+  <meta property="og:image" content="/static/img/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="/static/img/og.png">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/" aria-label="Velomine home">
+        <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="mark-dot" cx="60" cy="31" r="8"/>
+        </svg>
+        <span class="wordmark">velo<em>mine</em></span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/status/">Status</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/contact/">Contact</a>
+        <a class="btn btn-ghost" href="/sign-in">Sign in</a>
+        <a class="btn btn-primary" href="/register">Create account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-current="page">Privacy</li>
+          </ol>
+        </nav>
+        <p class="eyebrow">Privacy</p>
+        <h1>Your data, in plain language.</h1>
+        <p>What Velomine collects, why, how long we keep it, and how to get it back or delete it.</p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="legal-body">
+          <h2>Who we are</h2>
+          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use a managed cloud tenant with its own database. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> with any question about it.</p>
+
+          <h2>What we collect</h2>
+          <ul>
+            <li><strong>Account data:</strong> name, email address, password hash or single sign-on identifier, role, club, and the date you joined.</li>
+            <li><strong>Ride data:</strong> the original FIT, GPX or TCX file, and the distance, time, speed, elevation, heart rate, power, cadence, temperature, laps and map points it contains.</li>
+            <li><strong>Wellbeing data:</strong> daily check-in scores, the RPE and notes you add to a ride, and your consent record. This is health data and is treated as such.</li>
+            <li><strong>Photos</strong> you add to a ride, when that feature is available.</li>
+            <li><strong>Operational logs:</strong> request id, club, route template, status, duration and error code. They do not contain ride or health data, names, email addresses, IP addresses, tokens, cookies, request bodies or query strings. Kept for 30 days.</li>
+            <li><strong>Audit events:</strong> sign-ins, failed sign-ins, admin actions, coach and share views, exports, deletions and consent versions. Kept for 12 months and visible to the member they concern.</li>
+            <li><strong>Club billing data:</strong> the club's contact, contract and invoices. Members are never billed individually.</li>
+          </ul>
+
+          <h2>Why we process it</h2>
+          <ul>
+            <li><strong>To run the service:</strong> your account, your rides, your club and the features you use (contract).</li>
+            <li><strong>To keep it safe:</strong> security logs, audit events, rate limits and backups (legitimate interest and legal obligation).</li>
+            <li><strong>Health data:</strong> only with your explicit consent. You can withdraw it at any time; that stops future wellbeing processing.</li>
+            <li><strong>Billing and tax:</strong> invoices and records the law requires (legal obligation).</li>
+          </ul>
+
+          <h2>Health data</h2>
+          <p>Wellbeing data, and cycle data when that feature is available, are health data. We collect the minimum, ask for explicit consent before the first check-in, and ask again when the terms version changes. Free-text notes are only ever shown to you. A coach sees the scores and RPE you choose to share, never the notes. Health data never appears in share links. It is included in your export and deleted with your account.</p>
+
+          <h2>What we never do</h2>
+          <ul>
+            <li>No advertising, profiling, data sale or lead generation.</li>
+            <li>No use of member data for AI training.</li>
+            <li>No analytics or third-party scripts on this site.</li>
+            <li>No public feed, follower graph or public individual leaderboard.</li>
+          </ul>
+
+          <h2>Sharing</h2>
+          <p>Nothing you record is visible to anyone else until you share it. Sharing is per data type (rides, analytics, routes or wellbeing), per audience (the club's coaches today; a member-facing whole-club view later), and revocable. Every coach view is logged and you can see who looked. Share links, when you create one, show only what you chose to share.</p>
+
+          <h2 id="subprocessors">Sub-processors and the DPA</h2>
+          <p>Clubs on the managed cloud plan sign a data processing agreement (DPA) before go-live. It names the current sub-processors and their locations. The categories are:</p>
+          <ul>
+            <li>Cloud hosting for the application.</li>
+            <li>A managed PostgreSQL cluster, with one database per club.</li>
+            <li>Object storage for encrypted backups.</li>
+            <li>Email delivery for notifications and password reset.</li>
+            <li>Monitoring and central log collection, fed only with the operational logs described above.</li>
+            <li>Payment and invoicing for the club's subscription.</li>
+            <li>Optional providers a club chooses, such as its own single sign-on or map tile server.</li>
+          </ul>
+          <p>Member data is hosted in the EU/EEA. We do not transfer it outside the EU/EEA without the club's instruction. Self-hosted clubs keep all data on their own infrastructure; the Velomine project receives nothing from a self-hosted instance unless an administrator chooses to send a diagnostics bundle.</p>
+
+          <h2>Where the data lives</h2>
+          <p>On the cloud plan, each club has its own PostgreSQL database and file namespace in the EU/EEA. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has a standing account inside a club's app; support access is break-glass and audited.</p>
+
+          <h2>How long we keep it</h2>
+          <ul>
+            <li>Account, rides, photos and wellbeing: until you delete the account or the data.</li>
+            <li>Backups: up to 90 days after deletion.</li>
+            <li>Audit events: 12 months.</li>
+            <li>Operational logs: 30 days.</li>
+            <li>Billing records: for the period the law requires.</li>
+          </ul>
+
+          <h2>Your rights</h2>
+          <p>You can access, correct, export, restrict, object to or delete your data, and withdraw consent for health data. Export and deletion are in the app: <em>Download my data</em> gives you a ZIP with your profile, bikes, goals, rides and every original ride file; <em>Delete my account</em> removes the account and its data. Backups expire within 90 days. You can also complain to your data protection authority. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> for any request.</p>
+
+          <h2>Cookies and tracking</h2>
+          <p>This presentation site sets no cookies, no analytics and no third-party scripts. The web app uses a session cookie when you sign in, and the phone app keeps a refresh token in the device's secure storage. There is no advertising or cross-site tracking.</p>
+
+          <h2>Minors</h2>
+          <p>Velomine has no public profiles and no public individual results. Clubs are responsible for obtaining a parent or guardian's consent where the law requires it for a member under the age of consent.</p>
+
+          <h2>Security</h2>
+          <p>Traffic is encrypted in transit, access is role-based, every non-owner view is logged, and there is no automatic telemetry. To report a vulnerability, use the <a href="/security/">security page</a>. Please do not include member data in a report.</p>
+
+          <h2>Changes</h2>
+          <p>We version this policy. A material change is announced to club administrators before it takes effect, and the date below changes. The version that applies is the one shown when you use the service.</p>
+
+          <h2>Contact</h2>
+          <p>Privacy questions and requests: <a href="mailto:horizontodawn@pm.me?subject=Velomine%20privacy">horizontodawn@pm.me</a>.</p>
+
+          <p class="legal-meta">Last updated 9 November 2026. This is the plain-language policy; the signed club agreement and the DPA prevail for a club on the cloud plan.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/" aria-label="Velomine home">
+            <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+              <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle class="mark-dot" cx="60" cy="31" r="8"/>
+            </svg>
+            <span class="wordmark">velo<em>mine</em></span>
+          </a>
+          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
+        </div>
+        <div class="footer-col">
+          <h3>Site</h3>
+          <a href="/">Home</a>
+          <a href="/status/">Status</a>
+          <a href="/pricing/">Pricing</a>
+          <a href="/contact/">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h3>App</h3>
+          <a href="/sign-in">Sign in</a>
+          <a href="/register">Create account</a>
+          <a href="/openapi/v1.json">API</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
+        <nav class="footer-legal" aria-label="Project and legal">
+          <a href="/principles/">Principles</a>
+          <a href="https://github.com/zenkraker/Velomine#readme">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/commits">Changelog</a>
+          <a href="/principles/#licence">Licence</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/privacy/#subprocessors">DPA</a>
+          <a href="/terms/">Terms</a>
+          <a href="/security/">Security</a>
+        </nav>
+        <span>Early development. <a href="/status/">See what works.</a></span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

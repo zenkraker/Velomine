@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security — Velomine</title>
+  <meta name="description" content="How to report a security problem in Velomine, what is in scope, and what we do next.">
+  <meta name="theme-color" content="#F0EEE9">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Security — Velomine">
+  <meta property="og:description" content="How to report a security problem in Velomine, what is in scope, and what we do next.">
+  <meta property="og:image" content="/static/img/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="/static/img/og.png">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/" aria-label="Velomine home">
+        <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="mark-dot" cx="60" cy="31" r="8"/>
+        </svg>
+        <span class="wordmark">velo<em>mine</em></span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/status/">Status</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/contact/">Contact</a>
+        <a class="btn btn-ghost" href="/sign-in">Sign in</a>
+        <a class="btn btn-primary" href="/register">Create account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-current="page">Security</li>
+          </ol>
+        </nav>
+        <p class="eyebrow">Security</p>
+        <h1>Tell us before it becomes a problem.</h1>
+        <p>If you find a security issue in Velomine, report it privately. We will not treat good-faith research as an attack.</p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="legal-body">
+          <h2>How to report</h2>
+          <p>Email <a href="mailto:horizontodawn@pm.me?subject=Velomine%20security">horizontodawn@pm.me</a> with the subject <strong>Security</strong>. Include enough to reproduce the issue: the URL or app version, the steps, the impact, and any proof that does not contain member data, health data or another person's credentials.</p>
+          <p>If you need encryption, say so in the first email and we will arrange a key exchange. Do not open a public issue for a vulnerability.</p>
+
+          <h2>What is in scope</h2>
+          <ul>
+            <li>The Velomine server, the Flutter web app, the Android app and the presentation site.</li>
+            <li>Authentication, authorization, tenant isolation, session handling and the export/delete flows.</li>
+            <li>Ways to read another club's database, another member's data, or a coach view without a grant.</li>
+          </ul>
+
+          <h2>What is out of scope</h2>
+          <ul>
+            <li>Third-party services a club chooses, such as its single sign-on, mail or map provider.</li>
+            <li>Social engineering, phishing, physical access and stolen devices.</li>
+            <li>Denial-of-service, spam and automated scanning that disrupts the service.</li>
+            <li>Reports that require a compromised admin account or a rooted device.</li>
+          </ul>
+
+          <h2>Safe harbour</h2>
+          <p>We will not pursue legal action for good-faith research that follows these rules: do not access, change or store another person's data beyond what is needed to demonstrate the issue; do not disrupt the service; do not publish the issue before we have had a reasonable chance to fix it; and report promptly. If in doubt, ask first.</p>
+
+          <h2>What happens next</h2>
+          <ul>
+            <li>We acknowledge a report within three business days.</li>
+            <li>We confirm the issue, agree a fix window, and tell you when it is fixed.</li>
+            <li>We credit you publicly if you want, and only after the fix.</li>
+            <li>There is no paid bug bounty today. We will not ask you to pay for a fix.</li>
+          </ul>
+
+          <h2>What we do on our side</h2>
+          <ul>
+            <li>Encrypted traffic, role-based access, per-club databases and no platform admin inside a club's app.</li>
+            <li>Audit events for sign-ins, admin actions and every non-owner view.</li>
+            <li>No automatic telemetry, no third-party scripts on the presentation site, and no member data in operational logs.</li>
+            <li>Tested backups and a restore path, with a backup window disclosed in the privacy policy.</li>
+          </ul>
+
+          <h2>Machine-readable contact</h2>
+          <p>The same contact is published at <a href="/.well-known/security.txt">/.well-known/security.txt</a>.</p>
+
+          <p class="legal-meta">Last updated 9 November 2026.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/" aria-label="Velomine home">
+            <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+              <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle class="mark-dot" cx="60" cy="31" r="8"/>
+            </svg>
+            <span class="wordmark">velo<em>mine</em></span>
+          </a>
+          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
+        </div>
+        <div class="footer-col">
+          <h3>Site</h3>
+          <a href="/">Home</a>
+          <a href="/status/">Status</a>
+          <a href="/pricing/">Pricing</a>
+          <a href="/contact/">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h3>App</h3>
+          <a href="/sign-in">Sign in</a>
+          <a href="/register">Create account</a>
+          <a href="/openapi/v1.json">API</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
+        <nav class="footer-legal" aria-label="Project and legal">
+          <a href="/principles/">Principles</a>
+          <a href="https://github.com/zenkraker/Velomine#readme">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/commits">Changelog</a>
+          <a href="/principles/#licence">Licence</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/privacy/#subprocessors">DPA</a>
+          <a href="/terms/">Terms</a>
+          <a href="/security/">Security</a>
+        </nav>
+        <span>Early development. <a href="/status/">See what works.</a></span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

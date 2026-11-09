@@ -80,7 +80,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres)
         var original = Fit(new FitSession(Start, 120));
         await UploadAsync(me.Client, original);
         await UploadAsync(other.Client, Fit(new FitSession(Start.AddHours(6), 120)), "grace-ride.fit");
-        await me.Client.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada", 265, 61.5, 186, "Europe/Rome", "sunday"), Ct);
+        await me.Client.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada", 265, 61.5, 1995, "Europe/Rome", "sunday"), Ct);
         var bike = await (await me.Client.PostAsJsonAsync("/api/v1/bikes", new CreateBikeRequest { Name = "Road", Kind = "road", WheelCircumferenceMm = 2105, InitialDistanceM = 1000 }, Ct)).Content.ReadFromJsonAsync<BikeDetailResponse>(Ct);
         await me.Client.PostAsJsonAsync($"/api/v1/bikes/{bike!.Bike.Id}/components", new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 10, 1), ExpectedDistanceM = 4_000_000 }, Ct);
         await me.Client.PostAsJsonAsync("/api/v1/analytics/goals", new CreateGoalRequest { Period = "week", Metric = "distance", Target = 100_000 }, Ct);

@@ -5,16 +5,17 @@ description: Use when making structural decisions in Velomine - where code lives
 
 # Software architecture in Velomine
 
-Velomine is self-hosted by clubs and teams, often on one small server run by a volunteer. Every decision is judged by: does it stay simple to run, and does the member keep ownership of their data?
+Velomine runs as a managed cloud service (one shared app, one database per club) and as a self-hosted single-tenant instance. Every decision is judged by: does it stay simple to run, and does the member keep ownership of their data?
 
 ## Shape
 
-Follow `docs/architecture.md` and the architecture invariants in `AGENTS.md`. In short:
+Follow `docs/architecture.md`; `AGENTS.md` holds only code invariants. In short:
 
-- **One server process + one PostgreSQL + one file volume.** No microservices, brokers, Redis or extra services. An instance serves up to about 1,000 members; don't design for more.
+- **One application service and one database per club.** Cloud runs a shared deployment with one database and role per club; self-host runs the same image single-tenant. No microservices, brokers, Redis or extra services. Each club serves up to about 1,000 members; don't design for more.
+- **Tenant resolution is a request boundary.** Resolve the club from the host before authentication and select its database. No `club_id` column.
 - **Vertical slices** in `Features/<Area>/`: one FastEndpoints endpoint per use case, using the `DbContext` directly. No layers, repositories or mediators.
-- **One PostgreSQL schema per feature area.**
-- **Background work** runs in the server: a `Channel<T>` + `BackgroundService` for ingestion, `PeriodicTimer` for scheduled tasks. PostgreSQL is storage only: no jobs table, events or outbox.
+- **One PostgreSQL schema per feature area**, inside each club's database.
+- **Background work** runs in the server: a `Channel<T>` + `BackgroundService` for ingestion, `PeriodicTimer` for scheduled tasks. Queued work carries its tenant; PostgreSQL is storage only: no jobs table, events or outbox.
 
 ## Contracts
 
@@ -26,7 +27,7 @@ Follow `docs/architecture.md` and the architecture invariants in `AGENTS.md`. In
 
 - Members can export all their data in open formats (original FIT/GPX + JSON) and delete their account completely.
 - Privacy zones around home locations are applied before any track is shared.
-- No telemetry or third-party calls by default; anything that leaves the server is opt-in per instance.
+- No telemetry or third-party calls by default; anything that leaves the server is opt-in and documented.
 
 ## Decisions
 

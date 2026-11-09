@@ -16,8 +16,6 @@ class SettingsTab extends StatefulWidget {
 }
 
 class _SettingsTabState extends State<SettingsTab> {
-  final _tile = TextEditingController();
-  final _credit = TextEditingController();
   bool _signUp = true;
   bool _approval = true;
   bool _filled = false;
@@ -38,16 +36,12 @@ class _SettingsTabState extends State<SettingsTab> {
     setState(() {
       _signUp = s.signUpEnabled;
       _approval = s.requireAdminApproval;
-      _tile.text = s.mapTileUrl ?? '';
-      _credit.text = s.mapAttribution ?? '';
     });
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_fill);
-    _tile.dispose();
-    _credit.dispose();
     super.dispose();
   }
 
@@ -56,10 +50,6 @@ class _SettingsTabState extends State<SettingsTab> {
       UpdateSettingsRequest(
         signUpEnabled: _signUp,
         requireAdminApproval: _approval,
-        mapTileUrl: _tile.text.trim(),
-        mapAttribution: _credit.text.trim().isEmpty
-            ? null
-            : _credit.text.trim(),
       ),
     );
     if (mounted) setState(() => _saved = ok);
@@ -110,30 +100,6 @@ class _SettingsTabState extends State<SettingsTab> {
                     _approval = v;
                     _saved = false;
                   }),
-                ),
-                Text(
-                  l10n.mapBackground,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                TextField(
-                  key: const Key('setting-tile'),
-                  controller: _tile,
-                  onChanged: (_) => setState(() => _saved = false),
-                  decoration: InputDecoration(
-                    labelText: l10n.tileAddress,
-                    hintText: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    helperText: l10n.tileHelper,
-                    helperMaxLines: 2,
-                  ),
-                ),
-                TextField(
-                  key: const Key('setting-credit'),
-                  controller: _credit,
-                  onChanged: (_) => setState(() => _saved = false),
-                  decoration: InputDecoration(
-                    labelText: l10n.creditShown,
-                    hintText: '© OpenStreetMap contributors',
-                  ),
                 ),
                 if (c.error != null)
                   Text(

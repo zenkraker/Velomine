@@ -15,50 +15,30 @@ class UpdateSettingsRequest {
   UpdateSettingsRequest({
     required this.signUpEnabled,
     required this.requireAdminApproval,
-    required this.mapTileUrl,
-    required this.mapAttribution,
   });
 
   final bool signUpEnabled;
 
   final bool requireAdminApproval;
 
-  final String? mapTileUrl;
-
-  final String? mapAttribution;
-
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateSettingsRequest &&
     other.signUpEnabled == signUpEnabled &&
-    other.requireAdminApproval == requireAdminApproval &&
-    other.mapTileUrl == mapTileUrl &&
-    other.mapAttribution == mapAttribution;
+    other.requireAdminApproval == requireAdminApproval;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (signUpEnabled.hashCode) +
-    (requireAdminApproval.hashCode) +
-    (mapTileUrl == null ? 0 : mapTileUrl!.hashCode) +
-    (mapAttribution == null ? 0 : mapAttribution!.hashCode);
+    (requireAdminApproval.hashCode);
 
   @override
-  String toString() => 'UpdateSettingsRequest[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution]';
+  String toString() => 'UpdateSettingsRequest[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'signUpEnabled'] = this.signUpEnabled;
       json[r'requireAdminApproval'] = this.requireAdminApproval;
-    if (this.mapTileUrl != null) {
-      json[r'mapTileUrl'] = this.mapTileUrl;
-    } else {
-      json[r'mapTileUrl'] = null;
-    }
-    if (this.mapAttribution != null) {
-      json[r'mapAttribution'] = this.mapAttribution;
-    } else {
-      json[r'mapAttribution'] = null;
-    }
     return json;
   }
 
@@ -67,15 +47,9 @@ class UpdateSettingsRequest {
   UpdateSettingsRequest copyWith({
     bool? signUpEnabled,
     bool? requireAdminApproval,
-    String? mapTileUrl,
-    bool mapTileUrlSetToNull = false,
-    String? mapAttribution,
-    bool mapAttributionSetToNull = false,
   }) => UpdateSettingsRequest(
     signUpEnabled: signUpEnabled ?? this.signUpEnabled,
     requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
-    mapTileUrl: mapTileUrlSetToNull ? null : mapTileUrl ?? this.mapTileUrl,
-    mapAttribution: mapAttributionSetToNull ? null : mapAttribution ?? this.mapAttribution,
   );
 
   /// Returns a new [UpdateSettingsRequest] instance and imports its values from
@@ -93,16 +67,12 @@ class UpdateSettingsRequest {
         assert(json[r'signUpEnabled'] != null, 'Required key "UpdateSettingsRequest[signUpEnabled]" has a null value in JSON.');
         assert(json.containsKey(r'requireAdminApproval'), 'Required key "UpdateSettingsRequest[requireAdminApproval]" is missing from JSON.');
         assert(json[r'requireAdminApproval'] != null, 'Required key "UpdateSettingsRequest[requireAdminApproval]" has a null value in JSON.');
-        assert(json.containsKey(r'mapTileUrl'), 'Required key "UpdateSettingsRequest[mapTileUrl]" is missing from JSON.');
-        assert(json.containsKey(r'mapAttribution'), 'Required key "UpdateSettingsRequest[mapAttribution]" is missing from JSON.');
         return true;
       }());
 
       return UpdateSettingsRequest(
         signUpEnabled: mapValueOfType<bool>(json, r'signUpEnabled')!,
         requireAdminApproval: mapValueOfType<bool>(json, r'requireAdminApproval')!,
-        mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl'),
-        mapAttribution: mapValueOfType<String>(json, r'mapAttribution'),
       );
     }
     return null;
@@ -152,8 +122,6 @@ class UpdateSettingsRequest {
   static const requiredKeys = <String>{
     'signUpEnabled',
     'requireAdminApproval',
-    'mapTileUrl',
-    'mapAttribution',
   };
 }
 

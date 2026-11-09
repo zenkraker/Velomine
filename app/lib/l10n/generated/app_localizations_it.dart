@@ -1476,19 +1476,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'I nuovi account devono essere approvati da un amministratore';
 
   @override
-  String get mapBackground => 'Sfondo mappa';
-
-  @override
-  String get tileAddress => 'Indirizzo dei riquadri';
-
-  @override
-  String get tileHelper =>
-      'Vuoto disegna solo il percorso e non contatta nessun server di mappe. Leggi prima le regole d\'uso del fornitore.';
-
-  @override
-  String get creditShown => 'Credito mostrato sulla mappa';
-
-  @override
   String get envVariables => 'Impostato con variabili d\'ambiente';
 
   @override
@@ -1558,11 +1545,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get weight => 'Peso';
 
   @override
-  String get maxHeartRate => 'Frequenza cardiaca massima';
+  String get birthYear => 'Anno di nascita';
 
   @override
-  String get maxHeartRateHelper =>
-      'Le zone di frequenza cardiaca si calcolano da qui.';
+  String get birthYearHelper =>
+      'La frequenza cardiaca massima si stima da qui con la formula di Tanaka (208 − 0,7 × età).';
+
+  @override
+  String estimatedMaxHeartRate(int bpm) {
+    return 'Frequenza cardiaca massima stimata: $bpm bpm';
+  }
+
+  @override
+  String get estimatedMaxHeartRateNone =>
+      'Aggiungi il tuo anno di nascita per stimarla.';
 
   @override
   String get timeZone => 'Fuso orario';
@@ -1612,8 +1608,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errorWeight => 'Il peso è tra 20 e 300 kg.';
 
   @override
-  String get errorMaxHeartRate =>
-      'La frequenza cardiaca massima è tra 100 e 240 bpm.';
+  String get errorBirthYear =>
+      'Inserisci un anno di nascita tra il 1900 e dieci anni fa.';
 
   @override
   String get deleteAccountTitle => 'Eliminare il tuo account?';
@@ -2331,26 +2327,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get locationCurrentUnavailable =>
       'Il dispositivo non ha condiviso la posizione.';
-
-  @override
-  String get locationCoordinates => 'Latitudine, longitudine';
-
-  @override
-  String get locationLatitude => 'Latitudine';
-
-  @override
-  String get locationLongitude => 'Longitudine';
-
-  @override
-  String get locationCoordinatesHint => 'Per esempio 45.4642, 9.1900';
-
-  @override
-  String get locationCoordinatesInvalid =>
-      'Usa due numeri come 45.4642, 9.1900.';
-
-  @override
-  String get locationNoMap =>
-      'Questo server non ha uno sfondo mappa: inserisci le coordinate.';
 
   @override
   String get locationMapFirst => 'Prima sposta la mappa sul posto.';

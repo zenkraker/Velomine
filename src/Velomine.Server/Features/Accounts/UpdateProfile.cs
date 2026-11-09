@@ -10,7 +10,7 @@ public sealed record UpdateProfileRequest(
     string DisplayName,
     int? FtpW,
     double? WeightKg,
-    int? MaxHeartRate,
+    int? BirthYear,
     string? TimeZone,
     string FirstDayOfWeek,
     bool? EmailNotifications = null);
@@ -22,7 +22,9 @@ public sealed class UpdateProfileValidator : Validator<UpdateProfileRequest>
         RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.FtpW).InclusiveBetween(30, 1000);
         RuleFor(x => x.WeightKg).InclusiveBetween(20, 300);
-        RuleFor(x => x.MaxHeartRate).InclusiveBetween(100, 240);
+        RuleFor(x => x.BirthYear)
+            .InclusiveBetween(1900, DateTime.UtcNow.Year - 10)
+            .WithMessage("Enter a year of birth from 1900 to ten years ago.");
         RuleFor(x => x.TimeZone)
             .MaximumLength(64)
             .Must(z => z is null || TimeZoneInfo.TryFindSystemTimeZoneById(z, out _))
@@ -48,7 +50,7 @@ public sealed class UpdateProfile(VelomineDbContext db) : Endpoint<UpdateProfile
         user.DisplayName = req.DisplayName.Trim();
         user.FtpW = req.FtpW;
         user.WeightKg = req.WeightKg is { } kg ? Math.Round(kg, 1) : null;
-        user.MaxHeartRate = req.MaxHeartRate;
+        user.BirthYear = req.BirthYear;
         user.TimeZone = string.IsNullOrWhiteSpace(req.TimeZone) ? null : req.TimeZone.Trim();
         user.FirstDayOfWeek = firstDay;
         user.EmailNotifications = req.EmailNotifications ?? user.EmailNotifications;

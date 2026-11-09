@@ -1,50 +1,68 @@
 # Velomine
 
-Cycling-only training platform for clubs and teams, on-premise or in the cloud. No feature paywall; every member owns their data.
-
-- **Server:** .NET 10 (LTS), ASP.NET Core, EF Core, PostgreSQL.
-- **Apps:** Flutter for mobile (Android, iOS) and for the web app (Flutter web), one shared Dart codebase.
-- **Share pages and landing page:** plain HTML rendered by the server.
-
-These rules apply to every app and project in this repository: server, mobile, web, tools and scripts.
+Code, test, dependency and tooling rules for this repository. They apply to every project here: server, mobile, web, tools and scripts.
 
 ## What belongs in this file
 
-`AGENTS.md` holds **only invariants**: code, architecture, dependency and tooling rules that stay true for as long as nobody decides otherwise. **Never** put project status here: progress, roadmap position, current release, open questions, to-do lists or "what's done". Those go in `README.md`. When a rule here changes, edit it in place; do not add a history. `CLAUDE.md` imports this file, so Claude Code reads the same rules.
+`AGENTS.md` holds **only code invariants**. Architecture, product values, scope and operations live in `docs/`; project status lives in `README.md`. Never add progress, roadmap, open questions or feature decisions here. When a code rule changes, edit it in place; no history. `CLAUDE.md` imports this file.
 
-## References
-
-Background documents. Read the relevant one before designing a feature. When a document and this file disagree, this file wins.
+## Read before changing this
 
 | Document | Read it for |
 |----------|-------------|
-| `docs/architecture.md` | System architecture: modules, ingestion pipeline, jobs, data model, API, security, apps |
-| `docs/design/values.md` | Product values, principles and decision tests. Read before adding, cutting or pricing a feature. |
-| `docs/design/v1-scope-and-architecture.md` | Product scope, feature decisions, tech stack and architecture |
-| `docs/design/brand-directions.html` | Brand: name, colours, type and day/night themes (open in a browser) |
-| `docs/development.md` | The Nix development environment: how it works, setup (including Claude Code, OpenCode, ponytail, CodeGraph and the Flutter/Dart MCP server), daily commands, updating tools |
-| `docs/dependencies/` | Dependency evaluations, the template, approved and pending libraries |
+| `docs/architecture.md` | System architecture, tenancy, deployment, API, security, apps |
+| `docs/design/values.md` | Product values, pricing and decision tests |
+| `docs/design/v1-scope-and-architecture.md` | Scope and feature decisions |
+| `docs/design/v2.md` | Inter-club social ideas |
+| `docs/development.md` | Nix development environment, setup and commands |
+| `docs/dependencies/` | Dependency evaluations and approvals |
 
-## Architecture invariants
+For code rules, this file wins. For architecture and product, the referenced document wins.
 
-- **Keep it simple.** One server, one PostgreSQL database, one file volume. No microservices, brokers, caches or extra services.
-- **Vertical slices.** Server code lives in `Features/<Area>/`, one file per use case (request, response, validation, endpoint, logic). Slices use the `DbContext` directly: no repositories, service layers or mediators.
+## Code shape
+
+- **Server:** .NET 10 (LTS), ASP.NET Core, EF Core, PostgreSQL.
+- **Apps:** Flutter for Android, iOS and the web app, one Dart codebase.
+- **Share pages and landing page:** plain HTML rendered by the server.
+- **Vertical slices.** Server code lives in `Features/<Area>/`, one file per use case (request, response, validation, endpoint, logic). Slices use `VelomineDbContext` directly: no repositories, service layers or mediators.
 - **Endpoints use FastEndpoints**, one endpoint class per slice.
+- **One PostgreSQL schema per feature area.** A feature's tables live in its own schema; slices may read another area's tables when they need to.
 - **Background work runs in the server** as hosted services. PostgreSQL is storage only: no job queues, events or outbox in the database.
-- **One PostgreSQL schema per feature area.**
+- **Migrate forward.** Migrations are additive and backward-compatible for one release: expand, backfill, contract. Never drop a column in the release that stops using it.
 - **Don't reinvent the wheel on .NET.** Use what .NET, ASP.NET Core, EF Core and official Microsoft libraries provide; write it yourself only when nothing official fits.
-- **Every endpoint declares what it really accepts and returns** (`Description(...)` in its `Configure()`), because the generated Dart client is only as accurate as the OpenAPI document. After changing an endpoint, run `tools/generate-api-client.sh` and commit the regenerated client.
-- **The web app is served by the server** from `wwwroot`, at the same address as the API (built by the Dockerfile), so its session cookie needs no cross-origin setup.
-- **The Dart API client is generated** from the server's OpenAPI document. Never edit generated files by hand. For the generator only, a community tool is acceptable if it is free, well documented and actively supported; it still needs an evaluation in `docs/dependencies/`.
+
+## API contract
+
+- Every endpoint declares what it really accepts and returns (`Description(...)` in `Configure()`). The generated Dart client is only as accurate as the OpenAPI document.
+- After changing an endpoint, run `tools/generate-api-client.sh` and commit the regenerated client.
+- The Dart API client is generated. Never edit `app/packages/velomine_api/` by hand. For the generator only, a community tool is acceptable if it is free, well documented, actively supported and approved in `docs/dependencies/`.
+- A released API version is never broken. Breaking changes go to `/api/v2`.
+
+## Tenancy in code
+
+- The tenant is the database, resolved from the host before authentication. Select its connection string; never add a `club_id` column or filter rows by club.
+- A request or background job holds exactly one tenant's credentials. There is no ambient default tenant.
+- Any endpoint or job that touches club or member data needs a test proving a second tenant cannot see it.
+
+## Security in code
+
+- Every endpoint that returns member data checks owner or an active grant for that data type and audience.
+- Secrets come from configuration or a secret store, never the database or an API response.
+- Never log ride or health data, names, email addresses, IP addresses, tokens, cookies, request bodies or query strings. Log route templates, not raw paths.
+- No telemetry or third-party SDK without a deliberate decision.
 
 ## Tests
 
 - **Every test name follows `Subject_ShouldDoSomething_WhenCondition`.** Three PascalCase parts separated by underscores: the method, class, screen or controller under test, the observable behaviour, and the condition that triggers it. This applies to xUnit test methods and to the description strings of Dart `test(...)` and `testWidgets(...)`; group labels stay descriptive prose.
 - **Examples.** `NormalizedPower_ShouldReturnThatPower_WhenPowerIsSteady`, `SignInScreen_ShouldExplainWrongPassword_WhenSignInFails`, `MapView_ShouldZoomInMoreForShortRoutes_WhenFittingTheRoute`. Avoid spaces, punctuation and vague subjects like `Test1`.
+- **Isolation is tested, not assumed.** Every endpoint, background job or query that touches club or member data has a test proving a second tenant cannot see it. Example: `ClubData_ShouldNotBeVisible_WhenRequestComesFromAnotherTenant`.
+- **Tenant-aware jobs are tested.** Example: `Ingestion_ShouldProcessRide_WhenQueueItemCarriesItsTenant`.
+- **Migrations are tested against an empty database** before a release, and never only against a developer's existing one.
 
 ## Development environment
 
 - **`flake.nix` is the toolchain.** A tool needed to develop, build or test goes into the flake. Don't add install instructions, scripts that install into the home folder, or host requirements for it. Adding a tool is still a dependency and follows the dependency rule below.
+- **Operational tooling is not in this flake.** Ansible, SOPS/age, restic, Caddy configuration, monitoring and runbooks live in the private ops repository, not here.
 - **Running needs Docker only.** `docker compose up --build` must keep working without Nix. The `Dockerfile` and the compose stack do not use Nix.
 - **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and in the `Dockerfile` change in the same commit. psql in the flake has the same major version as the `postgres` image. The Android SDK, NDK and CMake versions in the flake are the ones the pinned Flutter's Gradle plugin asks for.
 - **Commit `flake.lock`.** Update nixpkgs with `nix flake update` in a commit of its own.
@@ -106,5 +124,11 @@ Commands like `dotnet add package`, `flutter pub add`, `dart pub add` and `npm i
 - Patch and minor updates of an approved library: allowed; mention them in the commit message.
 - Major updates, or a change of maintainer or licence: re-evaluate and ask again.
 - Removing a dependency never needs approval.
+
+### 6. CI and operations are dependencies too
+
+- Prefer official GitHub and Docker actions and the vendor's own CLI (for example, a hosting provider's CLI for its own service).
+- Evaluate community operational tools (Ansible, restic, SOPS/age, Caddy, image scanners) in `docs/dependencies/` before adopting them, even when they live in the private ops repository.
+- Pin container images by digest and CI actions by version or commit, and rebuild base images to receive security fixes.
 
 Pending evaluations are listed in `docs/dependencies/APPROVED.md`.

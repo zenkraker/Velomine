@@ -17,6 +17,7 @@ class MeResponse {
     required this.email,
     required this.displayName,
     this.roles = const [],
+    required this.language,
   });
 
   final String id;
@@ -27,12 +28,15 @@ class MeResponse {
 
   final List<String> roles;
 
+  final String? language;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is MeResponse &&
     other.id == id &&
     other.email == email &&
     other.displayName == displayName &&
-    _deepEquality.equals(other.roles, roles);
+    _deepEquality.equals(other.roles, roles) &&
+    other.language == language;
 
   @override
   int get hashCode =>
@@ -40,10 +44,11 @@ class MeResponse {
     (id.hashCode) +
     (email.hashCode) +
     (displayName.hashCode) +
-    (roles.hashCode);
+    (roles.hashCode) +
+    (language == null ? 0 : language!.hashCode);
 
   @override
-  String toString() => 'MeResponse[id=$id, email=$email, displayName=$displayName, roles=$roles]';
+  String toString() => 'MeResponse[id=$id, email=$email, displayName=$displayName, roles=$roles, language=$language]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -51,6 +56,11 @@ class MeResponse {
       json[r'email'] = this.email;
       json[r'displayName'] = this.displayName;
       json[r'roles'] = this.roles;
+    if (this.language != null) {
+      json[r'language'] = this.language;
+    } else {
+      json[r'language'] = null;
+    }
     return json;
   }
 
@@ -61,11 +71,14 @@ class MeResponse {
     String? email,
     String? displayName,
     List<String>? roles,
+    String? language,
+    bool languageSetToNull = false,
   }) => MeResponse(
     id: id ?? this.id,
     email: email ?? this.email,
     displayName: displayName ?? this.displayName,
     roles: roles ?? this.roles,
+    language: languageSetToNull ? null : language ?? this.language,
   );
 
   /// Returns a new [MeResponse] instance and imports its values from
@@ -87,6 +100,7 @@ class MeResponse {
         assert(json[r'displayName'] != null, 'Required key "MeResponse[displayName]" has a null value in JSON.');
         assert(json.containsKey(r'roles'), 'Required key "MeResponse[roles]" is missing from JSON.');
         assert(json[r'roles'] != null, 'Required key "MeResponse[roles]" has a null value in JSON.');
+        assert(json.containsKey(r'language'), 'Required key "MeResponse[language]" is missing from JSON.');
         return true;
       }());
 
@@ -97,6 +111,7 @@ class MeResponse {
         roles: json[r'roles'] is Iterable
             ? (json[r'roles'] as Iterable).cast<String>().toList(growable: false)
             : const [],
+        language: mapValueOfType<String>(json, r'language'),
       );
     }
     return null;
@@ -148,6 +163,7 @@ class MeResponse {
     'email',
     'displayName',
     'roles',
+    'language',
   };
 }
 

@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Status — Velomine</title>
-  <meta name="description" content="What works today in Velomine, the cycling training platform for clubs on-premise or in the cloud, and what is still on the way.">
+  <meta name="description" content="What works today in Velomine, the cycling training platform for clubs self-hosted or in the cloud, and what is still on the way.">
   <meta name="theme-color" content="#F0EEE9">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Status — Velomine">
@@ -85,7 +85,7 @@
           <article class="area-card is-progress">
             <h3>Server core</h3>
             <p class="area-state">In progress</p>
-            <p>Accounts, roles, single sign-on and admin approval work. MFA, passkeys and password reset are next.</p>
+            <p>Accounts, roles, single sign-on, club admin approval and password reset work. MFA and passkeys are next.</p>
           </article>
           <article class="area-card is-done">
             <h3>Ingestion</h3>
@@ -95,7 +95,7 @@
           <article class="area-card is-progress">
             <h3>Rides</h3>
             <p class="area-state">In progress</p>
-            <p>Maps, charts, every stream, heart-rate and power zones, IF, TSS and TRIMP. Laps and photos are next.</p>
+            <p>Maps, charts, every stream, heart-rate and power zones, IF, TSS, TRIMP and laps. Photos are next.</p>
           </article>
           <article class="area-card is-done">
             <h3>Bikes</h3>
@@ -110,7 +110,7 @@
           <article class="area-card is-done">
             <h3>Web app</h3>
             <p class="area-state">Done</p>
-            <p>Sign in, upload, rides, bikes, progress, club, coach and admin screens.</p>
+            <p>Sign in, upload, rides, bikes, progress, club and coach screens, plus club administration.</p>
           </article>
           <article class="area-card is-done">
             <h3>Wellbeing</h3>
@@ -120,7 +120,7 @@
           <article class="area-card is-progress">
             <h3>Sharing</h3>
             <p class="area-state">In progress</p>
-            <p>Clubs, join codes, coach or club sharing and read-only coach views work. Share links and privacy zones are next.</p>
+            <p>Clubs, join codes, coach sharing and read-only coach views work. Whole-club reading needs a member-facing club view; share links and privacy zones are next.</p>
           </article>
           <article class="area-card is-done">
             <h3>Analytics</h3>
@@ -145,10 +145,11 @@
           <article class="feature-group">
             <h3>Accounts and access</h3>
             <ul>
-              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign-up with admin approval</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign-up with club admin approval</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Password sign-in, with a cookie on the web and a refresh token on the phone</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Single sign-on with any OpenID Connect provider</span></li>
-              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Admin, member and coach roles</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Password reset by email, or a one-time link from a club admin</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Club admin, member and coach roles</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Lock or delete an account; deleting removes every ride and file</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Profile: FTP, weight, maximum heart rate, time zone and week start</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Download every ride and file as a ZIP</span></li>
@@ -162,6 +163,7 @@
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Distance, moving time, climbing, speed, power, normalized power, heart rate and cadence</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Route map and a chart for every signal</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Heart-rate and power zones, IF, TSS and TRIMP</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Laps read from FIT and TCX, with numbers recomputed from the samples</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A bike picker on every ride</span></li>
             </ul>
           </article>
@@ -201,7 +203,8 @@
             <h3>Clubs and sharing</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clubs, membership and joining with a code</span></li>
-              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sharing rides, analytics and routes with the coaches or the whole club</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sharing rides, analytics, routes and wellbeing with coaches</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Wellbeing only with explicit consent; notes stay private</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every choice is revocable</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Read-only coach views and a record of who looked</span></li>
             </ul>
@@ -218,10 +221,10 @@
           </article>
 
           <article class="feature-group">
-            <h3>Admin and server</h3>
+            <h3>Club admin and server</h3>
             <ul>
-              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every account, roles, lock, delete and approval</span></li>
-              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign-up, approval and map settings</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every account, roles, lock, delete and club admin approval</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign-up, club admin approval and map settings</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>In-app notifications, and optional email when the server has SMTP</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Day and night themes, English and Italian</span></li>
             </ul>
@@ -235,14 +238,15 @@
         <div class="next-list">
           <h2>Not yet</h2>
           <ul>
+            <li><span class="dash" aria-hidden="true"></span><span>Whole-club sharing (needs a member-facing club view)</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>Share links and privacy zones</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>Cycle tracking</span></li>
-            <li><span class="dash" aria-hidden="true"></span><span>Photos and laps</span></li>
+            <li><span class="dash" aria-hidden="true"></span><span>Photos</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>The iOS recorder</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>Speed, cadence and power sensors (in progress)</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>Garmin, Wahoo and folder connectors</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>Strava export import</span></li>
-            <li><span class="dash" aria-hidden="true"></span><span>MFA, passkeys, password reset and API keys</span></li>
+            <li><span class="dash" aria-hidden="true"></span><span>MFA, passkeys and API keys</span></li>
             <li><span class="dash" aria-hidden="true"></span><span>A desktop USB upload tool</span></li>
           </ul>
         </div>
@@ -271,7 +275,7 @@
             </svg>
             <span class="wordmark">velo<em>mine</em></span>
           </a>
-          <p class="footer-tagline">Cycling training for clubs and teams. On-premise or cloud, your data on your terms.</p>
+          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
         </div>
         <div class="footer-col">
           <h3>Site</h3>
@@ -289,6 +293,16 @@
       </div>
       <div class="footer-bottom">
         <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
+        <nav class="footer-legal" aria-label="Project and legal">
+          <a href="/principles/">Principles</a>
+          <a href="https://github.com/zenkraker/Velomine#readme">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/commits">Changelog</a>
+          <a href="/principles/#licence">Licence</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/privacy/#subprocessors">DPA</a>
+          <a href="/terms/">Terms</a>
+          <a href="/security/">Security</a>
+        </nav>
         <span>Early development. <a href="/status/">See what works.</a></span>
       </div>
     </div>

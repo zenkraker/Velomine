@@ -16,6 +16,7 @@ class ProfileResponse {
     required this.displayName,
     required this.ftpW,
     required this.weightKg,
+    required this.birthYear,
     required this.maxHeartRate,
     required this.timeZone,
     required this.firstDayOfWeek,
@@ -28,6 +29,8 @@ class ProfileResponse {
   final int? ftpW;
 
   final double? weightKg;
+
+  final int? birthYear;
 
   final int? maxHeartRate;
 
@@ -44,6 +47,7 @@ class ProfileResponse {
     other.displayName == displayName &&
     other.ftpW == ftpW &&
     other.weightKg == weightKg &&
+    other.birthYear == birthYear &&
     other.maxHeartRate == maxHeartRate &&
     other.timeZone == timeZone &&
     other.firstDayOfWeek == firstDayOfWeek &&
@@ -56,6 +60,7 @@ class ProfileResponse {
     (displayName.hashCode) +
     (ftpW == null ? 0 : ftpW!.hashCode) +
     (weightKg == null ? 0 : weightKg!.hashCode) +
+    (birthYear == null ? 0 : birthYear!.hashCode) +
     (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
     (timeZone == null ? 0 : timeZone!.hashCode) +
     (firstDayOfWeek.hashCode) +
@@ -63,7 +68,7 @@ class ProfileResponse {
     (hasPassword.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -77,6 +82,11 @@ class ProfileResponse {
       json[r'weightKg'] = this.weightKg;
     } else {
       json[r'weightKg'] = null;
+    }
+    if (this.birthYear != null) {
+      json[r'birthYear'] = this.birthYear;
+    } else {
+      json[r'birthYear'] = null;
     }
     if (this.maxHeartRate != null) {
       json[r'maxHeartRate'] = this.maxHeartRate;
@@ -102,6 +112,8 @@ class ProfileResponse {
     bool ftpWSetToNull = false,
     double? weightKg,
     bool weightKgSetToNull = false,
+    int? birthYear,
+    bool birthYearSetToNull = false,
     int? maxHeartRate,
     bool maxHeartRateSetToNull = false,
     String? timeZone,
@@ -113,6 +125,7 @@ class ProfileResponse {
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
     weightKg: weightKgSetToNull ? null : weightKg ?? this.weightKg,
+    birthYear: birthYearSetToNull ? null : birthYear ?? this.birthYear,
     maxHeartRate: maxHeartRateSetToNull ? null : maxHeartRate ?? this.maxHeartRate,
     timeZone: timeZoneSetToNull ? null : timeZone ?? this.timeZone,
     firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
@@ -135,6 +148,7 @@ class ProfileResponse {
         assert(json[r'displayName'] != null, 'Required key "ProfileResponse[displayName]" has a null value in JSON.');
         assert(json.containsKey(r'ftpW'), 'Required key "ProfileResponse[ftpW]" is missing from JSON.');
         assert(json.containsKey(r'weightKg'), 'Required key "ProfileResponse[weightKg]" is missing from JSON.');
+        assert(json.containsKey(r'birthYear'), 'Required key "ProfileResponse[birthYear]" is missing from JSON.');
         assert(json.containsKey(r'maxHeartRate'), 'Required key "ProfileResponse[maxHeartRate]" is missing from JSON.');
         assert(json.containsKey(r'timeZone'), 'Required key "ProfileResponse[timeZone]" is missing from JSON.');
         assert(json.containsKey(r'firstDayOfWeek'), 'Required key "ProfileResponse[firstDayOfWeek]" is missing from JSON.');
@@ -150,6 +164,7 @@ class ProfileResponse {
         displayName: mapValueOfType<String>(json, r'displayName')!,
         ftpW: mapValueOfType<int>(json, r'ftpW'),
         weightKg: mapValueOfType<double>(json, r'weightKg'),
+        birthYear: mapValueOfType<int>(json, r'birthYear'),
         maxHeartRate: mapValueOfType<int>(json, r'maxHeartRate'),
         timeZone: mapValueOfType<String>(json, r'timeZone'),
         firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
@@ -205,6 +220,7 @@ class ProfileResponse {
     'displayName',
     'ftpW',
     'weightKg',
+    'birthYear',
     'maxHeartRate',
     'timeZone',
     'firstDayOfWeek',

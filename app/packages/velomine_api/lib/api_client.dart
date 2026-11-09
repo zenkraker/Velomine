@@ -325,6 +325,8 @@ class ApiClient {
           return SetClubOwnerRequest.fromJson(value);
         case 'SetFtpRequest':
           return SetFtpRequest.fromJson(value);
+        case 'SetMyLanguageRequest':
+          return SetMyLanguageRequest.fromJson(value);
         case 'SetRideBikeRequest':
           return SetRideBikeRequest.fromJson(value);
         case 'SetRideTypeRequest':

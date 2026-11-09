@@ -17,7 +17,9 @@ public sealed class ServerSettings
 
     public bool? RequireAdminApproval { get; set; }
 
-    /// <summary>A tile address with {z}, {x} and {y}. Empty means "no map background", even if the environment sets one.</summary>
+    // No longer read or written: maps are always on (see MapOptions). Kept for one release before the
+    // columns are dropped, as the migration rule asks.
+
     public string? MapTileUrl { get; set; }
 
     public string? MapAttribution { get; set; }

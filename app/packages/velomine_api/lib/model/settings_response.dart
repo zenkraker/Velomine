@@ -15,8 +15,6 @@ class SettingsResponse {
   SettingsResponse({
     required this.signUpEnabled,
     required this.requireAdminApproval,
-    required this.mapTileUrl,
-    required this.mapAttribution,
     required this.smtp,
     required this.sso,
   });
@@ -24,10 +22,6 @@ class SettingsResponse {
   final bool signUpEnabled;
 
   final bool requireAdminApproval;
-
-  final String? mapTileUrl;
-
-  final String? mapAttribution;
 
   final SmtpStatus smtp;
 
@@ -37,8 +31,6 @@ class SettingsResponse {
   bool operator ==(Object other) => identical(this, other) || other is SettingsResponse &&
     other.signUpEnabled == signUpEnabled &&
     other.requireAdminApproval == requireAdminApproval &&
-    other.mapTileUrl == mapTileUrl &&
-    other.mapAttribution == mapAttribution &&
     other.smtp == smtp &&
     other.sso == sso;
 
@@ -47,28 +39,16 @@ class SettingsResponse {
     // ignore: unnecessary_parenthesis
     (signUpEnabled.hashCode) +
     (requireAdminApproval.hashCode) +
-    (mapTileUrl == null ? 0 : mapTileUrl!.hashCode) +
-    (mapAttribution == null ? 0 : mapAttribution!.hashCode) +
     (smtp.hashCode) +
     (sso.hashCode);
 
   @override
-  String toString() => 'SettingsResponse[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution, smtp=$smtp, sso=$sso]';
+  String toString() => 'SettingsResponse[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval, smtp=$smtp, sso=$sso]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'signUpEnabled'] = this.signUpEnabled;
       json[r'requireAdminApproval'] = this.requireAdminApproval;
-    if (this.mapTileUrl != null) {
-      json[r'mapTileUrl'] = this.mapTileUrl;
-    } else {
-      json[r'mapTileUrl'] = null;
-    }
-    if (this.mapAttribution != null) {
-      json[r'mapAttribution'] = this.mapAttribution;
-    } else {
-      json[r'mapAttribution'] = null;
-    }
       json[r'smtp'] = this.smtp;
       json[r'sso'] = this.sso;
     return json;
@@ -79,17 +59,11 @@ class SettingsResponse {
   SettingsResponse copyWith({
     bool? signUpEnabled,
     bool? requireAdminApproval,
-    String? mapTileUrl,
-    bool mapTileUrlSetToNull = false,
-    String? mapAttribution,
-    bool mapAttributionSetToNull = false,
     SmtpStatus? smtp,
     SsoStatus? sso,
   }) => SettingsResponse(
     signUpEnabled: signUpEnabled ?? this.signUpEnabled,
     requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
-    mapTileUrl: mapTileUrlSetToNull ? null : mapTileUrl ?? this.mapTileUrl,
-    mapAttribution: mapAttributionSetToNull ? null : mapAttribution ?? this.mapAttribution,
     smtp: smtp ?? this.smtp,
     sso: sso ?? this.sso,
   );
@@ -109,8 +83,6 @@ class SettingsResponse {
         assert(json[r'signUpEnabled'] != null, 'Required key "SettingsResponse[signUpEnabled]" has a null value in JSON.');
         assert(json.containsKey(r'requireAdminApproval'), 'Required key "SettingsResponse[requireAdminApproval]" is missing from JSON.');
         assert(json[r'requireAdminApproval'] != null, 'Required key "SettingsResponse[requireAdminApproval]" has a null value in JSON.');
-        assert(json.containsKey(r'mapTileUrl'), 'Required key "SettingsResponse[mapTileUrl]" is missing from JSON.');
-        assert(json.containsKey(r'mapAttribution'), 'Required key "SettingsResponse[mapAttribution]" is missing from JSON.');
         assert(json.containsKey(r'smtp'), 'Required key "SettingsResponse[smtp]" is missing from JSON.');
         assert(json[r'smtp'] != null, 'Required key "SettingsResponse[smtp]" has a null value in JSON.');
         assert(json.containsKey(r'sso'), 'Required key "SettingsResponse[sso]" is missing from JSON.');
@@ -121,8 +93,6 @@ class SettingsResponse {
       return SettingsResponse(
         signUpEnabled: mapValueOfType<bool>(json, r'signUpEnabled')!,
         requireAdminApproval: mapValueOfType<bool>(json, r'requireAdminApproval')!,
-        mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl'),
-        mapAttribution: mapValueOfType<String>(json, r'mapAttribution'),
         smtp: SmtpStatus.fromJson(json[r'smtp'])!,
         sso: SsoStatus.fromJson(json[r'sso'])!,
       );
@@ -174,8 +144,6 @@ class SettingsResponse {
   static const requiredKeys = <String>{
     'signUpEnabled',
     'requireAdminApproval',
-    'mapTileUrl',
-    'mapAttribution',
     'smtp',
     'sso',
   };

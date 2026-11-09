@@ -82,6 +82,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
+*AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
 *AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
@@ -235,6 +236,7 @@ Class | Method | HTTP request | Description
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)
+ - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetRideTypeRequest](doc//SetRideTypeRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)

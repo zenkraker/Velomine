@@ -848,10 +848,6 @@
   "signUp": "Sign-up",
   "peopleCanCreate": "People can create accounts",
   "newAccountsApproval": "New accounts need an admin to approve them",
-  "mapBackground": "Map background",
-  "tileAddress": "Tile address",
-  "tileHelper": "Empty draws the route alone and contacts no map server. Read the provider's usage rules first.",
-  "creditShown": "Credit shown on the map",
   "envVariables": "Set with environment variables",
   "secretsHelp": "These hold passwords and secrets, so they are never stored in the database or changed from here. Edit the server's environment and restart it.",
   "sendTestEmail": "Send a test email to me",
@@ -911,8 +907,17 @@
   "profileTitle": "Profile",
   "ftpHelper": "Functional threshold power. Used for training load and power zones.",
   "weight": "Weight",
-  "maxHeartRate": "Maximum heart rate",
-  "maxHeartRateHelper": "Heart rate zones are worked out from it.",
+  "birthYear": "Year of birth",
+  "birthYearHelper": "Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).",
+  "estimatedMaxHeartRate": "Estimated maximum heart rate: {bpm} bpm",
+  "@estimatedMaxHeartRate": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "estimatedMaxHeartRateNone": "Add your year of birth to estimate it.",
   "timeZone": "Time zone",
   "timeZoneHelper": "Decides which day a ride counts on when its file does not say. Empty means UTC.",
   "firstDayOfWeek": "Weeks start on",
@@ -927,7 +932,7 @@
   "errorEnterName": "Enter your name.",
   "errorFtp": "FTP is 30 to 1000 watts.",
   "errorWeight": "Weight is 20 to 300 kg.",
-  "errorMaxHeartRate": "Maximum heart rate is 100 to 240 bpm.",
+  "errorBirthYear": "Enter a year of birth between 1900 and ten years ago.",
   "deleteAccountTitle": "Delete your account?",
   "deleteAccountBody": "This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.",
   "yourPassword": "Your password",
@@ -1188,12 +1193,6 @@
   "locationPickerUse": "Use this point",
   "locationPickerCurrent": "Use my current location",
   "locationCurrentUnavailable": "Your device did not share its position.",
-  "locationCoordinates": "Latitude, longitude",
-  "locationLatitude": "Latitude",
-  "locationLongitude": "Longitude",
-  "locationCoordinatesHint": "For example 45.4642, 9.1900",
-  "locationCoordinatesInvalid": "Use two numbers like 45.4642, 9.1900.",
-  "locationNoMap": "This server has no map background, so enter the coordinates.",
   "locationMapFirst": "Drag the map to the place first.",
 
   "nearbyTitle": "Clubs near you",

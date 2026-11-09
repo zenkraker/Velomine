@@ -29,7 +29,7 @@ String weekDayName(AppLocalizations l10n, String day) => switch (day) {
   _ => l10n.sunday,
 };
 
-enum _ProfileProblem { name, ftp, weight, maxHeartRate }
+enum _ProfileProblem { name, ftp, weight, birthYear }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -67,10 +67,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _name = TextEditingController();
   final _ftp = TextEditingController();
   final _weight = TextEditingController();
-  final _maxHr = TextEditingController();
+  final _birthYear = TextEditingController();
   final _zone = TextEditingController();
   String _firstDay = 'monday';
   bool _email = true;
+  int? _estimatedMaxHr;
   _ProfileProblem? _problem;
   bool _saved = false;
   bool _exported = false;
@@ -87,7 +88,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _name.text = p.displayName;
       _ftp.text = p.ftpW?.toString() ?? '';
       _weight.text = p.weightKg?.toString() ?? '';
-      _maxHr.text = p.maxHeartRate?.toString() ?? '';
+      _birthYear.text = p.birthYear?.toString() ?? '';
+      _estimatedMaxHr = p.maxHeartRate;
       _zone.text = p.timeZone ?? '';
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
@@ -96,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _ftp, _weight, _maxHr, _zone]) {
+    for (final c in [_name, _ftp, _weight, _birthYear, _zone]) {
       c.dispose();
     }
     super.dispose();
@@ -148,15 +150,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _save() async {
     final ftp = _read(_ftp.text, 30, 1000);
     final weight = _read(_weight.text, 20, 300, whole: false);
-    final maxHr = _read(_maxHr.text, 100, 240);
+    final birthYear = _read(_birthYear.text, 1900, DateTime.now().year - 10);
     final problem = _name.text.trim().isEmpty
         ? _ProfileProblem.name
         : !ftp.$1
         ? _ProfileProblem.ftp
         : !weight.$1
         ? _ProfileProblem.weight
-        : !maxHr.$1
-        ? _ProfileProblem.maxHeartRate
+        : !birthYear.$1
+        ? _ProfileProblem.birthYear
         : null;
     setState(() {
       _problem = problem;
@@ -170,13 +172,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         displayName: _name.text.trim(),
         ftpW: ftp.$2?.toInt(),
         weightKg: weight.$2?.toDouble(),
-        maxHeartRate: maxHr.$2?.toInt(),
+        birthYear: birthYear.$2?.toInt(),
         timeZone: zone.isEmpty ? null : zone,
         firstDayOfWeek: _firstDay,
         emailNotifications: Optional.present(_email),
       ),
     );
-    if (mounted) setState(() => _saved = ok);
+    if (!mounted) return;
+    if (ok) _fill(widget.controller.profile);
+    setState(() => _saved = ok);
   }
 
   Widget _number(
@@ -214,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _ProfileProblem.name => l10n.errorEnterName,
           _ProfileProblem.ftp => l10n.errorFtp,
           _ProfileProblem.weight => l10n.errorWeight,
-          _ProfileProblem.maxHeartRate => l10n.errorMaxHeartRate,
+          _ProfileProblem.birthYear => l10n.errorBirthYear,
         };
         return ListView(
           padding: const EdgeInsets.all(16),
@@ -252,11 +256,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decimals: true,
                           ),
                           _number(
-                            'profile-max-hr',
-                            _maxHr,
-                            l10n.maxHeartRate,
-                            'bpm',
-                            helper: l10n.maxHeartRateHelper,
+                            'profile-birth-year',
+                            _birthYear,
+                            l10n.birthYear,
+                            '',
+                            helper: l10n.birthYearHelper,
+                          ),
+                          Text(
+                            _estimatedMaxHr == null
+                                ? l10n.estimatedMaxHeartRateNone
+                                : l10n.estimatedMaxHeartRate(_estimatedMaxHr!),
+                            key: const Key('profile-max-hr-estimate'),
                           ),
                           TextField(
                             key: const Key('profile-zone'),

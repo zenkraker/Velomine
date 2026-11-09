@@ -3,9 +3,9 @@
 These are the rules that decide what we build, how we price it, and what we refuse to do.
 They outrank feature requests, competitors and growth targets.
 
-`AGENTS.md` holds the code and architecture rules. This document holds the product and
-ethical rules. When they conflict, a change to this document is a deliberate decision, not
-a side effect of a feature.
+`AGENTS.md` holds the code rules; `docs/architecture.md` holds the architecture. This
+document holds the product and ethical rules. When they conflict, a change to this document
+is a deliberate decision, not a side effect of a feature.
 
 ## Why this exists
 
@@ -20,7 +20,7 @@ again to see their own history.
 ### 1. The member owns the data
 
 - Every member can export everything, in open formats, including the original ride files.
-- Delete means delete: account, rides, files and derived data.
+- Delete means delete: account, rides, files and derived data. Backups expire within 90 days.
 - Member data is never used for advertising, profiling, resale or AI training.
 - Changing platform must never mean losing history.
 
@@ -29,11 +29,13 @@ again to see their own history.
 - Every feature is included for every member of a club.
 - No paid tier for analysis, routes, history, exports, safety or coaching.
 - The club pays. Members never do.
+- Plans differ only in who operates the server, not in features.
 - We do not remove a feature from the free experience to sell it back later.
 
-### 3. The club controls its instance
+### 3. The club controls its data and its administration
 
 - Managed cloud or self-hosted/on-premise, chosen by the club.
+- In cloud, each club has its own database and role; self-host runs the whole instance.
 - The club decides where the data lives and who administers it.
 - No vendor lock-in: documented backups, migrations and a supported export path.
 
@@ -60,7 +62,7 @@ again to see their own history.
 ### 7. Fair, transparent pricing
 
 - One club price. No per-seat surprises, no feature tiers, no paid add-ons.
-- Pricing is published, and the same for comparable clubs.
+- Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 
 ### 8. Cycling-only and club-first

@@ -24,9 +24,9 @@ class ServerInfoResponse {
 
   final String version;
 
-  final String? mapTileUrl;
+  final String mapTileUrl;
 
-  final String? mapAttribution;
+  final String mapAttribution;
 
   final bool emailAvailable;
 
@@ -43,8 +43,8 @@ class ServerInfoResponse {
     // ignore: unnecessary_parenthesis
     (name.hashCode) +
     (version.hashCode) +
-    (mapTileUrl == null ? 0 : mapTileUrl!.hashCode) +
-    (mapAttribution == null ? 0 : mapAttribution!.hashCode) +
+    (mapTileUrl.hashCode) +
+    (mapAttribution.hashCode) +
     (emailAvailable.hashCode);
 
   @override
@@ -54,16 +54,8 @@ class ServerInfoResponse {
     final json = <String, dynamic>{};
       json[r'name'] = this.name;
       json[r'version'] = this.version;
-    if (this.mapTileUrl != null) {
       json[r'mapTileUrl'] = this.mapTileUrl;
-    } else {
-      json[r'mapTileUrl'] = null;
-    }
-    if (this.mapAttribution != null) {
       json[r'mapAttribution'] = this.mapAttribution;
-    } else {
-      json[r'mapAttribution'] = null;
-    }
       json[r'emailAvailable'] = this.emailAvailable;
     return json;
   }
@@ -74,15 +66,13 @@ class ServerInfoResponse {
     String? name,
     String? version,
     String? mapTileUrl,
-    bool mapTileUrlSetToNull = false,
     String? mapAttribution,
-    bool mapAttributionSetToNull = false,
     bool? emailAvailable,
   }) => ServerInfoResponse(
     name: name ?? this.name,
     version: version ?? this.version,
-    mapTileUrl: mapTileUrlSetToNull ? null : mapTileUrl ?? this.mapTileUrl,
-    mapAttribution: mapAttributionSetToNull ? null : mapAttribution ?? this.mapAttribution,
+    mapTileUrl: mapTileUrl ?? this.mapTileUrl,
+    mapAttribution: mapAttribution ?? this.mapAttribution,
     emailAvailable: emailAvailable ?? this.emailAvailable,
   );
 
@@ -102,7 +92,9 @@ class ServerInfoResponse {
         assert(json.containsKey(r'version'), 'Required key "ServerInfoResponse[version]" is missing from JSON.');
         assert(json[r'version'] != null, 'Required key "ServerInfoResponse[version]" has a null value in JSON.');
         assert(json.containsKey(r'mapTileUrl'), 'Required key "ServerInfoResponse[mapTileUrl]" is missing from JSON.');
+        assert(json[r'mapTileUrl'] != null, 'Required key "ServerInfoResponse[mapTileUrl]" has a null value in JSON.');
         assert(json.containsKey(r'mapAttribution'), 'Required key "ServerInfoResponse[mapAttribution]" is missing from JSON.');
+        assert(json[r'mapAttribution'] != null, 'Required key "ServerInfoResponse[mapAttribution]" has a null value in JSON.');
         assert(json.containsKey(r'emailAvailable'), 'Required key "ServerInfoResponse[emailAvailable]" is missing from JSON.');
         assert(json[r'emailAvailable'] != null, 'Required key "ServerInfoResponse[emailAvailable]" has a null value in JSON.');
         return true;
@@ -111,8 +103,8 @@ class ServerInfoResponse {
       return ServerInfoResponse(
         name: mapValueOfType<String>(json, r'name')!,
         version: mapValueOfType<String>(json, r'version')!,
-        mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl'),
-        mapAttribution: mapValueOfType<String>(json, r'mapAttribution'),
+        mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl')!,
+        mapAttribution: mapValueOfType<String>(json, r'mapAttribution')!,
         emailAvailable: mapValueOfType<bool>(json, r'emailAvailable')!,
       );
     }

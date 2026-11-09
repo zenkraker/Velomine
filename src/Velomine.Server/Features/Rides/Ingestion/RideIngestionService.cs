@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
 
@@ -70,8 +71,9 @@ public sealed class RideIngestionService(
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
         var profile = await db.Users.AsNoTracking()
             .Where(u => u.Id == ride.UserId)
-            .Select(u => new { u.FtpW, u.MaxHeartRate })
+            .Select(u => new { u.FtpW, u.BirthYear })
             .FirstAsync(ct);
+        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear);
         var memberBikes = await db.Bikes.AsNoTracking()
             .Where(b => b.UserId == ride.UserId && b.IsActive)
             .OrderBy(b => b.CreatedAt)
@@ -91,7 +93,7 @@ public sealed class RideIngestionService(
                     file.DeviceMovingS,
                     file.Pauses,
                     ftpW: profile.FtpW,
-                    maxHeartRate: profile.MaxHeartRate);
+                    maxHeartRate: maxHeartRate);
             }
             catch (RideParseException ex)
             {
@@ -131,7 +133,7 @@ public sealed class RideIngestionService(
             target.Status = RideStatus.Ready;
             target.Streams = ToStreams(file.Samples);
             target.Laps.Clear();
-            target.Laps.AddRange(LapMetrics.Build(target.Id, file.Laps, file.Samples, file.Pauses, profile.FtpW, profile.MaxHeartRate));
+            target.Laps.AddRange(LapMetrics.Build(target.Id, file.Laps, file.Samples, file.Pauses, profile.FtpW, maxHeartRate));
             target.PowerBests.Clear();
             var bests = metrics.PowerBests ?? [];
             for (var i = 0; i < bests.Length && i < PowerBests.Durations.Length; i++)

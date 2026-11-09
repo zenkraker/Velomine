@@ -3,7 +3,7 @@
 Checked 2026-11-09 from [pub.dev](https://pub.dev/packages/geolocator), the [GitHub repository](https://github.com/Baseflow/flutter-geolocator) and the pub.dev API. *Unverified* items were not confirmed.
 
 ## Need
-The nearby-clubs page asks the device for one position so the server can sort clubs by distance. The Flutter SDK has no geolocation API of its own, and neither does the web app outside the browser's `Geolocation` API. On Android and iOS this needs the platform permission flow, which a Dart-only package cannot provide. `geolocator` is the de facto community plugin for exactly this.
+The opt-in club directory page (inter-club layer, v2) asks the device for one position so the directory can sort clubs by distance. The Flutter SDK has no geolocation API of its own, and neither does the web app outside the browser's `Geolocation` API. On Android and iOS this needs the platform permission flow, which a Dart-only package cannot provide. `geolocator` is the de facto community plugin for exactly this.
 
 The feature does not depend on the plugin being present: a rider can save a home point instead, and that fallback stays in the app whether or not the device allows location.
 
@@ -25,7 +25,7 @@ MIT, the repository's declared licence. Compatible with this project.
 ## Security
 - Known advisories: none found for `geolocator` or its platform packages in a web search on 2026-11-09. This is not a substitute for `flutter pub outdated` / advisory scanning after adding it.
 - Transitive dependencies: `geolocator_platform_interface`, `geolocator_android`, `geolocator_apple`, `geolocator_web`, `geolocator_windows`, `geolocator_linux`. The desktop implementations are pulled in by the umbrella package even though Velomine ships Android, iOS and web; they are not used.
-- It requests the platform location permission and reads the device position. Velomine uses the result only for the nearby-clubs request and does not store it; the app copy says so.
+- It requests the platform location permission and reads the device position. Velomine uses the result only for the club-directory request and does not store it; the app copy says so.
 
 ## Platform support
 - Flutter: Android, iOS, web, macOS, Windows and Linux. Native code in the platform packages.
@@ -34,7 +34,7 @@ MIT, the repository's declared licence. Compatible with this project.
 - Dart SDK `^3.5.0`, Flutter `>=2.8.0`; this project is well above both.
 
 ## Size and performance
-The umbrella package is small; the platform packages add native code to the mobile builds. No background location, no continuous stream: one `getCurrentPosition` call when the nearby-clubs page asks for it, with a timeout. No measurable startup impact.
+The umbrella package is small; the platform packages add native code to the mobile builds. No background location, no continuous stream: one `getCurrentPosition` call when the club-directory page asks for it, with a timeout. No measurable startup impact.
 
 ## Risk and exit plan
 - Risk: a community plugin outside the `flutter.dev` publisher; a breaking major update or abandonment would force a migration.

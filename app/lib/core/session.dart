@@ -208,6 +208,20 @@ class Session extends ChangeNotifier {
     return null;
   }
 
+  /// Saves the chosen language on the account so every device follows it. Null means "follow the device".
+  Future<void> setLanguage(String? language) async {
+    try {
+      me =
+          await accounts.setMyLanguage(
+            SetMyLanguageRequest(language: Optional.present(language)),
+          ) ??
+          me;
+      _notify();
+    } on Object {
+      // The local choice still applies; the next sign-in or change tries again.
+    }
+  }
+
   /// Reads the signed-in member again, after they changed something shown elsewhere (their name).
   Future<void> refreshMe() async {
     try {

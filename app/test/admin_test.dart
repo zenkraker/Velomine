@@ -134,14 +134,6 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('setting-approval')));
-    await tester.enterText(
-      find.byKey(const Key('setting-tile')),
-      'https://tiles.example/{z}/{x}/{y}.png',
-    );
-    await tester.enterText(
-      find.byKey(const Key('setting-credit')),
-      '© Example',
-    );
     await tester.ensureVisible(find.byKey(const Key('setting-save')));
     await tester.tap(find.byKey(const Key('setting-save')));
     await tester.pumpAndSettle();
@@ -149,8 +141,6 @@ void main() {
     expect(server.adminSettings, {
       'signUpEnabled': true,
       'requireAdminApproval': false,
-      'mapTileUrl': 'https://tiles.example/{z}/{x}/{y}.png',
-      'mapAttribution': '© Example',
     });
     expect(find.byKey(const Key('settings-saved')), findsOneWidget);
   });
@@ -174,11 +164,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Single sign-on: off'), findsOneWidget);
-    // Nothing to edit: no field for a password, user name, client id or secret.
-    expect(
-      find.byType(TextField),
-      findsNWidgets(2),
-    ); // tile address and credit only
+    // Nothing to edit: no field for a password, user name, client id, secret or map.
+    expect(find.byType(TextField), findsNothing);
   });
 
   testWidgets('SettingsTab_ShouldSendTestEmailAndShowOutcome_WhenTapped', (

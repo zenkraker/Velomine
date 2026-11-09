@@ -7,20 +7,20 @@ import '../../core/l10n.dart';
 import '../../core/location_service.dart';
 import '../rides/detail/geo.dart';
 
-/// Picks a point for a club, or for the rider's saved fallback. With a map background the pin stays at the centre
-/// and the map moves under it; without one the coordinates are typed.
+/// Picks a point for a club, or for the rider's saved fallback. The map is always there: the pin stays at the
+/// centre and the map moves under it.
 class LocationPickerScreen extends StatefulWidget {
   const LocationPickerScreen({
     super.key,
     this.initial,
-    this.tileUrl,
-    this.attribution,
+    required this.tileUrl,
+    required this.attribution,
     required this.locationService,
   });
 
   final GeoPoint? initial;
-  final String? tileUrl;
-  final String? attribution;
+  final String tileUrl;
+  final String attribution;
   final LocationService locationService;
 
   @override
@@ -31,41 +31,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   static const _minZoom = 3;
   static const _maxZoom = 18;
 
-  late final _latField = TextEditingController(
-    text: widget.initial?.latitude.toStringAsFixed(5) ?? '',
-  );
-  late final _lonField = TextEditingController(
-    text: widget.initial?.longitude.toStringAsFixed(5) ?? '',
-  );
-
   double? _latitude;
   double? _longitude;
   int _zoom = 14;
   bool _locating = false;
-  String? _fieldError;
 
   Offset? _focalStart;
   double? _latitudeStart;
   double? _longitudeStart;
   int _zoomStart = 14;
 
-  bool get _hasMap => widget.tileUrl != null;
-
   @override
   void initState() {
     super.initState();
     _latitude = widget.initial?.latitude;
     _longitude = widget.initial?.longitude;
-    if (_hasMap && _latitude == null) {
+    if (_latitude == null) {
       _locate(tell: false);
     }
-  }
-
-  @override
-  void dispose() {
-    _latField.dispose();
-    _lonField.dispose();
-    super.dispose();
   }
 
   Future<void> _locate({required bool tell}) async {
@@ -113,45 +96,14 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     });
   }
 
-  /// Takes the typed coordinates; false when they are not two numbers in range.
-  bool _takeFields() {
-    final latitude = double.tryParse(
-      _latField.text.trim().replaceAll(',', '.'),
-    );
-    final longitude = double.tryParse(
-      _lonField.text.trim().replaceAll(',', '.'),
-    );
-    if (latitude == null ||
-        longitude == null ||
-        latitude.abs() > 90 ||
-        longitude.abs() > 180) {
-      setState(() => _fieldError = context.l10n.locationCoordinatesInvalid);
-      return false;
-    }
-
-    setState(() {
-      _fieldError = null;
-      _latitude = latitude;
-      _longitude = longitude;
-    });
-    return true;
-  }
-
   void _use() {
-    if (_hasMap) {
-      if (_latitude == null || _longitude == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.locationMapFirst)));
-        return;
-      }
-    } else if (!_takeFields()) {
-      return;
-    }
-
     final latitude = _latitude;
     final longitude = _longitude;
-    if (latitude == null || longitude == null) return;
+    if (latitude == null || longitude == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.locationMapFirst)));
+      return;
+    }
     Navigator.of(context)
         .pop<GeoPoint>((latitude: latitude, longitude: longitude));
   }
@@ -166,11 +118,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Text(
-                _hasMap ? l10n.locationPickerHelp : l10n.locationNoMap,
-              ),
+              child: Text(l10n.locationPickerHelp),
             ),
-            Expanded(child: _hasMap ? _map() : _coordinates()),
+            Expanded(child: _map()),
             Padding(
               padding: const EdgeInsets.all(16),
               child: SizedBox(
@@ -226,7 +176,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 Positioned.fill(
                   child: ColoredBox(color: colors.surfaceContainerHighest),
                 ),
-                for (final tile in view.tiles(widget.tileUrl!))
+                for (final tile in view.tiles(widget.tileUrl))
                   Positioned(
                     left: tile.left,
                     top: tile.top,
@@ -268,80 +218,29 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     ),
                   ),
                 ),
-                if (widget.attribution != null &&
-                    widget.attribution!.isNotEmpty)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.75),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      child: Text(
-                        widget.attribution!,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.black87,
-                        ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    child: Text(
+                      widget.attribution,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
+                ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _coordinates() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                key: const Key('location-lat'),
-                controller: _latField,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: context.l10n.locationLatitude,
-                  hintText: context.l10n.locationCoordinatesHint,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                key: const Key('location-lon'),
-                controller: _lonField,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: context.l10n.locationLongitude,
-                  hintText: context.l10n.locationCoordinatesHint,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (_fieldError != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            _fieldError!,
-            key: const Key('location-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-        ],
-      ],
     );
   }
 }

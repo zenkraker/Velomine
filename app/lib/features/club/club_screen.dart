@@ -48,8 +48,8 @@ class ClubScreen extends StatefulWidget {
     required this.onOpenClubs,
     required this.onOpenAthletes,
     required this.locationService,
-    this.tileUrl,
-    this.attribution,
+    required this.tileUrl,
+    required this.attribution,
   });
 
   final ClubController controller;
@@ -61,8 +61,8 @@ class ClubScreen extends StatefulWidget {
   final VoidCallback onOpenClubs;
   final VoidCallback onOpenAthletes;
   final LocationService locationService;
-  final String? tileUrl;
-  final String? attribution;
+  final String tileUrl;
+  final String attribution;
 
   @override
   State<ClubScreen> createState() => _ClubScreenState();

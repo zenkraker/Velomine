@@ -2690,30 +2690,6 @@ abstract class AppLocalizations {
   /// **'New accounts need an admin to approve them'**
   String get newAccountsApproval;
 
-  /// No description provided for @mapBackground.
-  ///
-  /// In en, this message translates to:
-  /// **'Map background'**
-  String get mapBackground;
-
-  /// No description provided for @tileAddress.
-  ///
-  /// In en, this message translates to:
-  /// **'Tile address'**
-  String get tileAddress;
-
-  /// No description provided for @tileHelper.
-  ///
-  /// In en, this message translates to:
-  /// **'Empty draws the route alone and contacts no map server. Read the provider\'s usage rules first.'**
-  String get tileHelper;
-
-  /// No description provided for @creditShown.
-  ///
-  /// In en, this message translates to:
-  /// **'Credit shown on the map'**
-  String get creditShown;
-
   /// No description provided for @envVariables.
   ///
   /// In en, this message translates to:
@@ -2828,17 +2804,29 @@ abstract class AppLocalizations {
   /// **'Weight'**
   String get weight;
 
-  /// No description provided for @maxHeartRate.
+  /// No description provided for @birthYear.
   ///
   /// In en, this message translates to:
-  /// **'Maximum heart rate'**
-  String get maxHeartRate;
+  /// **'Year of birth'**
+  String get birthYear;
 
-  /// No description provided for @maxHeartRateHelper.
+  /// No description provided for @birthYearHelper.
   ///
   /// In en, this message translates to:
-  /// **'Heart rate zones are worked out from it.'**
-  String get maxHeartRateHelper;
+  /// **'Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).'**
+  String get birthYearHelper;
+
+  /// No description provided for @estimatedMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated maximum heart rate: {bpm} bpm'**
+  String estimatedMaxHeartRate(int bpm);
+
+  /// No description provided for @estimatedMaxHeartRateNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your year of birth to estimate it.'**
+  String get estimatedMaxHeartRateNone;
 
   /// No description provided for @timeZone.
   ///
@@ -2924,11 +2912,11 @@ abstract class AppLocalizations {
   /// **'Weight is 20 to 300 kg.'**
   String get errorWeight;
 
-  /// No description provided for @errorMaxHeartRate.
+  /// No description provided for @errorBirthYear.
   ///
   /// In en, this message translates to:
-  /// **'Maximum heart rate is 100 to 240 bpm.'**
-  String get errorMaxHeartRate;
+  /// **'Enter a year of birth between 1900 and ten years ago.'**
+  String get errorBirthYear;
 
   /// No description provided for @deleteAccountTitle.
   ///
@@ -4249,42 +4237,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your device did not share its position.'**
   String get locationCurrentUnavailable;
-
-  /// No description provided for @locationCoordinates.
-  ///
-  /// In en, this message translates to:
-  /// **'Latitude, longitude'**
-  String get locationCoordinates;
-
-  /// No description provided for @locationLatitude.
-  ///
-  /// In en, this message translates to:
-  /// **'Latitude'**
-  String get locationLatitude;
-
-  /// No description provided for @locationLongitude.
-  ///
-  /// In en, this message translates to:
-  /// **'Longitude'**
-  String get locationLongitude;
-
-  /// No description provided for @locationCoordinatesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'For example 45.4642, 9.1900'**
-  String get locationCoordinatesHint;
-
-  /// No description provided for @locationCoordinatesInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Use two numbers like 45.4642, 9.1900.'**
-  String get locationCoordinatesInvalid;
-
-  /// No description provided for @locationNoMap.
-  ///
-  /// In en, this message translates to:
-  /// **'This server has no map background, so enter the coordinates.'**
-  String get locationNoMap;
 
   /// No description provided for @locationMapFirst.
   ///

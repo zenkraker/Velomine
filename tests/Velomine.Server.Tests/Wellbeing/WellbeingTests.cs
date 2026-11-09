@@ -163,7 +163,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
         var (client, _, _) = await NewMemberAsync(api);
         (await client.PutAsJsonAsync(
             "/api/v1/accounts/me/profile",
-            new UpdateProfileRequest("Rider", 200, 75, 190, "UTC", "monday"),
+            new UpdateProfileRequest("Rider", 200, 75, 2000, "UTC", "monday"),
             Ct)).EnsureSuccessStatusCode();
         await UploadAsync(client);
 

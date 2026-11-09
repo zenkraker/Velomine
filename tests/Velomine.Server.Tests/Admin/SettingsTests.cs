@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
-using Velomine.Server.Features.Server;
 
 namespace Velomine.Server.Tests.Admin;
 
@@ -26,8 +25,8 @@ public sealed class SettingsTests(PostgresFixture postgres)
         return await api.SignedInClientAsync(email, TestApi.MemberPassword);
     }
 
-    private static Task<HttpResponseMessage> SaveAsync(HttpClient admin, bool signUp = true, bool approval = true, string? tile = null, string? credit = null) =>
-        admin.PutAsJsonAsync("/api/v1/admin/settings", new UpdateSettingsRequest(signUp, approval, tile, credit), Ct);
+    private static Task<HttpResponseMessage> SaveAsync(HttpClient admin, bool signUp = true, bool approval = true) =>
+        admin.PutAsJsonAsync("/api/v1/admin/settings", new UpdateSettingsRequest(signUp, approval), Ct);
 
     [Fact]
     public async Task AdminSettings_ShouldBeForbidden_WhenCallerIsNotAnAdmin()
@@ -47,8 +46,6 @@ public sealed class SettingsTests(PostgresFixture postgres)
         {
             b.UseSetting("Velomine:Accounts:SignUpEnabled", "false");
             b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-            b.UseSetting("Velomine:Map:TileUrl", "https://tiles.example/{z}/{x}/{y}.png");
-            b.UseSetting("Velomine:Map:Attribution", "© Example Maps");
         });
         var admin = await AdminAsync(api);
 
@@ -56,8 +53,6 @@ public sealed class SettingsTests(PostgresFixture postgres)
 
         Assert.False(settings!.SignUpEnabled);
         Assert.False(settings.RequireAdminApproval);
-        Assert.Equal("https://tiles.example/{z}/{x}/{y}.png", settings.MapTileUrl);
-        Assert.Equal("© Example Maps", settings.MapAttribution);
         Assert.False(settings.Smtp.Configured);
         Assert.False(settings.Sso.Enabled);
     }
@@ -96,44 +91,21 @@ public sealed class SettingsTests(PostgresFixture postgres)
     [Fact]
     public async Task AdminSettings_ShouldOverrideTheEnvironment_WhenValuesAreSaved()
     {
-        await using var api = await StartAsync(b => b.UseSetting("Velomine:Map:TileUrl", "https://env.example/{z}/{x}/{y}.png"));
+        await using var api = await StartAsync();
         var admin = await AdminAsync(api);
 
-        var put = await SaveAsync(admin, signUp: true, approval: false, tile: "https://tiles.club.example/{z}/{x}/{y}.png", credit: "© Club Maps");
+        var put = await SaveAsync(admin, signUp: true, approval: false);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
         var saved = await put.Content.ReadFromJsonAsync<SettingsResponse>(Ct);
         Assert.False(saved!.RequireAdminApproval);
-
-        // The public server info follows the saved map.
-        var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", Ct);
-        Assert.Equal("https://tiles.club.example/{z}/{x}/{y}.png", info!.MapTileUrl);
-        Assert.Equal("© Club Maps", info.MapAttribution);
 
         // New accounts no longer wait for approval.
         var registered = await (await api.RegisterAsync(TestApi.NewEmail())).Content.ReadFromJsonAsync<RegisterResponse>(Ct);
         Assert.True(registered!.IsApproved);
 
         // Sign-up off closes the door.
-        await SaveAsync(admin, signUp: false, approval: false, tile: "https://tiles.club.example/{z}/{x}/{y}.png");
+        await SaveAsync(admin, signUp: false, approval: false);
         Assert.Equal(HttpStatusCode.Forbidden, (await api.RegisterAsync(TestApi.NewEmail())).StatusCode);
-
-        // An empty address switches the map off, even though the environment sets one.
-        await SaveAsync(admin, tile: "");
-        info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", Ct);
-        Assert.Null(info!.MapTileUrl);
-        Assert.Null(info.MapAttribution);
-    }
-
-    [Theory]
-    [InlineData("https://tiles.example/map.png")]
-    [InlineData("ftp://tiles.example/{z}/{x}/{y}.png")]
-    [InlineData("not a url {z}{x}{y}")]
-    public async Task AdminSettings_ShouldRejectTileAddress_WhenItIsUnusable(string tile)
-    {
-        await using var api = await StartAsync();
-        var admin = await AdminAsync(api);
-
-        Assert.Equal(HttpStatusCode.BadRequest, (await SaveAsync(admin, tile: tile)).StatusCode);
     }
 
     [Theory]

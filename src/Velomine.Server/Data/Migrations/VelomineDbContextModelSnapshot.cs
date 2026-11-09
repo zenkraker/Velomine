@@ -196,6 +196,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("access_failed_count");
 
+                    b.Property<int?>("BirthYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("birth_year");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text")
@@ -235,6 +239,15 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_approved");
 
+                    b.Property<string>("Language")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("language");
+
+                    b.Property<int?>("LegacyMaxHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_heart_rate");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("lockout_enabled");
@@ -242,10 +255,6 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lockout_end");
-
-                    b.Property<int?>("MaxHeartRate")
-                        .HasColumnType("integer")
-                        .HasColumnName("max_heart_rate");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -311,6 +320,8 @@ namespace Velomine.Server.Data.Migrations
 
                     b.ToTable("users", "accounts", t =>
                         {
+                            t.HasCheckConstraint("ck_users_birth_year", "birth_year IS NULL OR birth_year BETWEEN 1900 AND 2200");
+
                             t.HasCheckConstraint("ck_users_first_day_of_week", "first_day_of_week BETWEEN 0 AND 6");
 
                             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");

@@ -29,7 +29,7 @@ void main() {
       'displayName': 'Ada',
       'ftpW': 250,
       'weightKg': 64.5,
-      'maxHeartRate': 186,
+      'birthYear': 1990,
       'timeZone': 'Europe/Rome',
       'firstDayOfWeek': 'sunday',
       'emailNotifications': true,
@@ -42,7 +42,8 @@ void main() {
     expect(field('profile-name'), 'Ada');
     expect(field('profile-ftp'), '250');
     expect(field('profile-weight'), '64.5');
-    expect(field('profile-max-hr'), '186');
+    expect(field('profile-birth-year'), '1990');
+    expect(find.textContaining('Estimated maximum heart rate'), findsOneWidget);
     expect(field('profile-zone'), 'Europe/Rome');
     expect(find.text('Sunday'), findsOneWidget);
   });
@@ -55,6 +56,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('profile-name')), 'Ada L');
     await tester.enterText(find.byKey(const Key('profile-ftp')), '265');
     await tester.enterText(find.byKey(const Key('profile-weight')), '68,5');
+    await tester.enterText(find.byKey(const Key('profile-birth-year')), '1985');
     await tester.enterText(
       find.byKey(const Key('profile-zone')),
       'Europe/Rome',
@@ -70,7 +72,7 @@ void main() {
       'displayName': 'Ada L',
       'ftpW': 265,
       'weightKg': 68.5,
-      'maxHeartRate': null,
+      'birthYear': 1985,
       'timeZone': 'Europe/Rome',
       'firstDayOfWeek': 'saturday',
       'emailNotifications': true,
@@ -85,11 +87,14 @@ void main() {
   ) async {
     await openProfile(tester);
 
-    await tester.enterText(find.byKey(const Key('profile-max-hr')), '300');
+    await tester.enterText(find.byKey(const Key('profile-birth-year')), '1800');
     await tester.tap(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Maximum heart rate is 100 to 240 bpm.'), findsOneWidget);
+    expect(
+      find.text('Enter a year of birth between 1900 and ten years ago.'),
+      findsOneWidget,
+    );
     expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
   });
 

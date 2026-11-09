@@ -307,26 +307,9 @@ void main() {
   });
 
   group('map tiles', () {
-    testWidgets('RouteMap_ShouldRequestNoTiles_WhenServerOffersNoAddress', (
-      tester,
-    ) async {
-      await open(tester);
-
-      expect(find.byKey(const Key('map-attribution')), findsNothing);
-      expect(
-        find.byWidgetPredicate(
-          (w) =>
-              w.key is ValueKey<String> &&
-              (w.key! as ValueKey<String>).value.startsWith('tile-'),
-        ),
-        findsNothing,
-      );
-    });
-
     testWidgets(
       'RouteMap_ShouldLayOutTilesAndShowCredit_WhenServerOffersAnAddress',
       (tester) async {
-        server.tileUrl = 'https://tiles.example/{z}/{x}/{y}.png';
         await open(tester);
 
         expect(find.byKey(const Key('map-attribution')), findsOneWidget);

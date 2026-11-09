@@ -26,7 +26,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
 
         var profile = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
 
-        Assert.Equal(new ProfileResponse("Ada", null, null, null, null, "monday", true, true), profile);
+        Assert.Equal(new ProfileResponse("Ada", null, null, null, null, null, "monday", true, true), profile);
     }
 
     [Fact]
@@ -36,13 +36,15 @@ public sealed class ProfileTests(PostgresFixture postgres)
         await using var _ = api;
 
         var put = await member.PutAsJsonAsync("/api/v1/accounts/me/profile",
-            new UpdateProfileRequest("Ada L", 265, 68.04, 188, "Europe/Rome", "sunday"), Ct);
+            new UpdateProfileRequest("Ada L", 265, 68.04, 1990, "Europe/Rome", "sunday"), Ct);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
-        Assert.Equal(new ProfileResponse("Ada L", 265, 68.0, 188, "Europe/Rome", "sunday", true, true), await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
+        Assert.Equal(
+            new ProfileResponse("Ada L", 265, 68.0, 1990, User.EstimateMaxHeartRate(1990), "Europe/Rome", "sunday", true, true),
+            await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
 
         await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada L", null, null, null, null, "monday"), Ct);
         var cleared = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
-        Assert.Equal(new ProfileResponse("Ada L", null, null, null, null, "monday", true, true), cleared);
+        Assert.Equal(new ProfileResponse("Ada L", null, null, null, null, null, "monday", true, true), cleared);
 
         var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
         Assert.Equal("Ada L", me!.DisplayName); // the name is the same everywhere
@@ -69,18 +71,42 @@ public sealed class ProfileTests(PostgresFixture postgres)
     [InlineData("", null, null, null, null, "monday")]
     [InlineData("Ada", 5, null, null, null, "monday")]
     [InlineData("Ada", null, 5.0, null, null, "monday")]
-    [InlineData("Ada", null, null, 300, null, "monday")]
+    [InlineData("Ada", null, null, 1800, null, "monday")]
+    [InlineData("Ada", null, null, 3000, null, "monday")]
     [InlineData("Ada", null, null, null, "Mars/Olympus", "monday")]
     [InlineData("Ada", null, null, null, null, "someday")]
     [InlineData("Ada", null, null, null, null, "1")]
-    public async Task Profile_ShouldRejectTheUpdate_WhenTheValuesAreInvalid(string name, int? ftp, double? weight, int? maxHr, string? zone, string firstDay)
+    public async Task Profile_ShouldRejectTheUpdate_WhenTheValuesAreInvalid(string name, int? ftp, double? weight, int? birthYear, string? zone, string firstDay)
     {
         var (api, member) = await StartAsync();
         await using var _ = api;
 
-        var put = await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest(name, ftp, weight, maxHr, zone, firstDay), Ct);
+        var put = await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest(name, ftp, weight, birthYear, zone, firstDay), Ct);
 
         Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+    }
+
+    [Fact]
+    public async Task Language_ShouldBeKeptOnTheAccount_WhenSetFromAnotherDevice()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
+
+        var first = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        var put = await first.PutAsJsonAsync("/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "it" }, Ct);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        // A second device signs in with the same account and sees the same choice.
+        var second = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        Assert.Equal("it", (await second.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Language);
+
+        Assert.Equal(
+            HttpStatusCode.BadRequest,
+            (await second.PutAsJsonAsync("/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "not a code" }, Ct)).StatusCode);
+
+        await second.PutAsJsonAsync("/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = null }, Ct);
+        Assert.Null((await second.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Language);
     }
 
     [Fact]

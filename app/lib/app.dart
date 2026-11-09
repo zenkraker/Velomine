@@ -9,6 +9,7 @@ import 'core/home_location.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
 import 'core/location_service.dart';
+import 'core/map_defaults.dart';
 import 'core/session.dart';
 import 'core/solo_hint.dart';
 import 'core/theme.dart';
@@ -172,12 +173,35 @@ class _VelomineAppState extends State<VelomineApp> {
 
   late final SoloHint _soloHint = widget.soloHint ?? SoloHint();
 
+  bool _languageSynced = false;
+
   @override
   void initState() {
     super.initState();
+    widget.languageChoice.onChanged = _shareLanguage;
     widget.session.addListener(_followSession);
     _followSession();
     _soloHint.load();
+  }
+
+  /// A choice made in the title bar goes to the account, so the phone picks it up too.
+  Future<void> _shareLanguage(String? code) async {
+    if (widget.session.status == SessionStatus.signedIn) {
+      await widget.session.setLanguage(code);
+    }
+  }
+
+  /// Applies the account's language on sign-in; with no account choice yet, carries this device's choice to it.
+  void _applyAccountLanguage() {
+    if (_languageSynced) return;
+    final me = widget.session.me;
+    if (me == null) return;
+    _languageSynced = true;
+    if (me.language != null) {
+      widget.languageChoice.adopt(me.language);
+    } else if (widget.languageChoice.code != null) {
+      widget.session.setLanguage(widget.languageChoice.code);
+    }
   }
 
   /// Notifications are checked while someone is signed in, and forgotten when they sign out.
@@ -187,6 +211,7 @@ class _VelomineAppState extends State<VelomineApp> {
       if (!_club.loaded) _club.refresh();
       final id = widget.session.me?.id;
       if (id != null) _homeLocation.load(id);
+      _applyAccountLanguage();
     } else {
       if (_notifications.running) _notifications.stop();
       if (_club.loaded) _club.reset();
@@ -195,6 +220,7 @@ class _VelomineAppState extends State<VelomineApp> {
       _joinRequests.reset();
       if (widget.session.status == SessionStatus.signedOut) {
         _homeLocation.forget();
+        _languageSynced = false;
       }
     }
   }
@@ -301,8 +327,10 @@ class _VelomineAppState extends State<VelomineApp> {
           homeLocation: _homeLocation,
           userId: widget.session.me?.id ?? '',
           onBack: () => context.go('/club'),
-          tileUrl: widget.session.serverInfo?.mapTileUrl,
-          attribution: widget.session.serverInfo?.mapAttribution,
+          tileUrl: widget.session.serverInfo?.mapTileUrl ?? defaultMapTileUrl,
+          attribution:
+              widget.session.serverInfo?.mapAttribution ??
+              defaultMapAttribution,
         ),
       ),
       GoRoute(
@@ -387,8 +415,11 @@ class _VelomineAppState extends State<VelomineApp> {
               onOpenClubs: () => context.go('/clubs'),
               onOpenAthletes: () => context.go('/club/athletes'),
               locationService: _locationService,
-              tileUrl: widget.session.serverInfo?.mapTileUrl,
-              attribution: widget.session.serverInfo?.mapAttribution,
+              tileUrl:
+                  widget.session.serverInfo?.mapTileUrl ?? defaultMapTileUrl,
+              attribution:
+                  widget.session.serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
             ),
           ),
           GoRoute(
@@ -640,8 +671,8 @@ class _CoachRidePageState extends State<_CoachRidePage> {
       userId: widget.userId,
       rideId: widget.rideId,
       onBack: widget.onBack,
-      tileUrl: info?.mapTileUrl,
-      attribution: info?.mapAttribution,
+      tileUrl: info?.mapTileUrl ?? defaultMapTileUrl,
+      attribution: info?.mapAttribution ?? defaultMapAttribution,
     );
   }
 }
@@ -689,8 +720,8 @@ class _RideDetailPageState extends State<_RideDetailPage> {
       controller: _controller,
       onBack: widget.onBack,
       onDeleted: widget.onDeleted,
-      tileUrl: info?.mapTileUrl,
-      attribution: info?.mapAttribution,
+      tileUrl: info?.mapTileUrl ?? defaultMapTileUrl,
+      attribution: info?.mapAttribution ?? defaultMapAttribution,
     );
   }
 }

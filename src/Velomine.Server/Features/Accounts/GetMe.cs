@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Velomine.Server.Features.Accounts;
 
-public sealed record MeResponse(Guid Id, string Email, string DisplayName, string[] Roles);
+public sealed record MeResponse(Guid Id, string Email, string DisplayName, string[] Roles, string? Language);
 
 public sealed class GetMe(UserManager<User> users) : EndpointWithoutRequest<MeResponse>
 {
@@ -18,6 +18,6 @@ public sealed class GetMe(UserManager<User> users) : EndpointWithoutRequest<MeRe
         }
 
         var roles = await users.GetRolesAsync(user);
-        await Send.OkAsync(new MeResponse(user.Id, user.Email!, user.DisplayName, [.. roles]), ct);
+        await Send.OkAsync(new MeResponse(user.Id, user.Email!, user.DisplayName, [.. roles], user.Language), ct);
     }
 }

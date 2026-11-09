@@ -6,9 +6,9 @@ using Velomine.Server.Features.Admin;
 namespace Velomine.Server.Features.Server;
 
 /// <summary>What a client needs to know about this server before anyone signs in.</summary>
-public sealed record ServerInfoResponse(string Name, string Version, string? MapTileUrl, string? MapAttribution, bool EmailAvailable);
+public sealed record ServerInfoResponse(string Name, string Version, string MapTileUrl, string MapAttribution, bool EmailAvailable);
 
-public sealed class GetServerInfo(SettingsReader settings, IOptions<SmtpOptions> smtp) : EndpointWithoutRequest<ServerInfoResponse>
+public sealed class GetServerInfo(IOptions<MapOptions> map, IOptions<SmtpOptions> smtp) : EndpointWithoutRequest<ServerInfoResponse>
 {
     public override void Configure()
     {
@@ -16,10 +16,14 @@ public sealed class GetServerInfo(SettingsReader settings, IOptions<SmtpOptions>
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override Task HandleAsync(CancellationToken ct)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
-        var effective = await settings.GetAsync(ct);
-        await Send.OkAsync(new ServerInfoResponse("Velomine", version, effective.MapTileUrl, effective.MapAttribution, smtp.Value.Configured), ct);
+        return Send.OkAsync(new ServerInfoResponse(
+            "Velomine",
+            version,
+            map.Value.EffectiveTileUrl,
+            map.Value.EffectiveAttribution,
+            smtp.Value.Configured), ct);
     }
 }

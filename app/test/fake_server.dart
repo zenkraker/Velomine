@@ -26,6 +26,7 @@ class FakeAccount {
     this.name = 'Test Rider',
     this.approved = true,
     List<String> roles = const ['member'],
+    this.language,
   }) : id = 'id-${email.hashCode.abs()}',
        roles = [...roles];
 
@@ -36,6 +37,7 @@ class FakeAccount {
   bool approved;
   bool locked = false;
   List<String> roles;
+  String? language;
 }
 
 /// A tiny stand-in for the Velomine server, answering the calls the app makes.
@@ -45,7 +47,7 @@ class FakeServer {
   final rides = <Map<String, Object?>>[];
   final requests = <String>[]; // "METHOD /path", in order
   bool ssoEnabled = false;
-  String? tileUrl; // what GET /server offers as a map background
+  String tileUrl = 'https://tiles.example/{z}/{x}/{y}.png'; // what GET /server offers as the map
   final bikes = <Map<String, Object?>>[];
   final parts =
       <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
@@ -108,8 +110,6 @@ class FakeServer {
   final adminSettings = <String, Object?>{
     'signUpEnabled': true,
     'requireAdminApproval': true,
-    'mapTileUrl': null,
-    'mapAttribution': null,
   };
   bool smtpConfigured = false;
 
@@ -151,6 +151,7 @@ class FakeServer {
     List<String> roles = const ['member'],
     String name = 'Test Rider',
     String? clubRole = 'member',
+    String? language,
   }) {
     final account = FakeAccount(
       email,
@@ -158,6 +159,7 @@ class FakeServer {
       approved: approved,
       roles: roles,
       name: name,
+      language: language,
     );
     accounts[email] = account;
     if (clubRole != null) clubRoles[email] = clubRole;
@@ -219,7 +221,7 @@ class FakeServer {
         'name': 'Velomine',
         'version': '0.0.0',
         'mapTileUrl': tileUrl,
-        'mapAttribution': tileUrl == null ? null : '© Test Maps',
+        'mapAttribution': '© Test Maps',
         'emailAvailable': smtpConfigured,
       });
     }
@@ -353,6 +355,7 @@ class FakeServer {
         'email': caller.email,
         'displayName': caller.name,
         'roles': caller.roles,
+        'language': caller.language,
       });
     }
 
@@ -539,6 +542,7 @@ extension on FakeServer {
     }
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/accounts/me/ftp') &&
+        !path.startsWith('/api/v1/accounts/me/language') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
         !path.startsWith('/api/v1/club') &&
@@ -568,6 +572,17 @@ extension on FakeServer {
         ? <String, Object?>{}
         : jsonDecode(request.body) as Map<String, Object?>;
 
+    if (path == '/api/v1/accounts/me/language' && request.method == 'PUT') {
+      caller.language = body['language'] as String?;
+      return json({
+        'id': caller.id,
+        'email': caller.email,
+        'displayName': caller.name,
+        'roles': caller.roles,
+        'language': caller.language,
+      });
+    }
+
     if (path == '/api/v1/accounts/me/profile') {
       final profile = profiles.putIfAbsent(
         caller.email,
@@ -575,7 +590,7 @@ extension on FakeServer {
           'displayName': caller.name,
           'ftpW': null,
           'weightKg': null,
-          'maxHeartRate': null,
+          'birthYear': null,
           'timeZone': null,
           'firstDayOfWeek': 'monday',
           'emailNotifications': true,
@@ -583,7 +598,7 @@ extension on FakeServer {
         },
       );
       if (request.method == 'PUT') profile.addAll(body);
-      return json(profile);
+      return json(_profileWithEstimate(profile));
     }
 
     if (path == '/api/v1/accounts/me/ftp') {
@@ -593,7 +608,7 @@ extension on FakeServer {
           'displayName': caller.name,
           'ftpW': null,
           'weightKg': null,
-          'maxHeartRate': null,
+          'birthYear': null,
           'timeZone': null,
           'firstDayOfWeek': 'monday',
           'emailNotifications': true,
@@ -601,7 +616,7 @@ extension on FakeServer {
         },
       );
       if (request.method == 'PUT') profile['ftpW'] = body['ftpW'];
-      return json(profile);
+      return json(_profileWithEstimate(profile));
     }
 
     if (path == '/api/v1/analytics/power-curve') {
@@ -950,6 +965,20 @@ extension on FakeServer {
     }
 
     return http.Response('', 404);
+  }
+
+  /// The profile as the app sees it: the stored fields plus the max heart rate estimated from the birth year.
+  static Map<String, Object?> _profileWithEstimate(
+    Map<String, Object?> profile,
+  ) {
+    final birthYear = profile['birthYear'] as int?;
+    final age = birthYear == null
+        ? null
+        : (DateTime.now().year - birthYear).clamp(10, 100);
+    return {
+      ...profile,
+      'maxHeartRate': age == null ? null : (208 - 0.7 * age).round(),
+    };
   }
 
   Map<String, Object?>? _myJoinRequest(FakeAccount me) {

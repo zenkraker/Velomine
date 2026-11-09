@@ -179,7 +179,14 @@ void main() {
       widen(tester);
       final owner = server.add('owner@example.com', clubRole: 'owner');
       server.signInBrowser(owner);
-      await startApp(tester, server.session(useCookies: true));
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        locationService: FakeLocationService((
+          latitude: 45.4642,
+          longitude: 9.19,
+        )),
+      );
 
       await tester.tap(find.text('Club'));
       await tester.pumpAndSettle();
@@ -187,8 +194,6 @@ void main() {
       await tester.tap(find.byKey(const Key('set-club-location')));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('location-lat')), '45.4642');
-      await tester.enterText(find.byKey(const Key('location-lon')), '9.19');
       await tester.tap(find.byKey(const Key('location-use')));
       await tester.pumpAndSettle();
 

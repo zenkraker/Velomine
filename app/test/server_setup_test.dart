@@ -9,8 +9,8 @@ import 'package:velomine_api/api.dart';
 ServerInfoResponse info() => ServerInfoResponse(
   name: 'Velomine',
   version: '0.1.0',
-  mapTileUrl: null,
-  mapAttribution: null,
+  mapTileUrl: 'https://tile.example/{z}/{x}/{y}.png',
+  mapAttribution: '© Test Maps',
   emailAvailable: false,
 );
 

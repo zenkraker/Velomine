@@ -45,7 +45,7 @@ public sealed class SiteTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        Assert.Contains("One plan. On-premise or cloud.", html);
+        Assert.Contains("One plan. Self-hosted or cloud.", html);
         Assert.Contains("Activation", html);
         Assert.Contains("No feature paywall", html);
     }
@@ -61,6 +61,93 @@ public sealed class SiteTests(PostgresFixture postgres)
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("mailto:", html);
         Assert.Contains("Tell me how your club rides", html);
+    }
+
+    [Fact]
+    public async Task Website_ShouldServeThePrivacyPage_WhenPrivacyIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/privacy/", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("Your data, in plain language.", html);
+        Assert.Contains("Sub-processors and the DPA", html);
+        Assert.Contains("Backups: up to 90 days", html);
+    }
+
+    [Fact]
+    public async Task Website_ShouldServeTheTermsPage_WhenTermsIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/terms/", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("The agreement, in plain language.", html);
+        Assert.Contains("one yearly fee per club", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("no feature paywall", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Website_ShouldServeTheSecurityPage_WhenSecurityIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/security/", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("Tell us before it becomes a problem.", html);
+        Assert.Contains("/.well-known/security.txt", html);
+    }
+
+    [Fact]
+    public async Task Website_ShouldServeThePrinciplesPage_WhenPrinciplesIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/principles/", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("Principles, not slogans.", html);
+        Assert.Contains("No feature paywall", html);
+        Assert.Contains("id=\"licence\"", html);
+    }
+
+    [Fact]
+    public async Task Website_ShouldServeSecurityTxt_WhenTheWellKnownPathIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/.well-known/security.txt", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var text = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("Contact: mailto:", text);
+        Assert.Contains("Preferred-Languages:", text);
+    }
+
+    [Fact]
+    public async Task Website_ShouldNotListBuiltFeaturesAsNotYet_WhenStatusIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/status/", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var start = html.IndexOf("<div class=\"next-list\">", StringComparison.Ordinal);
+        var end = html.IndexOf("</section>", start, StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start, "The status page should have a 'Not yet' section.");
+        var notYet = html[start..end];
+        Assert.DoesNotContain("password reset", notYet, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("laps", notYet, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Laps read from FIT and TCX", html);
+        Assert.Contains("Password reset by email", html);
     }
 
     [Fact]
@@ -87,5 +174,16 @@ public sealed class SiteTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
         Assert.Equal("/status/", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task Website_ShouldRedirectToThePrivacyPage_WhenTheTrailingSlashIsMissing()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/privacy", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+        Assert.Equal("/privacy/", response.Headers.Location?.ToString());
     }
 }
