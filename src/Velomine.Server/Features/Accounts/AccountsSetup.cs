@@ -16,6 +16,11 @@ public static class AccountsSetup
         services.AddOptions<AccountsOptions>().BindConfiguration("Velomine:Accounts");
         services.AddOptions<AdminBootstrapOptions>().BindConfiguration("Velomine:Admin");
         services.AddOptions<SsoOptions>().BindConfiguration("Velomine:Sso");
+        services.AddOptions<PublicUrlOptions>()
+            .BindConfiguration("Velomine")
+            .Validate(o => Uri.TryCreate(o.PublicUrl, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https",
+                "Velomine:PublicUrl must be an absolute http or https address, for example https://club.example.")
+            .ValidateOnStart();
         services.AddSingleton(TimeProvider.System);
         services.AddMemoryCache();
         services.AddSingleton<SsoTokenValidator>();
@@ -100,7 +105,7 @@ public sealed class AccountsStartup(IServiceProvider services, ILogger<AccountsS
         var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminBootstrapOptions>>().Value;
         if (string.IsNullOrWhiteSpace(admin.Email) || string.IsNullOrWhiteSpace(admin.Password))
         {
-            logger.LogWarning("No admin exists. Set Velomine__Admin__Email and Velomine__Admin__Password to create one.");
+            logger.LogWarning("No admin exists. Set VELOMINE__ADMIN__EMAIL and VELOMINE__ADMIN__PASSWORD to create one.");
             return;
         }
 

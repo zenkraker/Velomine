@@ -1,7 +1,7 @@
 namespace Velomine.Server.Features.Server;
 
 /// <summary>
-/// Bound from "Velomine:Map" (environment: Velomine__Map__TileUrl, Velomine__Map__Attribution).
+/// Bound from "Velomine:Map" (environment: VELOMINE__MAP__TILEURL, VELOMINE__MAP__ATTRIBUTION).
 /// Maps are always on. A self-hoster may point the server at their own tile provider; an empty or unusable
 /// address falls back to OpenStreetMap, so the map cannot be turned off.
 /// </summary>

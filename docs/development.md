@@ -169,8 +169,8 @@ If you need `project-management` for a setup task, run it explicitly with
 `MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
 
 Telemetry is off in the development server by default. To try the server path, set
-`Velomine__Telemetry__Enabled=true`, `Velomine__Telemetry__Sentry__Dsn=<server dsn>` and
-`Velomine__Telemetry__Sentry__AppDsn=<app dsn>` in the environment; the app reads the app DSN from
+`VELOMINE__TELEMETRY__ENABLED=true`, `VELOMINE__TELEMETRY__SENTRY__DSN=<server dsn>` and
+`VELOMINE__TELEMETRY__SENTRY__APPDSN=<app dsn>` in the environment; the app reads the app DSN from
 `GET /api/v1/server` only after a member opts in under **Profile → Privacy** and restarts. If `AppDsn` is unset it
 falls back to `Dsn`, so one project still works. A self-hosted server with no DSN sends nothing.
 
@@ -280,7 +280,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `flutter run -d chrome` finds no browser | Install Chromium or Chrome on the host. The shell sets `CHROME_EXECUTABLE` to the first one it finds. |
 | The Dart MCP server is missing in OpenCode, or `opencode mcp list` says `NotFound` | OpenCode's background service was started outside the dev shell and is spawning the server without `dart` on PATH. Run `direnv reload`, then `opencode service restart` from the repository, and start a new session. If the desktop app starts the service itself, quit it fully first and relaunch it from the dev shell. |
 | Single sign-on through Dex fails with `just server` | Port 8080 must be free (no `just stack` running), because Dex only accepts `http://localhost:8080/signin-oidc`. |
-| Port 5432 is already in use | A PostgreSQL on the host is running. Stop it, or change the port in `compose.dev.yml` and pass a matching `ConnectionStrings__Velomine`. |
+| Port 5432 is already in use | A PostgreSQL on the host is running. Stop it, or change the port in `compose.dev.yml` and pass a matching `CONNECTIONSTRINGS__VELOMINE`. |
 | Something in the shell is broken or stale | `rm -rf .dev .direnv`, then `direnv allow`. Caches download again, and nothing in git is affected. |
 
 ## Removing it

@@ -60,7 +60,7 @@ public sealed class ForgotPassword(
             {
                 if (await users.HasPasswordAsync(user))
                 {
-                    var link = await links.CreateAsync(user, HttpContext.Request);
+                    var link = await links.CreateAsync(user);
                     await sender.SendAsync(user.Email!, PasswordResetEmail.Subject, PasswordResetEmail.Body(link), ct);
                 }
                 else

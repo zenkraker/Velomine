@@ -19,7 +19,8 @@ public static class TestRideFiles
         int? TimerSeconds = null,
         IReadOnlyList<(int Start, int Stop)>? Pauses = null,
         SubSport SubSport = SubSport.Generic,
-        IReadOnlyList<int>? LapSeconds = null);
+        IReadOnlyList<int>? LapSeconds = null,
+        bool NoPosition = false);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -48,8 +49,11 @@ public static class TestRideFiles
             {
                 var record = new RecordMesg();
                 record.SetTimestamp(new Dynastream.Fit.DateTime(session.Start.AddSeconds(s)));
-                record.SetPositionLat((int)((46.0 + s * 8 / 111_195.0) * (2147483648.0 / 180.0)));
-                record.SetPositionLong((int)(11.0 * (2147483648.0 / 180.0)));
+                if (!session.NoPosition)
+                {
+                    record.SetPositionLat((int)((46.0 + s * 8 / 111_195.0) * (2147483648.0 / 180.0)));
+                    record.SetPositionLong((int)(11.0 * (2147483648.0 / 180.0)));
+                }
                 record.SetAltitude(300 + s * 0.1f);
                 record.SetSpeed(8);
                 record.SetDistance(s * 8f);

@@ -38,14 +38,15 @@ server: deps
     #!/usr/bin/env bash
     set -euo pipefail
     export ASPNETCORE_URLS=http://localhost:8080
-    export Velomine__Admin__Email=admin@velomine.local
-    export Velomine__Admin__Password=Velomine-dev-1
-    export Velomine__Sso__Authority=http://dex.localhost:5556/dex
-    export Velomine__Sso__ClientId=velomine
-    export Velomine__Sso__ClientSecret=velomine-dev-secret
-    export Velomine__Sso__AppClientId=velomine-app
-    export Velomine__Sso__DisplayName="Dex (local test)"
-    export Velomine__Sso__AllowInsecureHttp=true
+    export VELOMINE__ADMIN__EMAIL=admin@velomine.local
+    export VELOMINE__ADMIN__PASSWORD=Velomine-dev-1
+    export VELOMINE__PUBLICURL=http://localhost:8080
+    export VELOMINE__SSO__AUTHORITY=http://dex.localhost:5556/dex
+    export VELOMINE__SSO__CLIENTID=velomine
+    export VELOMINE__SSO__CLIENTSECRET=velomine-dev-secret
+    export VELOMINE__SSO__APPCLIENTID=velomine-app
+    export VELOMINE__SSO__DISPLAYNAME="Dex (local test)"
+    export VELOMINE__SSO__ALLOWINSECUREHTTP=true
     exec dotnet watch run --project src/Velomine.Server
 
 # build the web app into the server's wwwroot; reload http://localhost:8080 to see it

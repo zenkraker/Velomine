@@ -21,7 +21,7 @@ public sealed class SendTestEmail(IEmailSender sender, IOptions<SmtpOptions> smt
     {
         if (!smtp.Value.Configured)
         {
-            AddError("Email is not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From and restart the server.");
+            AddError("Email is not set up. Set VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM and restart the server.");
             await Send.ErrorsAsync(409, ct);
             return;
         }

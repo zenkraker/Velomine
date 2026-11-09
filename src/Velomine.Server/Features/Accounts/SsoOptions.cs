@@ -1,7 +1,7 @@
 namespace Velomine.Server.Features.Accounts;
 
 /// <summary>
-/// Bound from "Velomine:Sso" (environment: Velomine__Sso__Authority, ...). Any OpenID Connect provider works.
+/// Bound from "Velomine:Sso" (environment: VELOMINE__SSO__AUTHORITY, ...). Any OpenID Connect provider works.
 /// The web uses a confidential client; the phone is a public native client with PKCE and its own redirect URI.
 /// </summary>
 public sealed class SsoOptions

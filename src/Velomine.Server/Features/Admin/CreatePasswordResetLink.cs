@@ -38,7 +38,7 @@ public sealed class CreatePasswordResetLink(
             return;
         }
 
-        var link = await links.CreateAsync(user, HttpContext.Request);
+        var link = await links.CreateAsync(user);
         logger.LogInformation("Admin {AdminId} made a password reset link for account {UserId}.", User.UserId(), user.Id);
         await Send.OkAsync(new PasswordResetLinkResponse(link, links.ExpiresAt), ct);
     }

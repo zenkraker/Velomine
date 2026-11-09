@@ -1,6 +1,6 @@
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>Bound from "Velomine:Accounts" (environment: Velomine__Accounts__SignUpEnabled, ...).</summary>
+/// <summary>Bound from "Velomine:Accounts" (environment: VELOMINE__ACCOUNTS__SIGNUPENABLED, ...).</summary>
 public sealed class AccountsOptions
 {
     public bool SignUpEnabled { get; set; } = true;

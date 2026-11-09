@@ -29,7 +29,15 @@ public sealed class MailKitEmailSender(IOptions<SmtpOptions> options) : IEmailSe
         };
         await client.ConnectAsync(smtp.Host!, smtp.Port, security, ct);
         if (!string.IsNullOrEmpty(smtp.User)) await client.AuthenticateAsync(smtp.User, smtp.Password ?? "", ct);
-        await client.SendAsync(message, ct);
+        try
+        {
+            await client.SendAsync(message, ct);
+        }
+        catch (SmtpCommandException ex) when (ex.ErrorCode == SmtpErrorCode.RecipientNotAccepted)
+        {
+            throw new EmailRecipientRejectedException(ex);
+        }
+
         await client.DisconnectAsync(quit: true, ct);
     }
 }

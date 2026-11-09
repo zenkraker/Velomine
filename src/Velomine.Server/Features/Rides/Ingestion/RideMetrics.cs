@@ -166,21 +166,36 @@ public static class RideMetrics
         IReadOnlyList<Sample> samples,
         IReadOnlyList<PauseInterval>? pauses = null)
     {
+        var cumulative = samples.Where(s => s.Distance.HasValue).Select(s => (double)s.Distance!.Value).ToArray();
+
         // A device cumulative distance cannot say which metres were ridden during a paused interval, so positions win
-        // when the file also has timer events.
+        // when the file also has timer events and positions. An indoor file has no positions, so there the cumulative
+        // distance is the only source even with pauses.
         if (pauses is null || pauses.Count == 0)
         {
-            var cumulative = samples.Where(s => s.Distance.HasValue).Select(s => (double)s.Distance!.Value).ToArray();
             if (cumulative.Length >= 2) return Math.Max(0, cumulative[^1] - cumulative[0]);
         }
-
-        var total = 0.0;
-        for (var i = 1; i < samples.Count; i++)
+        else
         {
-            if (CrossesPause(pauses, samples[i - 1].T, samples[i].T)) continue;
-            total += DistanceBetween(samples[i - 1], samples[i]) ?? 0;
+            var total = 0.0;
+            var hasPositions = false;
+            for (var i = 1; i < samples.Count; i++)
+            {
+                if (CrossesPause(pauses, samples[i - 1].T, samples[i].T)) continue;
+                if (DistanceBetween(samples[i - 1], samples[i]) is not { } meters) continue;
+                hasPositions = true;
+                total += meters;
+            }
+
+            if (hasPositions) return total;
+            if (cumulative.Length >= 2) return Math.Max(0, cumulative[^1] - cumulative[0]);
+            return 0;
         }
-        return total;
+
+        var distance = 0.0;
+        for (var i = 1; i < samples.Count; i++)
+            distance += DistanceBetween(samples[i - 1], samples[i]) ?? 0;
+        return distance;
     }
 
     private static double? DistanceBetween(Sample a, Sample b) =>

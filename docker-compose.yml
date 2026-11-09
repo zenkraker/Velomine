@@ -16,7 +16,7 @@ services:
       timeout: 3s
       retries: 10
 
-  # Local single sign-on provider for testing; remove it (and the Velomine__Sso__* settings) if you do not need it.
+  # Local single sign-on provider for testing; remove it (and the VELOMINE__SSO__* settings) if you do not need it.
   dex:
     image: ghcr.io/dexidp/dex:v2.46.1
     command: ["dex", "serve", "/etc/dex/config.yaml"]
@@ -45,22 +45,25 @@ services:
       dex:
         condition: service_healthy
     environment:
-      ConnectionStrings__Velomine: Host=postgres;Database=velomine;Username=velomine;Password=${POSTGRES_PASSWORD:-velomine-dev}
+      CONNECTIONSTRINGS__VELOMINE: Host=postgres;Database=velomine;Username=velomine;Password=${POSTGRES_PASSWORD:-velomine-dev}
       # First admin, created on start when the server has none. Change these for anything shared.
-      Velomine__Admin__Email: ${VELOMINE_ADMIN_EMAIL:-admin@velomine.local}
-      Velomine__Admin__Password: ${VELOMINE_ADMIN_PASSWORD:-Velomine-dev-1}
-      # Maps are on by default (OpenStreetMap). A self-hoster may set Velomine__Map__TileUrl and
-      # Velomine__Map__Attribution here to use a private tile server; an empty value falls back to the default.
+      VELOMINE__ADMIN__EMAIL: ${VELOMINE__ADMIN__EMAIL:-admin@velomine.local}
+      VELOMINE__ADMIN__PASSWORD: ${VELOMINE__ADMIN__PASSWORD:-Velomine-dev-1}
+      # The public address used in password reset emails. Set this to the address members open, for example
+      # https://club.example, before exposing the server.
+      VELOMINE__PUBLICURL: ${VELOMINE__PUBLICURL:-http://localhost:8080}
+      # Maps are on by default (OpenStreetMap). A self-hoster may set VELOMINE__MAP__TILEURL and
+      # VELOMINE__MAP__ATTRIBUTION here to use a private tile server; an empty value falls back to the default.
       # Single sign-on through the local Dex service above. Any OpenID Connect provider works.
-      Velomine__Sso__Authority: http://dex.localhost:5556/dex
-      Velomine__Sso__ClientId: velomine
-      Velomine__Sso__ClientSecret: velomine-dev-secret
-      Velomine__Sso__AppClientId: velomine-app
-      Velomine__Sso__DisplayName: Dex (local test)
-      Velomine__Sso__AllowInsecureHttp: "true"
+      VELOMINE__SSO__AUTHORITY: http://dex.localhost:5556/dex
+      VELOMINE__SSO__CLIENTID: velomine
+      VELOMINE__SSO__CLIENTSECRET: velomine-dev-secret
+      VELOMINE__SSO__APPCLIENTID: velomine-app
+      VELOMINE__SSO__DISPLAYNAME: Dex (local test)
+      VELOMINE__SSO__ALLOWINSECUREHTTP: "true"
       # Background work (ride ingestion, email, catalogue sync) runs on one instance only. On every other API
-      # instance of a cloud deployment set Velomine__Background__Enabled=false; keep it true on exactly one.
-      # Velomine__Background__Enabled: "false"
+      # instance of a cloud deployment set VELOMINE__BACKGROUND__ENABLED=false; keep it true on exactly one.
+      # VELOMINE__BACKGROUND__ENABLED: "false"
     ports:
       - "${VELOMINE_PORT:-8080}:8080"
     volumes:

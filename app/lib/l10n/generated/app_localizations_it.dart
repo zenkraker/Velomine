@@ -1564,7 +1564,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get smtpNotConfigured =>
-      'Non impostato. Imposta Velomine__Smtp__Host e Velomine__Smtp__From.';
+      'Non impostato. Imposta VELOMINE__SMTP__HOST e VELOMINE__SMTP__FROM.';
 
   @override
   String get singleSignOn => 'Accesso singolo';
@@ -1576,7 +1576,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get ssoNotConfigured =>
-      'Non impostato. Imposta Velomine__Sso__Authority, ClientId e ClientSecret.';
+      'Non impostato. Imposta VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID e VELOMINE__SSO__CLIENTSECRET.';
 
   @override
   String statusOn(String title) {

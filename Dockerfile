@@ -40,6 +40,6 @@ COPY --from=web /src/app/build/web ./wwwroot
 RUN mkdir -p /data/files /data/keys && chown app /data/files /data/keys
 USER app
 ENV ASPNETCORE_HTTP_PORTS=8080 \
-    Velomine__FilesPath=/data/files
+    VELOMINE__FILESPATH=/data/files
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Velomine.Server.dll"]

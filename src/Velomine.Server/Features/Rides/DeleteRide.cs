@@ -6,7 +6,7 @@ using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Features.Rides;
 
-/// <summary>Deletes a ride and its samples. The original file goes too, unless another ride was read from the same file.</summary>
+/// <summary>Deletes a ride, its hidden duplicates and its samples. The original file goes too, unless another ride was read from the same file.</summary>
 public sealed class DeleteRide(VelomineDbContext db, RideFileStore files) : Endpoint<RideIdRequest>
 {
     public override void Configure() => Delete("rides/{id}");
@@ -21,6 +21,10 @@ public sealed class DeleteRide(VelomineDbContext db, RideFileStore files) : Endp
             return;
         }
 
+        var hidden = await db.Rides
+            .Where(r => r.UserId == userId && r.DuplicateOf == ride.Id)
+            .ToListAsync(ct);
+        db.Rides.RemoveRange(hidden);
         db.Rides.Remove(ride);
         await db.SaveChangesAsync(ct);
 

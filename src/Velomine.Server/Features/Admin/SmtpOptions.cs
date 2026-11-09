@@ -3,7 +3,8 @@ using Microsoft.Extensions.Options;
 namespace Velomine.Server.Features.Admin;
 
 /// <summary>
-/// Bound from "Velomine:Smtp" (environment: Velomine__Smtp__Host, Port, Security, User, Password, From). Environment only,
+/// Bound from "Velomine:Smtp" (environment: VELOMINE__SMTP__HOST, VELOMINE__SMTP__PORT, VELOMINE__SMTP__SECURITY,
+/// VELOMINE__SMTP__USER, VELOMINE__SMTP__PASSWORD, VELOMINE__SMTP__FROM). Environment only,
 /// by design: the password is never stored in the database or shown by the API.
 /// Email is on when a host and a from address are set.
 /// </summary>
@@ -33,10 +34,10 @@ public sealed class SmtpOptionsValidator : IValidateOptions<SmtpOptions>
     public ValidateOptionsResult Validate(string? name, SmtpOptions o)
     {
         if (string.IsNullOrWhiteSpace(o.Host) != string.IsNullOrWhiteSpace(o.From))
-            return ValidateOptionsResult.Fail("Velomine__Smtp__Host and Velomine__Smtp__From must be set together.");
+            return ValidateOptionsResult.Fail("VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM must be set together.");
         if (!SmtpOptions.SecurityModes.Contains(o.Security))
-            return ValidateOptionsResult.Fail("Velomine__Smtp__Security must be one of: " + string.Join(", ", SmtpOptions.SecurityModes) + ".");
-        if (o.Port is < 1 or > 65535) return ValidateOptionsResult.Fail("Velomine__Smtp__Port must be 1 to 65535.");
+            return ValidateOptionsResult.Fail("VELOMINE__SMTP__SECURITY must be one of: " + string.Join(", ", SmtpOptions.SecurityModes) + ".");
+        if (o.Port is < 1 or > 65535) return ValidateOptionsResult.Fail("VELOMINE__SMTP__PORT must be 1 to 65535.");
         return ValidateOptionsResult.Success;
     }
 }

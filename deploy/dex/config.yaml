@@ -1,6 +1,6 @@
 # Dex: a small OpenID Connect provider for LOCAL DEVELOPMENT ONLY (see docs/dependencies/dex.md).
 # It lets you try single sign-on without any outside account. In production, point
-# Velomine__Sso__Authority at your own provider instead and remove the dex service.
+# VELOMINE__SSO__AUTHORITY at your own provider instead and remove the dex service.
 #
 # Log in at the Velomine sign-in page with:  rider@sso.test / password
 #

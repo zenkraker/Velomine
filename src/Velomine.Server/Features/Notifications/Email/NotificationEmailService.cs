@@ -7,8 +7,9 @@ namespace Velomine.Server.Features.Notifications.Email;
 
 /// <summary>
 /// Emails members their notifications when the server has SMTP set up. Every 30 seconds it sends the notifications that
-/// are not emailed yet. The state lives on the notification (EmailedAt), so there is no queue: a failed send is simply
-/// tried again at the next run, and a restart loses nothing.
+/// are not emailed yet. The state lives on the notification (EmailedAt), so there is no queue: a connection or server
+/// failure is tried again at the next run, a refused recipient is recorded as attempted and skipped, and a restart
+/// loses nothing.
 /// What is emailed: notifications created after email was first switched on (so switching it on never sends a backlog),
 /// and no older than a day, that the member has not already read, for members who have email notifications on.
 /// </summary>
@@ -85,6 +86,15 @@ public sealed class NotificationEmailService(
                 try
                 {
                     await sender.SendAsync(item.Email, NotificationText.Subject(item.Notification), NotificationText.Body(item.Notification), ct);
+                }
+                catch (EmailRecipientRejectedException ex)
+                {
+                    // A refused address will not start working on the next run, so do not let it block the rest.
+                    // The exception type says what failed; the message can name the recipient, which must not be logged.
+                    logger.LogWarning("A notification email was refused for its recipient ({Exception}).", ex.GetType().Name);
+                    item.Notification.EmailedAt = time.GetUtcNow();
+                    await db.SaveChangesAsync(ct);
+                    continue;
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {

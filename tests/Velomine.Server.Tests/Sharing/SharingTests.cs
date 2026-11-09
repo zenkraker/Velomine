@@ -318,6 +318,45 @@ public sealed class SharingTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task CoachRides_ShouldHideTrainingLoad_WhenAnalyticsIsNotShared()
+    {
+        await using var api = await StartAsync();
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(api, owner);
+        var athlete = await NewMemberAsync(api);
+        await JoinAsync(athlete, club);
+        (await athlete.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", 250, null, 1990, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        var ride = await UploadAndWaitAsync(athlete.Client, Fit(new FitSession(Start, 600)));
+        (await ShareAsync(athlete, "coaches", "none")).EnsureSuccessStatusCode();
+
+        var list = await owner.Client.GetFromJsonAsync<ListRidesResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides", Ct);
+        var listed = Assert.Single(list!.Rides);
+        Assert.Null(listed.IntensityFactor);
+        Assert.Null(listed.Tss);
+        Assert.Null(listed.Trimp);
+
+        var hidden = await owner.Client.GetFromJsonAsync<RideResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
+        Assert.Null(hidden!.IntensityFactor);
+        Assert.Null(hidden.Tss);
+        Assert.Null(hidden.Trimp);
+        Assert.Null(hidden.HeartRateZones);
+        Assert.Null(hidden.PowerZones);
+
+        (await ShareAsync(athlete, "coaches", "coaches")).EnsureSuccessStatusCode();
+        var shown = await owner.Client.GetFromJsonAsync<RideResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
+        Assert.NotNull(shown!.IntensityFactor);
+        Assert.NotNull(shown.Tss);
+        Assert.NotNull(shown.Trimp);
+        Assert.NotNull(shown.HeartRateZones);
+        Assert.NotNull(shown.PowerZones);
+    }
+
+    [Fact]
     public async Task Sharing_ShouldShowTheRoute_WhenRoutesAreShared()
     {
         await using var api = await StartAsync();

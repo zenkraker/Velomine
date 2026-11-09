@@ -71,4 +71,14 @@ public sealed record RideResponse(
         r.MaxHeartRate,
         r.AvgCadence,
         r.BikeId);
+
+    /// <summary>The same ride without training load, for a viewer allowed to see rides but not analytics.</summary>
+    public RideResponse WithoutTrainingLoad() => this with
+    {
+        IntensityFactor = null,
+        Tss = null,
+        Trimp = null,
+        HeartRateZones = null,
+        PowerZones = null,
+    };
 }

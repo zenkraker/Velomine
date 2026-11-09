@@ -56,7 +56,7 @@ public sealed class CoachRideStreamsValidator : Validator<CoachRideStreamsReques
     public CoachRideStreamsValidator() => RuleFor(x => x.MaxPoints).InclusiveBetween(10, 5000).When(x => x.MaxPoints.HasValue);
 }
 
-/// <summary>An athlete's rides, newest first. Only numbers: the route lives in the streams and needs its own grant.</summary>
+/// <summary>An athlete's rides, newest first. Ride numbers only: training load needs the analytics grant, and the route needs its own.</summary>
 public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
     : Endpoint<CoachRidesRequest, ListRidesResponse>
 {
@@ -68,12 +68,14 @@ public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
 
     public override async Task HandleAsync(CoachRidesRequest req, CancellationToken ct)
     {
-        if (!await SharingRules.CanViewAsync(db, req.ClubId, User.UserId(), req.UserId, DataTypes.Rides, ct))
+        var viewerId = User.UserId();
+        if (!await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Rides, ct))
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
+        var canAnalytics = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Analytics, ct);
         var limit = req.Limit ?? 50;
         var query = db.Rides.AsNoTracking()
             .Where(r => r.UserId == req.UserId && r.Status != RideStatus.Duplicate);
@@ -92,15 +94,15 @@ public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
 
         var (page, next) = await RideCursor.PageAsync(query, limit, ct);
 
-        var viewerId = User.UserId();
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Rides, ct);
-        await Send.OkAsync(new ListRidesResponse([.. page.Select(RideResponse.From)], next), ct);
+        await Send.OkAsync(new ListRidesResponse(
+            [.. page.Select(r => canAnalytics ? RideResponse.From(r) : RideResponse.From(r).WithoutTrainingLoad())], next), ct);
     }
 }
 
-/// <summary>One of the athlete's rides, read-only, with the same numbers they see.</summary>
+/// <summary>One of the athlete's rides, read-only, with training load only when analytics is shared too.</summary>
 public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
     : Endpoint<CoachRideRequest, RideResponse>
 {
@@ -119,6 +121,7 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
             return;
         }
 
+        var canAnalytics = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Analytics, ct);
         var ride = await db.Rides.AsNoTracking()
             .Include(r => r.Streams)
             .Include(r => r.Owner)
@@ -132,7 +135,8 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct);
-        await Send.OkAsync(RideDetails.Build(ride), ct);
+        await Send.OkAsync(
+            canAnalytics ? RideDetails.Build(ride) : RideResponse.From(ride).WithoutTrainingLoad(), ct);
     }
 }
 

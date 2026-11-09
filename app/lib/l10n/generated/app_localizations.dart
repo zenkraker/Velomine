@@ -2849,7 +2849,7 @@ abstract class AppLocalizations {
   /// No description provided for @smtpNotConfigured.
   ///
   /// In en, this message translates to:
-  /// **'Not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From.'**
+  /// **'Not set up. Set VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM.'**
   String get smtpNotConfigured;
 
   /// No description provided for @singleSignOn.
@@ -2867,7 +2867,7 @@ abstract class AppLocalizations {
   /// No description provided for @ssoNotConfigured.
   ///
   /// In en, this message translates to:
-  /// **'Not set up. Set Velomine__Sso__Authority, ClientId and ClientSecret.'**
+  /// **'Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.'**
   String get ssoNotConfigured;
 
   /// No description provided for @statusOn.

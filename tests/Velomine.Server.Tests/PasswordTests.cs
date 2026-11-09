@@ -97,6 +97,28 @@ public sealed class PasswordTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task ForgotPassword_ShouldUseTheConfiguredAddress_WhenTheRequestHostIsForged()
+    {
+        var (api, mail) = await StartAsync(
+            postgres,
+            configure: b => b.UseSetting("Velomine:PublicUrl", "https://club.example"));
+        await using var _ = api;
+        var (email, _) = await NewMemberAsync(api);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/accounts/password/forgot")
+        {
+            Content = JsonContent.Create(new ForgotPasswordRequest(email)),
+        };
+        request.Headers.Host = "evil.example";
+        var response = await api.CreateClient().SendAsync(request, Ct);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        var link = Regex.Match(Assert.Single(mail.Sent).Body, @"https?://\S+").Value;
+        Assert.StartsWith("https://club.example/reset-password#", link);
+        Assert.DoesNotContain("evil.example", link);
+    }
+
+    [Fact]
     public async Task ForgotPassword_ShouldRefuse_WhenEmailIsNotConfigured()
     {
         var (api, mail) = await StartAsync(postgres, smtp: false);

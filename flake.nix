@@ -151,7 +151,7 @@
           export GRADLE_USER_HOME="$DEV/gradle"
           export ANDROID_USER_HOME="$DEV/android"
           export ANDROID_AVD_HOME="$DEV/android/avd"
-          export Velomine__FilesPath="$DEV/files"
+          export VELOMINE__FILESPATH="$DEV/files"
 
           # Flutter: unpack the pinned release once. It must be writable, so it can't live in /nix/store.
           FLUTTER_DIR="$DEV/flutter-${flutterVersion}"

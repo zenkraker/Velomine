@@ -893,7 +893,7 @@
       }
     }
   },
-  "smtpNotConfigured": "Not set up. Set Velomine__Smtp__Host and Velomine__Smtp__From.",
+  "smtpNotConfigured": "Not set up. Set VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM.",
   "singleSignOn": "Single sign-on",
   "ssoDetail": "{name} · {authority}",
   "@ssoDetail": {
@@ -906,7 +906,7 @@
       }
     }
   },
-  "ssoNotConfigured": "Not set up. Set Velomine__Sso__Authority, ClientId and ClientSecret.",
+  "ssoNotConfigured": "Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.",
   "statusOn": "{title}: on",
   "@statusOn": {
     "placeholders": {

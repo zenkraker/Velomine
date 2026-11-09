@@ -22,8 +22,12 @@ public sealed class FakeEmailSender : IEmailSender
 
     public Exception? Fail { get; set; }
 
+    public HashSet<string> Rejected { get; } = [];
+
     public Task SendAsync(string to, string subject, string body, CancellationToken ct)
     {
+        if (Rejected.Contains(to))
+            throw new EmailRecipientRejectedException(new InvalidOperationException("550 mailbox unavailable"));
         if (Fail is not null) throw Fail;
         Sent.Add((to, subject, body));
         return Task.CompletedTask;
@@ -177,6 +181,40 @@ public sealed class EmailTests(PostgresFixture postgres)
         mail.Fail = null;
         Assert.Equal(1, await RunAsync(api));
         Assert.Single(mail.Sent);
+    }
+
+    [Fact]
+    public async Task NotificationEmail_ShouldSkipTheRejectedAddressAndSendTheRest_WhenOneRecipientIsRefused()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (badEmail, badClient) = await NewMemberAsync(api);
+        var (goodEmail, goodClient) = await NewMemberAsync(api);
+        var badId = (await badClient.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
+        var goodId = (await goodClient.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
+        await RunAsync(api); // email is on from now
+
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            Notify.Add(db, new FixedTime(now), badId, NotificationTypes.RideReady, "bad.fit");
+            Notify.Add(db, new FixedTime(now.AddSeconds(1)), goodId, NotificationTypes.RideReady, "good.fit");
+            await db.SaveChangesAsync(Ct);
+        }
+
+        mail.Rejected.Add(badEmail);
+
+        Assert.Equal(1, await RunAsync(api));
+        Assert.Equal(goodEmail, Assert.Single(mail.Sent).To);
+
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            Assert.All(await db.Notifications.ToListAsync(Ct), n => Assert.NotNull(n.EmailedAt));
+        }
+
+        Assert.Equal(0, await RunAsync(api));
     }
 
     [Fact]

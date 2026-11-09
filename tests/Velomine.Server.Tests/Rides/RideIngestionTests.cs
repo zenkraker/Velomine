@@ -440,6 +440,38 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task UploadRide_ShouldStoreTheDistance_WhenAnIndoorFileHasAPause()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(
+            Start, 60, Pauses: new[] { (10, 20) }, SubSport: SubSport.IndoorCycling, NoPosition: true)));
+
+        Assert.Equal("ready", ride.Status);
+        Assert.Equal("indoor", ride.Environment);
+        Assert.InRange(ride.DistanceM!.Value, 470, 475);
+    }
+
+    [Fact]
+    public async Task DeleteRide_ShouldRemoveTheHiddenDuplicateAndTheFile_WhenTheRideHasOne()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var file = Fit(new FitSession(Start, 90));
+        var visible = await UploadAndWaitAsync(member, file);
+        var duplicate = await UploadAndWaitAsync(member, file, key: "other-key");
+        Assert.Equal("duplicate", duplicate.Status);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await member.DeleteAsync($"/api/v1/rides/{visible.Id}", Ct)).StatusCode);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        Assert.False(await db.Rides.AnyAsync(Ct));
+        Assert.Equal(0, OriginalFileCount(api));
+    }
+
+    [Fact]
     public async Task RideIngestionService_ShouldReadLeftoverRides_WhenTheServerStartsAgain()
     {
         await using var first = await StartAsync();
