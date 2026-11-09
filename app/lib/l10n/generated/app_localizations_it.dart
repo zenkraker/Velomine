@@ -1648,6 +1648,20 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo server non è configurato per inviare email, quindi per ora non viene inviato nulla.';
 
   @override
+  String get emailAccountNotifications => 'Email per account e club';
+
+  @override
+  String get emailAccountNotificationsHelp =>
+      'Richieste di iscrizione e approvazioni, e nuove registrazioni in attesa.';
+
+  @override
+  String get emailTrainingNotifications => 'Email per uscite e componenti';
+
+  @override
+  String get emailTrainingNotificationsHelp =>
+      'Uscite lette o non leggibili, e componenti usurati. Raggruppate in una sola email.';
+
+  @override
   String get yourData => 'I tuoi dati';
 
   @override

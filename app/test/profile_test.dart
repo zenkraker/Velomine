@@ -33,6 +33,8 @@ void main() {
       'timeZone': 'Europe/Rome',
       'firstDayOfWeek': 'sunday',
       'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
       'hasPassword': true,
     };
     await openProfile(tester);
@@ -106,6 +108,8 @@ void main() {
       'timeZone': 'Europe/Rome',
       'firstDayOfWeek': 'saturday',
       'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
       'hasPassword': true,
     });
     expect(find.byKey(const Key('profile-saved')), findsOneWidget);
@@ -153,6 +157,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.profiles['rider@example.com']!['emailNotifications'], false);
+  });
+
+  testWidgets('ProfileScreen_ShouldSendEmailCategories_WhenChanged', (
+    tester,
+  ) async {
+    server.smtpConfigured = true;
+    await openProfile(tester);
+
+    await tester.ensureVisible(find.byKey(const Key('profile-email-training')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-email-training')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('profile-save')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-save')));
+    await tester.pumpAndSettle();
+
+    expect(
+      server.profiles['rider@example.com']!['emailTrainingNotifications'],
+      true,
+    );
+    expect(
+      server.profiles['rider@example.com']!['emailAccountNotifications'],
+      true,
+    );
   });
 
   Future<void> tapVisible(WidgetTester tester, String key) async {
@@ -293,6 +322,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(server.accounts, contains('sso@example.com'));
 
+      // Let the "does not match" message go away before reaching for the button behind it.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
       await tapVisible(tester, 'delete-account');
       await tester.enterText(
         find.byKey(const Key('delete-confirm')),

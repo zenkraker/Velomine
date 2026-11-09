@@ -29,7 +29,23 @@ public sealed class SendTestEmail(IEmailSender sender, IOptions<SmtpOptions> smt
         var admin = await users.GetUserAsync(User);
         try
         {
-            await sender.SendAsync(admin!.Email!, "Velomine: test email", "If you can read this, Velomine can send email.\n", ct);
+            var result = await sender.SendAsync(
+                [new OutgoingEmail(admin!.Email!, "Velomine: test email", "If you can read this, Velomine can send email.\n")], ct);
+            if (result.Failure is not null)
+            {
+                // What the mail server answered helps the admin; the settings themselves, and the password, are never in it.
+                logger.LogWarning("The test email could not be sent ({Exception}).", result.Failure.GetType().Name);
+                AddError("The mail server did not accept it: " + result.Failure.Message);
+                await Send.ErrorsAsync(502, ct);
+                return;
+            }
+
+            if (result.Results[0].Outcome != EmailOutcome.Sent)
+            {
+                AddError("The mail server refused the address.");
+                await Send.ErrorsAsync(502, ct);
+                return;
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

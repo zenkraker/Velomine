@@ -58,18 +58,23 @@ public sealed class ForgotPassword(
         {
             try
             {
+                OutgoingEmail mail;
                 if (await users.HasPasswordAsync(user))
                 {
                     var link = await links.CreateAsync(user);
-                    await sender.SendAsync(user.Email!, PasswordResetEmail.Subject, PasswordResetEmail.Body(link), ct);
+                    mail = new OutgoingEmail(user.Email!, PasswordResetEmail.Subject, PasswordResetEmail.Body(link));
                 }
                 else
                 {
                     var body = sso.Value.Enabled
                         ? PasswordResetEmail.SsoBody(sso.Value.DisplayName)
                         : PasswordResetEmail.NoPasswordBody;
-                    await sender.SendAsync(user.Email!, PasswordResetEmail.SsoSubject, body, ct);
+                    mail = new OutgoingEmail(user.Email!, PasswordResetEmail.SsoSubject, body);
                 }
+
+                var result = await sender.SendAsync([mail], ct);
+                if (result.Failure is not null || result.Results[0].Outcome != EmailOutcome.Sent)
+                    logger.LogWarning("Could not send a password reset email ({Exception}).", result.Failure?.GetType().Name ?? "refused");
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

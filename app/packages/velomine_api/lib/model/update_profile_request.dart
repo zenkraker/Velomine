@@ -20,6 +20,8 @@ class UpdateProfileRequest {
     required this.timeZone,
     required this.firstDayOfWeek,
     this.emailNotifications = const Optional.absent(),
+    this.emailAccountNotifications = const Optional.absent(),
+    this.emailTrainingNotifications = const Optional.absent(),
   });
 
   final String displayName;
@@ -48,6 +50,22 @@ class UpdateProfileRequest {
   ///
   final Optional<bool?> emailNotifications;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> emailAccountNotifications;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> emailTrainingNotifications;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateProfileRequest &&
     other.displayName == displayName &&
@@ -56,7 +74,9 @@ class UpdateProfileRequest {
     other.birthYear == birthYear &&
     other.timeZone == timeZone &&
     other.firstDayOfWeek == firstDayOfWeek &&
-    other.emailNotifications == emailNotifications;
+    other.emailNotifications == emailNotifications &&
+    other.emailAccountNotifications == emailAccountNotifications &&
+    other.emailTrainingNotifications == emailTrainingNotifications;
 
   @override
   int get hashCode =>
@@ -67,10 +87,12 @@ class UpdateProfileRequest {
     (birthYear == null ? 0 : birthYear!.hashCode) +
     (timeZone == null ? 0 : timeZone!.hashCode) +
     (firstDayOfWeek.hashCode) +
-    (emailNotifications == null ? 0 : emailNotifications!.hashCode);
+    (emailNotifications == null ? 0 : emailNotifications!.hashCode) +
+    (emailAccountNotifications == null ? 0 : emailAccountNotifications!.hashCode) +
+    (emailTrainingNotifications == null ? 0 : emailTrainingNotifications!.hashCode);
 
   @override
-  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications]';
+  String toString() => 'UpdateProfileRequest[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -100,6 +122,14 @@ class UpdateProfileRequest {
       final value = this.emailNotifications.value;
       json[r'emailNotifications'] = value;
     }
+    if (this.emailAccountNotifications.isPresent) {
+      final value = this.emailAccountNotifications.value;
+      json[r'emailAccountNotifications'] = value;
+    }
+    if (this.emailTrainingNotifications.isPresent) {
+      final value = this.emailTrainingNotifications.value;
+      json[r'emailTrainingNotifications'] = value;
+    }
     return json;
   }
 
@@ -117,6 +147,8 @@ class UpdateProfileRequest {
     bool timeZoneSetToNull = false,
     String? firstDayOfWeek,
     Optional<bool?>? emailNotifications,
+    Optional<bool?>? emailAccountNotifications,
+    Optional<bool?>? emailTrainingNotifications,
   }) => UpdateProfileRequest(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -125,6 +157,8 @@ class UpdateProfileRequest {
     timeZone: timeZoneSetToNull ? null : timeZone ?? this.timeZone,
     firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
     emailNotifications: emailNotifications ?? this.emailNotifications,
+    emailAccountNotifications: emailAccountNotifications ?? this.emailAccountNotifications,
+    emailTrainingNotifications: emailTrainingNotifications ?? this.emailTrainingNotifications,
   );
 
   /// Returns a new [UpdateProfileRequest] instance and imports its values from
@@ -157,6 +191,8 @@ class UpdateProfileRequest {
         timeZone: mapValueOfType<String>(json, r'timeZone'),
         firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
         emailNotifications: json.containsKey(r'emailNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailNotifications')) : const Optional.absent(),
+        emailAccountNotifications: json.containsKey(r'emailAccountNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailAccountNotifications')) : const Optional.absent(),
+        emailTrainingNotifications: json.containsKey(r'emailTrainingNotifications') ? Optional.present(mapValueOfType<bool>(json, r'emailTrainingNotifications')) : const Optional.absent(),
       );
     }
     return null;

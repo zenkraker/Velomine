@@ -24,13 +24,24 @@ public sealed class FakeEmailSender : IEmailSender
 
     public HashSet<string> Rejected { get; } = [];
 
-    public Task SendAsync(string to, string subject, string body, CancellationToken ct)
+    public Task<EmailBatchResult> SendAsync(IReadOnlyList<OutgoingEmail> emails, CancellationToken ct)
     {
-        if (Rejected.Contains(to))
-            throw new EmailRecipientRejectedException(new InvalidOperationException("550 mailbox unavailable"));
-        if (Fail is not null) throw Fail;
-        Sent.Add((to, subject, body));
-        return Task.CompletedTask;
+        var results = new List<EmailResult>(emails.Count);
+        foreach (var email in emails)
+        {
+            if (Rejected.Contains(email.To))
+            {
+                results.Add(new EmailResult(email, EmailOutcome.RecipientRejected));
+                continue;
+            }
+
+            if (Fail is not null) return Task.FromResult(new EmailBatchResult(results, Fail));
+
+            Sent.Add((email.To, email.Subject, email.Body));
+            results.Add(new EmailResult(email, EmailOutcome.Sent));
+        }
+
+        return Task.FromResult(new EmailBatchResult(results, null));
     }
 }
 
@@ -80,6 +91,20 @@ public sealed class EmailTests(PostgresFixture postgres)
     private static Task<int> RunAsync(TestApi api) =>
         api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct);
 
+    private static Task TurnOnTrainingAsync(HttpClient member) =>
+        member.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, null, null, null, "monday", EmailTrainingNotifications: true),
+            Ct);
+
+    private static async Task AddAsync(TestApi api, Guid userId, string type, string subject, DateTimeOffset at)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        Notify.Add(db, new FixedTime(at), userId, type, subject);
+        await db.SaveChangesAsync(Ct);
+    }
+
     [Fact]
     public async Task EmailSettings_ShouldSendNothingAndAnnounceNothing_WhenSmtpIsMissing()
     {
@@ -104,6 +129,20 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task EmailSender_ShouldResolveWithItsRetryPipelines_WhenSmtpIsConfigured()
+    {
+        var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");
+            b.UseSetting("Velomine:Smtp:From", "velomine@club.example");
+        });
+        await using var _ = api;
+
+        Assert.IsType<MailKitEmailSender>(api.Services.GetRequiredService<IEmailSender>());
+    }
+
+    [Fact]
     public async Task NotificationEmail_ShouldSkipBacklogAndSendOnce_WhenEmailIsTurnedOn()
     {
         var (api, mail) = await StartAsync(postgres);
@@ -112,21 +151,16 @@ public sealed class EmailTests(PostgresFixture postgres)
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
 
         // A notification from before email was switched on (the server started with SMTP set after this one was made).
-        await using (var oldScope = api.Services.CreateAsyncScope())
-        {
-            var oldDb = oldScope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-            Notify.Add(oldDb, new FixedTime(DateTimeOffset.UtcNow.AddHours(-3)), id, NotificationTypes.RideReady, "old.fit");
-            await oldDb.SaveChangesAsync(Ct);
-        }
+        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "old rider", DateTimeOffset.UtcNow.AddHours(-3));
 
         Assert.Equal(0, await RunAsync(api));
         Assert.Empty(mail.Sent);
 
-        await UploadAsync(member, Start.AddHours(5));
+        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "new rider", DateTimeOffset.UtcNow);
         Assert.Equal(1, await RunAsync(api));
         var (to, subject, body) = Assert.Single(mail.Sent);
         Assert.Equal(email, to);
-        Assert.Equal("Velomine: Your ride ride.fit is ready.", subject);
+        Assert.Equal("Velomine: new rider asked to join your club.", subject);
         Assert.Contains("email notifications are on in your Velomine profile", body);
 
         Assert.Equal(0, await RunAsync(api)); // not again
@@ -142,10 +176,14 @@ public sealed class EmailTests(PostgresFixture postgres)
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
         var (_, member) = await NewMemberAsync(api);
+        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api); // email is now on
-        await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Rider", null, null, null, null, "monday", false), Ct);
+        await member.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, null, null, null, "monday", EmailNotifications: false),
+            Ct);
 
-        await UploadAsync(member, Start);
+        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
 
         Assert.Equal(0, await RunAsync(api));
         Assert.Empty(mail.Sent);
@@ -157,8 +195,9 @@ public sealed class EmailTests(PostgresFixture postgres)
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
         var (_, member) = await NewMemberAsync(api);
+        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
-        await UploadAsync(member, Start);
+        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
         await member.PostAsync("/api/v1/notifications/read", null, Ct);
 
         Assert.Equal(0, await RunAsync(api));
@@ -171,8 +210,9 @@ public sealed class EmailTests(PostgresFixture postgres)
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
         var (_, member) = await NewMemberAsync(api);
+        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
-        await UploadAsync(member, Start);
+        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
 
         mail.Fail = new InvalidOperationException("mail server down");
         Assert.Equal(0, await RunAsync(api));
@@ -194,14 +234,8 @@ public sealed class EmailTests(PostgresFixture postgres)
         var goodId = (await goodClient.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api); // email is on from now
 
-        await using (var scope = api.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-            var now = DateTimeOffset.UtcNow;
-            Notify.Add(db, new FixedTime(now), badId, NotificationTypes.RideReady, "bad.fit");
-            Notify.Add(db, new FixedTime(now.AddSeconds(1)), goodId, NotificationTypes.RideReady, "good.fit");
-            await db.SaveChangesAsync(Ct);
-        }
+        await AddAsync(api, badId, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
+        await AddAsync(api, goodId, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow.AddSeconds(1));
 
         mail.Rejected.Add(badEmail);
 
@@ -215,6 +249,78 @@ public sealed class EmailTests(PostgresFixture postgres)
         }
 
         Assert.Equal(0, await RunAsync(api));
+    }
+
+    [Fact]
+    public async Task NotificationEmail_ShouldNotEmailARideReady_WhenTrainingEmailIsOff()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (_, member) = await NewMemberAsync(api);
+        await RunAsync(api); // email is on from now
+
+        await UploadAsync(member, Start);
+
+        Assert.Equal(0, await RunAsync(api));
+        Assert.Empty(mail.Sent);
+    }
+
+    [Fact]
+    public async Task NotificationEmail_ShouldDelayRideEmail_WhenItIsNewerThanTheDigestWindow()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (_, member) = await NewMemberAsync(api);
+        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
+        await RunAsync(api);
+        await TurnOnTrainingAsync(member);
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var settings = await db.Set<ServerSettings>().FirstAsync(Ct);
+            settings.EmailStartedAt = DateTimeOffset.UtcNow.AddHours(-1);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        await AddAsync(api, id, NotificationTypes.RideReady, "old.fit", DateTimeOffset.UtcNow.AddMinutes(-11));
+        await AddAsync(api, id, NotificationTypes.RideReady, "new.fit", DateTimeOffset.UtcNow.AddMinutes(-1));
+
+        Assert.Equal(1, await RunAsync(api));
+        var (_, subject, body) = Assert.Single(mail.Sent);
+        Assert.Contains("old.fit", subject);
+        Assert.Contains("old.fit", body);
+        Assert.DoesNotContain("new.fit", body);
+
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            Assert.NotNull((await db.Notifications.SingleAsync(n => n.Subject == "old.fit", Ct)).EmailedAt);
+            Assert.Null((await db.Notifications.SingleAsync(n => n.Subject == "new.fit", Ct)).EmailedAt);
+        }
+    }
+
+    [Fact]
+    public async Task NotificationEmail_ShouldSendOneEmail_WhenSeveralNotificationsAreDue()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (_, member) = await NewMemberAsync(api);
+        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
+        await RunAsync(api);
+
+        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "Ada", DateTimeOffset.UtcNow);
+        await AddAsync(api, id, NotificationTypes.ClubJoinApproved, "Club", DateTimeOffset.UtcNow.AddSeconds(1));
+
+        Assert.Equal(1, await RunAsync(api));
+        var (_, subject, body) = Assert.Single(mail.Sent);
+        Assert.Equal("Velomine: 2 updates", subject);
+        Assert.Contains("Ada asked to join your club.", body);
+        Assert.Contains("Club accepted you.", body);
+        Assert.Equal(1, body.Split("email notifications are on").Length - 1);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        Assert.All(await db.Notifications.ToListAsync(Ct), n => Assert.NotNull(n.EmailedAt));
     }
 
     [Fact]
@@ -262,4 +368,18 @@ public sealed class EmailTests(PostgresFixture postgres)
     [InlineData(NotificationTypes.PartWorn, "morning.fit is worn out. Time to replace it.")]
     public void NotificationText_ShouldReturnTheSentence_WhenNotificationTypeIsKnown(string type, string sentence) =>
         Assert.Equal(sentence, NotificationText.Sentence(new Notification { Type = type, Subject = "morning.fit" }));
+
+    [Fact]
+    public void NotificationText_ShouldWriteOneFooter_WhenSeveralAreDue()
+    {
+        var body = NotificationText.Body(
+        [
+            new Notification { Type = NotificationTypes.ClubJoinRequest, Subject = "Ada" },
+            new Notification { Type = NotificationTypes.ClubJoinApproved, Subject = "Club" },
+        ]);
+
+        Assert.Contains("Ada asked to join your club.", body);
+        Assert.Contains("Club accepted you.", body);
+        Assert.Equal(1, body.Split("email notifications are on").Length - 1);
+    }
 }

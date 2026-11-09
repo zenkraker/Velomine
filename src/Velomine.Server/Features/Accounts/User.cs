@@ -48,6 +48,12 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>Also email this member their notifications, when the server can send email.</summary>
     public bool EmailNotifications { get; set; } = true;
 
+    /// <summary>Also email about club and account events: join requests and approvals, sign-ups waiting.</summary>
+    public bool EmailAccountNotifications { get; set; } = true;
+
+    /// <summary>Also email about the member's own rides and parts. Off by default: the app already shows them.</summary>
+    public bool EmailTrainingNotifications { get; set; }
+
     /// <summary>When the member accepted the wellbeing terms; null means they have not started.</summary>
     public DateTimeOffset? WellbeingConsentAt { get; set; }
 

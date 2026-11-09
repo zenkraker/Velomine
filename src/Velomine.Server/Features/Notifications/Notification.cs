@@ -37,6 +37,41 @@ public static class NotificationTypes
     public const string ClubJoinDeclined = "club_join_declined";
 }
 
+/// <summary>
+/// The two purposes a notification can be emailed about. The member picks one in the profile, and the email
+/// service filters on it. Rides and gear are off by default: they are confirmation, not something to act on.
+/// </summary>
+public static class NotificationKinds
+{
+    public const string Account = "account";
+    public const string Training = "training";
+
+    /// <summary>Someone waits on the member, or a request about the member was answered.</summary>
+    public static readonly string[] AccountTypes =
+    [
+        NotificationTypes.ClubJoinRequest,
+        NotificationTypes.ClubJoinApproved,
+        NotificationTypes.ClubJoinDeclined,
+        NotificationTypes.SignUpWaiting,
+    ];
+
+    /// <summary>What happened to the member's own rides and parts.</summary>
+    public static readonly string[] TrainingTypes =
+    [
+        NotificationTypes.RideReady,
+        NotificationTypes.RideFailed,
+        NotificationTypes.RideDuplicate,
+        NotificationTypes.PartSoon,
+        NotificationTypes.PartWorn,
+    ];
+
+    /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>
+    public static string? Of(string type) =>
+        AccountTypes.Contains(type) ? Account :
+        TrainingTypes.Contains(type) ? Training :
+        null;
+}
+
 public sealed class Notification
 {
     public Guid Id { get; set; }

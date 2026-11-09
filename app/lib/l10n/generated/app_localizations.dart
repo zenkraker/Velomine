@@ -2984,6 +2984,30 @@ abstract class AppLocalizations {
   /// **'This server is not set up to send email, so nothing is sent yet.'**
   String get emailUnavailableHelp;
 
+  /// No description provided for @emailAccountNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and club emails'**
+  String get emailAccountNotifications;
+
+  /// No description provided for @emailAccountNotificationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Join requests and approvals, and sign-ups waiting for approval.'**
+  String get emailAccountNotificationsHelp;
+
+  /// No description provided for @emailTrainingNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride and gear emails'**
+  String get emailTrainingNotifications;
+
+  /// No description provided for @emailTrainingNotificationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides finishing or failing, and parts wearing out. Grouped into one email.'**
+  String get emailTrainingNotificationsHelp;
+
   /// No description provided for @yourData.
   ///
   /// In en, this message translates to:

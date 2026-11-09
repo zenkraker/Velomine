@@ -219,6 +219,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("email");
 
+                    b.Property<bool>("EmailAccountNotifications")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_account_notifications");
+
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("email_confirmed");
@@ -226,6 +230,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<bool>("EmailNotifications")
                         .HasColumnType("boolean")
                         .HasColumnName("email_notifications");
+
+                    b.Property<bool>("EmailTrainingNotifications")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_training_notifications");
 
                     b.Property<int>("FirstDayOfWeek")
                         .HasColumnType("integer")

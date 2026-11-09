@@ -73,6 +73,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _zone = TextEditingController();
   String _firstDay = 'monday';
   bool _email = true;
+  bool _emailAccount = true;
+  bool _emailTraining = false;
   int? _estimatedMaxHr;
   _ProfileProblem? _problem;
   late final ProviderSubscription<ProfileState> _profileSub;
@@ -97,6 +99,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _zone.text = p.timeZone ?? '';
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
+      _emailAccount = p.emailAccountNotifications;
+      _emailTraining = p.emailTrainingNotifications;
     });
   }
 
@@ -185,6 +189,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             timeZone: zone.isEmpty ? null : zone,
             firstDayOfWeek: _firstDay,
             emailNotifications: Optional.present(_email),
+            emailAccountNotifications: Optional.present(_emailAccount),
+            emailTrainingNotifications: Optional.present(_emailTraining),
           ),
         );
     if (!mounted) return;
@@ -379,6 +385,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onChanged: widget.emailAvailable
                             ? (v) => setState(() => _email = v)
                             : null,
+                      ),
+                      CheckboxListTile(
+                        key: const Key('profile-email-account'),
+                        contentPadding: const EdgeInsets.only(left: 32),
+                        value: _emailAccount,
+                        title: Text(l10n.emailAccountNotifications),
+                        subtitle: Text(l10n.emailAccountNotificationsHelp),
+                        enabled: _email && widget.emailAvailable,
+                        onChanged: (v) =>
+                            setState(() => _emailAccount = v ?? _emailAccount),
+                      ),
+                      CheckboxListTile(
+                        key: const Key('profile-email-training'),
+                        contentPadding: const EdgeInsets.only(left: 32),
+                        value: _emailTraining,
+                        title: Text(l10n.emailTrainingNotifications),
+                        subtitle: Text(l10n.emailTrainingNotificationsHelp),
+                        enabled: _email && widget.emailAvailable,
+                        onChanged: (v) => setState(
+                          () => _emailTraining = v ?? _emailTraining,
+                        ),
                       ),
                       const Divider(),
                       Text(

@@ -22,6 +22,8 @@ class ProfileResponse {
     required this.firstDayOfWeek,
     required this.emailNotifications,
     required this.hasPassword,
+    required this.emailAccountNotifications,
+    required this.emailTrainingNotifications,
   });
 
   final String displayName;
@@ -42,6 +44,10 @@ class ProfileResponse {
 
   final bool hasPassword;
 
+  final bool emailAccountNotifications;
+
+  final bool emailTrainingNotifications;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProfileResponse &&
     other.displayName == displayName &&
@@ -52,7 +58,9 @@ class ProfileResponse {
     other.timeZone == timeZone &&
     other.firstDayOfWeek == firstDayOfWeek &&
     other.emailNotifications == emailNotifications &&
-    other.hasPassword == hasPassword;
+    other.hasPassword == hasPassword &&
+    other.emailAccountNotifications == emailAccountNotifications &&
+    other.emailTrainingNotifications == emailTrainingNotifications;
 
   @override
   int get hashCode =>
@@ -65,10 +73,12 @@ class ProfileResponse {
     (timeZone == null ? 0 : timeZone!.hashCode) +
     (firstDayOfWeek.hashCode) +
     (emailNotifications.hashCode) +
-    (hasPassword.hashCode);
+    (hasPassword.hashCode) +
+    (emailAccountNotifications.hashCode) +
+    (emailTrainingNotifications.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -101,6 +111,8 @@ class ProfileResponse {
       json[r'firstDayOfWeek'] = this.firstDayOfWeek;
       json[r'emailNotifications'] = this.emailNotifications;
       json[r'hasPassword'] = this.hasPassword;
+      json[r'emailAccountNotifications'] = this.emailAccountNotifications;
+      json[r'emailTrainingNotifications'] = this.emailTrainingNotifications;
     return json;
   }
 
@@ -121,6 +133,8 @@ class ProfileResponse {
     String? firstDayOfWeek,
     bool? emailNotifications,
     bool? hasPassword,
+    bool? emailAccountNotifications,
+    bool? emailTrainingNotifications,
   }) => ProfileResponse(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -131,6 +145,8 @@ class ProfileResponse {
     firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
     emailNotifications: emailNotifications ?? this.emailNotifications,
     hasPassword: hasPassword ?? this.hasPassword,
+    emailAccountNotifications: emailAccountNotifications ?? this.emailAccountNotifications,
+    emailTrainingNotifications: emailTrainingNotifications ?? this.emailTrainingNotifications,
   );
 
   /// Returns a new [ProfileResponse] instance and imports its values from
@@ -157,6 +173,10 @@ class ProfileResponse {
         assert(json[r'emailNotifications'] != null, 'Required key "ProfileResponse[emailNotifications]" has a null value in JSON.');
         assert(json.containsKey(r'hasPassword'), 'Required key "ProfileResponse[hasPassword]" is missing from JSON.');
         assert(json[r'hasPassword'] != null, 'Required key "ProfileResponse[hasPassword]" has a null value in JSON.');
+        assert(json.containsKey(r'emailAccountNotifications'), 'Required key "ProfileResponse[emailAccountNotifications]" is missing from JSON.');
+        assert(json[r'emailAccountNotifications'] != null, 'Required key "ProfileResponse[emailAccountNotifications]" has a null value in JSON.');
+        assert(json.containsKey(r'emailTrainingNotifications'), 'Required key "ProfileResponse[emailTrainingNotifications]" is missing from JSON.');
+        assert(json[r'emailTrainingNotifications'] != null, 'Required key "ProfileResponse[emailTrainingNotifications]" has a null value in JSON.');
         return true;
       }());
 
@@ -170,6 +190,8 @@ class ProfileResponse {
         firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
         emailNotifications: mapValueOfType<bool>(json, r'emailNotifications')!,
         hasPassword: mapValueOfType<bool>(json, r'hasPassword')!,
+        emailAccountNotifications: mapValueOfType<bool>(json, r'emailAccountNotifications')!,
+        emailTrainingNotifications: mapValueOfType<bool>(json, r'emailTrainingNotifications')!,
       );
     }
     return null;
@@ -226,6 +248,8 @@ class ProfileResponse {
     'firstDayOfWeek',
     'emailNotifications',
     'hasPassword',
+    'emailAccountNotifications',
+    'emailTrainingNotifications',
   };
 }
 

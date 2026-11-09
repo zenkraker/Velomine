@@ -13,7 +13,9 @@ public sealed record UpdateProfileRequest(
     int? BirthYear,
     string? TimeZone,
     string FirstDayOfWeek,
-    bool? EmailNotifications = null);
+    bool? EmailNotifications = null,
+    bool? EmailAccountNotifications = null,
+    bool? EmailTrainingNotifications = null);
 
 public sealed class UpdateProfileValidator : Validator<UpdateProfileRequest>
 {
@@ -54,6 +56,8 @@ public sealed class UpdateProfile(VelomineDbContext db) : Endpoint<UpdateProfile
         user.TimeZone = string.IsNullOrWhiteSpace(req.TimeZone) ? null : req.TimeZone.Trim();
         user.FirstDayOfWeek = firstDay;
         user.EmailNotifications = req.EmailNotifications ?? user.EmailNotifications;
+        user.EmailAccountNotifications = req.EmailAccountNotifications ?? user.EmailAccountNotifications;
+        user.EmailTrainingNotifications = req.EmailTrainingNotifications ?? user.EmailTrainingNotifications;
         await db.SaveChangesAsync(ct);
 
         await Send.OkAsync(GetProfile.ProfileOf(user), ct);

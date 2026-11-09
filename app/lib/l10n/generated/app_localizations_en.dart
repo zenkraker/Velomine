@@ -1640,6 +1640,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This server is not set up to send email, so nothing is sent yet.';
 
   @override
+  String get emailAccountNotifications => 'Account and club emails';
+
+  @override
+  String get emailAccountNotificationsHelp =>
+      'Join requests and approvals, and sign-ups waiting for approval.';
+
+  @override
+  String get emailTrainingNotifications => 'Ride and gear emails';
+
+  @override
+  String get emailTrainingNotificationsHelp =>
+      'Rides finishing or failing, and parts wearing out. Grouped into one email.';
+
+  @override
   String get yourData => 'Your data';
 
   @override

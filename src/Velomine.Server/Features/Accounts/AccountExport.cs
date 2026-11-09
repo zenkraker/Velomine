@@ -65,6 +65,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.TimeZone,
             FirstDayOfWeek = WeekDays.Name(user.FirstDayOfWeek),
             user.EmailNotifications,
+            user.EmailAccountNotifications,
+            user.EmailTrainingNotifications,
             TelemetryConsentAt = user.TelemetryConsentAt,
             TelemetryConsentVersion = user.TelemetryConsentVersion,
             user.TelemetryCrash,

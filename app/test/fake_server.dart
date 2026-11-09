@@ -660,6 +660,8 @@ extension on FakeServer {
           'timeZone': null,
           'firstDayOfWeek': 'monday',
           'emailNotifications': true,
+          'emailAccountNotifications': true,
+          'emailTrainingNotifications': false,
           'hasPassword': caller.password.isNotEmpty,
         },
       );
@@ -678,6 +680,8 @@ extension on FakeServer {
           'timeZone': null,
           'firstDayOfWeek': 'monday',
           'emailNotifications': true,
+          'emailAccountNotifications': true,
+          'emailTrainingNotifications': false,
           'hasPassword': caller.password.isNotEmpty,
         },
       );
