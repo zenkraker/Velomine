@@ -2652,4 +2652,34 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get customHelper =>
       'Tieni questo componente fuori dal catalogo condiviso; non verrà inviato all\'editore.';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get telemetryHelp =>
+      'Aiuta a migliorare Velomine con segnalazioni anonime di errori e dati sulle prestazioni. Nessun dato che registri viene incluso.';
+
+  @override
+  String get crashReports => 'Segnalazioni di errori';
+
+  @override
+  String get crashReportsHelp =>
+      'Stack trace e versione dell\'app, per correggere un bug.';
+
+  @override
+  String get usageData => 'Prestazioni e utilizzo';
+
+  @override
+  String get usageDataHelp =>
+      'Schermate lente e funzioni usate, senza le tue uscite o dati di salute.';
+
+  @override
+  String get telemetryUnavailable => 'Questo server non raccoglie telemetria.';
+
+  @override
+  String get telemetrySaved => 'Salvato.';
+
+  @override
+  String get telemetryRestart => 'Riavvia l\'app per applicare questa scelta.';
 }

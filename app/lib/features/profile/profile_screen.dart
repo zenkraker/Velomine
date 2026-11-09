@@ -7,6 +7,7 @@ import '../../core/failure.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
 import '../../core/language_choice.dart';
+import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -190,6 +191,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (ok) setState(() {});
   }
 
+  Future<void> _setTelemetry({required bool crash, required bool usage}) async {
+    await ref
+        .read(profileViewModelProvider.notifier)
+        .setTelemetry(crash: crash, usage: usage);
+  }
+
   Widget _number(
     String key,
     TextEditingController c,
@@ -217,6 +224,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final s = ref.watch(profileViewModelProvider);
     final language = ref.watch(languageChoiceViewModelProvider);
+    final telemetry = s.telemetry;
+    final telemetryAvailable =
+        ref.watch(sessionViewModelProvider).serverInfo?.telemetryEnabled ??
+        false;
     final l10n = context.l10n;
 
     ref.listen(profileViewModelProvider.select((state) => state.messages), (
@@ -369,6 +380,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ? (v) => setState(() => _email = v)
                             : null,
                       ),
+                      const Divider(),
+                      Text(
+                        l10n.privacy,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(l10n.telemetryHelp),
+                      if (!telemetryAvailable)
+                        Text(l10n.telemetryUnavailable)
+                      else ...[
+                        SwitchListTile(
+                          key: const Key('telemetry-crash'),
+                          contentPadding: EdgeInsets.zero,
+                          value: telemetry?.crash ?? false,
+                          title: Text(l10n.crashReports),
+                          subtitle: Text(l10n.crashReportsHelp),
+                          onChanged: s.telemetrySave.running
+                              ? null
+                              : (v) => _setTelemetry(
+                                  crash: v,
+                                  usage: telemetry?.usage ?? false,
+                                ),
+                        ),
+                        SwitchListTile(
+                          key: const Key('telemetry-usage'),
+                          contentPadding: EdgeInsets.zero,
+                          value: telemetry?.usage ?? false,
+                          title: Text(l10n.usageData),
+                          subtitle: Text(l10n.usageDataHelp),
+                          onChanged: s.telemetrySave.running
+                              ? null
+                              : (v) => _setTelemetry(
+                                  crash: telemetry?.crash ?? false,
+                                  usage: v,
+                                ),
+                        ),
+                        if (s.telemetrySave.completed &&
+                            !s.telemetrySave.running)
+                          Text(
+                            '${l10n.telemetrySaved} ${l10n.telemetryRestart}',
+                            key: const Key('telemetry-saved'),
+                          ),
+                      ],
                       if ((problem ??
                               (failure == null
                                   ? null

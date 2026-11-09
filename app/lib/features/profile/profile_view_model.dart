@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
+import '../../core/telemetry.dart';
 import '../../core/user_message.dart';
 import 'profile_data.dart';
 import 'profile_state.dart';
@@ -26,15 +27,64 @@ class ProfileViewModel extends _$ProfileViewModel {
   Future<void> load() async {
     if (state.load.running) return;
     state = state.copyWith(load: state.load.start());
-    final result = await ref.read(profileDataProvider).profile();
+    final profileResult = await ref.read(profileDataProvider).profile();
+    final telemetryResult = await ref.read(profileDataProvider).telemetry();
     if (!ref.mounted) return;
-    state = switch (result) {
+    state = switch (profileResult) {
       Ok(:final value) => state.copyWith(
-        load: state.load.finish(result),
+        load: state.load.finish(profileResult),
         profile: value,
+        telemetry: telemetryResult.valueOrNull ?? state.telemetry,
       ),
-      Failed() => state.copyWith(load: state.load.finish(result)),
+      Failed() => state.copyWith(load: state.load.finish(profileResult)),
     };
+
+    if (telemetryResult case Ok(value: final value?)) {
+      final crash = value.consentRequired ? false : value.crash;
+      final usage = value.consentRequired ? false : value.usage;
+      final dsn = ref.read(sessionProvider).serverInfo?.sentryDsn;
+      await ref
+          .read(telemetryStoreProvider)
+          .write(
+            TelemetryChoice(
+              crash: crash,
+              usage: usage,
+              dsn: dsn,
+              termsVersion: value.version,
+            ),
+          );
+      if (!crash && !usage) await ref.read(telemetryRuntimeProvider).close();
+    }
+  }
+
+  Future<bool> setTelemetry({required bool crash, required bool usage}) async {
+    if (state.telemetrySave.running) return false;
+    state = state.copyWith(telemetrySave: state.telemetrySave.start());
+    final result = await ref
+        .read(profileDataProvider)
+        .setTelemetry(crash: crash, usage: usage);
+    if (!ref.mounted) return false;
+    state = state.copyWith(telemetrySave: state.telemetrySave.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+
+    final value = result.valueOrNull;
+    state = state.copyWith(telemetry: value);
+    final dsn = ref.read(sessionProvider).serverInfo?.sentryDsn;
+    await ref
+        .read(telemetryStoreProvider)
+        .write(
+          TelemetryChoice(
+            crash: crash,
+            usage: usage,
+            dsn: dsn,
+            termsVersion: value?.version ?? 0,
+          ),
+        );
+    if (!crash && !usage) await ref.read(telemetryRuntimeProvider).close();
+    return true;
   }
 
   Future<bool> save(UpdateProfileRequest request) async {

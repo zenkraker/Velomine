@@ -2630,4 +2630,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get customHelper =>
       'Keep this part out of the shared catalogue; it will not be sent to the publisher.';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get telemetryHelp =>
+      'Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.';
+
+  @override
+  String get crashReports => 'Crash reports';
+
+  @override
+  String get crashReportsHelp =>
+      'Stack traces and app version, so a bug can be fixed.';
+
+  @override
+  String get usageData => 'Performance and usage data';
+
+  @override
+  String get usageDataHelp =>
+      'Slow screens and which features are used, without your rides or health data.';
+
+  @override
+  String get telemetryUnavailable => 'This server does not collect telemetry.';
+
+  @override
+  String get telemetrySaved => 'Saved.';
+
+  @override
+  String get telemetryRestart => 'Restart the app to apply this choice.';
 }

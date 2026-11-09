@@ -12,7 +12,8 @@
   },
   "enabledMcpjsonServers": [
     "codegraph",
-    "dart"
+    "dart",
+    "sentry"
   ],
   "statusLine": {
     "type": "command",
@@ -21,7 +22,8 @@
   "permissions": {
     "allow": [
       "mcp__codegraph__*",
-      "mcp__dart__*"
+      "mcp__dart__*",
+      "mcp__sentry__*"
     ]
   },
   "hooks": {

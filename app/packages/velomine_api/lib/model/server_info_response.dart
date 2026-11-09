@@ -18,6 +18,9 @@ class ServerInfoResponse {
     required this.mapTileUrl,
     required this.mapAttribution,
     required this.emailAvailable,
+    required this.telemetryEnabled,
+    required this.sentryDsn,
+    required this.telemetryTermsVersion,
   });
 
   final String name;
@@ -30,13 +33,22 @@ class ServerInfoResponse {
 
   final bool emailAvailable;
 
+  final bool telemetryEnabled;
+
+  final String? sentryDsn;
+
+  final int telemetryTermsVersion;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ServerInfoResponse &&
     other.name == name &&
     other.version == version &&
     other.mapTileUrl == mapTileUrl &&
     other.mapAttribution == mapAttribution &&
-    other.emailAvailable == emailAvailable;
+    other.emailAvailable == emailAvailable &&
+    other.telemetryEnabled == telemetryEnabled &&
+    other.sentryDsn == sentryDsn &&
+    other.telemetryTermsVersion == telemetryTermsVersion;
 
   @override
   int get hashCode =>
@@ -45,10 +57,13 @@ class ServerInfoResponse {
     (version.hashCode) +
     (mapTileUrl.hashCode) +
     (mapAttribution.hashCode) +
-    (emailAvailable.hashCode);
+    (emailAvailable.hashCode) +
+    (telemetryEnabled.hashCode) +
+    (sentryDsn == null ? 0 : sentryDsn!.hashCode) +
+    (telemetryTermsVersion.hashCode);
 
   @override
-  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution, emailAvailable=$emailAvailable]';
+  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution, emailAvailable=$emailAvailable, telemetryEnabled=$telemetryEnabled, sentryDsn=$sentryDsn, telemetryTermsVersion=$telemetryTermsVersion]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -57,6 +72,13 @@ class ServerInfoResponse {
       json[r'mapTileUrl'] = this.mapTileUrl;
       json[r'mapAttribution'] = this.mapAttribution;
       json[r'emailAvailable'] = this.emailAvailable;
+      json[r'telemetryEnabled'] = this.telemetryEnabled;
+    if (this.sentryDsn != null) {
+      json[r'sentryDsn'] = this.sentryDsn;
+    } else {
+      json[r'sentryDsn'] = null;
+    }
+      json[r'telemetryTermsVersion'] = this.telemetryTermsVersion;
     return json;
   }
 
@@ -68,12 +90,19 @@ class ServerInfoResponse {
     String? mapTileUrl,
     String? mapAttribution,
     bool? emailAvailable,
+    bool? telemetryEnabled,
+    String? sentryDsn,
+    bool sentryDsnSetToNull = false,
+    int? telemetryTermsVersion,
   }) => ServerInfoResponse(
     name: name ?? this.name,
     version: version ?? this.version,
     mapTileUrl: mapTileUrl ?? this.mapTileUrl,
     mapAttribution: mapAttribution ?? this.mapAttribution,
     emailAvailable: emailAvailable ?? this.emailAvailable,
+    telemetryEnabled: telemetryEnabled ?? this.telemetryEnabled,
+    sentryDsn: sentryDsnSetToNull ? null : sentryDsn ?? this.sentryDsn,
+    telemetryTermsVersion: telemetryTermsVersion ?? this.telemetryTermsVersion,
   );
 
   /// Returns a new [ServerInfoResponse] instance and imports its values from
@@ -97,6 +126,11 @@ class ServerInfoResponse {
         assert(json[r'mapAttribution'] != null, 'Required key "ServerInfoResponse[mapAttribution]" has a null value in JSON.');
         assert(json.containsKey(r'emailAvailable'), 'Required key "ServerInfoResponse[emailAvailable]" is missing from JSON.');
         assert(json[r'emailAvailable'] != null, 'Required key "ServerInfoResponse[emailAvailable]" has a null value in JSON.');
+        assert(json.containsKey(r'telemetryEnabled'), 'Required key "ServerInfoResponse[telemetryEnabled]" is missing from JSON.');
+        assert(json[r'telemetryEnabled'] != null, 'Required key "ServerInfoResponse[telemetryEnabled]" has a null value in JSON.');
+        assert(json.containsKey(r'sentryDsn'), 'Required key "ServerInfoResponse[sentryDsn]" is missing from JSON.');
+        assert(json.containsKey(r'telemetryTermsVersion'), 'Required key "ServerInfoResponse[telemetryTermsVersion]" is missing from JSON.');
+        assert(json[r'telemetryTermsVersion'] != null, 'Required key "ServerInfoResponse[telemetryTermsVersion]" has a null value in JSON.');
         return true;
       }());
 
@@ -106,6 +140,9 @@ class ServerInfoResponse {
         mapTileUrl: mapValueOfType<String>(json, r'mapTileUrl')!,
         mapAttribution: mapValueOfType<String>(json, r'mapAttribution')!,
         emailAvailable: mapValueOfType<bool>(json, r'emailAvailable')!,
+        telemetryEnabled: mapValueOfType<bool>(json, r'telemetryEnabled')!,
+        sentryDsn: mapValueOfType<String>(json, r'sentryDsn'),
+        telemetryTermsVersion: mapValueOfType<int>(json, r'telemetryTermsVersion')!,
       );
     }
     return null;
@@ -158,6 +195,9 @@ class ServerInfoResponse {
     'mapTileUrl',
     'mapAttribution',
     'emailAvailable',
+    'telemetryEnabled',
+    'sentryDsn',
+    'telemetryTermsVersion',
   };
 }
 

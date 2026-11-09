@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -46,6 +47,6 @@ public sealed class SetMyLanguage(UserManager<User> users) : Endpoint<SetMyLangu
         await users.UpdateAsync(user);
 
         var roles = await users.GetRolesAsync(user);
-        await Send.OkAsync(new MeResponse(user.Id, user.Email!, user.DisplayName, [.. roles], user.Language), ct);
+        await Send.OkAsync(MeResponse.From(user, roles), ct);
     }
 }

@@ -75,6 +75,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
 *AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
+*AccountsApi* | [**getTelemetry**](doc//AccountsApi.md#gettelemetry) | **GET** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**listUsers**](doc//AccountsApi.md#listusers) | **GET** /api/v1/accounts/users | 
 *AccountsApi* | [**login**](doc//AccountsApi.md#login) | **POST** /api/v1/accounts/login | 
 *AccountsApi* | [**logout**](doc//AccountsApi.md#logout) | **POST** /api/v1/accounts/logout | 
@@ -83,6 +84,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
+*AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
 *AdminApi* | [**bikesGetCatalogue**](doc//AdminApi.md#bikesgetcatalogue) | **GET** /api/v1/admin/catalogue | 
@@ -258,6 +260,7 @@ Class | Method | HTTP request | Description
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetRideTypeRequest](doc//SetRideTypeRequest.md)
+ - [SetTelemetryRequest](doc//SetTelemetryRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
  - [ShareViewResponse](doc//ShareViewResponse.md)
@@ -266,6 +269,7 @@ Class | Method | HTTP request | Description
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
+ - [TelemetryResponse](doc//TelemetryResponse.md)
  - [TemplatePartRequest](doc//TemplatePartRequest.md)
  - [TemplatePartResponse](doc//TemplatePartResponse.md)
  - [TokenResponse](doc//TokenResponse.md)

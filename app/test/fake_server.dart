@@ -40,6 +40,8 @@ class FakeAccount {
   bool locked = false;
   List<String> roles;
   String? language;
+  bool telemetryCrash = false;
+  bool telemetryUsage = false;
 }
 
 /// A tiny stand-in for the Velomine server, answering the calls the app makes.
@@ -49,6 +51,8 @@ class FakeServer {
   final rides = <Map<String, Object?>>[];
   final requests = <String>[]; // "METHOD /path", in order
   bool ssoEnabled = false;
+  bool telemetryEnabled = false;
+  String? sentryDsn;
   String tileUrl = 'https://tiles.example/{z}/{x}/{y}.png'; // what GET /server offers as the map
   final bikes = <Map<String, Object?>>[];
   final parts =
@@ -247,6 +251,9 @@ class FakeServer {
         'mapTileUrl': tileUrl,
         'mapAttribution': '© Test Maps',
         'emailAvailable': smtpConfigured,
+        'telemetryEnabled': telemetryEnabled,
+        'sentryDsn': telemetryEnabled ? sentryDsn : null,
+        'telemetryTermsVersion': 1,
       });
     }
 
@@ -380,6 +387,9 @@ class FakeServer {
         'displayName': caller.name,
         'roles': caller.roles,
         'language': caller.language,
+        'telemetryConsentRequired': false,
+        'telemetryCrash': caller.telemetryCrash,
+        'telemetryUsage': caller.telemetryUsage,
       });
     }
 
@@ -567,6 +577,7 @@ extension on FakeServer {
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/accounts/me/ftp') &&
         !path.startsWith('/api/v1/accounts/me/language') &&
+        !path.startsWith('/api/v1/accounts/me/telemetry') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
         !path.startsWith('/api/v1/club') &&
@@ -604,6 +615,22 @@ extension on FakeServer {
         'displayName': caller.name,
         'roles': caller.roles,
         'language': caller.language,
+        'telemetryConsentRequired': false,
+        'telemetryCrash': caller.telemetryCrash,
+        'telemetryUsage': caller.telemetryUsage,
+      });
+    }
+
+    if (path == '/api/v1/accounts/me/telemetry') {
+      if (request.method == 'PUT') {
+        caller.telemetryCrash = body['crash'] as bool? ?? false;
+        caller.telemetryUsage = body['usage'] as bool? ?? false;
+      }
+      return json({
+        'consentRequired': false,
+        'crash': caller.telemetryCrash,
+        'usage': caller.telemetryUsage,
+        'version': 1,
       });
     }
 

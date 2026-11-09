@@ -108,6 +108,7 @@ lib/model/set_ftp_request.dart
 lib/model/set_my_language_request.dart
 lib/model/set_ride_bike_request.dart
 lib/model/set_ride_type_request.dart
+lib/model/set_telemetry_request.dart
 lib/model/set_user_roles_request.dart
 lib/model/settings_response.dart
 lib/model/share_view_response.dart
@@ -116,6 +117,7 @@ lib/model/sharing_response.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart
+lib/model/telemetry_response.dart
 lib/model/template_part_request.dart
 lib/model/template_part_response.dart
 lib/model/token_response.dart

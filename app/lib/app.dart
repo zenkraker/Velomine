@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'core/hooks.dart';
@@ -12,6 +15,7 @@ import 'core/providers.dart';
 import 'core/server_config.dart';
 import 'core/session.dart';
 import 'core/solo_hint.dart';
+import 'core/telemetry.dart';
 import 'core/theme.dart';
 import 'core/theme_choice.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -118,6 +122,9 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
     } else if (session.status == SessionStatus.signedOut) {
       ref.read(languageChoiceViewModelProvider.notifier).forget();
       _languageSynced = false;
+      // Never carry one member's telemetry choice into the next sign-in.
+      unawaited(ref.read(telemetryStoreProvider).clear());
+      unawaited(ref.read(telemetryRuntimeProvider).close());
     }
   }
 
@@ -125,6 +132,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
 
   GoRouter _createRouter() => GoRouter(
     initialLocation: '/',
+    observers: [SentryNavigatorObserver()],
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final club = ref.read(clubViewModelProvider);

@@ -240,7 +240,7 @@ Cross-club join requests are not in this database. A rider on another club's hos
 - Wellbeing and cycle data are health data: explicit consent before first use, and again when the terms version changes. Check-ins and RPE can be shared with coaches; free-text notes never leave the owner. The readiness score is member-only: a coach sees the load and the shared check-ins, not a composite advice.
 - Built-in ASP.NET Core rate limiting on login and upload, plus an in-memory limit on the two anonymous password endpoints. Secrets only in environment variables or a per-tenant secret store.
 - The Data Protection key ring is persisted to a volume and backed up. Losing it breaks signed URLs and later encrypted data.
-- Audit events stay in the club's database for 12 months and are visible to the member. Operational logs are structured JSON with request id, tenant, route template, status and duration; they never contain member data and are kept for 30 days. Diagnostics are generated on demand. There is no automatic telemetry and no third-party SDK.
+- Audit events stay in the club's database for 12 months and are visible to the member. Operational logs are structured JSON through Microsoft `ILogger` and Serilog, with request id, tenant, route template, status and duration; they never contain member data and are kept for 30 days. OpenTelemetry traces and Sentry error grouping are enabled only when the operator configures a DSN; a self-hosted instance has none by default. Member crash and performance/usage contribution is opt-in, versioned and off by default, carries no member data, and can be withdrawn. No session replay, no advertising SDK and no automatic telemetry.
 
 ## 10. Flutter apps
 
@@ -336,6 +336,9 @@ Each needs an evaluation in `docs/dependencies/` and owner approval before use.
 | Map widget | none: the route is drawn with Flutter's own canvas; map tiles are plain images laid out by our own code (`features/rides/detail/geo.dart`), which also pans and zooms the location picker. `flutter_map` would be needed for a general-purpose interactive map. | Not needed yet |
 | Charts | none: drawn with Flutter's own canvas (`features/rides/detail/series_chart.dart`) | Not needed |
 | Local storage on mobile | `sqflite`, or plain files | Needs evaluation |
+| Error tracking and crashes | Sentry .NET, `Sentry.Serilog`, `Sentry.OpenTelemetry.Exporter`, `sentry_flutter` | Approved, see `docs/dependencies/APPROVED.md` |
+| Structured logging | `Serilog.AspNetCore`, console and Sentry sinks | Approved, see `docs/dependencies/APPROVED.md` |
+| Traces and metrics | OpenTelemetry .NET, `Npgsql.OpenTelemetry` | Approved, see `docs/dependencies/APPROVED.md` |
 
 ## 13. Decisions to record as ADRs
 
@@ -349,4 +352,4 @@ Each needs an evaluation in `docs/dependencies/` and owner approval before use.
 8. Wear, goals and totals computed on read.
 9. Cloud runs one shared application deployment with one database and role per club; self-host is single-tenant.
 10. Offline, signed licence per club: no phone-home and never a block on member data.
-11. Audit and operational logging are separate rings; no automatic telemetry.
+11. Audit and operational logging are separate rings; telemetry is anonymous, opt-in and off by default.

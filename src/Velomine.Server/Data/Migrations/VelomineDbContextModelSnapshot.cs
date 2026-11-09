@@ -282,6 +282,22 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
 
+                    b.Property<DateTimeOffset?>("TelemetryConsentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("telemetry_consent_at");
+
+                    b.Property<int?>("TelemetryConsentVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("telemetry_consent_version");
+
+                    b.Property<bool>("TelemetryCrash")
+                        .HasColumnType("boolean")
+                        .HasColumnName("telemetry_crash");
+
+                    b.Property<bool>("TelemetryUsage")
+                        .HasColumnType("boolean")
+                        .HasColumnName("telemetry_usage");
+
                     b.Property<string>("TimeZone")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")

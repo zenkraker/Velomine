@@ -44,6 +44,7 @@ again to see their own history.
 - Nothing a member records is visible to anyone else until the member shares it.
 - Sharing is per data type, per audience, revocable, and logged for the member.
 - Health and wellbeing data needs explicit consent and never appears in share links.
+- Telemetry is opt-in and anonymous: crash reports and performance/usage data are contributed only when the member chooses, never include rides, health data, names or emails, and can be withdrawn at any time.
 - Minors are protected by default: no public profiles, no public individual results.
 
 ### 5. No engagement traps

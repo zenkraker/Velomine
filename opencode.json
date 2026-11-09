@@ -9,6 +9,10 @@
         "AGENT_PLUGIN": "opencode"
       },
       "enabled": true
+    },
+    "sentry": {
+      "type": "local",
+      "command": ["sentry-mcp"]
     }
   }
 }

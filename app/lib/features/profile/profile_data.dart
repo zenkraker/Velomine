@@ -19,6 +19,18 @@ class ProfileData {
     onUnauthorized: onUnauthorized,
   );
 
+  Future<Result<TelemetryResponse?>> telemetry() => _api.getTelemetry().guard(
+    FailureAction.loadProfile,
+    onUnauthorized: onUnauthorized,
+  );
+
+  Future<Result<TelemetryResponse?>> setTelemetry({
+    required bool crash,
+    required bool usage,
+  }) => _api
+      .setTelemetry(SetTelemetryRequest(crash: crash, usage: usage))
+      .guard(FailureAction.saveProfile, onUnauthorized: onUnauthorized);
+
   Future<Result<ProfileResponse?>> save(UpdateProfileRequest request) => _api
       .updateProfile(request)
       .guard(FailureAction.saveProfile, onUnauthorized: onUnauthorized);

@@ -14,6 +14,17 @@
 | geolocator | 14.1.x | 2026-11-09, by the owner | [geolocator.md](geolocator.md) | Android, iOS and web only; one position on demand, never a continuous stream; coordinates are used only for the opt-in club directory (inter-club layer, v2) and never stored. Keep the saved-home-location fallback for denied permission or a non-secure context. Re-evaluate on a major update. |
 | flutter_riverpod, riverpod_annotation, riverpod_generator, riverpod_lint | 3.5.x / 4.0.x / 4.0.x / 3.2.x | 2026-11-09, by the owner | [riverpod.md](riverpod.md) | Flutter app state only. Hand-written immutable state classes; no `freezed` and no second state-management library. Data sources return `Result<T>` (`Ok`/`Failed`) and ViewModels expose `CommandState`; see `AGENTS.md`. Generated provider files are committed. `riverpod_lint` is development-only, enabled through `analysis_options.yaml`. Patch and minor updates allowed with the changelog read; a major update is re-evaluated. |
 | @dietrichgebert/ponytail | 5.3.3 | 2026-11-09, by the owner | [ponytail.md](ponytail.md) | Agent plugin only (OpenCode and Claude Code). Exact version pinned in `opencode.json`; update deliberately and re-evaluate on a major update. Its rules never override `AGENTS.md`. |
+| Sentry .NET (`Sentry.AspNetCore`, `Sentry.Serilog`, `Sentry.OpenTelemetry.Exporter`) and `sentry_flutter` | 6.12.1 / 10.3.0 | 2026-11-09, by the owner | [sentry.md](sentry.md) | Error grouping, Flutter crashes, structured logs and OTel trace export. Opt-in and off by default for members; `SendDefaultPii = false`; no session replay; no request bodies, headers, cookies, query strings, raw paths, ride or health data; fixed server name; self-host has no DSN. The OTLP trace path is open beta, with Sentry native tracing as the fallback. Read-only Sentry MCP is allowed; project writes need the owner's approval. |
+| Serilog (`Serilog.AspNetCore`, `Serilog.Sinks.Console`, `Serilog.Settings.Configuration`) | 10.0.0 / 6.1.1 / 10.0.1 | 2026-11-09, by the owner | [serilog.md](serilog.md) | Logging provider only. `ILogger<T>` stays the application interface; Serilog types live in `Observability/` and the composition root. Console and Sentry sinks now; the OpenTelemetry sink is reserved for the later OTLP move. No member data in log properties. |
+| OpenTelemetry .NET (`OpenTelemetry.Extensions.Hosting`, `OpenTelemetry.Instrumentation.AspNetCore`, `.Http`, `.Runtime`, `OpenTelemetry.Exporter.OpenTelemetryProtocol`) and `Npgsql.OpenTelemetry` | 1.20.x / 10.0.3 | 2026-11-09, by the owner | [opentelemetry-dotnet.md](opentelemetry-dotnet.md) | Traces only over OTLP; Sentry does not accept OTLP metrics, so metrics use `MeterListener` to Sentry. 5–10 % sampling. The redaction processor is mandatory: no raw path, query string, header, IP, user or ride identifier. The exporter is pinned to 1.20.1 because 1.12.0 had GHSA-4625-4j76-fww9. |
+
+## Development tools, not app dependencies
+
+Sentry MCP (`https://mcp.sentry.dev/mcp`) and the SDK-bundled `dart mcp-server` are agent tools. They are
+not referenced by the server or app and do not ship. Sentry MCP is read-only (`inspect,triage`) unless the
+owner approves a write. Claude Code uses the hosted server; OpenCode 2 uses the Nix-provided local stdio
+wrapper `sentry-mcp` (`@sentry/mcp-server` 0.49.0) because the hosted OAuth currently fails with a 401 in
+OpenCode 2 (anomalyco/opencode#56195). The wrapper is pinned in `flake.nix` and downloads into `.dev/npm`.
 
 ## Needs an evaluation before use
 

@@ -351,6 +351,8 @@ class ApiClient {
           return SetRideBikeRequest.fromJson(value);
         case 'SetRideTypeRequest':
           return SetRideTypeRequest.fromJson(value);
+        case 'SetTelemetryRequest':
+          return SetTelemetryRequest.fromJson(value);
         case 'SetUserRolesRequest':
           return SetUserRolesRequest.fromJson(value);
         case 'SettingsResponse':
@@ -367,6 +369,8 @@ class ApiClient {
           return SsoInfoResponse.fromJson(value);
         case 'SsoStatus':
           return SsoStatus.fromJson(value);
+        case 'TelemetryResponse':
+          return TelemetryResponse.fromJson(value);
         case 'TemplatePartRequest':
           return TemplatePartRequest.fromJson(value);
         case 'TemplatePartResponse':

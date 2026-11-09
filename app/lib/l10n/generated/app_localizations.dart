@@ -4771,6 +4771,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep this part out of the shared catalogue; it will not be sent to the publisher.'**
   String get customHelper;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @telemetryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.'**
+  String get telemetryHelp;
+
+  /// No description provided for @crashReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports'**
+  String get crashReports;
+
+  /// No description provided for @crashReportsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack traces and app version, so a bug can be fixed.'**
+  String get crashReportsHelp;
+
+  /// No description provided for @usageData.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance and usage data'**
+  String get usageData;
+
+  /// No description provided for @usageDataHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow screens and which features are used, without your rides or health data.'**
+  String get usageDataHelp;
+
+  /// No description provided for @telemetryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not collect telemetry.'**
+  String get telemetryUnavailable;
+
+  /// No description provided for @telemetrySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved.'**
+  String get telemetrySaved;
+
+  /// No description provided for @telemetryRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the app to apply this choice.'**
+  String get telemetryRestart;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Wellbeing;
 
@@ -79,6 +80,7 @@ public sealed class SaveCheckIn(VelomineDbContext db, TimeProvider time)
         checkIn.Motivation = req.Motivation;
         checkIn.UpdatedAt = now;
         await db.SaveChangesAsync(ct);
+        VelomineMetrics.CheckInsSaved.Add(1);
 
         await Send.OkAsync(CheckInResponse.From(checkIn), ct);
     }

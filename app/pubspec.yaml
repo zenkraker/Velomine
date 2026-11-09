@@ -21,6 +21,7 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.3
   riverpod_annotation: ^4.0.8
+  sentry_flutter: ^10.3.0
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
   velomine_api:

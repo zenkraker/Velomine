@@ -965,5 +965,14 @@
   "contributionFailed": "Abbandonato",
   "custom": "Componente personalizzato",
   "customPart": "Personalizzato",
-  "customHelper": "Tieni questo componente fuori dal catalogo condiviso; non verrà inviato all'editore."
+  "customHelper": "Tieni questo componente fuori dal catalogo condiviso; non verrà inviato all'editore.",
+  "privacy": "Privacy",
+  "telemetryHelp": "Aiuta a migliorare Velomine con segnalazioni anonime di errori e dati sulle prestazioni. Nessun dato che registri viene incluso.",
+  "crashReports": "Segnalazioni di errori",
+  "crashReportsHelp": "Stack trace e versione dell'app, per correggere un bug.",
+  "usageData": "Prestazioni e utilizzo",
+  "usageDataHelp": "Schermate lente e funzioni usate, senza le tue uscite o dati di salute.",
+  "telemetryUnavailable": "Questo server non raccoglie telemetria.",
+  "telemetrySaved": "Salvato.",
+  "telemetryRestart": "Riavvia l'app per applicare questa scelta."
 }

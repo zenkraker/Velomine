@@ -1,9 +1,33 @@
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
+using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Accounts;
 
-public sealed record MeResponse(Guid Id, string Email, string DisplayName, string[] Roles, string? Language);
+public sealed record MeResponse(
+    Guid Id,
+    string Email,
+    string DisplayName,
+    string[] Roles,
+    string? Language,
+    bool TelemetryConsentRequired,
+    bool TelemetryCrash,
+    bool TelemetryUsage)
+{
+    public static MeResponse From(User user, IEnumerable<string> roles)
+    {
+        var required = user.TelemetryConsentVersion != TelemetryTerms.Version;
+        return new MeResponse(
+            user.Id,
+            user.Email!,
+            user.DisplayName,
+            [.. roles],
+            user.Language,
+            required,
+            !required && user.TelemetryCrash,
+            !required && user.TelemetryUsage);
+    }
+}
 
 public sealed class GetMe(UserManager<User> users) : EndpointWithoutRequest<MeResponse>
 {
@@ -18,6 +42,6 @@ public sealed class GetMe(UserManager<User> users) : EndpointWithoutRequest<MeRe
         }
 
         var roles = await users.GetRolesAsync(user);
-        await Send.OkAsync(new MeResponse(user.Id, user.Email!, user.DisplayName, [.. roles], user.Language), ct);
+        await Send.OkAsync(MeResponse.From(user, roles), ct);
     }
 }

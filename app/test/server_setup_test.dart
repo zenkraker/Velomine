@@ -14,6 +14,9 @@ ServerInfoResponse info() => ServerInfoResponse(
   mapTileUrl: 'https://tile.example/{z}/{x}/{y}.png',
   mapAttribution: '© Test Maps',
   emailAvailable: false,
+  telemetryEnabled: false,
+  sentryDsn: null,
+  telemetryTermsVersion: 1,
 );
 
 class _MemoryStore implements ServerConfigStore {

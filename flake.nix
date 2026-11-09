@@ -50,6 +50,20 @@
         });
       });
 
+      # TEMPORARY: OpenCode 2 rejects the hosted Sentry MCP OAuth with a 401
+      # (https://github.com/anomalyco/opencode/issues/56195). Remove this local
+      # stdio wrapper and point opencode.json back at https://mcp.sentry.dev/mcp
+      # once the fix ships. npx pins the package version; upgrade it deliberately.
+      sentryMcpVersion = "0.49.0";
+      sentryMcp = pkgs.writeShellApplication {
+        name = "sentry-mcp";
+        runtimeInputs = [ pkgs.nodejs ];
+        text = ''
+          export MCP_SKILLS="''${MCP_SKILLS:-inspect,triage}"
+          exec npx --yes @sentry/mcp-server@${sentryMcpVersion} "$@"
+        '';
+      };
+
       # OpenCode V2 is not in nixpkgs' extension set yet.
       opencodeV2Extension = pkgs.vscode-utils.extensionsFromVscodeMarketplace [
         {
@@ -78,7 +92,7 @@
       formatter.${system} = pkgs.nixfmt;
 
       packages.${system} = {
-        inherit opencode vscode;
+        inherit opencode vscode sentryMcp;
       };
 
       devShells.${system}.default = pkgs.mkShell {
@@ -100,6 +114,8 @@
           # docs/development.md.
           pkgs.nodejs # ponytail's Claude Code hooks
           pkgs.codegraph
+          pkgs.sentry-cli # releases and debug-symbol uploads
+          sentryMcp # local stdio Sentry MCP (hosted OAuth is broken in OpenCode 2)
           opencode # local override (see above); alternative to Claude Code
 
           # Flutter's own command-line needs, plus helpers
@@ -131,6 +147,7 @@
           export NUGET_HTTP_CACHE_PATH="$DEV/nuget/http-cache"
           export DOTNET_CLI_HOME="$DEV/dotnet"
           export PUB_CACHE="$DEV/pub-cache"
+          export npm_config_cache="$DEV/npm" # npx: sentry-mcp and other agent tools
           export GRADLE_USER_HOME="$DEV/gradle"
           export ANDROID_USER_HOME="$DEV/android"
           export ANDROID_AVD_HOME="$DEV/android/avd"

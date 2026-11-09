@@ -48,6 +48,36 @@ void main() {
     expect(find.text('Sunday'), findsOneWidget);
   });
 
+  testWidgets('ProfileScreen_ShouldSaveTelemetryChoice_WhenSwitched', (
+    tester,
+  ) async {
+    server.telemetryEnabled = true;
+    server.sentryDsn = 'https://key@example.invalid/1';
+    await openProfile(tester);
+
+    expect(find.byKey(const Key('telemetry-crash')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('telemetry-crash')));
+    await tester.tap(find.byKey(const Key('telemetry-crash')));
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/accounts/me/telemetry'));
+    expect(server.accounts['rider@example.com']!.telemetryCrash, isTrue);
+    expect(find.byKey(const Key('telemetry-saved')), findsOneWidget);
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldExplainTelemetryUnavailable_WhenServerHasNoDsn',
+    (tester) async {
+      await openProfile(tester);
+
+      expect(
+        find.text('This server does not collect telemetry.'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('telemetry-crash')), findsNothing);
+    },
+  );
+
   testWidgets('ProfileScreen_ShouldSendEveryField_WhenSomeAreEmpty', (
     tester,
   ) async {

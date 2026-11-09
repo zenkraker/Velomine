@@ -130,6 +130,53 @@ CodeGraph indexes the code into a local symbol graph and gives Claude MCP tools 
 
 OpenCode reads `AGENTS.md` directly and takes its MCP servers and plugins from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. OpenCode needs no install command for ponytail: the `plugins` entry loads `@dietrichgebert/ponytail` from npm on first start and keeps it active in every session of this repository. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
 
+#### Agent MCP servers
+
+The Dart MCP server is the one bundled with the pinned SDK. Do not install a separate global copy:
+
+```
+dart mcp-server --version     # 1.2.2 with Flutter 3.47.9 / Dart 3.13.7
+flutter --version
+```
+
+Claude Code gets the official plugin and its skills:
+
+```
+claude plugin marketplace add flutter/agent-plugins
+claude plugin install dart-flutter@dart-flutter
+```
+
+OpenCode has no Flutter plugin marketplace, so keep the `dart mcp-server` entry in `opencode.json` and install the official skills into the workspace:
+
+```
+npx skills add flutter/agent-plugins --skill '*' --agent universal --yes
+npx skills add dart-lang/skills --skill '*' --agent universal --yes
+```
+
+Sentry MCP is available in two forms. Claude Code uses the hosted server configured in `.mcp.json`. OpenCode 2
+currently fails the hosted server's OAuth with a 401 ([anomalyco/opencode#56195](https://github.com/anomalyco/opencode/issues/56195)),
+so the dev shell provides a local stdio server instead. **Temporary workaround:** remove the `sentry-mcp`
+wrapper from `flake.nix` and point `opencode.json` back at `https://mcp.sentry.dev/mcp` once that issue is fixed.
+
+```
+sentry-mcp auth login     # once; opens the browser and stores the login
+```
+
+`opencode.json` starts `sentry-mcp` with `MCP_SKILLS=inspect,triage`; the local server then uses the stored
+login. `sentry-cli` is also in the shell for releases and debug-symbol uploads. Without an LLM provider the
+local server's AI-powered search tools are unavailable, but project/DSN discovery and the other tools work.
+If you need `project-management` for a setup task, run it explicitly with
+`MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
+
+Telemetry is off in the development server by default. To try the server path, set
+`Velomine__Telemetry__Enabled=true` and `Velomine__Telemetry__Sentry__Dsn=<dsn>` in the environment; the app
+reads the DSN from `GET /api/v1/server` only after a member opts in under **Profile → Privacy** and restarts.
+A self-hosted server with no DSN sends nothing.
+
+Release builds do not upload debug symbols or web source maps yet. When you want readable release stack traces,
+add the Sentry Dart Plugin and pass `SENTRY_AUTH_TOKEN` as a build secret; it is deliberately not enabled by
+default because a self-hosted image has no token.
+
 The dev shell points the NuGet, pub, Gradle and Android caches, the unpacked Flutter SDK and the server's ride files into `.dev/`.
 
 ### 6. Enter the dev shell for the first time

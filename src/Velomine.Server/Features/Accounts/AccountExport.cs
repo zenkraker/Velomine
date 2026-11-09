@@ -65,6 +65,10 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.TimeZone,
             FirstDayOfWeek = WeekDays.Name(user.FirstDayOfWeek),
             user.EmailNotifications,
+            TelemetryConsentAt = user.TelemetryConsentAt,
+            TelemetryConsentVersion = user.TelemetryConsentVersion,
+            user.TelemetryCrash,
+            user.TelemetryUsage,
         }, ct);
         await AddJsonAsync(zip, "bikes.json", bikes.Select(b => new
         {

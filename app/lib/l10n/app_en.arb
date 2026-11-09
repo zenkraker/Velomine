@@ -1408,5 +1408,14 @@
   "contributionFailed": "Gave up",
   "custom": "Custom part",
   "customPart": "Custom",
-  "customHelper": "Keep this part out of the shared catalogue; it will not be sent to the publisher."
+  "customHelper": "Keep this part out of the shared catalogue; it will not be sent to the publisher.",
+  "privacy": "Privacy",
+  "telemetryHelp": "Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.",
+  "crashReports": "Crash reports",
+  "crashReportsHelp": "Stack traces and app version, so a bug can be fixed.",
+  "usageData": "Performance and usage data",
+  "usageDataHelp": "Slow screens and which features are used, without your rides or health data.",
+  "telemetryUnavailable": "This server does not collect telemetry.",
+  "telemetrySaved": "Saved.",
+  "telemetryRestart": "Restart the app to apply this choice."
 }

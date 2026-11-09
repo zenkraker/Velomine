@@ -13,8 +13,10 @@ using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Server;
+using Velomine.Server.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddVelomineTelemetry();
 
 // The connection string is read when the context is first created, so tests can override it.
 builder.Services.AddDbContext<VelomineDbContext>((services, options) =>
@@ -109,6 +111,7 @@ if (Directory.Exists(sitePath))
     app.UseStaticFiles(new StaticFileOptions { FileProvider = siteFiles });
 }
 app.UseStaticFiles();
+app.UseVelomineTelemetry();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();

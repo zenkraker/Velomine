@@ -2,13 +2,25 @@ using System.Reflection;
 using FastEndpoints;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Server;
 
 /// <summary>What a client needs to know about this server before anyone signs in.</summary>
-public sealed record ServerInfoResponse(string Name, string Version, string MapTileUrl, string MapAttribution, bool EmailAvailable);
+public sealed record ServerInfoResponse(
+    string Name,
+    string Version,
+    string MapTileUrl,
+    string MapAttribution,
+    bool EmailAvailable,
+    bool TelemetryEnabled,
+    string? SentryDsn,
+    int TelemetryTermsVersion);
 
-public sealed class GetServerInfo(IOptions<MapOptions> map, IOptions<SmtpOptions> smtp) : EndpointWithoutRequest<ServerInfoResponse>
+public sealed class GetServerInfo(
+    IOptions<MapOptions> map,
+    IOptions<SmtpOptions> smtp,
+    IOptions<TelemetryOptions> telemetry) : EndpointWithoutRequest<ServerInfoResponse>
 {
     public override void Configure()
     {
@@ -19,11 +31,15 @@ public sealed class GetServerInfo(IOptions<MapOptions> map, IOptions<SmtpOptions
     public override Task HandleAsync(CancellationToken ct)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        var options = telemetry.Value;
         return Send.OkAsync(new ServerInfoResponse(
             "Velomine",
             version,
             map.Value.EffectiveTileUrl,
             map.Value.EffectiveAttribution,
-            smtp.Value.Configured), ct);
+            smtp.Value.Configured,
+            options.IsActive,
+            options.IsActive ? options.Sentry.Dsn : null,
+            TelemetryTerms.Version), ct);
     }
 }

@@ -20,6 +20,23 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
 
         Assert.Equal("Velomine", info?.Name);
         Assert.False(string.IsNullOrEmpty(info?.Version));
+        Assert.False(info!.TelemetryEnabled);
+        Assert.Null(info.SentryDsn);
+    }
+
+    [Fact]
+    public async Task ServerInfo_ShouldOfferTelemetry_WhenTheOperatorEnabledIt()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Telemetry:Enabled", "true");
+            b.UseSetting("Velomine:Telemetry:Sentry:Dsn", "https://key@example.invalid/1");
+        });
+
+        var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
+
+        Assert.True(info!.TelemetryEnabled);
+        Assert.Equal("https://key@example.invalid/1", info.SentryDsn);
     }
 
     [Fact]

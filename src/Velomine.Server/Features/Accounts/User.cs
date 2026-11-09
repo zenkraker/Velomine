@@ -53,6 +53,18 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>The consent text version they accepted. A new version asks again.</summary>
     public int? WellbeingConsentVersion { get; set; }
+
+    /// <summary>When the member opted in to contributing crash and usage telemetry; null means never asked.</summary>
+    public DateTimeOffset? TelemetryConsentAt { get; set; }
+
+    /// <summary>The telemetry wording version they accepted. A new version asks again.</summary>
+    public int? TelemetryConsentVersion { get; set; }
+
+    /// <summary>Share crash reports and stack traces.</summary>
+    public bool TelemetryCrash { get; set; }
+
+    /// <summary>Share coarse performance and feature-usage data.</summary>
+    public bool TelemetryUsage { get; set; }
 }
 
 public static class Roles

@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Diagnostics;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
+using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
 
@@ -57,6 +59,19 @@ public sealed class RideIngestionService(
     }
 
     private async Task ProcessAsync(VelomineDbContext db, Guid id, CancellationToken ct)
+    {
+        var started = Stopwatch.GetTimestamp();
+        try
+        {
+            await ProcessCoreAsync(db, id, ct);
+        }
+        finally
+        {
+            VelomineMetrics.RideIngestionDuration.Record(Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+        }
+    }
+
+    private async Task ProcessCoreAsync(VelomineDbContext db, Guid id, CancellationToken ct)
     {
         var ride = await db.Rides.Include(r => r.Laps).FirstOrDefaultAsync(r => r.Id == id && r.Status == RideStatus.Processing, ct);
         if (ride is null) return;
@@ -185,11 +200,13 @@ public sealed class RideIngestionService(
 
         // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
+        VelomineMetrics.RidesIngested.Add(read.Count(r => r.Status == RideStatus.Ready));
         await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
     }
 
     private async Task FailAsync(VelomineDbContext db, Ride ride, string code, CancellationToken ct)
     {
+        VelomineMetrics.UploadFailures.Add(1, new KeyValuePair<string, object?>("reason", code));
         ride.Status = RideStatus.Failed;
         ride.Error = code;
         Notify.RideRead(db, time, ride);

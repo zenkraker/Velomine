@@ -5,6 +5,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'core/providers.dart';
 import 'core/server_config.dart';
+import 'core/telemetry.dart';
 import 'core/theme_choice.dart';
 import 'core/token_store_factory.dart';
 import 'root.dart';
@@ -28,8 +29,10 @@ Future<void> main() async {
     await container.read(tokenStoreProvider).clear();
   }
 
-  runApp(
-    UncontrolledProviderScope(
+  final telemetry = await container.read(telemetryStoreProvider).read();
+  await runWithTelemetry(
+    choice: telemetry,
+    app: UncontrolledProviderScope(
       container: container,
       child: const VelomineRoot(),
     ),
