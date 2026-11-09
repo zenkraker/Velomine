@@ -36,8 +36,8 @@ class ProfileData {
     final result = await _api
         .changePassword(
           ChangePasswordRequest(
-            currentPassword: current,
-            newPassword: newPassword,
+            currentPassword: current.trim(),
+            newPassword: newPassword.trim(),
           ),
         )
         .guard(FailureAction.changePassword, onUnauthorized: onUnauthorized);
@@ -52,7 +52,10 @@ class ProfileData {
   }) async {
     try {
       await _api.deleteMyAccount(
-        DeleteMyAccountRequest(password: password, confirmEmail: confirmEmail),
+        DeleteMyAccountRequest(
+          password: password?.trim(),
+          confirmEmail: confirmEmail?.trim(),
+        ),
       );
       return const Ok(null);
     } on ApiException catch (e) {

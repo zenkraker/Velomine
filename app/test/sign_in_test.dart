@@ -85,6 +85,19 @@ void main() {
     expect(find.byKey(const Key('upload')), findsNothing);
   });
 
+  testWidgets(
+    'SignInScreen_ShouldIgnoreSpacesAroundCredentials_WhenSigningIn',
+    (tester) async {
+      server.add('rider@example.com');
+      await startApp(tester, server.session(useCookies: false));
+
+      await signIn(tester, '  rider@example.com  ', '  Rider-pass-123  ');
+
+      expect(find.byKey(const Key('upload')), findsOneWidget);
+      expect(find.byKey(const Key('sign-in-error')), findsNothing);
+    },
+  );
+
   testWidgets('SignInScreen_ShouldTellToWait_WhenAccountIsNotApproved', (
     tester,
   ) async {

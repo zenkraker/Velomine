@@ -29,7 +29,7 @@ class AuthData {
   void retryRestore() => _session.retryRestore();
 
   Future<Result<void>> forgotPassword(String email) => _session.accounts
-      .forgotPassword(ForgotPasswordRequest(email: email))
+      .forgotPassword(ForgotPasswordRequest(email: email.trim()))
       .guard(FailureAction.resetPassword);
 
   Future<Result<void>> resetPassword({
@@ -39,9 +39,9 @@ class AuthData {
   }) => _session.accounts
       .resetPassword(
         ResetPasswordRequest(
-          email: email,
+          email: email.trim(),
           token: token,
-          newPassword: newPassword,
+          newPassword: newPassword.trim(),
         ),
       )
       .guard(FailureAction.resetPassword);

@@ -55,4 +55,19 @@ void main() {
 
     expect(find.textContaining('already an account'), findsOneWidget);
   });
+
+  testWidgets('RegisterScreen_ShouldStoreTrimmedFields_WhenTheyHaveSpaces', (
+    tester,
+  ) async {
+    await startApp(tester, server.session(useCookies: false));
+
+    await register(
+      tester,
+      email: '  new@example.com  ',
+      password: '  Rider-pass-123  ',
+    );
+
+    expect(find.byKey(const Key('registered')), findsOneWidget);
+    expect(server.accounts['new@example.com']!.password, 'Rider-pass-123');
+  });
 }

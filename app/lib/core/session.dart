@@ -291,6 +291,10 @@ class Session {
 
   /// Returns null on success, or the reason it failed.
   Future<AuthProblem?> signIn(String email, String password) async {
+    // Keys and autofill can add a space at either end; it must not decide whether
+    // an account matches.
+    email = email.trim();
+    password = password.trim();
     restoreProblem = null;
 
     TokenResponse? token;
@@ -342,6 +346,9 @@ class Session {
     String displayName,
     String password,
   ) async {
+    email = email.trim();
+    displayName = displayName.trim();
+    password = password.trim();
     try {
       final created = await accounts.register(
         RegisterRequest(
