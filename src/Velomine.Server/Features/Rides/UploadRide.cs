@@ -110,6 +110,8 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
     {
         if (earlier.FileSha256 != sha)
         {
+            // The file just saved belongs to no ride: do not leave it on disk. A file another member also uploaded stays.
+            if (!await db.Rides.AnyAsync(r => r.FileSha256 == sha, ct)) files.Delete(sha);
             AddError("This Idempotency-Key was already used with a different file.");
             await Send.ErrorsAsync(409, ct);
             return;

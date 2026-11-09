@@ -256,6 +256,8 @@
   "bike": "Bici",
   "noBike": "Nessuna bici",
   "mapOfRoute": "Mappa del percorso",
+  "heartRateOnMap": "Mostra la frequenza cardiaca sulla mappa",
+  "mapHeartRateHint": "Il colore del percorso indica la frequenza cardiaca da {min} a {max} bpm",
   "seriesElevation": "Altitudine",
   "seriesSpeed": "Velocità",
   "seriesPower": "Potenza",
@@ -624,6 +626,7 @@
   "wellbeingConsentTitle": "Prima di iniziare",
   "wellbeingConsentBody": "Velomine conserva un breve check-in giornaliero e l'RPE che aggiungi alle uscite. Sono dati sulla salute: nessun altro li vede se non li condividi con i tuoi allenatori, e puoi esportarli o eliminarli in qualsiasi momento. Non sono consigli medici.",
   "wellbeingConsentAction": "Accetto",
+  "wellbeingWithdrawConsent": "Revoca il consenso",
   "wellbeingToday": "Come ti senti oggi?",
   "wellbeingSaved": "Check-in di oggi",
   "wellbeingEdit": "Modifica oggi",
@@ -894,8 +897,6 @@
   "actionLoadTemplates": "caricare i tuoi modelli di allestimento",
   "actionSaveTemplate": "salvare il modello di allestimento",
   "actionApplyTemplate": "applicare il modello di allestimento",
-  "actionSaveCatalogue": "salvare l'impostazione del catalogo",
-  "actionResolveConflict": "risolvere il conflitto del catalogo",
 
   "saveAsTemplate": "Salva come modello di allestimento",
   "applyTemplate": "Applica un modello di allestimento",
@@ -940,25 +941,8 @@
     }
   },
   "catalogueConflicts": "Componenti diversi dal catalogo condiviso",
-  "noCatalogueConflicts": "Nessun componente diverso.",
   "keepMine": "Tieni il mio",
   "useShared": "Usa il condiviso",
-  "conflictLocal": "Il tuo: {text}",
-  "@conflictLocal": {
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
-  "conflictShared": "Condiviso: {text}",
-  "@conflictShared": {
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
   "contributionCounts": "{pending} in attesa · {sent} inviati · {rejected} rifiutati · {failed} falliti",
   "@contributionCounts": {
     "placeholders": {

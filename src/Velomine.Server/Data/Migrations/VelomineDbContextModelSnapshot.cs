@@ -1386,7 +1386,9 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_rides_bike_id");
 
                     b.HasIndex("UserId", "DedupKey")
-                        .HasDatabaseName("ix_rides_user_id_dedup_key");
+                        .IsUnique()
+                        .HasDatabaseName("ux_rides_user_dedup_key")
+                        .HasFilter("status IN ('Processing','Ready')");
 
                     b.HasIndex("UserId", "Discipline")
                         .HasDatabaseName("ix_rides_user_id_discipline");

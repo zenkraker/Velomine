@@ -71,13 +71,11 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
             .ToListAsync(ct);
 
         var athletes = new List<CoachAthleteResponse>(members.Count);
-        foreach (var member in members)
-        {
-            // Each member's own grants decide what the roster shows: one rider's choice must not colour another's.
-            var memberGrants = grants.Where(g => g.MemberId == member.UserId).ToList();
-            if (!memberGrants.Any(g => g.DataType is DataTypes.Rides or DataTypes.Analytics or DataTypes.Wellbeing)) continue;
-            athletes.Add(await CoachQueries.SummaryAsync(db, time, member, memberGrants, ct));
-        }
+        var sharing = members
+            .Where(member => grants.Any(g => g.MemberId == member.UserId
+                && g.DataType is DataTypes.Rides or DataTypes.Analytics or DataTypes.Wellbeing))
+            .ToList();
+        athletes.AddRange(await CoachQueries.SummariesAsync(db, time, sharing, grants, ct));
 
         // The roster shows each athlete's snapshot, so it is a view of their data, not just a directory.
         await SharingRules.RecordViewsAsync(
@@ -170,6 +168,83 @@ public static class CoachQueries
 {
     public static async Task<string> ViewerNameAsync(VelomineDbContext db, Guid viewerId, CancellationToken ct) =>
         await db.Users.AsNoTracking().Where(u => u.Id == viewerId).Select(u => u.DisplayName).FirstOrDefaultAsync(ct) ?? "";
+
+    /// <summary>
+    /// The roster in a fixed number of queries: one for the rides of every athlete, one for their last ride.
+    /// Each member's own grants still decide what is shown for them.
+    /// </summary>
+    public static async Task<List<CoachAthleteResponse>> SummariesAsync(
+        VelomineDbContext db,
+        TimeProvider time,
+        IReadOnlyCollection<ClubMembership> members,
+        IReadOnlyCollection<ShareGrant> grants,
+        CancellationToken ct)
+    {
+        if (members.Count == 0) return [];
+
+        var ids = members.Select(m => m.UserId).ToList();
+        // The local window is the same 42 days for everyone; the UTC cut has a day either side for time zones.
+        var utcToday = DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime);
+        var fromUtc = new DateTimeOffset(utcToday.AddDays(-42).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var toUtc = new DateTimeOffset(utcToday.AddDays(2).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var rides = await db.Rides.AsNoTracking()
+            .Where(r => ids.Contains(r.UserId) && r.Status == RideStatus.Ready
+                && r.StartTime >= fromUtc && r.StartTime < toUtc)
+            .Select(r => new { r.UserId, r.StartTime, r.UtcOffsetMinutes, r.DistanceM, r.MovingS, r.ElevationGainM, r.NormalizedPowerW, r.Tss })
+            .ToListAsync(ct);
+
+        var rideSharerIds = members
+            .Where(m => grants.Any(g => g.MemberId == m.UserId && g.DataType == DataTypes.Rides))
+            .Select(m => m.UserId)
+            .ToList();
+        var lastRideTimes = rideSharerIds.Count == 0
+            ? new Dictionary<Guid, DateTimeOffset?>()
+            : await db.Rides.AsNoTracking()
+                .Where(r => rideSharerIds.Contains(r.UserId) && r.Status == RideStatus.Ready)
+                .GroupBy(r => r.UserId)
+                .Select(g => new { UserId = g.Key, Last = g.Max(r => r.StartTime) })
+                .ToDictionaryAsync(x => x.UserId, x => x.Last, ct);
+
+        var result = new List<CoachAthleteResponse>(members.Count);
+        foreach (var member in members)
+        {
+            var memberGrants = grants.Where(g => g.MemberId == member.UserId).ToList();
+            var sharesRides = memberGrants.Any(g => g.DataType == DataTypes.Rides);
+            var sharesAnalytics = memberGrants.Any(g => g.DataType == DataTypes.Analytics);
+            var sharesRoutes = memberGrants.Any(g => g.DataType == DataTypes.Routes);
+            var sharesWellbeing = memberGrants.Any(g => g.DataType == DataTypes.Wellbeing);
+
+            var clock = MemberClock.For(member.User.TimeZone, member.User.FirstDayOfWeek, time);
+            var from = clock.Today.AddDays(-41);
+            var to = clock.Today.AddDays(1);
+            var memberRides = rides
+                .Where(r => r.UserId == member.UserId)
+                .Select(r => new RideDay(
+                    clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
+                    r.DistanceM ?? 0,
+                    r.MovingS ?? 0,
+                    r.ElevationGainM ?? 0,
+                    r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, member.User.FtpW).Tss ?? 0))
+                .Where(r => r.LocalDate >= from && r.LocalDate < to)
+                .ToList();
+            var week = memberRides.Where(r => r.LocalDate >= clock.Today.AddDays(-6)).ToList();
+
+            result.Add(new CoachAthleteResponse(
+                member.UserId,
+                member.User.DisplayName,
+                sharesRides,
+                sharesAnalytics,
+                sharesRoutes,
+                sharesWellbeing,
+                sharesRides && lastRideTimes.TryGetValue(member.UserId, out var last) ? last : null,
+                sharesRides ? memberRides.Count : null,
+                sharesRides ? memberRides.Sum(r => r.DistanceM) : null,
+                sharesAnalytics ? Math.Round(week.Sum(r => r.Tss), 1) : null,
+                sharesAnalytics ? Math.Round(memberRides.Sum(r => r.Tss), 1) : null));
+        }
+
+        return result;
+    }
 
     public static async Task<CoachAthleteResponse> SummaryAsync(
         VelomineDbContext db,

@@ -39,6 +39,7 @@ public sealed class TestApi : IAsyncDisposable
         {
             builder.UseSetting("ConnectionStrings:Velomine", connection);
             builder.UseSetting("Velomine:FilesPath", filesPath);
+            builder.UseSetting("Velomine:DataProtection:KeysPath", Path.Combine(filesPath, "keys"));
             builder.UseSetting("Velomine:Admin:Email", AdminEmail);
             builder.UseSetting("Velomine:Admin:Password", AdminPassword);
             // Tests start with an empty catalogue unless they ask for the bundled seed.

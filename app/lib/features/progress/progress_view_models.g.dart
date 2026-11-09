@@ -104,7 +104,7 @@ final class TotalsViewModelProvider
   }
 }
 
-String _$totalsViewModelHash() => r'8d193f2330e4cda1ab8e85d46e146cf0ccb05ccb';
+String _$totalsViewModelHash() => r'12cb9396b0b2de3b56ee86740ed66d6799316d10';
 
 abstract class _$TotalsViewModel extends $Notifier<TotalsState> {
   TotalsState build();
@@ -156,7 +156,7 @@ final class GoalsViewModelProvider
   }
 }
 
-String _$goalsViewModelHash() => r'5875c34ca46c8f22154a491a1fe6300f08e9d207';
+String _$goalsViewModelHash() => r'4d4fde365cfb1b46bc4be64a483f8034029c22f5';
 
 abstract class _$GoalsViewModel extends $Notifier<GoalsState> {
   GoalsState build();
@@ -208,7 +208,7 @@ final class TrainingViewModelProvider
   }
 }
 
-String _$trainingViewModelHash() => r'abda001d0f35a61ab51abc5e91ac6c4c67933857';
+String _$trainingViewModelHash() => r'677e10863de1610597f551f804cb2a2ddaa7816b';
 
 abstract class _$TrainingViewModel extends $Notifier<TrainingState> {
   TrainingState build();
@@ -261,7 +261,7 @@ final class PowerCurveViewModelProvider
 }
 
 String _$powerCurveViewModelHash() =>
-    r'2956d723977bca4af053abf021c98b693428a74b';
+    r'b73eac18834e97e8193849a02bd402c2e2fabbcf';
 
 abstract class _$PowerCurveViewModel extends $Notifier<PowerState> {
   PowerState build();
@@ -314,7 +314,7 @@ final class ReadinessViewModelProvider
 }
 
 String _$readinessViewModelHash() =>
-    r'977a3e0174369c1a22107d5dad39a18f694a07ca';
+    r'082da647cd7cb9ff29ea9920bbca1b44291d2abb';
 
 abstract class _$ReadinessViewModel extends $Notifier<ReadinessState> {
   ReadinessState build();
@@ -367,7 +367,7 @@ final class WellbeingViewModelProvider
 }
 
 String _$wellbeingViewModelHash() =>
-    r'641bbc696c14f0e6adc09451212c9524fe9189e4';
+    r'afcce6f28be44df7cb4850674493682b7cdeefbf';
 
 abstract class _$WellbeingViewModel extends $Notifier<WellbeingState> {
   WellbeingState build();

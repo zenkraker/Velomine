@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -28,6 +29,7 @@ public sealed class ResetPassword(
     {
         Post("accounts/password/reset");
         AllowAnonymous();
+        Options(b => b.RequireRateLimiting("anonymous"));
         Description(d => d.Accepts<ResetPasswordRequest>("application/json").Produces(204).ProducesProblem(400)
             .ProducesProblem(429), clearDefaults: true);
     }

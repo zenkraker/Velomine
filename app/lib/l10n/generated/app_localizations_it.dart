@@ -812,6 +812,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapOfRoute => 'Mappa del percorso';
 
   @override
+  String get heartRateOnMap => 'Mostra la frequenza cardiaca sulla mappa';
+
+  @override
+  String mapHeartRateHint(int min, int max) {
+    return 'Il colore del percorso indica la frequenza cardiaca da $min a $max bpm';
+  }
+
+  @override
   String get seriesElevation => 'Altitudine';
 
   @override
@@ -2002,6 +2010,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingConsentAction => 'Accetto';
 
   @override
+  String get wellbeingWithdrawConsent => 'Revoca il consenso';
+
+  @override
   String get wellbeingToday => 'Come ti senti oggi?';
 
   @override
@@ -2540,12 +2551,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionApplyTemplate => 'applicare il modello di allestimento';
 
   @override
-  String get actionSaveCatalogue => 'salvare l\'impostazione del catalogo';
-
-  @override
-  String get actionResolveConflict => 'risolvere il conflitto del catalogo';
-
-  @override
   String get saveAsTemplate => 'Salva come modello di allestimento';
 
   @override
@@ -2618,23 +2623,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get catalogueConflicts => 'Componenti diversi dal catalogo condiviso';
 
   @override
-  String get noCatalogueConflicts => 'Nessun componente diverso.';
-
-  @override
   String get keepMine => 'Tieni il mio';
 
   @override
   String get useShared => 'Usa il condiviso';
-
-  @override
-  String conflictLocal(String text) {
-    return 'Il tuo: $text';
-  }
-
-  @override
-  String conflictShared(String text) {
-    return 'Condiviso: $text';
-  }
 
   @override
   String contributionCounts(int pending, int sent, int rejected, int failed) {

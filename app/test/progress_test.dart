@@ -50,6 +50,32 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'ProgressScreen_ShouldShowOnlyTheChosenPeriod_WhenThePeriodChangesDuringALoad',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      final gate = server.delayNext('/api/v1/analytics/totals');
+      await tester.tap(find.text('Progress'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 10));
+
+      await tester.tap(find.text('Months'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('This month'), findsOneWidget);
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.text('This month'), findsOneWidget);
+      expect(find.text('This week'), findsNothing);
+      expect(find.text('103 km'), findsWidgets);
+    },
+  );
+
   testWidgets('ProgressScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
     tester,
   ) async {
@@ -226,6 +252,66 @@ void main() {
     expect(server.wellbeingToday?['motivation'], 3);
     expect(find.byKey(const Key('readiness-card')), findsOneWidget);
     expect(find.text('How you feel'), findsOneWidget);
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldClearMemberData_WhenAnotherAccountSignsIn',
+    (tester) async {
+      final second = server.add('other@example.com');
+      await openProgress(tester);
+      expect(find.byKey(const Key('total-0')), findsOneWidget);
+      expect(find.text('42.5 km'), findsWidgets);
+
+      await tester.tap(find.byKey(const Key('sign-out')));
+      await tester.pumpAndSettle();
+      server.totals.clear();
+      server.goals.clear();
+      server.goalCurrent.clear();
+
+      await tester.enterText(find.byKey(const Key('email')), second.email);
+      await tester.enterText(
+        find.byKey(const Key('password')),
+        second.password,
+      );
+      await tester.tap(find.byKey(const Key('sign-in')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Progress'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('total-0')), findsNothing);
+      expect(find.text('42.5 km'), findsNothing);
+      expect(find.byKey(const Key('no-goals')), findsOneWidget);
+      expect(
+        server.requests
+            .where((r) => r == 'GET /api/v1/analytics/totals')
+            .length,
+        2,
+      );
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldWithdrawConsent_WhenTheButtonIsTapped', (
+    tester,
+  ) async {
+    server.wellbeingConsent = true;
+    server.wellbeingToday = {
+      'date': '2026-11-08',
+      'fatigue': 3,
+      'soreness': 2,
+      'mood': 4,
+      'stress': 2,
+      'motivation': 5,
+    };
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('wellbeing-withdraw')));
+    await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
+    await tester.pumpAndSettle();
+
+    expect(server.wellbeingConsent, isFalse);
+    expect(server.sharingChoices['wellbeing'], 'none');
+    expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
   });
 
   testWidgets('ProgressScreen_ShouldAskForOneDiscipline_WhenAFilterIsChosen', (

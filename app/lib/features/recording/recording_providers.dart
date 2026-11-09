@@ -32,12 +32,14 @@ final uploadStateStoreProvider = Provider<UploadStateStore>(
 @Riverpod(keepAlive: true)
 RideUploadQueue? uploadQueue(Ref ref) {
   final recorder = ref.watch(recorderProvider);
-  if (recorder == null) return null;
+  final accountId = ref.watch(signedInUserIdProvider);
+  if (recorder == null || accountId == null) return null;
   final session = ref.watch(sessionProvider);
   final queue = RideUploadQueue(
     recorder: recorder,
     uploader: ServerRideUploader(session.rides),
     store: ref.watch(uploadStateStoreProvider),
+    accountId: accountId,
     serverUrl: session.serverUrl,
     pollInterval: ref.watch(ridePollIntervalProvider),
     onUnauthorized: session.sessionExpired,

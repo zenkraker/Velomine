@@ -2,8 +2,10 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/theme.dart';
 import 'package:velomine/features/rides/detail/geo.dart';
 import 'package:velomine/features/rides/detail/ride_series.dart';
+import 'package:velomine/features/rides/detail/route_map.dart';
 import 'package:velomine/features/rides/detail/scale.dart';
 import 'package:velomine_api/api.dart';
 
@@ -152,8 +154,8 @@ void main() {
       expect(series.series.map((s) => s.id), [
         'elevation',
         'speed',
-        'power',
         'heartrate',
+        'power',
       ]); // speed is worked out from positions
     });
 
@@ -205,6 +207,28 @@ void main() {
       ); // sample 1 has no position; sample 0 is the nearest
     });
 
+    test(
+      'RideSeries_ShouldOmitSpeed_WhenNoTwoNeighbouringSamplesHaveAPosition',
+      () {
+        final series = RideSeries.from(
+          RideStreamsResponse(
+            time: const [0, 1, 2, 3],
+            latitude: const [46.0, null, null, 46.001],
+            longitude: const [11.0, null, null, 11.001],
+            altitude: const [],
+            speed: const [],
+            distance: const [],
+            heartRate: const [],
+            power: const [],
+            cadence: const [],
+            temperature: const [],
+          ),
+        );
+
+        expect(series.series.any((s) => s.id == 'speed'), isFalse);
+      },
+    );
+
     test('Series_ShouldSkipGapsInStatistics_WhenValuesContainNulls', () {
       final s = Series(
         id: 'x',
@@ -218,5 +242,24 @@ void main() {
       expect(s.format(null), '–');
       expect(s.format(12.345), '12.3 u');
     });
+  });
+
+  group('heart rate colour', () {
+    test('HeartRateColor_ShouldUseTheRouteColour_WhenTheRateIsAtItsLowest', () {
+      expect(
+        heartRateColor(90, 90, 180, VelomineColors.day),
+        VelomineColors.day.route,
+      );
+    });
+
+    test(
+      'HeartRateColor_ShouldUseTheHeartRateColour_WhenTheRateIsAtItsHighest',
+      () {
+        expect(
+          heartRateColor(180, 90, 180, VelomineColors.day),
+          VelomineColors.day.series['heartrate'],
+        );
+      },
+    );
   });
 }

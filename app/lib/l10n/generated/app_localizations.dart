@@ -1544,6 +1544,18 @@ abstract class AppLocalizations {
   /// **'Map of the route'**
   String get mapOfRoute;
 
+  /// No description provided for @heartRateOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show heart rate on the map'**
+  String get heartRateOnMap;
+
+  /// No description provided for @mapHeartRateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Route colour shows heart rate from {min} to {max} bpm'**
+  String mapHeartRateHint(int min, int max);
+
   /// No description provided for @seriesElevation.
   ///
   /// In en, this message translates to:
@@ -3632,6 +3644,12 @@ abstract class AppLocalizations {
   /// **'I agree'**
   String get wellbeingConsentAction;
 
+  /// No description provided for @wellbeingWithdrawConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw consent'**
+  String get wellbeingWithdrawConsent;
+
   /// No description provided for @wellbeingToday.
   ///
   /// In en, this message translates to:
@@ -4592,18 +4610,6 @@ abstract class AppLocalizations {
   /// **'apply the build template'**
   String get actionApplyTemplate;
 
-  /// No description provided for @actionSaveCatalogue.
-  ///
-  /// In en, this message translates to:
-  /// **'save the catalogue setting'**
-  String get actionSaveCatalogue;
-
-  /// No description provided for @actionResolveConflict.
-  ///
-  /// In en, this message translates to:
-  /// **'settle the catalogue conflict'**
-  String get actionResolveConflict;
-
   /// No description provided for @saveAsTemplate.
   ///
   /// In en, this message translates to:
@@ -4712,12 +4718,6 @@ abstract class AppLocalizations {
   /// **'Parts that differ from the shared catalogue'**
   String get catalogueConflicts;
 
-  /// No description provided for @noCatalogueConflicts.
-  ///
-  /// In en, this message translates to:
-  /// **'No parts differ.'**
-  String get noCatalogueConflicts;
-
   /// No description provided for @keepMine.
   ///
   /// In en, this message translates to:
@@ -4729,18 +4729,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use shared'**
   String get useShared;
-
-  /// No description provided for @conflictLocal.
-  ///
-  /// In en, this message translates to:
-  /// **'Yours: {text}'**
-  String conflictLocal(String text);
-
-  /// No description provided for @conflictShared.
-  ///
-  /// In en, this message translates to:
-  /// **'Shared: {text}'**
-  String conflictShared(String text);
 
   /// No description provided for @contributionCounts.
   ///

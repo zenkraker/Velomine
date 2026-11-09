@@ -57,11 +57,18 @@ services:
       Velomine__Sso__ClientSecret: velomine-dev-secret
       Velomine__Sso__DisplayName: Dex (local test)
       Velomine__Sso__AllowInsecureHttp: "true"
+      # Background work (ride ingestion, email, catalogue sync) runs on one instance only. On every other API
+      # instance of a cloud deployment set Velomine__Background__Enabled=false; keep it true on exactly one.
+      # Velomine__Background__Enabled: "false"
     ports:
       - "${VELOMINE_PORT:-8080}:8080"
     volumes:
       - velomine-files:/data/files
+      # Shared by every API instance: the Data Protection key ring signs the cookies, so a restart or another
+      # instance must read the same keys. Do not give each instance its own volume.
+      - velomine-keys:/data/keys
 
 volumes:
   postgres-data:
   velomine-files:
+  velomine-keys:

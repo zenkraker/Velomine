@@ -44,7 +44,14 @@ public sealed class DeleteMyAccount(UserManager<User> users, AccountDeletion del
             return;
         }
 
-        await deletion.DeleteAsync(user.Id, ct);
+        var result = await deletion.DeleteAsync(user.Id, ct);
+        if (result == AccountDeletionResult.SoleClubOwner)
+        {
+            AddError("You are the only owner of your club. Make another member the owner first.");
+            await Send.ErrorsAsync(409, ct);
+            return;
+        }
+
         await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme); // the browser's cookie belongs to nobody now
         await Send.NoContentAsync(ct);
     }

@@ -69,16 +69,14 @@ public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest,
 
         if (req.Cursor is not null)
         {
-            var parts = req.Cursor.Split(':');
-            if (parts.Length != 2 || !long.TryParse(parts[0], out var ticks) || !Guid.TryParse(parts[1], out var lastId))
+            if (!RideCursor.TryParse(req.Cursor, out var lastTime, out var lastId))
             {
-                AddError(r => r.Cursor!, "The cursor is not valid.");
+                AddError(r => r.Cursor!, RideCursor.InvalidMessage);
                 await Send.ErrorsAsync(400, ct);
                 return;
             }
 
-            var lastTime = new DateTimeOffset(ticks, TimeSpan.Zero);
-            query = query.Where(r => (r.StartTime ?? r.UploadedAt) < lastTime || ((r.StartTime ?? r.UploadedAt) == lastTime && r.Id.CompareTo(lastId) < 0));
+            query = RideCursor.Apply(query, lastTime, lastId);
         }
 
         if (req.Discipline is not null) query = query.Where(r => r.Discipline == req.Discipline);
@@ -86,17 +84,7 @@ public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest,
         if (req.Environment is not null) query = query.Where(r => r.Environment == req.Environment);
         if (req.Commute is { } commute) query = query.Where(r => r.Commute == commute);
 
-        var page = await query
-            .OrderByDescending(r => r.StartTime ?? r.UploadedAt)
-            .ThenByDescending(r => r.Id)
-            .Take(limit + 1)
-            .ToListAsync(ct);
-
-        var hasMore = page.Count > limit;
-        if (hasMore) page.RemoveAt(page.Count - 1);
-        var last = page.LastOrDefault();
-        var next = hasMore && last is not null ? $"{(last.StartTime ?? last.UploadedAt).UtcTicks}:{last.Id}" : null;
-
+        var (page, next) = await RideCursor.PageAsync(query, limit, ct);
         await Send.OkAsync(new ListRidesResponse([.. page.Select(RideResponse.From)], next), ct);
     }
 }

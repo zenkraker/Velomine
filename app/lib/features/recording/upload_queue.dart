@@ -34,18 +34,6 @@ class UploadState {
       state == queued || state == uploading || state == processing;
   bool get isFailed => state == failed;
 
-  UploadState copyWith({
-    String? state,
-    String? serverRideId,
-    String? error,
-    int? attempts,
-  }) => UploadState(
-    state: state ?? this.state,
-    serverRideId: serverRideId ?? this.serverRideId,
-    error: error ?? this.error,
-    attempts: attempts ?? this.attempts,
-  );
-
   Map<String, Object?> toJson() => {
     'state': state,
     'serverRideId': serverRideId,
@@ -122,6 +110,7 @@ class RideUploadQueue {
     required this.recorder,
     required this.uploader,
     required this.store,
+    required this.accountId,
     this.serverUrl,
     this.pollInterval = const Duration(seconds: 1),
     this.onUnauthorized,
@@ -130,6 +119,9 @@ class RideUploadQueue {
   final Recorder recorder;
   final RideUploader uploader;
   final UploadStateStore store;
+
+  /// Uploads only the rides this member recorded.
+  final String accountId;
   final String? serverUrl;
   final Duration pollInterval;
   final VoidCallback? onUnauthorized;
@@ -161,12 +153,17 @@ class RideUploadQueue {
 
   /// On opening the recorder: retry unfinished uploads and queue ready rides that were never sent.
   Future<void> resume(List<LocalRide> rides) async {
+    final mine = [
+      for (final ride in rides)
+        if (ride.accountId == accountId) ride,
+    ];
+    final ids = {for (final ride in mine) ride.id};
     for (final entry in _states.entries) {
-      if (_shouldRetry(entry.value)) {
+      if (ids.contains(entry.key) && _shouldRetry(entry.value)) {
         unawaited(_run(entry.key));
       }
     }
-    for (final ride in rides) {
+    for (final ride in mine) {
       if (!ride.isReady) continue;
       if (ride.isUploaded) {
         _states[ride.id] = UploadState(
@@ -204,6 +201,10 @@ class RideUploadQueue {
     final existing = _states[rideId];
     if (!retry && existing?.isUploaded == true) return;
     if (_running.contains(rideId)) return;
+    if (!await _owns(rideId)) {
+      recorderLog('upload: $rideId belongs to another member; refused');
+      return;
+    }
 
     _states[rideId] = UploadState(
       state: UploadState.queued,
@@ -218,6 +219,16 @@ class RideUploadQueue {
   }
 
   Future<void> retry(String rideId) => enqueue(rideId, retry: true);
+
+  Future<bool> _owns(String rideId) async {
+    try {
+      final rides = await recorder.listRides(accountId: accountId);
+      return rides.any((ride) => ride.id == rideId);
+    } on Object catch (e) {
+      recorderLog('upload: could not check ride $rideId: $e');
+      return false;
+    }
+  }
 
   /// Drop a ride that was deleted from the phone.
   void forget(String rideId) {

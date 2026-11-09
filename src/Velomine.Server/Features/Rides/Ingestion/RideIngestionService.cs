@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Bikes;
@@ -41,8 +42,16 @@ public sealed class RideIngestionService(
             catch (Exception ex)
             {
                 logger.LogError(ex, "Reading ride {RideId} failed unexpectedly.", id);
-                await using var scope = services.CreateAsyncScope();
-                await MarkFailedAsync(scope.ServiceProvider.GetRequiredService<VelomineDbContext>(), id, "internal_error", stoppingToken);
+                try
+                {
+                    await using var scope = services.CreateAsyncScope();
+                    await MarkFailedAsync(scope.ServiceProvider.GetRequiredService<VelomineDbContext>(), id, "internal_error", stoppingToken);
+                }
+                catch (Exception markEx) when (markEx is not OperationCanceledException)
+                {
+                    // The ride stays Processing and the next start tries it again; one failure must not stop the host.
+                    logger.LogError(markEx, "Could not record the failure for ride {RideId}.", id);
+                }
             }
         }
     }
@@ -71,7 +80,7 @@ public sealed class RideIngestionService(
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
         var profile = await db.Users.AsNoTracking()
             .Where(u => u.Id == ride.UserId)
-            .Select(u => new { u.FtpW, u.BirthYear })
+            .Select(u => new { u.FtpW, u.BirthYear, u.TimeZone })
             .FirstAsync(ct);
         var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear);
         var memberBikes = await db.Bikes.AsNoTracking()
@@ -108,7 +117,11 @@ public sealed class RideIngestionService(
             used = true;
             read.Add(target);
 
-            target.StartTime = file.StartTime;            target.UtcOffsetMinutes = file.UtcOffsetMinutes;
+            target.StartTime = file.StartTime;
+            target.UtcOffsetMinutes = file.UtcOffsetMinutes
+                // A GPX or TCX file has no offset; keep the member's zone at that moment so a later
+                // time-zone change does not move the ride to another day.
+                ?? (int)TimeZoneInfo.ConvertTime(file.StartTime, MemberClock.ZoneOf(profile.TimeZone)).Offset.TotalMinutes;
             target.Device = file.Device;
             target.Discipline = file.Discipline;
             target.Assist = file.Assist;
@@ -118,7 +131,9 @@ public sealed class RideIngestionService(
             target.Error = null;
 
             var original = await db.Rides.AsNoTracking()
-                .Where(r => r.UserId == ride.UserId && r.DedupKey == target.DedupKey && r.Status == RideStatus.Ready && r.Id != target.Id)
+                .Where(r => r.UserId == ride.UserId && r.DedupKey == target.DedupKey
+                    && (r.Status == RideStatus.Processing || r.Status == RideStatus.Ready)
+                    && r.Id != target.Id)
                 .Select(r => (Guid?)r.Id)
                 .FirstOrDefaultAsync(ct);
             if (original is not null)
@@ -155,7 +170,18 @@ public sealed class RideIngestionService(
         }
 
         foreach (var r in read) Notify.RideRead(db, time, r);
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+            { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
+        {
+            // Two reads of the same file finished together. The unique index lets one in; the other becomes a
+            // duplicate of it, exactly as when it is seen later.
+            await MarkDuplicateAsync(db, ride.Id, ride.UserId, read.FirstOrDefault()?.DedupKey, ct);
+            return;
+        }
 
         // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
@@ -166,6 +192,25 @@ public sealed class RideIngestionService(
     {
         ride.Status = RideStatus.Failed;
         ride.Error = code;
+        Notify.RideRead(db, time, ride);
+        await db.SaveChangesAsync(ct);
+    }
+
+    private const string DedupIndex = "ux_rides_user_dedup_key";
+
+    private async Task MarkDuplicateAsync(VelomineDbContext db, Guid id, Guid userId, string? dedupKey, CancellationToken ct)
+    {
+        db.ChangeTracker.Clear();
+        var survivor = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == userId && r.DedupKey == dedupKey && r.Id != id
+                && (r.Status == RideStatus.Processing || r.Status == RideStatus.Ready))
+            .Select(r => (Guid?)r.Id)
+            .FirstOrDefaultAsync(ct);
+        var ride = await db.Rides.FirstOrDefaultAsync(r => r.Id == id, ct);
+        if (ride is null || survivor is null) return;
+        ride.DedupKey = dedupKey;
+        ride.Status = RideStatus.Duplicate;
+        ride.DuplicateOf = survivor;
         Notify.RideRead(db, time, ride);
         await db.SaveChangesAsync(ct);
     }

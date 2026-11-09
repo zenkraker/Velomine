@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Notifications;
@@ -28,7 +29,8 @@ public sealed class Register(UserManager<User> users, VelomineDbContext db, Sett
     {
         Post("accounts/register");
         AllowAnonymous();
-        Description(d => d.Accepts<RegisterRequest>("application/json").Produces<RegisterResponse>(201).ProducesProblem(400).Produces(403), clearDefaults: true);
+        Options(b => b.RequireRateLimiting("anonymous"));
+        Description(d => d.Accepts<RegisterRequest>("application/json").Produces<RegisterResponse>(201).ProducesProblem(400).Produces(403).ProducesProblem(429), clearDefaults: true);
     }
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)

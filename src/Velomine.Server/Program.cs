@@ -1,9 +1,12 @@
 using FastEndpoints;
 using FastEndpoints.OpenApi;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
+using System.Threading.RateLimiting;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
@@ -15,11 +18,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // The connection string is read when the context is first created, so tests can override it.
 builder.Services.AddDbContext<VelomineDbContext>((services, options) =>
-    options.UseNpgsql(services.GetRequiredService<IConfiguration>().GetConnectionString("Velomine")));
+    options.UseNpgsql(services.GetRequiredService<IConfiguration>().GetConnectionString("Velomine"))
+        .AddInterceptors(services.GetServices<IInterceptor>()));
 builder.Services.AddHostedService<DatabaseMigrator>(); // first: later startup work needs the tables
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(builder.Configuration["Velomine:DataProtection:KeysPath"] ?? "/data/keys"));
 builder.Services.AddAccounts(builder.Configuration);
-builder.Services.AddAdmin();
-builder.Services.AddRides();
+builder.Services.AddAdmin(builder.Configuration);
+builder.Services.AddRides(builder.Configuration);
 builder.Services.AddBikes(builder.Configuration);
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
@@ -62,7 +68,19 @@ builder.Services.OpenApiDocument(o =>
         });
     };
 });
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    var permitLimit = builder.Configuration.GetValue("Velomine:RateLimits:AnonymousPerMinute", 60);
+    options.AddPolicy("anonymous", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = TimeSpan.FromMinutes(1),
+        }));
+});
 
 // Exporting the API document (see below) needs no database and no background work.
 if (builder.IsExportMode()) builder.Services.RemoveAll<IHostedService>();
@@ -93,6 +111,7 @@ if (Directory.Exists(sitePath))
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseFastEndpoints(c =>
 {
     c.Endpoints.RoutePrefix = "api/v1";

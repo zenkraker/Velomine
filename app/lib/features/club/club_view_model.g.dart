@@ -47,7 +47,7 @@ final class ClubViewModelProvider
   }
 }
 
-String _$clubViewModelHash() => r'4cf01177861964cef8801330757bea4d43af62d7';
+String _$clubViewModelHash() => r'6dcd58e4c52efa0db2f87032a1bebc6825a48f0f';
 
 /// The signed-in account's club and the changes to it. Kept alive for the
 /// session; a sign-out rebuilds it empty, and the router reads it for redirects.

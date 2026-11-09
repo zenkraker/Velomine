@@ -153,12 +153,14 @@ void main() {
       ); // before touching: the summary
 
       final chart = find.byKey(const Key('chart-power'));
+      await tester.ensureVisible(chart);
+      await tester.pumpAndSettle();
       final box = tester.getRect(chart);
       // About a third of the way along the plot area (which starts 46 px in and ends 10 px before the edge).
       await tester.tapAt(
         Offset(box.left + 46 + (box.width - 56) * 0.5, box.center.dy),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('moment')), findsOneWidget);
       // The middle of a 59 second ride, at 10 m a second.
@@ -181,6 +183,45 @@ void main() {
         tester.widget<Text>(find.byKey(const Key('readout-heartrate'))).data,
         isNot(contains('avg')),
       );
+    },
+  );
+
+  testWidgets('RouteMap_ShouldShowHeartRateLegend_WhenTheRideHasHeartRate', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('heart-rate-map-toggle')), findsOneWidget);
+    expect(find.byKey(const Key('heart-rate-legend')), findsOneWidget);
+    expect(find.text('140–149 bpm'), findsOneWidget);
+  });
+
+  testWidgets('RouteMap_ShouldHideHeartRateLegend_WhenTheToggleIsUnchecked', (
+    tester,
+  ) async {
+    await open(tester);
+    final toggle = find.byKey(const Key('heart-rate-map-toggle'));
+    await tester.scrollUntilVisible(
+      toggle,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(toggle);
+    await tester.pump();
+
+    expect(find.byKey(const Key('heart-rate-legend')), findsNothing);
+    expect(tester.widget<CheckboxListTile>(toggle).value, isFalse);
+  });
+
+  testWidgets(
+    'RouteMap_ShouldShowNoHeartRateToggle_WhenTheRideHasNoHeartRate',
+    (tester) async {
+      server.streams['r1'] = streamsJson(heartRate: false);
+      await open(tester);
+
+      expect(find.byKey(const Key('route-map')), findsOneWidget);
+      expect(find.byKey(const Key('heart-rate-map-toggle')), findsNothing);
+      expect(find.byKey(const Key('heart-rate-legend')), findsNothing);
     },
   );
 

@@ -167,6 +167,9 @@ class ProgressScreen extends ConsumerWidget {
                   saving: wellbeing.action.running,
                   onConsent: () =>
                       ref.read(wellbeingViewModelProvider.notifier).consent(),
+                  onWithdraw: () => ref
+                      .read(wellbeingViewModelProvider.notifier)
+                      .withdrawConsent(),
                   onSave: (fatigue, soreness, mood, stress, motivation) => ref
                       .read(wellbeingViewModelProvider.notifier)
                       .saveCheckIn(fatigue, soreness, mood, stress, motivation),

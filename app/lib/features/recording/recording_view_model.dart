@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/providers.dart';
 import '../../core/result.dart';
 import 'recorder.dart';
 import 'recorder_log.dart';
@@ -14,6 +15,7 @@ part 'recording_view_model.g.dart';
 /// screen is closed; opening it again reads the live state back.
 @Riverpod(keepAlive: true)
 class RecordingViewModel extends _$RecordingViewModel {
+  String? _accountId;
   bool _started = false;
   bool _uploadsResumed = false;
 
@@ -21,7 +23,19 @@ class RecordingViewModel extends _$RecordingViewModel {
   RideRecordingState build() {
     final recorder = ref.watch(recorderProvider);
     final queue = ref.watch(uploadQueueProvider);
-    if (recorder == null) return const RideRecordingState();
+    final accountId = ref.watch(signedInUserIdProvider);
+    if (recorder == null || accountId == null) {
+      _accountId = null;
+      _started = false;
+      _uploadsResumed = false;
+      return const RideRecordingState();
+    }
+    if (accountId != _accountId) {
+      // Another member signed in: this one's rides and uploads start from empty.
+      _accountId = accountId;
+      _started = false;
+      _uploadsResumed = false;
+    }
 
     ref.listen(recorderSnapshotViewModelProvider, (_, snapshot) {
       if (!ref.mounted) return;
@@ -64,11 +78,12 @@ class RecordingViewModel extends _$RecordingViewModel {
 
   Future<void> refresh() async {
     final recorder = ref.read(recorderProvider);
-    if (recorder == null) return;
+    final accountId = _accountId;
+    if (recorder == null || accountId == null) return;
     state = state.copyWith(loading: true);
     try {
       final snapshot = await recorder.state();
-      final rides = await recorder.listRides();
+      final rides = await recorder.listRides(accountId: accountId);
       if (!ref.mounted) return;
       state = state.copyWith(
         snapshot: snapshot,
@@ -93,7 +108,8 @@ class RecordingViewModel extends _$RecordingViewModel {
 
   Future<void> start() async {
     final recorder = ref.read(recorderProvider);
-    if (recorder == null || state.command.running) return;
+    final accountId = _accountId;
+    if (recorder == null || accountId == null || state.command.running) return;
     state = state.copyWith(command: state.command.start(), clearError: true);
     try {
       final granted = await recorder.requestPermissions();
@@ -105,6 +121,7 @@ class RecordingViewModel extends _$RecordingViewModel {
         autoPause: state.autoPause,
         rideType: state.rideType,
         ebike: state.ebike,
+        accountId: accountId,
       );
       await _waitForRunning(recorder);
     } on RecorderException catch (e) {
@@ -167,7 +184,9 @@ class RecordingViewModel extends _$RecordingViewModel {
       final ride = await recorder.finalizeRide(id);
       if (ride != null && ride.isFailed) _error(ride.error);
       if (!ref.mounted) return;
-      state = state.copyWith(rides: await recorder.listRides());
+      state = state.copyWith(
+        rides: await recorder.listRides(accountId: _accountId),
+      );
       final queue = ref.read(uploadQueueProvider);
       if (ride?.isReady == true && queue != null) {
         await queue.enqueue(id);
@@ -201,7 +220,9 @@ class RecordingViewModel extends _$RecordingViewModel {
         ref.read(uploadQueueProvider)?.forget(id);
       }
       if (!ref.mounted) return;
-      state = state.copyWith(rides: await recorder.listRides());
+      state = state.copyWith(
+        rides: await recorder.listRides(accountId: _accountId),
+      );
     } on RecorderException catch (e) {
       _error(e.code);
     } on Object {
@@ -250,7 +271,7 @@ class RecordingViewModel extends _$RecordingViewModel {
     final recorder = ref.read(recorderProvider);
     if (recorder == null) return;
     try {
-      final rides = await recorder.listRides();
+      final rides = await recorder.listRides(accountId: _accountId);
       if (!ref.mounted) return;
       state = state.copyWith(rides: rides);
     } on Object catch (e) {

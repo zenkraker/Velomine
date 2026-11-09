@@ -16,6 +16,7 @@ class RidesViewModel extends _$RidesViewModel {
   static const _watchAttempts = 120;
 
   int _messageId = 0;
+  int _loadGeneration = 0;
 
   @override
   RidesState build() {
@@ -25,12 +26,12 @@ class RidesViewModel extends _$RidesViewModel {
   }
 
   Future<void> refresh() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
     final result = await ref
         .read(ridesDataProvider)
         .page(discipline: state.disciplineFilter);
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(result),
@@ -44,12 +45,13 @@ class RidesViewModel extends _$RidesViewModel {
 
   Future<void> loadMore() async {
     final cursor = state.next;
-    if (cursor == null || state.load.running) return;
+    if (cursor == null) return;
+    final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
     final result = await ref
         .read(ridesDataProvider)
         .page(cursor: cursor, discipline: state.disciplineFilter);
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(result),

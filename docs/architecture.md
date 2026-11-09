@@ -47,6 +47,8 @@ PostgreSQL is storage only. A managed cluster holds one database and role per cl
 - One Docker image (amd64, non-root) with the API, share pages, the Flutter web build as static files, and the background services.
 - **Cloud:** one shared deployment, plus a canary deployment for releases, over a managed PostgreSQL cluster. Each club gets one database and one role. Wildcard DNS and TLS cover `club.velomine.app`; custom domains come later.
 - **Self-host:** the same image as a single-tenant instance, with PostgreSQL as a second container or an existing server, and one mounted volume for files.
+- **Volumes:** ride files live on `/data/files`; the Data Protection key ring lives on `/data/keys`. Every API instance mounts the same keys volume, because it signs the session cookies and the signed share links. Giving instances separate key volumes signs a member out when a request reaches another instance.
+- **Background work on one instance:** ride ingestion, email, catalogue sync and contributions run only where `Velomine:Background:Enabled` is `true` (the default). In a cloud deployment set it `false` on every additional API instance and keep exactly one `true`; with none, uploads stay `processing`. Migrations still run on every instance, safely, because EF Core takes a migration lock.
 - A tenant catalog (host, club, database, secret reference, tier and licence) is platform configuration. It is backed up and restored with the deployment.
 - Environment variables, validated on start with `IOptions<T>` validation. Per-club SMTP and OIDC overrides come from a per-tenant secret store, never the database.
 - Migrations run per tenant, canary club first. Self-host may migrate its single database on start.

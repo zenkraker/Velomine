@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Velomine.Server.Data;
 using Velomine.Server.Features.Server;
 
 namespace Velomine.Server.Tests;
@@ -69,5 +72,19 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         var response = await api.CreateClient().GetAsync("/health", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Health_ShouldBeUnhealthy_WhenTheDatabaseCannotBeReached()
+    {
+        var options = new DbContextOptionsBuilder<VelomineDbContext>()
+            .UseNpgsql("Host=127.0.0.1;Port=1;Database=velomine;Username=velomine;Password=velomine;Timeout=1;Command Timeout=1")
+            .Options;
+        await using var db = new VelomineDbContext(options);
+
+        var result = await new DatabaseHealthCheck(db)
+            .CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
     }
 }

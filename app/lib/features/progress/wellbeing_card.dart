@@ -11,6 +11,7 @@ class WellbeingCard extends StatefulWidget {
     required this.wellbeing,
     required this.checkIns,
     required this.onConsent,
+    required this.onWithdraw,
     required this.onSave,
     required this.saving,
   });
@@ -18,6 +19,7 @@ class WellbeingCard extends StatefulWidget {
   final WellbeingResponse? wellbeing;
   final CheckInsResponse? checkIns;
   final Future<bool> Function() onConsent;
+  final Future<bool> Function() onWithdraw;
   final Future<bool> Function(
     int fatigue,
     int soreness,
@@ -214,6 +216,15 @@ class _WellbeingCardState extends State<WellbeingCard> {
                 ],
               ),
             ],
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                key: const Key('wellbeing-withdraw'),
+                onPressed: widget.saving ? null : widget.onWithdraw,
+                child: Text(l10n.wellbeingWithdrawConsent),
+              ),
+            ),
             if (widget.checkIns case final checkIns?
                 when checkIns.checkIns.isNotEmpty) ...[
               const SizedBox(height: 14),

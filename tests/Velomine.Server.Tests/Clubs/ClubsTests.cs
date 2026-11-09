@@ -239,6 +239,38 @@ public sealed class ClubsTests(PostgresFixture postgres)
                 Ct)).StatusCode);
     }
 
+    [Fact]
+    public async Task Clubs_ShouldRefuseDeletingTheOnlyOwner_WhenTheAccountIsDeleted()
+    {
+        await using var api = await StartAsync();
+        var admin = await AdminAsync(api);
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(admin, $"Club {Guid.NewGuid():N}", owner.Email);
+
+        var self = await owner.Client.PostAsJsonAsync(
+            "/api/v1/accounts/me/delete",
+            new DeleteMyAccountRequest(TestApi.MemberPassword, null),
+            Ct);
+        Assert.Equal(HttpStatusCode.Conflict, self.StatusCode);
+
+        Assert.Equal(
+            HttpStatusCode.Conflict,
+            (await admin.DeleteAsync($"/api/v1/admin/users/{owner.Id}", Ct)).StatusCode);
+
+        var rider = await NewMemberAsync(api);
+        await rider.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct);
+        Assert.Equal(HttpStatusCode.OK, (await admin.PutAsJsonAsync(
+            $"/api/v1/admin/clubs/{club.Id}/owner",
+            new SetClubOwnerRequest { UserId = rider.Id },
+            Ct)).StatusCode);
+
+        var deleted = await owner.Client.PostAsJsonAsync(
+            "/api/v1/accounts/me/delete",
+            new DeleteMyAccountRequest(TestApi.MemberPassword, null),
+            Ct);
+        Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+    }
+
     private static Task<HttpResponseMessage> SetLocationAsync(
         HttpClient client,
         double? latitude,

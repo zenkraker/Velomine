@@ -4,11 +4,23 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/providers.dart';
 import 'package:velomine/features/recording/recorder.dart';
 import 'package:velomine/features/recording/recorder_settings.dart';
 import 'package:velomine/features/recording/recording_providers.dart';
 import 'package:velomine/features/recording/recording_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
+
+final testAccountProvider = NotifierProvider<_TestAccount, String?>(
+  _TestAccount.new,
+);
+
+class _TestAccount extends Notifier<String?> {
+  @override
+  String? build() => 'id-rider';
+
+  void set(String? value) => state = value;
+}
 
 class FakeRecorder implements Recorder {
   FakeRecorder();
@@ -30,6 +42,7 @@ class FakeRecorder implements Recorder {
   bool? lastAutoPause;
   String? lastRideType;
   bool? lastEbike;
+  String? lastAccountId;
   int starts = 0;
   int pauses = 0;
   int resumes = 0;
@@ -105,11 +118,13 @@ class FakeRecorder implements Recorder {
     bool autoPause = true,
     String rideType = 'road',
     bool ebike = false,
+    String? accountId,
   }) async {
     starts++;
     lastAutoPause = autoPause;
     lastRideType = rideType;
     lastEbike = ebike;
+    lastAccountId = accountId;
     _emit(
       RecorderSnapshot(
         state: 'recording',
@@ -166,6 +181,7 @@ class FakeRecorder implements Recorder {
         state: 'ready',
         distanceM: 500,
         movingS: 60,
+        accountId: lastAccountId,
       ),
     );
     _emit(
@@ -185,7 +201,31 @@ class FakeRecorder implements Recorder {
   Stream<RecorderSnapshot> get events => _events.stream;
 
   @override
-  Future<List<LocalRide>> listRides() async => [...rides];
+  Future<List<LocalRide>> listRides({String? accountId}) async {
+    final result = <LocalRide>[];
+    for (var i = 0; i < rides.length; i++) {
+      var ride = rides[i];
+      if (accountId != null && ride.accountId == null) {
+        ride = LocalRide(
+          id: ride.id,
+          startedAt: ride.startedAt,
+          endedAt: ride.endedAt,
+          state: ride.state,
+          distanceM: ride.distanceM,
+          movingS: ride.movingS,
+          accountId: accountId,
+          error: ride.error,
+          uploadState: ride.uploadState,
+          serverRideId: ride.serverRideId,
+          uploadError: ride.uploadError,
+          uploadAttempts: ride.uploadAttempts,
+        );
+        rides[i] = ride;
+      }
+      if (accountId == null || ride.accountId == accountId) result.add(ride);
+    }
+    return result;
+  }
 
   @override
   Future<Uint8List?> readFit(String id) async => Uint8List.fromList([1, 2, 3]);
@@ -202,6 +242,7 @@ class FakeRecorder implements Recorder {
       state: 'ready',
       distanceM: rides[index].distanceM,
       movingS: rides[index].movingS,
+      accountId: rides[index].accountId,
     );
     return rides[index];
   }
@@ -269,6 +310,9 @@ void main() {
             settings ?? MemoryRecorderSettings(),
           ),
           uploadQueueProvider.overrideWithValue(null),
+          signedInUserIdProvider.overrideWith(
+            (ref) => ref.watch(testAccountProvider),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -390,6 +434,47 @@ void main() {
     expect(find.byKey(const Key('record-error')), findsOneWidget);
     expect(find.textContaining('Allow precise location'), findsOneWidget);
   });
+
+  testWidgets(
+    'RecordingScreen_ShouldHideAnotherAccountsLocalRides_WhenTheAccountChanges',
+    (tester) async {
+      final recorder = FakeRecorder()
+        ..rides.add(
+          LocalRide(
+            id: 'alice-ride',
+            startedAt: DateTime(2026, 11, 5, 8),
+            state: 'ready',
+            distanceM: 1200,
+            movingS: 300,
+            accountId: 'id-rider',
+          ),
+        )
+        ..rides.add(
+          LocalRide(
+            id: 'bob-ride',
+            startedAt: DateTime(2026, 11, 5, 9),
+            state: 'ready',
+            distanceM: 2200,
+            movingS: 400,
+            accountId: 'id-other',
+          ),
+        );
+      await pump(tester, recorder);
+
+      expect(find.byKey(const Key('local-ride-alice-ride')), findsOneWidget);
+      expect(find.byKey(const Key('local-ride-bob-ride')), findsNothing);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(RecordingScreen)),
+        listen: false,
+      );
+      container.read(testAccountProvider.notifier).set('id-other');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('local-ride-alice-ride')), findsNothing);
+      expect(find.byKey(const Key('local-ride-bob-ride')), findsOneWidget);
+    },
+  );
 
   testWidgets('RecordingScreen_ShouldDeleteRide_WhenTapped', (tester) async {
     final recorder = FakeRecorder();

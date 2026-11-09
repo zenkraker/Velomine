@@ -50,6 +50,8 @@ public sealed class SetUserRoles(UserManager<User> users) : Endpoint<SetUserRole
 
         await users.RemoveFromRolesAsync(user, current.Except(wanted));
         await users.AddToRolesAsync(user, wanted.Except(current));
+        // A changed role must take effect now: old cookies and access tokens still carry the previous claims.
+        await users.UpdateSecurityStampAsync(user);
 
         await Send.OkAsync(new AdminUserSummary(user.Id, user.Email!, user.DisplayName, user.IsApproved,
             await users.IsLockedOutAsync(user), [.. (await users.GetRolesAsync(user)).Order()], user.CreatedAt), ct);

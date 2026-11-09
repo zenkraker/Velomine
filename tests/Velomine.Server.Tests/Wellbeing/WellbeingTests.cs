@@ -3,6 +3,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Clubs;
@@ -191,6 +194,56 @@ public sealed class WellbeingTests(PostgresFixture postgres)
 
         Assert.Null(readiness!.Score);
         Assert.Equal("unknown", readiness.Band);
+    }
+
+    [Fact]
+    public async Task WithdrawConsent_ShouldStopSharingAndProcessing_WhenTheMemberWithdraws()
+    {
+        await using var api = await StartAsync();
+        var (coach, _, coachEmail) = await NewMemberAsync(api, "Coach Rina");
+        var club = await CreateClubAsync(api, coachEmail);
+        var (athlete, athleteId, _) = await NewMemberAsync(api, "Athlete Luca");
+        (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();
+        await ConsentAsync(athlete);
+        await CheckInAsync(athlete, fatigue: 4);
+        await ShareAsync(athlete, "none", "none", "coaches");
+
+        var before = await coach.GetFromJsonAsync<CoachWellbeingResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athleteId}/wellbeing?days=30", Ct);
+        Assert.Single(before!.CheckIns);
+
+        var withdrawn = await athlete.DeleteAsync("/api/v1/wellbeing/consent", Ct);
+
+        Assert.Equal(HttpStatusCode.OK, withdrawn.StatusCode);
+        var body = await withdrawn.Content.ReadFromJsonAsync<WellbeingResponse>(Ct);
+        Assert.True(body!.ConsentRequired);
+        Assert.False(body.Consented);
+        Assert.NotNull(body.Today); // the history is kept, not deleted
+        Assert.Equal(HttpStatusCode.Conflict, (await CheckInAsync(athlete)).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict,
+            (await athlete.GetAsync("/api/v1/wellbeing/check-ins?days=30", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await coach.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{athleteId}/wellbeing", Ct)).StatusCode);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        Assert.True(await scope.ServiceProvider.GetRequiredService<VelomineDbContext>()
+            .DailyCheckIns.AnyAsync(c => c.UserId == athleteId, Ct));
+    }
+
+    [Fact]
+    public async Task GetWellbeing_ShouldAskForConsentAgain_WhenConsentWasWithdrawn()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        await ConsentAsync(client);
+        await CheckInAsync(client, fatigue: 4);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync("/api/v1/wellbeing/consent", Ct)).StatusCode);
+
+        var wellbeing = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
+        Assert.True(wellbeing!.ConsentRequired);
+        Assert.False(wellbeing.Consented);
+        Assert.Equal(4, wellbeing.Today!.Fatigue);
     }
 
     [Fact]

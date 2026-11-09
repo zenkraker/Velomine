@@ -88,8 +88,8 @@ public sealed class NotificationEmailService(
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // Never log the SMTP settings; the message says what the server answered. The rest waits for the next run.
-                    logger.LogWarning("Could not send a notification email ({Reason}). Trying again later.", ex.Message);
+                    // The exception type says what failed; the message can name the recipient, which must not be logged.
+                    logger.LogWarning("Could not send a notification email ({Exception}). Trying again later.", ex.GetType().Name);
                     break;
                 }
 

@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Notifications.Email;
@@ -32,6 +33,7 @@ public sealed class ForgotPassword(
     {
         Post("accounts/password/forgot");
         AllowAnonymous();
+        Options(b => b.RequireRateLimiting("anonymous"));
         Description(d => d.Accepts<ForgotPasswordRequest>("application/json").Produces(202).ProducesProblem(400)
             .ProducesProblem(429).ProducesProblem(503), clearDefaults: true);
     }
@@ -72,7 +74,7 @@ public sealed class ForgotPassword(
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Never log the token. The member can try again; a failed address lookup is not revealed.
-                logger.LogWarning("Could not send a password reset email ({Reason}).", ex.Message);
+                logger.LogWarning("Could not send a password reset email ({Exception}).", ex.GetType().Name);
             }
         }
 

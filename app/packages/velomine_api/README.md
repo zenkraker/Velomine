@@ -169,6 +169,7 @@ Class | Method | HTTP request | Description
 *WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
 *WellbeingApi* | [**listCheckIns**](doc//WellbeingApi.md#listcheckins) | **GET** /api/v1/wellbeing/check-ins | 
 *WellbeingApi* | [**saveCheckIn**](doc//WellbeingApi.md#savecheckin) | **PUT** /api/v1/wellbeing/check-ins/today | 
+*WellbeingApi* | [**withdrawWellbeingConsent**](doc//WellbeingApi.md#withdrawwellbeingconsent) | **DELETE** /api/v1/wellbeing/consent | 
 
 
 ## Documentation For Models

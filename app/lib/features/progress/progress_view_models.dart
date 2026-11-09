@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/user_message.dart';
 import 'progress_data.dart';
@@ -40,8 +41,11 @@ class ProgressFiltersViewModel extends _$ProgressFiltersViewModel {
 
 @Riverpod(keepAlive: true)
 class TotalsViewModel extends _$TotalsViewModel {
+  int _loadGeneration = 0;
+
   @override
   TotalsState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const TotalsState();
     ref.watch(
       progressFiltersViewModelProvider.select((f) => (f.period, f.discipline)),
     );
@@ -50,7 +54,7 @@ class TotalsViewModel extends _$TotalsViewModel {
   }
 
   Future<void> load() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = TotalsState(load: state.load.start());
     final filters = ref.read(progressFiltersViewModelProvider);
     final result = await ref
@@ -60,7 +64,7 @@ class TotalsViewModel extends _$TotalsViewModel {
           periodCounts[filters.period] ?? 12,
           filters.discipline,
         );
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = TotalsState(load: state.load.finish(result));
   }
 }
@@ -68,18 +72,20 @@ class TotalsViewModel extends _$TotalsViewModel {
 @Riverpod(keepAlive: true)
 class GoalsViewModel extends _$GoalsViewModel {
   int _messageId = 0;
+  int _loadGeneration = 0;
 
   @override
   GoalsState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const GoalsState();
     Future.microtask(load);
     return const GoalsState();
   }
 
   Future<void> load() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
     final result = await ref.read(progressDataProvider).goals();
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(result),
@@ -125,8 +131,11 @@ class GoalsViewModel extends _$GoalsViewModel {
 
 @Riverpod(keepAlive: true)
 class TrainingViewModel extends _$TrainingViewModel {
+  int _loadGeneration = 0;
+
   @override
   TrainingState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const TrainingState();
     ref.watch(
       progressFiltersViewModelProvider.select(
         (f) => (f.trainingDays, f.discipline),
@@ -137,13 +146,13 @@ class TrainingViewModel extends _$TrainingViewModel {
   }
 
   Future<void> load() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = TrainingState(load: state.load.start());
     final filters = ref.read(progressFiltersViewModelProvider);
     final result = await ref
         .read(progressDataProvider)
         .training(filters.trainingDays, filters.discipline);
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = TrainingState(load: state.load.finish(result));
   }
 }
@@ -151,21 +160,23 @@ class TrainingViewModel extends _$TrainingViewModel {
 @Riverpod(keepAlive: true)
 class PowerCurveViewModel extends _$PowerCurveViewModel {
   int _messageId = 0;
+  int _loadGeneration = 0;
 
   @override
   PowerState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const PowerState();
     ref.watch(progressFiltersViewModelProvider.select((f) => f.powerDays));
     Future.microtask(load);
     return const PowerState();
   }
 
   Future<void> load() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
     final result = await ref
         .read(progressDataProvider)
         .powerCurve(ref.read(progressFiltersViewModelProvider).powerDays);
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = state.copyWith(load: state.load.finish(result));
   }
 
@@ -201,17 +212,22 @@ class PowerCurveViewModel extends _$PowerCurveViewModel {
 
 @Riverpod(keepAlive: true)
 class ReadinessViewModel extends _$ReadinessViewModel {
+  int _loadGeneration = 0;
+
   @override
   ReadinessState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const ReadinessState();
+    }
     Future.microtask(load);
     return const ReadinessState();
   }
 
   Future<void> load() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = ReadinessState(load: state.load.start());
     final result = await ref.read(progressDataProvider).readiness();
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = ReadinessState(load: state.load.finish(result));
   }
 }
@@ -219,24 +235,28 @@ class ReadinessViewModel extends _$ReadinessViewModel {
 @Riverpod(keepAlive: true)
 class WellbeingViewModel extends _$WellbeingViewModel {
   int _messageId = 0;
+  int _loadGeneration = 0;
 
   @override
   WellbeingState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const WellbeingState();
+    }
     Future.microtask(load);
     return const WellbeingState();
   }
 
   Future<void> load() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
     final data = ref.read(progressDataProvider);
     final today = await data.wellbeing();
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
 
     CheckInsResponse? history;
     if (today.valueOrNull?.consented == true) {
       history = (await data.checkIns(30)).valueOrNull;
-      if (!ref.mounted) return;
+      if (!ref.mounted || generation != _loadGeneration) return;
     }
 
     state = WellbeingState(
@@ -250,6 +270,10 @@ class WellbeingViewModel extends _$WellbeingViewModel {
   /// Accepts the wellbeing terms. Health data is not stored before this.
   Future<bool> consent() =>
       _run(() => ref.read(progressDataProvider).giveConsent());
+
+  /// Stops processing and sharing; the member's history stays until they delete it.
+  Future<bool> withdrawConsent() =>
+      _run(() => ref.read(progressDataProvider).withdrawConsent());
 
   Future<bool> saveCheckIn(
     int fatigue,

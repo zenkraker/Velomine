@@ -15,7 +15,9 @@ public sealed class PasswordResetThrottle(IMemoryCache cache, TimeProvider clock
 
     public bool Allowed(string action, HttpContext context, string? email = null)
     {
-        var key = $"password-reset:{action}:{context.Connection.RemoteIpAddress}:{email?.Trim().ToLowerInvariant()}";
+        // The address is deliberately not part of the key: one entry per address would let an attacker grow the cache
+        // without bound by trying a new email each time. The whole address gets the same small budget.
+        var key = $"password-reset:{action}:{context.Connection.RemoteIpAddress}";
         var now = clock.GetUtcNow();
         var counter = cache.Get<Counter>(key);
 

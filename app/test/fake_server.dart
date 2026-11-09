@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -151,6 +152,16 @@ class FakeServer {
   FakeAccount? _cookieUser;
   int _pollsLeft = 1;
 
+  /// Responses held for a test, in order, by path.
+  final _replyGates = <String, List<Completer<void>>>{};
+
+  /// Holds the next answer to [path] until the returned completer completes.
+  Completer<void> delayNext(String path) {
+    final gate = Completer<void>();
+    (_replyGates[path] ??= []).add(gate);
+    return gate;
+  }
+
   late final http.Client client = MockClient(_handle);
 
   FakeAccount add(
@@ -218,6 +229,10 @@ class FakeServer {
     }
     final path = request.url.path;
     requests.add('${request.method} $path');
+    final waiting = _replyGates[path];
+    if (waiting != null && waiting.isNotEmpty) {
+      await waiting.removeAt(0).future;
+    }
     http.Response json(Object? body, [int status = 200]) => http.Response(
       jsonEncode(body),
       status,
@@ -1035,6 +1050,16 @@ extension on FakeServer {
       return json({
         'consentRequired': false,
         'consented': true,
+        'today': today(),
+      });
+    }
+
+    if (path == '/api/v1/wellbeing/consent' && request.method == 'DELETE') {
+      wellbeingConsent = false;
+      sharingChoices['wellbeing'] = 'none';
+      return json({
+        'consentRequired': true,
+        'consented': false,
         'today': today(),
       });
     }
@@ -1916,6 +1941,7 @@ Map<String, Object?> streamsJson({
   bool position = true,
   bool cadence = false,
   bool speed = true,
+  bool heartRate = true,
 }) {
   const n = 60;
   List<T> each<T>(T Function(int i) f) => [for (var i = 0; i < n; i++) f(i)];
@@ -1926,7 +1952,7 @@ Map<String, Object?> streamsJson({
     'altitude': each((i) => 300 + i * 0.5),
     'speed': speed ? each((_) => 10.0) : null,
     'distance': each((i) => i * 10.0),
-    'heartRate': each((i) => 140 + i ~/ 6),
+    'heartRate': heartRate ? each((i) => 140 + i ~/ 6) : null,
     'power': each((i) => i.isEven ? 180 : 220),
     'cadence': cadence ? each((_) => 90) : null,
     'temperature': null,

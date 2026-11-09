@@ -92,6 +92,7 @@ class LocalRide {
     required this.state,
     required this.distanceM,
     required this.movingS,
+    this.accountId,
     this.error,
     this.uploadState,
     this.serverRideId,
@@ -103,6 +104,10 @@ class LocalRide {
   final DateTime startedAt;
   final DateTime? endedAt;
   final String state;
+
+  /// The member who recorded the ride. Null on rides recorded before this was
+  /// kept; the recorder claims those for the first signed-in member it sees.
+  final String? accountId;
   final double distanceM;
   final double movingS;
   final String? error;
@@ -132,6 +137,7 @@ class LocalRide {
       state: map['state'] as String? ?? 'interrupted',
       distanceM: (map['distanceM'] as num?)?.toDouble() ?? 0,
       movingS: (map['movingS'] as num?)?.toDouble() ?? 0,
+      accountId: map['accountId'] as String?,
       error: map['error'] as String?,
       uploadState: map['uploadState'] as String?,
       serverRideId: map['serverRideId'] as String?,
@@ -162,6 +168,7 @@ abstract interface class Recorder {
     bool autoPause = true,
     String rideType = 'road',
     bool ebike = false,
+    String? accountId,
   });
 
   Future<void> pause();
@@ -185,7 +192,9 @@ abstract interface class Recorder {
 
   Future<void> forgetSensor();
 
-  Future<List<LocalRide>> listRides();
+  /// The rides that belong to [accountId]; unclaimed rides are claimed for it.
+  /// Null lists every ride without changing anything.
+  Future<List<LocalRide>> listRides({String? accountId});
 
   /// The finished FIT file, or null when the ride has none yet.
   Future<Uint8List?> readFit(String id);

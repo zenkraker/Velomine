@@ -26,13 +26,14 @@ class RideStore(context: Context) {
         startedAt: Long = System.currentTimeMillis(),
         rideType: String = "road",
         ebike: Boolean = false,
+        accountId: String? = null,
     ): ActiveRide {
         val id = UUID.randomUUID().toString()
         val dir = File(ridesDir, id).apply { mkdirs() }
-        val ride = ActiveRide(id, dir, startedAt, offsetMinutes(startedAt), rideType, ebike)
+        val ride = ActiveRide(id, dir, startedAt, offsetMinutes(startedAt), rideType, ebike, accountId)
         log(
             "create ride $id dir=${dir.absolutePath} startedAt=$startedAt " +
-                "offset=${ride.offsetMinutes} rideType=$rideType ebike=$ebike",
+                "offset=${ride.offsetMinutes} rideType=$rideType ebike=$ebike account=$accountId",
         )
         ride.event("start", startedAt)
         save(ride, "recording", endedAt = null, error = null)
@@ -58,6 +59,7 @@ class RideStore(context: Context) {
             .put("rideType", ride.rideType)
             .put("ebike", ride.ebike)
             .put("error", error)
+        if (ride.accountId != null) json.put("accountId", ride.accountId)
         log(
             "save ride ${ride.id} state=$state endedAt=$endedAt distance=$distanceM " +
                 "movingMs=$movingMs error=$error",
@@ -129,11 +131,20 @@ class RideStore(context: Context) {
         }
     }
 
-    fun list(): List<Map<String, Any?>> {
+    /**
+     * Local rides. With [claimFor], a sidecar without an account id is claimed for that member first, and only that
+     * member's rides are returned. The background worker does the same with the id the server reports for its token.
+     */
+    fun list(claimFor: String? = null): List<Map<String, Any?>> {
         val dirs = ridesDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
         val rides = dirs
             .mapNotNull { dir ->
                 readSidecar(dir)?.let { map ->
+                    if (claimFor != null && map.optString("accountId").isEmpty()) {
+                        map.put("accountId", claimFor)
+                        writeSidecar(dir, map)
+                        log("list: claimed ${map.optString("id")} for $claimFor")
+                    }
                     // A recording state is only live while the service is running. Otherwise it was interrupted.
                     if (!RecorderRuntime.isRunning &&
                         (map.optString("state") == "recording" || map.optString("state") == "paused")
@@ -155,6 +166,7 @@ class RideStore(context: Context) {
                     map.toMap()
                 }
             }
+            .filter { claimFor == null || it["accountId"] == claimFor }
             .sortedByDescending { (it["startedAt"] as? Number)?.toLong() ?: 0L }
         log("list: ${rides.size} ride(s) running=${RecorderRuntime.isRunning}")
         for (ride in rides) {
@@ -366,6 +378,7 @@ class ActiveRide(
     val offsetMinutes: Int,
     val rideType: String,
     val ebike: Boolean,
+    val accountId: String? = null,
 ) {
     private val writer = BufferedWriter(FileWriter(File(dir, "raw.jsonl"), true))
 

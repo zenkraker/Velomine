@@ -27,6 +27,7 @@ class NativeRecorder implements Recorder {
     bool autoPause = true,
     String rideType = 'road',
     bool ebike = false,
+    String? accountId,
   }) async {
     recorderLog(
       'start: sending autoPause=$autoPause rideType=$rideType ebike=$ebike',
@@ -36,6 +37,7 @@ class NativeRecorder implements Recorder {
         'autoPause': autoPause,
         'rideType': rideType,
         'ebike': ebike,
+        'accountId': accountId,
       }),
     );
     recorderLog('start: returned');
@@ -140,9 +142,9 @@ class NativeRecorder implements Recorder {
   }
 
   @override
-  Future<List<LocalRide>> listRides() async {
+  Future<List<LocalRide>> listRides({String? accountId}) async {
     final list = await _call<List<dynamic>>(
-      () => _channel.invokeMethod<List<dynamic>>('listRides'),
+      () => _channel.invokeMethod<List<dynamic>>('listRides', accountId),
     );
     final rides = <LocalRide>[];
     for (final item in list) {

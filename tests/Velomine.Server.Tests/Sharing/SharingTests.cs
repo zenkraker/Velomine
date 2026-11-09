@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Data.Common;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Clubs;
@@ -69,6 +73,95 @@ public sealed class SharingTests(PostgresFixture postgres)
         }
 
         throw new TimeoutException("The ride was still processing after 10 seconds.");
+    }
+
+    /// <summary>Counts the reads a request made, so a batching change that adds one per athlete is caught.</summary>
+    private sealed class SelectCounter : DbCommandInterceptor
+    {
+        public int Selects { get; private set; }
+
+        public void Reset() => Selects = 0;
+
+        private static bool IsSelect(DbCommand command) =>
+            command.CommandText.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase);
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(
+            DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
+        {
+            if (IsSelect(command)) Selects++;
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (IsSelect(command)) Selects++;
+            return ValueTask.FromResult(result);
+        }
+    }
+
+    [Fact]
+    public async Task ListCoachAthletes_ShouldRunAConstantNumberOfQueries_WhenTheRosterGrows()
+    {
+        var counter = new SelectCounter();
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.ConfigureTestServices(services => services.AddSingleton<IInterceptor>(counter));
+        });
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(api, owner);
+        var first = await NewMemberAsync(api);
+        await JoinAsync(first, club);
+        await UploadAndWaitAsync(first.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
+        (await ShareAsync(first, "coaches", "coaches")).EnsureSuccessStatusCode();
+
+        await owner.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes", Ct);
+        counter.Reset();
+        await owner.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes", Ct);
+        var one = counter.Selects;
+
+        for (var i = 0; i < 19; i++)
+        {
+            var more = await NewMemberAsync(api);
+            await JoinAsync(more, club);
+            (await ShareAsync(more, "coaches", "coaches")).EnsureSuccessStatusCode();
+        }
+
+        counter.Reset();
+        await owner.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes", Ct);
+
+        Assert.Equal(one, counter.Selects);
+    }
+
+    [Fact]
+    public async Task ListCoachRides_ShouldUseTheSameCursorRules_WhenPaging()
+    {
+        await using var api = await StartAsync();
+        var owner = await NewMemberAsync(api);
+        var club = await CreateClubAsync(api, owner);
+        var athlete = await NewMemberAsync(api);
+        await JoinAsync(athlete, club);
+        var start = new DateTime(2026, 10, 3, 8, 0, 0, DateTimeKind.Utc);
+        foreach (var day in new[] { 1, 2, 3 })
+            await UploadAndWaitAsync(athlete.Client, Fit(new FitSession(start.AddDays(day), 60)));
+        (await ShareAsync(athlete, "coaches")).EnsureSuccessStatusCode();
+
+        var page1 = await owner.Client.GetFromJsonAsync<ListRidesResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides?limit=2", Ct);
+        Assert.Equal([start.AddDays(3), start.AddDays(2)],
+            page1!.Rides.Select(r => r.StartTime!.Value.UtcDateTime).ToArray());
+        Assert.NotNull(page1.Next);
+
+        var page2 = await owner.Client.GetFromJsonAsync<ListRidesResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides?limit=2&cursor={Uri.EscapeDataString(page1.Next)}", Ct);
+        Assert.Equal([start.AddDays(1)],
+            page2!.Rides.Select(r => r.StartTime!.Value.UtcDateTime).ToArray());
+        Assert.Null(page2.Next);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await owner.Client.GetAsync(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides?cursor=nonsense", Ct)).StatusCode);
     }
 
     [Fact]

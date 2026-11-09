@@ -43,7 +43,7 @@ final class ServerConfigViewModelProvider
 }
 
 String _$serverConfigViewModelHash() =>
-    r'a5172327b550b55407850a5a7af4a26f17f69701';
+    r'd327124a5d7558d68b783299ebfe7bf38e9e5fff';
 
 /// Where this phone's Velomine server is, kept on the device so it is asked for
 /// once. The web app is served by the server itself, so it always uses its own

@@ -37,7 +37,7 @@ WORKDIR /app
 COPY --from=build /app .
 COPY --from=web /src/app/build/web ./wwwroot
 # The aspnet image ships a non-root "app" user; files live on a volume it can write to.
-RUN mkdir -p /data/files && chown app /data/files
+RUN mkdir -p /data/files /data/keys && chown app /data/files /data/keys
 USER app
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     Velomine__FilesPath=/data/files

@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -22,8 +23,9 @@ public sealed class Login(SignInManager<User> signIn) : Endpoint<LoginRequest>
     {
         Post("accounts/login");
         AllowAnonymous();
+        Options(b => b.RequireRateLimiting("anonymous"));
         Description(
-            d => d.Accepts<LoginRequest>("application/json").Produces<TokenResponse>(200, "application/json").Produces(204).ProducesProblem(400).Produces(401).Produces(403).Produces(423),
+            d => d.Accepts<LoginRequest>("application/json").Produces<TokenResponse>(200, "application/json").Produces(204).ProducesProblem(400).Produces(401).Produces(403).Produces(423).ProducesProblem(429),
             clearDefaults: true);
     }
 

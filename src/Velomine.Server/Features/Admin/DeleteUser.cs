@@ -22,7 +22,18 @@ public sealed class DeleteUser(AccountDeletion deletion) : Endpoint<UserIdReques
             return;
         }
 
-        if (await deletion.DeleteAsync(req.Id, ct)) await Send.NoContentAsync(ct);
-        else await Send.NotFoundAsync(ct);
+        switch (await deletion.DeleteAsync(req.Id, ct))
+        {
+            case AccountDeletionResult.Deleted:
+                await Send.NoContentAsync(ct);
+                return;
+            case AccountDeletionResult.SoleClubOwner:
+                AddError("That account is the only owner of its club. Make another member the owner first.");
+                await Send.ErrorsAsync(409, ct);
+                return;
+            default:
+                await Send.NotFoundAsync(ct);
+                return;
+        }
     }
 }

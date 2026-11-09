@@ -34,7 +34,7 @@ public sealed class SendTestEmail(IEmailSender sender, IOptions<SmtpOptions> smt
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // What the mail server answered helps the admin; the settings themselves, and the password, are never in it.
-            logger.LogWarning("The test email could not be sent ({Reason}).", ex.Message);
+            logger.LogWarning("The test email could not be sent ({Exception}).", ex.GetType().Name);
             AddError("The mail server did not accept it: " + ex.Message);
             await Send.ErrorsAsync(502, ct);
             return;

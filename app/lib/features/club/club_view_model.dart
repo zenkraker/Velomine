@@ -15,6 +15,7 @@ part 'club_view_model.g.dart';
 @Riverpod(keepAlive: true)
 class ClubViewModel extends _$ClubViewModel {
   int _messageId = 0;
+  int _loadGeneration = 0;
 
   @override
   ClubState build() {
@@ -25,10 +26,10 @@ class ClubViewModel extends _$ClubViewModel {
   }
 
   Future<void> refresh() async {
-    if (state.load.running) return;
+    final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
     final result = await ref.read(clubDataProvider).myClub();
-    if (!ref.mounted) return;
+    if (!ref.mounted || generation != _loadGeneration) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(result),

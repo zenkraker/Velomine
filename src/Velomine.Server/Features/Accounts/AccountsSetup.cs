@@ -40,7 +40,8 @@ public static class AccountsSetup
             .AddSignInManager<VelomineSignInManager>();
         services.AddAuthorization();
         AddSso(services, configuration.GetSection("Velomine:Sso").Get<SsoOptions>() ?? new SsoOptions());
-        services.AddHostedService<AccountsStartup>();
+        if (configuration.GetValue("Velomine:Background:Enabled", true))
+            services.AddHostedService<AccountsStartup>();
         return services;
     }
 

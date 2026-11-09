@@ -35,7 +35,18 @@ public sealed partial class RideFileStore(IOptions<RidesOptions> options)
         var target = PathFor(sha);
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         if (File.Exists(target)) File.Delete(temp);
-        else File.Move(temp, target);
+        else
+        {
+            try
+            {
+                File.Move(temp, target);
+            }
+            catch (IOException) when (File.Exists(target))
+            {
+                // Another upload of the same file won the race; the bytes are identical, so keep one copy.
+                File.Delete(temp);
+            }
+        }
         return sha;
     }
 

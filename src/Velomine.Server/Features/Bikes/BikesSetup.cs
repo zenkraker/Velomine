@@ -10,9 +10,12 @@ public static class BikesSetup
         services.AddHttpClient<ICatalogueSource, HttpCatalogueSource>(client => client.Timeout = TimeSpan.FromSeconds(15));
         services.AddHttpClient("catalogue-contribution", client => client.Timeout = TimeSpan.FromSeconds(20));
 
-        services.AddHostedService<CatalogueBootstrap>();
-        services.AddHostedService<CatalogueSyncService>();
-        services.AddHostedService<ContributionService>();
+        if (configuration.GetValue("Velomine:Background:Enabled", true))
+        {
+            services.AddHostedService<CatalogueBootstrap>();
+            services.AddHostedService<CatalogueSyncService>();
+            services.AddHostedService<ContributionService>();
+        }
         return services;
     }
 }

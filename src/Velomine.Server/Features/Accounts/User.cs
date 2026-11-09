@@ -31,10 +31,6 @@ public sealed class User : IdentityUser<Guid>
     [NotMapped]
     public int? MaxHeartRate => EstimateMaxHeartRate(BirthYear);
 
-    /// <summary>Whole years from the birth year, clamped to a sane range. Null without a birth year.</summary>
-    [NotMapped]
-    public int? Age => BirthYear is { } year ? Math.Clamp(DateTime.UtcNow.Year - year, 10, 100) : null;
-
     public static int? EstimateMaxHeartRate(int? birthYear) =>
         birthYear is { } year
             ? (int)Math.Round(208 - 0.7 * Math.Clamp(DateTime.UtcNow.Year - year, 10, 100))

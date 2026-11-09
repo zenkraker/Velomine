@@ -63,7 +63,7 @@ class RideSeries {
 
     final speed =
         present(s.speed)?.map((v) => v == null ? null : v * 3.6).toList() ??
-        deriveSpeedKmh(time, lat, lon);
+        present(deriveSpeedKmh(time, lat, lon));
     final altitude = present(s.altitude);
     final power = present(s.power?.map((v) => v?.toDouble()).toList());
     final heartRate = present(s.heartRate?.map((v) => v?.toDouble()).toList());
@@ -80,8 +80,6 @@ class RideSeries {
           values: speed,
           decimals: 1,
         ),
-      if (power != null)
-        Series(id: 'power', name: 'Power', unit: 'W', values: power),
       if (heartRate != null)
         Series(
           id: 'heartrate',
@@ -89,6 +87,8 @@ class RideSeries {
           unit: 'bpm',
           values: heartRate,
         ),
+      if (power != null)
+        Series(id: 'power', name: 'Power', unit: 'W', values: power),
       if (cadence != null)
         Series(id: 'cadence', name: 'Cadence', unit: 'rpm', values: cadence),
     ]);

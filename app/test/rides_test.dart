@@ -131,4 +131,29 @@ void main() {
       expect(find.text('road.fit'), findsNothing);
     },
   );
+
+  testWidgets(
+    'RidesScreen_ShouldShowOnlyTheChosenDiscipline_WhenTheFilterChangesDuringALoad',
+    (tester) async {
+      server.rides.add(
+        rideJson('r1', 'ready', fileName: 'road.fit', discipline: 'road'),
+      );
+      server.rides.add(
+        rideJson('r2', 'ready', fileName: 'gravel.fit', discipline: 'gravel'),
+      );
+      await startApp(tester, server.session(useCookies: true));
+
+      final gate = server.delayNext('/api/v1/rides');
+      await tester.tap(find.byKey(const Key('filter-gravel')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('filter-road')));
+      await tester.pumpAndSettle();
+
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.text('road.fit'), findsOneWidget);
+      expect(find.text('gravel.fit'), findsNothing);
+    },
+  );
 }

@@ -117,6 +117,26 @@ public sealed class UsersTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task SetUserRoles_ShouldRefuseTheOldRefreshToken_WhenTheAdminRoleIsRemoved()
+    {
+        await using var api = await StartAsync();
+        var admin = await AdminAsync(api);
+        var member = await NewMemberAsync(api);
+        await admin.PutAsJsonAsync($"/api/v1/admin/users/{member.Id}/roles", new SetUserRolesRequest { Roles = ["admin"] }, Ct);
+
+        var login = await api.LoginAsync(member.Email, TestApi.MemberPassword);
+        var refreshToken = JsonDocument.Parse(await login.Content.ReadAsStringAsync(Ct)).RootElement
+            .GetProperty("refreshToken").GetString()!;
+
+        Assert.Equal(HttpStatusCode.OK,
+            (await admin.PutAsJsonAsync($"/api/v1/admin/users/{member.Id}/roles", new SetUserRolesRequest { Roles = [] }, Ct)).StatusCode);
+
+        var renew = await api.CreateClient()
+            .PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(refreshToken), Ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, renew.StatusCode);
+    }
+
+    [Fact]
     public async Task AdminUserLock_ShouldBlockSignInAndRenewal_WhenAccountIsLocked()
     {
         await using var api = await StartAsync();

@@ -57,6 +57,9 @@ class ProgressData {
       .giveWellbeingConsent(WellbeingConsentRequest(accepted: true))
       .guard(FailureAction.saveWellbeing);
 
+  Future<Result<WellbeingResponse?>> withdrawConsent() =>
+      _wellbeing.withdrawWellbeingConsent().guard(FailureAction.saveWellbeing);
+
   Future<Result<void>> saveCheckIn(SaveCheckInRequest checkIn) =>
       _wellbeing.saveCheckIn(checkIn).guard(FailureAction.saveWellbeing);
 

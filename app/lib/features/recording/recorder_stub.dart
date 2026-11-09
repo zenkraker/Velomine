@@ -33,6 +33,7 @@ class UnsupportedRecorder implements Recorder {
     bool autoPause = true,
     String rideType = 'road',
     bool ebike = false,
+    String? accountId,
   }) async => _unsupported;
 
   @override
@@ -56,7 +57,7 @@ class UnsupportedRecorder implements Recorder {
   Stream<RecorderSnapshot> get events => const Stream.empty();
 
   @override
-  Future<List<LocalRide>> listRides() async => const [];
+  Future<List<LocalRide>> listRides({String? accountId}) async => const [];
 
   @override
   Future<Uint8List?> readFit(String id) async => null;

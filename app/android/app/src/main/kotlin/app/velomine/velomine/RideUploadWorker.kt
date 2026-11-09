@@ -28,14 +28,6 @@ class RideUploadWorker(
 
         val store = RideStore(applicationContext)
         val tokens = SecureTokenStore(applicationContext)
-        val rides = store.list().filter {
-            it["state"] == "ready" && it["uploadState"] != "uploaded"
-        }
-        if (rides.isEmpty()) {
-            log("worker: no rides to upload")
-            return Result.success()
-        }
-        log("worker: ${rides.size} ride(s) to upload to $serverUrl")
 
         val saved = tokens.read()
         if (saved == null) {
@@ -50,6 +42,24 @@ class RideUploadWorker(
         }
 
         var accessToken: String = firstToken.token ?: return Result.success()
+        val user = currentUser(serverUrl, accessToken)
+        if (user.networkError) return Result.retry()
+        val accountId = user.id
+        if (accountId == null) {
+            log("worker: could not read the signed-in member")
+            return Result.success()
+        }
+
+        // Claims rides recorded before account ids were kept, then keeps only this member's rides.
+        val rides = store.list(claimFor = accountId).filter {
+            it["state"] == "ready" && it["uploadState"] != "uploaded"
+        }
+        if (rides.isEmpty()) {
+            log("worker: no rides to upload")
+            return Result.success()
+        }
+        log("worker: ${rides.size} ride(s) to upload to $serverUrl for $accountId")
+
         var retry = false
         var signedOut = false
 
@@ -196,6 +206,25 @@ class RideUploadWorker(
 
     private data class RefreshOutcome(val token: String?, val networkError: Boolean = false)
 
+    private data class UserOutcome(val id: String?, val networkError: Boolean = false)
+
+    /** Who the token belongs to, so a worker left over from another sign-in never uploads their rides. */
+    private fun currentUser(serverUrl: String, accessToken: String): UserOutcome {
+        val response = request(
+            "$serverUrl/api/v1/accounts/me",
+            "GET",
+            mapOf("Authorization" to "Bearer $accessToken"),
+            null,
+        )
+        if (response.networkError) return UserOutcome(null, networkError = true)
+        if (response.code !in 200..299) return UserOutcome(null)
+        return try {
+            UserOutcome(JSONObject(response.body).optString("id").ifEmpty { null })
+        } catch (_: Exception) {
+            UserOutcome(null)
+        }
+    }
+
     private fun refresh(
         serverUrl: String,
         refreshToken: String,
@@ -209,7 +238,8 @@ class RideUploadWorker(
             body,
         )
         if (response.networkError) return RefreshOutcome(null, networkError = true)
-        if (response.code != 200) return RefreshOutcome(null)
+        if (response.code == 401) return RefreshOutcome(null)
+        if (response.code != 200) return RefreshOutcome(null, networkError = true)
         return try {
             val json = JSONObject(response.body)
             val access = json.optString("accessToken")

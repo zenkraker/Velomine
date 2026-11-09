@@ -403,6 +403,18 @@
   "bike": "Bike",
   "noBike": "No bike",
   "mapOfRoute": "Map of the route",
+  "heartRateOnMap": "Show heart rate on the map",
+  "mapHeartRateHint": "Route colour shows heart rate from {min} to {max} bpm",
+  "@mapHeartRateHint": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "seriesElevation": "Elevation",
   "seriesSpeed": "Speed",
   "seriesPower": "Power",
@@ -1057,6 +1069,7 @@
   "wellbeingConsentTitle": "Before you start",
   "wellbeingConsentBody": "Velomine stores a short daily check-in and the RPE you add to rides. It is health data: nobody else sees it unless you share it with your coaches, and you can export or delete it at any time. It is not medical advice.",
   "wellbeingConsentAction": "I agree",
+  "wellbeingWithdrawConsent": "Withdraw consent",
   "wellbeingToday": "How do you feel today?",
   "wellbeingSaved": "Today's check-in",
   "wellbeingEdit": "Edit today",
@@ -1327,8 +1340,6 @@
   "actionLoadTemplates": "load your build templates",
   "actionSaveTemplate": "save the build template",
   "actionApplyTemplate": "apply the build template",
-  "actionSaveCatalogue": "save the catalogue setting",
-  "actionResolveConflict": "settle the catalogue conflict",
 
   "saveAsTemplate": "Save as build template",
   "applyTemplate": "Apply a build template",
@@ -1373,25 +1384,8 @@
     }
   },
   "catalogueConflicts": "Parts that differ from the shared catalogue",
-  "noCatalogueConflicts": "No parts differ.",
   "keepMine": "Keep mine",
   "useShared": "Use shared",
-  "conflictLocal": "Yours: {text}",
-  "@conflictLocal": {
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
-  "conflictShared": "Shared: {text}",
-  "@conflictShared": {
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
   "contributionCounts": "{pending} waiting · {sent} sent · {rejected} rejected · {failed} failed",
   "@contributionCounts": {
     "placeholders": {

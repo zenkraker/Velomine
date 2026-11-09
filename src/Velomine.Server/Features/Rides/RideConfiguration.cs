@@ -30,7 +30,10 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.HasIndex(r => r.BikeId);
 
         ride.HasIndex(r => new { r.UserId, r.IdempotencyKey }).IsUnique();
-        ride.HasIndex(r => new { r.UserId, r.DedupKey });
+        ride.HasIndex(r => new { r.UserId, r.DedupKey })
+            .IsUnique()
+            .HasFilter("status IN ('Processing','Ready')")
+            .HasDatabaseName("ux_rides_user_dedup_key");
         ride.HasIndex(r => new { r.UserId, r.StartTime });
         ride.HasIndex(r => new { r.UserId, r.Discipline });
     }

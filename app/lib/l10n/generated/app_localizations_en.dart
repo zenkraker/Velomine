@@ -808,6 +808,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapOfRoute => 'Map of the route';
 
   @override
+  String get heartRateOnMap => 'Show heart rate on the map';
+
+  @override
+  String mapHeartRateHint(int min, int max) {
+    return 'Route colour shows heart rate from $min to $max bpm';
+  }
+
+  @override
   String get seriesElevation => 'Elevation';
 
   @override
@@ -1985,6 +1993,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingConsentAction => 'I agree';
 
   @override
+  String get wellbeingWithdrawConsent => 'Withdraw consent';
+
+  @override
   String get wellbeingToday => 'How do you feel today?';
 
   @override
@@ -2520,12 +2531,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionApplyTemplate => 'apply the build template';
 
   @override
-  String get actionSaveCatalogue => 'save the catalogue setting';
-
-  @override
-  String get actionResolveConflict => 'settle the catalogue conflict';
-
-  @override
   String get saveAsTemplate => 'Save as build template';
 
   @override
@@ -2597,23 +2602,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Parts that differ from the shared catalogue';
 
   @override
-  String get noCatalogueConflicts => 'No parts differ.';
-
-  @override
   String get keepMine => 'Keep mine';
 
   @override
   String get useShared => 'Use shared';
-
-  @override
-  String conflictLocal(String text) {
-    return 'Yours: $text';
-  }
-
-  @override
-  String conflictShared(String text) {
-    return 'Shared: $text';
-  }
 
   @override
   String contributionCounts(int pending, int sent, int rejected, int failed) {

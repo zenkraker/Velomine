@@ -42,6 +42,7 @@ class RecorderService : Service(), LocationListener {
     private var autoPauseEnabled = true
     private var rideType = "road"
     private var ebike = false
+    private var accountId: String? = null
     private val autoPause = AutoPauseDecider()
     private val debug: Boolean
         get() = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
@@ -65,6 +66,7 @@ class RecorderService : Service(), LocationListener {
             autoPauseEnabled = intent?.getBooleanExtra(EXTRA_AUTO_PAUSE, true) ?: true
             rideType = intent?.getStringExtra(EXTRA_RIDE_TYPE) ?: "road"
             ebike = intent?.getBooleanExtra(EXTRA_EBIKE, false) ?: false
+            accountId = intent?.getStringExtra(EXTRA_ACCOUNT_ID)
         }
         log(
             "onStartCommand action=$action active=${active?.id} state=$state " +
@@ -132,7 +134,7 @@ class RecorderService : Service(), LocationListener {
             return
         }
 
-        val ride = store.create(rideType = rideType, ebike = ebike)
+        val ride = store.create(rideType = rideType, ebike = ebike, accountId = accountId)
         log("start ride ${ride.id} file=${ride.dir.absolutePath} startedAt=${ride.startedAt}")
         active = ride
         state = STATE_RECORDING
@@ -587,6 +589,7 @@ class RecorderService : Service(), LocationListener {
         const val EXTRA_AUTO_PAUSE = "autoPause"
         const val EXTRA_RIDE_TYPE = "rideType"
         const val EXTRA_EBIKE = "ebike"
+        const val EXTRA_ACCOUNT_ID = "accountId"
 
         private const val CHANNEL_ID = "velomine_recording"
         private const val NOTIFICATION_ID = 41

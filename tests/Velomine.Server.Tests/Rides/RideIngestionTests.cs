@@ -4,6 +4,7 @@ using Dynastream.Fit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
@@ -60,6 +61,9 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         throw new TimeoutException("The ride was still processing after 10 seconds.");
     }
 
+    private static int OriginalFileCount(TestApi api) =>
+        Directory.GetFiles(api.FilesPath, "*", SearchOption.AllDirectories).Count(f => f.Contains("originals"));
+
     [Fact]
     public async Task UploadRide_ShouldStoreAReadyRideWithMetrics_WhenGivenAFitFile()
     {
@@ -99,8 +103,43 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(200, ride.AvgPowerW);
         Assert.Equal(250, ride.MaxPowerW);
         Assert.InRange(ride.NormalizedPowerW!.Value, 200, 215);
-        Assert.Null(ride.UtcOffsetMinutes); // GPX has no local time
+        Assert.Equal(0, ride.UtcOffsetMinutes); // no member zone: UTC
     }
+
+    [Fact]
+    public async Task UploadRide_ShouldStoreTheRidersOffset_WhenTheGpxHasNoOffset()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await SetProfileAsync(member, "Europe/Rome");
+
+        var ride = await UploadAndWaitAsync(member, Bytes(Gpx(60)), "morning.gpx");
+
+        Assert.Equal(120, ride.UtcOffsetMinutes); // Rome in October is UTC+2
+    }
+
+    [Fact]
+    public async Task Totals_ShouldNotChange_WhenTheMemberChangesTimeZoneAfterUpload()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await SetProfileAsync(member, "Europe/Rome", "sunday");
+        // Saturday 31 October 23:30 UTC is Sunday 1 November in Rome.
+        var ride = await UploadAndWaitAsync(member, Bytes(Gpx(60, start: new System.DateTime(2026, 10, 31, 23, 30, 0, DateTimeKind.Utc))), "night.gpx");
+        Assert.Equal(60, ride.UtcOffsetMinutes);
+
+        await SetProfileAsync(member, "UTC", "sunday");
+
+        var totals = await member.GetFromJsonAsync<TotalsResponse>("/api/v1/analytics/totals?period=week&count=2", Ct);
+        Assert.Equal(new DateOnly(2026, 11, 1), totals!.Totals[0].Start);
+        Assert.Equal(1, totals.Totals[0].Rides);
+        Assert.Equal(0, totals.Totals[1].Rides);
+    }
+
+    private static async Task SetProfileAsync(HttpClient client, string timeZone, string firstDay = "monday") =>
+        (await client.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new Server.Features.Accounts.UpdateProfileRequest("Test Rider", null, null, null, timeZone, firstDay), Ct))
+        .EnsureSuccessStatusCode();
 
     [Fact]
     public async Task UploadRide_ShouldStoreStreamsAlignedBySample_WhenTheFileIsRead()
@@ -189,6 +228,19 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task UploadRide_ShouldDeleteTheRejectedFile_WhenTheKeyIsReusedForAnotherFile()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 90)), key: "k1");
+
+        var other = await UploadAsync(member, Fit(new FitSession(Start.AddDays(1), 90)), key: "k1");
+
+        Assert.Equal(HttpStatusCode.Conflict, other.StatusCode);
+        Assert.Equal(1, OriginalFileCount(api));
+    }
+
+    [Fact]
     public async Task UploadRide_ShouldReturnAHiddenDuplicate_WhenTheSameFileIsUploadedAgain()
     {
         await using var api = await StartAsync();
@@ -202,6 +254,46 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(first.Id, again.DuplicateOf);
         var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
         Assert.Equal(first.Id, Assert.Single(list!.Rides).Id);
+    }
+
+    [Fact]
+    public async Task UploadRide_ShouldKeepOneRide_WhenTheSameFileIsUploadedTwiceAtOnce()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var file = Fit(new FitSession(Start, 90));
+
+        var firstUpload = UploadAsync(member, file);
+        var secondUpload = UploadAsync(member, file);
+        var firstId = (await (await firstUpload).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
+        var secondId = (await (await secondUpload).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
+
+        var first = await WaitAsync(member, firstId);
+        var second = await WaitAsync(member, secondId);
+
+        var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
+        var visible = Assert.Single(list!.Rides);
+        Assert.Contains(new[] { first, second },
+            ride => ride.Status == "duplicate" && ride.DuplicateOf == visible.Id);
+    }
+
+    [Fact]
+    public async Task UploadRide_ShouldKeepOneRide_WhenTheSecondUploadStartsWhileTheFirstIsProcessing()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var file = Fit(new FitSession(Start, 90));
+
+        var first = await UploadAsync(member, file);
+        var firstId = (await first.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
+        var second = await UploadAsync(member, file);
+        var secondId = (await second.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
+
+        await WaitAsync(member, firstId);
+        await WaitAsync(member, secondId);
+
+        var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
+        Assert.Single(list!.Rides);
     }
 
     [Fact]

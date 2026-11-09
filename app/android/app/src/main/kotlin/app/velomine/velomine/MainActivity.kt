@@ -82,12 +82,14 @@ class MainActivity : FlutterActivity() {
                     val autoPause = args?.get("autoPause") as? Boolean ?: true
                     val rideType = args?.get("rideType") as? String ?: "road"
                     val ebike = args?.get("ebike") as? Boolean ?: false
+                    val accountId = args?.get("accountId") as? String
                     startRecorderService(
                         RecorderService.ACTION_START,
                         foreground = true,
                         autoPause = autoPause,
                         rideType = rideType,
                         ebike = ebike,
+                        accountId = accountId,
                     )
                     result.success(true)
                 }
@@ -104,7 +106,9 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "getState" -> result.success(RecorderRuntime.snapshot())
-                "listRides" -> inBackground(result) { store.list() }
+                "listRides" -> inBackground(result) {
+                    store.list(claimFor = call.arguments as? String)
+                }
                 "readFit" -> {
                     val id = call.arguments as? String
                     if (id == null) {
@@ -290,16 +294,18 @@ class MainActivity : FlutterActivity() {
         autoPause: Boolean = true,
         rideType: String = "road",
         ebike: Boolean = false,
+        accountId: String? = null,
     ) {
         log(
             "starting recorder service action=$action foreground=$foreground " +
-                "autoPause=$autoPause rideType=$rideType ebike=$ebike",
+                "autoPause=$autoPause rideType=$rideType ebike=$ebike account=$accountId",
         )
         val intent = Intent(this, RecorderService::class.java)
             .setAction(action)
             .putExtra(RecorderService.EXTRA_AUTO_PAUSE, autoPause)
             .putExtra(RecorderService.EXTRA_RIDE_TYPE, rideType)
             .putExtra(RecorderService.EXTRA_EBIKE, ebike)
+        if (accountId != null) intent.putExtra(RecorderService.EXTRA_ACCOUNT_ID, accountId)
         if (foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
