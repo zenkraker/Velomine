@@ -74,8 +74,11 @@ public sealed class BikeComponent
     /// <summary>The barcode on the packaging, normalised to GTIN-14. Only parts bought boxed have one.</summary>
     public string? Gtin { get; set; }
 
-    /// <summary>The catalogue entry this part is, when the club already knows it.</summary>
+    /// <summary>The shared catalogue entry this part is, when it is one. Null for a custom part and for a part the publisher has not listed yet.</summary>
     public Guid? PartId { get; set; }
+
+    /// <summary>True for a part the member added themselves: it is never linked to the shared catalogue and never contributed.</summary>
+    public bool IsCustom { get; set; }
 
     public DateOnly InstalledOn { get; set; }
 

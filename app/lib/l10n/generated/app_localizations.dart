@@ -110,6 +110,18 @@ abstract class AppLocalizations {
   /// **'Record'**
   String get navRecord;
 
+  /// No description provided for @navRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get navRecording;
+
+  /// No description provided for @navRecordingPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get navRecordingPaused;
+
   /// No description provided for @navProgress.
   ///
   /// In en, this message translates to:
@@ -457,6 +469,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are the only admin. Make someone else an admin first.'**
   String get failureLastAdmin;
+
+  /// No description provided for @failureSessionEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session ended. Sign in again.'**
+  String get failureSessionEnded;
+
+  /// No description provided for @failureForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account may not do that.'**
+  String get failureForbidden;
+
+  /// No description provided for @failureTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again shortly.'**
+  String get failureTooMany;
 
   /// No description provided for @failureUnreachable.
   ///
@@ -4543,6 +4573,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{club} declined your request.'**
   String notificationClubJoinDeclined(String club);
+
+  /// No description provided for @actionLoadTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'load your build templates'**
+  String get actionLoadTemplates;
+
+  /// No description provided for @actionSaveTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'save the build template'**
+  String get actionSaveTemplate;
+
+  /// No description provided for @actionApplyTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'apply the build template'**
+  String get actionApplyTemplate;
+
+  /// No description provided for @actionSaveCatalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'save the catalogue setting'**
+  String get actionSaveCatalogue;
+
+  /// No description provided for @actionResolveConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'settle the catalogue conflict'**
+  String get actionResolveConflict;
+
+  /// No description provided for @saveAsTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as build template'**
+  String get saveAsTemplate;
+
+  /// No description provided for @applyTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply a build template'**
+  String get applyTemplate;
+
+  /// No description provided for @saveTemplateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this bike\'s parts as a template'**
+  String get saveTemplateTitle;
+
+  /// No description provided for @templateName.
+  ///
+  /// In en, this message translates to:
+  /// **'Template name'**
+  String get templateName;
+
+  /// No description provided for @templateNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Gravel build, 2024'**
+  String get templateNameHint;
+
+  /// No description provided for @templateParts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 part} other{{count} parts}}'**
+  String templateParts(int count);
+
+  /// No description provided for @noTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'No build templates yet. Save a bike\'s parts as a template to reuse them.'**
+  String get noTemplates;
+
+  /// No description provided for @applyTemplateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply a build template'**
+  String get applyTemplateTitle;
+
+  /// No description provided for @templateApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Build template applied.'**
+  String get templateApplied;
+
+  /// No description provided for @errorTemplateName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the template a name.'**
+  String get errorTemplateName;
+
+  /// No description provided for @sharedCatalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared parts catalogue'**
+  String get sharedCatalogue;
+
+  /// No description provided for @shareParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Share new parts with the shared catalogue'**
+  String get shareParts;
+
+  /// No description provided for @sharePartsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-custom parts that the shared catalogue does not list are sent to the publisher. Custom parts stay only on your bike.'**
+  String get sharePartsHelp;
+
+  /// No description provided for @catalogueNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'This server has no contribution endpoint configured, so nothing is sent.'**
+  String get catalogueNotConfigured;
+
+  /// No description provided for @catalogueVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalogue version {version}, last checked {date}'**
+  String catalogueVersion(int version, String date);
+
+  /// No description provided for @catalogueNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'The shared catalogue has not been checked yet.'**
+  String get catalogueNeverSynced;
+
+  /// No description provided for @catalogueSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared catalogue last checked {date}'**
+  String catalogueSynced(String date);
+
+  /// No description provided for @catalogueConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts that differ from the shared catalogue'**
+  String get catalogueConflicts;
+
+  /// No description provided for @noCatalogueConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'No parts differ.'**
+  String get noCatalogueConflicts;
+
+  /// No description provided for @keepMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep mine'**
+  String get keepMine;
+
+  /// No description provided for @useShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Use shared'**
+  String get useShared;
+
+  /// No description provided for @conflictLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Yours: {text}'**
+  String conflictLocal(String text);
+
+  /// No description provided for @conflictShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared: {text}'**
+  String conflictShared(String text);
+
+  /// No description provided for @contributionCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{pending} waiting · {sent} sent · {rejected} rejected · {failed} failed'**
+  String contributionCounts(int pending, int sent, int rejected, int failed);
+
+  /// No description provided for @catalogueProblems.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts the shared catalogue did not take'**
+  String get catalogueProblems;
+
+  /// No description provided for @contributionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get contributionRejected;
+
+  /// No description provided for @contributionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Gave up'**
+  String get contributionFailed;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom part'**
+  String get custom;
+
+  /// No description provided for @customPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customPart;
+
+  /// No description provided for @customHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this part out of the shared catalogue; it will not be sent to the publisher.'**
+  String get customHelper;
 }
 
 class _AppLocalizationsDelegate

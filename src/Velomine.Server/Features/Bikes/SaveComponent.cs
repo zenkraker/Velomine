@@ -14,6 +14,7 @@ public interface IComponentFields
     string? Model { get; }
     string? Mpn { get; }
     string? Gtin { get; }
+    bool Custom { get; }
     DateOnly InstalledOn { get; }
     DateOnly? RemovedOn { get; }
     double? ExpectedDistanceM { get; }
@@ -38,6 +39,9 @@ public sealed class CreateComponentRequest : IComponentFields
 
     /// <summary>The barcode on the packaging. Optional; a valid GTIN identifies the part on its own.</summary>
     public string? Gtin { get; set; }
+
+    /// <summary>True for a part of the member's own: it is never linked to the shared catalogue and never contributed.</summary>
+    public bool Custom { get; set; }
 
     /// <summary>The day it was fitted. Rides from this day on count towards its wear.</summary>
     public required DateOnly InstalledOn { get; set; }
@@ -74,6 +78,9 @@ public sealed class UpdateComponentRequest : IComponentFields
 
     /// <summary>The barcode on the packaging. Optional; a valid GTIN identifies the part on its own.</summary>
     public string? Gtin { get; set; }
+
+    /// <summary>True for a part of the member's own: it is never linked to the shared catalogue and never contributed.</summary>
+    public bool Custom { get; set; }
 
     /// <summary>The day it was fitted. Rides from this day on count towards its wear.</summary>
     public required DateOnly InstalledOn { get; set; }
@@ -132,7 +139,11 @@ public sealed class CreateComponent(VelomineDbContext db, TimeProvider time) : E
 
         var component = new BikeComponent { Id = Guid.CreateVersion7(), BikeId = bike.Id };
         Apply(component, req);
-        component.PartId = await PartCatalogue.LinkAsync(db, component, time, confirm: true, ct);
+        var part = req.Custom ? null : await PartCatalogue.FindAsync(db, component, ct);
+        component.PartId = part?.Id;
+        // Publisher-authoritative: a non-custom part that is not in the shared list is offered to the publisher, never
+        // added to the list on this instance. A custom part is never offered.
+        if (part is null && !req.Custom) await ContributionOutbox.EnqueueAsync(db, component, time, ct);
         db.BikeComponents.Add(component); // Add explicitly: EF would treat a new child with a preset key as existing
         await db.SaveChangesAsync(ct);
         await Send.CreatedAtAsync<GetBike>(new { id = bike.Id }, await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), cancellation: ct);
@@ -145,6 +156,7 @@ public sealed class CreateComponent(VelomineDbContext db, TimeProvider time) : E
         c.Model = req.Model?.Trim();
         c.Mpn = PartIdentity.NormaliseMpn(req.Mpn);
         c.Gtin = PartIdentity.TryNormaliseGtin(req.Gtin, out var gtin) ? gtin : null;
+        c.IsCustom = req.Custom;
         c.InstalledOn = req.InstalledOn;
         c.RemovedOn = req.RemovedOn;
         c.ExpectedDistanceM = req.ExpectedDistanceM;
@@ -173,7 +185,9 @@ public sealed class UpdateComponent(VelomineDbContext db, TimeProvider time) : E
         }
 
         CreateComponent.Apply(component, req);
-        component.PartId = await PartCatalogue.LinkAsync(db, component, time, confirm: false, ct);
+        var part = req.Custom ? null : await PartCatalogue.FindAsync(db, component, ct);
+        component.PartId = part?.Id;
+        if (part is null && !req.Custom) await ContributionOutbox.EnqueueAsync(db, component, time, ct);
         await db.SaveChangesAsync(ct);
         await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }

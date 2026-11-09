@@ -18,6 +18,7 @@ class CreateComponentRequest {
     this.model = const Optional.absent(),
     this.mpn = const Optional.absent(),
     this.gtin = const Optional.absent(),
+    this.custom = const Optional.absent(),
     required this.installedOn,
     this.removedOn = const Optional.absent(),
     this.expectedDistanceM = const Optional.absent(),
@@ -58,6 +59,14 @@ class CreateComponentRequest {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   final Optional<String?> gtin;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> custom;
 
   final DateTime installedOn;
 
@@ -103,6 +112,7 @@ class CreateComponentRequest {
     other.model == model &&
     other.mpn == mpn &&
     other.gtin == gtin &&
+    other.custom == custom &&
     other.installedOn == installedOn &&
     other.removedOn == removedOn &&
     other.expectedDistanceM == expectedDistanceM &&
@@ -117,6 +127,7 @@ class CreateComponentRequest {
     (model == null ? 0 : model!.hashCode) +
     (mpn == null ? 0 : mpn!.hashCode) +
     (gtin == null ? 0 : gtin!.hashCode) +
+    (custom == null ? 0 : custom!.hashCode) +
     (installedOn.hashCode) +
     (removedOn == null ? 0 : removedOn!.hashCode) +
     (expectedDistanceM == null ? 0 : expectedDistanceM!.hashCode) +
@@ -124,7 +135,7 @@ class CreateComponentRequest {
     (expectedMonths == null ? 0 : expectedMonths!.hashCode);
 
   @override
-  String toString() => 'CreateComponentRequest[type=$type, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths]';
+  String toString() => 'CreateComponentRequest[type=$type, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, custom=$custom, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -144,6 +155,10 @@ class CreateComponentRequest {
     if (this.gtin.isPresent) {
       final value = this.gtin.value;
       json[r'gtin'] = value;
+    }
+    if (this.custom.isPresent) {
+      final value = this.custom.value;
+      json[r'custom'] = value;
     }
       json[r'installedOn'] = _dateFormatter.format(this.installedOn);
     if (this.removedOn.isPresent) {
@@ -173,6 +188,7 @@ class CreateComponentRequest {
     Optional<String?>? model,
     Optional<String?>? mpn,
     Optional<String?>? gtin,
+    Optional<bool?>? custom,
     DateTime? installedOn,
     Optional<DateTime?>? removedOn,
     Optional<double?>? expectedDistanceM,
@@ -184,6 +200,7 @@ class CreateComponentRequest {
     model: model ?? this.model,
     mpn: mpn ?? this.mpn,
     gtin: gtin ?? this.gtin,
+    custom: custom ?? this.custom,
     installedOn: installedOn ?? this.installedOn,
     removedOn: removedOn ?? this.removedOn,
     expectedDistanceM: expectedDistanceM ?? this.expectedDistanceM,
@@ -215,6 +232,7 @@ class CreateComponentRequest {
         model: json.containsKey(r'model') ? Optional.present(mapValueOfType<String>(json, r'model')) : const Optional.absent(),
         mpn: json.containsKey(r'mpn') ? Optional.present(mapValueOfType<String>(json, r'mpn')) : const Optional.absent(),
         gtin: json.containsKey(r'gtin') ? Optional.present(mapValueOfType<String>(json, r'gtin')) : const Optional.absent(),
+        custom: json.containsKey(r'custom') ? Optional.present(mapValueOfType<bool>(json, r'custom')) : const Optional.absent(),
         installedOn: mapDateTime(json, r'installedOn', r'')!,
         removedOn: json.containsKey(r'removedOn') ? Optional.present(mapDateTime(json, r'removedOn', r'')) : const Optional.absent(),
         expectedDistanceM: json.containsKey(r'expectedDistanceM') ? Optional.present(mapValueOfType<double>(json, r'expectedDistanceM')) : const Optional.absent(),

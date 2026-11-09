@@ -46,6 +46,15 @@ public sealed class PartIdentityTests
     }
 
     [Fact]
+    public void PartKey_ShouldDiffer_WhenTheSamePadIsUsedAtTheFrontAndTheRear()
+    {
+        var front = PartIdentity.Key("front_brake_pads", "Shimano", "B01S", "B01S", null);
+        var rear = PartIdentity.Key("rear_brake_pads", "Shimano", "B01S", "B01S", null);
+
+        Assert.NotEqual(front, rear);
+    }
+
+    [Fact]
     public void PartKey_ShouldFallBackToTheName_WhenThereIsNoOfficialIdentifier()
     {
         var key = PartIdentity.Key("chain", "Shimano", "CN-M8100", null, null);

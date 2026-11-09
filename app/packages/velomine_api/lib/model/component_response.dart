@@ -21,6 +21,7 @@ class ComponentResponse {
     required this.mpn,
     required this.gtin,
     required this.partId,
+    required this.isCustom,
     required this.installedOn,
     required this.removedOn,
     required this.expectedDistanceM,
@@ -48,6 +49,8 @@ class ComponentResponse {
   final String? gtin;
 
   final String? partId;
+
+  final bool isCustom;
 
   final DateTime installedOn;
 
@@ -79,6 +82,7 @@ class ComponentResponse {
     other.mpn == mpn &&
     other.gtin == gtin &&
     other.partId == partId &&
+    other.isCustom == isCustom &&
     other.installedOn == installedOn &&
     other.removedOn == removedOn &&
     other.expectedDistanceM == expectedDistanceM &&
@@ -101,6 +105,7 @@ class ComponentResponse {
     (mpn == null ? 0 : mpn!.hashCode) +
     (gtin == null ? 0 : gtin!.hashCode) +
     (partId == null ? 0 : partId!.hashCode) +
+    (isCustom.hashCode) +
     (installedOn.hashCode) +
     (removedOn == null ? 0 : removedOn!.hashCode) +
     (expectedDistanceM == null ? 0 : expectedDistanceM!.hashCode) +
@@ -113,7 +118,7 @@ class ComponentResponse {
     (status.hashCode);
 
   @override
-  String toString() => 'ComponentResponse[id=$id, type=$type, typeName=$typeName, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, partId=$partId, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths, usedDistanceM=$usedDistanceM, usedHours=$usedHours, usedMonths=$usedMonths, wearPercent=$wearPercent, status=$status]';
+  String toString() => 'ComponentResponse[id=$id, type=$type, typeName=$typeName, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, partId=$partId, isCustom=$isCustom, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths, usedDistanceM=$usedDistanceM, usedHours=$usedHours, usedMonths=$usedMonths, wearPercent=$wearPercent, status=$status]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -145,6 +150,7 @@ class ComponentResponse {
     } else {
       json[r'partId'] = null;
     }
+      json[r'isCustom'] = this.isCustom;
       json[r'installedOn'] = _dateFormatter.format(this.installedOn);
     if (this.removedOn != null) {
       json[r'removedOn'] = _dateFormatter.format(this.removedOn!);
@@ -194,6 +200,7 @@ class ComponentResponse {
     bool gtinSetToNull = false,
     String? partId,
     bool partIdSetToNull = false,
+    bool? isCustom,
     DateTime? installedOn,
     DateTime? removedOn,
     bool removedOnSetToNull = false,
@@ -218,6 +225,7 @@ class ComponentResponse {
     mpn: mpnSetToNull ? null : mpn ?? this.mpn,
     gtin: gtinSetToNull ? null : gtin ?? this.gtin,
     partId: partIdSetToNull ? null : partId ?? this.partId,
+    isCustom: isCustom ?? this.isCustom,
     installedOn: installedOn ?? this.installedOn,
     removedOn: removedOnSetToNull ? null : removedOn ?? this.removedOn,
     expectedDistanceM: expectedDistanceMSetToNull ? null : expectedDistanceM ?? this.expectedDistanceM,
@@ -252,6 +260,8 @@ class ComponentResponse {
         assert(json.containsKey(r'mpn'), 'Required key "ComponentResponse[mpn]" is missing from JSON.');
         assert(json.containsKey(r'gtin'), 'Required key "ComponentResponse[gtin]" is missing from JSON.');
         assert(json.containsKey(r'partId'), 'Required key "ComponentResponse[partId]" is missing from JSON.');
+        assert(json.containsKey(r'isCustom'), 'Required key "ComponentResponse[isCustom]" is missing from JSON.');
+        assert(json[r'isCustom'] != null, 'Required key "ComponentResponse[isCustom]" has a null value in JSON.');
         assert(json.containsKey(r'installedOn'), 'Required key "ComponentResponse[installedOn]" is missing from JSON.');
         assert(json[r'installedOn'] != null, 'Required key "ComponentResponse[installedOn]" has a null value in JSON.');
         assert(json.containsKey(r'removedOn'), 'Required key "ComponentResponse[removedOn]" is missing from JSON.');
@@ -279,6 +289,7 @@ class ComponentResponse {
         mpn: mapValueOfType<String>(json, r'mpn'),
         gtin: mapValueOfType<String>(json, r'gtin'),
         partId: mapValueOfType<String>(json, r'partId'),
+        isCustom: mapValueOfType<bool>(json, r'isCustom')!,
         installedOn: mapDateTime(json, r'installedOn', r'')!,
         removedOn: mapDateTime(json, r'removedOn', r''),
         expectedDistanceM: mapValueOfType<double>(json, r'expectedDistanceM'),
@@ -344,6 +355,7 @@ class ComponentResponse {
     'mpn',
     'gtin',
     'partId',
+    'isCustom',
     'installedOn',
     'removedOn',
     'expectedDistanceM',

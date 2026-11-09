@@ -373,6 +373,7 @@ class PartFormData {
     this.model,
     this.mpn,
     this.gtin,
+    this.custom = false,
     required this.installedOn,
     this.removedOn,
     this.expectedKm,
@@ -385,6 +386,7 @@ class PartFormData {
   final String? model;
   final String? mpn;
   final String? gtin;
+  final bool custom;
   final DateTime installedOn;
   final DateTime? removedOn;
   final double? expectedKm;
@@ -397,6 +399,7 @@ class PartFormData {
     model: Optional.present(model),
     mpn: Optional.present(mpn),
     gtin: Optional.present(gtin),
+    custom: Optional.present(custom),
     installedOn: installedOn,
     removedOn: Optional.present(removedOn),
     expectedDistanceM: Optional.present(
@@ -412,6 +415,7 @@ class PartFormData {
     model: Optional.present(model),
     mpn: Optional.present(mpn),
     gtin: Optional.present(gtin),
+    custom: Optional.present(custom),
     installedOn: installedOn,
     removedOn: Optional.present(removedOn),
     expectedDistanceM: Optional.present(
@@ -468,6 +472,127 @@ String _fmt(num? v) => v == null
 
 enum _PartProblem { type, limits, gtin, removedBeforeInstalled }
 
+/// Asks for the name of a build template. Returns null when the member cancels.
+Future<String?> showTemplateNameDialog(BuildContext context) =>
+    showDialog<String>(
+      context: context,
+      builder: (_) => const _TemplateNameDialog(),
+    );
+
+class _TemplateNameDialog extends StatefulWidget {
+  const _TemplateNameDialog();
+
+  @override
+  State<_TemplateNameDialog> createState() => _TemplateNameDialogState();
+}
+
+class _TemplateNameDialogState extends State<_TemplateNameDialog> {
+  final _name = TextEditingController();
+  bool _missing = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      setState(() => _missing = true);
+      return;
+    }
+    Navigator.pop(context, name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.saveTemplateTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 8,
+        children: [
+          TextField(
+            key: const Key('template-name'),
+            controller: _name,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l10n.templateName,
+              hintText: l10n.templateNameHint,
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+          if (_missing)
+            Text(
+              l10n.errorTemplateName,
+              key: const Key('form-error'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('template-save'),
+          onPressed: _submit,
+          child: Text(l10n.save),
+        ),
+      ],
+    );
+  }
+}
+
+/// Picks one of the member's build templates. Returns null when there is none or the member closes it.
+Future<BikeTemplateResponse?> showApplyTemplateDialog(
+  BuildContext context, {
+  required List<BikeTemplateResponse> templates,
+}) => showDialog<BikeTemplateResponse>(
+  context: context,
+  builder: (context) {
+    final l10n = context.l10n;
+    return SimpleDialog(
+      title: Text(l10n.applyTemplateTitle),
+      children: templates.isEmpty
+          ? [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: Text(l10n.noTemplates, key: const Key('no-templates')),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.close),
+                ),
+              ),
+            ]
+          : [
+              for (final template in templates)
+                SimpleDialogOption(
+                  key: Key('template-${template.id}'),
+                  onPressed: () => Navigator.pop(context, template),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(template.name),
+                      Text(
+                        l10n.templateParts(template.parts.length),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+    );
+  },
+);
+
 class _PartFormState extends State<_PartForm> {
   late final ComponentResponse? _from = widget.part ?? widget.replacing;
   late String? _type = _from?.type;
@@ -475,6 +600,8 @@ class _PartFormState extends State<_PartForm> {
   late final _model = TextEditingController(text: widget.part?.model);
   late final _mpn = TextEditingController(text: widget.part?.mpn);
   late final _gtin = TextEditingController(text: widget.part?.gtin);
+  late bool _custom =
+      widget.part?.isCustom ?? widget.replacing?.isCustom ?? false;
   late final _km = TextEditingController(
     text: _fmt(
       _from?.expectedDistanceM == null
@@ -574,6 +701,7 @@ class _PartFormState extends State<_PartForm> {
           model: _text(_model.text),
           mpn: _text(_mpn.text),
           gtin: gtin,
+          custom: _custom,
           installedOn: _installed,
           removedOn: _removed,
           expectedKm: km,
@@ -699,6 +827,14 @@ class _PartFormState extends State<_PartForm> {
                     ),
                   ),
                 ],
+              ),
+              CheckboxListTile(
+                key: const Key('part-custom'),
+                value: _custom,
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.custom),
+                subtitle: Text(l10n.customHelper),
+                onChanged: (v) => setState(() => _custom = v ?? false),
               ),
               Align(
                 alignment: Alignment.centerLeft,

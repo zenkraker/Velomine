@@ -1,0 +1,268 @@
+{
+  "parts": [
+    {
+      "type": "chain",
+      "brand": "Shimano",
+      "model": "CN-M9100",
+      "mpn": "CN-M9100"
+    },
+    {
+      "type": "chain",
+      "brand": "Shimano",
+      "model": "CN-M8100",
+      "mpn": "CN-M8100"
+    },
+    {
+      "type": "chain",
+      "brand": "Shimano",
+      "model": "CN-M7100",
+      "mpn": "CN-M7100"
+    },
+    {
+      "type": "chain",
+      "brand": "Shimano",
+      "model": "CN-HG701",
+      "mpn": "CN-HG701"
+    },
+    {
+      "type": "chain",
+      "brand": "Shimano",
+      "model": "CN-HG601",
+      "mpn": "CN-HG601"
+    },
+    {
+      "type": "chain",
+      "brand": "Shimano",
+      "model": "CN-HG54",
+      "mpn": "CN-HG54"
+    },
+    {
+      "type": "chain",
+      "brand": "SRAM",
+      "model": "PC-1130",
+      "mpn": "PC-1130"
+    },
+    {
+      "type": "chain",
+      "brand": "SRAM",
+      "model": "PC-X01",
+      "mpn": "PC-X01"
+    },
+    {
+      "type": "chain",
+      "brand": "SRAM",
+      "model": "PC-GX-EAGLE",
+      "mpn": "PC-GX-EAGLE"
+    },
+    {
+      "type": "cassette",
+      "brand": "Shimano",
+      "model": "CS-M9100",
+      "mpn": "CS-M9100"
+    },
+    {
+      "type": "cassette",
+      "brand": "Shimano",
+      "model": "CS-M8100",
+      "mpn": "CS-M8100"
+    },
+    {
+      "type": "cassette",
+      "brand": "Shimano",
+      "model": "CS-M7100",
+      "mpn": "CS-M7100"
+    },
+    {
+      "type": "cassette",
+      "brand": "Shimano",
+      "model": "CS-R8000",
+      "mpn": "CS-R8000"
+    },
+    {
+      "type": "cassette",
+      "brand": "Shimano",
+      "model": "CS-R7000",
+      "mpn": "CS-R7000"
+    },
+    {
+      "type": "cassette",
+      "brand": "Shimano",
+      "model": "CS-HG700-11",
+      "mpn": "CS-HG700-11"
+    },
+    {
+      "type": "cassette",
+      "brand": "SRAM",
+      "model": "PG-1130",
+      "mpn": "PG-1130"
+    },
+    {
+      "type": "cassette",
+      "brand": "SRAM",
+      "model": "XG-1275",
+      "mpn": "XG-1275"
+    },
+    {
+      "type": "crankset",
+      "brand": "Shimano",
+      "model": "FC-M8100",
+      "mpn": "FC-M8100"
+    },
+    {
+      "type": "crankset",
+      "brand": "Shimano",
+      "model": "FC-M7100",
+      "mpn": "FC-M7100"
+    },
+    {
+      "type": "crankset",
+      "brand": "Shimano",
+      "model": "FC-R8000",
+      "mpn": "FC-R8000"
+    },
+    {
+      "type": "crankset",
+      "brand": "Shimano",
+      "model": "FC-R7000",
+      "mpn": "FC-R7000"
+    },
+    {
+      "type": "chainring",
+      "brand": "Shimano",
+      "model": "SM-CRM85",
+      "mpn": "SM-CRM85"
+    },
+    {
+      "type": "chainring",
+      "brand": "Shimano",
+      "model": "SM-CRM75",
+      "mpn": "SM-CRM75"
+    },
+    {
+      "type": "bottom_bracket",
+      "brand": "Shimano",
+      "model": "BB-MT800",
+      "mpn": "BB-MT800"
+    },
+    {
+      "type": "bottom_bracket",
+      "brand": "Shimano",
+      "model": "BB-R60",
+      "mpn": "BB-R60"
+    },
+    {
+      "type": "bottom_bracket",
+      "brand": "Shimano",
+      "model": "SM-BB52",
+      "mpn": "SM-BB52"
+    },
+    {
+      "type": "bottom_bracket",
+      "brand": "Shimano",
+      "model": "BB-MT501",
+      "mpn": "BB-MT501"
+    },
+    {
+      "type": "bottom_bracket",
+      "brand": "Shimano",
+      "model": "BB-RS501",
+      "mpn": "BB-RS501"
+    },
+    {
+      "type": "front_derailleur",
+      "brand": "Shimano",
+      "model": "FD-M8100",
+      "mpn": "FD-M8100"
+    },
+    {
+      "type": "front_derailleur",
+      "brand": "Shimano",
+      "model": "FD-M7100",
+      "mpn": "FD-M7100"
+    },
+    {
+      "type": "front_derailleur",
+      "brand": "Shimano",
+      "model": "FD-R8000",
+      "mpn": "FD-R8000"
+    },
+    {
+      "type": "rear_derailleur",
+      "brand": "Shimano",
+      "model": "RD-M8100",
+      "mpn": "RD-M8100"
+    },
+    {
+      "type": "rear_derailleur",
+      "brand": "Shimano",
+      "model": "RD-M7100",
+      "mpn": "RD-M7100"
+    },
+    {
+      "type": "rear_derailleur",
+      "brand": "Shimano",
+      "model": "RD-R8000",
+      "mpn": "RD-R8000"
+    },
+    {
+      "type": "rear_derailleur",
+      "brand": "Shimano",
+      "model": "RD-R7000",
+      "mpn": "RD-R7000"
+    },
+    {
+      "type": "front_brake_pads",
+      "brand": "Shimano",
+      "model": "B01S",
+      "mpn": "B01S"
+    },
+    {
+      "type": "rear_brake_pads",
+      "brand": "Shimano",
+      "model": "B01S",
+      "mpn": "B01S"
+    },
+    {
+      "type": "front_brake_pads",
+      "brand": "Shimano",
+      "model": "B05S-RX",
+      "mpn": "B05S-RX"
+    },
+    {
+      "type": "rear_brake_pads",
+      "brand": "Shimano",
+      "model": "B05S-RX",
+      "mpn": "B05S-RX"
+    },
+    {
+      "type": "front_brake_pads",
+      "brand": "Shimano",
+      "model": "D03S",
+      "mpn": "D03S"
+    },
+    {
+      "type": "rear_brake_pads",
+      "brand": "Shimano",
+      "model": "D03S",
+      "mpn": "D03S"
+    },
+    {
+      "type": "pedals",
+      "brand": "Shimano",
+      "model": "PD-M520",
+      "mpn": "PD-M520"
+    },
+    {
+      "type": "pedals",
+      "brand": "Shimano",
+      "model": "PD-M8100",
+      "mpn": "PD-M8100"
+    },
+    {
+      "type": "pedals",
+      "brand": "Shimano",
+      "model": "PD-R7000",
+      "mpn": "PD-R7000"
+    }
+  ]
+}

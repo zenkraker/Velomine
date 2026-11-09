@@ -3,6 +3,8 @@
 
   "navRides": "Rides",
   "navRecord": "Record",
+  "navRecording": "Recording",
+  "navRecordingPaused": "Paused",
   "navProgress": "Progress",
   "navBikes": "Bikes",
   "navAdmin": "Admin",
@@ -95,6 +97,9 @@
   "failureMail": "The mail server did not accept it. Check the email settings.",
   "failureWrongConfirmation": "That does not match. Nothing was deleted.",
   "failureLastAdmin": "You are the only admin. Make someone else an admin first.",
+  "failureSessionEnded": "Your session ended. Sign in again.",
+  "failureForbidden": "Your account may not do that.",
+  "failureTooMany": "Too many attempts. Try again shortly.",
   "failureUnreachable": "Could not reach the server. Try again.",
   "failureFailed": "Could not {action} ({code}). Try again.",
   "@failureFailed": {
@@ -1318,4 +1323,96 @@
       }
     }
   }
+  ,
+  "actionLoadTemplates": "load your build templates",
+  "actionSaveTemplate": "save the build template",
+  "actionApplyTemplate": "apply the build template",
+  "actionSaveCatalogue": "save the catalogue setting",
+  "actionResolveConflict": "settle the catalogue conflict",
+
+  "saveAsTemplate": "Save as build template",
+  "applyTemplate": "Apply a build template",
+  "saveTemplateTitle": "Save this bike's parts as a template",
+  "templateName": "Template name",
+  "templateNameHint": "For example: Gravel build, 2024",
+  "templateParts": "{count, plural, =1{1 part} other{{count} parts}}",
+  "@templateParts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noTemplates": "No build templates yet. Save a bike's parts as a template to reuse them.",
+  "applyTemplateTitle": "Apply a build template",
+  "templateApplied": "Build template applied.",
+  "errorTemplateName": "Give the template a name.",
+
+  "sharedCatalogue": "Shared parts catalogue",
+  "shareParts": "Share new parts with the shared catalogue",
+  "sharePartsHelp": "Non-custom parts that the shared catalogue does not list are sent to the publisher. Custom parts stay only on your bike.",
+  "catalogueNotConfigured": "This server has no contribution endpoint configured, so nothing is sent.",
+  "catalogueVersion": "Catalogue version {version}, last checked {date}",
+  "@catalogueVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogueNeverSynced": "The shared catalogue has not been checked yet.",
+  "catalogueSynced": "Shared catalogue last checked {date}",
+  "@catalogueSynced": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogueConflicts": "Parts that differ from the shared catalogue",
+  "noCatalogueConflicts": "No parts differ.",
+  "keepMine": "Keep mine",
+  "useShared": "Use shared",
+  "conflictLocal": "Yours: {text}",
+  "@conflictLocal": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "conflictShared": "Shared: {text}",
+  "@conflictShared": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "contributionCounts": "{pending} waiting · {sent} sent · {rejected} rejected · {failed} failed",
+  "@contributionCounts": {
+    "placeholders": {
+      "pending": {
+        "type": "int"
+      },
+      "sent": {
+        "type": "int"
+      },
+      "rejected": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogueProblems": "Parts the shared catalogue did not take",
+  "contributionRejected": "Rejected",
+  "contributionFailed": "Gave up",
+  "custom": "Custom part",
+  "customPart": "Custom",
+  "customHelper": "Keep this part out of the shared catalogue; it will not be sent to the publisher."
 }

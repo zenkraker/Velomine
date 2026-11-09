@@ -16,6 +16,64 @@ class BikesApi {
 
   final ApiClient apiClient;
 
+  /// Performs an HTTP 'POST /api/v1/bikes/{bikeId}/templates/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [ApplyTemplateRequest] applyTemplateRequest (required):
+  Future<Response> applyTemplateWithHttpInfo(String bikeId, String id, ApplyTemplateRequest applyTemplateRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/templates/{id}'
+      .replaceAll('{bikeId}', bikeId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = applyTemplateRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [ApplyTemplateRequest] applyTemplateRequest (required):
+  Future<BikeDetailResponse?> applyTemplate(String bikeId, String id, ApplyTemplateRequest applyTemplateRequest, { Future<void>? abortTrigger, }) async {
+    final response = await applyTemplateWithHttpInfo(bikeId, id, applyTemplateRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/bikes' operation and returns the [Response].
   /// Parameters:
   ///
@@ -117,6 +175,54 @@ class BikesApi {
     return null;
   }
 
+  /// Performs an HTTP 'POST /api/v1/bikes/templates' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [CreateTemplateRequest] createTemplateRequest (required):
+  Future<Response> createTemplateWithHttpInfo(CreateTemplateRequest createTemplateRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/templates';
+
+    // ignore: prefer_final_locals
+    Object? postBody = createTemplateRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [CreateTemplateRequest] createTemplateRequest (required):
+  Future<BikeTemplateResponse?> createTemplate(CreateTemplateRequest createTemplateRequest, { Future<void>? abortTrigger, }) async {
+    final response = await createTemplateWithHttpInfo(createTemplateRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeTemplateResponse',) as BikeTemplateResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'DELETE /api/v1/bikes/{id}' operation and returns the [Response].
   /// Parameters:
   ///
@@ -199,6 +305,47 @@ class BikesApi {
   /// * [String] id (required):
   Future<void> deleteComponent(String bikeId, String id, { Future<void>? abortTrigger, }) async {
     final response = await deleteComponentWithHttpInfo(bikeId, id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'DELETE /api/v1/bikes/templates/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteTemplateWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/templates/{id}'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteTemplate(String id, { Future<void>? abortTrigger, }) async {
+    final response = await deleteTemplateWithHttpInfo(id, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -332,6 +479,101 @@ class BikesApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListComponentTypesResponse',) as ListComponentTypesResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/bikes/templates' operation and returns the [Response].
+  Future<Response> listTemplatesWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/templates';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<ListTemplatesResponse?> listTemplates({ Future<void>? abortTrigger, }) async {
+    final response = await listTemplatesWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListTemplatesResponse',) as ListTemplatesResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/bikes/{bikeId}/templates' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [SaveBikeAsTemplateRequest] saveBikeAsTemplateRequest (required):
+  Future<Response> saveBikeAsTemplateWithHttpInfo(String bikeId, SaveBikeAsTemplateRequest saveBikeAsTemplateRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/templates'
+      .replaceAll('{bikeId}', bikeId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = saveBikeAsTemplateRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [SaveBikeAsTemplateRequest] saveBikeAsTemplateRequest (required):
+  Future<BikeTemplateResponse?> saveBikeAsTemplate(String bikeId, SaveBikeAsTemplateRequest saveBikeAsTemplateRequest, { Future<void>? abortTrigger, }) async {
+    final response = await saveBikeAsTemplateWithHttpInfo(bikeId, saveBikeAsTemplateRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeTemplateResponse',) as BikeTemplateResponse;
     
     }
     return null;
@@ -557,6 +799,59 @@ class BikesApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/bikes/templates/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateTemplateRequest] updateTemplateRequest (required):
+  Future<Response> updateTemplateWithHttpInfo(String id, UpdateTemplateRequest updateTemplateRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/templates/{id}'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = updateTemplateRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateTemplateRequest] updateTemplateRequest (required):
+  Future<BikeTemplateResponse?> updateTemplate(String id, UpdateTemplateRequest updateTemplateRequest, { Future<void>? abortTrigger, }) async {
+    final response = await updateTemplateWithHttpInfo(id, updateTemplateRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeTemplateResponse',) as BikeTemplateResponse;
     
     }
     return null;

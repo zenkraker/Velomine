@@ -621,8 +621,8 @@ namespace Velomine.Server.Data.Migrations
 
                     b.Property<string>("Key")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
                         .HasColumnName("key");
 
                     b.Property<string>("Model")

@@ -85,6 +85,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
+*AdminApi* | [**bikesGetCatalogue**](doc//AdminApi.md#bikesgetcatalogue) | **GET** /api/v1/admin/catalogue | 
 *AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
 *AdminApi* | [**clubsListAdminClubs**](doc//AdminApi.md#clubslistadminclubs) | **GET** /api/v1/admin/clubs | 
 *AdminApi* | [**clubsSetClubOwner**](doc//AdminApi.md#clubssetclubowner) | **PUT** /api/v1/admin/clubs/{id}/owner | 
@@ -107,17 +108,23 @@ Class | Method | HTTP request | Description
 *AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
+*BikesApi* | [**applyTemplate**](doc//BikesApi.md#applytemplate) | **POST** /api/v1/bikes/{bikeId}/templates/{id} | 
 *BikesApi* | [**createBike**](doc//BikesApi.md#createbike) | **POST** /api/v1/bikes | 
 *BikesApi* | [**createComponent**](doc//BikesApi.md#createcomponent) | **POST** /api/v1/bikes/{bikeId}/components | 
+*BikesApi* | [**createTemplate**](doc//BikesApi.md#createtemplate) | **POST** /api/v1/bikes/templates | 
 *BikesApi* | [**deleteBike**](doc//BikesApi.md#deletebike) | **DELETE** /api/v1/bikes/{id} | 
 *BikesApi* | [**deleteComponent**](doc//BikesApi.md#deletecomponent) | **DELETE** /api/v1/bikes/{bikeId}/components/{id} | 
+*BikesApi* | [**deleteTemplate**](doc//BikesApi.md#deletetemplate) | **DELETE** /api/v1/bikes/templates/{id} | 
 *BikesApi* | [**getBike**](doc//BikesApi.md#getbike) | **GET** /api/v1/bikes/{id} | 
 *BikesApi* | [**listBikes**](doc//BikesApi.md#listbikes) | **GET** /api/v1/bikes | 
 *BikesApi* | [**listComponentTypes**](doc//BikesApi.md#listcomponenttypes) | **GET** /api/v1/bikes/component-types | 
+*BikesApi* | [**listTemplates**](doc//BikesApi.md#listtemplates) | **GET** /api/v1/bikes/templates | 
+*BikesApi* | [**saveBikeAsTemplate**](doc//BikesApi.md#savebikeastemplate) | **POST** /api/v1/bikes/{bikeId}/templates | 
 *BikesApi* | [**searchParts**](doc//BikesApi.md#searchparts) | **GET** /api/v1/bikes/parts | 
 *BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
+*BikesApi* | [**updateTemplate**](doc//BikesApi.md#updatetemplate) | **PUT** /api/v1/bikes/templates/{id} | 
 *ClubApi* | [**approveJoinRequest**](doc//ClubApi.md#approvejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/approve | 
 *ClubApi* | [**cancelJoinRequest**](doc//ClubApi.md#canceljoinrequest) | **DELETE** /api/v1/club/join-request | 
 *ClubApi* | [**declineJoinRequest**](doc//ClubApi.md#declinejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/decline | 
@@ -169,8 +176,13 @@ Class | Method | HTTP request | Description
  - [AdminClubListResponse](doc//AdminClubListResponse.md)
  - [AdminClubResponse](doc//AdminClubResponse.md)
  - [AdminUserSummary](doc//AdminUserSummary.md)
+ - [ApplyTemplateRequest](doc//ApplyTemplateRequest.md)
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
+ - [BikeTemplateResponse](doc//BikeTemplateResponse.md)
+ - [CatalogueAdminResponse](doc//CatalogueAdminResponse.md)
+ - [CatalogueContributionResponse](doc//CatalogueContributionResponse.md)
+ - [CatalogueCountsResponse](doc//CatalogueCountsResponse.md)
  - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
  - [CheckInResponse](doc//CheckInResponse.md)
  - [CheckInsResponse](doc//CheckInsResponse.md)
@@ -186,6 +198,7 @@ Class | Method | HTTP request | Description
  - [CreateClubRequest](doc//CreateClubRequest.md)
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
+ - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [ExchangeSsoCodeRequest](doc//ExchangeSsoCodeRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
@@ -203,6 +216,7 @@ Class | Method | HTTP request | Description
  - [ListGoalsResponse](doc//ListGoalsResponse.md)
  - [ListNotificationsResponse](doc//ListNotificationsResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
+ - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [MeResponse](doc//MeResponse.md)
  - [MyClubResponse](doc//MyClubResponse.md)
@@ -231,6 +245,7 @@ Class | Method | HTTP request | Description
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
+ - [SaveBikeAsTemplateRequest](doc//SaveBikeAsTemplateRequest.md)
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
@@ -250,6 +265,8 @@ Class | Method | HTTP request | Description
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
+ - [TemplatePartRequest](doc//TemplatePartRequest.md)
+ - [TemplatePartResponse](doc//TemplatePartResponse.md)
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
  - [TrainingDay](doc//TrainingDay.md)
@@ -261,6 +278,7 @@ Class | Method | HTTP request | Description
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
  - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
  - [UpdateSharingRequest](doc//UpdateSharingRequest.md)
+ - [UpdateTemplateRequest](doc//UpdateTemplateRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
  - [Vo2MaxEstimate](doc//Vo2MaxEstimate.md)

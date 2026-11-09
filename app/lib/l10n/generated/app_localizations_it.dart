@@ -16,6 +16,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navRecord => 'Registra';
 
   @override
+  String get navRecording => 'In corso';
+
+  @override
+  String get navRecordingPaused => 'In pausa';
+
+  @override
   String get navProgress => 'Progressi';
 
   @override
@@ -214,6 +220,15 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get failureLastAdmin =>
       'Sei l\'unico amministratore. Nomina prima qualcun altro.';
+
+  @override
+  String get failureSessionEnded => 'La sessione è terminata. Accedi di nuovo.';
+
+  @override
+  String get failureForbidden => 'Il tuo account non può farlo.';
+
+  @override
+  String get failureTooMany => 'Troppi tentativi. Riprova tra poco.';
 
   @override
   String get failureUnreachable =>
@@ -2514,4 +2529,135 @@ class AppLocalizationsIt extends AppLocalizations {
   String notificationClubJoinDeclined(String club) {
     return '$club ha rifiutato la tua richiesta.';
   }
+
+  @override
+  String get actionLoadTemplates => 'caricare i tuoi modelli di allestimento';
+
+  @override
+  String get actionSaveTemplate => 'salvare il modello di allestimento';
+
+  @override
+  String get actionApplyTemplate => 'applicare il modello di allestimento';
+
+  @override
+  String get actionSaveCatalogue => 'salvare l\'impostazione del catalogo';
+
+  @override
+  String get actionResolveConflict => 'risolvere il conflitto del catalogo';
+
+  @override
+  String get saveAsTemplate => 'Salva come modello di allestimento';
+
+  @override
+  String get applyTemplate => 'Applica un modello di allestimento';
+
+  @override
+  String get saveTemplateTitle =>
+      'Salva i componenti di questa bici come modello';
+
+  @override
+  String get templateName => 'Nome del modello';
+
+  @override
+  String get templateNameHint => 'Per esempio: Gravel 2024';
+
+  @override
+  String templateParts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count componenti',
+      one: '1 componente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noTemplates =>
+      'Nessun modello di allestimento. Salva i componenti di una bici come modello per riutilizzarli.';
+
+  @override
+  String get applyTemplateTitle => 'Applica un modello di allestimento';
+
+  @override
+  String get templateApplied => 'Modello applicato.';
+
+  @override
+  String get errorTemplateName => 'Dai un nome al modello.';
+
+  @override
+  String get sharedCatalogue => 'Catalogo condiviso dei componenti';
+
+  @override
+  String get shareParts =>
+      'Condividi i nuovi componenti con il catalogo condiviso';
+
+  @override
+  String get sharePartsHelp =>
+      'I componenti non personalizzati che il catalogo condiviso non elenca vengono inviati all\'editore. I componenti personalizzati restano solo sulla tua bici.';
+
+  @override
+  String get catalogueNotConfigured =>
+      'Questo server non ha un endpoint per i contributi, quindi non viene inviato nulla.';
+
+  @override
+  String catalogueVersion(int version, String date) {
+    return 'Versione catalogo $version, ultimo controllo $date';
+  }
+
+  @override
+  String get catalogueNeverSynced =>
+      'Il catalogo condiviso non è ancora stato controllato.';
+
+  @override
+  String catalogueSynced(String date) {
+    return 'Catalogo condiviso controllato il $date';
+  }
+
+  @override
+  String get catalogueConflicts => 'Componenti diversi dal catalogo condiviso';
+
+  @override
+  String get noCatalogueConflicts => 'Nessun componente diverso.';
+
+  @override
+  String get keepMine => 'Tieni il mio';
+
+  @override
+  String get useShared => 'Usa il condiviso';
+
+  @override
+  String conflictLocal(String text) {
+    return 'Il tuo: $text';
+  }
+
+  @override
+  String conflictShared(String text) {
+    return 'Condiviso: $text';
+  }
+
+  @override
+  String contributionCounts(int pending, int sent, int rejected, int failed) {
+    return '$pending in attesa · $sent inviati · $rejected rifiutati · $failed falliti';
+  }
+
+  @override
+  String get catalogueProblems =>
+      'Componenti non accettati dal catalogo condiviso';
+
+  @override
+  String get contributionRejected => 'Rifiutato';
+
+  @override
+  String get contributionFailed => 'Abbandonato';
+
+  @override
+  String get custom => 'Componente personalizzato';
+
+  @override
+  String get customPart => 'Personalizzato';
+
+  @override
+  String get customHelper =>
+      'Tieni questo componente fuori dal catalogo condiviso; non verrà inviato all\'editore.';
 }

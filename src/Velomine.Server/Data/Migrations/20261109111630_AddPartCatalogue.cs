@@ -63,7 +63,7 @@ namespace Velomine.Server.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    key = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    key = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
                     type = table.Column<string>(type: "character varying(48)", maxLength: 48, nullable: false),
                     brand = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),

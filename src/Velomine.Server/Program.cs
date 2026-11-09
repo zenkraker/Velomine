@@ -7,6 +7,7 @@ using Microsoft.Extensions.FileProviders;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Server;
 
@@ -19,6 +20,7 @@ builder.Services.AddHostedService<DatabaseMigrator>(); // first: later startup w
 builder.Services.AddAccounts(builder.Configuration);
 builder.Services.AddAdmin();
 builder.Services.AddRides();
+builder.Services.AddBikes(builder.Configuration);
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
 builder.Services.OpenApiDocument(o =>

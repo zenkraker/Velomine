@@ -27,8 +27,13 @@ lib/auth/oauth.dart
 lib/model/admin_club_list_response.dart
 lib/model/admin_club_response.dart
 lib/model/admin_user_summary.dart
+lib/model/apply_template_request.dart
 lib/model/bike_detail_response.dart
 lib/model/bike_response.dart
+lib/model/bike_template_response.dart
+lib/model/catalogue_admin_response.dart
+lib/model/catalogue_contribution_response.dart
+lib/model/catalogue_counts_response.dart
 lib/model/change_password_request.dart
 lib/model/check_in_response.dart
 lib/model/check_ins_response.dart
@@ -44,6 +49,7 @@ lib/model/create_bike_request.dart
 lib/model/create_club_request.dart
 lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
+lib/model/create_template_request.dart
 lib/model/delete_my_account_request.dart
 lib/model/exchange_sso_code_request.dart
 lib/model/export_link_response.dart
@@ -61,6 +67,7 @@ lib/model/list_component_types_response.dart
 lib/model/list_goals_response.dart
 lib/model/list_notifications_response.dart
 lib/model/list_rides_response.dart
+lib/model/list_templates_response.dart
 lib/model/login_request.dart
 lib/model/me_response.dart
 lib/model/my_club_response.dart
@@ -89,6 +96,7 @@ lib/model/ride_feel_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
+lib/model/save_bike_as_template_request.dart
 lib/model/save_check_in_request.dart
 lib/model/save_ride_feel_request.dart
 lib/model/search_parts_response.dart
@@ -108,6 +116,8 @@ lib/model/sharing_response.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart
+lib/model/template_part_request.dart
+lib/model/template_part_response.dart
 lib/model/token_response.dart
 lib/model/totals_response.dart
 lib/model/training_day.dart
@@ -119,6 +129,7 @@ lib/model/update_goal_request.dart
 lib/model/update_profile_request.dart
 lib/model/update_settings_request.dart
 lib/model/update_sharing_request.dart
+lib/model/update_template_request.dart
 lib/model/upload_ride_response.dart
 lib/model/user_summary.dart
 lib/model/vo2_max_estimate.dart

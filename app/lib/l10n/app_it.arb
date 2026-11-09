@@ -3,6 +3,8 @@
 
   "navRides": "Uscite",
   "navRecord": "Registra",
+  "navRecording": "In corso",
+  "navRecordingPaused": "In pausa",
   "navProgress": "Progressi",
   "navBikes": "Bici",
   "navAdmin": "Admin",
@@ -67,6 +69,9 @@
   "failureMail": "Il server di posta non l'ha accettato. Controlla le impostazioni email.",
   "failureWrongConfirmation": "Non corrisponde. Non è stato eliminato nulla.",
   "failureLastAdmin": "Sei l'unico amministratore. Nomina prima qualcun altro.",
+  "failureSessionEnded": "La sessione è terminata. Accedi di nuovo.",
+  "failureForbidden": "Il tuo account non può farlo.",
+  "failureTooMany": "Troppi tentativi. Riprova tra poco.",
   "failureUnreachable": "Impossibile raggiungere il server. Riprova.",
   "failureFailed": "Impossibile {action} ({code}). Riprova.",
 
@@ -885,4 +890,96 @@
       }
     }
   }
+  ,
+  "actionLoadTemplates": "caricare i tuoi modelli di allestimento",
+  "actionSaveTemplate": "salvare il modello di allestimento",
+  "actionApplyTemplate": "applicare il modello di allestimento",
+  "actionSaveCatalogue": "salvare l'impostazione del catalogo",
+  "actionResolveConflict": "risolvere il conflitto del catalogo",
+
+  "saveAsTemplate": "Salva come modello di allestimento",
+  "applyTemplate": "Applica un modello di allestimento",
+  "saveTemplateTitle": "Salva i componenti di questa bici come modello",
+  "templateName": "Nome del modello",
+  "templateNameHint": "Per esempio: Gravel 2024",
+  "templateParts": "{count, plural, =1{1 componente} other{{count} componenti}}",
+  "@templateParts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noTemplates": "Nessun modello di allestimento. Salva i componenti di una bici come modello per riutilizzarli.",
+  "applyTemplateTitle": "Applica un modello di allestimento",
+  "templateApplied": "Modello applicato.",
+  "errorTemplateName": "Dai un nome al modello.",
+
+  "sharedCatalogue": "Catalogo condiviso dei componenti",
+  "shareParts": "Condividi i nuovi componenti con il catalogo condiviso",
+  "sharePartsHelp": "I componenti non personalizzati che il catalogo condiviso non elenca vengono inviati all'editore. I componenti personalizzati restano solo sulla tua bici.",
+  "catalogueNotConfigured": "Questo server non ha un endpoint per i contributi, quindi non viene inviato nulla.",
+  "catalogueVersion": "Versione catalogo {version}, ultimo controllo {date}",
+  "@catalogueVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogueNeverSynced": "Il catalogo condiviso non è ancora stato controllato.",
+  "catalogueSynced": "Catalogo condiviso controllato il {date}",
+  "@catalogueSynced": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogueConflicts": "Componenti diversi dal catalogo condiviso",
+  "noCatalogueConflicts": "Nessun componente diverso.",
+  "keepMine": "Tieni il mio",
+  "useShared": "Usa il condiviso",
+  "conflictLocal": "Il tuo: {text}",
+  "@conflictLocal": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "conflictShared": "Condiviso: {text}",
+  "@conflictShared": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "contributionCounts": "{pending} in attesa · {sent} inviati · {rejected} rifiutati · {failed} falliti",
+  "@contributionCounts": {
+    "placeholders": {
+      "pending": {
+        "type": "int"
+      },
+      "sent": {
+        "type": "int"
+      },
+      "rejected": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "catalogueProblems": "Componenti non accettati dal catalogo condiviso",
+  "contributionRejected": "Rifiutato",
+  "contributionFailed": "Abbandonato",
+  "custom": "Componente personalizzato",
+  "customPart": "Personalizzato",
+  "customHelper": "Tieni questo componente fuori dal catalogo condiviso; non verrà inviato all'editore."
 }

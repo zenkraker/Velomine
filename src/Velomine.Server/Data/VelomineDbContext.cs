@@ -35,6 +35,18 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<Part> Parts => Set<Part>();
 
+    public DbSet<CatalogueMeta> CatalogueMeta => Set<CatalogueMeta>();
+
+    public DbSet<CatalogueSettings> CatalogueSettings => Set<CatalogueSettings>();
+
+    public DbSet<PartContribution> PartContributions => Set<PartContribution>();
+
+    public DbSet<CatalogueConflict> CatalogueConflicts => Set<CatalogueConflict>();
+
+    public DbSet<BikeTemplate> BikeTemplates => Set<BikeTemplate>();
+
+    public DbSet<BikeTemplatePart> BikeTemplateParts => Set<BikeTemplatePart>();
+
     public DbSet<Goal> Goals => Set<Goal>();
 
     public DbSet<ServerSettings> ServerSettings => Set<ServerSettings>();

@@ -16,6 +16,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRecord => 'Record';
 
   @override
+  String get navRecording => 'Recording';
+
+  @override
+  String get navRecordingPaused => 'Paused';
+
+  @override
   String get navProgress => 'Progress';
 
   @override
@@ -213,6 +219,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get failureLastAdmin =>
       'You are the only admin. Make someone else an admin first.';
+
+  @override
+  String get failureSessionEnded => 'Your session ended. Sign in again.';
+
+  @override
+  String get failureForbidden => 'Your account may not do that.';
+
+  @override
+  String get failureTooMany => 'Too many attempts. Try again shortly.';
 
   @override
   String get failureUnreachable => 'Could not reach the server. Try again.';
@@ -2494,4 +2509,133 @@ class AppLocalizationsEn extends AppLocalizations {
   String notificationClubJoinDeclined(String club) {
     return '$club declined your request.';
   }
+
+  @override
+  String get actionLoadTemplates => 'load your build templates';
+
+  @override
+  String get actionSaveTemplate => 'save the build template';
+
+  @override
+  String get actionApplyTemplate => 'apply the build template';
+
+  @override
+  String get actionSaveCatalogue => 'save the catalogue setting';
+
+  @override
+  String get actionResolveConflict => 'settle the catalogue conflict';
+
+  @override
+  String get saveAsTemplate => 'Save as build template';
+
+  @override
+  String get applyTemplate => 'Apply a build template';
+
+  @override
+  String get saveTemplateTitle => 'Save this bike\'s parts as a template';
+
+  @override
+  String get templateName => 'Template name';
+
+  @override
+  String get templateNameHint => 'For example: Gravel build, 2024';
+
+  @override
+  String templateParts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parts',
+      one: '1 part',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noTemplates =>
+      'No build templates yet. Save a bike\'s parts as a template to reuse them.';
+
+  @override
+  String get applyTemplateTitle => 'Apply a build template';
+
+  @override
+  String get templateApplied => 'Build template applied.';
+
+  @override
+  String get errorTemplateName => 'Give the template a name.';
+
+  @override
+  String get sharedCatalogue => 'Shared parts catalogue';
+
+  @override
+  String get shareParts => 'Share new parts with the shared catalogue';
+
+  @override
+  String get sharePartsHelp =>
+      'Non-custom parts that the shared catalogue does not list are sent to the publisher. Custom parts stay only on your bike.';
+
+  @override
+  String get catalogueNotConfigured =>
+      'This server has no contribution endpoint configured, so nothing is sent.';
+
+  @override
+  String catalogueVersion(int version, String date) {
+    return 'Catalogue version $version, last checked $date';
+  }
+
+  @override
+  String get catalogueNeverSynced =>
+      'The shared catalogue has not been checked yet.';
+
+  @override
+  String catalogueSynced(String date) {
+    return 'Shared catalogue last checked $date';
+  }
+
+  @override
+  String get catalogueConflicts =>
+      'Parts that differ from the shared catalogue';
+
+  @override
+  String get noCatalogueConflicts => 'No parts differ.';
+
+  @override
+  String get keepMine => 'Keep mine';
+
+  @override
+  String get useShared => 'Use shared';
+
+  @override
+  String conflictLocal(String text) {
+    return 'Yours: $text';
+  }
+
+  @override
+  String conflictShared(String text) {
+    return 'Shared: $text';
+  }
+
+  @override
+  String contributionCounts(int pending, int sent, int rejected, int failed) {
+    return '$pending waiting · $sent sent · $rejected rejected · $failed failed';
+  }
+
+  @override
+  String get catalogueProblems => 'Parts the shared catalogue did not take';
+
+  @override
+  String get contributionRejected => 'Rejected';
+
+  @override
+  String get contributionFailed => 'Gave up';
+
+  @override
+  String get custom => 'Custom part';
+
+  @override
+  String get customPart => 'Custom';
+
+  @override
+  String get customHelper =>
+      'Keep this part out of the shared catalogue; it will not be sent to the publisher.';
 }

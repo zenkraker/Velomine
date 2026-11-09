@@ -34,6 +34,7 @@ public sealed record ComponentResponse(
     string? Mpn,
     string? Gtin,
     Guid? PartId,
+    bool IsCustom,
     DateOnly InstalledOn,
     DateOnly? RemovedOn,
     double? ExpectedDistanceM,
@@ -91,7 +92,7 @@ public static class BikeQueries
             .ToList();
 
     public static ComponentResponse Component(BikeComponent c, ComponentWear w) => new(
-        c.Id, c.Type, ComponentTypes.NameOf(c.Type), c.Brand, c.Model, c.Mpn, c.Gtin, c.PartId,
+        c.Id, c.Type, ComponentTypes.NameOf(c.Type), c.Brand, c.Model, c.Mpn, c.Gtin, c.PartId, c.IsCustom,
         c.InstalledOn, c.RemovedOn,
         c.ExpectedDistanceM, c.ExpectedHours, c.ExpectedMonths, w.DistanceM, w.Hours, w.Months, w.Percent, w.Status);
 }

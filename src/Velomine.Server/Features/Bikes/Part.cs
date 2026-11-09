@@ -114,11 +114,13 @@ public static class PartIdentity
     /// <summary>The key a part is matched on, or null when there is nothing to match it by.</summary>
     public static string? Key(string type, string? brand, string? model, string? mpn, string? gtin)
     {
-        if (TryNormaliseGtin(gtin, out var gtin14)) return "gtin:" + gtin14;
+        // The type is part of every key: the front and the rear brake pad are the same product but two parts on the
+        // bike, and a suggestion for one must not turn up while the member is adding the other.
+        if (TryNormaliseGtin(gtin, out var gtin14)) return "gtin:" + type + ":" + gtin14;
 
         var brandKey = CanonicalBrand(brand)?.ToLowerInvariant();
         var mpnKey = NormaliseMpn(mpn)?.ToUpperInvariant();
-        if (brandKey is not null && mpnKey is not null) return "mpn:" + brandKey + "|" + mpnKey;
+        if (brandKey is not null && mpnKey is not null) return "mpn:" + type + ":" + brandKey + "|" + mpnKey;
 
         var modelKey = Collapse(model)?.ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(type) && brandKey is not null && modelKey is not null)
@@ -156,57 +158,19 @@ public static class PartIdentity
     }
 }
 
-/// <summary>Adds a part to the club's catalogue the first time it is used, and links later uses to the same entry.</summary>
+/// <summary>
+/// Looks a component up in the shared catalogue. A member never adds to that catalogue: a part that is not in it is
+/// offered to the publisher instead, and appears for everyone after the publisher lists it.
+/// </summary>
 public static class PartCatalogue
 {
-    /// <summary>
-    /// Links <paramref name="component"/> to its catalogue entry, creating one when this is the first time the club
-    /// uses the part. Returns null when the part has nothing to be recognised by, so free text stays free text.
-    /// </summary>
-    public static async Task<Guid?> LinkAsync(VelomineDbContext db, BikeComponent component, TimeProvider time, bool confirm, CancellationToken ct)
+    /// <summary>The shared part this component is, or null when the catalogue does not list it (yet).</summary>
+    public static async Task<Part?> FindAsync(VelomineDbContext db, BikeComponent component, CancellationToken ct)
     {
         var key = PartIdentity.Key(component.Type, component.Brand, component.Model, component.Mpn, component.Gtin);
         if (key is null) return null;
 
-        var part = await FindAsync(db, component, ct);
-        if (part is not null)
-        {
-            if (confirm) part.Confirmations++;
-            return part.Id;
-        }
-
-        var created = new Part
-        {
-            Id = Guid.CreateVersion7(),
-            Key = key,
-            Type = component.Type,
-            Brand = PartIdentity.CanonicalBrand(component.Brand) ?? "",
-            Model = component.Model?.Trim() ?? "",
-            Mpn = PartIdentity.NormaliseMpn(component.Mpn),
-            Gtin = component.Gtin,
-            CreatedAt = time.GetUtcNow(),
-            Confirmations = 1,
-        };
-        db.Parts.Add(created);
-        return created.Id;
-    }
-
-    /// <summary>A valid GTIN matches whatever the name says; otherwise the brand and the part number must both match.</summary>
-    private static async Task<Part?> FindAsync(VelomineDbContext db, BikeComponent component, CancellationToken ct)
-    {
-        if (component.Gtin is not null)
-        {
-            var byGtin = await db.Parts.FirstOrDefaultAsync(p => p.Gtin == component.Gtin, ct);
-            if (byGtin is not null) return byGtin;
-        }
-
-        var brand = PartIdentity.CanonicalBrand(component.Brand);
-        var mpn = PartIdentity.NormaliseMpn(component.Mpn);
-        if (brand is null || mpn is null) return null;
-
-        var brandKey = brand.ToLowerInvariant();
-        var mpnKey = mpn.ToUpperInvariant();
-        return await db.Parts.FirstOrDefaultAsync(
-            p => p.Mpn != null && p.Mpn.ToUpper() == mpnKey && p.Brand.ToLower() == brandKey, ct);
+        return await db.Parts.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Key == key && p.Status == "active", ct);
     }
 }

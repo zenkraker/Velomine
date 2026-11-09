@@ -548,6 +548,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("installed_on");
 
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_custom");
+
                     b.Property<string>("Model")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -590,6 +594,242 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("bike_components", "bikes");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bike_templates");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_bike_templates_user_id");
+
+                    b.ToTable("bike_templates", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeTemplatePart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("brand");
+
+                    b.Property<double?>("ExpectedDistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("expected_distance_m");
+
+                    b.Property<double?>("ExpectedHours")
+                        .HasColumnType("double precision")
+                        .HasColumnName("expected_hours");
+
+                    b.Property<int?>("ExpectedMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("expected_months");
+
+                    b.Property<string>("Gtin")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("gtin");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_custom");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Mpn")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("mpn");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bike_template_parts");
+
+                    b.HasIndex("TemplateId")
+                        .HasDatabaseName("ix_bike_template_parts_template_id");
+
+                    b.ToTable("bike_template_parts", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.CatalogueConflict", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("IncomingHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("incoming_hash");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("LocalBrand")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("local_brand");
+
+                    b.Property<string>("LocalGtin")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("local_gtin");
+
+                    b.Property<string>("LocalModel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("local_model");
+
+                    b.Property<string>("LocalMpn")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("local_mpn");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<string>("SharedBrand")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("shared_brand");
+
+                    b.Property<string>("SharedGtin")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("shared_gtin");
+
+                    b.Property<string>("SharedModel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("shared_model");
+
+                    b.Property<string>("SharedMpn")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("shared_mpn");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalogue_conflicts");
+
+                    b.HasIndex("Key")
+                        .IsUnique()
+                        .HasDatabaseName("ux_catalogue_conflicts_one_pending_per_key")
+                        .HasFilter("status = 'pending'");
+
+                    b.ToTable("catalogue_conflicts", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.CatalogueMeta", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<string>("SourceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("source_url");
+
+                    b.Property<DateTimeOffset?>("SyncedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("synced_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalogue_meta");
+
+                    b.ToTable("catalogue_meta", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.CatalogueSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("ContributionsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("contributions_enabled");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalogue_settings");
+
+                    b.ToTable("catalogue_settings", "bikes", t =>
+                        {
+                            t.HasCheckConstraint("ck_catalogue_settings_one_row", "id = 1");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Part", b =>
                 {
                     b.Property<Guid>("Id")
@@ -618,8 +858,8 @@ namespace Velomine.Server.Data.Migrations
 
                     b.Property<string>("Key")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
                         .HasColumnName("key");
 
                     b.Property<string>("Model")
@@ -668,6 +908,93 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_parts_type_brand");
 
                     b.ToTable("parts", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.PartContribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("brand");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Gtin")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("gtin");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Mpn")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("mpn");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<string>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("payload_hash");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_part_contributions");
+
+                    b.HasIndex("Key", "PayloadHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_part_contributions_key_payload_hash");
+
+                    b.HasIndex("Status", "NextAttemptAt")
+                        .HasDatabaseName("ix_part_contributions_status_next_attempt_at");
+
+                    b.ToTable("part_contributions", "bikes");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Clubs.Club", b =>
@@ -1497,6 +1824,28 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_bike_components_parts_part_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeTemplate", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bike_templates_users_user_id");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeTemplatePart", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Bikes.BikeTemplate", null)
+                        .WithMany("Parts")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bike_template_parts_bike_templates_template_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubJoinRequest", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Clubs.Club", "Club")
@@ -1664,6 +2013,11 @@ namespace Velomine.Server.Data.Migrations
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
                 {
                     b.Navigation("Components");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeTemplate", b =>
+                {
+                    b.Navigation("Parts");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Clubs.Club", b =>

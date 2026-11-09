@@ -189,10 +189,20 @@ class ApiClient {
           return AdminClubResponse.fromJson(value);
         case 'AdminUserSummary':
           return AdminUserSummary.fromJson(value);
+        case 'ApplyTemplateRequest':
+          return ApplyTemplateRequest.fromJson(value);
         case 'BikeDetailResponse':
           return BikeDetailResponse.fromJson(value);
         case 'BikeResponse':
           return BikeResponse.fromJson(value);
+        case 'BikeTemplateResponse':
+          return BikeTemplateResponse.fromJson(value);
+        case 'CatalogueAdminResponse':
+          return CatalogueAdminResponse.fromJson(value);
+        case 'CatalogueContributionResponse':
+          return CatalogueContributionResponse.fromJson(value);
+        case 'CatalogueCountsResponse':
+          return CatalogueCountsResponse.fromJson(value);
         case 'ChangePasswordRequest':
           return ChangePasswordRequest.fromJson(value);
         case 'CheckInResponse':
@@ -223,6 +233,8 @@ class ApiClient {
           return CreateComponentRequest.fromJson(value);
         case 'CreateGoalRequest':
           return CreateGoalRequest.fromJson(value);
+        case 'CreateTemplateRequest':
+          return CreateTemplateRequest.fromJson(value);
         case 'DeleteMyAccountRequest':
           return DeleteMyAccountRequest.fromJson(value);
         case 'ExchangeSsoCodeRequest':
@@ -257,6 +269,8 @@ class ApiClient {
           return ListNotificationsResponse.fromJson(value);
         case 'ListRidesResponse':
           return ListRidesResponse.fromJson(value);
+        case 'ListTemplatesResponse':
+          return ListTemplatesResponse.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
         case 'MeResponse':
@@ -313,6 +327,8 @@ class ApiClient {
           return RideResponse.fromJson(value);
         case 'RideStreamsResponse':
           return RideStreamsResponse.fromJson(value);
+        case 'SaveBikeAsTemplateRequest':
+          return SaveBikeAsTemplateRequest.fromJson(value);
         case 'SaveCheckInRequest':
           return SaveCheckInRequest.fromJson(value);
         case 'SaveRideFeelRequest':
@@ -351,6 +367,10 @@ class ApiClient {
           return SsoInfoResponse.fromJson(value);
         case 'SsoStatus':
           return SsoStatus.fromJson(value);
+        case 'TemplatePartRequest':
+          return TemplatePartRequest.fromJson(value);
+        case 'TemplatePartResponse':
+          return TemplatePartResponse.fromJson(value);
         case 'TokenResponse':
           return TokenResponse.fromJson(value);
         case 'TotalsResponse':
@@ -373,6 +393,8 @@ class ApiClient {
           return UpdateSettingsRequest.fromJson(value);
         case 'UpdateSharingRequest':
           return UpdateSharingRequest.fromJson(value);
+        case 'UpdateTemplateRequest':
+          return UpdateTemplateRequest.fromJson(value);
         case 'UploadRideResponse':
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':
