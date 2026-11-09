@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="ResetSubject" xml:space="preserve">
+    <value>Reimposta la password di Velomine</value>
+  </data>
+  <data name="ResetIntro" xml:space="preserve">
+    <value>Qualcuno ha chiesto di reimpostare la password del tuo account Velomine. Apri questo link per scegliere una nuova password:</value>
+  </data>
+  <data name="ResetAction" xml:space="preserve">
+    <value>Scegli una nuova password</value>
+  </data>
+  <data name="ResetExpiry" xml:space="preserve">
+    <value>Il link funziona una sola volta e scade tra 30 minuti. Se non sei stato tu, ignora questa email; la password resta la stessa.</value>
+  </data>
+  <data name="SsoSubject" xml:space="preserve">
+    <value>Come accedere a Velomine</value>
+  </data>
+  <data name="SsoBody" xml:space="preserve">
+    <value>Questo indirizzo appartiene a un account Velomine che accede con {0}. Usa il pulsante di accesso unico nella pagina di accesso invece di una password.</value>
+  </data>
+  <data name="NoPasswordBody" xml:space="preserve">
+    <value>Questo indirizzo appartiene a un account Velomine senza password. Chiedi aiuto all'amministratore del club per accedere.</value>
+  </data>
+  <data name="TestSubject" xml:space="preserve">
+    <value>Velomine: email di prova</value>
+  </data>
+  <data name="TestBody" xml:space="preserve">
+    <value>Se riesci a leggere questo messaggio, Velomine può inviare email.</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Apri Velomine per vedere di più.</value>
+  </data>
+  <data name="Footer" xml:space="preserve">
+    <value>Ricevi questa email perché nel tuo profilo Velomine sono attive le notifiche via email. Puoi disattivarle lì.</value>
+  </data>
+  <data name="UpdatesSubject" xml:space="preserve">
+    <value>Velomine: {0} aggiornamenti</value>
+  </data>
+  <data name="RideReady" xml:space="preserve">
+    <value>La tua uscita {0} è pronta.</value>
+  </data>
+  <data name="RideFailed" xml:space="preserve">
+    <value>Impossibile leggere {0}.</value>
+  </data>
+  <data name="RideDuplicate" xml:space="preserve">
+    <value>{0} era già stata caricata, quindi è nascosta.</value>
+  </data>
+  <data name="SignUpWaiting" xml:space="preserve">
+    <value>{0} si è iscritto e attende l'approvazione.</value>
+  </data>
+  <data name="PartSoon" xml:space="preserve">
+    <value>{0} è quasi usurato.</value>
+  </data>
+  <data name="PartWorn" xml:space="preserve">
+    <value>{0} è usurato. È ora di sostituirlo.</value>
+  </data>
+  <data name="ClubJoinRequest" xml:space="preserve">
+    <value>{0} ha chiesto di entrare nel tuo club.</value>
+  </data>
+  <data name="ClubJoinApproved" xml:space="preserve">
+    <value>{0} ti ha accettato. Benvenuto!</value>
+  </data>
+  <data name="ClubJoinDeclined" xml:space="preserve">
+    <value>{0} ha rifiutato la tua richiesta.</value>
+  </data>
+</root>

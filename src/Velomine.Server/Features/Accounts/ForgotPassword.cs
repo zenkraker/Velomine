@@ -56,20 +56,23 @@ public sealed class ForgotPassword(
         var user = await users.FindByEmailAsync(req.Email.Trim());
         if (user is not null)
         {
+            // The member chose a language in the app; the email uses it, and follows the app's English fallback.
+            using var language = EmailLanguage.Use(user.Language);
             try
             {
                 OutgoingEmail mail;
                 if (await users.HasPasswordAsync(user))
                 {
                     var link = await links.CreateAsync(user);
-                    mail = new OutgoingEmail(user.Email!, PasswordResetEmail.Subject, PasswordResetEmail.Body(link));
+                    var content = PasswordResetEmail.Reset(link);
+                    mail = new OutgoingEmail(user.Email!, content.Subject, content.Text, content.Html);
                 }
                 else
                 {
-                    var body = sso.Value.Enabled
-                        ? PasswordResetEmail.SsoBody(sso.Value.DisplayName)
-                        : PasswordResetEmail.NoPasswordBody;
-                    mail = new OutgoingEmail(user.Email!, PasswordResetEmail.SsoSubject, body);
+                    var content = sso.Value.Enabled
+                        ? PasswordResetEmail.Sso(sso.Value.DisplayName)
+                        : PasswordResetEmail.NoPassword();
+                    mail = new OutgoingEmail(user.Email!, content.Subject, content.Text, content.Html);
                 }
 
                 var result = await sender.SendAsync([mail], ct);

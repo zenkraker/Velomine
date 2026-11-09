@@ -1,6 +1,7 @@
 namespace Velomine.Server.Features.Notifications.Email;
 
-public sealed record OutgoingEmail(string To, string Subject, string Body);
+/// <summary>One message. <see cref="HtmlBody"/> is null for plain-text-only mail; otherwise the sender adds it as the HTML alternative.</summary>
+public sealed record OutgoingEmail(string To, string Subject, string Body, string? HtmlBody = null);
 
 /// <summary>What happened to one message. The server-level failure is reported separately by the batch.</summary>
 public enum EmailOutcome
@@ -20,7 +21,7 @@ public readonly record struct EmailResult(OutgoingEmail Email, EmailOutcome Outc
 /// </summary>
 public sealed record EmailBatchResult(IReadOnlyList<EmailResult> Results, Exception? Failure);
 
-/// <summary>Sends plain-text emails through the SMTP server set in the environment.</summary>
+/// <summary>Sends emails through the SMTP server set in the environment, as text with an HTML alternative when there is one.</summary>
 public interface IEmailSender
 {
     /// <summary>Sends all messages over one connection. A refused recipient does not stop the rest.</summary>

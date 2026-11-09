@@ -27,10 +27,14 @@ public sealed class SendTestEmail(IEmailSender sender, IOptions<SmtpOptions> smt
         }
 
         var admin = await users.GetUserAsync(User);
+        // The admin sees what a member sees, in the language this account chose.
+        using var language = EmailLanguage.Use(admin!.Language);
+        var subject = EmailStrings.Get("TestSubject");
+        var body = EmailStrings.Get("TestBody");
         try
         {
             var result = await sender.SendAsync(
-                [new OutgoingEmail(admin!.Email!, "Velomine: test email", "If you can read this, Velomine can send email.\n")], ct);
+                [new OutgoingEmail(admin.Email!, subject, body, EmailLayout.Render(subject, body, EmailLayout.Paragraph(body)))], ct);
             if (result.Failure is not null)
             {
                 // What the mail server answered helps the admin; the settings themselves, and the password, are never in it.

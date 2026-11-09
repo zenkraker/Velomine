@@ -98,6 +98,7 @@ public sealed class NotificationEmailService(
                     {
                         Notification = n,
                         u.Email,
+                        u.Language,
                         u.EmailAccountNotifications,
                         u.EmailTrainingNotifications,
                     })
@@ -113,13 +114,18 @@ public sealed class NotificationEmailService(
                 .Select(g => new
                 {
                     Email = g.First().Email!,
+                    Language = g.First().Language,
                     Notifications = g.Select(x => x.Notification).OrderBy(n => n.CreatedAt).ToList(),
                 })
                 .ToList();
 
-            var outgoing = groups
-                .Select(g => new OutgoingEmail(g.Email, NotificationText.Subject(g.Notifications), NotificationText.Body(g.Notifications)))
-                .ToList();
+            var outgoing = new List<OutgoingEmail>(groups.Count);
+            foreach (var g in groups)
+            {
+                using var _ = EmailLanguage.Use(g.Language);
+                var content = NotificationText.Write(g.Notifications);
+                outgoing.Add(new OutgoingEmail(g.Email, content.Subject, content.Text, content.Html));
+            }
 
             var batch = await sender.SendAsync(outgoing, ct);
             var sentAt = time.GetUtcNow();

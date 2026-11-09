@@ -1,34 +1,44 @@
+using Velomine.Server.Features.Notifications.Email;
+
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>The one email a password reset, or an account with no password, sends. Plain text: no tracking, no images.</summary>
+/// <summary>
+/// The one email a password reset, or an account with no password, sends, in the member's language. Text and
+/// HTML come from the same wording: no tracking, no images.
+/// </summary>
 public static class PasswordResetEmail
 {
-    public const string Subject = "Reset your Velomine password";
+    public static string Subject => EmailStrings.Get("ResetSubject");
 
-    public static string Body(string link) =>
-        $"""
-        Someone asked to reset the password for your Velomine account.
+    public static string SsoSubject => EmailStrings.Get("SsoSubject");
 
-        Open this link to choose a new password:
-        {link}
+    public static EmailContent Reset(string link)
+    {
+        var intro = EmailStrings.Get("ResetIntro");
+        var expiry = EmailStrings.Get("ResetExpiry");
+        var subject = Subject;
+        var text = $"{intro}\n\n{link}\n\n{expiry}";
+        var html = EmailLayout.Render(
+            subject,
+            intro,
+            EmailLayout.Paragraph(intro)
+            + EmailLayout.Button(link, EmailStrings.Get("ResetAction"))
+            + EmailLayout.Muted(link)
+            + EmailLayout.Paragraph(expiry));
+        return new EmailContent(subject, text, html);
+    }
 
-        The link works once and expires in 30 minutes.
-        If it was not you, ignore this email; your password stays the same.
-        """;
+    public static EmailContent Sso(string provider)
+    {
+        var subject = SsoSubject;
+        var body = EmailStrings.Format("SsoBody", provider);
+        return new EmailContent(subject, body, EmailLayout.Render(subject, body, EmailLayout.Paragraph(body)));
+    }
 
-    public const string SsoSubject = "How to sign in to Velomine";
-
-    public static string SsoBody(string provider) =>
-        $"""
-        This address belongs to a Velomine account that signs in with {provider}.
-
-        Use the single sign-on button on the sign-in page instead of a password.
-        """;
-
-    public const string NoPasswordBody =
-        """
-        This address belongs to a Velomine account that has no password.
-
-        Ask your club admin to help you sign in.
-        """;
+    public static EmailContent NoPassword()
+    {
+        var subject = SsoSubject;
+        var body = EmailStrings.Get("NoPasswordBody");
+        return new EmailContent(subject, body, EmailLayout.Render(subject, body, EmailLayout.Paragraph(body)));
+    }
 }

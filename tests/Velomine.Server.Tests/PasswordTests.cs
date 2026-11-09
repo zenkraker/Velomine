@@ -90,7 +90,10 @@ public sealed class PasswordTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var sent = Assert.Single(mail.Sent);
         Assert.Equal(email, sent.To);
-        Assert.Equal(PasswordResetEmail.Subject, sent.Subject);
+        Assert.Equal("Reset your Velomine password", sent.Subject);
+        Assert.NotNull(sent.HtmlBody);
+        Assert.StartsWith("<!doctype html>", sent.HtmlBody);
+        Assert.Contains("reset-password#", sent.HtmlBody);
         var (linkEmail, token) = FromEmail(mail);
         Assert.Equal(email, linkEmail);
         Assert.False(string.IsNullOrEmpty(token));
@@ -155,9 +158,42 @@ public sealed class PasswordTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var sent = Assert.Single(mail.Sent);
-        Assert.Equal(PasswordResetEmail.SsoSubject, sent.Subject);
+        Assert.Equal("How to sign in to Velomine", sent.Subject);
         Assert.DoesNotContain("reset-password", sent.Body);
         Assert.Contains("no password", sent.Body);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ShouldWriteItalian_WhenUserLanguageIsItalian()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (email, member) = await NewMemberAsync(api);
+        await member.PutAsJsonAsync(
+            "/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "it" }, Ct);
+
+        await ForgotAsync(api, email);
+
+        var sent = Assert.Single(mail.Sent);
+        Assert.Equal("Reimposta la password di Velomine", sent.Subject);
+        Assert.Contains("Qualcuno ha chiesto di reimpostare la password", sent.Body);
+        Assert.Contains("lang=\"it\"", sent.HtmlBody);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ShouldWriteEnglish_WhenLanguageIsNotSupported()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (email, member) = await NewMemberAsync(api);
+        await member.PutAsJsonAsync(
+            "/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "de" }, Ct);
+
+        await ForgotAsync(api, email);
+
+        var sent = Assert.Single(mail.Sent);
+        Assert.Equal("Reset your Velomine password", sent.Subject);
+        Assert.Contains("lang=\"en\"", sent.HtmlBody);
     }
 
     [Fact]

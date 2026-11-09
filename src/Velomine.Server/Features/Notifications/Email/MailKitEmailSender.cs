@@ -126,7 +126,9 @@ public sealed class MailKitEmailSender(IOptions<SmtpOptions> options, Resilience
         message.From.Add(MailboxAddress.Parse(smtp.From!));
         message.To.Add(MailboxAddress.Parse(email.To));
         message.Subject = email.Subject;
-        message.Body = new TextPart("plain") { Text = email.Body };
+        // Transactional mail: an out-of-office reply must not bounce back into the server.
+        message.Headers.Add("Auto-Submitted", "auto-generated");
+        message.Body = new BodyBuilder { TextBody = email.Body, HtmlBody = email.HtmlBody }.ToMessageBody();
         return message;
     }
 }
