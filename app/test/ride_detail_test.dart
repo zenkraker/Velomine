@@ -344,8 +344,27 @@ void main() {
           tester.widgetList(tiles).length,
           lessThan(30),
         ); // a screenful, not the world
+        final image = tester.widget<Image>(tiles.first).image as NetworkImage;
+        expect(image.headers?['User-Agent'], contains('Velomine'));
       },
     );
+  });
+
+  testWidgets('RouteMap_ShouldOpenFullScreenAndClose_WhenTheMapIsTapped', (
+    tester,
+  ) async {
+    await open(tester);
+    final map = find.byKey(const Key('route-map-open'));
+    await tester.ensureVisible(map);
+    await tester.pumpAndSettle();
+
+    await tester.tap(map);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('full-route-map')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('full-map-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('full-route-map')), findsNothing);
   });
 
   testWidgets('RideDetailScreen_ShouldSaveRpeAndNote_WhenWellbeingIsSetUp', (

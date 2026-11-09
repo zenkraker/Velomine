@@ -188,34 +188,34 @@ class RideStreamsResponse {
 
       return RideStreamsResponse(
         time: json[r'time'] is Iterable
-            ? (json[r'time'] as Iterable).cast<double>().toList(growable: false)
+            ? (json[r'time'] as Iterable).map((e) => (e as num).toDouble()).toList(growable: false)
             : const [],
         latitude: json[r'latitude'] is Iterable
-            ? (json[r'latitude'] as Iterable).cast<double>().toList(growable: false)
+            ? (json[r'latitude'] as Iterable).map((e) => (e as num?)?.toDouble()).toList(growable: false)
             : const [],
         longitude: json[r'longitude'] is Iterable
-            ? (json[r'longitude'] as Iterable).cast<double>().toList(growable: false)
+            ? (json[r'longitude'] as Iterable).map((e) => (e as num?)?.toDouble()).toList(growable: false)
             : const [],
         altitude: json[r'altitude'] is Iterable
-            ? (json[r'altitude'] as Iterable).cast<double>().toList(growable: false)
+            ? (json[r'altitude'] as Iterable).map((e) => (e as num?)?.toDouble()).toList(growable: false)
             : const [],
         speed: json[r'speed'] is Iterable
-            ? (json[r'speed'] as Iterable).cast<double>().toList(growable: false)
+            ? (json[r'speed'] as Iterable).map((e) => (e as num?)?.toDouble()).toList(growable: false)
             : const [],
         distance: json[r'distance'] is Iterable
-            ? (json[r'distance'] as Iterable).cast<double>().toList(growable: false)
+            ? (json[r'distance'] as Iterable).map((e) => (e as num?)?.toDouble()).toList(growable: false)
             : const [],
         heartRate: json[r'heartRate'] is Iterable
-            ? (json[r'heartRate'] as Iterable).cast<int>().toList(growable: false)
+            ? (json[r'heartRate'] as Iterable).map((e) => (e as num?)?.toInt()).toList(growable: false)
             : const [],
         power: json[r'power'] is Iterable
-            ? (json[r'power'] as Iterable).cast<int>().toList(growable: false)
+            ? (json[r'power'] as Iterable).map((e) => (e as num?)?.toInt()).toList(growable: false)
             : const [],
         cadence: json[r'cadence'] is Iterable
-            ? (json[r'cadence'] as Iterable).cast<int>().toList(growable: false)
+            ? (json[r'cadence'] as Iterable).map((e) => (e as num?)?.toInt()).toList(growable: false)
             : const [],
         temperature: json[r'temperature'] is Iterable
-            ? (json[r'temperature'] as Iterable).cast<int>().toList(growable: false)
+            ? (json[r'temperature'] as Iterable).map((e) => (e as num?)?.toInt()).toList(growable: false)
             : const [],
       );
     }

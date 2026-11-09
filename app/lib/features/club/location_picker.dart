@@ -1,10 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
+import '../../core/map_defaults.dart';
 import '../rides/detail/geo.dart';
 
 /// Picks a point for a club, or for the rider's saved fallback. The map is always there: the pin stays at the
@@ -33,13 +32,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
 
   double? _latitude;
   double? _longitude;
-  int _zoom = 14;
+  double _zoom = 14;
   bool _locating = false;
 
   Offset? _focalStart;
   double? _latitudeStart;
   double? _longitudeStart;
-  int _zoomStart = 14;
+  double _zoomStart = 14;
 
   @override
   void initState() {
@@ -78,21 +77,19 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       return;
     }
 
-    final zoom = (_zoomStart + math.log(details.scale) / math.ln2)
-        .round()
-        .clamp(_minZoom, _maxZoom);
-    final delta = details.localFocalPoint - start;
-    final scale = tileSize * math.pow(2, zoom);
-    final longitude = longitudeStart - delta.dx / scale * 360;
-    final y = worldY(latitudeStart, zoom) - delta.dy;
-    final n = math.pi * (1 - 2 * y / scale);
-    final latitude =
-        180 / math.pi * math.atan((math.exp(n) - math.exp(-n)) / 2);
+    final moved = pannedView(
+      center: (lat: latitudeStart, lon: longitudeStart),
+      zoom: _zoomStart,
+      delta: details.localFocalPoint - start,
+      scale: details.scale,
+      minZoom: _minZoom,
+      maxZoom: _maxZoom,
+    );
 
     setState(() {
-      _zoom = zoom;
-      _latitude = latitude.clamp(-85, 85);
-      _longitude = (longitude + 180) % 360 - 180;
+      _zoom = moved.zoom;
+      _latitude = moved.center.lat;
+      _longitude = moved.center.lon;
     });
   }
 
@@ -155,10 +152,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           onPointerSignal: (event) {
             if (event is PointerScrollEvent) {
               setState(() {
-                _zoom = (_zoom + (event.scrollDelta.dy > 0 ? -1 : 1)).clamp(
-                  _minZoom,
-                  _maxZoom,
-                );
+                _zoom = (_zoom + (event.scrollDelta.dy > 0 ? -1 : 1))
+                    .clamp(_minZoom, _maxZoom)
+                    .toDouble();
               });
             }
           },
@@ -180,10 +176,11 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   Positioned(
                     left: tile.left,
                     top: tile.top,
-                    width: tileSize,
-                    height: tileSize,
+                    width: view.tilePixels,
+                    height: view.tilePixels,
                     child: Image.network(
                       tile.url,
+                      headers: mapTileHeaders,
                       fit: BoxFit.fill,
                       webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
                       errorBuilder: (_, _, _) => const SizedBox.shrink(),

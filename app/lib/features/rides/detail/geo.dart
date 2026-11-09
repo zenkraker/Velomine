@@ -9,10 +9,10 @@ typedef LatLon = ({double lat, double lon});
 
 typedef Bounds = ({double north, double south, double east, double west});
 
-double worldX(double lon, int zoom) =>
+double worldX(double lon, num zoom) =>
     (lon + 180) / 360 * tileSize * math.pow(2, zoom);
 
-double worldY(double lat, int zoom) {
+double worldY(double lat, num zoom) {
   final rad = lat * math.pi / 180;
   return (1 - math.log(math.tan(rad) + 1 / math.cos(rad)) / math.pi) /
       2 *
@@ -50,10 +50,36 @@ int fitZoom(
   return minZoom;
 }
 
+/// The centre and zoom after dragging [delta] pixels and pinching by [scale].
+/// The zoom stays fractional, so a pinch moves the map continuously instead of
+/// snapping from one tile level to the next.
+({LatLon center, double zoom}) pannedView({
+  required LatLon center,
+  required num zoom,
+  required Offset delta,
+  required double scale,
+  num minZoom = 2,
+  num maxZoom = 18,
+}) {
+  final nextZoom = (zoom + math.log(scale) / math.ln2)
+      .clamp(minZoom, maxZoom)
+      .toDouble();
+  final pixels = tileSize * math.pow(2, nextZoom);
+  final lon = center.lon - delta.dx / pixels * 360;
+  final y = worldY(center.lat, nextZoom) - delta.dy;
+  final n = math.pi * (1 - 2 * y / pixels);
+  final lat = 180 / math.pi * math.atan((math.exp(n) - math.exp(-n)) / 2);
+  return (
+    center: (lat: lat.clamp(-85, 85), lon: (lon + 180) % 360 - 180),
+    zoom: nextZoom,
+  );
+}
+
 /// Where the route sits on screen: a map of [size] pixels at [zoom], centred on the middle of the route.
 class MapView {
-  MapView({required this.bounds, required this.size, required this.zoom})
-    : originX =
+  MapView({required this.bounds, required this.size, required num zoom})
+    : zoom = zoom.toDouble(),
+      originX =
           (worldX(bounds.east, zoom) + worldX(bounds.west, zoom)) / 2 -
           size.width / 2,
       originY =
@@ -69,8 +95,9 @@ class MapView {
   MapView.centered({
     required LatLon center,
     required this.size,
-    required this.zoom,
-  }) : bounds = (
+    required num zoom,
+  }) : zoom = zoom.toDouble(),
+       bounds = (
          north: center.lat,
          south: center.lat,
          east: center.lon,
@@ -81,7 +108,13 @@ class MapView {
 
   final Bounds bounds;
   final Size size;
-  final int zoom;
+  final double zoom;
+
+  /// The integer tile level used, and the size one of its tiles has on screen.
+  /// A fractional [zoom] is drawn by scaling that level instead of snapping.
+  int get tileZoom => zoom.round();
+
+  double get tilePixels => tileSize * math.pow(2, zoom - tileZoom).toDouble();
 
   /// The world pixel at the top-left corner of the view.
   final double originX;
@@ -92,7 +125,7 @@ class MapView {
 
   /// The latitude and longitude under a point on screen.
   LatLon unproject(Offset offset) {
-    final scale = tileSize * math.pow(2, zoom);
+    final scale = tileSize * math.pow(2, zoom).toDouble();
     final x = originX + offset.dx;
     final y = originY + offset.dy;
     final lon = x / scale * 360 - 180;
@@ -103,24 +136,26 @@ class MapView {
 
   /// The map tiles that cover the view, each with its address and position on screen.
   List<MapTile> tiles(String urlTemplate) {
-    final count = 1 << zoom;
-    final firstX = (originX / tileSize).floor();
-    final lastX = ((originX + size.width) / tileSize).floor();
-    final firstY = math.max(0, (originY / tileSize).floor());
+    final level = tileZoom;
+    final pixels = tilePixels;
+    final count = 1 << level;
+    final firstX = (originX / pixels).floor();
+    final lastX = ((originX + size.width) / pixels).floor();
+    final firstY = math.max(0, (originY / pixels).floor());
     final lastY = math.min(
       count - 1,
-      ((originY + size.height) / tileSize).floor(),
+      ((originY + size.height) / pixels).floor(),
     );
     return [
       for (var y = firstY; y <= lastY; y++)
         for (var x = firstX; x <= lastX; x++)
           MapTile(
             url: urlTemplate
-                .replaceAll('{z}', '$zoom')
+                .replaceAll('{z}', '$level')
                 .replaceAll('{x}', '${x % count}')
                 .replaceAll('{y}', '$y'),
-            left: x * tileSize - originX,
-            top: y * tileSize - originY,
+            left: x * pixels - originX,
+            top: y * pixels - originY,
           ),
     ];
   }

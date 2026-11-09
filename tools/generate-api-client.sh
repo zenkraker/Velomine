@@ -31,6 +31,11 @@ else
   docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/local" -w /local "openapitools/openapi-generator-cli:v$VERSION" "${ARGS[@]}"
 fi
 
-# 3. The generated code is not ours to lint.
+# 3. The Dart generator casts JSON numbers straight to double/int, which throws on
+#    native for a whole number (the server writes 79 for 79.0) and for a null in a
+#    nullable array. tools/patch_api_client.dart rewrites those casts after generation.
+dart tools/patch_api_client.dart
+
+# 4. The generated code is not ours to lint.
 printf 'analyzer:\n  exclude:\n    - "**"\n' > "$OUT/analysis_options.yaml"
 rm -f "$OUT/.travis.yml" "$OUT/git_push.sh"

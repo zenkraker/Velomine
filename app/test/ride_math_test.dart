@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/theme.dart';
 import 'package:velomine/features/rides/detail/geo.dart';
 import 'package:velomine/features/rides/detail/ride_series.dart';
-import 'package:velomine/features/rides/detail/route_map.dart';
+import 'package:velomine/features/rides/detail/route_painter.dart';
 import 'package:velomine/features/rides/detail/scale.dart';
 import 'package:velomine_api/api.dart';
 
@@ -55,7 +55,10 @@ void main() {
 
       final tiles = view.tiles('https://t.example/{z}/{x}/{y}.png');
 
-      expect(tiles.first.url, startsWith('https://t.example/${view.zoom}/'));
+      expect(
+        tiles.first.url,
+        startsWith('https://t.example/${view.tileZoom}/'),
+      );
       expect(tiles.map((t) => t.left).reduce(math.min), lessThanOrEqualTo(0));
       expect(
         tiles.map((t) => t.left + tileSize).reduce(math.max),
@@ -79,6 +82,41 @@ void main() {
         tile.top + (worldY(46.07, view.zoom) - y * tileSize),
         closeTo(start.dy, 1e-6),
       );
+    });
+
+    test('MapView_ShouldKeepTheDraggedPointUnderTheFinger_WhenPanned', () {
+      const size = Size(400, 300);
+      const center = (lat: 46.5, lon: 11.3);
+      const delta = Offset(30, -20);
+      final before = MapView.centered(center: center, size: size, zoom: 15);
+      final moved = pannedView(
+        center: center,
+        zoom: 15,
+        delta: delta,
+        scale: 1,
+      );
+      final after = MapView.centered(
+        center: moved.center,
+        size: size,
+        zoom: moved.zoom,
+      );
+
+      final dragged = after.project(
+        before.unproject(Offset(size.width / 2, size.height / 2)),
+      );
+      expect(dragged.dx, closeTo(size.width / 2 + delta.dx, 1e-6));
+      expect(dragged.dy, closeTo(size.height / 2 + delta.dy, 1e-6));
+    });
+
+    test('MapView_ShouldKeepAFractionalZoom_WhenPinching', () {
+      final moved = pannedView(
+        center: (lat: 46.5, lon: 11.3),
+        zoom: 15,
+        delta: Offset.zero,
+        scale: 1.5,
+      );
+
+      expect(moved.zoom, closeTo(15 + math.log(1.5) / math.ln2, 1e-9));
     });
 
     test('MapView_ShouldZoomAllTheWayIn_WhenRouteIsASinglePoint', () {
