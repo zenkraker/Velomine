@@ -2,27 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../core/l10n.dart';
 import 'accounts_tab.dart';
-import 'admin_controller.dart';
 import 'clubs_tab.dart';
 import 'overview_tab.dart';
 import 'settings_tab.dart';
 
-/// The admin pages: accounts, settings and an overview of the server.
-class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key, required this.controller});
-
-  final AdminController controller;
-
-  @override
-  State<AdminScreen> createState() => _AdminScreenState();
-}
-
-class _AdminScreenState extends State<AdminScreen> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.refresh();
-  }
+/// The admin pages: accounts, clubs, settings and an overview of the server.
+class AdminScreen extends StatelessWidget {
+  const AdminScreen({super.key});
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
@@ -46,17 +32,9 @@ class _AdminScreenState extends State<AdminScreen> {
             ),
           ],
         ),
-        Expanded(
-          child: ListenableBuilder(
-            listenable: widget.controller,
-            builder: (context, _) => TabBarView(
-              children: [
-                AccountsTab(controller: widget.controller),
-                ClubsTab(controller: widget.controller),
-                SettingsTab(controller: widget.controller),
-                OverviewTab(controller: widget.controller),
-              ],
-            ),
+        const Expanded(
+          child: TabBarView(
+            children: [AccountsTab(), ClubsTab(), SettingsTab(), OverviewTab()],
           ),
         ),
       ],

@@ -650,16 +650,6 @@ class _PartFormState extends State<_PartForm> {
     });
   }
 
-  /// Waits for a pause in typing before asking the server, and ignores answers that arrive after a newer keystroke.
-  int _searchSeq = 0;
-
-  Future<Iterable<PartResponse>> _searchOptions(String text) async {
-    final seq = ++_searchSeq;
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    if (seq != _searchSeq) return const <PartResponse>[];
-    return widget.search(text, _type);
-  }
-
   /// Picking a kind of part offers its typical limits, unless the member already typed some.
   void _pickType(String? id) {
     setState(() {
@@ -747,7 +737,7 @@ class _PartFormState extends State<_PartForm> {
                 optionsBuilder: (value) async {
                   final text = value.text.trim();
                   if (text.length < 2) return const <PartResponse>[];
-                  return _searchOptions(text);
+                  return widget.search(text, _type);
                 },
                 displayStringForOption: (p) =>
                     [p.brand, p.model].where((s) => s.isNotEmpty).join(' '),

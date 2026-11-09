@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/server_config.dart';
 
@@ -56,40 +57,61 @@ void main() {
     });
   });
 
-  group('ServerConfig', () {
+  group('ServerConfigViewModel', () {
+    ProviderContainer container({
+      MemoryServerConfigStore? store,
+      bool web = false,
+      String? origin,
+    }) {
+      final container = ProviderContainer(
+        overrides: [
+          serverConfigStoreProvider.overrideWithValue(
+            store ?? MemoryServerConfigStore(),
+          ),
+          isWebProvider.overrideWithValue(web),
+          webOriginProvider.overrideWithValue(origin),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
     test(
-      'ServerConfig_ShouldLoadSaveAndClearAddress_WhenStoreHasValues',
+      'ServerConfigViewModel_ShouldLoadSaveAndClearAddress_WhenStoreHasValues',
       () async {
         final store = MemoryServerConfigStore('https://old.example/');
-        final config = ServerConfig(store: store, web: false);
-        await config.load();
+        final app = container(store: store);
+        var config = await app.read(serverConfigViewModelProvider.future);
         expect(config.baseUrl, 'https://old.example');
 
-        await config.save('https://new.example/');
+        await app
+            .read(serverConfigViewModelProvider.notifier)
+            .save('https://new.example/');
+        config = app.read(serverConfigViewModelProvider).value!;
         expect(config.baseUrl, 'https://new.example');
         expect(store.value, 'https://new.example');
 
-        await config.clear();
+        await app.read(serverConfigViewModelProvider.notifier).clear();
+        config = app.read(serverConfigViewModelProvider).value!;
         expect(config.baseUrl, isNull);
         expect(store.value, isNull);
         expect(config.previousUrl, 'https://new.example');
       },
     );
 
-    test('ServerConfig_ShouldHaveNoAddress_WhenNoneIsSaved', () async {
-      final config = ServerConfig(store: MemoryServerConfigStore(), web: false);
-      await config.load();
+    test('ServerConfigViewModel_ShouldHaveNoAddress_WhenNoneIsSaved', () async {
+      final app = container();
+      final config = await app.read(serverConfigViewModelProvider.future);
       expect(config.baseUrl, isNull);
     });
 
-    test('ServerConfig_ShouldUseOwnOrigin_WhenRunningAsWebApp', () async {
-      final config = ServerConfig(
-        store: MemoryServerConfigStore(),
-        web: true,
-        webOrigin: 'https://velo.example',
-      );
-      await config.load();
-      expect(config.baseUrl, 'https://velo.example');
-    });
+    test(
+      'ServerConfigViewModel_ShouldUseOwnOrigin_WhenRunningAsWebApp',
+      () async {
+        final app = container(web: true, origin: 'https://velo.example');
+        final config = await app.read(serverConfigViewModelProvider.future);
+        expect(config.baseUrl, 'https://velo.example');
+      },
+    );
   });
 }

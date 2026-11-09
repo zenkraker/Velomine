@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
-import 'core/language_choice.dart';
+import 'core/providers.dart';
 import 'core/server_config.dart';
 import 'core/theme_choice.dart';
 import 'core/token_store_factory.dart';
@@ -12,26 +13,25 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy(); // real URLs on the web ("/rides"), not "/#/rides"; the server falls back to index.html
 
-  final config = ServerConfig();
-  await config.load();
+  final container = ProviderContainer(
+    overrides: [tokenStoreProvider.overrideWithValue(createTokenStore())],
+  );
 
-  // Read the saved theme before the first frame, so the app never flashes the wrong one.
-  final themeChoice = ThemeChoice();
-  await themeChoice.load();
+  // Read the saved address and theme before the first frame, so the app never
+  // flashes the setup screen or the wrong theme.
+  final config = await container.read(serverConfigViewModelProvider.future);
+  await container.read(themeChoiceViewModelProvider.future);
 
-  final languageChoice = LanguageChoice();
-
-  final tokenStore = createTokenStore();
   // Keychain entries survive an uninstall on iOS. With no server chosen there is no session to restore,
   // so drop any token that belonged to the removed installation.
-  if (!kIsWeb && config.baseUrl == null) await tokenStore.clear();
+  if (!kIsWeb && config.baseUrl == null) {
+    await container.read(tokenStoreProvider).clear();
+  }
 
   runApp(
-    VelomineRoot(
-      config: config,
-      tokenStore: tokenStore,
-      themeChoice: themeChoice,
-      languageChoice: languageChoice,
+    UncontrolledProviderScope(
+      container: container,
+      child: const VelomineRoot(),
     ),
   );
 }

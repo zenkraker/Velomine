@@ -1,165 +1,124 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'recorder.dart';
-import 'recorder_factory.dart';
-import 'recorder_settings.dart';
-import 'recording_controller.dart';
-import 'ride_uploader.dart';
+import 'recording_providers.dart';
+import 'recording_view_model.dart';
 import 'upload_queue.dart';
 
+String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
+  'permission' => l10n.recorderPermission,
+  'gps_off' => l10n.recorderGpsOff,
+  'location' => l10n.recorderLocationFailed,
+  'unsupported' => l10n.recorderUnsupported,
+  'too_short' => l10n.recorderTooShort,
+  'fit_failed' => l10n.recorderFitFailed,
+  'still_recording' => l10n.recorderStillRecording,
+  'not_found' => l10n.recorderRideNotFound,
+  'bluetooth_off' => l10n.recorderBluetoothOff,
+  'bluetooth_denied' => l10n.recorderBluetoothDenied,
+  'sensor_not_found' => l10n.recorderSensorNotFound,
+  'recorder_unreadable' => l10n.recorderUnreadable,
+  _ => l10n.recorderFailed,
+};
+
 /// Record a ride with the phone, and see the rides saved on this phone.
-class RecordingScreen extends StatefulWidget {
-  const RecordingScreen({
-    super.key,
-    this.recorder,
-    this.uploader,
-    this.onUnauthorized,
-    this.uploadStore,
-    this.settingsStore,
-    this.serverUrl,
-    this.uploadPollInterval = const Duration(seconds: 1),
-  });
+class RecordingScreen extends ConsumerWidget {
+  const RecordingScreen({super.key});
 
-  /// Tests pass a fake; the app uses the native service.
-  final Recorder? recorder;
-
-  /// Null in tests that only cover recording; the app passes the server uploader.
-  final RideUploader? uploader;
-
-  final VoidCallback? onUnauthorized;
-  final UploadStateStore? uploadStore;
-  final RecorderSettingsStore? settingsStore;
-  final String? serverUrl;
-  final Duration uploadPollInterval;
-
-  @override
-  State<RecordingScreen> createState() => _RecordingScreenState();
-}
-
-class _RecordingScreenState extends State<RecordingScreen> {
-  late final Recorder _recorder = widget.recorder ?? createRecorder();
-  late final RecordingController _controller = RecordingController(
-    recorder: _recorder,
-    settingsStore: widget.settingsStore,
-    uploads: widget.uploader == null
-        ? null
-        : RideUploadQueue(
-            recorder: _recorder,
-            uploader: widget.uploader!,
-            store: widget.uploadStore ?? PreferencesUploadStateStore(),
-            serverUrl: widget.serverUrl,
-            pollInterval: widget.uploadPollInterval,
-            onUnauthorized: widget.onUnauthorized,
-          ),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.init();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pairSensor() async {
+  Future<void> _pairSensor(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(recordingViewModelProvider.notifier);
     final sensor = await showModalBottomSheet<SensorInfo>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _SensorSheet(
-        requestPermission: _controller.requestSensorPermissions,
-        scan: _controller.scanSensors,
+        requestPermission: notifier.requestSensorPermissions,
+        scan: notifier.scanSensors,
       ),
     );
     if (sensor == null) return;
-    await _controller.pairSensor(sensor);
+    await notifier.pairSensor(sensor);
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        final state = _controller.state;
-        final live = state.isRecording || state.isPaused;
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-            children: [
-              if (live)
-                _LiveCard(
-                  state: state,
-                  sensorsSupported: _recorder.sensorsSupported,
-                  busy: _controller.busy,
-                  onPause: _controller.pause,
-                  onResume: _controller.resume,
-                  onStop: _controller.stop,
-                )
-              else
-                _StartCard(
-                  busy: _controller.busy,
-                  loading: _controller.loading,
-                  autoPause: _controller.autoPause,
-                  rideType: _controller.rideType,
-                  ebike: _controller.ebike,
-                  onAutoPause: _controller.setAutoPause,
-                  onRideType: _controller.setRideType,
-                  onEbike: _controller.setEbike,
-                  onStart: _controller.start,
-                  sensorsSupported: _recorder.sensorsSupported,
-                  sensorName: state.sensorName,
-                  sensorStatus: state.sensorStatus,
-                  onPair: _pairSensor,
-                  onForget: _controller.forgetSensor,
-                ),
-              if (_controller.errorCode != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  recorderErrorText(context.l10n, _controller.errorCode),
-                  key: const Key('record-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              const SizedBox(height: 24),
-              Text(
-                context.l10n.onThisPhone,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              if (_controller.rides.isEmpty && !_controller.loading)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    context.l10n.noLocalRides,
-                    key: const Key('no-local-rides'),
-                  ),
-                )
-              else
-                for (final ride in _controller.rides)
-                  _LocalRideCard(
-                    ride: ride,
-                    upload: _controller.uploads?.stateFor(ride.id),
-                    busy: _controller.busy,
-                    onFinalize: () => _controller.finalizeRide(ride.id),
-                    onDelete: () => _controller.deleteRide(ride.id),
-                    onUpload: _controller.uploads == null
-                        ? null
-                        : () => _controller.uploads!.enqueue(ride.id),
-                    onRetryUpload: _controller.uploads == null
-                        ? null
-                        : () => _controller.uploads!.retry(ride.id),
-                  ),
-            ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(recordingViewModelProvider);
+    final recorder = ref.watch(recorderProvider);
+    final uploadsEnabled = ref.watch(uploadQueueProvider) != null;
+    final notifier = ref.read(recordingViewModelProvider.notifier);
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+        children: [
+          if (s.live)
+            _LiveCard(
+              state: s.snapshot,
+              sensorsSupported: recorder?.sensorsSupported ?? false,
+              busy: s.command.running,
+              onPause: notifier.pause,
+              onResume: notifier.resume,
+              onStop: notifier.stop,
+            )
+          else
+            _StartCard(
+              busy: s.command.running,
+              loading: s.loading,
+              autoPause: s.autoPause,
+              rideType: s.rideType,
+              ebike: s.ebike,
+              onAutoPause: notifier.setAutoPause,
+              onRideType: notifier.setRideType,
+              onEbike: notifier.setEbike,
+              onStart: notifier.start,
+              sensorsSupported: recorder?.sensorsSupported ?? false,
+              sensorName: s.snapshot.sensorName,
+              sensorStatus: s.snapshot.sensorStatus,
+              onPair: () => _pairSensor(context, ref),
+              onForget: notifier.forgetSensor,
+            ),
+          if (s.errorCode != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              recorderErrorText(context.l10n, s.errorCode),
+              key: const Key('record-error'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: 24),
+          Text(
+            context.l10n.onThisPhone,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-        );
-      },
+          const SizedBox(height: 8),
+          if (s.rides.isEmpty && !s.loading)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                context.l10n.noLocalRides,
+                key: const Key('no-local-rides'),
+              ),
+            )
+          else
+            for (final ride in s.rides)
+              _LocalRideCard(
+                ride: ride,
+                upload: s.uploads[ride.id],
+                busy: s.command.running,
+                onFinalize: () => notifier.finalizeRide(ride.id),
+                onDelete: () => notifier.deleteRide(ride.id),
+                onUpload: uploadsEnabled
+                    ? () => notifier.uploadRide(ride.id)
+                    : null,
+                onRetryUpload: uploadsEnabled
+                    ? () => notifier.retryUpload(ride.id)
+                    : null,
+              ),
+        ],
+      ),
     );
   }
 }

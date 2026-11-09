@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/recording/recorder.dart';
 import 'package:velomine/features/recording/recorder_settings.dart';
+import 'package:velomine/features/recording/recording_providers.dart';
 import 'package:velomine/features/recording/recording_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -260,10 +262,19 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: RecordingScreen(recorder: recorder, settingsStore: settings),
+      ProviderScope(
+        overrides: [
+          recorderProvider.overrideWithValue(recorder),
+          recorderSettingsStoreProvider.overrideWithValue(
+            settings ?? MemoryRecorderSettings(),
+          ),
+          uploadQueueProvider.overrideWithValue(null),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const RecordingScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();

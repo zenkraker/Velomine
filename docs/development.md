@@ -202,7 +202,8 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `just db` | Opens psql on the dev database |
 | `just migration Name` | Adds an EF Core migration under `Data/Migrations` |
 | `just api-client` | Regenerates the Dart API client after an endpoint change (`tools/generate-api-client.sh`) |
-| `just check` | Runs the README's checks: server tests, Dart format, analyzer and Flutter tests |
+| `just codegen` | Regenerates the Riverpod providers (`build_runner`). Run it after changing a `@riverpod` provider; the generated `.g.dart` files are committed. |
+| `just check` | Runs the README's checks: server tests, Riverpod codegen, Dart format, analyzer and Flutter tests |
 | `nix fmt flake.nix` | Formats the flake with the pinned `nixfmt` |
 
 `flutter run -d chrome` also works for quick UI work. Password sign-in needs the cookie, which only works when the server serves the app, so use `just web` for anything that needs a session.

@@ -12,15 +12,9 @@ void main() {
   testWidgets('App_ShouldApplyTheAccountLanguage_WhenSignedIn', (tester) async {
     final rider = server.add('rider@example.com', language: 'it');
     server.signInBrowser(rider);
-    final choice = LanguageChoice();
+    await startApp(tester, server.session(useCookies: true));
 
-    await startApp(
-      tester,
-      server.session(useCookies: true),
-      languageChoice: choice,
-    );
-
-    expect(choice.code, 'it');
+    expect(containerOf(tester).read(languageChoiceViewModelProvider), 'it');
   });
 
   testWidgets('App_ShouldForgetTheAccountLanguage_WhenSignedOut', (
@@ -28,17 +22,12 @@ void main() {
   ) async {
     final rider = server.add('rider@example.com', language: 'it');
     server.signInBrowser(rider);
-    final choice = LanguageChoice();
-    await startApp(
-      tester,
-      server.session(useCookies: true),
-      languageChoice: choice,
-    );
-    expect(choice.code, 'it');
+    await startApp(tester, server.session(useCookies: true));
+    expect(containerOf(tester).read(languageChoiceViewModelProvider), 'it');
 
     await tester.tap(find.byKey(const Key('sign-out')));
     await tester.pumpAndSettle();
 
-    expect(choice.code, isNull);
+    expect(containerOf(tester).read(languageChoiceViewModelProvider), isNull);
   });
 }

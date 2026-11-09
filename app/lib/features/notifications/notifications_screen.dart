@@ -1,90 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import 'notifications_controller.dart';
+import '../../core/user_message_text.dart';
+import 'notifications_text.dart';
+import 'notifications_view_model.dart';
 
-class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({
-    super.key,
-    required this.controller,
-    required this.onOpen,
-  });
+class NotificationsScreen extends ConsumerWidget {
+  const NotificationsScreen({super.key, required this.onOpen});
 
-  final NotificationsController controller;
   final void Function(String location) onOpen;
 
-  @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
-}
-
-class _NotificationsScreenState extends State<NotificationsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.refresh();
-  }
-
-  Future<void> _open(NotificationResponse n) async {
-    await widget.controller.markRead(n);
+  Future<void> _open(
+    BuildContext context,
+    WidgetRef ref,
+    NotificationResponse n,
+  ) async {
+    await ref.read(notificationsViewModelProvider.notifier).markRead(n);
     final target = notificationTarget(n);
-    if (target != null && mounted) widget.onOpen(target);
+    if (target != null && context.mounted) onOpen(target);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final c = widget.controller;
-    return ListenableBuilder(
-      listenable: c,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: 12,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          context.l10n.notifications,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(notificationsViewModelProvider);
+    final l10n = context.l10n;
+
+    ref.listen(
+      notificationsViewModelProvider.select((state) => state.messages),
+      (_, messages) {
+        for (final message in messages) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(userMessageText(l10n, message))),
+          );
+          ref
+              .read(notificationsViewModelProvider.notifier)
+              .messageShown(message.id);
+        }
+      },
+    );
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 12,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.notifications,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      if (c.unread > 0)
-                        TextButton(
-                          key: const Key('notifications-read-all'),
-                          onPressed: c.markAllRead,
-                          child: Text(context.l10n.markAllRead),
-                        ),
-                    ],
+                    ),
+                    if (s.unread > 0)
+                      TextButton(
+                        key: const Key('notifications-read-all'),
+                        onPressed: s.markAll.running
+                            ? null
+                            : () => ref
+                                  .read(notificationsViewModelProvider.notifier)
+                                  .markAllRead(),
+                        child: Text(l10n.markAllRead),
+                      ),
+                  ],
+                ),
+                if (s.load.failure case final failure?)
+                  Text(
+                    failureText(l10n, failure),
+                    key: const Key('notifications-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                  if (c.error != null)
-                    Text(
-                      failureText(context.l10n, c.error!),
-                      key: const Key('notifications-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  if (c.items.isEmpty && !c.loading && c.error == null)
-                    Text(
-                      context.l10n.noNotifications,
-                      key: const Key('no-notifications'),
-                    ),
-                  for (final n in c.items)
-                    _NotificationTile(notification: n, onTap: () => _open(n)),
-                ],
-              ),
+                if (s.items.isEmpty &&
+                    !s.load.running &&
+                    s.load.failure == null)
+                  Text(
+                    l10n.noNotifications,
+                    key: const Key('no-notifications'),
+                  ),
+                for (final n in s.items)
+                  _NotificationTile(
+                    notification: n,
+                    onTap: () => _open(context, ref, n),
+                  ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

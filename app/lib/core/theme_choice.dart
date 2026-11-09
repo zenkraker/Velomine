@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n.dart';
 
-/// Day, night, or whatever the device is set to. Kept on this device only: the same member may want the night
-/// theme on the phone and the day theme on a laptop, and the choice applies before anyone signs in.
-class ThemeChoice extends ChangeNotifier {
-  ThemeChoice({ThemeChoiceStore? store}) : _store = store ?? _Preferences();
+part 'theme_choice.g.dart';
 
-  final ThemeChoiceStore _store;
-  ThemeMode mode = ThemeMode.system;
+/// Where the choice is kept. Tests override it with an in-memory store.
+final themeChoiceStoreProvider = Provider<ThemeChoiceStore>(
+  (ref) => PreferencesThemeChoiceStore(),
+);
 
-  Future<void> load() async {
-    final saved = await _store.read();
-    mode =
-        ThemeMode.values.where((m) => m.name == saved).firstOrNull ??
+/// Day, night, or whatever the device is set to. Kept on this device only: the
+/// same member may want the night theme on the phone and the day theme on a
+/// laptop, and the choice applies before anyone signs in.
+@Riverpod(keepAlive: true)
+class ThemeChoiceViewModel extends _$ThemeChoiceViewModel {
+  @override
+  Future<ThemeMode> build() async {
+    final saved = await ref.watch(themeChoiceStoreProvider).read();
+    return ThemeMode.values.where((m) => m.name == saved).firstOrNull ??
         ThemeMode.system;
-    notifyListeners();
   }
 
   Future<void> choose(ThemeMode value) async {
-    mode = value;
-    notifyListeners();
-    await _store.write(value.name);
+    state = AsyncData(value);
+    await ref.read(themeChoiceStoreProvider).write(value.name);
   }
 }
 
@@ -32,7 +36,7 @@ abstract interface class ThemeChoiceStore {
   Future<void> write(String value);
 }
 
-class _Preferences implements ThemeChoiceStore {
+class PreferencesThemeChoiceStore implements ThemeChoiceStore {
   static const _key = 'theme';
   final _prefs = SharedPreferencesAsync();
 
@@ -56,10 +60,8 @@ class _Preferences implements ThemeChoiceStore {
 }
 
 /// A button for the title bar that switches between the themes.
-class ThemeChoiceButton extends StatelessWidget {
-  const ThemeChoiceButton({super.key, required this.choice});
-
-  final ThemeChoice choice;
+class ThemeChoiceButton extends ConsumerWidget {
+  const ThemeChoiceButton({super.key});
 
   static IconData _icon(ThemeMode m) => switch (m) {
     ThemeMode.light => Icons.light_mode_outlined,
@@ -74,14 +76,15 @@ class ThemeChoiceButton extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: choice,
-    builder: (context, _) => PopupMenuButton<ThemeMode>(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode =
+        ref.watch(themeChoiceViewModelProvider).value ?? ThemeMode.system;
+    return PopupMenuButton<ThemeMode>(
       key: const Key('theme-choice'),
-      tooltip: context.l10n.themeTooltip(_name(context, choice.mode)),
-      icon: Icon(_icon(choice.mode)),
-      initialValue: choice.mode,
-      onSelected: choice.choose,
+      tooltip: context.l10n.themeTooltip(_name(context, mode)),
+      icon: Icon(_icon(mode)),
+      initialValue: mode,
+      onSelected: ref.read(themeChoiceViewModelProvider.notifier).choose,
       itemBuilder: (_) => [
         for (final m in [ThemeMode.light, ThemeMode.dark, ThemeMode.system])
           PopupMenuItem(
@@ -90,11 +93,11 @@ class ThemeChoiceButton extends StatelessWidget {
             child: ListTile(
               leading: Icon(_icon(m)),
               title: Text(_name(context, m)),
-              trailing: m == choice.mode ? const Icon(Icons.check) : null,
+              trailing: m == mode ? const Icon(Icons.check) : null,
               contentPadding: EdgeInsets.zero,
             ),
           ),
       ],
-    ),
-  );
+    );
+  }
 }

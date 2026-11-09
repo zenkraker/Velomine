@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/providers.dart';
 import 'package:velomine/features/auth/reset_password_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -25,13 +27,16 @@ void main() {
     String? email = 'rider@example.com',
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: ResetPasswordScreen(
-          session: server.session(useCookies: false),
-          token: token,
-          email: email,
+      ProviderScope(
+        overrides: [
+          sessionProvider.overrideWith(
+            (ref) => server.session(useCookies: false),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ResetPasswordScreen(token: token, email: email),
         ),
       ),
     );

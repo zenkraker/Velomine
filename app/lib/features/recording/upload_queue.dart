@@ -113,7 +113,11 @@ class PreferencesUploadStateStore implements UploadStateStore {
 }
 
 /// Uploads finished local rides to the server, one at a time per ride, with the local id as the idempotency key.
-class RideUploadQueue extends ChangeNotifier {
+///
+/// The work is imperative (timers, retries, persisted progress), so it stays a
+/// plain repository object; its state is exposed as a stream, which Riverpod
+/// turns into [uploadStatesProvider].
+class RideUploadQueue {
   RideUploadQueue({
     required this.recorder,
     required this.uploader,
@@ -132,9 +136,19 @@ class RideUploadQueue extends ChangeNotifier {
 
   final _states = <String, UploadState>{};
   final _running = <String>{};
+  final _updates = StreamController<Map<String, UploadState>>.broadcast(
+    sync: true,
+  );
   bool _disposed = false;
 
   UploadState? stateFor(String rideId) => _states[rideId];
+
+  /// A snapshot of every ride's upload state.
+  Map<String, UploadState> get states => Map.unmodifiable(_states);
+
+  /// Every change to [states], so the Record screen and the title bar share one
+  /// subscription instead of each polling the queue.
+  Stream<Map<String, UploadState>> get updates => _updates.stream;
 
   Future<void> init() async {
     _states
@@ -351,12 +365,11 @@ class RideUploadQueue extends ChangeNotifier {
   Future<void> _persist() => store.write(Map.unmodifiable(_states));
 
   void _notify() {
-    if (!_disposed) notifyListeners();
+    if (!_disposed) _updates.add(states);
   }
 
-  @override
   void dispose() {
     _disposed = true;
-    super.dispose();
+    unawaited(_updates.close());
   }
 }

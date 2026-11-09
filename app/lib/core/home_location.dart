@@ -1,45 +1,48 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'location_service.dart';
 
-/// A point the rider saved on this device for their account, used for nearby clubs when the device will not
-/// share its position. It never goes to the server except inside a nearby-clubs request.
-class HomeLocation extends ChangeNotifier {
-  HomeLocation({HomeLocationStore? store}) : _store = store ?? _Preferences();
+part 'home_location.g.dart';
 
-  final HomeLocationStore _store;
+/// Where the saved point is kept. Tests override it with an in-memory store.
+final homeLocationStoreProvider = Provider<HomeLocationStore>(
+  (ref) => PreferencesHomeLocationStore(),
+);
 
-  GeoPoint? position;
+/// A point the rider saved on this device for their account, used for nearby
+/// clubs when the device will not share its position. It never goes to the
+/// server except inside a nearby-clubs request.
+@Riverpod(keepAlive: true)
+class HomeLocationViewModel extends _$HomeLocationViewModel {
   String? _account;
 
-  /// Reads the point saved for [account], so one person on a shared device never sees another's.
+  @override
+  GeoPoint? build() => null;
+
+  /// Reads the point saved for [account], so one person on a shared device never
+  /// sees another's.
   Future<void> load(String account) async {
     _account = account;
-    position = await _store.read(account);
-    notifyListeners();
+    final point = await ref.read(homeLocationStoreProvider).read(account);
+    if (!ref.mounted) return;
+    state = point;
   }
 
   Future<void> save(GeoPoint point) async {
     final account = _account;
     if (account == null) return;
-    position = point;
-    notifyListeners();
-    await _store.write(account, point);
+    state = point;
+    await ref.read(homeLocationStoreProvider).write(account, point);
   }
 
   Future<void> clear() async {
     final account = _account;
-    position = null;
-    notifyListeners();
-    if (account != null) await _store.clear(account);
-  }
-
-  /// The session is gone: forget the point in memory but leave it saved for the next sign-in.
-  void forget() {
-    _account = null;
-    position = null;
-    notifyListeners();
+    state = null;
+    if (account != null) {
+      await ref.read(homeLocationStoreProvider).clear(account);
+    }
   }
 }
 
@@ -49,7 +52,7 @@ abstract interface class HomeLocationStore {
   Future<void> clear(String account);
 }
 
-class _Preferences implements HomeLocationStore {
+class PreferencesHomeLocationStore implements HomeLocationStore {
   final _prefs = SharedPreferencesAsync();
 
   static String _latitudeKey(String account) => 'home_latitude_$account';

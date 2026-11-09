@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import 'detail/ride_detail_controller.dart';
+
+/// Saves the four dimensions of a ride and answers whether the server took them.
+typedef RideTypeSaver = Future<bool> Function({
+  String? discipline,
+  String? assist,
+  String? environment,
+  bool? commute,
+});
 
 /// Opens the sheet that sets the four independent ride dimensions. Every field is optional.
 Future<void> showRideTypeSheet(
   BuildContext context,
-  RideDetailController controller,
+  RideResponse ride,
+  RideTypeSaver save,
 ) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  builder: (_) => _RideTypeSheet(controller: controller),
+  builder: (_) => _RideTypeSheet(ride: ride, save: save),
 );
 
 class _RideTypeSheet extends StatefulWidget {
-  const _RideTypeSheet({required this.controller});
+  const _RideTypeSheet({required this.ride, required this.save});
 
-  final RideDetailController controller;
+  final RideResponse ride;
+  final RideTypeSaver save;
 
   @override
   State<_RideTypeSheet> createState() => _RideTypeSheetState();
@@ -25,10 +35,10 @@ class _RideTypeSheet extends StatefulWidget {
 class _RideTypeSheetState extends State<_RideTypeSheet> {
   // The dropdowns use an empty string for "not set", because a null value cannot be selected in a
   // DropdownButton; it is translated back to null when the sheet is saved.
-  late String _discipline = widget.controller.ride?.discipline ?? '';
-  late String _assist = widget.controller.ride?.assist ?? '';
-  late String _environment = widget.controller.ride?.environment ?? '';
-  late String _commute = switch (widget.controller.ride?.commute) {
+  late String _discipline = widget.ride.discipline ?? '';
+  late String _assist = widget.ride.assist ?? '';
+  late String _environment = widget.ride.environment ?? '';
+  late String _commute = switch (widget.ride.commute) {
     true => 'yes',
     false => 'no',
     null => '',
@@ -37,7 +47,7 @@ class _RideTypeSheetState extends State<_RideTypeSheet> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    final saved = await widget.controller.setType(
+    final saved = await widget.save(
       discipline: _discipline.isEmpty ? null : _discipline,
       assist: _assist.isEmpty ? null : _assist,
       environment: _environment.isEmpty ? null : _environment,

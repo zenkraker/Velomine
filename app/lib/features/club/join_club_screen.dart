@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
-import 'club_controller.dart';
+import 'club_view_model.dart';
 
 /// Where a signed-in account without a club lands. It joins with the code the owner shared.
-class JoinClubScreen extends StatefulWidget {
+class JoinClubScreen extends ConsumerStatefulWidget {
   const JoinClubScreen({
     super.key,
-    required this.controller,
     this.initialCode = '',
     this.onJoined,
     this.onSkip,
   });
 
-  final ClubController controller;
   final String initialCode;
 
   /// Called once the membership exists, so an invite code kept for this visit can be forgotten.
@@ -24,14 +23,13 @@ class JoinClubScreen extends StatefulWidget {
   final VoidCallback? onSkip;
 
   @override
-  State<JoinClubScreen> createState() => _JoinClubScreenState();
+  ConsumerState<JoinClubScreen> createState() => _JoinClubScreenState();
 }
 
-class _JoinClubScreenState extends State<JoinClubScreen> {
+class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
   late final _code = TextEditingController(
     text: widget.initialCode.toUpperCase(),
   );
-  Failure? _failure;
 
   @override
   void dispose() {
@@ -42,16 +40,15 @@ class _JoinClubScreenState extends State<JoinClubScreen> {
   Future<void> _join() async {
     final code = _code.text.trim();
     if (code.isEmpty) return;
-    setState(() => _failure = null);
-    final failure = await widget.controller.join(code);
-    if (failure == null) widget.onJoined?.call();
-    if (mounted) setState(() => _failure = failure);
+    final joined = await ref.read(clubViewModelProvider.notifier).join(code);
+    if (joined) widget.onJoined?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final failure = _failure;
+    final state = ref.watch(clubViewModelProvider);
+    final failure = state.action.failure;
     final message = failure == null
         ? null
         : switch (failure.kind) {
@@ -104,14 +101,14 @@ class _JoinClubScreenState extends State<JoinClubScreen> {
                 const SizedBox(height: 16),
                 FilledButton(
                   key: const Key('join-club'),
-                  onPressed: widget.controller.busy ? null : _join,
+                  onPressed: state.action.running ? null : _join,
                   child: Text(l10n.joinAction),
                 ),
                 if (widget.onSkip != null) ...[
                   const SizedBox(height: 8),
                   TextButton(
                     key: const Key('skip-join'),
-                    onPressed: widget.controller.busy ? null : widget.onSkip,
+                    onPressed: state.action.running ? null : widget.onSkip,
                     child: Text(l10n.joinSkip),
                   ),
                 ],

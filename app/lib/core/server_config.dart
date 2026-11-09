@@ -1,52 +1,51 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'server_url.dart';
 
-/// Where this phone's Velomine server is, kept on the device so it is asked for once.
-///
-/// The web app is served by the server itself, so it always uses its own origin and never shows a setup screen.
-class ServerConfig extends ChangeNotifier {
-  ServerConfig({ServerConfigStore? store, bool? web, this.webOrigin})
-    : _store = store ?? _Preferences(),
-      _web = web ?? kIsWeb;
+part 'server_config.g.dart';
 
-  final ServerConfigStore _store;
-  final bool _web;
+/// The chosen address, and the last one so the setup screen can prefill it.
+typedef ServerConfigState = ({String? baseUrl, String? previousUrl});
 
-  /// Tests use this instead of the browser's own origin.
-  final String? webOrigin;
+/// Where the address is kept. Tests override it with an in-memory store.
+final serverConfigStoreProvider = Provider<ServerConfigStore>(
+  (ref) => PreferencesServerConfigStore(),
+);
 
-  String? _baseUrl;
-  String? _previousUrl;
+/// Whether this build runs as the web app. Tests override it.
+final isWebProvider = Provider<bool>((ref) => kIsWeb);
 
-  /// The server address without a trailing slash, or null until one is chosen on a phone.
-  String? get baseUrl => _baseUrl;
+/// The origin the browser serves the web app from. Tests override it.
+final webOriginProvider = Provider<String?>((ref) => null);
 
-  /// The last address, kept only so the setup screen can prefill it after "Change server".
-  String? get previousUrl => _previousUrl;
-
-  /// What to put in the setup field before the member types anything.
-  String get suggestedUrl => configuredServerUrl().isNotEmpty
-      ? normalizeServerUrl(configuredServerUrl()) ?? ''
-      : (kDebugMode ? 'http://localhost:8080' : '');
-
-  Future<void> load() async {
-    if (_web) {
-      _baseUrl = webOrigin ?? Uri.base.origin;
-      return;
+/// Where this phone's Velomine server is, kept on the device so it is asked for
+/// once. The web app is served by the server itself, so it always uses its own
+/// origin and never shows a setup screen.
+@Riverpod(keepAlive: true)
+class ServerConfigViewModel extends _$ServerConfigViewModel {
+  @override
+  Future<ServerConfigState> build() async {
+    if (ref.watch(isWebProvider)) {
+      return (
+        baseUrl: ref.watch(webOriginProvider) ?? Uri.base.origin,
+        previousUrl: null,
+      );
     }
 
-    final saved = await _store.read();
+    final saved = await ref.watch(serverConfigStoreProvider).read();
     final normalized = saved == null ? null : normalizeServerUrl(saved);
     if (normalized != null) {
-      _baseUrl = normalized;
-      return;
+      return (baseUrl: normalized, previousUrl: null);
     }
 
     // A development build may point at one server without asking.
-    final configured = normalizeServerUrl(configuredServerUrl());
-    if (configured != null) _baseUrl = configured;
+    return (
+      baseUrl: normalizeServerUrl(configuredServerUrl()),
+      previousUrl: null,
+    );
   }
 
   Future<void> save(String url) async {
@@ -54,18 +53,20 @@ class ServerConfig extends ChangeNotifier {
     if (normalized == null) {
       throw ArgumentError.value(url, 'url', 'Not a server address.');
     }
-    _baseUrl = normalized;
-    notifyListeners();
-    await _store.write(normalized);
+    state = AsyncData((baseUrl: normalized, previousUrl: state.value?.baseUrl));
+    await ref.read(serverConfigStoreProvider).write(normalized);
   }
 
   Future<void> clear() async {
-    _previousUrl = _baseUrl;
-    _baseUrl = null;
-    notifyListeners();
-    await _store.write(null);
+    state = AsyncData((baseUrl: null, previousUrl: state.value?.baseUrl));
+    await ref.read(serverConfigStoreProvider).write(null);
   }
 }
+
+/// What to put in the setup field before the member types anything.
+String suggestedServerUrl() => configuredServerUrl().isNotEmpty
+    ? normalizeServerUrl(configuredServerUrl()) ?? ''
+    : (kDebugMode ? 'http://localhost:8080' : '');
 
 /// Where the address is kept. Tests pass one in memory.
 abstract interface class ServerConfigStore {
@@ -74,7 +75,7 @@ abstract interface class ServerConfigStore {
   Future<void> write(String? value);
 }
 
-class _Preferences implements ServerConfigStore {
+class PreferencesServerConfigStore implements ServerConfigStore {
   static const _key = 'serverUrl';
   final _prefs = SharedPreferencesAsync();
 

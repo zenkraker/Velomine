@@ -78,9 +78,11 @@ class NativeRecorder implements Recorder {
     return snapshot;
   }
 
-  @override
-  Stream<RecorderSnapshot> get events =>
-      _events.receiveBroadcastStream().map((event) {
+  /// One broadcast stream for every listener (the title bar and the Record screen). Creating a new
+  /// `receiveBroadcastStream` per call would open a second native subscription, and the Android side keeps one sink.
+  late final Stream<RecorderSnapshot> _eventStream = _events
+      .receiveBroadcastStream()
+      .map((event) {
         final map = Map<String, dynamic>.from(event as Map<dynamic, dynamic>);
         final snapshot = RecorderSnapshot.fromMap(map);
         recorderLog(
@@ -92,6 +94,9 @@ class NativeRecorder implements Recorder {
         );
         return snapshot;
       });
+
+  @override
+  Stream<RecorderSnapshot> get events => _eventStream;
 
   @override
   Future<bool> requestSensorPermissions() async {

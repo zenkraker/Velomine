@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../l10n/generated/app_localizations.dart';
 
 /// What went wrong with a request, kept as a kind so the screen can say it in the language that is showing now.
@@ -13,6 +15,33 @@ enum FailureKind {
 
   /// The mail server refused the message (502).
   mailRejected,
+
+  /// The session ended, or the credentials were refused (401).
+  sessionEnded,
+
+  /// The account may not do this (403).
+  forbidden,
+
+  /// Too many attempts (429).
+  throttled,
+
+  /// Sign-in refused the email or password (401 on login).
+  wrongPassword,
+
+  /// The account is waiting for approval (403 on login or single sign-on).
+  notApproved,
+
+  /// The account is locked out (423).
+  lockedOut,
+
+  /// Sign-up is closed on this server (403 on register).
+  signUpClosed,
+
+  /// The password does not meet the rules (400 on register).
+  weakPassword,
+
+  /// The email address already has an account (400 on register).
+  emailTaken,
 
   /// A confirmation did not match what the account holds.
   wrongConfirmation,
@@ -45,6 +74,9 @@ enum FailureAction {
   addPart,
   savePart,
   removePart,
+  loadTemplates,
+  saveTemplate,
+  applyTemplate,
   loadProgress,
   addGoal,
   changeGoal,
@@ -60,6 +92,8 @@ enum FailureAction {
   deleteAccount,
   sendTestEmail,
   saveSettings,
+  saveCatalogue,
+  resolveConflict,
   loadProfile,
   prepareData,
   saveProfile,
@@ -106,6 +140,52 @@ class Failure {
   final String? detail;
 }
 
+/// The kind a status code maps to when no more specific meaning is known.
+FailureKind failureKindFor(int code) => switch (code) {
+  400 => FailureKind.rejected,
+  401 => FailureKind.sessionEnded,
+  403 => FailureKind.forbidden,
+  404 => FailureKind.missing,
+  409 => FailureKind.conflict,
+  423 => FailureKind.lockedOut,
+  429 => FailureKind.throttled,
+  502 => FailureKind.mailRejected,
+  _ => FailureKind.failed,
+};
+
+/// The sentence the server sent for a validation or conflict error, if it sent one.
+///
+/// FastEndpoints answers with ProblemDetails: `{"errors":{"generalErrors":["..."]}}` or a `detail` string. The
+/// sentence is English today (bodies are not localized yet), but it is far more useful than "the server did not
+/// accept that": it names the missing account, the duplicate name, and so on.
+String? serverDetail(String? body) {
+  if (body == null || body.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(body);
+    if (decoded is! Map) return null;
+    final errors = decoded['errors'];
+    if (errors is Map) {
+      for (final value in errors.values) {
+        if (value is List && value.isNotEmpty && value.first is String) {
+          final text = (value.first as String).trim();
+          if (text.isNotEmpty) return text;
+        }
+      }
+    }
+    final detail = decoded['detail'];
+    if (detail is String && detail.trim().isNotEmpty) return detail.trim();
+    final title = decoded['title'];
+    if (title is String &&
+        title.trim().isNotEmpty &&
+        !title.toLowerCase().contains('validation')) {
+      return title.trim();
+    }
+  } on FormatException {
+    return null;
+  }
+  return null;
+}
+
 String _actionText(AppLocalizations l10n, FailureAction action) =>
     switch (action) {
       FailureAction.general => l10n.actionGeneral,
@@ -124,6 +204,9 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.addPart => l10n.actionAddPart,
       FailureAction.savePart => l10n.actionSavePart,
       FailureAction.removePart => l10n.actionRemovePart,
+      FailureAction.loadTemplates => l10n.actionLoadTemplates,
+      FailureAction.saveTemplate => l10n.actionSaveTemplate,
+      FailureAction.applyTemplate => l10n.actionApplyTemplate,
       FailureAction.loadProgress => l10n.actionLoadProgress,
       FailureAction.addGoal => l10n.actionAddGoal,
       FailureAction.changeGoal => l10n.actionChangeGoal,
@@ -139,6 +222,8 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.deleteAccount => l10n.actionDeleteAccount,
       FailureAction.sendTestEmail => l10n.actionSendTestEmail,
       FailureAction.saveSettings => l10n.actionSaveSettings,
+      FailureAction.saveCatalogue => l10n.actionSaveCatalogue,
+      FailureAction.resolveConflict => l10n.actionResolveConflict,
       FailureAction.loadProfile => l10n.actionLoadProfile,
       FailureAction.prepareData => l10n.actionPrepareData,
       FailureAction.saveProfile => l10n.actionSaveProfile,
@@ -176,6 +261,15 @@ String failureText(AppLocalizations l10n, Failure failure) =>
       FailureKind.conflict => failure.detail ?? l10n.failureConflict,
       FailureKind.missing => l10n.failureMissing,
       FailureKind.mailRejected => l10n.failureMail,
+      FailureKind.sessionEnded => l10n.failureSessionEnded,
+      FailureKind.forbidden => l10n.failureForbidden,
+      FailureKind.throttled => l10n.failureTooMany,
+      FailureKind.wrongPassword => l10n.authWrongPassword,
+      FailureKind.notApproved => l10n.authNotApproved,
+      FailureKind.lockedOut => l10n.authLockedOut,
+      FailureKind.signUpClosed => l10n.authSignUpClosed,
+      FailureKind.weakPassword => l10n.authWeakPassword,
+      FailureKind.emailTaken => l10n.authEmailTaken,
       FailureKind.wrongConfirmation => l10n.failureWrongConfirmation,
       FailureKind.lastAdmin => l10n.failureLastAdmin,
       FailureKind.unreachable => l10n.failureUnreachable,

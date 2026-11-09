@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
 import 'pkce.dart';
@@ -19,11 +18,41 @@ enum AuthProblem {
   unavailable,
 }
 
+/// The session fields a screen or the router reacts to.
+class SessionState {
+  const SessionState({
+    required this.status,
+    this.me,
+    this.sso,
+    this.serverInfo,
+    this.restoreProblem,
+    this.pendingJoinCode,
+    this.ssoError,
+  });
+
+  final SessionStatus status;
+  final MeResponse? me;
+  final SsoInfoResponse? sso;
+  final ServerInfoResponse? serverInfo;
+
+  /// Set when a saved session could not be brought back because the server was
+  /// unreachable.
+  final AuthProblem? restoreProblem;
+
+  final String? pendingJoinCode;
+  final String? ssoError;
+
+  bool get isAdmin => me?.roles.contains('admin') ?? false;
+}
+
 /// Who is signed in, and the calls that change that.
 ///
 /// The web app keeps its session in a cookie the server sets (the browser sends it by itself). The phone app keeps
 /// the refresh token in the platform's secure storage, so it can come back after a restart without the password.
-class Session extends ChangeNotifier {
+///
+/// The work is imperative and long-lived, so this is a plain repository object:
+/// it emits [states] and Riverpod exposes that stream as [sessionViewModelProvider].
+class Session {
   Session({
     required ApiClient client,
     required this.auth,
@@ -69,6 +98,20 @@ class Session extends ChangeNotifier {
   /// the phone is handed back through. The sign-in screen explains it.
   String? ssoError;
 
+  /// Clears that reason once the member tries to sign in again.
+  void clearSsoError() {
+    if (ssoError == null) return;
+    ssoError = null;
+    _notify();
+  }
+
+  /// Records why single sign-on came back without a session, so the sign-in
+  /// screen can explain it.
+  void reportSsoError(String reason) {
+    ssoError = reason;
+    _notify();
+  }
+
   /// The secret of the sign-in the phone started in the browser; the code that comes back is only good with it.
   String? _ssoVerifier;
 
@@ -84,17 +127,31 @@ class Session extends ChangeNotifier {
   AuthProblem? restoreProblem;
 
   bool _disposed = false;
+  final _states = StreamController<SessionState>.broadcast(sync: true);
+
+  /// Every change a screen, the router or a ViewModel reacts to.
+  Stream<SessionState> get states => _states.stream;
+
+  /// What [states] last emitted: the value a new listener starts from.
+  SessionState get snapshot => SessionState(
+    status: status,
+    me: me,
+    sso: sso,
+    serverInfo: serverInfo,
+    restoreProblem: restoreProblem,
+    pendingJoinCode: pendingJoinCode,
+    ssoError: ssoError,
+  );
 
   bool get isAdmin => me?.roles.contains('admin') ?? false;
 
   void _notify() {
-    if (!_disposed) notifyListeners();
+    if (!_disposed) _states.add(snapshot);
   }
 
-  @override
   void dispose() {
     _disposed = true;
-    super.dispose();
+    unawaited(_states.close());
   }
 
   /// Called once at start: find out whether a session is saved, and whether SSO is offered.

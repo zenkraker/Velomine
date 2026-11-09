@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/theme.dart';
 import 'package:velomine/core/theme_choice.dart';
@@ -40,7 +41,7 @@ void main() {
     await startApp(
       tester,
       server.session(useCookies: true),
-      themeChoice: ThemeChoice(store: store),
+      themeChoiceStore: store,
     );
     expect(current(tester).colorScheme.surface, cloudDancer);
 
@@ -55,15 +56,31 @@ void main() {
   });
 
   test(
-    'ThemeChoice_ShouldReadSavedChoiceAndFallBackToDevice_WhenLoaded',
+    'ThemeChoiceViewModel_ShouldReadSavedChoiceAndFallBackToDevice_WhenLoaded',
     () async {
-      final night = ThemeChoice(store: MemoryThemeStore('dark'));
-      await night.load();
-      expect(night.mode, ThemeMode.dark);
+      final night = ProviderContainer(
+        overrides: [
+          themeChoiceStoreProvider.overrideWithValue(MemoryThemeStore('dark')),
+        ],
+      );
+      addTearDown(night.dispose);
+      expect(
+        await night.read(themeChoiceViewModelProvider.future),
+        ThemeMode.dark,
+      );
 
-      final odd = ThemeChoice(store: MemoryThemeStore('purple'));
-      await odd.load();
-      expect(odd.mode, ThemeMode.system);
+      final odd = ProviderContainer(
+        overrides: [
+          themeChoiceStoreProvider.overrideWithValue(
+            MemoryThemeStore('purple'),
+          ),
+        ],
+      );
+      addTearDown(odd.dispose);
+      expect(
+        await odd.read(themeChoiceViewModelProvider.future),
+        ThemeMode.system,
+      );
     },
   );
 
@@ -86,8 +103,7 @@ void main() {
     await startApp(
       tester,
       server.session(useCookies: true),
-      themeChoice: ThemeChoice(store: MemoryThemeStore('dark')..value = 'dark')
-        ..mode = ThemeMode.dark,
+      themeChoiceStore: MemoryThemeStore('dark'),
     );
 
     await tester.tap(find.byKey(const Key('ride-ride-1')));

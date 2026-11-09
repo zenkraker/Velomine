@@ -257,7 +257,7 @@ app/
 ```
 
 - **Design system:** a day theme (Cloud Dancer, deep teal, iron oxide) and a night-ride theme (asphalt, Volt) for recording.
-- **State:** Flutter SDK primitives (`ChangeNotifier`). **Navigation:** `go_router`, with real URLs on the web.
+- **State:** Riverpod (`flutter_riverpod` + `riverpod_annotation` codegen) with MVVM: one ViewModel and one immutable state per route. Data sources return `Result<T>`; ViewModels expose `CommandState<T>` per operation and a list of `UserMessage`s. **Navigation:** `go_router`, with real URLs on the web.
 - **Languages:** English and Italian through Flutter's `gen-l10n` (`lib/l10n/app_en.arb`, `app_it.arb`). The language is an account setting in the profile, saved with `PUT /accounts/me/language`, so a choice on one device follows the member to every device. Before sign-in the app follows the device language; there is no per-device language picker. Number and date formats follow the language. Server-rendered email is still English.
 - **Web app:** built by the Dockerfile and served by the server itself from `wwwroot`, at the club's own host and the same address as the API. That makes the session cookie work without cross-origin setup, and single sign-on returns to the same site. Any path that is not an API path falls back to `index.html`.
 - **Presentation site:** plain HTML and CSS in `src/Velomine.Server/site/`, served before `wwwroot` so `/` is Home, with `/status/`, `/pricing/` and `/contact/`. It has no JavaScript and loads no external assets. English lives at the root; Italian will be added under `/it/` with the same pages and `hreflang`. The app keeps its own routes (`/sign-in`, `/rides`, …); the PWA `start_url` points to `/rides` because `/` is the presentation site. A club host may later show a club-branded entry at `/`, but the app routes stay the same.
@@ -267,6 +267,31 @@ app/
 - **Progress:** readiness for today, the daily wellbeing check-in (with consent first), the power curve with FTP and VO2max suggestions, then the training dashboard, totals and goals. Readiness combines form, the seven-day ramp and recent load; a check-in and the last ride's RPE adjust it when they exist.
 - **Map background:** always on. The server tells clients the tile address through `GET /api/v1/server`; the default is OpenStreetMap with its credit. A self-hoster may point `Velomine__Map__TileUrl` and `Velomine__Map__Attribution` at a private tile server; an empty or unusable address falls back to the default, so the map cannot be turned off. The location picker uses the same map.
 - **Platform split:** recording, Bluetooth and local storage are mobile only. The web app adds drag-and-drop upload and admin screens.
+
+### Session and state
+
+The app follows the Flutter team's MVVM architecture and the Android UI-layer rules for state and errors:
+
+- **One owner per piece of state.** A routed screen has one `<Screen>ViewModel` (a Riverpod `Notifier`) and one immutable `<Screen>State`. Session-scoped state (session, club, notifications, upload queue, progress, admin, bikes, rides) is `keepAlive`; route-scoped state (ride detail, bike detail, profile, coach screens) is a family provider with auto-dispose.
+- **Views are dumb.** A view reads state with `ref.watch`, renders it, and calls commands. It never calls the API and never builds a controller. Leaf widgets take plain values and callbacks.
+- **Commands, not booleans.** Every operation is a `CommandState<T>` with `running`, `completed`, `failed`, `failure` and `value`, as in the Compass sample. A load failure renders inline with a retry; a mutation failure is appended to `UserMessage`s and shown by the view, which calls `messageShown(id)` once it has been displayed. No event channels, no snackbars from a ViewModel, no localised strings in a ViewModel.
+- **Errors cross the data boundary as values.** Each feature has one data source (`features/<area>/<area>_data.dart`) that wraps the generated client and returns `Result<T>` (`Ok` / `Failed` carrying a `Failure`). The ViewModel never sees an `ApiException`. `Failure` holds a kind, an HTTP code, the action and an optional server detail; `failureText` turns it into a sentence in the current language.
+- **The session follows the official Flutter shape.** The session is a state machine (`loading`, `signedOut`, `signedIn`) owned by `Session`, a repository that emits a `Stream<SessionState>`; `SessionViewModel` mirrors that stream into Riverpod, so the router and every screen react through providers. The app calls `GoRouter.refresh()` from `ref.listen` when the session or club changes, so `redirect` runs again without a `ChangeNotifier` bridge. `redirect` is pure: it reads the state and returns a location; it never mutates the session.
+- **One root scope.** `main` owns the root `ProviderContainer`; the chosen server, theme and language are Notifier providers there, and the session is rebuilt when the server changes. No `ChangeNotifier` remains in the app. A `ValueNotifier` is used only for the ride-detail chart hover, where a `CustomPainter` repaints from a `Listenable`; it is view-local interaction state inside one route.
+- **Account scoping is structural.** Every ViewModel that holds member data watches the signed-in identity, so signing out or switching account rebuilds it empty. There is no reset list to forget.
+
+Session mechanics, unchanged by the port:
+
+- **Tokens.** The web app uses the HttpOnly cookie the server sets at the club's host. The phone app keeps the refresh token in Android Keystore (AES-GCM, ciphertext in `noBackupFilesDir`) or the iOS Keychain (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`). The access token lives in memory only. Refresh is single-flight; a refused refresh clears the token, an unreachable server keeps it and offers a retry.
+- **Single sign-on.** The phone opens the provider in the system browser with PKCE (`S256`, one-time verifier) and returns through the private-use scheme `com.velomine.app:`. The web app redirects to the provider and back to the same host, so the cookie applies. RFC 8252 and RFC 7636 govern both.
+- **401 handling.** One HTTP-client wrapper turns any 401 into "the session ended"; no controller handles 401 individually.
+
+Known gaps, tracked for the server:
+
+- Signing out on the phone clears local tokens but does not revoke the refresh token server-side (`POST /accounts/logout` ends the cookie session only). RFC 9700 §4.14 expects revocation or rotation with reuse detection; the refresh endpoint currently re-issues a pair without invalidating the presented token.
+- Android allows cleartext globally (`usesCleartextTraffic="true"`) so a self-hosted server on a LAN can use HTTP. The cloud host should get a network security config that forbids cleartext, leaving the exception only for self-hosting.
+
+References: [Flutter app architecture](https://docs.flutter.dev/app-architecture), [Android UI layer](https://developer.android.com/topic/architecture/ui-layer), [UI events](https://developer.android.com/topic/architecture/ui-layer/events), [data layer](https://developer.android.com/topic/architecture/data-layer), [RFC 8252](https://www.rfc-editor.org/rfc/rfc8252), [RFC 7636](https://www.rfc-editor.org/rfc/rfc7636), [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700).
 
 ### Mobile recorder
 

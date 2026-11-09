@@ -26,10 +26,23 @@ For code rules, this file wins. For architecture and product, the referenced doc
 - **Share pages and landing page:** plain HTML rendered by the server.
 - **Vertical slices.** Server code lives in `Features/<Area>/`, one file per use case (request, response, validation, endpoint, logic). Slices use `VelomineDbContext` directly: no repositories, service layers or mediators.
 - **Endpoints use FastEndpoints**, one endpoint class per slice.
+- **Server errors are HTTP.** Expected failures use status codes and ProblemDetails (`400`, `401`, `403`, `404`, `409`, `423`, `429`, `502`); exceptions are for bugs only. Never wrap an endpoint response in a custom `Result` envelope: HTTP is the result, and the generated client depends on it.
 - **One PostgreSQL schema per feature area.** A feature's tables live in its own schema; slices may read another area's tables when they need to.
 - **Background work runs in the server** as hosted services. PostgreSQL is storage only: no job queues, events or outbox in the database.
 - **Migrate forward.** Migrations are additive and backward-compatible for one release: expand, backfill, contract. Never drop a column in the release that stops using it.
 - **Don't reinvent the wheel on .NET.** Use what .NET, ASP.NET Core, EF Core and official Microsoft libraries provide; write it yourself only when nothing official fits.
+
+## State and events
+
+- **One source of truth for live state.** When a service, platform channel or background task already emits changes, subscribe to its stream. Never poll a second copy from a widget, screen or controller.
+- **One subscription per source.** Expose one broadcast stream or one provider from the owner of the state and let every screen listen to it. Do not open a second platform subscription for the same data.
+- **Timers are for what cannot push.** Polling is acceptable only for a remote source with no event stream, such as server notifications. Local live state comes from events.
+- **Use Riverpod for state in the Flutter app.** `flutter_riverpod` with `riverpod_annotation` and `riverpod_generator` is the only way state is shared between widgets, screens or features. `ChangeNotifier`, `ValueNotifier` and `ListenableBuilder` are allowed only for view-local state that never leaves one widget subtree: text fields, focus, animation, scroll and map gestures. Never add a second state-management library.
+- **Every routed screen follows MVVM.** One `<Screen>ViewModel` and one immutable `<Screen>State` per route. The view renders state and sends commands; it contains no business logic and never calls the API or a data source. The ViewModel owns command state and messages, and is testable without `BuildContext`.
+- **Commands model the operation, not a boolean.** Each operation is a `CommandState<T>` with `running`, `completed`, `failed`, `failure` and `value`, like the `Command` objects in Flutter's architecture sample. Loads render their failure inline; mutations append a `UserMessage`.
+- **Errors are values.** Data sources return `Result<T>` (`Ok` / `Failed` carrying a `Failure`); no `ApiException` or `RecorderException` crosses into a ViewModel. The view renders a failure in the current language with `failureText`, and clears a shown message with `messageShown(id)`. No event channels, no localised strings in a ViewModel, no snackbars raised from a ViewModel.
+- **State follows the session.** A ViewModel that holds member data watches the signed-in identity, so signing out or switching account rebuilds it empty. There is no hand-written reset list.
+- **Providers own their lifetime.** `keepAlive` for session-scoped providers, auto-dispose for route-scoped and family providers. Timers and native subscriptions are released in `ref.onDispose`.
 
 ## API contract
 

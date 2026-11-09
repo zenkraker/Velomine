@@ -3,15 +3,16 @@ import 'dart:math' as math;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
 import 'package:velomine/core/home_location.dart';
 import 'package:velomine/core/hooks.dart';
-import 'package:velomine/core/language_choice.dart';
 import 'package:velomine/core/location_service.dart';
 import 'package:velomine/core/pkce.dart';
+import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/session_auth.dart';
 import 'package:velomine/core/solo_hint.dart';
@@ -53,6 +54,12 @@ class FakeServer {
       <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
   /// What the "find a known part" field offers, as the server would return it.
   final partCatalogue = <Map<String, Object?>>[];
+
+  /// Build templates, as the server would return them.
+  final templates = <Map<String, Object?>>[];
+
+  /// The shared catalogue as the admin page sees it.
+  bool catalogueConfigured = true;
   final streams =
       <String, Map<String, Object?>>{}; // a ride's samples, by ride id
   final rideLaps =
@@ -1306,6 +1313,15 @@ extension on FakeServer {
         'version': '0.1.0',
       });
     }
+    if (path == '/api/v1/admin/catalogue') {
+      return json({
+        'contributionEndpointConfigured': catalogueConfigured,
+        'contributionKeyConfigured': catalogueConfigured,
+        'syncedAt': '2026-11-09T08:00:00Z',
+        'contributions': {'pending': 0, 'sent': 0, 'rejected': 0, 'failed': 0},
+        'problems': [],
+      });
+    }
     if (path == '/api/v1/admin/settings') {
       if (request.method == 'PUT') {
         adminSettings.addAll(jsonDecode(request.body) as Map<String, Object?>);
@@ -1396,6 +1412,7 @@ extension on FakeServer {
       'mpn': null,
       'gtin': null,
       'partId': null,
+      'isCustom': false,
       'removedOn': null,
       'expectedDistanceM': null,
       'expectedHours': null,
@@ -1414,6 +1431,121 @@ extension on FakeServer {
           partJson(p),
       ],
     };
+
+    String typeName(Object? type) => switch (type) {
+      'chain' => 'Chain',
+      'cassette' => 'Cassette',
+      'tubeless_sealant' => 'Tubeless sealant',
+      _ => 'Other part',
+    };
+    Map<String, Object?> templatePartJson(Map<String, Object?> p) => {
+      'id': p['id'],
+      'type': p['type'],
+      'typeName': typeName(p['type']),
+      'brand': p['brand'],
+      'model': p['model'],
+      'mpn': p['mpn'],
+      'gtin': p['gtin'],
+      'isCustom': p['isCustom'] ?? false,
+      'expectedDistanceM': p['expectedDistanceM'],
+      'expectedHours': p['expectedHours'],
+      'expectedMonths': p['expectedMonths'],
+    };
+    Map<String, Object?> templateJson(Map<String, Object?> t) => {
+      'id': t['id'],
+      'name': t['name'],
+      'createdAt': t['createdAt'] ?? '2026-11-09T08:00:00Z',
+      'parts': [
+        for (final p in (t['parts'] as List? ?? const []))
+          templatePartJson((p as Map).cast<String, Object?>()),
+      ],
+    };
+    Map<String, Object?> addTemplate(Object? name, List<Object?> parts) {
+      final id = 'template-${templates.length + 1}';
+      final template = <String, Object?>{
+        'id': id,
+        'name': name,
+        'createdAt': '2026-11-09T08:00:00Z',
+        'parts': [
+          for (var i = 0; i < parts.length; i++)
+            {
+              ...(parts[i] as Map).cast<String, Object?>(),
+              'id': 'tplpart-$id-$i',
+            },
+        ],
+      };
+      templates.add(template);
+      return template;
+    }
+
+    if (path == '/api/v1/bikes/templates') {
+      if (request.method == 'GET') {
+        return json({
+          'templates': [for (final t in templates) templateJson(t)],
+        });
+      }
+      final created = addTemplate(
+        body['name'],
+        (body['parts'] as List? ?? const []).cast<Object?>(),
+      );
+      return json(templateJson(created), 201);
+    }
+
+    final snapshot = RegExp(r'^/api/v1/bikes/([^/]+)/templates$')
+        .firstMatch(path);
+    if (snapshot != null && request.method == 'POST') {
+      final fitted = (parts[snapshot.group(1)!] ?? const [])
+          .where((p) => p['removedOn'] == null)
+          .toList();
+      if (fitted.isEmpty) {
+        return http.Response(
+          '{"detail":"Add at least one part to the bike before saving it as a template."}',
+          400,
+        );
+      }
+      final created = addTemplate(body['name'], fitted);
+      return json(templateJson(created), 201);
+    }
+
+    final apply = RegExp(r'^/api/v1/bikes/([^/]+)/templates/([^/]+)$')
+        .firstMatch(path);
+    if (apply != null && request.method == 'POST') {
+      final bikeId = apply.group(1)!;
+      final found = templates
+          .where((t) => t['id'] == apply.group(2))
+          .firstOrNull;
+      if (found == null) return http.Response('', 404);
+      final list = parts.putIfAbsent(bikeId, () => []);
+      final fittedTypes = list
+          .where((p) => p['removedOn'] == null)
+          .map((p) => p['type'])
+          .toSet();
+      for (final one in (found['parts'] as List).cast<Map>()) {
+        if (!fittedTypes.add(one['type'])) continue;
+        list.add({
+          'id': 'part-${list.length + 1}',
+          'typeName': typeName(one['type']),
+          'brand': null,
+          'model': null,
+          'mpn': null,
+          'gtin': null,
+          'partId': null,
+          'isCustom': false,
+          'removedOn': null,
+          'expectedDistanceM': null,
+          'expectedHours': null,
+          'expectedMonths': null,
+          'usedDistanceM': 0.0,
+          'usedHours': 0.0,
+          'usedMonths': 0.0,
+          'wearPercent': null,
+          'status': 'ok',
+          ...one.cast<String, Object?>(),
+          'installedOn': body['installedOn'],
+        });
+      }
+      return json(detail(bikeId));
+    }
 
     if (path == '/api/v1/bikes/parts') {
       final q = (request.url.queryParameters['q'] ?? '').toLowerCase();
@@ -1479,6 +1611,7 @@ extension on FakeServer {
           'mpn': null,
           'gtin': null,
           'partId': null,
+          'isCustom': body['custom'] ?? false,
           'removedOn': null,
           'expectedDistanceM': null,
           'expectedHours': null,
@@ -1665,37 +1798,49 @@ Future<void> startApp(
   Session session, {
   FilePicker? pickFile,
   SsoStarter? startSso,
-  ThemeChoice? themeChoice,
-  LanguageChoice? languageChoice,
+  ThemeChoiceStore? themeChoiceStore,
   LinkOpener? openLink,
   Future<void> Function()? onChangeServer,
   LocationService? locationService,
-  HomeLocation? homeLocation,
-  SoloHint? soloHint,
+  HomeLocationStore? homeLocationStore,
+  SoloHintStore? soloHintStore,
 }) async {
   await tester.runAsync(session.restore);
-  final language = languageChoice ?? LanguageChoice();
-  final home = homeLocation ?? HomeLocation(store: MemoryHomeLocationStore());
-  await home.load(session.me?.id ?? 'test');
-  final solo = soloHint ?? SoloHint(store: MemorySoloHintStore());
-  await solo.load();
   await tester.pumpWidget(
-    VelomineApp(
-      session: session,
-      themeChoice: themeChoice ?? ThemeChoice(store: MemoryThemeStore()),
-      languageChoice: language,
-      pickFile: pickFile ?? () async => null,
-      startSso: startSso ?? () async {},
-      openLink: openLink ?? (_) async {},
-      onChangeServer: onChangeServer,
-      locationService: locationService ?? FakeLocationService(),
-      homeLocation: home,
-      soloHint: solo,
-      uploadPollInterval: const Duration(milliseconds: 10),
+    ProviderScope(
+      overrides: [
+        sessionProvider.overrideWith((ref) => session),
+        locationServiceProvider.overrideWithValue(
+          locationService ?? FakeLocationService(),
+        ),
+        homeLocationStoreProvider.overrideWithValue(
+          homeLocationStore ?? MemoryHomeLocationStore(),
+        ),
+        soloHintStoreProvider.overrideWithValue(
+          soloHintStore ?? MemorySoloHintStore(),
+        ),
+        filePickerProvider.overrideWithValue(pickFile ?? () async => null),
+        ridePollIntervalProvider.overrideWithValue(
+          const Duration(milliseconds: 10),
+        ),
+        themeChoiceStoreProvider.overrideWithValue(
+          themeChoiceStore ?? MemoryThemeStore(),
+        ),
+        ssoStarterProvider.overrideWithValue(startSso ?? () async {}),
+        linkOpenerProvider.overrideWithValue(openLink ?? (_) async {}),
+        changeServerProvider.overrideWithValue(onChangeServer),
+      ],
+      child: const VelomineApp(),
     ),
   );
   await tester.pumpAndSettle();
 }
+
+/// The container behind the app a test started, for reading providers.
+ProviderContainer containerOf(WidgetTester tester) => ProviderScope.containerOf(
+  tester.element(find.byType(VelomineApp)),
+  listen: false,
+);
 
 class FakeLocationService implements LocationService {
   FakeLocationService([this.position]);

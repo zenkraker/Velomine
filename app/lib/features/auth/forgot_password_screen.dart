@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import '../../core/session.dart';
+import '../../l10n/generated/app_localizations.dart';
+import 'auth_state.dart';
+import 'auth_view_models.dart';
+
+String forgotProblemText(AppLocalizations l10n, ForgotProblem problem) =>
+    switch (problem) {
+      ForgotProblem.missingEmail => l10n.errorEnterEmail,
+      ForgotProblem.emailNotSetUp => l10n.forgotPasswordUnavailable,
+      ForgotProblem.tooMany => l10n.forgotPasswordTooMany,
+      ForgotProblem.failed => l10n.forgotPasswordFailed,
+    };
 
 /// Asks for the email address and always says the same thing: the answer must not reveal who is registered.
-class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key, required this.session});
-
-  final Session session;
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _email = TextEditingController();
-  bool _busy = false;
-  bool _sent = false;
-  String? _error;
 
   @override
   void dispose() {
@@ -27,44 +33,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _send() async {
-    final l10n = context.l10n;
-    final email = _email.text.trim();
-    if (email.isEmpty) {
-      setState(() => _error = l10n.errorEnterEmail);
-      return;
-    }
-
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-
-    String? error;
-    try {
-      await widget.session.accounts.forgotPassword(
-        ForgotPasswordRequest(email: email),
-      );
-    } on ApiException catch (e) {
-      error = switch (e.code) {
-        503 => l10n.forgotPasswordUnavailable,
-        429 => l10n.forgotPasswordTooMany,
-        _ => l10n.forgotPasswordFailed,
-      };
-    } on Object {
-      error = l10n.forgotPasswordFailed;
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _error = error;
-      _sent = error == null;
-    });
-  }
+  Future<void> _send() => ref
+      .read(forgotPasswordViewModelProvider.notifier)
+      .send(_email.text.trim());
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(forgotPasswordViewModelProvider);
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
@@ -88,7 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 decoration: InputDecoration(labelText: l10n.email),
                 onSubmitted: (_) => _send(),
               ),
-              if (_sent) ...[
+              if (s.sent) ...[
                 const SizedBox(height: 16),
                 Text(l10n.forgotPasswordSent, key: const Key('forgot-sent')),
                 const SizedBox(height: 12),
@@ -98,10 +73,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Text(l10n.goToSignIn),
                 ),
               ] else ...[
-                if (_error != null) ...[
+                if (s.problem != null) ...[
                   const SizedBox(height: 12),
                   Text(
-                    _error!,
+                    forgotProblemText(l10n, s.problem!),
                     key: const Key('forgot-error'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
@@ -111,7 +86,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 16),
                 FilledButton(
                   key: const Key('forgot-submit'),
-                  onPressed: _busy ? null : _send,
+                  onPressed: s.command.running ? null : _send,
                   child: Text(l10n.sendResetLink),
                 ),
               ],

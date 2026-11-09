@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/providers.dart';
+import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
-import 'admin_controller.dart';
+import 'admin_view_models.dart';
 
 String _roleName(AppLocalizations l10n, String role) => switch (role) {
   'member' => l10n.roleMember,
@@ -16,20 +19,30 @@ String _roleName(AppLocalizations l10n, String role) => switch (role) {
 };
 
 /// Every account, with what an admin can do to it.
-class AccountsTab extends StatelessWidget {
-  const AccountsTab({super.key, required this.controller});
+class AccountsTab extends ConsumerWidget {
+  const AccountsTab({super.key});
 
-  final AdminController controller;
-
-  Future<void> _roles(BuildContext context, AdminUserSummary user) async {
+  Future<void> _roles(
+    BuildContext context,
+    WidgetRef ref,
+    AdminUserSummary user,
+  ) async {
     final chosen = await showDialog<List<String>>(
       context: context,
       builder: (_) => _RolesDialog(user: user),
     );
-    if (chosen != null) await controller.setRoles(user, chosen);
+    if (chosen != null) {
+      await ref
+          .read(adminAccountsViewModelProvider.notifier)
+          .setRoles(user, chosen);
+    }
   }
 
-  Future<void> _delete(BuildContext context, AdminUserSummary user) async {
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    AdminUserSummary user,
+  ) async {
     final l10n = context.l10n;
     final sure = await showDialog<bool>(
       context: context,
@@ -53,11 +66,19 @@ class AccountsTab extends StatelessWidget {
         ],
       ),
     );
-    if (sure ?? false) await controller.delete(user);
+    if ((sure ?? false) && context.mounted) {
+      await ref.read(adminAccountsViewModelProvider.notifier).delete(user);
+    }
   }
 
-  Future<void> _resetLink(BuildContext context, AdminUserSummary user) async {
-    final link = await controller.createPasswordResetLink(user);
+  Future<void> _resetLink(
+    BuildContext context,
+    WidgetRef ref,
+    AdminUserSummary user,
+  ) async {
+    final link = await ref
+        .read(adminAccountsViewModelProvider.notifier)
+        .createResetLink(user);
     if (link == null || !context.mounted) return;
     await showDialog<void>(
       context: context,
@@ -66,17 +87,33 @@ class AccountsTab extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final c = controller;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(adminAccountsViewModelProvider);
+    final myId = ref.watch(signedInUserIdProvider);
     final l10n = context.l10n;
-    final waiting = c.users.where((u) => !u.isApproved).toList();
-    final rest = c.users.where((u) => u.isApproved).toList();
+
+    ref.listen(
+      adminAccountsViewModelProvider.select((state) => state.messages),
+      (_, messages) {
+        for (final message in messages) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(userMessageText(l10n, message))),
+          );
+          ref
+              .read(adminAccountsViewModelProvider.notifier)
+              .messageShown(message.id);
+        }
+      },
+    );
+
+    final waiting = s.users.where((u) => !u.isApproved).toList();
+    final rest = s.users.where((u) => u.isApproved).toList();
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (c.error != null)
+        if (s.load.failure case final failure?)
           Text(
-            failureText(l10n, c.error!),
+            failureText(l10n, failure),
             key: const Key('admin-error'),
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
@@ -84,25 +121,30 @@ class AccountsTab extends StatelessWidget {
           l10n.waitingForApproval,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        if (waiting.isEmpty && !c.loading)
+        if (waiting.isEmpty && !s.load.running)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(l10n.nonePending, key: const Key('none-pending')),
           ),
-        for (final user in waiting) _tile(context, user),
+        for (final user in waiting) _tile(context, ref, user, myId),
         const SizedBox(height: 16),
         Text(
           l10n.adminAccounts,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        for (final user in rest) _tile(context, user),
+        for (final user in rest) _tile(context, ref, user, myId),
       ],
     );
   }
 
-  Widget _tile(BuildContext context, AdminUserSummary user) {
+  Widget _tile(
+    BuildContext context,
+    WidgetRef ref,
+    AdminUserSummary user,
+    String? myId,
+  ) {
     final l10n = context.l10n;
-    final mine = user.id == controller.myId();
+    final mine = user.id == myId;
     return Card(
       key: Key('user-${user.id}'),
       child: ListTile(
@@ -121,7 +163,9 @@ class AccountsTab extends StatelessWidget {
         trailing: !user.isApproved
             ? FilledButton(
                 key: Key('approve-${user.id}'),
-                onPressed: () => controller.approve(user),
+                onPressed: () => ref
+                    .read(adminAccountsViewModelProvider.notifier)
+                    .approve(user),
                 child: Text(l10n.approve),
               )
             : mine
@@ -130,11 +174,17 @@ class AccountsTab extends StatelessWidget {
                 key: Key('user-menu-${user.id}'),
                 tooltip: l10n.actionsFor(user.displayName),
                 onSelected: (action) => switch (action) {
-                  'roles' => _roles(context, user),
-                  'lock' => controller.lock(user),
-                  'unlock' => controller.unlock(user),
-                  'reset-password' => _resetLink(context, user),
-                  _ => _delete(context, user),
+                  'roles' => _roles(context, ref, user),
+                  'lock' =>
+                    ref
+                        .read(adminAccountsViewModelProvider.notifier)
+                        .lock(user),
+                  'unlock' =>
+                    ref
+                        .read(adminAccountsViewModelProvider.notifier)
+                        .unlock(user),
+                  'reset-password' => _resetLink(context, ref, user),
+                  _ => _delete(context, ref, user),
                 },
                 itemBuilder: (_) => [
                   PopupMenuItem(

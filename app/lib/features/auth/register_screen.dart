@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
-import '../../core/session.dart';
+import 'auth_view_models.dart';
 import 'sign_in_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key, required this.session});
-
-  final Session session;
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _email = TextEditingController();
   final _name = TextEditingController();
   final _password = TextEditingController();
-  AuthProblem? _problem;
-  bool? _approved; // null until the account is created
-  bool _busy = false;
 
   @override
   void dispose() {
@@ -30,30 +26,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _register() async {
-    setState(() {
-      _busy = true;
-      _problem = null;
-    });
-    final result = await widget.session.signUp(
-      _email.text.trim(),
-      _name.text.trim(),
-      _password.text,
-    );
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      if (result.problem != null) {
-        _problem = result.problem;
-      } else {
-        _approved = result.approved;
-      }
-    });
-  }
+  Future<void> _register() => ref
+      .read(registerViewModelProvider.notifier)
+      .register(_email.text.trim(), _name.text.trim(), _password.text);
 
   @override
   Widget build(BuildContext context) {
-    final created = _approved != null;
+    final s = ref.watch(registerViewModelProvider);
+    final created = s.approved != null;
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.createAccount)),
@@ -66,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: created
                 ? [
                     Text(
-                      _approved!
+                      s.approved!
                           ? l10n.registeredReady
                           : l10n.registeredPending,
                       key: const Key('registered'),
@@ -102,10 +82,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
                       ),
                     ),
-                    if (_problem != null) ...[
+                    if (s.problem != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        authProblemText(l10n, _problem!),
+                        authProblemText(l10n, s.problem!),
                         key: const Key('register-error'),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
@@ -115,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 16),
                     FilledButton(
                       key: const Key('register'),
-                      onPressed: _busy ? null : _register,
+                      onPressed: s.command.running ? null : _register,
                       child: Text(l10n.createAccountAction),
                     ),
                     TextButton(

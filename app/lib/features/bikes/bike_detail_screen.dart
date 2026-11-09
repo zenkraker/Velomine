@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:velomine_api/api.dart';
 
@@ -6,43 +7,69 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
+import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'bike_forms.dart';
-import 'bikes_controller.dart';
+import 'bikes_state.dart';
+import 'bikes_view_models.dart';
 import 'component_names.dart';
 
-class BikeDetailScreen extends StatefulWidget {
+DateTime _today() {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
+}
+
+class BikeDetailScreen extends ConsumerWidget {
   const BikeDetailScreen({
     super.key,
-    required this.controller,
+    required this.id,
     required this.onBack,
     required this.onDeleted,
   });
 
-  final BikeDetailController controller;
+  final String id;
   final VoidCallback onBack;
   final VoidCallback onDeleted;
 
-  @override
-  State<BikeDetailScreen> createState() => _BikeDetailScreenState();
-}
-
-class _BikeDetailScreenState extends State<BikeDetailScreen> {
-  BikeDetailController get c => widget.controller;
-
-  @override
-  void initState() {
-    super.initState();
-    c.load();
-  }
-
-  Future<void> _edit() async {
-    final bike = c.detail!.bike;
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final bike = ref.read(bikeDetailViewModelProvider(id)).detail!.bike;
     final data = await showBikeForm(context, bike: bike);
-    if (data != null) await c.save(data.toUpdate(isActive: bike.isActive));
+    if (data != null) {
+      await ref
+          .read(bikeDetailViewModelProvider(id).notifier)
+          .save(data.toUpdate(isActive: bike.isActive));
+    }
   }
 
-  Future<void> _confirmDelete() async {
+  Future<void> _saveTemplate(BuildContext context, WidgetRef ref) async {
+    final name = await showTemplateNameDialog(context);
+    if (name == null) return;
+    final saved = await ref
+        .read(bikeDetailViewModelProvider(id).notifier)
+        .saveTemplateFromBike(name);
+    if (saved && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.saved)));
+    }
+  }
+
+  Future<void> _applyTemplate(BuildContext context, WidgetRef ref) async {
+    final templates = ref.read(bikeDetailViewModelProvider(id)).templates;
+    final template = await showApplyTemplateDialog(
+      context,
+      templates: templates,
+    );
+    if (template == null) return;
+    final applied = await ref
+        .read(bikeDetailViewModelProvider(id).notifier)
+        .applyTemplate(template.id);
+    if (applied && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.templateApplied)));
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
@@ -62,42 +89,72 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         ],
       ),
     );
-    if (ok == true && await c.delete()) widget.onDeleted();
+    if (ok == true &&
+        await ref.read(bikeDetailViewModelProvider(id).notifier).delete()) {
+      onDeleted();
+    }
   }
 
-  Future<void> _addPart() async {
+  Future<void> _addPart(BuildContext context, WidgetRef ref) async {
+    final s = ref.read(bikeDetailViewModelProvider(id));
     final data = await showPartForm(
       context,
-      types: c.types,
-      today: c.today,
-      search: c.searchParts,
+      types: s.types,
+      today: _today(),
+      search: ref.read(bikeDetailViewModelProvider(id).notifier).searchParts,
     );
-    if (data != null) await c.addPart(data.toCreate());
+    if (data != null) {
+      await ref
+          .read(bikeDetailViewModelProvider(id).notifier)
+          .addPart(data.toCreate());
+    }
   }
 
-  Future<void> _editPart(ComponentResponse part) async {
+  Future<void> _editPart(
+    BuildContext context,
+    WidgetRef ref,
+    ComponentResponse part,
+  ) async {
+    final s = ref.read(bikeDetailViewModelProvider(id));
     final data = await showPartForm(
       context,
-      types: c.types,
-      today: c.today,
-      search: c.searchParts,
+      types: s.types,
+      today: _today(),
+      search: ref.read(bikeDetailViewModelProvider(id).notifier).searchParts,
       part: part,
     );
-    if (data != null) await c.editPart(part.id, data.toUpdate());
+    if (data != null) {
+      await ref
+          .read(bikeDetailViewModelProvider(id).notifier)
+          .editPart(part.id, data.toUpdate());
+    }
   }
 
-  Future<void> _replacePart(ComponentResponse part) async {
+  Future<void> _replacePart(
+    BuildContext context,
+    WidgetRef ref,
+    ComponentResponse part,
+  ) async {
+    final s = ref.read(bikeDetailViewModelProvider(id));
     final data = await showPartForm(
       context,
-      types: c.types,
-      today: c.today,
-      search: c.searchParts,
+      types: s.types,
+      today: _today(),
+      search: ref.read(bikeDetailViewModelProvider(id).notifier).searchParts,
       replacing: part,
     );
-    if (data != null) await c.replacePart(part, data.toCreate());
+    if (data != null) {
+      await ref
+          .read(bikeDetailViewModelProvider(id).notifier)
+          .replacePart(part, data.toCreate());
+    }
   }
 
-  Future<void> _removePart(ComponentResponse part) async {
+  Future<void> _removePart(
+    BuildContext context,
+    WidgetRef ref,
+    ComponentResponse part,
+  ) async {
     final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
@@ -121,13 +178,33 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         ],
       ),
     );
-    if (ok == true) await c.removePart(part.id);
+    if (ok == true) {
+      await ref
+          .read(bikeDetailViewModelProvider(id).notifier)
+          .removePart(part.id);
+    }
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: c,
-    builder: (context, _) => ListView(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(bikeDetailViewModelProvider(id));
+    final l10n = context.l10n;
+
+    ref.listen(bikeDetailViewModelProvider(id).select((s) => s.messages), (
+      _,
+      messages,
+    ) {
+      for (final message in messages) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
+        ref
+            .read(bikeDetailViewModelProvider(id).notifier)
+            .messageShown(message.id);
+      }
+    });
+
+    return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Center(
@@ -141,25 +218,25 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
                     key: const Key('back'),
-                    onPressed: widget.onBack,
+                    onPressed: onBack,
                     icon: const Icon(Icons.arrow_back),
-                    label: Text(context.l10n.navBikes),
+                    label: Text(l10n.navBikes),
                   ),
                 ),
-                ..._body(context),
+                ..._body(context, ref, s),
               ],
             ),
           ),
         ),
       ],
-    ),
-  );
+    );
+  }
 
-  List<Widget> _body(BuildContext context) {
+  List<Widget> _body(BuildContext context, WidgetRef ref, BikeDetailState s) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final errorStyle = TextStyle(color: Theme.of(context).colorScheme.error);
-    if (c.notFound) {
+    if (s.notFound) {
       return [
         Text(
           l10n.bikeNotFound,
@@ -168,13 +245,13 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         ),
       ];
     }
-    final detail = c.detail;
+    final detail = s.detail;
     if (detail == null) {
       return [
-        if (c.loading) const Center(child: CircularProgressIndicator()),
-        if (c.error != null)
+        if (s.load.running) const Center(child: CircularProgressIndicator()),
+        if (s.load.failure case final failure?)
           Text(
-            failureText(context.l10n, c.error!),
+            failureText(l10n, failure),
             key: const Key('bike-error'),
             style: errorStyle,
           ),
@@ -193,6 +270,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
     final retired = detail.components
         .where((p) => p.removedOn != null)
         .toList();
+    final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
     return [
       Row(
         spacing: 8,
@@ -225,20 +303,32 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
         children: [
           OutlinedButton.icon(
             key: const Key('edit-bike'),
-            onPressed: _edit,
+            onPressed: () => _edit(context, ref),
             icon: const Icon(Icons.edit),
             label: Text(l10n.edit),
+          ),
+          OutlinedButton.icon(
+            key: const Key('save-template'),
+            onPressed: () => _saveTemplate(context, ref),
+            icon: const Icon(Icons.bookmark_add_outlined),
+            label: Text(l10n.saveAsTemplate),
+          ),
+          OutlinedButton.icon(
+            key: const Key('apply-template'),
+            onPressed: () => _applyTemplate(context, ref),
+            icon: const Icon(Icons.playlist_add_check),
+            label: Text(l10n.applyTemplate),
           ),
           if (!bike.isDefault && bike.isActive)
             OutlinedButton.icon(
               key: const Key('make-default'),
-              onPressed: c.makeDefault,
+              onPressed: notifier.makeDefault,
               icon: const Icon(Icons.star_outline),
               label: Text(l10n.makeDefault),
             ),
           OutlinedButton.icon(
             key: const Key('toggle-archive'),
-            onPressed: () => c.setActive(!bike.isActive),
+            onPressed: () => notifier.setActive(!bike.isActive),
             icon: Icon(
               bike.isActive ? Icons.archive_outlined : Icons.unarchive_outlined,
             ),
@@ -246,7 +336,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
           ),
           TextButton.icon(
             key: const Key('delete-bike'),
-            onPressed: _confirmDelete,
+            onPressed: () => _confirmDelete(context, ref),
             icon: const Icon(Icons.delete_outline),
             label: Text(l10n.delete),
             style: TextButton.styleFrom(
@@ -255,9 +345,9 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
           ),
         ],
       ),
-      if (c.error != null)
+      if (s.load.failure case final failure?)
         Text(
-          failureText(context.l10n, c.error!),
+          failureText(l10n, failure),
           key: const Key('bike-error'),
           style: errorStyle,
         ),
@@ -267,7 +357,7 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
           const Spacer(),
           FilledButton.icon(
             key: const Key('add-part'),
-            onPressed: _addPart,
+            onPressed: () => _addPart(context, ref),
             icon: const Icon(Icons.add),
             label: Text(l10n.addPartAction),
           ),
@@ -277,17 +367,17 @@ class _BikeDetailScreenState extends State<BikeDetailScreen> {
       for (final part in current)
         _PartCard(
           part: part,
-          onEdit: () => _editPart(part),
-          onReplace: () => _replacePart(part),
-          onRemove: () => _removePart(part),
+          onEdit: () => _editPart(context, ref, part),
+          onReplace: () => _replacePart(context, ref, part),
+          onRemove: () => _removePart(context, ref, part),
         ),
       if (retired.isNotEmpty) ...[
         Text(l10n.replacedParts, style: text.titleMedium),
         for (final part in retired)
           _PartCard(
             part: part,
-            onEdit: () => _editPart(part),
-            onRemove: () => _removePart(part),
+            onEdit: () => _editPart(context, ref, part),
+            onRemove: () => _removePart(context, ref, part),
           ),
       ],
     ];
@@ -389,6 +479,7 @@ class _PartCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
             if (part.wearPercent != null)
               Semantics(
                 label: l10n.wearPercent(part.wearPercent!),
@@ -410,6 +501,12 @@ class _PartCard extends StatelessWidget {
                     ),
               style: text.bodySmall,
             ),
+            if (part.mpn != null)
+              Text(
+                part.mpn!,
+                key: Key('mpn-${part.id}'),
+                style: text.bodySmall,
+              ),
             Wrap(
               spacing: 8,
               children: [

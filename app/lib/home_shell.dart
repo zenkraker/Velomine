@@ -1,64 +1,58 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/l10n.dart';
-import 'core/session.dart';
+import 'core/providers.dart';
 import 'core/theme_choice.dart';
-import 'features/notifications/notifications_controller.dart';
+import 'features/notifications/notifications_view_model.dart';
+import 'features/recording/recording_providers.dart';
 
 /// The frame around the signed-in screens: title bar with notifications, the member's profile and sign out,
 /// and a bottom bar to switch between rides, progress, bikes and (for admins) accounts.
-class HomeShell extends StatelessWidget {
-  const HomeShell({
-    super.key,
-    required this.session,
-    required this.notifications,
-    required this.themeChoice,
-    required this.location,
-    required this.child,
-  });
+class HomeShell extends ConsumerWidget {
+  const HomeShell({super.key, required this.location, required this.child});
 
-  final Session session;
-  final NotificationsController notifications;
-  final ThemeChoice themeChoice;
   final String location;
   final Widget child;
 
-  List<String> get _destinations => [
+  List<String> _destinations(bool isAdmin) => [
     '/rides',
     if (!kIsWeb) '/record',
     '/progress',
     '/club',
     '/bikes',
-    if (session.isAdmin) '/admin',
+    if (isAdmin) '/admin',
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final me = session.me;
-    final destinations = _destinations;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(sessionViewModelProvider);
+    final me = state.me;
+    final recording = ref.watch(recorderSnapshotViewModelProvider).state;
+    final unread = ref.watch(
+      notificationsViewModelProvider.select((state) => state.unread),
+    );
+    final destinations = _destinations(state.isAdmin);
     final selected = destinations.indexWhere(location.startsWith);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Velomine'),
         actions: [
-          ThemeChoiceButton(choice: themeChoice),
-          ListenableBuilder(
-            listenable: notifications,
-            builder: (context, _) => IconButton(
-              key: const Key('open-notifications'),
-              tooltip: notifications.unread == 0
-                  ? context.l10n.notifications
-                  : context.l10n.notificationsUnread(notifications.unread),
-              isSelected: location == '/notifications',
-              icon: Badge(
-                isLabelVisible: notifications.unread > 0,
-                label: Text('${notifications.unread}'),
-                child: const Icon(Icons.notifications_none),
-              ),
-              onPressed: () => context.go('/notifications'),
+          const ThemeChoiceButton(),
+          IconButton(
+            key: const Key('open-notifications'),
+            tooltip: unread == 0
+                ? context.l10n.notifications
+                : context.l10n.notificationsUnread(unread),
+            isSelected: location == '/notifications',
+            icon: Badge(
+              isLabelVisible: unread > 0,
+              label: Text('$unread'),
+              child: const Icon(Icons.notifications_none),
             ),
+            onPressed: () => context.go('/notifications'),
           ),
           if (me != null)
             TextButton.icon(
@@ -71,7 +65,7 @@ class HomeShell extends StatelessWidget {
             key: const Key('sign-out'),
             tooltip: context.l10n.signOut,
             icon: const Icon(Icons.logout),
-            onPressed: session.signOut,
+            onPressed: ref.read(sessionProvider).signOut,
           ),
         ],
       ),
@@ -89,8 +83,20 @@ class HomeShell extends StatelessWidget {
           ),
           if (!kIsWeb)
             NavigationDestination(
-              icon: const Icon(Icons.fiber_manual_record),
-              label: context.l10n.navRecord,
+              key: const Key('nav-record'),
+              icon: switch (recording) {
+                'recording' => Icon(
+                  Icons.fiber_smart_record,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                'paused' => const Icon(Icons.pause_circle_outline),
+                _ => const Icon(Icons.fiber_manual_record),
+              },
+              label: switch (recording) {
+                'recording' => context.l10n.navRecording,
+                'paused' => context.l10n.navRecordingPaused,
+                _ => context.l10n.navRecord,
+              },
             ),
           NavigationDestination(
             icon: const Icon(Icons.insights),
@@ -104,7 +110,7 @@ class HomeShell extends StatelessWidget {
             icon: const Icon(Icons.pedal_bike),
             label: context.l10n.navBikes,
           ),
-          if (session.isAdmin)
+          if (state.isAdmin)
             NavigationDestination(
               icon: const Icon(Icons.admin_panel_settings),
               label: context.l10n.navAdmin,

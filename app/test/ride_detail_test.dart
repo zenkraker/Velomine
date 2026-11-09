@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:velomine/features/rides/detail/ride_detail_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:velomine/core/providers.dart';
+import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
+
+Widget _detailApp(Session session, String id) => ProviderScope(
+  overrides: [
+    sessionProvider.overrideWith((ref) => session),
+    ridePollIntervalProvider.overrideWithValue(
+      const Duration(milliseconds: 10),
+    ),
+  ],
+  child: MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: RideDetailScreen(id: id, onBack: () {}, onDeleted: () {}),
+    ),
+  ),
+);
 
 void main() {
   late FakeServer server;
@@ -203,32 +221,11 @@ void main() {
     tester,
   ) async {
     final session = server.session(useCookies: true);
-    final controller = RideDetailController(
-      api: session.rides,
-      bikesApi: session.bikes,
-      id: 'nobody-has-this-ride',
-      onUnauthorized: () {},
-    );
-    addTearDown(controller.dispose);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: RideDetailScreen(
-            controller: controller,
-            onBack: () {},
-            onDeleted: () {},
-          ),
-        ),
-      ),
-    );
+    await tester.pumpWidget(_detailApp(session, 'nobody-has-this-ride'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('not-found')), findsOneWidget);
     expect(find.byKey(const Key('delete')), findsNothing);
-    expect(controller.notFound, isTrue);
   });
 
   testWidgets('RideDetailScreen_ShouldFillInAfterProcessing_WhenRideIsRead', (
@@ -236,27 +233,7 @@ void main() {
   ) async {
     server.rides.add(rideJson('r3', 'processing', fileName: 'big.fit'));
     final session = server.session(useCookies: true);
-    final controller = RideDetailController(
-      api: session.rides,
-      bikesApi: session.bikes,
-      id: 'r3',
-      onUnauthorized: () {},
-      pollInterval: const Duration(milliseconds: 10),
-    );
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: RideDetailScreen(
-            controller: controller,
-            onBack: () {},
-            onDeleted: () {},
-          ),
-        ),
-      ),
-    );
+    await tester.pumpWidget(_detailApp(session, 'r3'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 5));
     expect(find.byKey(const Key('processing')), findsOneWidget);

@@ -1,23 +1,33 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Whether the rider who is not in a club has put away the card that points at nearby clubs.
-class SoloHint extends ChangeNotifier {
-  SoloHint({SoloHintStore? store}) : _store = store ?? _Preferences();
+part 'solo_hint.g.dart';
 
-  final SoloHintStore _store;
+/// Where the dismissal is kept. Tests override it with an in-memory store.
+final soloHintStoreProvider = Provider<SoloHintStore>(
+  (ref) => PreferencesSoloHintStore(),
+);
 
-  bool dismissed = false;
+/// Whether the rider who is not in a club has put away the card that points at
+/// nearby clubs.
+@Riverpod(keepAlive: true)
+class SoloHintViewModel extends _$SoloHintViewModel {
+  @override
+  bool build() {
+    Future.microtask(_load);
+    return false;
+  }
 
-  Future<void> load() async {
-    dismissed = await _store.read();
-    notifyListeners();
+  Future<void> _load() async {
+    final dismissed = await ref.read(soloHintStoreProvider).read();
+    if (!ref.mounted) return;
+    state = dismissed;
   }
 
   Future<void> dismiss() async {
-    dismissed = true;
-    notifyListeners();
-    await _store.write();
+    state = true;
+    await ref.read(soloHintStoreProvider).write();
   }
 }
 
@@ -26,7 +36,7 @@ abstract interface class SoloHintStore {
   Future<void> write();
 }
 
-class _Preferences implements SoloHintStore {
+class PreferencesSoloHintStore implements SoloHintStore {
   static const _key = 'solo_club_hint_dismissed';
   final _prefs = SharedPreferencesAsync();
 

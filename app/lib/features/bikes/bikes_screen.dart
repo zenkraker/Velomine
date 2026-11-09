@@ -1,87 +1,86 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
-import 'bikes_controller.dart';
+import 'bikes_view_models.dart';
 
-class BikesScreen extends StatefulWidget {
-  const BikesScreen({
-    super.key,
-    required this.controller,
-    required this.onOpen,
-  });
+class BikesScreen extends ConsumerWidget {
+  const BikesScreen({super.key, required this.onOpen});
 
-  final BikesController controller;
   final void Function(String id) onOpen;
 
-  @override
-  State<BikesScreen> createState() => _BikesScreenState();
-}
-
-class _BikesScreenState extends State<BikesScreen> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.refresh();
-  }
-
-  Future<void> _add() async {
+  Future<void> _add(BuildContext context, WidgetRef ref) async {
     final data = await showBikeForm(context);
-    if (data == null) return;
-    final id = await widget.controller.add(data.toCreate());
-    if (id != null && mounted) widget.onOpen(id);
+    if (data == null || !context.mounted) return;
+    final id = await ref
+        .read(bikesViewModelProvider.notifier)
+        .add(data.toCreate());
+    if (id != null && context.mounted) onOpen(id);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final c = widget.controller;
-    return ListenableBuilder(
-      listenable: c,
-      builder: (context, _) => Scaffold(
-        backgroundColor: Colors.transparent,
-        floatingActionButton: FloatingActionButton.extended(
-          key: const Key('add-bike'),
-          onPressed: _add,
-          icon: const Icon(Icons.add),
-          label: Text(context.l10n.addBike),
-        ),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 12,
-                  children: [
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(bikesViewModelProvider);
+    final l10n = context.l10n;
+
+    ref.listen(bikesViewModelProvider.select((state) => state.messages), (
+      _,
+      messages,
+    ) {
+      for (final message in messages) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
+        ref.read(bikesViewModelProvider.notifier).messageShown(message.id);
+      }
+    });
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('add-bike'),
+        onPressed: s.action.running ? null : () => _add(context, ref),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.addBike),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 12,
+                children: [
+                  Text(
+                    l10n.navBikes,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  if (s.load.failure case final failure?)
                     Text(
-                      context.l10n.navBikes,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    if (c.error != null)
-                      Text(
-                        failureText(context.l10n, c.error!),
-                        key: const Key('bikes-error'),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      failureText(l10n, failure),
+                      key: const Key('bikes-error'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
                       ),
-                    if (c.loading && c.bikes.isEmpty)
-                      const Center(child: CircularProgressIndicator())
-                    else if (c.bikes.isEmpty && c.error == null)
-                      Text(context.l10n.noBikes, key: const Key('no-bikes')),
-                    for (final bike in c.bikes)
-                      _BikeCard(bike: bike, onOpen: widget.onOpen),
-                  ],
-                ),
+                    ),
+                  if (s.load.running && s.bikes.isEmpty)
+                    const Center(child: CircularProgressIndicator())
+                  else if (s.bikes.isEmpty && s.load.failure == null)
+                    Text(l10n.noBikes, key: const Key('no-bikes')),
+                  for (final bike in s.bikes)
+                    _BikeCard(bike: bike, onOpen: onOpen),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -68,7 +68,11 @@ migration name:
 api-client:
     tools/generate-api-client.sh
 
+# regenerate the Riverpod providers after changing a @riverpod declaration
+codegen:
+    cd app && dart run build_runner build
+
 # the checks from the README
 check:
     dotnet test --solution Velomine.slnx
-    cd app && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
+    cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test

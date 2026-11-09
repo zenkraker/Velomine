@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/server_config.dart';
 import 'package:velomine/features/auth/server_setup_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
@@ -14,33 +16,44 @@ ServerInfoResponse info() => ServerInfoResponse(
   emailAvailable: false,
 );
 
+class _MemoryStore implements ServerConfigStore {
+  String? value;
+
+  @override
+  Future<String?> read() async => value;
+
+  @override
+  Future<void> write(String? value) async => this.value = value;
+}
+
 void main() {
-  Future<void> pump(
+  Future<_MemoryStore> pump(
     WidgetTester tester, {
     required Future<ServerInfoResponse?> Function(String url) check,
-    required Future<void> Function(String url) onSaved,
     String initialUrl = '',
-  }) => tester.pumpWidget(
-    MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: ServerSetupScreen(
-        initialUrl: initialUrl,
-        check: check,
-        onSaved: onSaved,
+  }) async {
+    final store = _MemoryStore();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          serverInfoCheckProvider.overrideWithValue(check),
+          serverConfigStoreProvider.overrideWithValue(store),
+          isWebProvider.overrideWithValue(false),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ServerSetupScreen(initialUrl: initialUrl),
+        ),
       ),
-    ),
-  );
+    );
+    return store;
+  }
 
   testWidgets(
     'ServerSetupScreen_ShouldCheckAndSaveAddress_WhenAddressIsValid',
     (tester) async {
-      String? saved;
-      await pump(
-        tester,
-        check: (_) async => info(),
-        onSaved: (url) async => saved = url,
-      );
+      final store = await pump(tester, check: (_) async => info());
 
       await tester.enterText(
         find.byKey(const Key('server-url')),
@@ -49,7 +62,7 @@ void main() {
       await tester.tap(find.byKey(const Key('server-save')));
       await tester.pumpAndSettle();
 
-      expect(saved, 'https://velo.example');
+      expect(store.value, 'https://velo.example');
     },
   );
 
@@ -57,13 +70,12 @@ void main() {
     tester,
   ) async {
     var checked = false;
-    await pump(
+    final store = await pump(
       tester,
       check: (_) async {
         checked = true;
         return info();
       },
-      onSaved: (_) async {},
     );
 
     await tester.enterText(find.byKey(const Key('server-url')), 'velo.example');
@@ -72,17 +84,13 @@ void main() {
 
     expect(find.byKey(const Key('server-error')), findsOneWidget);
     expect(checked, isFalse);
+    expect(store.value, isNull);
   });
 
   testWidgets('ServerSetupScreen_ShouldExplainUnreachable_WhenServerIsAbsent', (
     tester,
   ) async {
-    var saved = false;
-    await pump(
-      tester,
-      check: (_) async => null,
-      onSaved: (_) async => saved = true,
-    );
+    final store = await pump(tester, check: (_) async => null);
 
     await tester.enterText(
       find.byKey(const Key('server-url')),
@@ -92,15 +100,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Could not reach'), findsOneWidget);
-    expect(saved, isFalse);
+    expect(store.value, isNull);
   });
 
   testWidgets('ServerSetupScreen_ShouldTimeOut_WhenUnanswered', (tester) async {
-    var saved = false;
-    await pump(
+    final store = await pump(
       tester,
       check: (_) => Completer<ServerInfoResponse?>().future,
-      onSaved: (_) async => saved = true,
     );
 
     await tester.enterText(
@@ -117,7 +123,7 @@ void main() {
 
     expect(find.byKey(const Key('server-error')), findsOneWidget);
     expect(find.textContaining('same network'), findsOneWidget);
-    expect(saved, isFalse);
+    expect(store.value, isNull);
   });
 
   testWidgets('ServerSetupScreen_ShouldFillLastAddress_WhenAfterServerChange', (
@@ -127,7 +133,6 @@ void main() {
       tester,
       initialUrl: 'https://old.example',
       check: (_) async => info(),
-      onSaved: (_) async {},
     );
 
     expect(find.text('https://old.example'), findsOneWidget);

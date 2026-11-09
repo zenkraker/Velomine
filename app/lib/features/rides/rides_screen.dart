@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
-import 'rides_controller.dart';
 import 'ride_type_chips.dart';
+import 'rides_view_model.dart';
 
 String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
   'corrupt_file' => l10n.rideErrorCorrupt,
@@ -19,17 +21,14 @@ String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
   _ => l10n.rideErrorUnknown,
 };
 
-class RidesScreen extends StatefulWidget {
+class RidesScreen extends ConsumerWidget {
   const RidesScreen({
     super.key,
-    required this.controller,
     required this.onOpen,
     this.showSoloCard = false,
     this.onOpenClubs,
     this.onDismissSoloCard,
   });
-
-  final RidesController controller;
 
   /// Called with a ride's id when its card is pressed.
   final void Function(String id) onOpen;
@@ -40,151 +39,146 @@ class RidesScreen extends StatefulWidget {
   final VoidCallback? onDismissSoloCard;
 
   @override
-  State<RidesScreen> createState() => _RidesScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(ridesViewModelProvider);
+    final l10n = context.l10n;
 
-class _RidesScreenState extends State<RidesScreen> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.refresh();
-  }
+    ref.listen(ridesViewModelProvider.select((state) => state.messages), (
+      _,
+      messages,
+    ) {
+      for (final message in messages) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
+        ref.read(ridesViewModelProvider.notifier).messageShown(message.id);
+      }
+    });
 
-  @override
-  Widget build(BuildContext context) {
-    final c = widget.controller;
-    return ListenableBuilder(
-      listenable: c,
-      builder: (context, _) {
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          floatingActionButton: FloatingActionButton.extended(
-            key: const Key('upload'),
-            onPressed: c.uploading ? null : c.upload,
-            icon: const Icon(Icons.upload_file),
-            label: Text(
-              c.uploading ? context.l10n.uploading : context.l10n.uploadRide,
-            ),
-          ),
-          body: RefreshIndicator(
-            onRefresh: c.refresh,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-              children: [
-                if (c.error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      failureText(context.l10n, c.error!),
-                      key: const Key('rides-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ),
-                if (widget.showSoloCard && widget.onOpenClubs != null)
-                  Card(
-                    key: const Key('solo-club-card'),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 4,
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('upload'),
+        onPressed: s.upload.running
+            ? null
+            : () => ref.read(ridesViewModelProvider.notifier).upload(),
+        icon: const Icon(Icons.upload_file),
+        label: Text(s.upload.running ? l10n.uploading : l10n.uploadRide),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(ridesViewModelProvider.notifier).refresh(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          children: [
+            if (s.load.failure case final failure?)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  failureText(l10n, failure),
+                  key: const Key('rides-error'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            if (showSoloCard && onOpenClubs != null)
+              Card(
+                key: const Key('solo-club-card'),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 4,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  context.l10n.soloHintTitle,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium,
-                                ),
-                              ),
-                              IconButton(
-                                key: const Key('dismiss-solo-card'),
-                                tooltip: context.l10n.soloHintDismiss,
-                                onPressed: widget.onDismissSoloCard,
-                                icon: const Icon(Icons.close),
-                              ),
-                            ],
-                          ),
-                          Text(context.l10n.soloHintBody),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              key: const Key('open-nearby-from-rides'),
-                              onPressed: widget.onOpenClubs,
-                              icon: const Icon(Icons.explore_outlined),
-                              label: Text(context.l10n.soloHintSee),
+                          Expanded(
+                            child: Text(
+                              l10n.soloHintTitle,
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
+                          ),
+                          IconButton(
+                            key: const Key('dismiss-solo-card'),
+                            tooltip: l10n.soloHintDismiss,
+                            onPressed: onDismissSoloCard,
+                            icon: const Icon(Icons.close),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      spacing: 8,
-                      children: [
-                        ChoiceChip(
-                          key: const Key('filter-all'),
-                          label: Text(context.l10n.rideFilterAll),
-                          selected: c.disciplineFilter == null,
-                          onSelected: (_) => c.setDisciplineFilter(null),
+                      Text(l10n.soloHintBody),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          key: const Key('open-nearby-from-rides'),
+                          onPressed: onOpenClubs,
+                          icon: const Icon(Icons.explore_outlined),
+                          label: Text(l10n.soloHintSee),
                         ),
-                        for (final discipline in [
-                          'road',
-                          'gravel',
-                          'mountain',
-                          'track',
-                        ])
-                          ChoiceChip(
-                            key: Key('filter-$discipline'),
-                            label: Text(
-                              disciplineName(context.l10n, discipline),
-                            ),
-                            selected: c.disciplineFilter == discipline,
-                            onSelected: (_) =>
-                                c.setDisciplineFilter(discipline),
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                if (c.rides.isEmpty && !c.loading)
-                  Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Text(
-                        context.l10n.noRides,
-                        key: const Key('no-rides'),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      key: const Key('filter-all'),
+                      label: Text(l10n.rideFilterAll),
+                      selected: s.disciplineFilter == null,
+                      onSelected: (_) => ref
+                          .read(ridesViewModelProvider.notifier)
+                          .setDisciplineFilter(null),
+                    ),
+                    for (final discipline in [
+                      'road',
+                      'gravel',
+                      'mountain',
+                      'track',
+                    ])
+                      ChoiceChip(
+                        key: Key('filter-$discipline'),
+                        label: Text(disciplineName(l10n, discipline)),
+                        selected: s.disciplineFilter == discipline,
+                        onSelected: (_) => ref
+                            .read(ridesViewModelProvider.notifier)
+                            .setDisciplineFilter(discipline),
                       ),
-                    ),
-                  ),
-                for (final ride in c.rides)
-                  RideCard(ride: ride, onTap: () => widget.onOpen(ride.id)),
-                if (c.next != null)
-                  TextButton(
-                    key: const Key('load-more'),
-                    onPressed: c.loadMore,
-                    child: Text(context.l10n.loadMore),
-                  ),
-                if (c.loading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
-          ),
-        );
-      },
+            if (s.rides.isEmpty && !s.load.running)
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: Text(l10n.noRides, key: const Key('no-rides')),
+                ),
+              ),
+            for (final ride in s.rides)
+              RideCard(ride: ride, onTap: () => onOpen(ride.id)),
+            if (s.next != null)
+              TextButton(
+                key: const Key('load-more'),
+                onPressed: s.load.running
+                    ? null
+                    : () =>
+                          ref.read(ridesViewModelProvider.notifier).loadMore(),
+                child: Text(l10n.loadMore),
+              ),
+            if (s.load.running)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

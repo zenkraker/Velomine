@@ -1,85 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
-import '../../core/home_location.dart';
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
+import '../../core/providers.dart';
+import '../../core/user_message_text.dart';
 import 'location_picker.dart';
-import 'nearby_clubs_controller.dart';
+import 'nearby_clubs_view_model.dart';
 
 /// The suggestion page: a rider without a club sees which clubs are within reach and may ask to join one.
-class NearbyClubsScreen extends StatefulWidget {
+class NearbyClubsScreen extends ConsumerStatefulWidget {
   const NearbyClubsScreen({
     super.key,
-    required this.controller,
-    required this.locationService,
-    required this.homeLocation,
-    required this.userId,
     required this.onBack,
     required this.tileUrl,
     required this.attribution,
   });
-
-  final NearbyClubsController controller;
-  final LocationService locationService;
-  final HomeLocation homeLocation;
-
-  /// Whose saved fallback point to read, so a shared device never mixes two accounts.
-  final String userId;
 
   final VoidCallback onBack;
   final String tileUrl;
   final String attribution;
 
   @override
-  State<NearbyClubsScreen> createState() => _NearbyClubsScreenState();
+  ConsumerState<NearbyClubsScreen> createState() => _NearbyClubsScreenState();
 }
 
-class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
-  bool _locating = true;
-  bool _fromHome = false;
-  GeoPoint? _position;
-  bool _askedDevice = false;
-
-  static const _radii = [25, 50, 100, 200];
-
+class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
   @override
   void initState() {
     super.initState();
-    _start();
-  }
-
-  Future<void> _start() async {
-    setState(() => _locating = true);
-    final device = await widget.locationService.current();
-    if (!mounted) return;
-    if (device != null) {
-      await _use(device, fromHome: false);
-      return;
-    }
-
-    await widget.homeLocation.load(widget.userId);
-    if (!mounted) return;
-    final home = widget.homeLocation.position;
-    if (home != null) {
-      await _use(home, fromHome: true);
-      return;
-    }
-
-    setState(() {
-      _locating = false;
-      _askedDevice = true;
-    });
-  }
-
-  Future<void> _use(GeoPoint point, {required bool fromHome}) async {
-    setState(() {
-      _locating = false;
-      _position = point;
-      _fromHome = fromHome;
-    });
-    await widget.controller.refresh(point);
+    // Opening the page asks where the rider is: the device first, then the saved point.
+    Future.microtask(
+      () => ref.read(nearbyClubsViewModelProvider.notifier).start(),
+    );
   }
 
   Future<GeoPoint?> _pick(GeoPoint? initial) => Navigator.of(context).push(
@@ -88,22 +43,20 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
         initial: initial,
         tileUrl: widget.tileUrl,
         attribution: widget.attribution,
-        locationService: widget.locationService,
+        locationService: ref.read(locationServiceProvider),
       ),
     ),
   );
 
-  Future<void> _setSavedLocation() async {
-    final point = await _pick(_position);
+  Future<void> _setSavedLocation(GeoPoint? initial) async {
+    final point = await _pick(initial);
     if (point == null || !mounted) return;
-    await widget.homeLocation.load(widget.userId);
-    await widget.homeLocation.save(point);
-    await _use(point, fromHome: true);
+    await ref.read(nearbyClubsViewModelProvider.notifier).useSavedPoint(point);
   }
 
   Future<void> _ask(NearbyClubResponse club) async {
     final l10n = context.l10n;
-    final pending = widget.controller.request;
+    final pending = ref.read(nearbyClubsViewModelProvider).request;
     if (pending != null && pending.clubId != club.id) {
       final replace = await showDialog<bool>(
         context: context,
@@ -132,40 +85,30 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
     );
     if (note == null || !mounted) return;
 
-    final failure = await widget.controller.askToJoin(club.id, note);
-    if (!mounted) return;
-    if (failure == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.nearbyRequestSent)));
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(failureText(l10n, failure))));
-    }
-  }
-
-  Future<void> _cancelRequest() async {
-    final failure = await widget.controller.cancelRequest();
-    if (!mounted || failure == null) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(failureText(context.l10n, failure))));
-  }
-
-  void _widen() {
-    final current = widget.controller.radiusKm;
-    final next = _radii.firstWhere(
-      (km) => km > current,
-      orElse: () => _radii.last,
-    );
-    final position = _position;
-    if (position == null || next == current) return;
-    widget.controller.refresh(position, radiusKm: next);
+    await ref
+        .read(nearbyClubsViewModelProvider.notifier)
+        .askToJoin(club.id, note);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final controller = widget.controller;
+    final s = ref.watch(nearbyClubsViewModelProvider);
+
+    ref.listen(nearbyClubsViewModelProvider.select((state) => state.messages), (
+      _,
+      messages,
+    ) {
+      for (final message in messages) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
+        ref
+            .read(nearbyClubsViewModelProvider.notifier)
+            .messageShown(message.id);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.nearbyTitle),
@@ -174,10 +117,9 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
           onPressed: widget.onBack,
         ),
       ),
-      body: ListenableBuilder(
-        listenable: controller,
-        builder: (context, _) {
-          if (_locating) {
+      body: Builder(
+        builder: (context) {
+          if (s.locating) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -190,17 +132,22 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
             );
           }
 
-          final position = _position;
+          final position = s.position;
           if (position == null) {
             return _WhereAreYou(
-              askedDevice: _askedDevice,
-              onUseDevice: _start,
-              onPick: _setSavedLocation,
+              askedDevice: s.askedDevice,
+              onUseDevice: () =>
+                  ref.read(nearbyClubsViewModelProvider.notifier).start(),
+              onPick: () => _setSavedLocation(null),
             );
           }
 
+          final nextRadius = ref
+              .read(nearbyClubsViewModelProvider.notifier)
+              .nextRadius;
           return RefreshIndicator(
-            onRefresh: () => controller.refresh(position),
+            onRefresh: () =>
+                ref.read(nearbyClubsViewModelProvider.notifier).refresh(),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
@@ -210,7 +157,7 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                   l10n.nearbyLocationHelp,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                if (_fromHome) ...[
+                if (s.usingSavedPoint) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -223,7 +170,7 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                       Expanded(child: Text(l10n.nearbyHomeUsed)),
                       TextButton(
                         key: const Key('change-home-location'),
-                        onPressed: _setSavedLocation,
+                        onPressed: () => _setSavedLocation(position),
                         child: Text(l10n.clubLocationChange),
                       ),
                     ],
@@ -237,17 +184,18 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                         spacing: 8,
                         runSpacing: 4,
                         children: [
-                          for (final km in _radii)
+                          for (final km in NearbyClubsViewModel.radii)
                             ChoiceChip(
                               key: Key('radius-$km'),
                               label: Text(l10n.nearbyRadius(km)),
-                              selected: controller.radiusKm == km,
-                              onSelected: controller.busy
+                              selected: s.radiusKm == km,
+                              onSelected: s.action.running || s.load.running
                                   ? null
-                                  : (_) => controller.refresh(
-                                      position,
-                                      radiusKm: km,
-                                    ),
+                                  : (_) => ref
+                                        .read(
+                                          nearbyClubsViewModelProvider.notifier,
+                                        )
+                                        .setRadius(km),
                             ),
                         ],
                       ),
@@ -256,29 +204,31 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                     IconButton.filledTonal(
                       key: const Key('nearby-relocate'),
                       tooltip: l10n.nearbyUseDevice,
-                      onPressed: _start,
+                      onPressed: () => ref
+                          .read(nearbyClubsViewModelProvider.notifier)
+                          .start(),
                       icon: const Icon(Icons.my_location),
                     ),
                     const SizedBox(width: 4),
                     IconButton.filledTonal(
                       key: const Key('nearby-set-location'),
                       tooltip: l10n.nearbySetHome,
-                      onPressed: _setSavedLocation,
+                      onPressed: () => _setSavedLocation(position),
                       icon: const Icon(Icons.edit_location_alt_outlined),
                     ),
                   ],
                 ),
-                if (controller.error != null) ...[
+                if (s.load.failure case final failure?) ...[
                   const SizedBox(height: 12),
                   Text(
-                    failureText(l10n, controller.error!),
+                    failureText(l10n, failure),
                     key: const Key('nearby-error'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ],
-                if (controller.request != null) ...[
+                if (s.request != null) ...[
                   const SizedBox(height: 16),
                   Card(
                     key: const Key('pending-join-request'),
@@ -291,21 +241,23 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                         spacing: 6,
                         children: [
                           Text(
-                            l10n.nearbyPendingTitle(
-                              controller.request!.clubName,
-                            ),
+                            l10n.nearbyPendingTitle(s.request!.clubName),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(l10n.nearbyPendingBody),
-                          if (controller.request!.note != null)
-                            Text('“${controller.request!.note}”'),
+                          if (s.request!.note != null)
+                            Text('“${s.request!.note}”'),
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               key: const Key('cancel-join-request'),
-                              onPressed: controller.busy
+                              onPressed: s.action.running
                                   ? null
-                                  : _cancelRequest,
+                                  : () => ref
+                                        .read(
+                                          nearbyClubsViewModelProvider.notifier,
+                                        )
+                                        .cancelRequest(),
                               child: Text(l10n.nearbyCancel),
                             ),
                           ),
@@ -314,39 +266,42 @@ class _NearbyClubsScreenState extends State<NearbyClubsScreen> {
                     ),
                   ),
                 ],
-                if (controller.loading)
+                if (s.load.running)
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: CircularProgressIndicator(),
                     ),
                   )
-                else if (controller.clubs.isEmpty &&
-                    controller.error == null) ...[
+                else if (s.clubs.isEmpty && s.load.failure == null) ...[
                   const SizedBox(height: 24),
                   Center(
                     child: Text(
-                      l10n.nearbyEmpty(controller.radiusKm),
+                      l10n.nearbyEmpty(s.radiusKm),
                       key: const Key('nearby-empty'),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  if (controller.radiusKm < _radii.last) ...[
+                  if (nextRadius != null) ...[
                     const SizedBox(height: 12),
                     Center(
                       child: TextButton(
                         key: const Key('nearby-widen'),
-                        onPressed: _widen,
+                        onPressed: s.load.running
+                            ? null
+                            : () => ref
+                                  .read(nearbyClubsViewModelProvider.notifier)
+                                  .setRadius(nextRadius),
                         child: Text(l10n.nearbyWiden),
                       ),
                     ),
                   ],
                 ] else
-                  for (final club in controller.clubs)
+                  for (final club in s.clubs)
                     _ClubRow(
                       club: club,
-                      requested: controller.request?.clubId == club.id,
-                      busy: controller.busy,
+                      requested: s.request?.clubId == club.id,
+                      busy: s.action.running,
                       onAsk: () => _ask(club),
                     ),
               ],

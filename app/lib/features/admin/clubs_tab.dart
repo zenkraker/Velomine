@@ -1,122 +1,142 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
-import 'admin_controller.dart';
+import '../../core/user_message_text.dart';
+import 'admin_view_models.dart';
 
 /// Every club on the server, for the instance admin: create one, and turn it on or off.
-class ClubsTab extends StatelessWidget {
-  const ClubsTab({super.key, required this.controller});
+class ClubsTab extends ConsumerWidget {
+  const ClubsTab({super.key});
 
-  final AdminController controller;
-
-  Future<void> _create(BuildContext context) async {
+  Future<void> _create(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<({String name, String ownerEmail})>(
       context: context,
       builder: (_) => const _CreateClubDialog(),
     );
     if (result == null) return;
-    await controller.createClub(result.name, result.ownerEmail);
+    await ref
+        .read(adminClubsViewModelProvider.notifier)
+        .create(result.name, result.ownerEmail);
   }
 
   Future<void> _changeOwner(
     BuildContext context,
+    WidgetRef ref,
     AdminClubResponse club,
   ) async {
     final userId = await showDialog<String>(
       context: context,
       builder: (_) => _OwnerDialog(club: club),
     );
-    if (userId != null) await controller.setClubOwner(club, userId);
+    if (userId != null) {
+      await ref
+          .read(adminClubsViewModelProvider.notifier)
+          .setOwner(club, userId);
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: 12,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.adminClubs,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
+    final s = ref.watch(adminClubsViewModelProvider);
+
+    ref.listen(adminClubsViewModelProvider.select((state) => state.messages), (
+      _,
+      messages,
+    ) {
+      for (final message in messages) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
+        ref.read(adminClubsViewModelProvider.notifier).messageShown(message.id);
+      }
+    });
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 12,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.adminClubs,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      FilledButton.icon(
-                        key: const Key('create-club'),
-                        onPressed: () => _create(context),
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.adminCreateClub),
-                      ),
-                    ],
+                    ),
+                    FilledButton.icon(
+                      key: const Key('create-club'),
+                      onPressed: () => _create(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.adminCreateClub),
+                    ),
+                  ],
+                ),
+                if (s.load.failure case final failure?)
+                  Text(
+                    failureText(l10n, failure),
+                    key: const Key('clubs-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                  if (controller.error != null)
-                    Text(
-                      failureText(l10n, controller.error!),
-                      key: const Key('clubs-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                if (s.clubs.isEmpty && !s.load.running)
+                  Text(l10n.adminNoClubs, key: const Key('no-clubs')),
+                for (final club in s.clubs)
+                  Card(
+                    key: Key('club-${club.id}'),
+                    child: ListTile(
+                      leading: const Icon(Icons.groups_outlined),
+                      title: Text(club.name),
+                      subtitle: Text(
+                        [
+                          l10n.clubMemberCount(club.memberCount),
+                          if (club.ownerName != null) club.ownerName!,
+                          if (club.ownerEmail != null) club.ownerEmail!,
+                          '${l10n.adminClubJoinCode}: ${club.joinCode}',
+                        ].join(' · '),
                       ),
-                    ),
-                  if (controller.clubs.isEmpty && !controller.loading)
-                    Text(l10n.adminNoClubs, key: const Key('no-clubs')),
-                  for (final club in controller.clubs)
-                    Card(
-                      key: Key('club-${club.id}'),
-                      child: ListTile(
-                        leading: const Icon(Icons.groups_outlined),
-                        title: Text(club.name),
-                        subtitle: Text(
-                          [
-                            l10n.clubMemberCount(club.memberCount),
-                            if (club.ownerName != null) club.ownerName!,
-                            if (club.ownerEmail != null) club.ownerEmail!,
-                            '${l10n.adminClubJoinCode}: ${club.joinCode}',
-                          ].join(' · '),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (club.members.any(
-                              (m) => m.userId != club.ownerId,
-                            ))
-                              IconButton(
-                                key: Key('change-owner-${club.id}'),
-                                tooltip: l10n.changeOwner,
-                                icon: const Icon(Icons.person_pin_outlined),
-                                onPressed: controller.clubsBusy
-                                    ? null
-                                    : () => _changeOwner(context, club),
-                              ),
-                            Switch(
-                              key: Key('club-active-${club.id}'),
-                              value: club.isActive,
-                              onChanged: controller.clubsBusy
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (club.members.any((m) => m.userId != club.ownerId))
+                            IconButton(
+                              key: Key('change-owner-${club.id}'),
+                              tooltip: l10n.changeOwner,
+                              icon: const Icon(Icons.person_pin_outlined),
+                              onPressed: s.action.running
                                   ? null
-                                  : (on) => controller.setClubActive(club, on),
+                                  : () => _changeOwner(context, ref, club),
                             ),
-                          ],
-                        ),
+                          Switch(
+                            key: Key('club-active-${club.id}'),
+                            value: club.isActive,
+                            onChanged: s.action.running
+                                ? null
+                                : (on) => ref
+                                      .read(
+                                        adminClubsViewModelProvider.notifier,
+                                      )
+                                      .setActive(club, on),
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -1,34 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import '../../core/session.dart';
+import '../../l10n/generated/app_localizations.dart';
+import 'auth_state.dart';
+import 'auth_view_models.dart';
+
+String resetProblemText(AppLocalizations l10n, ResetProblem problem) =>
+    switch (problem) {
+      ResetProblem.invalidLink => l10n.resetPasswordInvalid,
+      ResetProblem.tooShort => l10n.passwordTooShort,
+      ResetProblem.mismatch => l10n.passwordsDoNotMatch,
+      ResetProblem.tooMany => l10n.forgotPasswordTooMany,
+      ResetProblem.failed => l10n.passwordChangeFailed,
+    };
 
 /// The page the one-time email link opens. The token and email come from the URL fragment, so the browser never
 /// sends them to the server; the reset call carries them in its body instead.
-class ResetPasswordScreen extends StatefulWidget {
+class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({
     super.key,
-    required this.session,
     required this.token,
     required this.email,
   });
 
-  final Session session;
   final String? token;
   final String? email;
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
-  bool _busy = false;
-  bool _done = false;
-  String? _error;
 
   @override
   void dispose() {
@@ -37,62 +44,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _reset() async {
-    final l10n = context.l10n;
-    final token = widget.token;
-    final email = widget.email;
-    if (token == null || token.isEmpty || email == null || email.isEmpty) {
-      setState(() => _error = l10n.resetPasswordInvalid);
-      return;
-    }
-    if (_password.text.length < 10) {
-      setState(() => _error = l10n.passwordTooShort);
-      return;
-    }
-    if (_password.text != _confirm.text) {
-      setState(() => _error = l10n.passwordsDoNotMatch);
-      return;
-    }
-
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-
-    String? error;
-    try {
-      await widget.session.accounts.resetPassword(
-        ResetPasswordRequest(
-          email: email,
-          token: token,
-          newPassword: _password.text,
-        ),
+  Future<void> _reset() => ref
+      .read(resetPasswordViewModelProvider.notifier)
+      .reset(
+        token: widget.token,
+        email: widget.email,
+        password: _password.text,
+        confirm: _confirm.text,
       );
-    } on ApiException catch (e) {
-      error = switch (e.code) {
-        400 => l10n.resetPasswordInvalid,
-        429 => l10n.forgotPasswordTooMany,
-        _ => l10n.passwordChangeFailed,
-      };
-    } on Object {
-      error = l10n.passwordChangeFailed;
-    }
-
-    if (!mounted) return;
-    if (error == null) {
-      // The stamp changed: this session (if there was one) is no longer valid.
-      await widget.session.signOut();
-    }
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _error = error;
-      _done = error == null;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(resetPasswordViewModelProvider);
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
@@ -106,7 +69,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             shrinkWrap: true,
             padding: const EdgeInsets.all(24),
             children: [
-              if (_done) ...[
+              if (s.done) ...[
                 Text(l10n.resetPasswordDone, key: const Key('reset-done')),
                 const SizedBox(height: 16),
                 FilledButton(
@@ -133,10 +96,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   decoration: InputDecoration(labelText: l10n.confirmPassword),
                   onSubmitted: (_) => _reset(),
                 ),
-                if (_error != null) ...[
+                if (s.problem != null) ...[
                   const SizedBox(height: 12),
                   Text(
-                    _error!,
+                    resetProblemText(l10n, s.problem!),
                     key: const Key('reset-error'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
@@ -146,7 +109,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 const SizedBox(height: 16),
                 FilledButton(
                   key: const Key('reset-submit'),
-                  onPressed: _busy ? null : _reset,
+                  onPressed: s.command.running ? null : _reset,
                   child: Text(l10n.setNewPassword),
                 ),
                 const SizedBox(height: 8),

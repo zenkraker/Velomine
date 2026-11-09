@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
+import '../../core/providers.dart';
 import '../../core/session.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'auth_view_models.dart';
 
 String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
     switch (problem) {
@@ -26,29 +29,19 @@ String ssoErrorText(AppLocalizations l10n, String code) => switch (code) {
   _ => l10n.ssoFailed,
 };
 
-class SignInScreen extends StatefulWidget {
-  const SignInScreen({
-    super.key,
-    required this.session,
-    required this.startSso,
-    this.onChangeServer,
-  });
+class SignInScreen extends ConsumerStatefulWidget {
+  const SignInScreen({super.key, required this.startSso, this.onChangeServer});
 
-  final Session session;
   final SsoStarter startSso;
   final Future<void> Function()? onChangeServer;
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  ConsumerState<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  AuthProblem? _problem;
-  bool _busy = false;
-
-  late String? _ssoError = widget.session.ssoError;
 
   @override
   void dispose() {
@@ -57,33 +50,24 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn() async {
-    setState(() {
-      _busy = true;
-      _problem = null;
-      _ssoError = null;
-    });
-    final problem = await widget.session.signIn(
-      _email.text.trim(),
-      _password.text,
-    );
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _problem = problem;
-    });
-  }
+  Future<void> _signIn() => ref
+      .read(signInViewModelProvider.notifier)
+      .signIn(_email.text.trim(), _password.text);
 
   @override
   Widget build(BuildContext context) {
-    final sso = widget.session.sso;
-    final restoreProblem = widget.session.restoreProblem;
+    final session = ref.watch(sessionProvider);
+    final state = ref.watch(sessionViewModelProvider);
+    final s = ref.watch(signInViewModelProvider);
+    final sso = state.sso;
+    final restoreProblem = state.restoreProblem;
+    final ssoError = state.ssoError;
     final l10n = context.l10n;
-    final message = _problem != null
-        ? authProblemText(l10n, _problem!)
+    final message = s.problem != null
+        ? authProblemText(l10n, s.problem!)
         : (restoreProblem != null
               ? authProblemText(l10n, restoreProblem)
-              : (_ssoError == null ? null : ssoErrorText(l10n, _ssoError!)));
+              : (ssoError == null ? null : ssoErrorText(l10n, ssoError)));
     return Scaffold(
       body: Stack(
         children: [
@@ -107,7 +91,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         children: [
                           Flexible(
                             child: Text(
-                              l10n.serverLabel(widget.session.serverUrl),
+                              l10n.serverLabel(session.serverUrl),
                               key: const Key('server-address'),
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -160,14 +144,16 @@ class _SignInScreenState extends State<SignInScreen> {
                       const SizedBox(height: 8),
                       OutlinedButton(
                         key: const Key('retry-session'),
-                        onPressed: widget.session.retryRestore,
+                        onPressed: ref
+                            .read(signInViewModelProvider.notifier)
+                            .retryRestore,
                         child: Text(l10n.tryAgain),
                       ),
                     ],
                     const SizedBox(height: 16),
                     FilledButton(
                       key: const Key('sign-in'),
-                      onPressed: _busy ? null : _signIn,
+                      onPressed: s.command.running ? null : _signIn,
                       child: Text(l10n.signIn),
                     ),
                     if (sso?.enabled ?? false) ...[

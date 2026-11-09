@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:velomine/core/home_location.dart';
-import 'package:velomine/core/solo_hint.dart';
 
 import 'fake_server.dart';
 
@@ -96,7 +94,7 @@ void main() {
       await startApp(
         tester,
         server.session(useCookies: true),
-        homeLocation: HomeLocation(store: homeStore),
+        homeLocationStore: homeStore,
       );
 
       await tester.tap(find.text('Club'));
@@ -162,7 +160,7 @@ void main() {
       await startApp(
         tester,
         server.session(useCookies: true),
-        soloHint: SoloHint(store: store),
+        soloHintStore: store,
       );
 
       await tester.tap(find.byKey(const Key('dismiss-solo-card')));

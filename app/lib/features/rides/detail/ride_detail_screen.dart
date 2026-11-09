@@ -1,49 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
+import '../../../core/user_message_text.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../rides_screen.dart';
 import '../ride_type_chips.dart';
 import '../ride_type_sheet.dart';
 import 'lap_table.dart';
-import 'ride_detail_controller.dart';
+import 'ride_detail_state.dart';
+import 'ride_detail_view_model.dart';
 import 'ride_feel_card.dart';
+import 'ride_selection.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
 
-class RideDetailScreen extends StatefulWidget {
+class RideDetailScreen extends ConsumerWidget {
   const RideDetailScreen({
     super.key,
-    required this.controller,
+    required this.id,
     required this.onBack,
     required this.onDeleted,
     this.tileUrl,
     this.attribution,
   });
 
-  final RideDetailController controller;
+  final String id;
   final VoidCallback onBack;
   final VoidCallback onDeleted;
   final String? tileUrl;
   final String? attribution;
 
-  @override
-  State<RideDetailScreen> createState() => _RideDetailScreenState();
-}
-
-class _RideDetailScreenState extends State<RideDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.load();
-  }
-
-  Future<void> _confirmDelete() async {
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
@@ -63,62 +56,82 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         ],
       ),
     );
-    if (ok == true && await widget.controller.delete()) widget.onDeleted();
+    if (ok == true &&
+        await ref.read(rideDetailViewModelProvider(id).notifier).deleteRide()) {
+      onDeleted();
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final c = widget.controller;
-    return ListenableBuilder(
-      listenable: c,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 920),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 16,
-                children: [
-                  Row(
-                    children: [
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(rideDetailViewModelProvider(id));
+    final selection = ref.watch(rideSelectionProvider(id));
+    final l10n = context.l10n;
+
+    ref.listen(rideDetailViewModelProvider(id).select((s) => s.messages), (
+      _,
+      messages,
+    ) {
+      for (final message in messages) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
+        ref
+            .read(rideDetailViewModelProvider(id).notifier)
+            .messageShown(message.id);
+      }
+    });
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 920),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 16,
+              children: [
+                Row(
+                  children: [
+                    TextButton.icon(
+                      key: const Key('back'),
+                      onPressed: onBack,
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(l10n.navRides),
+                    ),
+                    const Spacer(),
+                    if (s.ride != null)
                       TextButton.icon(
-                        key: const Key('back'),
-                        onPressed: widget.onBack,
-                        icon: const Icon(Icons.arrow_back),
-                        label: Text(context.l10n.navRides),
-                      ),
-                      const Spacer(),
-                      if (c.ride != null)
-                        TextButton.icon(
-                          key: const Key('delete'),
-                          onPressed: _confirmDelete,
-                          icon: const Icon(Icons.delete_outline),
-                          label: Text(context.l10n.delete),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Theme.of(context)
-                                .colorScheme
-                                .error,
-                          ),
+                        key: const Key('delete'),
+                        onPressed: () => _confirmDelete(context, ref),
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(l10n.delete),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
                         ),
-                    ],
-                  ),
-                  ..._body(context, c),
-                ],
-              ),
+                      ),
+                  ],
+                ),
+                ..._body(context, ref, s, selection),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  List<Widget> _body(BuildContext context, RideDetailController c) {
+  List<Widget> _body(
+    BuildContext context,
+    WidgetRef ref,
+    RideDetailState s,
+    RideSelection selection,
+  ) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final error = Theme.of(context).colorScheme.error;
-    if (c.notFound) {
+    if (s.notFound) {
       return [
         Text(
           l10n.rideNotFound,
@@ -127,7 +140,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         ),
       ];
     }
-    if (c.loading && c.ride == null) {
+    if (s.load.running && s.ride == null) {
       return const [
         Center(
           child: Padding(
@@ -137,16 +150,19 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         ),
       ];
     }
-    final ride = c.ride;
+    final ride = s.ride;
     if (ride == null) {
       return [
         Text(
-          c.error == null ? l10n.couldNotLoadRide : failureText(l10n, c.error!),
+          s.load.failure == null
+              ? l10n.couldNotLoadRide
+              : failureText(l10n, s.load.failure!),
           key: const Key('ride-error'),
           style: TextStyle(color: error),
         ),
       ];
     }
+    final notifier = ref.read(rideDetailViewModelProvider(id).notifier);
     final heartRateZones =
         ride.heartRateZones.orElse(null) ?? const <ZoneTime>[];
     final powerZones = ride.powerZones.orElse(null) ?? const <ZoneTime>[];
@@ -160,9 +176,9 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         [ride.fileName, if (ride.device != null) ride.device!].join(' · '),
         style: text.bodyMedium,
       ),
-      if (c.error != null)
+      if (s.load.failure case final failure?)
         Text(
-          failureText(l10n, c.error!),
+          failureText(l10n, failure),
           key: const Key('ride-error'),
           style: TextStyle(color: error),
         ),
@@ -194,7 +210,21 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
             ),
             TextButton.icon(
               key: const Key('edit-ride-type'),
-              onPressed: () => showRideTypeSheet(context, c),
+              onPressed: () => showRideTypeSheet(
+                context,
+                ride,
+                ({
+                  String? discipline,
+                  String? assist,
+                  String? environment,
+                  bool? commute,
+                }) => notifier.setType(
+                  discipline: discipline,
+                  assist: assist,
+                  environment: environment,
+                  commute: commute,
+                ),
+              ),
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(
                 rideTypeIsSet(ride) ? l10n.rideTypeEdit : l10n.rideTypeNotSet,
@@ -203,8 +233,8 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           ],
         ),
         _Stats(ride: ride),
-        if (c.laps.isNotEmpty)
-          LapTable(laps: c.laps, selectedLap: c.selectedLap),
+        if (s.laps.isNotEmpty)
+          LapTable(laps: s.laps, selectedLap: selection.selectedLap),
         if (heartRateZones.isEmpty &&
             powerZones.isEmpty &&
             (ride.avgHeartRate != null || ride.avgPowerW != null))
@@ -229,39 +259,39 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
             zones: powerZones,
             colors: _powerZoneColors,
           ),
-        if (c.bikes.isNotEmpty || ride.bikeId != null)
-          _BikePicker(controller: c, ride: ride),
+        if (s.bikes.isNotEmpty || ride.bikeId != null)
+          _BikePicker(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
         RideFeelCard(
-          feel: c.feel,
-          saving: c.savingFeel,
-          onSave: c.saveFeel,
-          onDelete: c.deleteFeel,
+          feel: s.feel,
+          saving: s.feelCommand.running,
+          onSave: notifier.saveFeel,
+          onDelete: notifier.deleteFeel,
         ),
-        if (c.data?.hasRoute ?? false)
+        if (s.series?.hasRoute ?? false)
           RouteMap(
-            data: c.data!,
-            selected: c.selected,
-            selectedLap: c.selectedLap,
-            tileUrl: widget.tileUrl,
-            attribution: widget.attribution,
+            data: s.series!,
+            selected: selection.selected,
+            selectedLap: selection.selectedLap,
+            tileUrl: tileUrl,
+            attribution: attribution,
           ),
-        if (c.data != null && c.data!.series.isNotEmpty) ...[
+        if (s.series != null && s.series!.series.isNotEmpty) ...[
           ValueListenableBuilder<int?>(
-            valueListenable: c.selected,
+            valueListenable: selection.selected,
             builder: (_, index, _) => Text(
-              index == null ? l10n.momentHint : _moment(l10n, c, index),
+              index == null ? l10n.momentHint : _moment(l10n, s, index),
               key: const Key('moment'),
               style: text.bodyMedium?.copyWith(
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
-          for (final series in c.data!.series)
+          for (final series in s.series!.series)
             SeriesChart(
               series: series,
-              time: c.data!.time,
-              selected: c.selected,
-              selectedLap: c.selectedLap,
+              time: s.series!.time,
+              selected: selection.selected,
+              selectedLap: selection.selectedLap,
               color:
                   VelomineColors.of(context).series[series.id] ??
                   Theme.of(context).colorScheme.primary,
@@ -271,11 +301,11 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     ];
   }
 
-  String _moment(AppLocalizations l10n, RideDetailController c, int index) {
-    final d = c.data!;
-    final distance = d.distance == null ? null : d.distance![index];
+  String _moment(AppLocalizations l10n, RideDetailState s, int index) {
+    final data = s.series!;
+    final distance = data.distance == null ? null : data.distance![index];
     return l10n.momentAt(
-      clock(d.time[index]),
+      clock(data.time[index]),
       distance == null ? '' : ' · ${km(distance)}',
     );
   }
@@ -486,18 +516,23 @@ const _powerZoneColors = [
 
 /// Which bike was ridden. An archived bike is only listed when this ride already uses it.
 class _BikePicker extends StatelessWidget {
-  const _BikePicker({required this.controller, required this.ride});
+  const _BikePicker({
+    required this.bikes,
+    required this.ride,
+    required this.onChanged,
+  });
 
-  final RideDetailController controller;
+  final List<BikeResponse> bikes;
   final RideResponse ride;
+  final ValueChanged<String?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final bikes = controller.bikes
+    final shown = bikes
         .where((b) => b.isActive || b.id == ride.bikeId)
         .toList();
     // A bike this list does not know (deleted meanwhile) must not break the dropdown.
-    final value = bikes.any((b) => b.id == ride.bikeId) ? ride.bikeId : null;
+    final value = shown.any((b) => b.id == ride.bikeId) ? ride.bikeId : null;
     return DropdownButtonFormField<String?>(
       key: ValueKey('ride-bike-$value'),
       initialValue: value,
@@ -507,10 +542,10 @@ class _BikePicker extends StatelessWidget {
           value: null,
           child: Text(context.l10n.noBike),
         ),
-        for (final b in bikes)
+        for (final b in shown)
           DropdownMenuItem<String?>(value: b.id, child: Text(b.name)),
       ],
-      onChanged: controller.setBike,
+      onChanged: onChanged,
     );
   }
 }

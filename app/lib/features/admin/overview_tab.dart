@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import 'admin_controller.dart';
+import 'admin_view_models.dart';
 
 /// Totals for the whole server. Counts only: an admin never sees whose rides they are.
-class OverviewTab extends StatelessWidget {
-  const OverviewTab({super.key, required this.controller});
-
-  final AdminController controller;
+class OverviewTab extends ConsumerWidget {
+  const OverviewTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final o = controller.overview;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(adminOverviewViewModelProvider);
+    final l10n = context.l10n;
+    final o = s.load.value;
     if (o == null) {
       return Center(
-        child: controller.loading
+        child: s.load.running
             ? const CircularProgressIndicator()
             : Text(
-                controller.error == null
-                    ? context.l10n.noOverview
-                    : failureText(context.l10n, controller.error!),
+                s.load.failure == null
+                    ? l10n.noOverview
+                    : failureText(l10n, s.load.failure!),
               ),
       );
     }
@@ -32,7 +33,6 @@ class OverviewTab extends StatelessWidget {
         trailing: Text(value, style: Theme.of(context).textTheme.titleLarge),
       ),
     );
-    final l10n = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
