@@ -15,6 +15,7 @@
   <meta name="twitter:image" content="/static/img/og.png">
   <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
 </head>
@@ -83,7 +84,7 @@
         </div>
 
         <div class="area-grid">
-          <article class="area-card is-progress">
+          <article class="area-card card is-progress">
             <h3>Cloud and enrollment</h3>
             <p class="area-state">In progress</p>
             <p>One app, one database per club. The single-club install works today; enrolling a new club is still done with me personally. Missing:</p>
@@ -97,47 +98,47 @@
               <li>the first import and the go-live checklist</li>
             </ul>
           </article>
-          <article class="area-card is-progress">
+          <article class="area-card card is-progress">
             <h3>Server core</h3>
             <p class="area-state">In progress</p>
-            <p>Accounts, roles, single sign-on, admin approval and password reset work. Two-factor sign-in, API keys and passkeys are next.</p>
+            <p>Accounts, roles, single sign-on, admin approval, password reset, optional two-factor sign-in and the device list work. API keys are next.</p>
           </article>
-          <article class="area-card is-done">
+          <article class="area-card card is-done">
             <h3>Ride files</h3>
             <p class="area-state">Done</p>
             <p>FIT, GPX and TCX files read in the background into a ride.</p>
           </article>
-          <article class="area-card is-progress">
+          <article class="area-card card is-progress">
             <h3>Rides</h3>
             <p class="area-state">In progress</p>
             <p>Maps, charts, every stream, heart-rate and power zones, IF, TSS, TRIMP and laps. Photos, thumbnails and reverse geocoding are next.</p>
           </article>
-          <article class="area-card is-done">
+          <article class="area-card card is-done">
             <h3>Bikes</h3>
             <p class="area-state">Done</p>
             <p>Bikes, wheel circumference, parts, wear by distance, hours or months, and a default bike.</p>
           </article>
-          <article class="area-card is-progress">
+          <article class="area-card card is-progress">
             <h3>Mobile app</h3>
             <p class="area-state">In progress</p>
             <p>Android records with the screen off, a heart-rate strap, auto-pause and background upload. Speed, cadence and power sensors are being integrated; iOS is next.</p>
           </article>
-          <article class="area-card is-done">
+          <article class="area-card card is-done">
             <h3>Web app</h3>
             <p class="area-state">Done</p>
             <p>Sign in, upload, rides, bikes, progress, club and coach screens, plus club administration.</p>
           </article>
-          <article class="area-card is-done">
+          <article class="area-card card is-done">
             <h3>Wellbeing</h3>
             <p class="area-state">Done</p>
             <p>Daily check-in, RPE and notes, consent, and a readiness view.</p>
           </article>
-          <article class="area-card is-progress">
+          <article class="area-card card is-progress">
             <h3>Sharing</h3>
             <p class="area-state">In progress</p>
             <p>Clubs, join codes, coach sharing and read-only coach views work. Whole-club reading needs a member-facing club view; share links, privacy zones and per-stream privacy are next.</p>
           </article>
-          <article class="area-card is-done">
+          <article class="area-card card is-done">
             <h3>Analytics</h3>
             <p class="area-state">Done</p>
             <p>NP, IF, TSS, TRIMP, heart-rate and power zones, totals, goals, the 30/90/365 dashboard, a power curve with FTP and VO2max estimates, and readiness.</p>
@@ -157,13 +158,15 @@
         </div>
 
         <div class="feature-groups">
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Accounts and access</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign-up with club admin approval</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Password sign-in, with a cookie on the web and a refresh token on the phone</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Single sign-on with the club’s existing provider</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Password reset by email, or a one-time link from a club admin</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Optional two-factor sign-in with an authenticator app and single-use recovery codes</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A device list: see every signed-in phone and browser, sign one out, or all the others</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Club admin, member and coach roles</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Lock or delete an account; deleting removes every ride and file</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Profile: FTP, weight, maximum heart rate, time zone and week start</span></li>
@@ -171,7 +174,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Rides and analysis</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>FIT, GPX and TCX uploads, including gzipped files</span></li>
@@ -183,7 +186,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Training and goals</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Weekly, monthly and yearly totals</span></li>
@@ -193,7 +196,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Wellbeing</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Daily check-in: fatigue, soreness, mood, stress and motivation</span></li>
@@ -204,7 +207,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Bikes and components</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Bikes with wheel circumference and the distance a used bike already had</span></li>
@@ -214,7 +217,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Clubs and sharing</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clubs, membership and joining with a code</span></li>
@@ -225,7 +228,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Phone recorder</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Android recording with the screen off</span></li>
@@ -235,7 +238,7 @@
             </ul>
           </article>
 
-          <article class="feature-group">
+          <article class="feature-group card">
             <h3>Club admin and server</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every account, roles, lock, delete and club admin approval</span></li>
@@ -261,7 +264,7 @@
           <thead><tr><th scope="col">Area</th><th scope="col">Missing</th></tr></thead>
           <tbody>
             <tr><td>Clubs and hosting</td><td>The club list, each club’s own database, and automated enrollment.</td></tr>
-            <tr><td>Accounts</td><td>Two-factor sign-in, API keys.</td></tr>
+            <tr><td>Accounts</td><td>API keys.</td></tr>
             <tr><td>Rides</td><td>Photos, thumbnails, reverse geocoding.</td></tr>
             <tr><td>Web app</td><td>Drag-and-drop upload; a file picker works today.</td></tr>
             <tr><td>Sharing</td><td>Share links, privacy zones, per-stream privacy, whole-club reading (member-facing club view).</td></tr>
@@ -281,7 +284,6 @@
             <tr><td>Live</td><td>Live tracking with an expiring link for solo rides.</td></tr>
             <tr><td>Club</td><td>Group rides, club leaderboards, self-hosted segments.</td></tr>
             <tr><td>Export</td><td>FIT export of any ride.</td></tr>
-            <tr><td>Auth</td><td>Passkeys.</td></tr>
           </tbody>
         </table>
 
@@ -296,7 +298,7 @@
           </tbody>
         </table>
 
-        <p class="note-small">The v1 scope table and the release plan disagree on cycle tracking, Garmin Connect and passkeys. This page follows the scope table and puts passkeys after v1.</p>
+        <p class="note-small">The v1 scope table and the release plan disagree on cycle tracking and Garmin Connect. This page follows the scope table.</p>
       </div>
     </section>
 
@@ -305,7 +307,7 @@
         <p class="eyebrow">Talk to me</p>
         <h2>Want to try it with your club?</h2>
         <p>Tell me what your club needs first. The status page is honest about what is ready; the next feature can be shaped by a real club.</p>
-        <a class="btn btn-primary" href="/contact/">Get in touch <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-primary" href="/contact/">Get in touch <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
       </div>
     </section>
   </main>

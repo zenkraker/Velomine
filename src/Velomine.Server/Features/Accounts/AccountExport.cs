@@ -26,6 +26,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var rides = await db.Rides.AsNoTracking().Where(r => r.UserId == userId).OrderBy(r => r.StartTime).ThenBy(r => r.UploadedAt).ToListAsync(ct);
         var goals = await db.Set<Goal>().AsNoTracking().Where(g => g.UserId == userId).OrderBy(g => g.CreatedAt).ToListAsync(ct);
         var notifications = await db.Notifications.AsNoTracking().Where(n => n.UserId == userId).OrderBy(n => n.CreatedAt).ToListAsync(ct);
+        var sessions = await db.UserSessions.AsNoTracking().Where(s => s.UserId == userId).OrderByDescending(s => s.LastUsedAt).ToListAsync(ct);
         var checkIns = await db.DailyCheckIns.AsNoTracking()
             .Where(c => c.UserId == userId).OrderBy(c => c.LocalDate).ToListAsync(ct);
         var feels = await (
@@ -107,6 +108,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         }), ct);
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
+        await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
         await AddJsonAsync(zip, "wellbeing.json", new
         {
             ConsentAt = user.WellbeingConsentAt,
@@ -153,6 +155,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         rides.json          every ride: its numbers, its status, and where its original file is in this ZIP
         goals.json          your goals
         notifications.json  your notifications
+        sessions.json       where you are signed in: the device label and the times, never an address
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.

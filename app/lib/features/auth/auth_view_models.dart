@@ -20,16 +20,49 @@ class SignInViewModel extends _$SignInViewModel {
   }) async {
     if (state.command.running) return;
     ref.read(sessionProvider).clearSsoError();
-    state = state.copyWith(command: state.command.start(), clearProblem: true);
-    final problem = await ref
+    state = state.copyWith(
+      command: state.command.start(),
+      clearProblem: true,
+      clearChallenge: true,
+      rememberMe: rememberMe,
+    );
+    final result = await ref
         .read(authDataProvider)
         .signIn(email, password, rememberMe: rememberMe);
     if (!ref.mounted) return;
     state = state.copyWith(
       command: state.command.finish(const Ok(null)),
-      problem: problem,
+      problem: result.problem,
+      challenge: result.challenge,
     );
   }
+
+  /// The code from the authenticator app, or one recovery code.
+  Future<void> verifyCode(String code) async {
+    if (state.command.running ||
+        state.challenge == null ||
+        code.trim().isEmpty) {
+      return;
+    }
+    state = state.copyWith(command: state.command.start(), clearProblem: true);
+    final problem = await ref
+        .read(authDataProvider)
+        .completeTwoFactor(
+          state.challenge!,
+          code,
+          rememberMe: state.rememberMe,
+        );
+    if (!ref.mounted) return;
+    state = state.copyWith(
+      command: state.command.finish(const Ok(null)),
+      problem: problem,
+      clearChallenge: problem == null,
+    );
+  }
+
+  /// Back to email and password, for a member who has the wrong account.
+  void useAnotherAccount() =>
+      state = state.copyWith(clearChallenge: true, clearProblem: true);
 
   void retryRestore() => ref.read(authDataProvider).retryRestore();
 }

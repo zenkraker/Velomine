@@ -41,7 +41,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | Share links | One link per ride, with optional expiry and privacy zones, instead of public pages and a feed. |
 | Per-stream privacy | Applied to share links and coach views. |
 | Notifications | Component worn out, coach request, import failed. |
-| Auth | Local login, MFA, SSO (OIDC) per club host, sign-up approval, password reset, API keys and sessions, plus passkeys. |
+| Auth | Local login, two-factor sign-in (authenticator app and recovery codes), SSO (OIDC) per club host, sign-up approval, password reset, API keys and the session list with "log out other devices". |
 | Roles | Club admin, member and coach. |
 | Solo riders | Any account works without a club on that club's host: personal tools, rides and wellbeing, with the club as an opt-in step. Discovery and joining across clubs are part of the inter-club layer (v2). |
 | Profile export and import | Full export, including original files. |
@@ -52,7 +52,7 @@ Everything below is cycling-first, and every feature is shaped for clubs and tea
 | Phone extras | Auto-pause and audio announcements. |
 | Phone health import | Not in v1: rides come from the phone, a bike computer or connectors. |
 
-Out of scope: gym and running concepts, a social feed with followers, and health logging (steps, sleep, water, fasting, bowel log). Clubs and coaches replace followers, and the wellness check-in replaces health logging.
+Out of scope: gym and running concepts, a social feed with followers, and health logging (steps, sleep, water, fasting, bowel log). Clubs and coaches replace followers, and the wellness check-in replaces health logging. Passkeys are not planned: Flutter has no official passkey plugin, and iOS passkey sign-in needs a per-domain app association that self-hosted clubs cannot provide.
 
 ## Velomine-only features
 
@@ -83,7 +83,7 @@ Recommendation: .NET 10 for the server, and Flutter for everything a logged-in u
 - **Data:** PostgreSQL with EF Core.
 - **FIT parsing:** Garmin's official FIT C# SDK, on NuGet as `Garmin.FIT.Sdk` ([NuGet](https://nuget.org/packages/Garmin.FIT.Sdk/21.158.0)). It targets .NET Standard 2.0, so it runs on .NET 10.
 - **Background work:** hosted services with an in-memory channel and timers: ingestion, thumbnails, geocoding, connector polling, maintenance reminders. Each unit of work resolves one tenant; nothing is queued in the database.
-- **Auth:** ASP.NET Core Identity with MFA, external OIDC login for SSO, scoped API keys, and passkeys, built into Identity since .NET 10 ([Microsoft docs](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/passkeys)).
+- **Auth:** ASP.NET Core Identity with two-factor sign-in (authenticator app and one-time recovery codes), external OIDC login for SSO, and scoped API keys.
 - **Deploy:** one Docker image (amd64; the Flutter web stage is Linux x64). Cloud runs one shared deployment over a managed PostgreSQL cluster with one database per club; self-host runs the same image single-tenant.
 
 ### Mobile apps: Flutter
@@ -123,7 +123,7 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 
 **v1: ride, record, share**
 
-1. Server core: tenancy (one shared deployment, one database per club), accounts, MFA, SSO with OIDC, roles (club admin, member, coach), clubs with members and coaches, Docker image.
+1. Server core: tenancy (one shared deployment, one database per club), accounts, two-factor sign-in, session list with sign out of other devices, SSO with OIDC, roles (club admin, member, coach), clubs with members and coaches, Docker image.
 2. Ingestion: upload endpoint with async jobs and idempotency, FIT and GPX parsing including every sensor extension, deduplication.
 3. Rides: map, stream charts, HR and power zones, laps, photos, ride dimensions for cycling.
 4. Bikes: bikes with wheel circumference, components with wear by km, hours or months.
@@ -141,7 +141,6 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 4. Analytics, advanced: power curve, FTP and VO2max estimates, fitness, fatigue and form, readiness view.
 5. Cycle tracking, encrypted, with its own sharing permission.
 6. Maintenance reminders as notifications.
-7. Passkeys.
 
 **Later**
 

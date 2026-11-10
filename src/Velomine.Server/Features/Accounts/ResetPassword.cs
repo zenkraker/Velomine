@@ -23,6 +23,7 @@ public sealed class ResetPasswordValidator : Validator<ResetPasswordRequest>
 /// </summary>
 public sealed class ResetPassword(
     UserManager<User> users,
+    UserSessions sessions,
     PasswordResetThrottle throttle) : Endpoint<ResetPasswordRequest>
 {
     public override void Configure()
@@ -70,6 +71,7 @@ public sealed class ResetPassword(
 
         // ResetPasswordAsync already moves the stamp, but doing it here makes the guarantee explicit.
         await users.UpdateSecurityStampAsync(user);
+        await sessions.RevokeAllAsync(user.Id, ct);
         await Send.NoContentAsync(ct);
     }
 }

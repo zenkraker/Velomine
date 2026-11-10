@@ -356,6 +356,204 @@ abstract class AppLocalizations {
   /// **'Could not reach the server. Try again.'**
   String get authUnavailable;
 
+  /// No description provided for @authWrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code did not work. Try the next one.'**
+  String get authWrongCode;
+
+  /// No description provided for @twoFactorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in'**
+  String get twoFactorTitle;
+
+  /// No description provided for @twoFactorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code from your authenticator app, or one of your recovery codes.'**
+  String get twoFactorHelp;
+
+  /// No description provided for @twoFactorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get twoFactorCode;
+
+  /// No description provided for @twoFactorVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get twoFactorVerify;
+
+  /// No description provided for @twoFactorUseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another account'**
+  String get twoFactorUseAnother;
+
+  /// No description provided for @twoFactorStateOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is on.'**
+  String get twoFactorStateOn;
+
+  /// No description provided for @twoFactorStateOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is off.'**
+  String get twoFactorStateOff;
+
+  /// No description provided for @twoFactorIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'After your password, you enter a code from your authenticator app. It is optional, and you can turn it off again.'**
+  String get twoFactorIntro;
+
+  /// No description provided for @twoFactorNoPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'This account signs in with single sign-on, so it already has a second step.'**
+  String get twoFactorNoPassword;
+
+  /// No description provided for @twoFactorStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up an authenticator'**
+  String get twoFactorStart;
+
+  /// No description provided for @twoFactorKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Type this key into your authenticator app, then enter the code it shows.'**
+  String get twoFactorKeyHelp;
+
+  /// No description provided for @twoFactorKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Key'**
+  String get twoFactorKey;
+
+  /// No description provided for @twoFactorPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password'**
+  String get twoFactorPassword;
+
+  /// No description provided for @twoFactorCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the app'**
+  String get twoFactorCodeLabel;
+
+  /// No description provided for @twoFactorEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get twoFactorEnable;
+
+  /// No description provided for @twoFactorDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get twoFactorDisable;
+
+  /// No description provided for @twoFactorRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'New recovery codes'**
+  String get twoFactorRegenerate;
+
+  /// No description provided for @twoFactorRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery codes'**
+  String get twoFactorRecoveryTitle;
+
+  /// No description provided for @twoFactorRecoveryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Save them somewhere safe. Each works once, in place of the app code.'**
+  String get twoFactorRecoveryHelp;
+
+  /// No description provided for @twoFactorEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is on.'**
+  String get twoFactorEnabled;
+
+  /// No description provided for @twoFactorDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is off.'**
+  String get twoFactorDisabled;
+
+  /// No description provided for @twoFactorCodeWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That code did not work. Check the clock on your phone and try the next one.'**
+  String get twoFactorCodeWrong;
+
+  /// No description provided for @sessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices and sessions'**
+  String get sessionsTitle;
+
+  /// No description provided for @sessionsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Where you are signed in now. Signing a device out asks for the password again there.'**
+  String get sessionsIntro;
+
+  /// No description provided for @sessionThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get sessionThisDevice;
+
+  /// No description provided for @sessionLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used'**
+  String get sessionLastUsed;
+
+  /// No description provided for @sessionSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get sessionSince;
+
+  /// No description provided for @sessionRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get sessionRevoke;
+
+  /// No description provided for @sessionLogoutOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out other devices'**
+  String get sessionLogoutOthers;
+
+  /// No description provided for @sessionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No other devices are signed in.'**
+  String get sessionsEmpty;
+
+  /// No description provided for @sessionRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'That device is signed out.'**
+  String get sessionRevoked;
+
+  /// No description provided for @sessionOthersRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Every other device is signed out.'**
+  String get sessionOthersRevoked;
+
   /// No description provided for @ssoEmailNotVerified.
   ///
   /// In en, this message translates to:
@@ -2966,6 +3164,18 @@ abstract class AppLocalizations {
   /// **'Delete account'**
   String get deleteAccountAction;
 
+  /// No description provided for @resetTwoFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset two-factor sign-in'**
+  String get resetTwoFactor;
+
+  /// No description provided for @resetTwoFactorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The member signs in again with the password and sets up the authenticator app from scratch.'**
+  String get resetTwoFactorBody;
+
   /// No description provided for @rolesFor.
   ///
   /// In en, this message translates to:
@@ -4501,6 +4711,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'decline the request'**
   String get actionDeclineJoinRequest;
+
+  /// No description provided for @actionLoadSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'load your sign-in settings'**
+  String get actionLoadSecurity;
+
+  /// No description provided for @actionChangeSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'change your sign-in settings'**
+  String get actionChangeSecurity;
 
   /// No description provided for @clubSeeNearby.
   ///

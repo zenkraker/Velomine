@@ -17,6 +17,7 @@ class LoginRequest {
     required this.password,
     this.useCookies = const Optional.present(false),
     this.rememberMe = const Optional.present(true),
+    this.deviceLabel = const Optional.absent(),
   });
 
   final String email;
@@ -27,12 +28,21 @@ class LoginRequest {
 
   final Optional<bool?> rememberMe;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> deviceLabel;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is LoginRequest &&
     other.email == email &&
     other.password == password &&
     other.useCookies == useCookies &&
-    other.rememberMe == rememberMe;
+    other.rememberMe == rememberMe &&
+    other.deviceLabel == deviceLabel;
 
   @override
   int get hashCode =>
@@ -40,10 +50,11 @@ class LoginRequest {
     (email.hashCode) +
     (password.hashCode) +
     (useCookies.hashCode) +
-    (rememberMe.hashCode);
+    (rememberMe.hashCode) +
+    (deviceLabel == null ? 0 : deviceLabel!.hashCode);
 
   @override
-  String toString() => 'LoginRequest[email=$email, password=$password, useCookies=$useCookies, rememberMe=$rememberMe]';
+  String toString() => 'LoginRequest[email=$email, password=$password, useCookies=$useCookies, rememberMe=$rememberMe, deviceLabel=$deviceLabel]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -57,6 +68,10 @@ class LoginRequest {
       final value = this.rememberMe.value;
       json[r'rememberMe'] = value;
     }
+    if (this.deviceLabel.isPresent) {
+      final value = this.deviceLabel.value;
+      json[r'deviceLabel'] = value;
+    }
     return json;
   }
 
@@ -67,11 +82,13 @@ class LoginRequest {
     String? password,
     Optional<bool?>? useCookies,
     Optional<bool?>? rememberMe,
+    Optional<String?>? deviceLabel,
   }) => LoginRequest(
     email: email ?? this.email,
     password: password ?? this.password,
     useCookies: useCookies ?? this.useCookies,
     rememberMe: rememberMe ?? this.rememberMe,
+    deviceLabel: deviceLabel ?? this.deviceLabel,
   );
 
   /// Returns a new [LoginRequest] instance and imports its values from
@@ -97,6 +114,7 @@ class LoginRequest {
         password: mapValueOfType<String>(json, r'password')!,
         useCookies: json.containsKey(r'useCookies') ? Optional.present(mapValueOfType<bool>(json, r'useCookies')) : const Optional.absent(),
         rememberMe: json.containsKey(r'rememberMe') ? Optional.present(mapValueOfType<bool>(json, r'rememberMe')) : const Optional.absent(),
+        deviceLabel: json.containsKey(r'deviceLabel') ? Optional.present(mapValueOfType<String>(json, r'deviceLabel')) : const Optional.absent(),
       );
     }
     return null;

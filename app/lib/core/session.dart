@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:velomine_api/api.dart';
 
 import 'app_sso.dart';
@@ -11,6 +12,7 @@ enum SessionStatus { loading, signedOut, signedIn }
 /// Why a sign-in or sign-up did not work, for the screens to explain.
 enum AuthProblem {
   wrongPassword,
+  wrongCode,
   notApproved,
   lockedOut,
   signUpClosed,
@@ -266,6 +268,7 @@ class Session {
         ExchangeSsoTokenRequest(
           idToken: idToken,
           accessToken: result.accessToken,
+          deviceLabel: Optional.present(_deviceLabel),
         ),
       );
     } on ApiException catch (e) {
@@ -335,43 +338,122 @@ class Session {
     }
   }
 
-  /// Returns null on success, or the reason it failed.
-  Future<AuthProblem?> signIn(String email, String password, {bool rememberMe = true}) async {
+  /// Returns null on success, or the reason it failed. A non-null challenge means the account has a second factor:
+  /// the screen asks for the code and calls [completeTwoFactor].
+  Future<({AuthProblem? problem, String? challenge})> signIn(
+    String email,
+    String password, {
+    bool rememberMe = true,
+  }) async {
     // Keys and autofill can add a space at either end; it must not decide whether
     // an account matches.
     email = email.trim();
     password = password.trim();
     restoreProblem = null;
 
+    late final int statusCode;
+    String? challenge;
     TokenResponse? token;
     try {
-      token = await accounts.login(
+      final response = await accounts.loginWithHttpInfo(
         LoginRequest(
           email: email,
           password: password,
           useCookies: Optional.present(useCookies),
           rememberMe: Optional.present(rememberMe),
+          deviceLabel: Optional.present(_deviceLabel),
         ),
       );
-    } on ApiException catch (e) {
-      if (e.code == 401) {
-        await auth.clear();
-        return AuthProblem.wrongPassword;
+      statusCode = response.statusCode;
+      if (statusCode == 202) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        challenge = body['challenge'] as String?;
+      } else if (statusCode < 400 && response.body.isNotEmpty) {
+        token = TokenResponse.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
       }
-      return switch (e.code) {
-        403 => AuthProblem.notApproved,
-        423 => AuthProblem.lockedOut,
-        _ => AuthProblem.unavailable,
-      };
     } on Object {
-      return AuthProblem.unavailable;
+      return (problem: AuthProblem.unavailable, challenge: null);
+    }
+
+    if (challenge != null) {
+      return (problem: null, challenge: challenge);
+    }
+
+    // A 202 without a challenge would otherwise look like a successful sign-in with no session.
+    if (statusCode == 202) {
+      return (problem: AuthProblem.unavailable, challenge: null);
+    }
+
+    if (statusCode >= 400) {
+      if (statusCode == 401) await auth.clear();
+      return (
+        problem: switch (statusCode) {
+          401 => AuthProblem.wrongPassword,
+          403 => AuthProblem.notApproved,
+          423 => AuthProblem.lockedOut,
+          _ => AuthProblem.unavailable,
+        },
+        challenge: null,
+      );
     }
 
     if (!useCookies) {
-      if (token == null) return AuthProblem.unavailable;
+      if (token == null) {
+        return (problem: AuthProblem.unavailable, challenge: null);
+      }
       await auth.accept(token, persist: rememberMe);
     }
 
+    final problem = await _finishSignIn();
+    return (problem: problem, challenge: null);
+  }
+
+  /// The second step: the challenge from [signIn] and the code from the authenticator app, or a recovery code.
+  Future<AuthProblem?> completeTwoFactor(
+    String challenge,
+    String code, {
+    bool rememberMe = true,
+  }) async {
+    try {
+      final response = await accounts.loginTwoFactorWithHttpInfo(
+        LoginTwoFactorRequest(
+          challenge: challenge,
+          code: code.trim(),
+          useCookies: Optional.present(useCookies),
+          rememberMe: Optional.present(rememberMe),
+          deviceLabel: Optional.present(_deviceLabel),
+        ),
+      );
+
+      if (response.statusCode >= 400) {
+        if (response.statusCode == 401) await auth.clear();
+        return switch (response.statusCode) {
+          401 => AuthProblem.wrongCode,
+          403 => AuthProblem.notApproved,
+          423 => AuthProblem.lockedOut,
+          _ => AuthProblem.unavailable,
+        };
+      }
+
+      if (!useCookies) {
+        if (response.body.isEmpty) return AuthProblem.unavailable;
+        final token = TokenResponse.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
+        if (token == null) return AuthProblem.unavailable;
+        await auth.accept(token, persist: rememberMe);
+      }
+
+      return await _finishSignIn();
+    } on Object {
+      return AuthProblem.unavailable;
+    }
+  }
+
+  /// Reads the member after the server accepted the sign-in.
+  Future<AuthProblem?> _finishSignIn() async {
     try {
       me = await accounts.getMe();
     } on ApiException catch (e) {
@@ -385,6 +467,19 @@ class Session {
     status = SessionStatus.signedIn;
     _notify();
     return null;
+  }
+
+  /// A label the session list can show, without asking the platform for a model name.
+  String get _deviceLabel {
+    if (kIsWeb) return 'Web app';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => 'Android app',
+      TargetPlatform.iOS => 'iPhone app',
+      TargetPlatform.macOS => 'Mac app',
+      TargetPlatform.windows => 'Windows app',
+      TargetPlatform.linux => 'Linux app',
+      _ => 'App',
+    };
   }
 
   /// Returns null on success. [approved] says whether the new account can sign in right away.
@@ -422,7 +517,9 @@ class Session {
 
   Future<void> signOut() async {
     try {
-      if (useCookies) await accounts.logout();
+      // Ending the session on the server also removes it from the member's device list; a token on its own would
+      // simply expire.
+      await accounts.logout();
     } on Object {
       // The session is dropped on this side either way.
     }

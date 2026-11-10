@@ -153,6 +153,113 @@ class AppLocalizationsIt extends AppLocalizations {
   String get authUnavailable => 'Impossibile raggiungere il server. Riprova.';
 
   @override
+  String get authWrongCode => 'Il codice non è corretto. Prova il successivo.';
+
+  @override
+  String get twoFactorTitle => 'Accesso a due fattori';
+
+  @override
+  String get twoFactorHelp =>
+      'Inserisci il codice di 6 cifre della tua app di autenticazione, oppure uno dei codici di recupero.';
+
+  @override
+  String get twoFactorCode => 'Codice di 6 cifre';
+
+  @override
+  String get twoFactorVerify => 'Verifica';
+
+  @override
+  String get twoFactorUseAnother => 'Usa un altro account';
+
+  @override
+  String get twoFactorStateOn => 'L\'accesso a due fattori è attivo.';
+
+  @override
+  String get twoFactorStateOff => 'L\'accesso a due fattori è disattivato.';
+
+  @override
+  String get twoFactorIntro =>
+      'Dopo la password inserisci un codice della tua app di autenticazione. È facoltativo e puoi disattivarlo quando vuoi.';
+
+  @override
+  String get twoFactorNoPassword =>
+      'Questo account accede con l\'accesso singolo, che è già un secondo passaggio.';
+
+  @override
+  String get twoFactorStart => 'Configura un\'app di autenticazione';
+
+  @override
+  String get twoFactorKeyHelp =>
+      'Digita questa chiave nella tua app di autenticazione, poi inserisci il codice che mostra.';
+
+  @override
+  String get twoFactorKey => 'Chiave';
+
+  @override
+  String get twoFactorPassword => 'La tua password';
+
+  @override
+  String get twoFactorCodeLabel => 'Codice dall\'app';
+
+  @override
+  String get twoFactorEnable => 'Attiva';
+
+  @override
+  String get twoFactorDisable => 'Disattiva';
+
+  @override
+  String get twoFactorRegenerate => 'Nuovi codici di recupero';
+
+  @override
+  String get twoFactorRecoveryTitle => 'Codici di recupero';
+
+  @override
+  String get twoFactorRecoveryHelp =>
+      'Salvali in un posto sicuro. Ognuno funziona una volta, al posto del codice dell\'app.';
+
+  @override
+  String get twoFactorEnabled => 'L\'accesso a due fattori è attivo.';
+
+  @override
+  String get twoFactorDisabled => 'L\'accesso a due fattori è disattivato.';
+
+  @override
+  String get twoFactorCodeWrong =>
+      'Il codice non è corretto. Controlla l\'ora del telefono e prova il successivo.';
+
+  @override
+  String get sessionsTitle => 'Dispositivi e sessioni';
+
+  @override
+  String get sessionsIntro =>
+      'Dove hai effettuato l\'accesso adesso. Disconnettere un dispositivo richiede di nuovo la password lì.';
+
+  @override
+  String get sessionThisDevice => 'Questo dispositivo';
+
+  @override
+  String get sessionLastUsed => 'Ultimo uso';
+
+  @override
+  String get sessionSince => 'Accesso';
+
+  @override
+  String get sessionRevoke => 'Disconnetti';
+
+  @override
+  String get sessionLogoutOthers => 'Disconnetti gli altri dispositivi';
+
+  @override
+  String get sessionsEmpty => 'Nessun altro dispositivo è connesso.';
+
+  @override
+  String get sessionRevoked => 'Quel dispositivo è disconnesso.';
+
+  @override
+  String get sessionOthersRevoked =>
+      'Tutti gli altri dispositivi sono disconnessi.';
+
+  @override
   String get ssoEmailNotVerified =>
       'Il tuo provider di accesso non ha verificato il tuo indirizzo email.';
 
@@ -1623,6 +1730,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get deleteAccountAction => 'Elimina account';
 
   @override
+  String get resetTwoFactor => 'Reimposta l\'accesso a due fattori';
+
+  @override
+  String get resetTwoFactorBody =>
+      'Il membro accede di nuovo con la password e configura da capo l\'app di autenticazione.';
+
+  @override
   String rolesFor(String name) {
     return 'Ruoli di $name';
   }
@@ -2469,6 +2583,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionDeclineJoinRequest => 'rifiutare la richiesta';
+
+  @override
+  String get actionLoadSecurity => 'caricare le impostazioni di accesso';
+
+  @override
+  String get actionChangeSecurity => 'modificare le impostazioni di accesso';
 
   @override
   String get clubSeeNearby => 'Vedi i club vicino a te';

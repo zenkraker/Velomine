@@ -152,6 +152,112 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authUnavailable => 'Could not reach the server. Try again.';
 
   @override
+  String get authWrongCode => 'That code did not work. Try the next one.';
+
+  @override
+  String get twoFactorTitle => 'Two-factor sign-in';
+
+  @override
+  String get twoFactorHelp =>
+      'Enter the 6-digit code from your authenticator app, or one of your recovery codes.';
+
+  @override
+  String get twoFactorCode => '6-digit code';
+
+  @override
+  String get twoFactorVerify => 'Verify';
+
+  @override
+  String get twoFactorUseAnother => 'Use another account';
+
+  @override
+  String get twoFactorStateOn => 'Two-factor sign-in is on.';
+
+  @override
+  String get twoFactorStateOff => 'Two-factor sign-in is off.';
+
+  @override
+  String get twoFactorIntro =>
+      'After your password, you enter a code from your authenticator app. It is optional, and you can turn it off again.';
+
+  @override
+  String get twoFactorNoPassword =>
+      'This account signs in with single sign-on, so it already has a second step.';
+
+  @override
+  String get twoFactorStart => 'Set up an authenticator';
+
+  @override
+  String get twoFactorKeyHelp =>
+      'Type this key into your authenticator app, then enter the code it shows.';
+
+  @override
+  String get twoFactorKey => 'Key';
+
+  @override
+  String get twoFactorPassword => 'Your password';
+
+  @override
+  String get twoFactorCodeLabel => 'Code from the app';
+
+  @override
+  String get twoFactorEnable => 'Turn on';
+
+  @override
+  String get twoFactorDisable => 'Turn off';
+
+  @override
+  String get twoFactorRegenerate => 'New recovery codes';
+
+  @override
+  String get twoFactorRecoveryTitle => 'Recovery codes';
+
+  @override
+  String get twoFactorRecoveryHelp =>
+      'Save them somewhere safe. Each works once, in place of the app code.';
+
+  @override
+  String get twoFactorEnabled => 'Two-factor sign-in is on.';
+
+  @override
+  String get twoFactorDisabled => 'Two-factor sign-in is off.';
+
+  @override
+  String get twoFactorCodeWrong =>
+      'That code did not work. Check the clock on your phone and try the next one.';
+
+  @override
+  String get sessionsTitle => 'Devices and sessions';
+
+  @override
+  String get sessionsIntro =>
+      'Where you are signed in now. Signing a device out asks for the password again there.';
+
+  @override
+  String get sessionThisDevice => 'This device';
+
+  @override
+  String get sessionLastUsed => 'Last used';
+
+  @override
+  String get sessionSince => 'Signed in';
+
+  @override
+  String get sessionRevoke => 'Sign out';
+
+  @override
+  String get sessionLogoutOthers => 'Log out other devices';
+
+  @override
+  String get sessionsEmpty => 'No other devices are signed in.';
+
+  @override
+  String get sessionRevoked => 'That device is signed out.';
+
+  @override
+  String get sessionOthersRevoked => 'Every other device is signed out.';
+
+  @override
   String get ssoEmailNotVerified =>
       'Your sign-in provider has not verified your email address.';
 
@@ -1614,6 +1720,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountAction => 'Delete account';
 
   @override
+  String get resetTwoFactor => 'Reset two-factor sign-in';
+
+  @override
+  String get resetTwoFactorBody =>
+      'The member signs in again with the password and sets up the authenticator app from scratch.';
+
+  @override
   String rolesFor(String name) {
     return 'Roles for $name';
   }
@@ -2451,6 +2564,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionDeclineJoinRequest => 'decline the request';
+
+  @override
+  String get actionLoadSecurity => 'load your sign-in settings';
+
+  @override
+  String get actionChangeSecurity => 'change your sign-in settings';
 
   @override
   String get clubSeeNearby => 'See clubs near you';

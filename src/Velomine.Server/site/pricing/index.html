@@ -15,6 +15,7 @@
   <meta name="twitter:image" content="/static/img/og.png">
   <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
 </head>
@@ -61,7 +62,7 @@
 
     <section class="section section--tight">
       <div class="container">
-        <div class="price-card">
+        <div class="price-card card card--lg">
           <div class="price-card-main">
             <div>
               <p class="price-label">Clubs</p>
@@ -81,7 +82,6 @@
               <p class="eyebrow">What no feature paywall means</p>
               <p>Every feature that exists is available to every member. There is no “pro” tier, no locked analysis and no add-on.</p>
               <p>Your data is yours: export everything as a ZIP, or delete the account and every file, at any time. Backups expire within 90 days.</p>
-              <p class="last-updated">Velomine is in early development. Some features are still on the way. <a href="/status/">See the status →</a></p>
             </div>
           </div>
           <div class="price-features">
@@ -94,6 +94,7 @@
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clubs, coaches and private sharing</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Bikes, parts and wear</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Goals, totals and training load</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Optional two-factor sign-in and a device list</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Wellbeing check-in, sharing and readiness</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Power curve, FTP and VO2max estimates</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Android recorder and file upload</span></li>
@@ -106,44 +107,6 @@
       </div>
     </section>
 
-    <section class="section section--tight">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">What the fee covers</p>
-          <h2>Activation gets you live. The annual fee keeps it running.</h2>
-          <p>No hidden feature tiers. The money goes into setting up your club and keeping the platform healthy.</p>
-        </div>
-        <div class="cost-grid">
-          <div class="cost-card">
-            <h3>Activation, one time</h3>
-            <ul>
-              <li>Server setup, self-hosted or cloud</li>
-              <li>First import from FIT, GPX or TCX files</li>
-              <li>Club setup and admin accounts</li>
-              <li>Go-live with your first members</li>
-            </ul>
-          </div>
-          <div class="cost-card">
-            <h3>Annual, per club</h3>
-            <ul>
-              <li>The platform and every update</li>
-              <li>Support for your club admins</li>
-              <li>Backups and monitoring on cloud</li>
-              <li>No feature gates, ever</li>
-            </ul>
-          </div>
-          <div class="cost-card">
-            <h3>Always yours</h3>
-            <ul>
-              <li>Every original ride file</li>
-              <li>Export everything as a ZIP</li>
-              <li>Delete the account and all of it; backups expire within 90 days</li>
-              <li>No data hostage, no lock-in</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <section class="section section--tight">
       <div class="container">
@@ -152,7 +115,7 @@
             <p class="eyebrow">Solo riders</p>
             <h2>No club? One price.</h2>
             <p>Use Velomine on your own for €39 a year. Rides, charts, laps, zones, bikes, parts, goals and readiness — everything personal, no club needed. Thirty days free, no card.</p>
-            <p class="note-small">The solo plan opens when Strava import ships, so your history comes with you. <a href="/contact/">Join the waitlist →</a></p>
+            <p class="note-small">The solo plan opens when Strava import ships, so your history comes with you. <a href="/contact/">Join the waitlist <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a></p>
           </div>
           <div class="split-visual">
             <article class="panel panel-pad price-block price-block--solo">
@@ -164,7 +127,7 @@
                 <li>Goals, totals and readiness</li>
                 <li>Every original file, exportable</li>
               </ul>
-              <a class="btn btn-on-dark" href="/contact/">Join the waitlist <span class="arrow" aria-hidden="true">→</span></a>
+              <a class="btn btn-on-dark" href="/contact/">Join the waitlist <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
             </article>
           </div>
         </div>
@@ -179,7 +142,7 @@
           <p>Same Velomine, same data ownership. Choose where the server lives and who keeps it running.</p>
         </div>
         <div class="hosting-grid">
-          <div class="cost-card">
+          <div class="cost-card card">
             <h3>Self-hosted</h3>
             <ul>
               <li>Installed on a server your club controls</li>
@@ -188,7 +151,7 @@
               <li>Activation covers the setup and go-live</li>
             </ul>
           </div>
-          <div class="cost-card">
+          <div class="cost-card card">
             <h3>Cloud</h3>
             <ul>
               <li>A managed instance with its own database</li>
@@ -252,7 +215,7 @@
           </details>
           <details>
             <summary>What is still missing?</summary>
-            <p>Whole-club sharing (needs a member-facing club view), photos, share links, privacy zones, per-stream privacy, cycle tracking, the iOS recorder, speed, cadence and power sensors, connectors, Strava and Garmin import, two-factor sign-in, passkeys and the Italian pages. The <a href="/status/">status page</a> lists every gap.</p>
+            <p>The <a href="/status/">status page</a> keeps the list of what is still missing, in one place.</p>
           </details>
           <details>
             <summary>How do I start?</summary>
@@ -266,8 +229,8 @@
       <div class="container">
         <p class="eyebrow">Talk to me</p>
         <h2>Let's see if it fits your club.</h2>
-        <p>Tell me how many members you have, what you use today, and whether you prefer self-hosted or cloud. I read every message.</p>
-        <a class="btn btn-primary" href="/contact/">Get in touch <span class="arrow" aria-hidden="true">→</span></a>
+        <p>Tell me how many members you have, what you use today, and whether you prefer self-hosted or cloud.</p>
+        <a class="btn btn-primary" href="/contact/">Get in touch <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
       </div>
     </section>
   </main>

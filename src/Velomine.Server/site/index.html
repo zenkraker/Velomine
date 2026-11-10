@@ -14,6 +14,7 @@
   <meta name="twitter:image" content="/static/img/og.png">
   <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
 </head>
@@ -60,13 +61,13 @@
         <div class="hero-grid">
           <div class="hero-copy">
             <p class="eyebrow">Self-hosted or cloud · For cycling clubs</p>
-            <h1>The club’s record of <em>every</em> ride.</h1>
+            <h1>The club’s record of every ride.</h1>
             <p class="hero-sub">Velomine records or imports every ride, shows every stream, and lets each rider decide exactly what their coach can see. The club pays; members never do.</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="/demo/">Try the demo <span class="arrow" aria-hidden="true">→</span></a>
+              <a class="btn btn-primary" href="/demo/">Try the demo <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
               <a class="btn btn-secondary" href="/contact/">For my club</a>
             </div>
-            <a class="hero-status" href="/status/"><span class="dot" aria-hidden="true"></span>Early development — see what works today <span aria-hidden="true">→</span></a>
+            <a class="hero-status" href="/status/"><span class="dot" aria-hidden="true"></span>Early development — see what works today <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
           </div>
 
           <div class="hero-stage">
@@ -149,7 +150,7 @@
         </div>
 
         <div class="split-visual reveal">
-          <div class="share-card">
+          <div class="share-card card card--lg">
             <div class="share-card-head">
               <strong>Who sees what</strong>
               <span class="pill">Private by default</span>
@@ -268,100 +269,16 @@
           <article class="panel panel-pad lift span-7 reveal">
             <span class="num">04</span>
             <h3>Admin and single sign-on</h3>
-            <p>Join with a code and an admin’s approval. Roles for club admin, coach and member, and sign-in with the accounts the club already uses — Google, Microsoft or its own identity provider.</p>
+            <p>Join with a code and an admin’s approval. Roles for club admin, coach and member, sign-in with the accounts the club already uses — Google, Microsoft or its own identity provider — plus optional two-factor sign-in with an authenticator app, and a list of every device you are signed in on.</p>
           </article>
         </div>
 
-        <p class="note-small">New-club enrollment is handled with you personally while the onboarding automation is finished.</p>
       </div>
     </section>
 
-    <section class="section section--tight" id="pricing">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow">Pricing</p>
-          <h2>One plan for clubs. One price for solo riders.</h2>
-        </div>
 
-        <div class="price-duo">
-          <article class="panel panel-pad lift price-block reveal">
-            <p class="price-label">Clubs</p>
-            <p class="price-tag">Agreed openly</p>
-            <p>One activation, then a yearly fee per club. Every feature, every member. The fee for your size is agreed before you commit, and comparable clubs pay the same.</p>
-            <ul class="price-list">
-              <li>Activation covers setup, your first import and go-live in 10 working days, refunded if it slips past 30.</li>
-              <li>Support answers within one business day; server-down comes first, weekends included.</li>
-              <li>The first five clubs keep their agreed fee for 24 months.</li>
-            </ul>
-            <a class="btn btn-primary" href="/contact/">Talk to me <span class="arrow" aria-hidden="true">→</span></a>
-          </article>
 
-          <article class="panel panel-pad lift price-block price-block--solo reveal">
-            <p class="price-label">Solo riders</p>
-            <p class="price-tag">€39<small>/year</small></p>
-            <p>30 days free, no card. All the personal tools: rides, charts, laps, zones, bikes, goals, readiness and export. No club needed.</p>
-            <p class="note-small">Opens when Strava import ships. <a href="/contact/">Join the waitlist →</a></p>
-          </article>
-        </div>
-      </div>
-    </section>
 
-    <section class="section section--tight">
-      <div class="container">
-        <div class="panel panel-pad demo-banner reveal">
-          <div>
-            <p class="eyebrow">Demo</p>
-            <h2>Break the demo.</h2>
-            <p>A seeded club, three months of rides, three logins — admin, coach, rider. Upload your own GPX and watch it appear. It resets every night, so nothing you do matters.</p>
-          </div>
-          <a class="btn btn-on-dark" href="/demo/">Open the demo <span class="arrow" aria-hidden="true">→</span></a>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section--tight">
-      <div class="container">
-        <div class="panel panel-pad founder reveal">
-          <div>
-            <p class="eyebrow">Behind it</p>
-            <h2>Who you’re dealing with.</h2>
-            <p>Velomine is built by an independent rider and developer. I answer every message.</p>
-          </div>
-          <!-- TODO: add your LinkedIn profile and Discord invite next to the email. -->
-          <a class="contact-email" href="mailto:horizontodawn@pm.me?subject=Velomine%20for%20our%20club">horizontodawn@pm.me</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section--tight">
-      <div class="container">
-        <div class="status-card">
-          <div>
-            <p class="eyebrow">The v1 goal</p>
-            <h2>Ride, record, share.</h2>
-            <p>Make Velomine usable on its own: record with the phone or upload any FIT file, see every ride, check in daily, and share safely.</p>
-            <a class="status-link" href="/status/">See what works today <span aria-hidden="true">→</span></a>
-          </div>
-          <div>
-            <ol class="trail">
-              <li class="is-progress"><span class="dot"></span>Cloud enrollment <span class="state">In progress</span></li>
-              <li class="is-progress"><span class="dot"></span>Rides <span class="state">In progress</span></li>
-              <li class="is-done"><span class="dot"></span>Training <span class="state">Done</span></li>
-              <li class="is-done"><span class="dot"></span>Equipment <span class="state">Done</span></li>
-              <li class="is-progress"><span class="dot"></span>Clubs &amp; sharing <span class="state">In progress</span></li>
-              <li class="is-done"><span class="dot"></span>Wellbeing <span class="state">Done</span></li>
-              <li class="is-progress"><span class="dot"></span>Phone <span class="state">In progress</span></li>
-              <li class="is-next"><span class="dot"></span>Share links <span class="state">Next</span></li>
-            </ol>
-            <div class="legend">
-              <span><i class="done"></i>Done</span>
-              <span><i class="progress"></i>In progress</span>
-              <span><i class="next"></i>Next</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="site-footer">

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
@@ -502,6 +503,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                       ],
+                      const Divider(),
+                      Text(
+                        l10n.twoFactorTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(l10n.twoFactorIntro),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: OutlinedButton.icon(
+                          key: const Key('two-factor-settings'),
+                          onPressed: () => context.push('/profile/two-factor'),
+                          icon: const Icon(Icons.verified_user),
+                          label: Text(l10n.twoFactorTitle),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: OutlinedButton.icon(
+                          key: const Key('sessions'),
+                          onPressed: () => context.push('/profile/sessions'),
+                          icon: const Icon(Icons.devices),
+                          label: Text(l10n.sessionsTitle),
+                        ),
+                      ),
                       const Divider(),
                       Text(
                         l10n.yourData,

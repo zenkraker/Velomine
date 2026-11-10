@@ -20,7 +20,7 @@ public sealed class SetUserRolesValidator : Validator<SetUserRolesRequest>
         RuleFor(x => x.Roles).NotNull().Must(r => r.All(Accounts.Roles.All.Contains)).WithMessage("Choose from: " + string.Join(", ", Accounts.Roles.All) + ".");
 }
 
-public sealed class SetUserRoles(UserManager<User> users) : Endpoint<SetUserRolesRequest, AdminUserSummary>
+public sealed class SetUserRoles(UserManager<User> users, UserSessions sessions) : Endpoint<SetUserRolesRequest, AdminUserSummary>
 {
     public override void Configure()
     {
@@ -52,6 +52,7 @@ public sealed class SetUserRoles(UserManager<User> users) : Endpoint<SetUserRole
         await users.AddToRolesAsync(user, wanted.Except(current));
         // A changed role must take effect now: old cookies and access tokens still carry the previous claims.
         await users.UpdateSecurityStampAsync(user);
+        await sessions.RevokeAllAsync(user.Id, ct);
 
         await Send.OkAsync(new AdminUserSummary(user.Id, user.Email!, user.DisplayName, user.IsApproved,
             await users.IsLockedOutAsync(user), [.. (await users.GetRolesAsync(user)).Order()], user.CreatedAt), ct);

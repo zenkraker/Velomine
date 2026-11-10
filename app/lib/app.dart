@@ -37,6 +37,8 @@ import 'features/coach/coach_athletes_screen.dart';
 import 'features/coach/coach_ride_screen.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/profile/sessions_screen.dart';
+import 'features/profile/two_factor_screen.dart';
 import 'features/privacy/privacy_screen.dart';
 import 'features/progress/progress_screen.dart';
 import 'features/recording/recording_screen.dart';
@@ -363,6 +365,14 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               onPasswordChanged: ref.read(sessionProvider).signOut,
               onOpenPrivacy: () => context.push('/privacy'),
             ),
+          ),
+          GoRoute(
+            path: '/profile/two-factor',
+            builder: (_, _) => const TwoFactorScreen(),
+          ),
+          GoRoute(
+            path: '/profile/sessions',
+            builder: (_, _) => const SessionsScreen(),
           ),
           GoRoute(
             path: '/privacy',

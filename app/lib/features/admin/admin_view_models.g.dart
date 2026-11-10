@@ -48,7 +48,7 @@ final class AdminAccountsViewModelProvider
 }
 
 String _$adminAccountsViewModelHash() =>
-    r'0167978c081779d71b336f0ee66eb6a74a22ee3a';
+    r'd647fa06b868835f7714c38f5c2e46362fc85991';
 
 /// Every account and the changes an admin makes to them. Kept alive for the
 /// session; signing out rebuilds it empty.

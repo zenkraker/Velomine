@@ -55,6 +55,9 @@ class AdminAccountsViewModel extends _$AdminAccountsViewModel {
   Future<bool> delete(AdminUserSummary user) =>
       _change(() => ref.read(adminDataProvider).delete(user.id));
 
+  Future<bool> resetTwoFactor(AdminUserSummary user) =>
+      _change(() => ref.read(adminDataProvider).resetTwoFactor(user.id));
+
   /// Makes a one-time reset link for the admin to hand to a member, or null
   /// when a message now says why.
   Future<String?> createResetLink(AdminUserSummary user) async {

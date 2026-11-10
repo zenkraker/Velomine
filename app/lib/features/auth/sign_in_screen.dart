@@ -14,6 +14,7 @@ import 'password_field.dart';
 String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
     switch (problem) {
       AuthProblem.wrongPassword => l10n.authWrongPassword,
+      AuthProblem.wrongCode => l10n.authWrongCode,
       AuthProblem.notApproved => l10n.authNotApproved,
       AuthProblem.lockedOut => l10n.authLockedOut,
       AuthProblem.signUpClosed => l10n.authSignUpClosed,
@@ -44,18 +45,23 @@ class SignInScreen extends ConsumerStatefulWidget {
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _code = TextEditingController();
   bool _staySignedIn = true;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _code.dispose();
     super.dispose();
   }
 
   Future<void> _signIn() => ref
       .read(signInViewModelProvider.notifier)
       .signIn(_email.text.trim(), _password.text, rememberMe: _staySignedIn);
+
+  Future<void> _verifyCode() =>
+      ref.read(signInViewModelProvider.notifier).verifyCode(_code.text);
 
   @override
   Widget build(BuildContext context) {
@@ -109,86 +115,131 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       ),
                     ],
                     const SizedBox(height: 24),
-                    TextField(
-                      key: const Key('email'),
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: InputDecoration(labelText: l10n.email),
-                    ),
-                    const SizedBox(height: 12),
-                    PasswordField(
-                      fieldKey: const Key('password'),
-                      visibilityKey: const Key('password-visibility'),
-                      controller: _password,
-                      label: l10n.password,
-                      autofillHints: const [AutofillHints.password],
-                      onSubmitted: (_) => _signIn(),
-                    ),
-                    CheckboxListTile(
-                      key: const Key('stay-signed-in'),
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: _staySignedIn,
-                      onChanged: (value) =>
-                          setState(() => _staySignedIn = value ?? true),
-                      title: Text(l10n.staySignedIn),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        key: const Key('forgot-password'),
-                        onPressed: () => context.push('/forgot-password'),
-                        child: Text(l10n.forgotPassword),
-                      ),
-                    ),
-                    if (message != null) ...[
-                      const SizedBox(height: 12),
+                    if (s.challenge != null) ...[
                       Text(
-                        message,
-                        key: const Key('sign-in-error'),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                        l10n.twoFactorTitle,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ],
-                    if (restoreProblem != null) ...[
                       const SizedBox(height: 8),
-                      OutlinedButton(
-                        key: const Key('retry-session'),
-                        onPressed: ref
-                            .read(signInViewModelProvider.notifier)
-                            .retryRestore,
-                        child: Text(l10n.tryAgain),
+                      Text(l10n.twoFactorHelp),
+                      const SizedBox(height: 16),
+                      TextField(
+                        key: const Key('two-factor-code'),
+                        controller: _code,
+                        keyboardType: TextInputType.number,
+                        autofillHints: const [AutofillHints.oneTimeCode],
+                        decoration: InputDecoration(
+                          labelText: l10n.twoFactorCode,
+                        ),
+                        onSubmitted: (_) => _verifyCode(),
                       ),
-                    ],
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      key: const Key('sign-in'),
-                      onPressed: s.command.running ? null : _signIn,
-                      child: Text(l10n.signIn),
-                    ),
-                    if (kIsWeb
-                        ? (sso?.enabled ?? false)
-                        : (sso?.appSsoEnabled ?? false)) ...[
-                      const SizedBox(height: 12),
-                      OutlinedButton(
-                        key: const Key('sso'),
-                        onPressed: widget.startSso,
-                        child: Text(
-                          l10n.continueWith(
-                            sso!.displayName ?? l10n.ssoGeneric,
+                      if (message != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          message,
+                          key: const Key('sign-in-error'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
                           ),
                         ),
+                      ],
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        key: const Key('two-factor-verify'),
+                        onPressed: s.command.running ? null : _verifyCode,
+                        child: Text(l10n.twoFactorVerify),
+                      ),
+                      TextButton(
+                        key: const Key('two-factor-back'),
+                        onPressed: s.command.running
+                            ? null
+                            : ref
+                                  .read(signInViewModelProvider.notifier)
+                                  .useAnotherAccount,
+                        child: Text(l10n.twoFactorUseAnother),
+                      ),
+                    ] else ...[
+                      TextField(
+                        key: const Key('email'),
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        decoration: InputDecoration(labelText: l10n.email),
+                      ),
+                      const SizedBox(height: 12),
+                      PasswordField(
+                        fieldKey: const Key('password'),
+                        visibilityKey: const Key('password-visibility'),
+                        controller: _password,
+                        label: l10n.password,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _signIn(),
+                      ),
+                      CheckboxListTile(
+                        key: const Key('stay-signed-in'),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        value: _staySignedIn,
+                        onChanged: (value) =>
+                            setState(() => _staySignedIn = value ?? true),
+                        title: Text(l10n.staySignedIn),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          key: const Key('forgot-password'),
+                          onPressed: () => context.push('/forgot-password'),
+                          child: Text(l10n.forgotPassword),
+                        ),
+                      ),
+                      if (message != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          message,
+                          key: const Key('sign-in-error'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      if (restoreProblem != null) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          key: const Key('retry-session'),
+                          onPressed: ref
+                              .read(signInViewModelProvider.notifier)
+                              .retryRestore,
+                          child: Text(l10n.tryAgain),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        key: const Key('sign-in'),
+                        onPressed: s.command.running ? null : _signIn,
+                        child: Text(l10n.signIn),
+                      ),
+                      if (kIsWeb
+                          ? (sso?.enabled ?? false)
+                          : (sso?.appSsoEnabled ?? false)) ...[
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          key: const Key('sso'),
+                          onPressed: widget.startSso,
+                          child: Text(
+                            l10n.continueWith(
+                              sso!.displayName ?? l10n.ssoGeneric,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      TextButton(
+                        key: const Key('to-register'),
+                        onPressed: () => context.push('/register'),
+                        child: Text(l10n.createAccount),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    TextButton(
-                      key: const Key('to-register'),
-                      onPressed: () => context.push('/register'),
-                      child: Text(l10n.createAccount),
-                    ),
                   ],
                 ),
               ),

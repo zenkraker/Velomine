@@ -10,7 +10,7 @@ using Velomine.Server.Features.Admin;
 namespace Velomine.Server.Features.Accounts;
 
 /// <summary>The ID token and optional access token the phone got from the provider's public client.</summary>
-public sealed record ExchangeSsoTokenRequest(string IdToken, string? AccessToken);
+public sealed record ExchangeSsoTokenRequest(string IdToken, string? AccessToken, string? DeviceLabel = null);
 
 public sealed class ExchangeSsoTokenValidator : Validator<ExchangeSsoTokenRequest>
 {
@@ -18,6 +18,7 @@ public sealed class ExchangeSsoTokenValidator : Validator<ExchangeSsoTokenReques
     {
         RuleFor(x => x.IdToken).NotEmpty().MaximumLength(8192);
         RuleFor(x => x.AccessToken).MaximumLength(8192);
+        RuleFor(x => x.DeviceLabel).MaximumLength(60);
     }
 }
 
@@ -26,6 +27,7 @@ public sealed class ExchangeSsoToken(
     SsoTokenValidator validator,
     UserManager<User> users,
     SignInManager<User> signIn,
+    SessionSignIn sessions,
     VelomineDbContext db,
     SettingsReader settings,
     TimeProvider clock,
@@ -107,6 +109,6 @@ public sealed class ExchangeSsoToken(
         }
 
         // Writes the access and refresh tokens as the response, like login and refresh do.
-        await HttpContext.SignInAsync(IdentityConstants.BearerScheme, await signIn.CreateUserPrincipalAsync(user));
+        await sessions.SignInAsync(user, IdentityConstants.BearerScheme, isPersistent: false, req.DeviceLabel, ct);
     }
 }

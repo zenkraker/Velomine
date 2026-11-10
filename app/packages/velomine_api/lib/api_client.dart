@@ -239,6 +239,8 @@ class ApiClient {
           return CreateTemplateRequest.fromJson(value);
         case 'DeleteMyAccountRequest':
           return DeleteMyAccountRequest.fromJson(value);
+        case 'EnableTwoFactorRequest':
+          return EnableTwoFactorRequest.fromJson(value);
         case 'ExchangeSsoTokenRequest':
           return ExchangeSsoTokenRequest.fromJson(value);
         case 'ExportLinkResponse':
@@ -275,6 +277,8 @@ class ApiClient {
           return ListTemplatesResponse.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
+        case 'LoginTwoFactorRequest':
+          return LoginTwoFactorRequest.fromJson(value);
         case 'MeResponse':
           return MeResponse.fromJson(value);
         case 'MyClubResponse':
@@ -293,6 +297,8 @@ class ApiClient {
           return OverviewResponse.fromJson(value);
         case 'PartResponse':
           return PartResponse.fromJson(value);
+        case 'PasswordConfirmation':
+          return PasswordConfirmation.fromJson(value);
         case 'PasswordResetLinkResponse':
           return PasswordResetLinkResponse.fromJson(value);
         case 'PendingJoinRequestResponse':
@@ -317,6 +323,8 @@ class ApiClient {
           return ReadinessFactor.fromJson(value);
         case 'ReadinessResponse':
           return ReadinessResponse.fromJson(value);
+        case 'RecoveryCodesResponse':
+          return RecoveryCodesResponse.fromJson(value);
         case 'RefreshRequest':
           return RefreshRequest.fromJson(value);
         case 'RegisterRequest':
@@ -345,6 +353,8 @@ class ApiClient {
           return SearchPartsResponse.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
+        case 'SessionResponse':
+          return SessionResponse.fromJson(value);
         case 'SetClubLocationRequest':
           return SetClubLocationRequest.fromJson(value);
         case 'SetClubMemberRoleRequest':
@@ -391,6 +401,12 @@ class ApiClient {
           return TrainingDay.fromJson(value);
         case 'TrainingResponse':
           return TrainingResponse.fromJson(value);
+        case 'TwoFactorRequiredResponse':
+          return TwoFactorRequiredResponse.fromJson(value);
+        case 'TwoFactorSetup':
+          return TwoFactorSetup.fromJson(value);
+        case 'TwoFactorState':
+          return TwoFactorState.fromJson(value);
         case 'UpdateBikeRequest':
           return UpdateBikeRequest.fromJson(value);
         case 'UpdateClubRequest':

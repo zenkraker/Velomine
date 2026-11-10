@@ -122,6 +122,8 @@ enum FailureAction {
   loadJoinRequests,
   approveJoinRequest,
   declineJoinRequest,
+  loadSecurity,
+  changeSecurity,
 }
 
 class Failure {
@@ -252,6 +254,8 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.loadJoinRequests => l10n.actionLoadJoinRequests,
       FailureAction.approveJoinRequest => l10n.actionApproveJoinRequest,
       FailureAction.declineJoinRequest => l10n.actionDeclineJoinRequest,
+      FailureAction.loadSecurity => l10n.actionLoadSecurity,
+      FailureAction.changeSecurity => l10n.actionChangeSecurity,
     };
 
 /// The sentence for a failure in the language on screen.

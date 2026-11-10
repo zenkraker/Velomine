@@ -68,7 +68,9 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**changePassword**](doc//AccountsApi.md#changepassword) | **PUT** /api/v1/accounts/me/password | 
 *AccountsApi* | [**createExportLink**](doc//AccountsApi.md#createexportlink) | **POST** /api/v1/accounts/me/export-link | 
 *AccountsApi* | [**deleteMyAccount**](doc//AccountsApi.md#deletemyaccount) | **POST** /api/v1/accounts/me/delete | 
+*AccountsApi* | [**disableTwoFactor**](doc//AccountsApi.md#disabletwofactor) | **POST** /api/v1/accounts/me/two-factor/disable | 
 *AccountsApi* | [**downloadExport**](doc//AccountsApi.md#downloadexport) | **GET** /api/v1/accounts/export/{token} | 
+*AccountsApi* | [**enableTwoFactor**](doc//AccountsApi.md#enabletwofactor) | **POST** /api/v1/accounts/me/two-factor/enable | 
 *AccountsApi* | [**exchangeSsoToken**](doc//AccountsApi.md#exchangessotoken) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**forgotPassword**](doc//AccountsApi.md#forgotpassword) | **POST** /api/v1/accounts/password/forgot | 
@@ -76,16 +78,23 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
 *AccountsApi* | [**getTelemetry**](doc//AccountsApi.md#gettelemetry) | **GET** /api/v1/accounts/me/telemetry | 
+*AccountsApi* | [**getTwoFactor**](doc//AccountsApi.md#gettwofactor) | **GET** /api/v1/accounts/me/two-factor | 
+*AccountsApi* | [**listSessions**](doc//AccountsApi.md#listsessions) | **GET** /api/v1/accounts/me/sessions | 
 *AccountsApi* | [**listUsers**](doc//AccountsApi.md#listusers) | **GET** /api/v1/accounts/users | 
 *AccountsApi* | [**login**](doc//AccountsApi.md#login) | **POST** /api/v1/accounts/login | 
+*AccountsApi* | [**loginTwoFactor**](doc//AccountsApi.md#logintwofactor) | **POST** /api/v1/accounts/login/two-factor | 
 *AccountsApi* | [**logout**](doc//AccountsApi.md#logout) | **POST** /api/v1/accounts/logout | 
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
+*AccountsApi* | [**regenerateRecoveryCodes**](doc//AccountsApi.md#regeneraterecoverycodes) | **POST** /api/v1/accounts/me/two-factor/recovery-codes | 
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
+*AccountsApi* | [**revokeOtherSessions**](doc//AccountsApi.md#revokeothersessions) | **POST** /api/v1/accounts/me/sessions/logout-others | 
+*AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
 *AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
+*AccountsApi* | [**startTwoFactorEnrollment**](doc//AccountsApi.md#starttwofactorenrollment) | **POST** /api/v1/accounts/me/two-factor/start | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
 *AdminApi* | [**bikesGetCatalogue**](doc//AdminApi.md#bikesgetcatalogue) | **GET** /api/v1/admin/catalogue | 
 *AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
@@ -98,6 +107,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**getSettings**](doc//AdminApi.md#getsettings) | **GET** /api/v1/admin/settings | 
 *AdminApi* | [**listAdminUsers**](doc//AdminApi.md#listadminusers) | **GET** /api/v1/admin/users | 
 *AdminApi* | [**lockUser**](doc//AdminApi.md#lockuser) | **POST** /api/v1/admin/users/{id}/lock | 
+*AdminApi* | [**resetUserTwoFactor**](doc//AdminApi.md#resetusertwofactor) | **POST** /api/v1/admin/users/{id}/two-factor/reset | 
 *AdminApi* | [**sendTestEmail**](doc//AdminApi.md#sendtestemail) | **POST** /api/v1/admin/settings/test-email | 
 *AdminApi* | [**setUserRoles**](doc//AdminApi.md#setuserroles) | **PUT** /api/v1/admin/users/{id}/roles | 
 *AdminApi* | [**unlockUser**](doc//AdminApi.md#unlockuser) | **POST** /api/v1/admin/users/{id}/unlock | 
@@ -208,6 +218,7 @@ Class | Method | HTTP request | Description
  - [CreatePrivacyZoneRequest](doc//CreatePrivacyZoneRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
+ - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
@@ -226,6 +237,7 @@ Class | Method | HTTP request | Description
  - [ListRidesResponse](doc//ListRidesResponse.md)
  - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
+ - [LoginTwoFactorRequest](doc//LoginTwoFactorRequest.md)
  - [MeResponse](doc//MeResponse.md)
  - [MyClubResponse](doc//MyClubResponse.md)
  - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
@@ -235,6 +247,7 @@ Class | Method | HTTP request | Description
  - [NotificationResponse](doc//NotificationResponse.md)
  - [OverviewResponse](doc//OverviewResponse.md)
  - [PartResponse](doc//PartResponse.md)
+ - [PasswordConfirmation](doc//PasswordConfirmation.md)
  - [PasswordResetLinkResponse](doc//PasswordResetLinkResponse.md)
  - [PendingJoinRequestResponse](doc//PendingJoinRequestResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
@@ -247,6 +260,7 @@ Class | Method | HTTP request | Description
  - [ProfileResponse](doc//ProfileResponse.md)
  - [ReadinessFactor](doc//ReadinessFactor.md)
  - [ReadinessResponse](doc//ReadinessResponse.md)
+ - [RecoveryCodesResponse](doc//RecoveryCodesResponse.md)
  - [RefreshRequest](doc//RefreshRequest.md)
  - [RegisterRequest](doc//RegisterRequest.md)
  - [RegisterResponse](doc//RegisterResponse.md)
@@ -261,6 +275,7 @@ Class | Method | HTTP request | Description
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
+ - [SessionResponse](doc//SessionResponse.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
@@ -284,6 +299,9 @@ Class | Method | HTTP request | Description
  - [TotalsResponse](doc//TotalsResponse.md)
  - [TrainingDay](doc//TrainingDay.md)
  - [TrainingResponse](doc//TrainingResponse.md)
+ - [TwoFactorRequiredResponse](doc//TwoFactorRequiredResponse.md)
+ - [TwoFactorSetup](doc//TwoFactorSetup.md)
+ - [TwoFactorState](doc//TwoFactorState.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
  - [UpdateClubRequest](doc//UpdateClubRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)

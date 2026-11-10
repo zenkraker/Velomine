@@ -21,6 +21,7 @@ public sealed class FinishSso(
     SignInManager<User> signIn,
     UserManager<User> users,
     VelomineDbContext db,
+    SessionSignIn sessions,
     IOptions<SsoOptions> sso,
     SettingsReader settings,
     TimeProvider clock) : Endpoint<FinishSsoRequest>
@@ -43,8 +44,8 @@ public sealed class FinishSso(
             return;
         }
 
-        var result = await signIn.ExternalLoginSignInAsync(SsoOptions.Scheme, subject, isPersistent: false, bypassTwoFactor: true);
-        if (!result.Succeeded && !result.IsLockedOut && !result.IsNotAllowed)
+        var user = await users.FindByLoginAsync(SsoOptions.Scheme, subject);
+        if (user is null)
         {
             var identity = SsoIdentity.FromPrincipal(external.Principal!, subject);
             var error = await SsoAccounts.LinkOrCreateAsync(db, users, settings, clock, sso.Value, identity, ct);
@@ -53,13 +54,23 @@ public sealed class FinishSso(
                 await Fail(returnUrl, error, ct);
                 return;
             }
-            result = await signIn.ExternalLoginSignInAsync(SsoOptions.Scheme, subject, isPersistent: false, bypassTwoFactor: true);
+
+            user = await users.FindByLoginAsync(SsoOptions.Scheme, subject);
         }
 
-        if (!result.Succeeded)
-            await Fail(returnUrl, result.IsLockedOut ? "locked_out" : result.IsNotAllowed ? "not_approved" : "failed", ct);
+        // Sign-in is done here rather than by ExternalLoginSignInAsync, so the session row exists and the cookie carries
+        // its id. The checks are the ones that method makes: approval, then lockout.
+        if (user is null)
+            await Fail(returnUrl, "failed", ct);
+        else if (await users.IsLockedOutAsync(user))
+            await Fail(returnUrl, "locked_out", ct);
+        else if (!await signIn.CanSignInAsync(user))
+            await Fail(returnUrl, "not_approved", ct);
         else
+        {
+            await sessions.SignInAsync(user, IdentityConstants.ApplicationScheme, isPersistent: false, "Web - single sign-on", ct);
             await Send.RedirectAsync(returnUrl, allowRemoteRedirects: false);
+        }
     }
 
     private Task Fail(string returnUrl, string error, CancellationToken ct) =>

@@ -15,25 +15,36 @@ class ExchangeSsoTokenRequest {
   ExchangeSsoTokenRequest({
     required this.idToken,
     required this.accessToken,
+    this.deviceLabel = const Optional.absent(),
   });
 
   final String idToken;
 
   final String? accessToken;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> deviceLabel;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ExchangeSsoTokenRequest &&
     other.idToken == idToken &&
-    other.accessToken == accessToken;
+    other.accessToken == accessToken &&
+    other.deviceLabel == deviceLabel;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (idToken.hashCode) +
-    (accessToken == null ? 0 : accessToken!.hashCode);
+    (accessToken == null ? 0 : accessToken!.hashCode) +
+    (deviceLabel == null ? 0 : deviceLabel!.hashCode);
 
   @override
-  String toString() => 'ExchangeSsoTokenRequest[idToken=$idToken, accessToken=$accessToken]';
+  String toString() => 'ExchangeSsoTokenRequest[idToken=$idToken, accessToken=$accessToken, deviceLabel=$deviceLabel]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -42,6 +53,10 @@ class ExchangeSsoTokenRequest {
       json[r'accessToken'] = this.accessToken;
     } else {
       json[r'accessToken'] = null;
+    }
+    if (this.deviceLabel.isPresent) {
+      final value = this.deviceLabel.value;
+      json[r'deviceLabel'] = value;
     }
     return json;
   }
@@ -52,9 +67,11 @@ class ExchangeSsoTokenRequest {
     String? idToken,
     String? accessToken,
     bool accessTokenSetToNull = false,
+    Optional<String?>? deviceLabel,
   }) => ExchangeSsoTokenRequest(
     idToken: idToken ?? this.idToken,
     accessToken: accessTokenSetToNull ? null : accessToken ?? this.accessToken,
+    deviceLabel: deviceLabel ?? this.deviceLabel,
   );
 
   /// Returns a new [ExchangeSsoTokenRequest] instance and imports its values from
@@ -77,6 +94,7 @@ class ExchangeSsoTokenRequest {
       return ExchangeSsoTokenRequest(
         idToken: mapValueOfType<String>(json, r'idToken')!,
         accessToken: mapValueOfType<String>(json, r'accessToken'),
+        deviceLabel: json.containsKey(r'deviceLabel') ? Optional.present(mapValueOfType<String>(json, r'deviceLabel')) : const Optional.absent(),
       );
     }
     return null;

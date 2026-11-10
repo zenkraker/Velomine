@@ -71,6 +71,37 @@ class AccountsTab extends ConsumerWidget {
     }
   }
 
+  Future<void> _resetTwoFactor(
+    BuildContext context,
+    WidgetRef ref,
+    AdminUserSummary user,
+  ) async {
+    final l10n = context.l10n;
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.resetTwoFactor),
+        content: Text(l10n.resetTwoFactorBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: const Key('confirm-reset-two-factor'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.resetTwoFactor),
+          ),
+        ],
+      ),
+    );
+    if ((sure ?? false) && context.mounted) {
+      await ref
+          .read(adminAccountsViewModelProvider.notifier)
+          .resetTwoFactor(user);
+    }
+  }
+
   Future<void> _resetLink(
     BuildContext context,
     WidgetRef ref,
@@ -184,6 +215,7 @@ class AccountsTab extends ConsumerWidget {
                         .read(adminAccountsViewModelProvider.notifier)
                         .unlock(user),
                   'reset-password' => _resetLink(context, ref, user),
+                  'two-factor' => _resetTwoFactor(context, ref, user),
                   _ => _delete(context, ref, user),
                 },
                 itemBuilder: (_) => [
@@ -208,6 +240,11 @@ class AccountsTab extends ConsumerWidget {
                     key: Key('reset-password-${user.id}'),
                     value: 'reset-password',
                     child: Text(l10n.resetPasswordLink),
+                  ),
+                  PopupMenuItem(
+                    key: Key('reset-two-factor-${user.id}'),
+                    value: 'two-factor',
+                    child: Text(l10n.resetTwoFactor),
                   ),
                   PopupMenuItem(
                     key: Key('delete-${user.id}'),

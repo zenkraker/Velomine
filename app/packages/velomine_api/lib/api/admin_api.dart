@@ -511,6 +511,47 @@ class AdminApi {
     }
   }
 
+  /// Performs an HTTP 'POST /api/v1/admin/users/{id}/two-factor/reset' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> resetUserTwoFactorWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/admin/users/{id}/two-factor/reset'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> resetUserTwoFactor(String id, { Future<void>? abortTrigger, }) async {
+    final response = await resetUserTwoFactorWithHttpInfo(id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'POST /api/v1/admin/settings/test-email' operation and returns the [Response].
   Future<Response> sendTestEmailWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations

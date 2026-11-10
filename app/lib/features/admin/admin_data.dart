@@ -59,6 +59,9 @@ class AdminData {
   Future<Result<void>> delete(String id) =>
       _api.deleteUser(id).guard(FailureAction.deleteAccount);
 
+  Future<Result<void>> resetTwoFactor(String id) =>
+      _api.resetUserTwoFactor(id).guard(FailureAction.changeSecurity);
+
   Future<Result<PasswordResetLinkResponse?>> resetLink(String id) =>
       _api.createPasswordResetLink(id).guard(FailureAction.resetPassword);
 

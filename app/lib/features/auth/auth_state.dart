@@ -3,18 +3,34 @@ import '../../core/session.dart';
 
 /// What the sign-in form is doing, and why it last failed.
 class SignInState {
-  const SignInState({this.command = const CommandState.idle(), this.problem});
+  const SignInState({
+    this.command = const CommandState.idle(),
+    this.problem,
+    this.challenge,
+    this.rememberMe = true,
+  });
 
   final VoidCommand command;
   final AuthProblem? problem;
 
+  /// Set when the password was right and the account has a second factor: the screen asks for the code instead.
+  final String? challenge;
+
+  /// The stay-signed-in choice, kept until the code step finishes the same sign-in.
+  final bool rememberMe;
+
   SignInState copyWith({
     VoidCommand? command,
     AuthProblem? problem,
+    String? challenge,
     bool clearProblem = false,
+    bool clearChallenge = false,
+    bool? rememberMe,
   }) => SignInState(
     command: command ?? this.command,
     problem: clearProblem ? null : (problem ?? this.problem),
+    challenge: clearChallenge ? null : (challenge ?? this.challenge),
+    rememberMe: rememberMe ?? this.rememberMe,
   );
 }
 
