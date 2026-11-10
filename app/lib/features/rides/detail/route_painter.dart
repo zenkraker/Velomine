@@ -41,9 +41,16 @@ class RoutePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final points = [for (final point in data.route) view.project(point)];
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length; i++) {
-      path.lineTo(points[i].dx, points[i].dy);
+    if (points.isEmpty) return;
+    // A hidden stretch keeps its samples out of the route, so the line must break there instead of cutting across.
+    final path = Path();
+    for (var i = 0; i < points.length; i++) {
+      final point = points[i];
+      if (i == 0 || data.routeBreaks.contains(i)) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
     }
     // A pale edge under the line keeps it readable over any tile colour.
     canvas.drawPath(
@@ -63,6 +70,7 @@ class RoutePainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round
         ..strokeCap = StrokeCap.round;
       for (var i = 1; i < points.length; i++) {
+        if (data.routeBreaks.contains(i)) continue;
         final value = values[data.routeIndex[i]];
         paint.color = value == null
             ? colors.route
@@ -81,8 +89,8 @@ class RoutePainter extends CustomPainter {
       );
     }
 
-    _dot(canvas, points.first, colors.route, 7); // start
-    _dot(canvas, points.last, colors.finish, 7); // finish
+    if (!data.startHidden) _dot(canvas, points.first, colors.route, 7);
+    if (!data.endHidden) _dot(canvas, points.last, colors.finish, 7);
 
     // The selected lap, drawn over the route.
     final lap = selectedLap.value;
@@ -90,6 +98,7 @@ class RoutePainter extends CustomPainter {
       final highlight = Path();
       var open = false;
       for (var i = 0; i < data.route.length; i++) {
+        if (data.routeBreaks.contains(i)) open = false;
         final t = data.time[data.routeIndex[i]];
         if (t < lap.startS || t > lap.endS) {
           open = false;

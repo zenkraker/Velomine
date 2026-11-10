@@ -367,4 +367,43 @@ public sealed class PasswordTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Login_ShouldSetASessionCookie_WhenStayLoggedInIsOff()
+    {
+        await using var api = (await StartAsync(postgres, smtp: false)).Api;
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+
+        var response = await api.CreateClient().PostAsJsonAsync(
+            "/api/v1/accounts/login",
+            new LoginRequest(email, TestApi.MemberPassword, UseCookies: true, RememberMe: false),
+            Ct);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var cookie = Assert.Single(
+            response.Headers.GetValues("Set-Cookie"),
+            value => value.Contains("Identity.Application", StringComparison.Ordinal));
+        Assert.DoesNotContain("expires=", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("max-age=", cookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Login_ShouldSetAPersistentCookie_WhenStayLoggedInIsOn()
+    {
+        await using var api = (await StartAsync(postgres, smtp: false)).Api;
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+
+        var response = await api.CreateClient().PostAsJsonAsync(
+            "/api/v1/accounts/login",
+            new LoginRequest(email, TestApi.MemberPassword, UseCookies: true, RememberMe: true),
+            Ct);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var cookie = Assert.Single(
+            response.Headers.GetValues("Set-Cookie"),
+            value => value.Contains("Identity.Application", StringComparison.Ordinal));
+        Assert.Contains("expires=", cookie, StringComparison.OrdinalIgnoreCase);
+    }
 }

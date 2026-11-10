@@ -44,7 +44,7 @@ final class SignInViewModelProvider
   }
 }
 
-String _$signInViewModelHash() => r'3289cc83d59cf7838f9038ef40661eec937d8fcd';
+String _$signInViewModelHash() => r'2f1684c80504f046e8269769a42734f60eca92e8';
 
 /// The sign-in form. Route-scoped: it holds one attempt, not the session.
 

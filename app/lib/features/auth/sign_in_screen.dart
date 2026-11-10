@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../core/session.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'auth_view_models.dart';
+import 'password_field.dart';
 
 String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
     switch (problem) {
@@ -43,6 +44,7 @@ class SignInScreen extends ConsumerStatefulWidget {
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _staySignedIn = true;
 
   @override
   void dispose() {
@@ -53,7 +55,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   Future<void> _signIn() => ref
       .read(signInViewModelProvider.notifier)
-      .signIn(_email.text.trim(), _password.text);
+      .signIn(_email.text.trim(), _password.text, rememberMe: _staySignedIn);
 
   @override
   Widget build(BuildContext context) {
@@ -115,19 +117,29 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       decoration: InputDecoration(labelText: l10n.email),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      key: const Key('password'),
+                    PasswordField(
+                      fieldKey: const Key('password'),
+                      visibilityKey: const Key('password-visibility'),
                       controller: _password,
-                      obscureText: true,
+                      label: l10n.password,
                       autofillHints: const [AutofillHints.password],
-                      decoration: InputDecoration(labelText: l10n.password),
                       onSubmitted: (_) => _signIn(),
+                    ),
+                    CheckboxListTile(
+                      key: const Key('stay-signed-in'),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: _staySignedIn,
+                      onChanged: (value) =>
+                          setState(() => _staySignedIn = value ?? true),
+                      title: Text(l10n.staySignedIn),
                     ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         key: const Key('forgot-password'),
-                        onPressed: () => context.go('/forgot-password'),
+                        onPressed: () => context.push('/forgot-password'),
                         child: Text(l10n.forgotPassword),
                       ),
                     ),
@@ -174,7 +186,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     const SizedBox(height: 12),
                     TextButton(
                       key: const Key('to-register'),
-                      onPressed: () => context.go('/register'),
+                      onPressed: () => context.push('/register'),
                       child: Text(l10n.createAccount),
                     ),
                   ],

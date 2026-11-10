@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/back_guard.dart';
 import 'core/language_choice.dart';
 import 'core/server_config.dart';
 import 'core/theme.dart';
@@ -35,8 +36,11 @@ class VelomineRoot extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       home: config.isLoading && value == null
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : ServerSetupScreen(
-              initialUrl: value?.previousUrl ?? suggestedServerUrl(),
+          : BackGuard(
+              location: '/setup',
+              child: ServerSetupScreen(
+                initialUrl: value?.previousUrl ?? suggestedServerUrl(),
+              ),
             ),
     );
   }

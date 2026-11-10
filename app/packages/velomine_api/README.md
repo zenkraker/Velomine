@@ -152,6 +152,10 @@ Class | Method | HTTP request | Description
 *NotificationsApi* | [**listNotifications**](doc//NotificationsApi.md#listnotifications) | **GET** /api/v1/notifications | 
 *NotificationsApi* | [**markAllNotificationsRead**](doc//NotificationsApi.md#markallnotificationsread) | **POST** /api/v1/notifications/read | 
 *NotificationsApi* | [**markNotificationRead**](doc//NotificationsApi.md#marknotificationread) | **POST** /api/v1/notifications/{id}/read | 
+*PrivacyApi* | [**createPrivacyZone**](doc//PrivacyApi.md#createprivacyzone) | **POST** /api/v1/privacy/zones | 
+*PrivacyApi* | [**deletePrivacyZone**](doc//PrivacyApi.md#deleteprivacyzone) | **DELETE** /api/v1/privacy/zones/{id} | 
+*PrivacyApi* | [**getPrivacy**](doc//PrivacyApi.md#getprivacy) | **GET** /api/v1/privacy | 
+*PrivacyApi* | [**updatePrivacy**](doc//PrivacyApi.md#updateprivacy) | **PUT** /api/v1/privacy/settings | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
 *RidesApi* | [**getRideLaps**](doc//RidesApi.md#getridelaps) | **GET** /api/v1/rides/{id}/laps | 
@@ -201,6 +205,7 @@ Class | Method | HTTP request | Description
  - [CreateClubRequest](doc//CreateClubRequest.md)
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
+ - [CreatePrivacyZoneRequest](doc//CreatePrivacyZoneRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
@@ -235,6 +240,9 @@ Class | Method | HTTP request | Description
  - [PeriodTotals](doc//PeriodTotals.md)
  - [PowerCurvePoint](doc//PowerCurvePoint.md)
  - [PowerCurveResponse](doc//PowerCurveResponse.md)
+ - [PrivacyResponse](doc//PrivacyResponse.md)
+ - [PrivacyStreamsResponse](doc//PrivacyStreamsResponse.md)
+ - [PrivacyZoneResponse](doc//PrivacyZoneResponse.md)
  - [ProblemDetails](doc//ProblemDetails.md)
  - [ProfileResponse](doc//ProfileResponse.md)
  - [ReadinessFactor](doc//ReadinessFactor.md)
@@ -280,6 +288,7 @@ Class | Method | HTTP request | Description
  - [UpdateClubRequest](doc//UpdateClubRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
+ - [UpdatePrivacyRequest](doc//UpdatePrivacyRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
  - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
  - [UpdateSharingRequest](doc//UpdateSharingRequest.md)

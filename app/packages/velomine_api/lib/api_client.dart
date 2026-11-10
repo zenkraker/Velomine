@@ -233,6 +233,8 @@ class ApiClient {
           return CreateComponentRequest.fromJson(value);
         case 'CreateGoalRequest':
           return CreateGoalRequest.fromJson(value);
+        case 'CreatePrivacyZoneRequest':
+          return CreatePrivacyZoneRequest.fromJson(value);
         case 'CreateTemplateRequest':
           return CreateTemplateRequest.fromJson(value);
         case 'DeleteMyAccountRequest':
@@ -301,6 +303,12 @@ class ApiClient {
           return PowerCurvePoint.fromJson(value);
         case 'PowerCurveResponse':
           return PowerCurveResponse.fromJson(value);
+        case 'PrivacyResponse':
+          return PrivacyResponse.fromJson(value);
+        case 'PrivacyStreamsResponse':
+          return PrivacyStreamsResponse.fromJson(value);
+        case 'PrivacyZoneResponse':
+          return PrivacyZoneResponse.fromJson(value);
         case 'ProblemDetails':
           return ProblemDetails.fromJson(value);
         case 'ProfileResponse':
@@ -391,6 +399,8 @@ class ApiClient {
           return UpdateComponentRequest.fromJson(value);
         case 'UpdateGoalRequest':
           return UpdateGoalRequest.fromJson(value);
+        case 'UpdatePrivacyRequest':
+          return UpdatePrivacyRequest.fromJson(value);
         case 'UpdateProfileRequest':
           return UpdateProfileRequest.fromJson(value);
         case 'UpdateSettingsRequest':

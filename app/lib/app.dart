@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'core/back_guard.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
 import 'core/map_defaults.dart';
@@ -36,6 +37,7 @@ import 'features/coach/coach_athletes_screen.dart';
 import 'features/coach/coach_ride_screen.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/privacy/privacy_screen.dart';
 import 'features/progress/progress_screen.dart';
 import 'features/recording/recording_screen.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
@@ -172,9 +174,12 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
       GoRoute(
         path: '/sign-in',
-        builder: (_, _) => SignInScreen(
-          startSso: ref.read(ssoStarterProvider),
-          onChangeServer: ref.read(changeServerProvider),
+        builder: (context, state) => BackGuard(
+          location: state.uri.path,
+          child: SignInScreen(
+            startSso: ref.read(ssoStarterProvider),
+            onChangeServer: ref.read(changeServerProvider),
+          ),
         ),
       ),
       GoRoute(
@@ -182,47 +187,66 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
         builder: (context, state) {
           final session = ref.read(sessionProvider);
           final code = state.uri.queryParameters['code'];
-          return JoinClubScreen(
-            initialCode: code != null && code.isNotEmpty
-                ? code
-                : (session.pendingJoinCode ?? ''),
-            onJoined: () => session.pendingJoinCode = null,
-            onSkip: () {
-              session.pendingJoinCode = null;
-              context.go('/rides');
-            },
+          return BackGuard(
+            location: state.uri.path,
+            child: JoinClubScreen(
+              initialCode: code != null && code.isNotEmpty
+                  ? code
+                  : (session.pendingJoinCode ?? ''),
+              onJoined: () {
+                session.pendingJoinCode = null;
+                context.go('/rides');
+              },
+              onSkip: () {
+                session.pendingJoinCode = null;
+                context.go('/rides');
+              },
+            ),
           );
         },
       ),
-      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) =>
+            BackGuard(location: state.uri.path, child: const RegisterScreen()),
+      ),
       GoRoute(
         path: '/clubs',
-        builder: (context, _) => NearbyClubsScreen(
-          onBack: () => context.go('/club'),
-          tileUrl:
-              ref.read(sessionProvider).serverInfo?.mapTileUrl ??
-              defaultMapTileUrl,
-          attribution:
-              ref.read(sessionProvider).serverInfo?.mapAttribution ??
-              defaultMapAttribution,
+        builder: (context, state) => BackGuard(
+          location: state.uri.path,
+          child: NearbyClubsScreen(
+            onBack: () => context.go('/club'),
+            tileUrl:
+                ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                defaultMapTileUrl,
+            attribution:
+                ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                defaultMapAttribution,
+          ),
         ),
       ),
       GoRoute(
         path: '/forgot-password',
-        builder: (_, _) => const ForgotPasswordScreen(),
+        builder: (context, state) => BackGuard(
+          location: state.uri.path,
+          child: const ForgotPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: '/reset-password',
-        builder: (_, state) {
+        builder: (context, state) {
           final fragment = state.uri.fragment.isNotEmpty
               ? state.uri.fragment
               : Uri.base.fragment;
           final params = fragment.isNotEmpty
               ? Uri.splitQueryString(fragment)
               : state.uri.queryParameters;
-          return ResetPasswordScreen(
-            token: params['token'],
-            email: params['email'],
+          return BackGuard(
+            location: state.uri.path,
+            child: ResetPasswordScreen(
+              token: params['token'],
+              email: params['email'],
+            ),
           );
         },
       ),
@@ -237,9 +261,9 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
                 final club = ref.watch(clubViewModelProvider);
                 final dismissed = ref.watch(soloHintViewModelProvider);
                 return RidesScreen(
-                  onOpen: (id) => context.go('/rides/$id'),
+                  onOpen: (id) => context.push('/rides/$id'),
                   showSoloCard: club.loaded && club.club == null && !dismissed,
-                  onOpenClubs: () => context.go('/clubs'),
+                  onOpenClubs: () => context.push('/clubs'),
                   onDismissSoloCard: ref
                       .read(soloHintViewModelProvider.notifier)
                       .dismiss,
@@ -252,10 +276,10 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             builder: (context, state) => RideDetailScreen(
               key: ValueKey(state.pathParameters['id']),
               id: state.pathParameters['id']!,
-              onBack: () => context.go('/rides'),
+              onBack: () => _backOrGo(context, '/rides'),
               onDeleted: () {
                 ref.read(ridesViewModelProvider.notifier).refresh();
-                context.go('/rides');
+                _backOrGo(context, '/rides');
               },
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
@@ -271,9 +295,9 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             path: '/club',
             builder: (context, _) => ClubScreen(
               serverUrl: ref.read(sessionProvider).serverUrl,
-              onJoin: () => context.go('/join'),
-              onOpenClubs: () => context.go('/clubs'),
-              onOpenAthletes: () => context.go('/club/athletes'),
+              onJoin: () => context.push('/join'),
+              onOpenClubs: () => context.push('/clubs'),
+              onOpenAthletes: () => context.push('/club/athletes'),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,
@@ -286,7 +310,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             path: '/club/athletes',
             builder: (context, _) => CoachAthletesScreen(
               clubId: ref.read(clubViewModelProvider).club!.id,
-              onOpen: (id) => context.go('/club/athletes/$id'),
+              onOpen: (id) => context.push('/club/athletes/$id'),
             ),
           ),
           GoRoute(
@@ -295,8 +319,8 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               key: ValueKey(state.pathParameters['id']),
               clubId: ref.read(clubViewModelProvider).club!.id,
               userId: state.pathParameters['id']!,
-              onBack: () => context.go('/club/athletes'),
-              onOpenRide: (rideId) => context.go(
+              onBack: () => _backOrGo(context, '/club/athletes'),
+              onOpenRide: (rideId) => context.push(
                 '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
               ),
             ),
@@ -310,8 +334,10 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               clubId: ref.read(clubViewModelProvider).club!.id,
               userId: state.pathParameters['id']!,
               rideId: state.pathParameters['rideId']!,
-              onBack: () =>
-                  context.go('/club/athletes/${state.pathParameters['id']}'),
+              onBack: () => _backOrGo(
+                context,
+                '/club/athletes/${state.pathParameters['id']}',
+              ),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,
@@ -322,34 +348,47 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(
             path: '/notifications',
-            builder: (context, _) =>
-                NotificationsScreen(onOpen: (location) => context.go(location)),
+            builder: (context, _) => NotificationsScreen(
+              onOpen: (location) => context.push(location),
+            ),
           ),
           GoRoute(
             path: '/profile',
-            builder: (_, _) => ProfileScreen(
+            builder: (context, _) => ProfileScreen(
               serverUrl: ref.read(sessionProvider).serverUrl,
               emailAvailable:
                   ref.read(sessionProvider).serverInfo?.emailAvailable ?? false,
               openLink: ref.read(linkOpenerProvider),
               onAccountDeleted: ref.read(sessionProvider).signOut,
               onPasswordChanged: ref.read(sessionProvider).signOut,
+              onOpenPrivacy: () => context.push('/privacy'),
+            ),
+          ),
+          GoRoute(
+            path: '/privacy',
+            builder: (context, _) => PrivacyScreen(
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
             ),
           ),
           GoRoute(
             path: '/bikes',
             builder: (context, _) =>
-                BikesScreen(onOpen: (id) => context.go('/bikes/$id')),
+                BikesScreen(onOpen: (id) => context.push('/bikes/$id')),
           ),
           GoRoute(
             path: '/bikes/:id',
             builder: (context, state) => BikeDetailScreen(
               key: ValueKey(state.pathParameters['id']),
               id: state.pathParameters['id']!,
-              onBack: () => context.go('/bikes'),
+              onBack: () => _backOrGo(context, '/bikes'),
               onDeleted: () {
                 ref.read(bikesViewModelProvider.notifier).refresh();
-                context.go('/bikes');
+                _backOrGo(context, '/bikes');
               },
             ),
           ),
@@ -393,5 +432,14 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             : child!;
       },
     );
+  }
+}
+
+/// Pops to the screen this one was opened from. A deep link has no stack, so it goes to the tab instead.
+void _backOrGo(BuildContext context, String fallback) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(fallback);
   }
 }

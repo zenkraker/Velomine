@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>UseCookies: true for the web app (cookie session), false for the mobile app (bearer tokens).</summary>
-public sealed record LoginRequest(string Email, string Password, bool UseCookies = false);
+/// <summary>UseCookies: true for the web app (cookie session), false for the mobile app (bearer tokens).
+/// RememberMe: keep the web cookie after the browser closes; the phone app keeps the refresh token only when set.</summary>
+public sealed record LoginRequest(string Email, string Password, bool UseCookies = false, bool RememberMe = true);
 
 public sealed class LoginValidator : Validator<LoginRequest>
 {
@@ -32,7 +33,7 @@ public sealed class Login(SignInManager<User> signIn) : Endpoint<LoginRequest>
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
         signIn.AuthenticationScheme = req.UseCookies ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
-        var result = await signIn.PasswordSignInAsync(req.Email, req.Password, isPersistent: req.UseCookies, lockoutOnFailure: true);
+        var result = await signIn.PasswordSignInAsync(req.Email, req.Password, isPersistent: req.UseCookies && req.RememberMe, lockoutOnFailure: true);
 
         // On success the authentication handler has already written the response:
         // the cookie, or the bearer token JSON { access_token, refresh_token, expires_in }.

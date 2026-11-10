@@ -17,8 +17,11 @@ class AuthData {
 
   final Session _session;
 
-  Future<AuthProblem?> signIn(String email, String password) =>
-      _session.signIn(email, password);
+  Future<AuthProblem?> signIn(
+    String email,
+    String password, {
+    bool rememberMe = true,
+  }) => _session.signIn(email, password, rememberMe: rememberMe);
 
   Future<({AuthProblem? problem, bool approved})> signUp(
     String email,

@@ -8,6 +8,7 @@ using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Notifications;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Sharing;
 using Velomine.Server.Features.Wellbeing;
@@ -66,6 +67,10 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<DailyCheckIn> DailyCheckIns => Set<DailyCheckIn>();
 
     public DbSet<RideFeel> RideFeels => Set<RideFeel>();
+
+    public DbSet<PrivacySettings> PrivacySettings => Set<PrivacySettings>();
+
+    public DbSet<PrivacyZone> PrivacyZones => Set<PrivacyZone>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -39,6 +39,9 @@ class RideSeries {
     this.distance,
     this.route,
     this.routeIndex,
+    this.routeBreaks,
+    this.startHidden,
+    this.endHidden,
     this.series,
   );
 
@@ -51,15 +54,35 @@ class RideSeries {
     final lon = present(s.longitude);
     final route = <LatLon>[];
     final routeIndex = <int>[]; // which sample each route point is
+    final routeBreaks =
+        <int>{}; // route points that start a new line, after hidden ones
+    var gap = false;
     if (lat != null && lon != null) {
       for (var i = 0; i < time.length; i++) {
         final la = lat[i], lo = lon[i];
         if (la != null && lo != null) {
+          if (gap && route.isNotEmpty) routeBreaks.add(route.length);
           route.add((lat: la, lon: lo));
           routeIndex.add(i);
+          gap = false;
+        } else {
+          gap = true;
         }
       }
     }
+    // A hidden first or last sample means the start or finish dot would sit at the edge of the hidden area.
+    final startHidden =
+        lat == null ||
+        lon == null ||
+        time.isEmpty ||
+        lat[0] == null ||
+        lon[0] == null;
+    final endHidden =
+        lat == null ||
+        lon == null ||
+        time.isEmpty ||
+        lat[time.length - 1] == null ||
+        lon[time.length - 1] == null;
 
     final speed =
         present(s.speed)?.map((v) => v == null ? null : v * 3.6).toList() ??
@@ -69,35 +92,54 @@ class RideSeries {
     final heartRate = present(s.heartRate?.map((v) => v?.toDouble()).toList());
     final cadence = present(s.cadence?.map((v) => v?.toDouble()).toList());
 
-    return RideSeries._(time, present(s.distance), route, routeIndex, [
-      if (altitude != null)
-        Series(id: 'elevation', name: 'Elevation', unit: 'm', values: altitude),
-      if (speed != null)
-        Series(
-          id: 'speed',
-          name: 'Speed',
-          unit: 'km/h',
-          values: speed,
-          decimals: 1,
-        ),
-      if (heartRate != null)
-        Series(
-          id: 'heartrate',
-          name: 'Heart rate',
-          unit: 'bpm',
-          values: heartRate,
-        ),
-      if (power != null)
-        Series(id: 'power', name: 'Power', unit: 'W', values: power),
-      if (cadence != null)
-        Series(id: 'cadence', name: 'Cadence', unit: 'rpm', values: cadence),
-    ]);
+    return RideSeries._(
+      time,
+      present(s.distance),
+      route,
+      routeIndex,
+      routeBreaks,
+      startHidden,
+      endHidden,
+      [
+        if (altitude != null)
+          Series(
+            id: 'elevation',
+            name: 'Elevation',
+            unit: 'm',
+            values: altitude,
+          ),
+        if (speed != null)
+          Series(
+            id: 'speed',
+            name: 'Speed',
+            unit: 'km/h',
+            values: speed,
+            decimals: 1,
+          ),
+        if (heartRate != null)
+          Series(
+            id: 'heartrate',
+            name: 'Heart rate',
+            unit: 'bpm',
+            values: heartRate,
+          ),
+        if (power != null)
+          Series(id: 'power', name: 'Power', unit: 'W', values: power),
+        if (cadence != null)
+          Series(id: 'cadence', name: 'Cadence', unit: 'rpm', values: cadence),
+      ],
+    );
   }
 
   final List<double> time;
   final List<double?>? distance;
   final List<LatLon> route;
   final List<int> routeIndex;
+
+  /// Route points that begin a new line because the samples before them were hidden.
+  final Set<int> routeBreaks;
+  final bool startHidden;
+  final bool endHidden;
   final List<Series> series;
 
   bool get hasRoute => route.length >= 2;

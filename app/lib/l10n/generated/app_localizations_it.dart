@@ -74,6 +74,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get name => 'Nome';
 
   @override
+  String get showPassword => 'Mostra password';
+
+  @override
+  String get hidePassword => 'Nascondi password';
+
+  @override
+  String get staySignedIn => 'Resta connesso';
+
+  @override
+  String get pressBackAgain => 'Premi di nuovo indietro per uscire';
+
+  @override
   String get signIn => 'Accedi';
 
   @override
@@ -381,6 +393,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionSaveSharing => 'salvare le tue scelte di condivisione';
 
   @override
+  String get actionLoadPrivacy => 'caricare le tue scelte di privacy';
+
+  @override
+  String get actionSavePrivacy => 'salvare le tue scelte di privacy';
+
+  @override
   String get actionLoadAthletes => 'caricare gli atleti';
 
   @override
@@ -514,6 +532,90 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get routesNeedRides =>
       'Attiva prima le uscite; i percorsi aggiungono la mappa.';
+
+  @override
+  String get privacyTitle => 'Privacy delle uscite';
+
+  @override
+  String get privacyHelp =>
+      'Cosa vedono gli altri quando condividi un\'uscita o quando il club può vederla. Tu vedi sempre tutto.';
+
+  @override
+  String get privacyOthersSee => 'Cosa vedono gli altri di ogni uscita';
+
+  @override
+  String get privacyHideHeartRate => 'Frequenza cardiaca';
+
+  @override
+  String get privacyHidePower => 'Potenza';
+
+  @override
+  String get privacyHideCadence => 'Cadenza';
+
+  @override
+  String get privacyHideSpeed => 'Velocità';
+
+  @override
+  String get privacyHideElevation => 'Dislivello';
+
+  @override
+  String get privacyHideTemperature => 'Temperatura';
+
+  @override
+  String get privacyTrimTitle => 'Nascondi inizio e fine';
+
+  @override
+  String get privacyTrimStart => 'Inizio';
+
+  @override
+  String get privacyTrimEnd => 'Fine';
+
+  @override
+  String get privacyTrimHelp =>
+      'Metri nascosti all\'inizio e alla fine di ogni uscita. 0 tiene tutto.';
+
+  @override
+  String get privacyZonesTitle => 'Luoghi salvati';
+
+  @override
+  String get privacyZonesHelp =>
+      'Ogni uscita nasconde fino a un miglio intorno a questi luoghi, e la linea del percorso si interrompe lì. Al massimo dieci luoghi.';
+
+  @override
+  String get privacyZonesEmpty => 'Nessun luogo salvato.';
+
+  @override
+  String get privacyAddZone => 'Aggiungi un luogo';
+
+  @override
+  String get privacyZoneName => 'Nome';
+
+  @override
+  String get privacyZoneRadius => 'Raggio (m)';
+
+  @override
+  String get privacyZoneRadiusHelp => 'Da 200 a 1609 metri.';
+
+  @override
+  String privacyZoneDelete(String name) {
+    return 'Rimuovi $name';
+  }
+
+  @override
+  String get privacyErrorRadius => 'Scegli un raggio da 200 a 1609 metri.';
+
+  @override
+  String get privacyErrorName => 'Dai un nome al luogo.';
+
+  @override
+  String get privacyErrorTrim => 'Scegli da 0 a 5000 metri per ogni estremo.';
+
+  @override
+  String get privacyRidePrivacy => 'Privacy delle uscite';
+
+  @override
+  String get privacyRidePrivacyHelp =>
+      'Cosa vedono il tuo allenatore e i link condivisi.';
 
   @override
   String get viewsTitle => 'Chi ha guardato';

@@ -282,6 +282,44 @@ void main() {
     });
   });
 
+  group('route gaps', () {
+    test(
+      'RideSeries_ShouldBreakTheLine_WhenHiddenSamplesSitBetweenVisibleOnes',
+      () {
+        final series = RideSeries.from(
+          RideStreamsResponse(
+            time: const [0, 1, 2, 3, 4],
+            latitude: const [46.0, 46.00001, null, null, 46.00005],
+            longitude: const [11.0, 11.0, null, null, 11.0],
+          ),
+        );
+
+        expect(series.route, hasLength(3));
+        expect(series.routeBreaks, {2});
+        expect(series.startHidden, isFalse);
+        expect(series.endHidden, isFalse);
+      },
+    );
+
+    test(
+      'RideSeries_ShouldHideTheStartDot_WhenTheFirstSampleHasNoPosition',
+      () {
+        final series = RideSeries.from(
+          RideStreamsResponse(
+            time: const [0, 1, 2],
+            latitude: const [null, 46.0, 46.00001],
+            longitude: const [null, 11.0, 11.0],
+          ),
+        );
+
+        expect(series.route, hasLength(2));
+        expect(series.routeBreaks, isEmpty);
+        expect(series.startHidden, isTrue);
+        expect(series.endHidden, isFalse);
+      },
+    );
+  });
+
   group('heart rate colour', () {
     test('HeartRateColor_ShouldUseTheRouteColour_WhenTheRateIsAtItsLowest', () {
       expect(

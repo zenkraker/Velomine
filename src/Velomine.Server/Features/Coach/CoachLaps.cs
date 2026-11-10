@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Sharing;
 
@@ -64,6 +65,7 @@ public sealed class GetCoachRideLaps(VelomineDbContext db, TimeProvider time)
                 l.AvgSpeedMs, l.MaxSpeedMs, l.AvgPowerW, l.MaxPowerW,
                 l.AvgHeartRate, l.MaxHeartRate, l.AvgCadence, l.ElevationGainM))
             .ToListAsync(ct);
-        await Send.OkAsync(new RideLapsResponse([.. laps]), ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        await Send.OkAsync(new RideLapsResponse([.. laps.Select(l => PrivacyRules.ForViewer(l, privacy))]), ct);
     }
 }

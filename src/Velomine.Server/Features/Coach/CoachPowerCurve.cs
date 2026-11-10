@@ -3,6 +3,7 @@ using FluentValidation;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Features.Coach;
@@ -43,6 +44,13 @@ public sealed class GetCoachPowerCurve(VelomineDbContext db, TimeProvider time)
         }
 
         var clock = await MemberClock.ForAsync(db, req.UserId, time, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        if (privacy.HidePower)
+        {
+            await Send.NotFoundAsync(ct);
+            return;
+        }
+
         var curve = await FitnessQueries.PowerCurveAsync(
             db, clock, req.UserId, req.Days ?? 90, includeBodyMetrics: false, ct);
         await SharingRules.RecordViewAsync(

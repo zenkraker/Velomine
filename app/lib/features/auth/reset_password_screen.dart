@@ -6,6 +6,7 @@ import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'auth_state.dart';
 import 'auth_view_models.dart';
+import 'password_field.dart';
 
 String resetProblemText(AppLocalizations l10n, ResetProblem problem) =>
     switch (problem) {
@@ -80,20 +81,20 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ] else ...[
                 Text(l10n.resetPasswordHelp),
                 const SizedBox(height: 16),
-                TextField(
-                  key: const Key('reset-password'),
+                PasswordField(
+                  fieldKey: const Key('reset-password'),
+                  visibilityKey: const Key('reset-password-visibility'),
                   controller: _password,
-                  obscureText: true,
+                  label: l10n.newPassword,
                   autofillHints: const [AutofillHints.newPassword],
-                  decoration: InputDecoration(labelText: l10n.newPassword),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  key: const Key('reset-confirm'),
+                PasswordField(
+                  fieldKey: const Key('reset-confirm'),
+                  visibilityKey: const Key('reset-confirm-visibility'),
                   controller: _confirm,
-                  obscureText: true,
+                  label: l10n.confirmPassword,
                   autofillHints: const [AutofillHints.newPassword],
-                  decoration: InputDecoration(labelText: l10n.confirmPassword),
                   onSubmitted: (_) => _reset(),
                 ),
                 if (s.problem != null) ...[

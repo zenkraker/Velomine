@@ -16,6 +16,7 @@ class LoginRequest {
     required this.email,
     required this.password,
     this.useCookies = const Optional.present(false),
+    this.rememberMe = const Optional.present(true),
   });
 
   final String email;
@@ -24,21 +25,25 @@ class LoginRequest {
 
   final Optional<bool?> useCookies;
 
+  final Optional<bool?> rememberMe;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is LoginRequest &&
     other.email == email &&
     other.password == password &&
-    other.useCookies == useCookies;
+    other.useCookies == useCookies &&
+    other.rememberMe == rememberMe;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (email.hashCode) +
     (password.hashCode) +
-    (useCookies.hashCode);
+    (useCookies.hashCode) +
+    (rememberMe.hashCode);
 
   @override
-  String toString() => 'LoginRequest[email=$email, password=$password, useCookies=$useCookies]';
+  String toString() => 'LoginRequest[email=$email, password=$password, useCookies=$useCookies, rememberMe=$rememberMe]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -47,6 +52,10 @@ class LoginRequest {
     if (this.useCookies.isPresent) {
       final value = this.useCookies.value;
       json[r'useCookies'] = value;
+    }
+    if (this.rememberMe.isPresent) {
+      final value = this.rememberMe.value;
+      json[r'rememberMe'] = value;
     }
     return json;
   }
@@ -57,10 +66,12 @@ class LoginRequest {
     String? email,
     String? password,
     Optional<bool?>? useCookies,
+    Optional<bool?>? rememberMe,
   }) => LoginRequest(
     email: email ?? this.email,
     password: password ?? this.password,
     useCookies: useCookies ?? this.useCookies,
+    rememberMe: rememberMe ?? this.rememberMe,
   );
 
   /// Returns a new [LoginRequest] instance and imports its values from
@@ -85,6 +96,7 @@ class LoginRequest {
         email: mapValueOfType<String>(json, r'email')!,
         password: mapValueOfType<String>(json, r'password')!,
         useCookies: json.containsKey(r'useCookies') ? Optional.present(mapValueOfType<bool>(json, r'useCookies')) : const Optional.absent(),
+        rememberMe: json.containsKey(r'rememberMe') ? Optional.present(mapValueOfType<bool>(json, r'rememberMe')) : const Optional.absent(),
       );
     }
     return null;

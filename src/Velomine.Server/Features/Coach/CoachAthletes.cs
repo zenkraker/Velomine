@@ -5,6 +5,7 @@ using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Clubs;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Sharing;
 
@@ -77,6 +78,10 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
             .ToList();
         athletes.AddRange(await CoachQueries.SummariesAsync(db, time, sharing, grants, ct));
 
+        // Hiding power takes the training load with it, even on the roster.
+        var privacy = await PrivacyRules.LoadManyAsync(db, athletes.Select(a => a.UserId).ToList(), ct);
+        athletes = [.. athletes.Select(a => privacy[a.UserId].HidePower ? a with { Tss7 = null, Tss42 = null } : a)];
+
         // The roster shows each athlete's snapshot, so it is a view of their data, not just a directory.
         await SharingRules.RecordViewsAsync(
             db, time, athletes.Select(a => a.UserId), req.ClubId, viewerId,
@@ -114,6 +119,8 @@ public sealed class GetCoachAthlete(VelomineDbContext db, TimeProvider time)
             .Where(g => g.ClubId == req.ClubId && g.MemberId == req.UserId)
             .ToListAsync(ct);
         var summary = await CoachQueries.SummaryAsync(db, time, member, grants, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        if (privacy.HidePower) summary = summary with { Tss7 = null, Tss42 = null };
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Summary, ct);
@@ -157,6 +164,14 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
         }
 
         var clock = await MemberClock.ForAsync(db, req.UserId, time, ct);
+        // Fitness, fatigue and form are built from TSS and TRIMP: hiding either stream hides the trend.
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        if (privacy.HidesPowerOrHeartRate)
+        {
+            await Send.NotFoundAsync(ct);
+            return;
+        }
+
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Training, ct);

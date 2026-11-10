@@ -69,6 +69,7 @@ class Session {
        clubs = ClubApi(client),
        coach = ClubsApi(client),
        sharing = SharingApi(client),
+       privacy = PrivacyApi(client),
        wellbeing = WellbeingApi(client),
        notifications = NotificationsApi(client),
        server = ServerApi(client) {
@@ -85,6 +86,9 @@ class Session {
   /// The club-scoped endpoints a coach uses: athletes, their training and their rides.
   final ClubsApi coach;
   final SharingApi sharing;
+
+  /// The member's own privacy choices: stream switches, trimming and saved zones.
+  final PrivacyApi privacy;
 
   /// Check-ins, ride RPE and notes.
   final WellbeingApi wellbeing;
@@ -332,7 +336,7 @@ class Session {
   }
 
   /// Returns null on success, or the reason it failed.
-  Future<AuthProblem?> signIn(String email, String password) async {
+  Future<AuthProblem?> signIn(String email, String password, {bool rememberMe = true}) async {
     // Keys and autofill can add a space at either end; it must not decide whether
     // an account matches.
     email = email.trim();
@@ -346,6 +350,7 @@ class Session {
           email: email,
           password: password,
           useCookies: Optional.present(useCookies),
+          rememberMe: Optional.present(rememberMe),
         ),
       );
     } on ApiException catch (e) {
@@ -364,7 +369,7 @@ class Session {
 
     if (!useCookies) {
       if (token == null) return AuthProblem.unavailable;
-      await auth.accept(token);
+      await auth.accept(token, persist: rememberMe);
     }
 
     try {

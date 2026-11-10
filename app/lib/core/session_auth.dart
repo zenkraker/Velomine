@@ -97,12 +97,18 @@ class SessionAuth implements Authentication {
   }
 
   /// Takes the token pair from login or single sign-on and keeps the refresh token for the next start.
-  Future<void> accept(TokenResponse token) async {
+  /// With [persist] false the token stays in memory only, so closing the app asks for the password again.
+  Future<void> accept(TokenResponse token, {bool persist = true}) async {
     _accessToken = token.accessToken;
     _refreshToken = token.refreshToken;
     _expiresAt = _now().add(Duration(seconds: token.expiresIn));
     try {
-      await store.writeRefreshToken(token.refreshToken);
+      if (persist) {
+        await store.writeRefreshToken(token.refreshToken);
+      } else {
+        // A token from an earlier "stay logged in" sign-in must not bring back the old session.
+        await store.clear();
+      }
     } on Object {
       // The session still works until the app closes; the next start asks to sign in again.
     }

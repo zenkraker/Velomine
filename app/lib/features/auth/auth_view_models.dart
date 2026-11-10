@@ -13,11 +13,17 @@ class SignInViewModel extends _$SignInViewModel {
   @override
   SignInState build() => const SignInState();
 
-  Future<void> signIn(String email, String password) async {
+  Future<void> signIn(
+    String email,
+    String password, {
+    bool rememberMe = true,
+  }) async {
     if (state.command.running) return;
     ref.read(sessionProvider).clearSsoError();
     state = state.copyWith(command: state.command.start(), clearProblem: true);
-    final problem = await ref.read(authDataProvider).signIn(email, password);
+    final problem = await ref
+        .read(authDataProvider)
+        .signIn(email, password, rememberMe: rememberMe);
     if (!ref.mounted) return;
     state = state.copyWith(
       command: state.command.finish(const Ok(null)),

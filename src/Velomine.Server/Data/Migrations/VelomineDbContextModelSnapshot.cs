@@ -1240,6 +1240,106 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("notifications", "notifications");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Privacy.PrivacySettings", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("HideCadence")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_cadence");
+
+                    b.Property<bool>("HideElevation")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_elevation");
+
+                    b.Property<bool>("HideHeartRate")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_heart_rate");
+
+                    b.Property<bool>("HidePower")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_power");
+
+                    b.Property<bool>("HideSpeed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_speed");
+
+                    b.Property<bool>("HideTemperature")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_temperature");
+
+                    b.Property<int>("TrimEndM")
+                        .HasColumnType("integer")
+                        .HasColumnName("trim_end_m");
+
+                    b.Property<int>("TrimStartM")
+                        .HasColumnType("integer")
+                        .HasColumnName("trim_start_m");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_settings");
+
+                    b.ToTable("settings", "privacy", t =>
+                        {
+                            t.HasCheckConstraint("ck_privacy_settings_trim", "trim_start_m BETWEEN 0 AND 5000 AND trim_end_m BETWEEN 0 AND 5000");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Privacy.PrivacyZone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RadiusM")
+                        .HasColumnType("integer")
+                        .HasColumnName("radius_m");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_zones");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_zones_user_id");
+
+                    b.ToTable("zones", "privacy", t =>
+                        {
+                            t.HasCheckConstraint("ck_privacy_zones_latitude", "latitude BETWEEN -90 AND 90");
+
+                            t.HasCheckConstraint("ck_privacy_zones_longitude", "longitude BETWEEN -180 AND 180");
+
+                            t.HasCheckConstraint("ck_privacy_zones_radius", "radius_m BETWEEN 200 AND 1609");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1957,6 +2057,26 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_notifications_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Privacy.PrivacySettings", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithOne()
+                        .HasForeignKey("Velomine.Server.Features.Privacy.PrivacySettings", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_settings_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Privacy.PrivacyZone", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_zones_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>

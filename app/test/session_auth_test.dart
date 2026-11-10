@@ -39,6 +39,25 @@ void main() {
     expect(store.token, 'r-rider@example.com');
   });
 
+  test('SessionAuth_ShouldStoreTheRefreshToken_WhenPersisting', () async {
+    final session = auth();
+
+    await session.accept(tokens('rider@example.com'));
+
+    expect(store.token, 'r-rider@example.com');
+    expect(session.accessToken, 't-rider@example.com');
+  });
+
+  test('SessionAuth_ShouldNotStoreTheRefreshToken_WhenNotPersisting', () async {
+    store.token = 'r-old@example.com';
+    final session = auth();
+
+    await session.accept(tokens('rider@example.com'), persist: false);
+
+    expect(store.token, isNull);
+    expect(session.accessToken, 't-rider@example.com');
+  });
+
   test('SessionAuth_ShouldClearTokenAndSignOut_WhenRefused', () async {
     store.token = 'r-nobody@example.com';
     var signedOut = false;

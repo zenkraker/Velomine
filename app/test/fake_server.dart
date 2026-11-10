@@ -113,6 +113,19 @@ class FakeServer {
   };
   final shareViews = <Map<String, Object?>>[];
 
+  /// What the member hides from every non-owner, and the places whose surroundings are hidden.
+  final privacyStreams = <String, bool>{
+    'hideHeartRate': false,
+    'hidePower': false,
+    'hideCadence': false,
+    'hideSpeed': false,
+    'hideElevation': false,
+    'hideTemperature': false,
+  };
+  int privacyTrimStartM = 0;
+  int privacyTrimEndM = 0;
+  final privacyZones = <Map<String, Object?>>[];
+
   /// Whether the fake member accepted the wellbeing terms, today's check-in and its history.
   bool wellbeingConsent = false;
   Map<String, Object?>? wellbeingToday;
@@ -144,7 +157,8 @@ class FakeServer {
   int tokenExpiresIn = 3600;
 
   /// How many refresh-token exchanges were made.
-  int refreshCount = 0;
+  int refreshCount = 0; // how many times the app refreshed its token
+  bool? lastRememberMe; // the stay-signed-in choice of the last login
 
   /// Who a test email was sent to, and what the mail server answered.
   final testEmails = <String>[];
@@ -295,6 +309,7 @@ class FakeServer {
 
     if (path == '/api/v1/accounts/login') {
       final body = jsonDecode(request.body) as Map<String, Object?>;
+      lastRememberMe = body['rememberMe'] as bool?;
       final account = accounts[body['email']];
       if (account == null || account.password != body['password']) {
         return http.Response('', 401);
@@ -598,6 +613,7 @@ extension on FakeServer {
         !path.startsWith('/api/v1/club') &&
         !path.startsWith('/api/v1/clubs') &&
         !path.startsWith('/api/v1/sharing') &&
+        !path.startsWith('/api/v1/privacy') &&
         !path.startsWith('/api/v1/wellbeing') &&
         !path.startsWith('/api/v1/admin')) {
       return null;
@@ -613,6 +629,9 @@ extension on FakeServer {
     }
     if (path.startsWith('/api/v1/sharing')) {
       return _sharing(request, path, json);
+    }
+    if (path.startsWith('/api/v1/privacy')) {
+      return _privacy(request, path, json);
     }
     if (path.startsWith('/api/v1/admin')) {
       if (!caller.roles.contains('admin')) return http.Response('', 403);
@@ -1153,6 +1172,52 @@ extension on FakeServer {
         sharingChoices.addAll(body.cast<String, String>());
       }
       return json(sharingChoices);
+    }
+    return http.Response('', 404);
+  }
+
+  http.Response _privacy(
+    http.Request request,
+    String path,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    Map<String, Object?> view() => {
+      'streams': privacyStreams,
+      'trimStartM': privacyTrimStartM,
+      'trimEndM': privacyTrimEndM,
+      'zones': privacyZones,
+    };
+    if (path == '/api/v1/privacy' && request.method == 'GET') {
+      return json(view());
+    }
+    if (path == '/api/v1/privacy/settings' && request.method == 'PUT') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      for (final key in privacyStreams.keys) {
+        privacyStreams[key] = body[key] as bool? ?? false;
+      }
+      privacyTrimStartM = body['trimStartM'] as int? ?? 0;
+      privacyTrimEndM = body['trimEndM'] as int? ?? 0;
+      return json(view());
+    }
+    if (path == '/api/v1/privacy/zones' && request.method == 'POST') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final zone = {
+        'id':
+            'zone-${privacyZones.length + 1}-${DateTime.now().microsecondsSinceEpoch}',
+        'name': body['name'],
+        'latitude': body['latitude'],
+        'longitude': body['longitude'],
+        'radiusM': body['radiusM'],
+      };
+      privacyZones.add(zone);
+      return json(zone, 201);
+    }
+    if (path.startsWith('/api/v1/privacy/zones/') &&
+        request.method == 'DELETE') {
+      final id = path.split('/').last;
+      final before = privacyZones.length;
+      privacyZones.removeWhere((zone) => zone['id'] == id);
+      return http.Response('', privacyZones.length == before ? 404 : 204);
     }
     return http.Response('', 404);
   }

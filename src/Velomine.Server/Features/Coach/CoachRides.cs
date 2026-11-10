@@ -76,6 +76,7 @@ public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
         }
 
         var canAnalytics = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Analytics, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
         var limit = req.Limit ?? 50;
         var query = db.Rides.AsNoTracking()
             .Where(r => r.UserId == req.UserId && r.Status != RideStatus.Duplicate);
@@ -98,7 +99,8 @@ public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Rides, ct);
         await Send.OkAsync(new ListRidesResponse(
-            [.. page.Select(r => canAnalytics ? RideResponse.From(r) : RideResponse.From(r).WithoutTrainingLoad())], next), ct);
+            [.. page.Select(r => PrivacyRules.ForViewer(
+                canAnalytics ? RideResponse.From(r) : RideResponse.From(r).WithoutTrainingLoad(), privacy))], next), ct);
     }
 }
 
@@ -135,8 +137,10 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
         await Send.OkAsync(
-            canAnalytics ? RideDetails.Build(ride) : RideResponse.From(ride).WithoutTrainingLoad(), ct);
+            PrivacyRules.ForViewer(
+                canAnalytics ? RideDetails.Build(ride) : RideResponse.From(ride).WithoutTrainingLoad(), privacy), ct);
     }
 }
 
@@ -180,6 +184,7 @@ public sealed class GetCoachRideStreams(VelomineDbContext db, TimeProvider time)
         }
 
         var showRoute = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Routes, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
         var reduced = StreamSampling.Reduce(streams, req.MaxPoints ?? 1500);
         var response = new RideStreamsResponse(
             reduced.Time,
@@ -197,6 +202,6 @@ public sealed class GetCoachRideStreams(VelomineDbContext db, TimeProvider time)
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             showRoute ? ViewKinds.Route : ViewKinds.Ride, ct);
-        await Send.OkAsync(PrivacyRules.ForViewer(response, showRoute), ct);
+        await Send.OkAsync(PrivacyRules.ForViewer(response, privacy, showRoute), ct);
     }
 }

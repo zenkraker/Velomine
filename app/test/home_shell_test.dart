@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
@@ -92,6 +93,71 @@ void main() {
       await tester.pump();
 
       expect(find.text('Paused'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'HomeShell_ShouldAskAgainBeforeExiting_WhenBackHasNoPreviousPage',
+    (tester) async {
+      final server = FakeServer();
+      server.signInBrowser(server.add('rider@example.com'));
+      final session = server.session(useCookies: true);
+      await tester.runAsync(session.restore);
+      final calls = <MethodCall>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          calls.add(call);
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sessionProvider.overrideWith((ref) => session),
+            recorderProvider.overrideWithValue(
+              _StateRecorder(
+                const RecorderSnapshot(
+                  state: 'idle',
+                  elapsedS: 0,
+                  movingS: 0,
+                  distanceM: 0,
+                ),
+              ),
+            ),
+            themeChoiceStoreProvider.overrideWithValue(MemoryThemeStore()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: HomeShell(location: '/rides', child: const SizedBox.shrink()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(find.text('Press back again to exit'), findsOneWidget);
+      expect(
+        calls.where((call) => call.method == 'SystemNavigator.pop'),
+        isEmpty,
+      );
+
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(
+        calls.where((call) => call.method == 'SystemNavigator.pop'),
+        isNotEmpty,
+      );
     },
   );
 }

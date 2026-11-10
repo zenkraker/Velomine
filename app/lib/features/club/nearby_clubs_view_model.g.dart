@@ -54,7 +54,7 @@ final class NearbyClubsViewModelProvider
 }
 
 String _$nearbyClubsViewModelHash() =>
-    r'b961c48ccc67575a6d5f0ea0121114dcb744328d';
+    r'76bfb7768e43cabcc827fd17c510c49420f09ed2';
 
 /// Clubs within reach of the rider and the one open join request.
 ///

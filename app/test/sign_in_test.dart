@@ -98,6 +98,55 @@ void main() {
     },
   );
 
+  testWidgets('SignInScreen_ShouldShowTheTypedPassword_WhenTheEyeIsTapped', (
+    tester,
+  ) async {
+    await startApp(tester, server.session(useCookies: false));
+    TextField password() =>
+        tester.widget<TextField>(find.byKey(const Key('password')));
+
+    expect(password().obscureText, isTrue);
+    await tester.enterText(find.byKey(const Key('password')), 'secret-1');
+    await tester.tap(find.byKey(const Key('password-visibility')));
+    await tester.pump();
+    expect(password().obscureText, isFalse);
+
+    await tester.tap(find.byKey(const Key('password-visibility')));
+    await tester.pump();
+    expect(password().obscureText, isTrue);
+  });
+
+  testWidgets('SignInScreen_ShouldStayLoggedInByDefault_WhenTheFormOpens', (
+    tester,
+  ) async {
+    server.add('rider@example.com');
+    await startApp(tester, server.session(useCookies: false));
+
+    expect(
+      tester
+          .widget<CheckboxListTile>(find.byKey(const Key('stay-signed-in')))
+          .value,
+      isTrue,
+    );
+
+    await signIn(tester, 'rider@example.com', 'Rider-pass-123');
+
+    expect(server.lastRememberMe, isTrue);
+  });
+
+  testWidgets('SignInScreen_ShouldNotStayLoggedIn_WhenTheBoxIsCleared', (
+    tester,
+  ) async {
+    server.add('rider@example.com');
+    await startApp(tester, server.session(useCookies: false));
+    await tester.tap(find.byKey(const Key('stay-signed-in')));
+    await tester.pump();
+
+    await signIn(tester, 'rider@example.com', 'Rider-pass-123');
+
+    expect(server.lastRememberMe, isFalse);
+  });
+
   testWidgets('SignInScreen_ShouldTellToWait_WhenAccountIsNotApproved', (
     tester,
   ) async {

@@ -12,6 +12,7 @@ lib/api/bikes_api.dart
 lib/api/club_api.dart
 lib/api/clubs_api.dart
 lib/api/notifications_api.dart
+lib/api/privacy_api.dart
 lib/api/rides_api.dart
 lib/api/server_api.dart
 lib/api/sharing_api.dart
@@ -49,6 +50,7 @@ lib/model/create_bike_request.dart
 lib/model/create_club_request.dart
 lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
+lib/model/create_privacy_zone_request.dart
 lib/model/create_template_request.dart
 lib/model/delete_my_account_request.dart
 lib/model/exchange_sso_token_request.dart
@@ -83,6 +85,9 @@ lib/model/pending_join_request_response.dart
 lib/model/period_totals.dart
 lib/model/power_curve_point.dart
 lib/model/power_curve_response.dart
+lib/model/privacy_response.dart
+lib/model/privacy_streams_response.dart
+lib/model/privacy_zone_response.dart
 lib/model/problem_details.dart
 lib/model/profile_response.dart
 lib/model/readiness_factor.dart
@@ -128,6 +133,7 @@ lib/model/update_bike_request.dart
 lib/model/update_club_request.dart
 lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
+lib/model/update_privacy_request.dart
 lib/model/update_profile_request.dart
 lib/model/update_settings_request.dart
 lib/model/update_sharing_request.dart

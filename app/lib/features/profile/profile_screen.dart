@@ -10,6 +10,7 @@ import '../../core/language_choice.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../auth/password_field.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
@@ -43,6 +44,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
     required this.openLink,
     required this.onAccountDeleted,
     required this.onPasswordChanged,
+    required this.onOpenPrivacy,
     required this.serverUrl,
   });
 
@@ -60,6 +62,9 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
   /// Called after a password change: the security stamp moved, so every session must sign in again.
   final VoidCallback onPasswordChanged;
+
+  /// Opens the member's ride privacy: stream switches, trimming and saved zones.
+  final VoidCallback onOpenPrivacy;
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -412,6 +417,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         l10n.privacy,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
+                      ListTile(
+                        key: const Key('profile-ride-privacy'),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.privacyRidePrivacy),
+                        subtitle: Text(l10n.privacyRidePrivacyHelp),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: widget.onOpenPrivacy,
+                      ),
                       Text(l10n.telemetryHelp),
                       if (!telemetryAvailable)
                         Text(l10n.telemetryUnavailable)
@@ -599,26 +612,26 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         mainAxisSize: MainAxisSize.min,
         spacing: 16,
         children: [
-          TextField(
-            key: const Key('current-password'),
+          PasswordField(
+            fieldKey: const Key('current-password'),
+            visibilityKey: const Key('current-password-visibility'),
             controller: _current,
-            obscureText: true,
+            label: l10n.currentPassword,
             autofillHints: const [AutofillHints.password],
-            decoration: InputDecoration(labelText: l10n.currentPassword),
           ),
-          TextField(
-            key: const Key('new-password'),
+          PasswordField(
+            fieldKey: const Key('new-password'),
+            visibilityKey: const Key('new-password-visibility'),
             controller: _new,
-            obscureText: true,
+            label: l10n.newPassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: InputDecoration(labelText: l10n.newPassword),
           ),
-          TextField(
-            key: const Key('confirm-password'),
+          PasswordField(
+            fieldKey: const Key('confirm-password'),
+            visibilityKey: const Key('confirm-password-visibility'),
             controller: _confirm,
-            obscureText: true,
+            label: l10n.confirmPassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: InputDecoration(labelText: l10n.confirmPassword),
             onSubmitted: (_) => _submit(),
           ),
           if (_error != null)

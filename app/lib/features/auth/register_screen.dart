@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
 import 'auth_view_models.dart';
+import 'password_field.dart';
 import 'sign_in_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -72,15 +73,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       decoration: InputDecoration(labelText: l10n.name),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      key: const Key('password'),
+                    PasswordField(
+                      fieldKey: const Key('password'),
+                      visibilityKey: const Key('password-visibility'),
                       controller: _password,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: l10n.password,
-                        helperText: l10n.passwordHint,
-                        helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
-                      ),
+                      label: l10n.password,
+                      helperText: l10n.passwordHint,
+                      helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
+                      autofillHints: const [AutofillHints.newPassword],
                     ),
                     if (s.problem != null) ...[
                       const SizedBox(height: 12),

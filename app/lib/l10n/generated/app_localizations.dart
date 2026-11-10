@@ -218,6 +218,30 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get name;
 
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// No description provided for @staySignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay logged in'**
+  String get staySignedIn;
+
+  /// No description provided for @pressBackAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgain;
+
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:
@@ -782,6 +806,18 @@ abstract class AppLocalizations {
   /// **'save your sharing choices'**
   String get actionSaveSharing;
 
+  /// No description provided for @actionLoadPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'load your privacy choices'**
+  String get actionLoadPrivacy;
+
+  /// No description provided for @actionSavePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'save your privacy choices'**
+  String get actionSavePrivacy;
+
   /// No description provided for @actionLoadAthletes.
   ///
   /// In en, this message translates to:
@@ -1015,6 +1051,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on rides first; routes add the map to them.'**
   String get routesNeedRides;
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride privacy'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What other people see when you share a ride or your club can see it. You always see everything.'**
+  String get privacyHelp;
+
+  /// No description provided for @privacyOthersSee.
+  ///
+  /// In en, this message translates to:
+  /// **'What others see of each ride'**
+  String get privacyOthersSee;
+
+  /// No description provided for @privacyHideHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get privacyHideHeartRate;
+
+  /// No description provided for @privacyHidePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get privacyHidePower;
+
+  /// No description provided for @privacyHideCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Cadence'**
+  String get privacyHideCadence;
+
+  /// No description provided for @privacyHideSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get privacyHideSpeed;
+
+  /// No description provided for @privacyHideElevation.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation'**
+  String get privacyHideElevation;
+
+  /// No description provided for @privacyHideTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get privacyHideTemperature;
+
+  /// No description provided for @privacyTrimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the start and end'**
+  String get privacyTrimTitle;
+
+  /// No description provided for @privacyTrimStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get privacyTrimStart;
+
+  /// No description provided for @privacyTrimEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get privacyTrimEnd;
+
+  /// No description provided for @privacyTrimHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Metres hidden at the start and end of every ride. 0 keeps everything.'**
+  String get privacyTrimHelp;
+
+  /// No description provided for @privacyZonesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved places'**
+  String get privacyZonesTitle;
+
+  /// No description provided for @privacyZonesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Every ride hides up to a mile around these places, and the route line breaks there. At most ten places.'**
+  String get privacyZonesHelp;
+
+  /// No description provided for @privacyZonesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved places yet.'**
+  String get privacyZonesEmpty;
+
+  /// No description provided for @privacyAddZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a place'**
+  String get privacyAddZone;
+
+  /// No description provided for @privacyZoneName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get privacyZoneName;
+
+  /// No description provided for @privacyZoneRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius (m)'**
+  String get privacyZoneRadius;
+
+  /// No description provided for @privacyZoneRadiusHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'200 to 1609 metres.'**
+  String get privacyZoneRadiusHelp;
+
+  /// No description provided for @privacyZoneDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String privacyZoneDelete(String name);
+
+  /// No description provided for @privacyErrorRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a radius from 200 to 1609 metres.'**
+  String get privacyErrorRadius;
+
+  /// No description provided for @privacyErrorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the place a name.'**
+  String get privacyErrorName;
+
+  /// No description provided for @privacyErrorTrim.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose 0 to 5000 metres for each end.'**
+  String get privacyErrorTrim;
+
+  /// No description provided for @privacyRidePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride privacy'**
+  String get privacyRidePrivacy;
+
+  /// No description provided for @privacyRidePrivacyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What your coach and shared links see.'**
+  String get privacyRidePrivacyHelp;
 
   /// No description provided for @viewsTitle.
   ///

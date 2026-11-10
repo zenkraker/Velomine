@@ -74,6 +74,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get name => 'Name';
 
   @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get staySignedIn => 'Stay logged in';
+
+  @override
+  String get pressBackAgain => 'Press back again to exit';
+
+  @override
   String get signIn => 'Sign in';
 
   @override
@@ -379,6 +391,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSaveSharing => 'save your sharing choices';
 
   @override
+  String get actionLoadPrivacy => 'load your privacy choices';
+
+  @override
+  String get actionSavePrivacy => 'save your privacy choices';
+
+  @override
   String get actionLoadAthletes => 'load the athletes';
 
   @override
@@ -511,6 +529,89 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get routesNeedRides =>
       'Turn on rides first; routes add the map to them.';
+
+  @override
+  String get privacyTitle => 'Ride privacy';
+
+  @override
+  String get privacyHelp =>
+      'What other people see when you share a ride or your club can see it. You always see everything.';
+
+  @override
+  String get privacyOthersSee => 'What others see of each ride';
+
+  @override
+  String get privacyHideHeartRate => 'Heart rate';
+
+  @override
+  String get privacyHidePower => 'Power';
+
+  @override
+  String get privacyHideCadence => 'Cadence';
+
+  @override
+  String get privacyHideSpeed => 'Speed';
+
+  @override
+  String get privacyHideElevation => 'Elevation';
+
+  @override
+  String get privacyHideTemperature => 'Temperature';
+
+  @override
+  String get privacyTrimTitle => 'Hide the start and end';
+
+  @override
+  String get privacyTrimStart => 'Start';
+
+  @override
+  String get privacyTrimEnd => 'End';
+
+  @override
+  String get privacyTrimHelp =>
+      'Metres hidden at the start and end of every ride. 0 keeps everything.';
+
+  @override
+  String get privacyZonesTitle => 'Saved places';
+
+  @override
+  String get privacyZonesHelp =>
+      'Every ride hides up to a mile around these places, and the route line breaks there. At most ten places.';
+
+  @override
+  String get privacyZonesEmpty => 'No saved places yet.';
+
+  @override
+  String get privacyAddZone => 'Add a place';
+
+  @override
+  String get privacyZoneName => 'Name';
+
+  @override
+  String get privacyZoneRadius => 'Radius (m)';
+
+  @override
+  String get privacyZoneRadiusHelp => '200 to 1609 metres.';
+
+  @override
+  String privacyZoneDelete(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get privacyErrorRadius => 'Choose a radius from 200 to 1609 metres.';
+
+  @override
+  String get privacyErrorName => 'Give the place a name.';
+
+  @override
+  String get privacyErrorTrim => 'Choose 0 to 5000 metres for each end.';
+
+  @override
+  String get privacyRidePrivacy => 'Ride privacy';
+
+  @override
+  String get privacyRidePrivacyHelp => 'What your coach and shared links see.';
 
   @override
   String get viewsTitle => 'Who looked';
