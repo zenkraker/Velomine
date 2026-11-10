@@ -100,8 +100,22 @@ jobs:
       - name: Restore
         run: dotnet restore Velomine.slnx --locked-mode
 
+      # In CI the test platform cannot redraw its progress bar, so it stays
+      # silent until the end. Detailed output prints each test as it finishes.
       - name: Test
-        run: dotnet test --solution Velomine.slnx --no-restore
+        run: >-
+          dotnet test --solution Velomine.slnx --no-restore
+          --output Detailed --progress off
+          --results-directory "$RUNNER_TEMP/test-results"
+          --report-xunit-markdown --report-xunit-markdown-filename server-tests.md
+
+      - name: Publish the test summary
+        if: ${{ !cancelled() }}
+        run: |
+          shopt -s globstar nullglob
+          for report in "$RUNNER_TEMP"/test-results/**/server-tests.md; do
+            cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          done
 
   web-tests:
     name: Web tests
