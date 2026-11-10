@@ -191,7 +191,7 @@ public sealed class RideIngestionService(
             await db.SaveChangesAsync(ct);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-            { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
+        { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
         {
             // Two reads of the same file finished together. The unique index lets one in; the other becomes a
             // duplicate of it, exactly as when it is seen later.
