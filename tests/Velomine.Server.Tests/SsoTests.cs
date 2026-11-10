@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using Velomine.Server.Features.Accounts;
 
@@ -8,7 +7,7 @@ namespace Velomine.Server.Tests;
 
 /// <summary>The whole single sign-on flow against a real OpenID Connect provider (Dex), played by a test "browser".</summary>
 [Collection("postgres")]
-public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
+public sealed class SsoTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -35,38 +34,12 @@ public sealed partial class SsoTests(PostgresFixture postgres, DexFixture dex)
         var start = await server.GetAsync("/api/v1/accounts/sso/login?" + query, Ct);
         Assert.Equal(HttpStatusCode.Redirect, start.StatusCode);
 
-        using var provider = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = true });
-        var current = start.Headers.Location!;
-        Uri? callback = null;
-        for (var hop = 0; hop < 12 && callback is null; hop++)
-        {
-            var response = await provider.GetAsync(current, Ct);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                // Dex's login form: post the email and password to the form's own address.
-                var html = await response.Content.ReadAsStringAsync(Ct);
-                var action = WebUtility.HtmlDecode(FormAction().Match(html).Groups[1].Value);
-                response = await provider.PostAsync(
-                    new Uri(current, action),
-                    new FormUrlEncodedContent(new Dictionary<string, string> { ["login"] = email, ["password"] = DexFixture.Password }),
-                    Ct);
-            }
-
-            Assert.True((int)response.StatusCode is >= 300 and < 400, $"Unexpected {(int)response.StatusCode} from the provider at {current}");
-            var next = new Uri(current, response.Headers.Location!);
-            if (next.AbsoluteUri.StartsWith("http://localhost/signin-oidc")) callback = next;
-            else current = next;
-        }
-
-        Assert.NotNull(callback);
+        var callback = await DexFixture.SignInOnProviderAsync(start.Headers.Location!, email, DexFixture.WebRedirectUri, Ct);
         // The server exchanges the code with the provider, then redirects to its own callback slice.
         var signedIn = await server.GetAsync(callback.PathAndQuery, Ct);
         Assert.Equal(HttpStatusCode.Redirect, signedIn.StatusCode);
         return await server.GetAsync(signedIn.Headers.Location!.OriginalString, Ct);
     }
-
-    [GeneratedRegex("action=\"([^\"]+)\"")]
-    private static partial Regex FormAction();
 
     [Fact]
     public async Task Sso_ShouldReportWhetherItIsEnabled_WhenTheInfoEndpointIsCalled()

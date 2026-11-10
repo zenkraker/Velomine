@@ -19,15 +19,15 @@ namespace Velomine.Server.Tests;
 
 /// <summary>Members own their data: they can take all of it out, and delete their account with everything in it.</summary>
 [Collection("postgres")]
-public sealed class DataOwnershipTests(PostgresFixture postgres, FakeOidcFixture oidc)
+public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
     {
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.UseSetting("Velomine:Sso:Authority", FakeOidcFixture.Authority);
-        b.UseSetting("Velomine:Sso:AppClientId", FakeOidcFixture.AppClientId);
+        b.UseSetting("Velomine:Sso:Authority", DexFixture.Authority);
+        b.UseSetting("Velomine:Sso:AppClientId", DexFixture.AppClientId);
         b.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");
     });
 
@@ -196,7 +196,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, FakeOidcFixture
     public async Task DataOwnership_ShouldAskForTheEmail_WhenAnAccountWithoutPasswordDeletesItself()
     {
         await using var api = await StartAsync();
-        string email = TestApi.NewEmail();
+        const string email = DexFixture.VerifiedEmail;
         Guid id;
         await using (var scope = api.Services.CreateAsyncScope())
         {
@@ -208,8 +208,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, FakeOidcFixture
         }
 
         // The phone's sign-in hands out tokens for such an account (see SsoAppTests); play that part.
-        await oidc.EnsureStartedAsync();
-        var idToken = oidc.SignToken($"data-ownership-{id:N}", email);
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
         var exchanged = await api.CreateClient().PostAsJsonAsync(
             "/api/v1/accounts/sso/token", new ExchangeSsoTokenRequest(idToken, null), Ct);
         exchanged.EnsureSuccessStatusCode();

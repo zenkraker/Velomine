@@ -3,6 +3,7 @@
 # VELOMINE__SSO__AUTHORITY at your own provider instead and remove the dex service.
 #
 # Log in at the Velomine sign-in page with:  rider@sso.test / password
+# The server tests start Dex from this same file (tests/Velomine.Server.Tests/DexFixture.cs); keep both working.
 #
 # The issuer must be the same address for your browser and for the Velomine container:
 # the host name dex.localhost reaches Dex's published port from your browser (browsers send
@@ -27,6 +28,8 @@ staticClients:
     redirectURIs:
       # If you change VELOMINE_PORT in .env, change the port here too.
       - http://localhost:8080/signin-oidc
+      # The server tests run Dex from this file; their test server lives at http://localhost/.
+      - http://localhost/signin-oidc
   # The phone is a public native client (no secret); PKCE protects the code exchange.
   - id: velomine-app
     name: Velomine phone
@@ -42,3 +45,10 @@ staticPasswords:
     name: SSO Rider
     emailVerified: true
     userID: 08a8684b-db88-4b73-90a9-3cd1661f5466
+  # An address the provider has not verified: single sign-on must refuse to create an account for it.
+  - email: unverified@sso.test
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: unverified
+    name: Unverified Rider
+    emailVerified: false
+    userID: 17b4a4c4-6b0d-4c5e-9d52-0a6a1f4b2a11
