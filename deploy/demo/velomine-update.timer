@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the registry for a new Velomine demo image
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=velomine-update.service
+
+[Install]
+WantedBy=timers.target

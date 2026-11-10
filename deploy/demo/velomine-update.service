@@ -1,0 +1,12 @@
+[Unit]
+Description=Update the Velomine demo to the pushed image, with rollback
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=deploy
+WorkingDirectory=/opt/velomine
+# The health gate waits up to two minutes before rolling back, twice.
+TimeoutStartSec=600
+ExecStart=/opt/velomine/update-demo.sh

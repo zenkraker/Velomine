@@ -1,0 +1,12 @@
+project_id = "00000000-0000-0000-0000-000000000000"
+
+domain              = "velomine.eu"
+demo_host           = "demo"
+instance_type       = "STARDUST1-S"
+db_node_type        = "DB-DEV-S"
+backup_bucket_name  = "velomine-demo-backups-REPLACE-ME"
+registry_namespace  = "velomine-demo"
+
+# Do not put secrets in this file. Pass the password through TF_VAR_db_password.
+# The SSH key and admin CIDR can also be passed as TF_VAR_ssh_public_key and
+# TF_VAR_admin_cidr.

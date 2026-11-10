@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FastEndpoints.OpenApi;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -86,10 +87,20 @@ builder.Services.AddRateLimiter(options =>
         }));
 });
 
+// A reverse proxy is the only way in (the app port is never published), so trust its
+// forwarded headers; otherwise HTTPS looks like HTTP and every client shares one rate-limit bucket.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // Exporting the API document (see below) needs no database and no background work.
 if (builder.IsExportMode()) builder.Services.RemoveAll<IHostedService>();
 
 var app = builder.Build();
+app.UseForwardedHeaders();
 // The presentation site lives in site/ and is served at the root: "/", "/status/", "/pricing/", "/contact/",
 // "/principles/", "/privacy/", "/terms/" and "/security/".
 // The Flutter web app is built into wwwroot (see the Dockerfile) and keeps its own routes through the fallback below.

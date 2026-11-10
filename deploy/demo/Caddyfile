@@ -1,0 +1,22 @@
+{
+	admin off
+	email {$ACME_EMAIL}
+}
+
+{$VELOMINE_DEMO_HOST}, {$VELOMINE_ROOT_HOST}, {$VELOMINE_WWW_HOST} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(self)"
+		-Server
+	}
+
+	request_body {
+		max_size 30MB
+	}
+
+	reverse_proxy app:8080
+}

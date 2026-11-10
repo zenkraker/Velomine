@@ -1,0 +1,56 @@
+name: velomine-demo
+
+services:
+  caddy:
+    image: caddy:2.11.9-alpine@sha256:0bbb055bda6793c999bde78b1b5ce3e89f829fb031af2cf50056ea1246559fee
+    restart: unless-stopped
+    environment:
+      VELOMINE_DEMO_HOST: ${VELOMINE_DEMO_HOST:-demo.velomine.eu}
+      VELOMINE_ROOT_HOST: ${VELOMINE_ROOT_HOST:-velomine.eu}
+      VELOMINE_WWW_HOST: ${VELOMINE_WWW_HOST:-www.velomine.eu}
+      ACME_EMAIL: ${ACME_EMAIL:-ops@velomine.eu}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    image: ${VELOMINE_IMAGE:?set VELOMINE_IMAGE in /opt/velomine/.env}
+    restart: unless-stopped
+    env_file:
+      - /etc/velomine/velomine.env
+    volumes:
+      - /srv/velomine/files:/data/files
+      - /srv/velomine/keys:/data/keys
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 850m
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy-data:
+  caddy-config:
