@@ -30,7 +30,9 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
     final state = ref.watch(twoFactorViewModelProvider);
     final notifier = ref.read(twoFactorViewModelProvider.notifier);
     final info = state.load.value;
-    final codes = state.enable.value?.recoveryCodes ?? state.regenerate.value?.recoveryCodes;
+    final codes =
+        state.enable.value?.recoveryCodes ??
+        state.regenerate.value?.recoveryCodes;
     final setup = state.start.value;
 
     ref.listen(twoFactorViewModelProvider, (_, next) {

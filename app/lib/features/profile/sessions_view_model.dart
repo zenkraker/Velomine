@@ -95,7 +95,6 @@ class SessionsViewModel extends _$SessionsViewModel {
     if (state.message?.id == id) state = state.copyWith(clearMessage: true);
   }
 
-  void _fail(Failure failure) => state = state.copyWith(
-    message: FailureMessage(++_messageId, failure),
-  );
+  void _fail(Failure failure) =>
+      state = state.copyWith(message: FailureMessage(++_messageId, failure));
 }

@@ -183,32 +183,33 @@ void main() {
     expect(find.textContaining('RPE 7/10'), findsOneWidget);
   });
 
-  testWidgets('CoachAthletesScreen_ShouldReturnToTheClub_WhenTheSystemBackIsPressed', (
-    tester,
-  ) async {
-    final owner = server.add(
-      'owner@example.com',
-      name: 'Owner Rina',
-      clubRole: 'owner',
-    );
-    server.add('athlete@example.com', name: 'Athlete Luca');
-    server.sharingChoices['rides'] = 'coaches';
-    server.signInBrowser(owner);
-    tester.view.physicalSize = const Size(1000, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'CoachAthletesScreen_ShouldReturnToTheClub_WhenTheSystemBackIsPressed',
+    (tester) async {
+      final owner = server.add(
+        'owner@example.com',
+        name: 'Owner Rina',
+        clubRole: 'owner',
+      );
+      server.add('athlete@example.com', name: 'Athlete Luca');
+      server.sharingChoices['rides'] = 'coaches';
+      server.signInBrowser(owner);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
 
-    await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Club'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('open-athletes')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('open-athletes')), findsNothing);
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.text('Club'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open-athletes')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('open-athletes')), findsNothing);
 
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
 
-    // Back goes to the club, not out of the app.
-    expect(find.byKey(const Key('open-athletes')), findsOneWidget);
-  });
+      // Back goes to the club, not out of the app.
+      expect(find.byKey(const Key('open-athletes')), findsOneWidget);
+    },
+  );
 }

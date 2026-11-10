@@ -47,7 +47,7 @@ public sealed class SiteTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("One plan for clubs. One price for solo riders.", html);
-        Assert.Contains("Activation", html);
+        Assert.Contains("Guided setup", html);
         Assert.Contains("No feature paywall", html);
     }
 
