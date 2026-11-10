@@ -87,13 +87,10 @@
           <article class="area-card card is-progress">
             <h3>Cloud and enrollment</h3>
             <p class="area-state">In progress</p>
-            <p>One app, one database per club. The single-club install works today; enrolling a new club is still done with me personally. Missing:</p>
+            <p>One app and one database for every club, with each club’s data kept apart; a self-hosted club runs the same thing with one club. Clubs, members and coach sharing work today; enrolling a new club is still done with me personally. Missing:</p>
             <ul>
-              <li>the list that maps each club’s web address to its own database</li>
-              <li>sending each club’s address to its own database before sign-in</li>
-              <li>creating the club’s database when it enrolls</li>
-              <li>the first admin account and the club’s own file storage</li>
-              <li>the club’s web address and secure connection</li>
+              <li>database access rules that keep each club’s rows apart as a second line of defence</li>
+              <li>creating the club and its first admin when it enrolls</li>
               <li>the plan agreement and the first invoice</li>
               <li>the first import and the go-live checklist</li>
             </ul>
@@ -136,7 +133,7 @@
           <article class="area-card card is-progress">
             <h3>Sharing</h3>
             <p class="area-state">In progress</p>
-            <p>Clubs, join codes, coach sharing and read-only coach views work. Whole-club reading needs a member-facing club view; share links, privacy zones and per-stream privacy are next.</p>
+            <p>Clubs, join codes, coach sharing and read-only coach views work. Privacy zones, start and end trimming and per-stream privacy apply to every coach view. Whole-club reading needs a member-facing club view; share links are next.</p>
           </article>
           <article class="area-card card is-done">
             <h3>Analytics</h3>
@@ -145,7 +142,7 @@
           </article>
         </div>
 
-        <p class="last-updated">Last updated 10 November 2026. Checked against the v1 scope in <code>docs/design/v1-scope-and-architecture.md</code>.</p>
+        <p class="last-updated">Last updated 10 November 2026. Checked against the roadmap in the repository’s README.</p>
       </div>
     </section>
 
@@ -225,6 +222,7 @@
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Wellbeing only with explicit consent; notes stay private</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every choice is revocable</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Read-only coach views and a record of who looked</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Privacy zones around saved places, start and end trimming, and per-stream switches on everything a coach sees</span></li>
             </ul>
           </article>
 
@@ -263,13 +261,13 @@
         <table class="gap-table">
           <thead><tr><th scope="col">Area</th><th scope="col">Missing</th></tr></thead>
           <tbody>
-            <tr><td>Clubs and hosting</td><td>The club list, each club’s own database, and automated enrollment.</td></tr>
+            <tr><td>Clubs and hosting</td><td>Database access rules per club, and automated enrollment.</td></tr>
             <tr><td>Accounts</td><td>API keys.</td></tr>
             <tr><td>Rides</td><td>Photos, thumbnails, reverse geocoding.</td></tr>
             <tr><td>Web app</td><td>Drag-and-drop upload; a file picker works today.</td></tr>
-            <tr><td>Sharing</td><td>Share links, privacy zones, per-stream privacy, whole-club reading (member-facing club view).</td></tr>
+            <tr><td>Sharing</td><td>Share links, whole-club reading (member-facing club view).</td></tr>
             <tr><td>Phone</td><td>Speed, cadence and power sensors; audio announcements; the iOS recorder.</td></tr>
-            <tr><td>Import</td><td>Strava export import, Garmin Connect.</td></tr>
+            <tr><td>Import</td><td>Strava export import.</td></tr>
             <tr><td>Health</td><td>Cycle tracking: optional, encrypted, with its own consent and sharing switch.</td></tr>
             <tr><td>Site</td><td>Italian presentation pages under <code>/it/</code>.</td></tr>
           </tbody>
@@ -279,7 +277,7 @@
         <table class="gap-table">
           <thead><tr><th scope="col">Area</th><th scope="col">What comes later</th></tr></thead>
           <tbody>
-            <tr><td>Connectors</td><td>Wahoo cloud and watched Dropbox or Nextcloud folders.</td></tr>
+            <tr><td>Connectors</td><td>Garmin Connect, Wahoo cloud and watched Dropbox or Nextcloud folders.</td></tr>
             <tr><td>Desktop</td><td>A USB upload tool for bike computers without a connector.</td></tr>
             <tr><td>Live</td><td>Live tracking with an expiring link for solo rides.</td></tr>
             <tr><td>Club</td><td>Group rides, club leaderboards, self-hosted segments.</td></tr>
@@ -297,8 +295,6 @@
             <tr><td>Directory</td><td>A small club directory (name, area, join code), so solo riders can find a club.</td></tr>
           </tbody>
         </table>
-
-        <p class="note-small">The v1 scope table and the release plan disagree on cycle tracking and Garmin Connect. This page follows the scope table.</p>
       </div>
     </section>
 
