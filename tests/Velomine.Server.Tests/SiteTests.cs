@@ -33,7 +33,7 @@ public sealed class SiteTests(PostgresFixture postgres)
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("What works today", html);
         Assert.Contains("The v1 goal", html);
-        Assert.Contains("Not yet", html);
+        Assert.Contains("What is still missing", html);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class SiteTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        Assert.Contains("One plan. Self-hosted or cloud.", html);
+        Assert.Contains("One plan for clubs. One price for solo riders.", html);
         Assert.Contains("Activation", html);
         Assert.Contains("No feature paywall", html);
     }
@@ -140,14 +140,27 @@ public sealed class SiteTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        var start = html.IndexOf("<div class=\"next-list\">", StringComparison.Ordinal);
-        var end = html.IndexOf("</section>", start, StringComparison.Ordinal);
-        Assert.True(start >= 0 && end > start, "The status page should have a 'Not yet' section.");
+        var start = html.IndexOf("Promised for v1, still missing", StringComparison.Ordinal);
+        var end = html.IndexOf("After v1", start, StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start, "The status page should have a v1 gap list.");
         var notYet = html[start..end];
         Assert.DoesNotContain("password reset", notYet, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("laps", notYet, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Laps read from FIT and TCX", html);
         Assert.Contains("Password reset by email", html);
+    }
+
+    [Fact]
+    public async Task Website_ShouldServeTheDemoPage_WhenDemoIsRequested()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/demo/", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("Try a real club", html);
+        Assert.Contains("Resets every night", html);
     }
 
     [Fact]
@@ -174,6 +187,17 @@ public sealed class SiteTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
         Assert.Equal("/status/", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task Website_ShouldRedirectToTheDemoPage_WhenTheTrailingSlashIsMissing()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/demo", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+        Assert.Equal("/demo/", response.Headers.Location?.ToString());
     }
 
     [Fact]

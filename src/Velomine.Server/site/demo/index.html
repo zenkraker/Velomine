@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo — Velomine</title>
+  <meta name="description" content="Try Velomine on a seeded club: three shared logins, three months of rides, a nightly reset. Upload your own GPX and see what breaks.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#F0EEE9">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body class="demo-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/" aria-label="Velomine home">
+        <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="mark-dot" cx="60" cy="31" r="8"/>
+        </svg>
+        <span class="wordmark">velo<em>mine</em></span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/status/">Status</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/demo/" aria-current="page">Demo</a>
+        <a href="/contact/">Contact</a>
+        <a class="btn btn-ghost" href="/sign-in">Sign in</a>
+        <a class="btn btn-primary" href="/sign-in">Open the demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-current="page">Demo</li>
+          </ol>
+        </nav>
+        <p class="eyebrow">Demo</p>
+        <h1>Try a real club.</h1>
+        <p>Not a tour. A seeded club with three months of rides, three accounts, and a nightly reset. Upload your own GPX and see what breaks.</p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="split">
+          <div class="split-copy">
+            <h2>Sign in as anyone.</h2>
+            <p>Three accounts share one seeded club. Open the same ride from the coach side and the rider side and compare what each of them can see.</p>
+
+            <!-- Keep these in sync with the seeded demo club and the nightly reset script. -->
+            <div class="logins" aria-label="Demo accounts">
+              <div class="login-row">
+                <code>demo-admin@velomine.eu</code>
+                <span>Club admin: members, settings, approval</span>
+              </div>
+              <div class="login-row">
+                <code>demo-coach@velomine.eu</code>
+                <span>Coach: the squad, shared rides, power curve</span>
+              </div>
+              <div class="login-row">
+                <code>demo-rider@velomine.eu</code>
+                <span>Rider: rides, map, charts, laps, bikes, goals</span>
+              </div>
+              <div class="login-row">
+                <code>Velomine-demo-1</code>
+                <span>Password, shared by all three accounts</span>
+              </div>
+            </div>
+
+            <p class="pill-note">Resets every night at 03:00 UTC</p>
+
+            <ol class="steps">
+              <li>Sign in as the coach and open the squad. Note who shares rides, analytics and wellbeing.</li>
+              <li>Sign in as the rider and open a ride. Move over a chart and watch the map follow.</li>
+              <li>Upload your own GPX and find it in the list.</li>
+              <li>Tell me what broke, what was missing, and what you expected.</li>
+            </ol>
+          </div>
+
+          <div class="split-visual">
+            <div class="panel panel-pad">
+              <p class="eyebrow">Before you start</p>
+              <h3>It is a sandbox, and it is honest.</h3>
+              <p>Everything here is example data. Files you upload are deleted at the next reset, so do not put anything personal in it.</p>
+              <p>What works today: upload, rides, analysis, bikes, goals, wellbeing, coach sharing. What does not: workout plans, comments, share links, Strava import, the iOS recorder.</p>
+              <p class="note-small"><a href="/status/">The full status page →</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="panel panel-pad founder">
+          <div>
+            <p class="eyebrow">Afterwards</p>
+            <h2>Tell me what broke.</h2>
+            <p>A blunt email is worth more than a compliment. If you run a club, say so and I will show you the admin side.</p>
+          </div>
+          <a class="contact-email" href="mailto:horizontodawn@pm.me?subject=Velomine%20demo%20feedback">horizontodawn@pm.me</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/" aria-label="Velomine home">
+            <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+              <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle class="mark-dot" cx="60" cy="31" r="8"/>
+            </svg>
+            <span class="wordmark">velo<em>mine</em></span>
+          </a>
+          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
+        </div>
+        <div class="footer-col">
+          <h3>Site</h3>
+          <a href="/">Home</a>
+          <a href="/status/">Status</a>
+          <a href="/pricing/">Pricing</a>
+          <a href="/demo/">Demo</a>
+          <a href="/contact/">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h3>App</h3>
+          <a href="/sign-in">Sign in</a>
+          <a href="/register">Create account</a>
+          <a href="/openapi/v1.json">API</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
+        <nav class="footer-legal" aria-label="Project and legal">
+          <a href="/principles/">Principles</a>
+          <a href="https://github.com/zenkraker/Velomine#readme">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/commits">Changelog</a>
+          <a href="/principles/#licence">Open source</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/privacy/#subprocessors">DPA</a>
+          <a href="/terms/">Terms</a>
+          <a href="/security/">Security</a>
+        </nav>
+        <span>Early development. <a href="/status/">See what works.</a></span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

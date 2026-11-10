@@ -1005,12 +1005,12 @@ a {
 
 .note-small {
   margin-top: 1.2rem;
-  color: rgba(233, 235, 228, 0.55);
+  color: rgba(24, 32, 30, 0.6);
   font-size: 0.78rem;
 }
 
 .note-small a {
-  color: var(--volt);
+  color: var(--iron);
   font-weight: 600;
 }
 
@@ -2166,4 +2166,875 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==========================================================================
+   2026 layer: solid depth panels, bento, scroll motion.
+   No backdrop-filter, no JavaScript, no external assets: performance first.
+   ========================================================================== */
+
+:root {
+  --paper: #f7f5ef;
+  --paper-2: #fbfaf6;
+  --line: rgba(24, 32, 30, 0.1);
+  --line-strong: rgba(24, 32, 30, 0.17);
+  --depth-1: 0 1px 2px rgba(14, 15, 12, 0.05), 0 10px 24px -16px rgba(14, 15, 12, 0.25);
+  --depth-2: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 2px 4px rgba(14, 15, 12, 0.04),
+    0 24px 50px -28px rgba(14, 15, 12, 0.32);
+  --depth-3: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 40px 80px -40px rgba(14, 15, 12, 0.42);
+  --radius: 22px;
+  --radius-lg: 30px;
+}
+
+/* Sticky, solid header. No blur, so it stays cheap on a phone. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--cloud);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+/* Solid panels carry the depth that glass would have carried. */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--paper-2), var(--paper));
+  box-shadow: var(--depth-2);
+}
+
+.panel-pad {
+  padding: clamp(22px, 3vw, 34px);
+}
+
+.panel--quiet {
+  background: var(--paper);
+  box-shadow: var(--depth-1);
+}
+
+.panel--dark {
+  background: var(--asphalt);
+  border-color: #2c2f27;
+  color: var(--mist);
+  box-shadow: var(--depth-3);
+}
+
+.panel--dark h2,
+.panel--dark h3 {
+  color: var(--mist);
+}
+
+.panel--dark p {
+  color: rgba(233, 235, 228, 0.74);
+}
+
+.lift {
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--depth-3);
+}
+
+/* Buttons gain a little depth without a new shape. */
+.btn-primary {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 12px 26px -14px rgba(15, 76, 74, 0.6);
+}
+
+.btn-secondary {
+  background: var(--paper-2);
+  border-color: var(--line-strong);
+  box-shadow: var(--depth-1);
+}
+
+/* Hero */
+
+.hero--2026 {
+  padding-top: clamp(52px, 6vw, 88px);
+}
+
+.hero--2026 .hero-copy {
+  max-width: 640px;
+}
+
+.hero-stage {
+  position: relative;
+  width: min(100%, 470px);
+  justify-self: end;
+}
+
+.hero-stage::before {
+  content: '';
+  position: absolute;
+  inset: 14% -8% -10% 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 242, 58, 0.28), transparent 68%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.hero-stage .board {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+/* Coach board: the product's proof, built from markup, no screenshot needed. */
+.board-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+}
+
+.board-kicker {
+  margin: 0 0 0.25rem;
+  color: rgba(24, 32, 30, 0.56);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.board-head strong {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.board-name strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.board-name span {
+  color: rgba(24, 32, 30, 0.56);
+  font-size: 0.78rem;
+}
+
+.board-load {
+  display: grid;
+  gap: 5px;
+}
+
+.load {
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(24, 32, 30, 0.09);
+}
+
+.load i {
+  display: block;
+  height: 100%;
+  width: var(--load, 50%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--valley), var(--teal));
+}
+
+.board-load small {
+  color: rgba(24, 32, 30, 0.56);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-flags {
+  display: flex;
+  gap: 4px;
+}
+
+.flag {
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: rgba(24, 32, 30, 0.45);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.flag.on {
+  border-color: rgba(46, 125, 120, 0.35);
+  background: rgba(46, 125, 120, 0.1);
+  color: var(--teal);
+}
+
+.board-foot {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: rgba(24, 32, 30, 0.5);
+  font-size: 0.7rem;
+}
+
+/* Trust strip */
+
+.trust {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.trust div {
+  padding: 18px 22px;
+  border-left: 1px solid var(--line);
+  color: rgba(24, 32, 30, 0.72);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.trust div:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+/* Split sections */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(30px, 5vw, 68px);
+  align-items: center;
+}
+
+.split--flip .split-copy {
+  order: 2;
+}
+
+.split-copy h2 {
+  margin: 0;
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: clamp(2.3rem, 4.4vw, 3.8rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.split-copy > p {
+  max-width: 56ch;
+  margin: 1.15rem 0 0;
+  color: rgba(24, 32, 30, 0.72);
+}
+
+.on-dark .split-copy h2 {
+  color: var(--mist);
+}
+
+.on-dark .split-copy > p {
+  color: rgba(233, 235, 228, 0.72);
+}
+
+.on-dark .feature-list--day li {
+  color: var(--mist);
+}
+
+.on-dark .feature-list--day .check {
+  color: var(--volt);
+}
+
+/* Bento */
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 18px;
+}
+
+.bento > * {
+  grid-column: span 6;
+}
+
+.bento .span-7 {
+  grid-column: span 7;
+}
+
+.bento .span-5 {
+  grid-column: span 5;
+}
+
+.bento .span-12 {
+  grid-column: 1 / -1;
+}
+
+.bento h3 {
+  margin: 0.7rem 0 0.4rem;
+  color: var(--teal);
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.bento p {
+  margin: 0;
+  color: rgba(24, 32, 30, 0.68);
+  font-size: 0.95rem;
+}
+
+.num {
+  font-family: var(--serif);
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--gravel);
+}
+
+/* Pricing duo */
+
+.price-duo {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.price-block .price-label {
+  margin: 0 0 0.4rem;
+  color: rgba(24, 32, 30, 0.56);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.price-tag {
+  margin: 0;
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 3.6vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.price-tag small {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: rgba(24, 32, 30, 0.56);
+}
+
+.price-block p {
+  margin: 0.9rem 0 0;
+  color: rgba(24, 32, 30, 0.7);
+}
+
+.price-block .btn {
+  margin-top: 1.3rem;
+}
+
+.price-list {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.price-list li {
+  position: relative;
+  padding-left: 1.15rem;
+  color: rgba(24, 32, 30, 0.7);
+  font-size: 0.92rem;
+}
+
+.price-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--valley);
+}
+
+.price-block--solo {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--cloud);
+  box-shadow: var(--depth-3);
+}
+
+.price-block--solo .price-label,
+.price-block--solo p,
+.price-block--solo .price-tag small {
+  color: rgba(240, 238, 233, 0.72);
+}
+
+.price-block--solo .price-tag {
+  color: var(--volt);
+}
+
+.price-block--solo .note-small a {
+  color: var(--volt);
+}
+
+/* Demo banner */
+
+.demo-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) auto;
+  gap: clamp(20px, 4vw, 48px);
+  align-items: center;
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--cloud);
+  box-shadow: var(--depth-3);
+}
+
+.demo-banner h2 {
+  margin: 0;
+  color: var(--cloud);
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 3.8vw, 3.3rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.demo-banner p {
+  max-width: 56ch;
+  margin: 1rem 0 0;
+  color: rgba(240, 238, 233, 0.76);
+}
+
+.demo-banner .eyebrow {
+  color: var(--volt);
+}
+
+/* Founder */
+
+.founder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 36px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.founder h2 {
+  margin: 0;
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.founder p {
+  margin: 0.7rem 0 0;
+  color: rgba(24, 32, 30, 0.7);
+}
+
+/* Demo page */
+
+.demo-page .page-hero {
+  padding-bottom: clamp(20px, 3vw, 32px);
+}
+
+.logins {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--paper-2);
+  box-shadow: var(--depth-1);
+}
+
+.login-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+  align-items: baseline;
+}
+
+.login-row:first-child {
+  border-top: 0;
+}
+
+.login-row code {
+  font-size: 0.86rem;
+  word-break: break-all;
+}
+
+.login-row span {
+  color: rgba(24, 32, 30, 0.64);
+  font-size: 0.88rem;
+}
+
+.pill-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(178, 74, 34, 0.1);
+  color: var(--iron);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.steps {
+  counter-reset: step;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.steps li {
+  position: relative;
+  padding-left: 2.2rem;
+  color: rgba(24, 32, 30, 0.74);
+}
+
+.steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--teal);
+  color: var(--cloud);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* Status: enrollment card and the v1 gap table */
+
+.area-card ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.05rem;
+}
+
+.area-card li {
+  color: rgba(24, 32, 30, 0.72);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.gap-table {
+  width: 100%;
+  margin-top: 1.2rem;
+  border-collapse: collapse;
+}
+
+.gap-table th,
+.gap-table td {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.gap-table th {
+  color: var(--teal);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gap-table td {
+  color: rgba(24, 32, 30, 0.74);
+  font-size: 0.92rem;
+}
+
+.gap-table td:first-child {
+  width: 28%;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Motion: everything is progressive and respects reduced motion. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .contour path {
+    stroke-dasharray: 1500;
+    stroke-dashoffset: 1500;
+    animation: contour-draw 2.4s var(--ease) forwards;
+  }
+
+  .contour path:nth-child(2) { animation-delay: 0.06s; }
+  .contour path:nth-child(3) { animation-delay: 0.12s; }
+  .contour path:nth-child(4) { animation-delay: 0.18s; }
+  .contour path:nth-child(5) { animation-delay: 0.24s; }
+  .contour path:nth-child(6) { animation-delay: 0.3s; }
+  .contour path:nth-child(7) { animation-delay: 0.36s; }
+
+  @keyframes contour-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 26%;
+    }
+
+    @keyframes reveal-rise {
+      from {
+        opacity: 0;
+        translate: 0 26px;
+      }
+      to {
+        opacity: 1;
+        translate: 0 0;
+      }
+    }
+  }
+
+  @supports (animation-timeline: scroll()) {
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0 0 auto;
+      height: 2px;
+      background: var(--volt);
+      transform-origin: 0 50%;
+      scale: 0 1;
+      z-index: 60;
+      pointer-events: none;
+      animation: page-progress linear;
+      animation-timeline: scroll(root);
+    }
+
+    @keyframes page-progress {
+      to {
+        scale: 1 1;
+      }
+    }
+
+    .site-header {
+      animation: header-depth linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 120px;
+    }
+
+    @keyframes header-depth {
+      to {
+        box-shadow: 0 18px 40px -30px rgba(14, 15, 12, 0.55);
+      }
+    }
+  }
+
+  @view-transition {
+    navigation: auto;
+  }
+
+  .site-header {
+    view-transition-name: site-header;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.32s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    translate: none;
+    animation: none;
+  }
+
+  .contour path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+
+  .lift,
+  .lift:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .split,
+  .price-duo,
+  .demo-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .split--flip .split-copy {
+    order: 0;
+  }
+
+  .hero-stage {
+    justify-self: start;
+    width: min(100%, 520px);
+  }
+
+  .bento > *,
+  .bento .span-7,
+  .bento .span-5 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .trust {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .trust div {
+    border-left: 0;
+    padding: 14px 0;
+  }
+
+  .trust div:nth-child(even) {
+    padding-left: 18px;
+    border-left: 1px solid var(--line);
+  }
+
+  .board-row {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+
+  .board-flags {
+    display: none;
+  }
+
+  .gap-table td:first-child {
+    width: auto;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 520px) {
+  .board-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .trust {
+    grid-template-columns: 1fr;
+  }
+
+  .trust div:nth-child(even) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .gap-table,
+  .gap-table tbody,
+  .gap-table tr,
+  .gap-table td {
+    display: block;
+  }
+
+  .gap-table thead {
+    display: none;
+  }
+
+  .gap-table tr {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .gap-table td {
+    border: 0;
+    padding: 2px 0;
+  }
+}
+
+/* Gap list headings, and the solo block's list on teal. */
+.gap-heading {
+  margin: 2.2rem 0 0;
+  color: var(--teal);
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.price-block--solo .price-list li {
+  color: rgba(240, 238, 233, 0.78);
+}
+
+.price-block--solo .price-list li::before {
+  background: var(--volt);
+}
+
+.on-dark .note-small {
+  color: rgba(233, 235, 228, 0.62);
+}
+
+.on-dark .note-small a {
+  color: var(--volt);
+}
+
+/* Specificity fixes: keep labels, eyebrows and prices as designed. */
+.section-head > .eyebrow,
+.split-copy > .eyebrow,
+.founder .eyebrow,
+.demo-banner .eyebrow {
+  margin: 0 0 1rem;
+  max-width: none;
+  color: var(--teal);
+  font-size: 0.72rem;
+}
+
+.on-dark .split-copy > .eyebrow,
+.demo-banner .eyebrow {
+  color: var(--volt);
+}
+
+.founder .eyebrow {
+  margin-bottom: 0.7rem;
+}
+
+.price-block .price-label {
+  margin: 0 0 0.4rem;
+  color: rgba(24, 32, 30, 0.56);
+}
+
+.price-block .price-tag {
+  margin: 0;
+  color: var(--teal);
+}
+
+.price-block--solo .price-label {
+  color: rgba(240, 238, 233, 0.72);
+}
+
+.price-block--solo .price-tag {
+  color: var(--volt);
+}
+
+/* Layout corrections from the first render. */
+.section--flush {
+  padding-bottom: 0;
+}
+
+.area-grid {
+  align-items: start;
 }

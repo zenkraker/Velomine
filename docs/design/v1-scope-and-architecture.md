@@ -154,6 +154,6 @@ v1 makes Velomine usable on its own: record with the phone or upload any FIT fil
 
 - [ ] **Weight:** confirm it lives as a single profile field. W/kg, VO2max and calories need it.
 - [ ] **Health data and the law:** wellness and cycle data are health data. A club running a server for its members holds health data about them, which in the EU is a special category under GDPR and needs explicit consent. Velomine should ship consent screens, export and deletion by design; check the legal side with someone qualified.
-- [ ] **Licence for Velomine:** AGPL-3.0 (keeps forks open) or MIT (easier for others to reuse)?
-- [ ] **Strava:** one-time import of an export only, or ongoing sync despite Strava's API limits?
-- [ ] **Languages:** English and Italian first (assumption)?
+- [x] **Licence for Velomine:** AGPL-3.0 with a trademark policy. Clubs can inspect, self-host and fork; anyone running it as a service must publish their source, and nobody else may use the Velomine name.
+- [x] **Strava:** one-time import of a user's export ZIP only. Ongoing sync is out of v1.
+- [x] **Languages:** English and Italian first. The app ships both; the presentation site follows under `/it/`.
