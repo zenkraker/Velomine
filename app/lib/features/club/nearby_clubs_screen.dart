@@ -144,7 +144,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
 
           final nextRadius = ref
               .read(nearbyClubsViewModelProvider.notifier)
-              .nextRadius;
+              .nextRadius();
           return RefreshIndicator(
             onRefresh: () =>
                 ref.read(nearbyClubsViewModelProvider.notifier).refresh(),

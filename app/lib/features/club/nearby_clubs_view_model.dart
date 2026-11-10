@@ -118,7 +118,7 @@ class NearbyClubsViewModel extends _$NearbyClubsViewModel {
   }
 
   /// The next wider radius, or null when the widest is already shown.
-  int? get nextRadius => radii.where((r) => r > state.radiusKm).firstOrNull;
+  int? nextRadius() => radii.where((r) => r > state.radiusKm).firstOrNull;
 
   Future<bool> askToJoin(String clubId, String? note) async {
     if (state.action.running) return false;

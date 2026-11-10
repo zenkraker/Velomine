@@ -116,8 +116,6 @@ Future<void> runWithTelemetry({
   required Widget app,
 }) async {
   if (!choice.enabled) {
-    // The widget already carries its ProviderScope (see main.dart).
-    // ignore: missing_provider_scope
     runApp(app);
     return;
   }
@@ -169,12 +167,10 @@ Future<void> runWithTelemetry({
       },
       appRunner: () {
         started = true;
-        // ignore: missing_provider_scope
         runApp(app);
       },
     );
   } on Object {
-    // ignore: missing_provider_scope
     if (!started) runApp(app);
   }
 }
