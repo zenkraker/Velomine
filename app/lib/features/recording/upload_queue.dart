@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/telemetry.dart';
 import 'recorder.dart';
 import 'recorder_log.dart';
 import 'ride_uploader.dart';
@@ -111,6 +112,7 @@ class RideUploadQueue {
     required this.uploader,
     required this.store,
     required this.accountId,
+    required this.telemetry,
     this.serverUrl,
     this.pollInterval = const Duration(seconds: 1),
     this.onUnauthorized,
@@ -119,6 +121,7 @@ class RideUploadQueue {
   final Recorder recorder;
   final RideUploader uploader;
   final UploadStateStore store;
+  final TelemetryRuntime telemetry;
 
   /// Uploads only the rides this member recorded.
   final String accountId;
@@ -243,6 +246,8 @@ class RideUploadQueue {
     _running.add(rideId);
     final previous = _states[rideId];
     final attempts = (previous?.attempts ?? 0) + 1;
+    final started = Stopwatch()..start();
+    String? resultStatus;
     recorderLog('upload: $rideId attempt $attempts');
 
     _set(
@@ -291,6 +296,7 @@ class RideUploadQueue {
           continue;
         }
         if (status.status == 'ready' || status.status == 'duplicate') {
+          resultStatus = status.status;
           _set(
             rideId,
             UploadState(
@@ -329,10 +335,64 @@ class RideUploadQueue {
       _fail(rideId, 'offline', attempts);
     } finally {
       _running.remove(rideId);
+      started.stop();
+      _reportRun(rideId, attempts, resultStatus, started.elapsed);
       await _persist();
       _notify();
     }
   }
+
+  void _reportRun(
+    String rideId,
+    int attempts,
+    String? resultStatus,
+    Duration elapsed,
+  ) {
+    final state = _states[rideId];
+    final attempt = _attemptBucket(attempts);
+    if (state?.isUploaded == true) {
+      final attributes = <String, Object>{
+        'result': resultStatus ?? 'ready',
+        'attempts': attempt,
+      };
+      telemetry.count('ride_upload_succeeded', 1, attributes: attributes);
+      telemetry.distribution(
+        'ride_upload_duration',
+        elapsed.inMilliseconds,
+        unit: telemetryMilliseconds,
+        attributes: attributes,
+      );
+      telemetry.log(
+        TelemetryLevel.info,
+        'ride upload succeeded',
+        attributes: attributes,
+      );
+    } else if (state?.isFailed == true) {
+      final reason = state?.error ?? 'unknown';
+      final attributes = <String, Object>{
+        'reason': reason,
+        'attempts': attempt,
+      };
+      telemetry.count('ride_upload_failures', 1, attributes: attributes);
+      telemetry.distribution(
+        'ride_upload_duration',
+        elapsed.inMilliseconds,
+        unit: telemetryMilliseconds,
+        attributes: {...attributes, 'result': 'failed'},
+      );
+      telemetry.log(
+        TelemetryLevel.warning,
+        'ride upload failed',
+        attributes: attributes,
+      );
+    }
+  }
+
+  static String _attemptBucket(int attempts) => attempts <= 1
+      ? '1'
+      : attempts == 2
+      ? '2'
+      : '3+';
 
   void _fail(String rideId, String error, int attempts) {
     recorderLog('upload: $rideId failed code=$error attempt=$attempts');
@@ -376,7 +436,12 @@ class RideUploadQueue {
   Future<void> _persist() => store.write(Map.unmodifiable(_states));
 
   void _notify() {
-    if (!_disposed) _updates.add(states);
+    if (_disposed) return;
+    telemetry.gauge(
+      'ride_upload_pending',
+      _states.values.where((state) => !state.isUploaded).length,
+    );
+    _updates.add(states);
   }
 
   void dispose() {

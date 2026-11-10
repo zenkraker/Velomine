@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
@@ -11,6 +12,8 @@ import 'location_service.dart';
 import 'server_config.dart';
 import 'session.dart';
 import 'session_auth.dart';
+import 'telemetry.dart';
+import 'telemetry_http_client.dart';
 import 'token_store.dart';
 
 part 'providers.g.dart';
@@ -30,12 +33,21 @@ Session session(Ref ref) {
     throw StateError('No server address is chosen.');
   }
 
+  final telemetry = ref.watch(telemetryRuntimeProvider);
   final auth = SessionAuth(
     baseUrl: baseUrl,
     store: ref.watch(tokenStoreProvider),
     useCookies: kIsWeb,
+    refreshClient: TelemetryHttpClient(
+      inner: http.Client(),
+      telemetry: telemetry,
+    ),
   );
   final client = ApiClient(basePath: baseUrl, authentication: auth);
+  client.client = TelemetryHttpClient(
+    inner: client.client,
+    telemetry: telemetry,
+  );
   final session = Session(
     client: client,
     auth: auth,
@@ -43,6 +55,7 @@ Session session(Ref ref) {
     useCookies: kIsWeb,
     serverUrl: baseUrl,
     ssoError: Uri.base.queryParameters['sso_error'],
+    telemetry: telemetry,
   );
   unawaited(session.restore());
   ref.onDispose(session.dispose);

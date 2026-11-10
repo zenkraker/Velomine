@@ -17,9 +17,12 @@ import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/core/session_auth.dart';
 import 'package:velomine/core/solo_hint.dart';
+import 'package:velomine/core/telemetry.dart';
 import 'package:velomine/core/theme_choice.dart';
 import 'package:velomine/core/token_store.dart';
 import 'package:velomine_api/api.dart';
+
+import 'fake_telemetry.dart';
 
 class FakeAccount {
   FakeAccount(
@@ -228,6 +231,7 @@ class FakeServer {
     DateTime Function()? now,
     String serverUrl = 'http://server',
     AppSso? appSso,
+    TelemetryRuntime? telemetry,
   }) {
     final baseUrl = serverUrl;
     final auth = SessionAuth(
@@ -246,6 +250,7 @@ class FakeServer {
       useCookies: useCookies,
       serverUrl: baseUrl,
       ssoError: ssoError,
+      telemetry: telemetry ?? FakeTelemetryRuntime(),
     );
   }
 

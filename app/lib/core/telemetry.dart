@@ -87,9 +87,44 @@ final telemetryStoreProvider = Provider<TelemetryStore>(
 );
 
 /// Lets the app stop the SDK immediately when the member withdraws consent.
+///
+/// Everything that leaves for Sentry goes through this facade, so feature code
+/// never depends on the SDK and every signal follows the same consent rules.
 abstract interface class TelemetryRuntime {
   Future<void> close();
+
+  void log(
+    TelemetryLevel level,
+    String message, {
+    Map<String, Object> attributes = const {},
+  });
+
+  void count(
+    String name,
+    int value, {
+    Map<String, Object> attributes = const {},
+  });
+
+  void distribution(
+    String name,
+    num value, {
+    String? unit,
+    Map<String, Object> attributes = const {},
+  });
+
+  void gauge(
+    String name,
+    num value, {
+    String? unit,
+    Map<String, Object> attributes = const {},
+  });
 }
+
+enum TelemetryLevel { info, warning, error }
+
+/// Units accepted by [TelemetryRuntime.distribution] and [TelemetryRuntime.gauge].
+const telemetryMilliseconds = 'millisecond';
+const telemetrySeconds = 'second';
 
 class SentryTelemetryRuntime implements TelemetryRuntime {
   const SentryTelemetryRuntime();
@@ -102,6 +137,80 @@ class SentryTelemetryRuntime implements TelemetryRuntime {
       // Already closed, or never started.
     }
   }
+
+  @override
+  void log(
+    TelemetryLevel level,
+    String message, {
+    Map<String, Object> attributes = const {},
+  }) {
+    if (!Sentry.isEnabled) return;
+    final values = _attributes(attributes);
+    switch (level) {
+      case TelemetryLevel.info:
+        Sentry.logger.info(message, attributes: values);
+      case TelemetryLevel.warning:
+        Sentry.logger.warn(message, attributes: values);
+      case TelemetryLevel.error:
+        Sentry.logger.error(message, attributes: values);
+    }
+  }
+
+  @override
+  void count(
+    String name,
+    int value, {
+    Map<String, Object> attributes = const {},
+  }) {
+    if (!Sentry.isEnabled) return;
+    Sentry.metrics.count(name, value, attributes: _attributes(attributes));
+  }
+
+  @override
+  void distribution(
+    String name,
+    num value, {
+    String? unit,
+    Map<String, Object> attributes = const {},
+  }) {
+    if (!Sentry.isEnabled) return;
+    Sentry.metrics.distribution(
+      name,
+      value,
+      unit: unit,
+      attributes: _attributes(attributes),
+    );
+  }
+
+  @override
+  void gauge(
+    String name,
+    num value, {
+    String? unit,
+    Map<String, Object> attributes = const {},
+  }) {
+    if (!Sentry.isEnabled) return;
+    Sentry.metrics.gauge(
+      name,
+      value,
+      unit: unit,
+      attributes: _attributes(attributes),
+    );
+  }
+
+  static Map<String, SentryAttribute> _attributes(
+    Map<String, Object> attributes,
+  ) => {
+    for (final entry in attributes.entries) entry.key: _attribute(entry.value),
+  };
+
+  static SentryAttribute _attribute(Object value) => switch (value) {
+    final String text => SentryAttribute.string(text),
+    final int number => SentryAttribute.int(number),
+    final double number => SentryAttribute.double(number),
+    final bool flag => SentryAttribute.bool(flag),
+    _ => SentryAttribute.string('$value'),
+  };
 }
 
 final telemetryRuntimeProvider = Provider<TelemetryRuntime>(
@@ -149,6 +258,16 @@ Future<void> runWithTelemetry({
           event.request = null;
           return event;
         };
+        options.beforeSendLog = (log, hint) {
+          if (!choice.usage) return null;
+          log.attributes.removeWhere((key, _) => key.startsWith('user.'));
+          return log;
+        };
+        options.beforeSendMetric = (metric, hint) {
+          if (!choice.usage) return null;
+          metric.attributes.removeWhere((key, _) => key.startsWith('user.'));
+          return metric;
+        };
         options.beforeBreadcrumb = (breadcrumb, hint) {
           // URLs, request bodies and console output can carry member data.
           if (breadcrumb?.category == 'http' ||
@@ -167,6 +286,21 @@ Future<void> runWithTelemetry({
       },
       appRunner: () {
         started = true;
+        const telemetry = SentryTelemetryRuntime();
+        final attributes = <String, Object>{
+          'platform': kIsWeb ? 'web' : defaultTargetPlatform.name.toLowerCase(),
+          'mode': kDebugMode
+              ? 'debug'
+              : kProfileMode
+              ? 'profile'
+              : 'release',
+        };
+        telemetry.count('app_started', 1, attributes: attributes);
+        telemetry.log(
+          TelemetryLevel.info,
+          'app started',
+          attributes: attributes,
+        );
         runApp(app);
       },
     );

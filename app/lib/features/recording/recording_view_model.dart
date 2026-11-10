@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers.dart';
 import '../../core/result.dart';
+import '../../core/telemetry.dart';
 import 'recorder.dart';
 import 'recorder_log.dart';
 import 'recording_providers.dart';
@@ -18,6 +19,8 @@ class RecordingViewModel extends _$RecordingViewModel {
   String? _accountId;
   bool _started = false;
   bool _uploadsResumed = false;
+
+  TelemetryRuntime get _telemetry => ref.read(telemetryRuntimeProvider);
 
   @override
   RideRecordingState build() {
@@ -115,6 +118,7 @@ class RecordingViewModel extends _$RecordingViewModel {
       final granted = await recorder.requestPermissions();
       if (!granted) {
         _error('permission');
+        _recordingFailed('start', 'permission');
         return;
       }
       await recorder.start(
@@ -124,11 +128,18 @@ class RecordingViewModel extends _$RecordingViewModel {
         accountId: accountId,
       );
       await _waitForRunning(recorder);
+      if (state.snapshot.isIdle) {
+        _recordingFailed('start', state.errorCode ?? 'not_started');
+      } else {
+        _recordingStarted();
+      }
     } on RecorderException catch (e) {
       recorderLog('recording: start failed ${e.code} ${e.message}');
       _error(e.code);
+      _recordingFailed('start', e.code);
     } on Object {
       _error(null);
+      _recordingFailed('start', 'unknown');
     } finally {
       _finishCommand();
     }
@@ -155,18 +166,47 @@ class RecordingViewModel extends _$RecordingViewModel {
   Future<List<SensorInfo>> scanSensors() async =>
       ref.read(recorderProvider)?.scanSensors() ?? const [];
 
-  Future<void> pairSensor(SensorInfo sensor) =>
-      _act((recorder) => recorder.pairSensor(sensor));
+  Future<void> pairSensor(SensorInfo sensor) async {
+    await _act((recorder) => recorder.pairSensor(sensor));
+  }
 
-  Future<void> forgetSensor() => _act((recorder) => recorder.forgetSensor());
+  Future<void> forgetSensor() async {
+    await _act((recorder) => recorder.forgetSensor());
+  }
 
-  Future<void> pause() => _act((recorder) => recorder.pause());
+  Future<void> pause() async {
+    await _act((recorder) => recorder.pause());
+  }
 
-  Future<void> resume() => _act((recorder) => recorder.resume());
+  Future<void> resume() async {
+    await _act((recorder) => recorder.resume());
+  }
 
   Future<void> stop() async {
     final rideId = state.snapshot.rideId;
-    await _act((recorder) => recorder.stop());
+    final elapsedS = state.snapshot.elapsedS;
+    final rideType = state.rideType;
+    final couldRun = !state.command.running;
+    final stopped = await _act((recorder) => recorder.stop());
+    if (stopped) {
+      final attributes = <String, Object>{'ride_type': rideType};
+      _telemetry.count('ride_recording_stopped', 1, attributes: attributes);
+      if (elapsedS > 0) {
+        _telemetry.distribution(
+          'ride_recording_duration',
+          elapsedS,
+          unit: telemetrySeconds,
+          attributes: attributes,
+        );
+      }
+      _telemetry.log(
+        TelemetryLevel.info,
+        'ride recording stopped',
+        attributes: attributes,
+      );
+    } else if (couldRun) {
+      _recordingFailed('stop', state.errorCode ?? 'unknown');
+    }
     await refresh();
     final queue = ref.read(uploadQueueProvider);
     if (rideId != null && queue != null) {
@@ -182,7 +222,12 @@ class RecordingViewModel extends _$RecordingViewModel {
     state = state.copyWith(command: state.command.start(), clearError: true);
     try {
       final ride = await recorder.finalizeRide(id);
-      if (ride != null && ride.isFailed) _error(ride.error);
+      if (ride != null && ride.isFailed) {
+        _error(ride.error);
+        _rideFinalized('failed', ride.error);
+      } else {
+        _rideFinalized(ride?.state ?? 'missing', null);
+      }
       if (!ref.mounted) return;
       state = state.copyWith(
         rides: await recorder.listRides(accountId: _accountId),
@@ -193,8 +238,10 @@ class RecordingViewModel extends _$RecordingViewModel {
       }
     } on RecorderException catch (e) {
       _error(e.code);
+      _rideFinalized('failed', e.code);
     } on Object {
       _error(null);
+      _rideFinalized('failed', 'unknown');
     } finally {
       _finishCommand();
     }
@@ -232,20 +279,23 @@ class RecordingViewModel extends _$RecordingViewModel {
     }
   }
 
-  Future<void> _act(Future<void> Function(Recorder recorder) action) async {
+  Future<bool> _act(Future<void> Function(Recorder recorder) action) async {
     final recorder = ref.read(recorderProvider);
-    if (recorder == null || state.command.running) return;
+    if (recorder == null || state.command.running) return false;
     state = state.copyWith(command: state.command.start(), clearError: true);
     try {
       await action(recorder);
       final snapshot = await recorder.state();
-      if (!ref.mounted) return;
+      if (!ref.mounted) return false;
       state = state.copyWith(snapshot: snapshot);
+      return true;
     } on RecorderException catch (e) {
       recorderLog('recording: action failed ${e.code} ${e.message}');
       _error(e.code);
+      return false;
     } on Object {
       _error(null);
+      return false;
     } finally {
       _finishCommand();
     }
@@ -288,5 +338,44 @@ class RecordingViewModel extends _$RecordingViewModel {
   void _error(String? code) {
     if (!ref.mounted) return;
     state = state.copyWith(errorCode: code, clearError: code == null);
+  }
+
+  void _recordingStarted() {
+    final attributes = <String, Object>{
+      'ride_type': state.rideType,
+      'auto_pause': state.autoPause,
+      'ebike': state.ebike,
+    };
+    _telemetry.count('ride_recording_started', 1, attributes: attributes);
+    _telemetry.log(
+      TelemetryLevel.info,
+      'ride recording started',
+      attributes: attributes,
+    );
+  }
+
+  void _recordingFailed(String stage, String reason) {
+    final attributes = <String, Object>{'stage': stage, 'reason': reason};
+    _telemetry.count('ride_recording_failed', 1, attributes: attributes);
+    _telemetry.log(
+      TelemetryLevel.warning,
+      'ride recording failed',
+      attributes: attributes,
+    );
+  }
+
+  void _rideFinalized(String result, String? reason) {
+    _telemetry.count(
+      'ride_finalized',
+      1,
+      attributes: {'result': result, 'reason': ?reason},
+    );
+    if (result == 'failed') {
+      _telemetry.log(
+        TelemetryLevel.warning,
+        'ride finalization failed',
+        attributes: {'reason': reason ?? 'unknown'},
+      );
+    }
   }
 }

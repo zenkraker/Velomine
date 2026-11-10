@@ -33,11 +33,18 @@ nuke:
 db:
     psql "postgresql://velomine:velomine-dev@localhost:5432/velomine"
 
-# server with hot reload on http://localhost:8080 (same address as the Docker stack, so Dex SSO works)
+# server with hot reload on http://localhost:8080 (same address as the Docker stack, so Dex SSO works).
+# Set VELOMINE__TELEMETRY__* in .dev/telemetry.env to send logs, traces and metrics to Sentry.
 server: deps
     #!/usr/bin/env bash
     set -euo pipefail
-    export ASPNETCORE_URLS=http://localhost:8080
+    if [ -f .dev/telemetry.env ]; then
+      set -a
+      . .dev/telemetry.env
+      set +a
+    fi
+    export ASPNETCORE_URLS="${ASPNETCORE_URLS:-http://localhost:8080}"
+    export VELOMINE__DATAPROTECTION__KEYSPATH="${VELOMINE__DATAPROTECTION__KEYSPATH:-$PWD/.dev/keys}"
     export VELOMINE__ADMIN__EMAIL=admin@velomine.local
     export VELOMINE__ADMIN__PASSWORD=Velomine-dev-1
     export VELOMINE__PUBLICURL=http://localhost:8080

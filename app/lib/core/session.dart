@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 
 import 'app_sso.dart';
 import 'session_auth.dart';
+import 'telemetry.dart';
 
 enum SessionStatus { loading, signedOut, signedIn }
 
@@ -62,6 +63,7 @@ class Session {
     required this.appSso,
     required this.useCookies,
     required this.serverUrl,
+    required this.telemetry,
     this.ssoError,
   }) : accounts = AccountsApi(client),
        rides = RidesApi(client),
@@ -99,6 +101,7 @@ class Session {
   final SessionAuth auth;
   final AppSso appSso;
   final bool useCookies;
+  final TelemetryRuntime telemetry;
 
   /// The address this session belongs to, without a trailing slash.
   final String serverUrl;
@@ -183,6 +186,18 @@ class Session {
       await _restoreToken();
     }
 
+    telemetry.count(
+      'session_restore',
+      1,
+      attributes: {
+        'result': switch (status) {
+          SessionStatus.signedIn => 'signed_in',
+          SessionStatus.signedOut =>
+            restoreProblem == null ? 'signed_out' : 'unavailable',
+          SessionStatus.loading => 'loading',
+        },
+      },
+    );
     _notify();
   }
 
@@ -230,6 +245,30 @@ class Session {
 
   /// Signs in directly against the provider as a public client, then exchanges its ID token for Velomine tokens.
   Future<void> signInWithSso() async {
+    await _signInWithSso();
+    final success = status == SessionStatus.signedIn;
+    final result = success
+        ? 'success'
+        : ssoError == null
+        ? 'cancelled'
+        : 'failed';
+    telemetry.count(
+      'sso_sign_in',
+      1,
+      attributes: {'result': result, 'reason': ?ssoError},
+    );
+    if (success) {
+      telemetry.log(TelemetryLevel.info, 'sso sign-in succeeded');
+    } else if (result == 'failed') {
+      telemetry.log(
+        TelemetryLevel.warning,
+        'sso sign-in failed',
+        attributes: {'reason': ssoError ?? 'unknown'},
+      );
+    }
+  }
+
+  Future<void> _signInWithSso() async {
     final info = sso;
     if (info == null ||
         !info.appSsoEnabled ||
@@ -345,6 +384,33 @@ class Session {
     String password, {
     bool rememberMe = true,
   }) async {
+    final result = await _signIn(email, password, rememberMe: rememberMe);
+    final problem = result.problem;
+    final resultName =
+        problem?.name ?? (result.challenge == null ? 'success' : 'two_factor');
+    telemetry.count('sign_in', 1, attributes: {'result': resultName});
+    if (problem == null) {
+      telemetry.log(
+        TelemetryLevel.info,
+        result.challenge == null
+            ? 'sign-in succeeded'
+            : 'sign-in needs a second factor',
+      );
+    } else {
+      telemetry.log(
+        TelemetryLevel.warning,
+        'sign-in failed',
+        attributes: {'reason': problem.name},
+      );
+    }
+    return result;
+  }
+
+  Future<({AuthProblem? problem, String? challenge})> _signIn(
+    String email,
+    String password, {
+    bool rememberMe = true,
+  }) async {
     // Keys and autofill can add a space at either end; it must not decide whether
     // an account matches.
     email = email.trim();
@@ -412,6 +478,33 @@ class Session {
 
   /// The second step: the challenge from [signIn] and the code from the authenticator app, or a recovery code.
   Future<AuthProblem?> completeTwoFactor(
+    String challenge,
+    String code, {
+    bool rememberMe = true,
+  }) async {
+    final problem = await _completeTwoFactor(
+      challenge,
+      code,
+      rememberMe: rememberMe,
+    );
+    telemetry.count(
+      'sign_in_two_factor',
+      1,
+      attributes: {'result': problem?.name ?? 'success'},
+    );
+    if (problem == null) {
+      telemetry.log(TelemetryLevel.info, 'two-factor sign-in succeeded');
+    } else {
+      telemetry.log(
+        TelemetryLevel.warning,
+        'two-factor sign-in failed',
+        attributes: {'reason': problem.name},
+      );
+    }
+    return problem;
+  }
+
+  Future<AuthProblem?> _completeTwoFactor(
     String challenge,
     String code, {
     bool rememberMe = true,
@@ -488,6 +581,33 @@ class Session {
     String displayName,
     String password,
   ) async {
+    final result = await _signUp(email, displayName, password);
+    final problem = result.problem;
+    telemetry.count(
+      'sign_up',
+      1,
+      attributes: {
+        'result': problem?.name ?? 'success',
+        'approved': result.approved,
+      },
+    );
+    if (problem == null) {
+      telemetry.log(TelemetryLevel.info, 'sign-up succeeded');
+    } else {
+      telemetry.log(
+        TelemetryLevel.warning,
+        'sign-up failed',
+        attributes: {'reason': problem.name},
+      );
+    }
+    return result;
+  }
+
+  Future<({AuthProblem? problem, bool approved})> _signUp(
+    String email,
+    String displayName,
+    String password,
+  ) async {
     email = email.trim();
     displayName = displayName.trim();
     password = password.trim();
@@ -527,6 +647,9 @@ class Session {
     me = null;
     status = SessionStatus.signedOut;
     restoreProblem = null;
+    // Report before the app closes the SDK for the signed-out state.
+    telemetry.count('sign_out', 1);
+    telemetry.log(TelemetryLevel.info, 'signed out');
     _notify();
   }
 
@@ -536,6 +659,7 @@ class Session {
     unawaited(auth.clear());
     me = null;
     status = SessionStatus.signedOut;
+    telemetry.count('session_expired', 1);
     _notify();
   }
 }

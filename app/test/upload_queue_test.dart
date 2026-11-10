@@ -6,6 +6,8 @@ import 'package:velomine/features/recording/ride_uploader.dart';
 import 'package:velomine/features/recording/upload_queue.dart';
 import 'package:velomine_api/api.dart';
 
+import 'fake_telemetry.dart';
+
 class QueueRecorder implements Recorder {
   final rides = <LocalRide>[];
 
@@ -166,17 +168,20 @@ void main() {
   late MemoryUploadStore store;
   late QueueRecorder recorder;
   late RideUploadQueue queue;
+  late FakeTelemetryRuntime telemetry;
 
   setUp(() {
     uploader = FakeUploader();
     store = MemoryUploadStore();
     recorder = QueueRecorder()..rides.add(ready('r1'));
+    telemetry = FakeTelemetryRuntime();
     queue = RideUploadQueue(
       recorder: recorder,
       uploader: uploader,
       store: store,
       accountId: 'id-rider',
       pollInterval: Duration.zero,
+      telemetry: telemetry,
     );
   });
 
@@ -225,6 +230,7 @@ void main() {
       accountId: 'id-rider',
       pollInterval: Duration.zero,
       onUnauthorized: () => signedOut = true,
+      telemetry: FakeTelemetryRuntime(),
     );
     await queue.init();
     await queue.enqueue('r1');
@@ -274,5 +280,43 @@ void main() {
     await queue.resume([ready('r1')]);
     await settle(queue, 'r1');
     expect(queue.stateFor('r1')?.isUploaded, isTrue);
+  });
+
+  test('UploadQueue_ShouldReportSuccess_WhenTheUploadFinishes', () async {
+    await queue.init();
+    await queue.enqueue('r1');
+    await settle(queue, 'r1');
+
+    final success = telemetry.counts.firstWhere(
+      (entry) => entry.name == 'ride_upload_succeeded',
+    );
+    expect(success.attributes['attempts'], '1');
+    expect(
+      telemetry.distributions.any(
+        (entry) => entry.name == 'ride_upload_duration',
+      ),
+      isTrue,
+    );
+    expect(
+      telemetry.logs.any((entry) => entry.message == 'ride upload succeeded'),
+      isTrue,
+    );
+  });
+
+  test('UploadQueue_ShouldReportFailureReason_WhenTheUploadFails', () async {
+    uploader.failUpload = true;
+    await queue.init();
+    await queue.enqueue('r1');
+    await settle(queue, 'r1');
+
+    final failure = telemetry.counts.firstWhere(
+      (entry) => entry.name == 'ride_upload_failures',
+    );
+    expect(failure.attributes['reason'], 'server_failed');
+    expect(failure.attributes['attempts'], '1');
+    expect(
+      telemetry.logs.any((entry) => entry.message == 'ride upload failed'),
+      isTrue,
+    );
   });
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers.dart';
+import '../../core/telemetry.dart';
 import 'recorder.dart';
 import 'recorder_factory.dart';
 import 'recorder_settings.dart';
@@ -40,6 +41,7 @@ RideUploadQueue? uploadQueue(Ref ref) {
     uploader: ServerRideUploader(session.rides),
     store: ref.watch(uploadStateStoreProvider),
     accountId: accountId,
+    telemetry: ref.watch(telemetryRuntimeProvider),
     serverUrl: session.serverUrl,
     pollInterval: ref.watch(ridePollIntervalProvider),
     onUnauthorized: session.sessionExpired,
