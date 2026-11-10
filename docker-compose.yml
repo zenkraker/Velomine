@@ -39,6 +39,11 @@ services:
 
   velomine:
     build: .
+    # Optional, git-ignored: VELOMINE__TELEMETRY__* settings to send this instance's logs, traces and errors
+    # to Sentry during development (see docs/development.md). Without the file, telemetry stays off.
+    env_file:
+      - path: .dev/telemetry.env
+        required: false
     depends_on:
       postgres:
         condition: service_healthy

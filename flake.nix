@@ -99,7 +99,6 @@
         packages = [
           # server
           dotnet
-          pkgs.postgresql_17 # psql only; same major version as the postgres:17 container
 
           # app
           android.androidsdk
@@ -151,7 +150,6 @@
           export GRADLE_USER_HOME="$DEV/gradle"
           export ANDROID_USER_HOME="$DEV/android"
           export ANDROID_AVD_HOME="$DEV/android/avd"
-          export VELOMINE__FILESPATH="$DEV/files"
 
           # Flutter: unpack the pinned release once. It must be writable, so it can't live in /nix/store.
           FLUTTER_DIR="$DEV/flutter-${flutterVersion}"

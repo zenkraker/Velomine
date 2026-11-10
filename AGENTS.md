@@ -144,10 +144,11 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 - **`flake.nix` is the toolchain.** A tool needed to develop, build or test goes into the flake; no install scripts or host requirements. Adding a tool is a dependency and follows the dependency rule.
 - **Running needs Docker only.** `docker compose up --build` works without Nix; the `Dockerfile` and compose stack do not use Nix.
-- **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and the `Dockerfile` change in the same commit. psql in the flake has the same major version as the `postgres` image. The Android SDK, NDK and CMake versions are the ones the pinned Flutter's Gradle plugin asks for.
+- **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and the `Dockerfile` change in the same commit. The Android SDK, NDK and CMake versions are the ones the pinned Flutter's Gradle plugin asks for.
 - **Commit `flake.lock`**, and update nixpkgs in a commit of its own.
 - **Machine-local state stays in `.dev/`** (git-ignored). Never commit it or send a tool's cache elsewhere.
-- **The `justfile` is the entry point** for everyday commands. `compose.dev.yml` is only for `just`.
+- **The `justfile` is the entry point** for everyday commands.
+- **One way to run the server: `docker-compose.yml`.** Development, tests by hand and self-hosting all use the same compose stack (`just up`). Never add a recipe or script that runs the server from the host shell.
 - **Operations live elsewhere.** Hosting, customer inventory, secrets, backups and runbooks live in the private ops repository. This repository holds only what a self-hoster needs: the image, `docker-compose.yml` and its documentation. `to-move-out/` holds files waiting to move there; do not extend it.
 
 ## AI coding agents

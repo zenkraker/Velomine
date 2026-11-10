@@ -18,15 +18,15 @@ You only need a few ideas to use this setup.
 
 **direnv enters the shell for you.** With [direnv](https://direnv.net/), changing into the repository folder loads the dev shell, and leaving the folder unloads it. The `.envrc` file (`use flake`) tells it to. The direnv extension for VS Code does the same for the editor, its terminal and its language servers.
 
-**Caches go to `.dev/`, not to your home folder.** NuGet, pub and Gradle write into their caches while they run, so the caches cannot live in the read-only store. The dev shell redirects them into `.dev/` in the repository, together with the unpacked Flutter SDK, the emulator and uploaded ride files. `.dev/` is git-ignored. Delete it and all of that is gone. Your lock files (`packages.lock.json`, `pubspec.lock`, `flake.lock`) still pin every version.
+**Caches go to `.dev/`, not to your home folder.** NuGet, pub and Gradle write into their caches while they run, so the caches cannot live in the read-only store. The dev shell redirects them into `.dev/` in the repository, together with the unpacked Flutter SDK and the emulator. `.dev/` is git-ignored. Delete it and all of that is gone. Your lock files (`packages.lock.json`, `pubspec.lock`, `flake.lock`) still pin every version.
 
 ### What lives where
 
 | Place | What | Why there |
 |-------|------|-----------|
-| Your distribution (pacman, apt, …) | Nix, direnv, Docker, VS Code, a Chromium-based browser, a database GUI | Used across all projects, or system services Nix cannot run |
-| `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, psql, CodeGraph, OpenCode, VS Code with extensions, just | Versions that matter to this project |
-| `.dev/` in the repository | Caches, unpacked Flutter, emulator, ride files | Machine-local and writable; safe to delete |
+| Your distribution (pacman, apt, …) | Nix, direnv, Docker, VS Code, a Chromium-based browser | Used across all projects, or system services Nix cannot run |
+| `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, CodeGraph, OpenCode, VS Code with extensions, just | Versions that matter to this project |
+| `.dev/` in the repository | Caches, unpacked Flutter, emulator | Machine-local and writable; safe to delete |
 | Docker | PostgreSQL and Dex | The same containers as `docker compose`; see [the compose file](../docker-compose.yml) |
 
 ## What the flake provides
@@ -41,7 +41,6 @@ You only need a few ideas to use this setup.
 | CodeGraph | from nixpkgs | Required by AGENTS.md, so there's no `curl … \| sh` install |
 | OpenCode | from nixpkgs | AI coding agent, an alternative to Claude Code |
 | VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code and OpenCode V2. It is the same Microsoft build as `visual-studio-code-bin`. |
-| psql | 17 | Same major version as the `postgres:17` container |
 | just | from nixpkgs | Runs the commands in the `justfile` |
 | nixd | from nixpkgs | Language server for editing `flake.nix` |
 
@@ -56,14 +55,13 @@ These are one-time steps per machine. The commands use fish, the CachyOS default
 ### 1. Install the host packages
 
 ```
-sudo pacman -S nix direnv docker docker-compose docker-buildx chromium dbeaver
+sudo pacman -S nix direnv docker docker-compose docker-buildx chromium
 paru -S visual-studio-code-bin
 ```
 
 - `nix` is the package manager. `direnv` loads the dev shell when you enter the folder; step 3 adds `nix-direnv`, which caches the shell and keeps its packages from being garbage-collected.
 - `docker`, `docker-compose` and `docker-buildx` run PostgreSQL and Dex, the tests' Testcontainers, the full stack, and the OpenAPI generator.
 - `chromium` is used by `flutter run -d chrome`. Google Chrome works as well.
-- `dbeaver` is a GUI for browsing the database. Any PostgreSQL client works. Desktop apps go on the host because GUI programs from Nix often have graphics problems outside NixOS.
 - Use **`visual-studio-code-bin`** (Microsoft's build), not `code`. The open-source build cannot install the C# Dev Kit.
 
 ### 2. Turn on the services, the flakes feature and your groups
@@ -174,7 +172,7 @@ local server's AI-powered search tools are unavailable, but project/DSN discover
 If you need `project-management` for a setup task, run it explicitly with
 `MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
 
-The dev shell points the NuGet, pub, Gradle and Android caches, the unpacked Flutter SDK and the server's ride files into `.dev/`.
+The dev shell points the NuGet, pub, Gradle and Android caches, and the unpacked Flutter SDK into `.dev/`. Ride files, the database and the Data Protection keys live in Docker volumes.
 
 ### 6. Enter the dev shell for the first time
 
@@ -209,16 +207,10 @@ codegraph init
 ### 8. Try it
 
 ```
-just server          # PostgreSQL and Dex in Docker, then the server with hot reload
+just up              # build and start PostgreSQL, Dex and the server in Docker
 ```
 
-In a second terminal:
-
-```
-just web             # build the web app into the server's wwwroot
-```
-
-Open http://localhost:8080 and sign in as `admin@velomine.local` / `Velomine-dev-1`. For Android:
+Open http://localhost:8080 and sign in as `admin@velomine.local` / `Velomine-dev-1`. The server, the web app and the site run only in Docker, built from your working folder: after a change, run `just up` again. For Android:
 
 ```
 just emu             # start the emulator; wait until it has booted
@@ -233,8 +225,8 @@ Nix also runs on other Linux distributions, macOS and WSL 2. Install it with the
 
 ## Telemetry in development
 
-Telemetry is off in the development server by default. To send it locally, put the values in the git-ignored
-`.dev/telemetry.env`; `just server` sources that file before starting:
+Telemetry is off by default. To send it locally, put the values in the git-ignored `.dev/telemetry.env`; the
+`velomine` service in `docker-compose.yml` reads that file when it exists. Run `just up` after changing it:
 
 ```
 VELOMINE__TELEMETRY__ENABLED=true
@@ -242,7 +234,6 @@ VELOMINE__TELEMETRY__SENTRY__DSN=<server dsn>
 VELOMINE__TELEMETRY__SENTRY__APPDSN=<app dsn>
 VELOMINE__TELEMETRY__SENTRY__ENVIRONMENT=development
 VELOMINE__TELEMETRY__TRACESAMPLERATIO=1
-ASPNETCORE_URLS=http://0.0.0.0:8080
 ```
 
 The server starts logs, traces, metrics and errors. The phone reads the app DSN from `GET /api/v1/server`, but only
@@ -260,30 +251,26 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 
 | Command | What it does |
 |---------|--------------|
-| `just server` | Starts PostgreSQL and Dex in Docker, then runs the server with `dotnet watch` on http://localhost:8080, with the same admin and single sign-on settings as `docker-compose.yml` |
-| `just web` | Builds the Flutter web app into `src/Velomine.Server/wwwroot`, so the server serves it at the same address and the session cookie works. Run it again after app changes, then reload the page. |
+| `just up` | Builds the image and starts PostgreSQL, Dex and the server in Docker on http://localhost:8080, exactly as `docker compose up --build` in the README, in the background. Run it again after any change. |
+| `just logs` | Follows the server's log |
+| `just down` / `just nuke` | Stops the containers. `nuke` also deletes the database, the ride files and the Data Protection keys. |
+| `just db` | Opens psql on the database inside the postgres container |
 | `just emu` | Starts the Android emulator |
-| `just android` | Runs the app on the emulator. `adb reverse` forwards port 8080, so the app reaches your server at `localhost:8080`. |
-| `just stack` | Runs the whole stack in Docker, exactly as the README describes. Don't run it at the same time as `just server`: both use port 8080. |
-| `just down` / `just nuke` | Stops the containers. `nuke` also deletes the database and the uploaded ride files. |
-| `just db` | Opens psql on the dev database |
+| `just android` | Runs the app on the emulator against the stack from `just up`. `adb reverse` forwards ports 8080 and 5556, so the app reaches the server and Dex at `localhost`. |
 | `just migration Name` | Adds an EF Core migration under `Data/Migrations` |
 | `just api-client` | Regenerates the Dart API client after an endpoint change (`tools/generate-api-client.sh`) |
 | `just codegen` | Regenerates the Riverpod providers (`build_runner`). Run it after changing a `@riverpod` provider; the generated `.g.dart` files are committed. |
 | `just check` | Runs every check before a commit: .NET format check, server tests, Riverpod codegen, Dart format, analyzer and Flutter tests |
 | `nix fmt flake.nix` | Formats the flake with the pinned `nixfmt` |
 
-`flutter run -d chrome` also works for quick UI work. Password sign-in needs the cookie, which only works when the server serves the app, so use `just web` for anything that needs a session.
-
-`compose.dev.yml` is used only by the `just` commands. It adds one thing to `docker-compose.yml`: PostgreSQL on `127.0.0.1:5432`, so a server running in your shell can reach it with the connection string in `appsettings.json`.
+There is one way to run Velomine, in development and for a self-hoster alike: `docker-compose.yml`. Nothing runs the server from your shell. `flutter run -d chrome` still works for quick UI work, but password sign-in needs the cookie, which only works when the server serves the app, so use `just up` for anything that needs a session.
 
 ## Updating tools
 
 - **Flutter:** change `flutterVersion` and `sha256` in `flake.nix` **and** `FLUTTER_VERSION` and `FLUTTER_SHA256` in the `Dockerfile`, in the same commit. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). Run `direnv reload`. The new version unpacks into its own `.dev/flutter-<version>` folder, so delete the old one. A new minor version (3.48 rather than 3.47.x) may ask for newer Android SDK or NDK versions. See *Troubleshooting*.
-- **Everything from nixpkgs** (.NET SDK, Java, Node, psql, CodeGraph, just, the Android packages): `nix flake update nixpkgs`, then commit the new `flake.lock` on its own.
+- **Everything from nixpkgs** (.NET SDK, Java, Node, CodeGraph, just, the Android packages): `nix flake update nixpkgs`, then commit the new `flake.lock` on its own.
 - **Agent plugins:** OpenCode updates ponytail with `opencode plugin update @dietrichgebert/ponytail`; change the pinned version in `opencode.json` after reading the changelog. Claude Code and the official Flutter plugin update through their own plugin commands.
 - **Before committing a flake change:** run `nix fmt flake.nix` and `nix flake check --no-build`.
-- **PostgreSQL:** psql's major version follows the `postgres` image in `docker-compose.yml`. Change both together.
 
 ## Troubleshooting
 
@@ -298,10 +285,10 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | Gradle wants an SDK component or NDK version that is not installed | The SDK in `/nix/store` is read-only, so Gradle cannot install anything into it. Add the exact version it names to the `android` block in `flake.nix` (`platformVersions`, `buildToolsVersions` or `ndkVersions`) and run `direnv reload`. |
 | `flutter run -d chrome` finds no browser | Install Chromium or Chrome on the host. The shell sets `CHROME_EXECUTABLE` to the first one it finds. |
 | The Dart MCP server is missing in OpenCode, or `opencode mcp list` says `NotFound` | OpenCode's background service was started outside the dev shell and is spawning the server without `dart` on PATH. Run `direnv reload`, then `opencode service restart` from the repository, and start a new session. If the desktop app starts the service itself, quit it fully first and relaunch it from the dev shell. |
-| Single sign-on through Dex fails with `just server` | Port 8080 must be free (no `just stack` running), because Dex only accepts `http://localhost:8080/signin-oidc`. |
-| Port 5432 is already in use | A PostgreSQL on the host is running. Stop it, or change the port in `compose.dev.yml` and pass a matching `CONNECTIONSTRINGS__VELOMINE`. |
+| Single sign-on through Dex fails | Dex only accepts `http://localhost:8080/signin-oidc`: keep `VELOMINE_PORT` at 8080, or change the redirect address in `deploy/dex/config.yaml` too. |
+| `port is already allocated` on 8080 | Another program uses the port. Stop it, or set `VELOMINE_PORT` in `.env`. |
 | Something in the shell is broken or stale | `rm -rf .dev .direnv`, then `direnv allow`. Caches download again, and nothing in git is affected. |
 
 ## Removing it
 
-Delete `.dev/` and `.direnv/` in the repository. To remove Nix completely, uninstall the host packages from step 1, delete `/nix` and remove the lines added in steps 2 and 3. A few small settings files stay in your home folder (`~/.config/flutter`, `~/.dart-tool`, and `~/.aspnet` for ASP.NET's cookie keys), plus the Docker images and volumes (`just nuke`, `docker image prune`).
+Delete `.dev/` and `.direnv/` in the repository. To remove Nix completely, uninstall the host packages from step 1, delete `/nix` and remove the lines added in steps 2 and 3. A few small settings files stay in your home folder (`~/.config/flutter` and `~/.dart-tool`), plus the Docker images and volumes (`just nuke`, `docker image prune`).

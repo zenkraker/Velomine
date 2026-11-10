@@ -1,4 +1,3 @@
-compose := "docker compose -f docker-compose.yml -f compose.dev.yml"
 avd := "velomine"
 image := "system-images;android-36;google_apis_playstore;x86_64"
 
@@ -12,59 +11,31 @@ setup:
     cd app && flutter pub get
     avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}"
 
-# start PostgreSQL and Dex in Docker
-deps:
-    {{compose}} up -d --wait postgres dex
+# build and start the whole stack in Docker on http://localhost:8080; run it again after any change
+up:
+    docker compose up --build -d --wait
 
-# run the whole stack in Docker, exactly like the README
-stack:
-    docker compose up --build
+# follow the server's log
+logs:
+    docker compose logs -f velomine
 
 # stop containers (data is kept)
 down:
-    {{compose}} down
+    docker compose down
 
-# stop containers and delete the database and uploaded ride files
+# stop containers and delete the database, ride files and keys
 nuke:
-    {{compose}} down -v
-    rm -rf .dev/files
+    docker compose down -v
 
-# open psql on the dev database
+# open psql on the database inside the postgres container
 db:
-    psql "postgresql://velomine:velomine-dev@localhost:5432/velomine"
-
-# server with hot reload on http://localhost:8080 (same address as the Docker stack, so Dex SSO works).
-# Set VELOMINE__TELEMETRY__* in .dev/telemetry.env to send logs, traces and metrics to Sentry.
-server: deps
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ -f .dev/telemetry.env ]; then
-      set -a
-      . .dev/telemetry.env
-      set +a
-    fi
-    export ASPNETCORE_URLS="${ASPNETCORE_URLS:-http://localhost:8080}"
-    export VELOMINE__DATAPROTECTION__KEYSPATH="${VELOMINE__DATAPROTECTION__KEYSPATH:-$PWD/.dev/keys}"
-    export VELOMINE__ADMIN__EMAIL=admin@velomine.local
-    export VELOMINE__ADMIN__PASSWORD=Velomine-dev-1
-    export VELOMINE__PUBLICURL=http://localhost:8080
-    export VELOMINE__SSO__AUTHORITY=http://dex.localhost:5556/dex
-    export VELOMINE__SSO__CLIENTID=velomine
-    export VELOMINE__SSO__CLIENTSECRET=velomine-dev-secret
-    export VELOMINE__SSO__APPCLIENTID=velomine-app
-    export VELOMINE__SSO__DISPLAYNAME="Dex (local test)"
-    export VELOMINE__SSO__ALLOWINSECUREHTTP=true
-    exec dotnet watch run --project src/Velomine.Server
-
-# build the web app into the server's wwwroot; reload http://localhost:8080 to see it
-web:
-    cd app && flutter build web --no-web-resources-cdn -o ../src/Velomine.Server/wwwroot
+    docker compose exec postgres psql -U velomine velomine
 
 # start the Android emulator
 emu:
     flutter emulators --launch {{avd}}
 
-# run the app on the emulator; adb reverse lets it reach the server and local Dex at localhost
+# run the app on the emulator against the stack from `just up`; adb reverse lets it reach the server and Dex at localhost
 android:
     adb reverse tcp:8080 tcp:8080
     adb reverse tcp:5556 tcp:5556

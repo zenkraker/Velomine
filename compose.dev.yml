@@ -1,6 +1,0 @@
-# Used only by the justfile, on top of docker-compose.yml, when the server runs from your shell.
-# Publishes PostgreSQL to this machine only, matching the connection string in appsettings.json.
-services:
-  postgres:
-    ports:
-      - "127.0.0.1:5432:5432"
