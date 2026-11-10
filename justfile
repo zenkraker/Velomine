@@ -82,7 +82,8 @@ api-client:
 codegen:
     cd app && dart run build_runner build
 
-# the checks from the README
+# every check to run before a commit
 check:
+    dotnet format Velomine.slnx --verify-no-changes
     dotnet test --solution Velomine.slnx
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test

@@ -1,54 +1,32 @@
+using System.Net;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Velomine.Server.Tests;
 
 /// <summary>
-/// A real OpenID Connect provider (Dex) for the SSO tests. Starts on first use, so test runs that do not need it
-/// do not pay for it. Dev and test only. Users: rider@sso.test (email verified) and unverified@sso.test, password "password".
+/// The real OpenID Connect provider (Dex) for the single sign-on tests, started from the same
+/// <c>deploy/dex/config.yaml</c> as <c>docker compose</c>: the same users, clients and secrets. Only the issuer
+/// changes, to a port that does not clash with a running development stack. Starts on first use.
 /// </summary>
-public sealed class DexFixture : IAsyncLifetime
+public sealed partial class DexFixture : IAsyncLifetime
 {
-    private const int HostPort = 15556; // fixed: the issuer URL in the ID token must match what the server is configured with
+    private const int HostPort = 15556; // fixed: the issuer in the ID token must match what the server is configured with
 
     public const string Authority = "http://localhost:15556/dex";
-    public const string ClientId = "velomine-test";
-    public const string ClientSecret = "velomine-test-secret";
+    public const string ClientId = "velomine";
+    public const string ClientSecret = "velomine-dev-secret";
+    public const string AppClientId = "velomine-app";
+    public const string AppRedirectUri = "com.velomine.app:/sso-callback";
+    public const string WebRedirectUri = "http://localhost/signin-oidc"; // the test server's address
     public const string VerifiedEmail = "rider@sso.test";
     public const string UnverifiedEmail = "unverified@sso.test";
     public const string Password = "password";
-
-    // The test server's address is http://localhost/, so that is the redirect URI the provider must accept.
-    private const string Config = $"""
-        issuer: {Authority}
-        storage:
-          type: memory
-        web:
-          http: 0.0.0.0:5556
-        oauth2:
-          skipApprovalScreen: true
-        enablePasswordDB: true
-        staticClients:
-          - id: {ClientId}
-            name: Velomine tests
-            secret: {ClientSecret}
-            redirectURIs:
-              - http://localhost/signin-oidc
-        staticPasswords:
-          - email: {VerifiedEmail}
-            hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
-            username: rider
-            name: SSO Rider
-            emailVerified: true
-            userID: 08a8684b-db88-4b73-90a9-3cd1661f5466
-          - email: {UnverifiedEmail}
-            hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
-            username: unverified
-            name: Unverified Rider
-            emailVerified: false
-            userID: 17b4a4c4-6b0d-4c5e-9d52-0a6a1f4b2a11
-        """;
 
     private readonly SemaphoreSlim gate = new(1, 1);
     private IContainer? container;
@@ -61,9 +39,10 @@ public sealed class DexFixture : IAsyncLifetime
         try
         {
             if (container is not null) return;
+            var config = IssuerLine().Replace(await File.ReadAllTextAsync(DevConfigPath()), $"issuer: {Authority}");
             container = new ContainerBuilder("ghcr.io/dexidp/dex:v2.46.1")
                 .WithPortBinding(HostPort, 5556)
-                .WithResourceMapping(Encoding.UTF8.GetBytes(Config), "/etc/dex/config.yaml")
+                .WithResourceMapping(Encoding.UTF8.GetBytes(config), "/etc/dex/config.yaml")
                 .WithCommand("dex", "serve", "/etc/dex/config.yaml")
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(5556).ForPath("/dex/.well-known/openid-configuration")))
                 .Build();
@@ -75,8 +54,94 @@ public sealed class DexFixture : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// Plays the browser on Dex's login page from <paramref name="start"/> until Dex redirects to
+    /// <paramref name="redirectUri"/>, and returns that redirect.
+    /// </summary>
+    public static async Task<Uri> SignInOnProviderAsync(Uri start, string email, string redirectUri, CancellationToken ct)
+    {
+        using var browser = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = true });
+        var current = start;
+        for (var hop = 0; hop < 12; hop++)
+        {
+            var response = await browser.GetAsync(current, ct);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                // Dex's login form: post the email and password to the form's own address.
+                var html = await response.Content.ReadAsStringAsync(ct);
+                var action = WebUtility.HtmlDecode(FormAction().Match(html).Groups[1].Value);
+                response = await browser.PostAsync(
+                    new Uri(current, action),
+                    new FormUrlEncodedContent(new Dictionary<string, string> { ["login"] = email, ["password"] = Password }),
+                    ct);
+            }
+
+            Assert.True((int)response.StatusCode is >= 300 and < 400, $"Unexpected {(int)response.StatusCode} from the provider at {current}");
+            var next = new Uri(current, response.Headers.Location!);
+            if (next.AbsoluteUri.StartsWith(redirectUri, StringComparison.Ordinal)) return next;
+            current = next;
+        }
+
+        throw new InvalidOperationException($"Dex never redirected to {redirectUri}.");
+    }
+
+    /// <summary>
+    /// Signs <paramref name="email"/> in with the authorization code flow and PKCE, as the phone does, and returns
+    /// the provider's ID token and access token. The web client needs its secret; the phone client is public.
+    /// </summary>
+    public async Task<(string IdToken, string AccessToken)> TokensAsync(
+        string email, CancellationToken ct, string clientId = AppClientId, string redirectUri = AppRedirectUri, string? clientSecret = null)
+    {
+        await EnsureStartedAsync();
+        var verifier = Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(32));
+        var challenge = Base64UrlEncoder.Encode(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
+        var authorize = new Uri(
+            $"{Authority}/auth?response_type=code&scope=openid%20email%20profile&state=test" +
+            $"&client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            $"&code_challenge={challenge}&code_challenge_method=S256");
+
+        var callback = await SignInOnProviderAsync(authorize, email, redirectUri, ct);
+        var code = CodeParameter().Match(callback.Query).Groups[1].Value;
+
+        var form = new Dictionary<string, string>
+        {
+            ["grant_type"] = "authorization_code",
+            ["code"] = Uri.UnescapeDataString(code),
+            ["redirect_uri"] = redirectUri,
+            ["client_id"] = clientId,
+            ["code_verifier"] = verifier,
+        };
+        if (clientSecret is not null) form["client_secret"] = clientSecret;
+
+        using var http = new HttpClient();
+        var response = await http.PostAsync($"{Authority}/token", new FormUrlEncodedContent(form), ct);
+        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(ct));
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+        return (json.RootElement.GetProperty("id_token").GetString()!, json.RootElement.GetProperty("access_token").GetString()!);
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (container is not null) await container.DisposeAsync();
     }
+
+    private static string DevConfigPath()
+    {
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
+        {
+            var path = Path.Combine(dir.FullName, "deploy", "dex", "config.yaml");
+            if (File.Exists(path)) return path;
+        }
+
+        throw new FileNotFoundException("deploy/dex/config.yaml not found above the test output folder.");
+    }
+
+    [GeneratedRegex("^issuer: .*$", RegexOptions.Multiline)]
+    private static partial Regex IssuerLine();
+
+    [GeneratedRegex("action=\"([^\"]+)\"")]
+    private static partial Regex FormAction();
+
+    [GeneratedRegex("[?&]code=([^&]+)")]
+    private static partial Regex CodeParameter();
 }

@@ -34,7 +34,7 @@ Early development. The single-database model below is what runs today, locally a
 
 **Roadmap**
 
-- *Next:* speed, cadence and power sensors and the wheel-speed source; the iOS recorder; audio announcements; row-level security on club tables; share links with server-rendered pages; photos, ride thumbnails and reverse geocoding; scoped API keys and a desktop USB upload tool; an audit log of sign-ins and admin actions; outbound address checks for admin-entered URLs; re-reading all rides after a parser update; the Italian presentation site; the self-host licence.
+- *Next:* speed, cadence and power sensors and the wheel-speed source; the iOS recorder; audio announcements; row-level security on club tables; share links with server-rendered pages; photos, ride thumbnails and reverse geocoding; scoped API keys and a desktop USB upload tool; drag-and-drop upload on the web; an audit log of sign-ins and admin actions; outbound address checks for admin-entered URLs; re-reading all rides after a parser update; the Italian presentation site; the self-host licence.
 - *Then:* Strava export import; connectors (Garmin personal key, Wahoo cloud, a watched Dropbox or Nextcloud folder); maintenance reminders; cycle tracking, encrypted and separately shared; whole-club sharing with a member-facing club view.
 - *Later:* USB import and Gadgetbridge hand-off on Android; live tracking with an expiring link; opt-in club features (group rides, club leaderboards, segments); FIT export of any ride; the inter-club layer ([v2](docs/design/v2.md)).
 

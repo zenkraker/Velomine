@@ -48,7 +48,7 @@ final class RecordingViewModelProvider
 }
 
 String _$recordingViewModelHash() =>
-    r'0c890c5bdb7411215bdba2c4031857524208750b';
+    r'20e6b4886105aacea5144f6de676efeed84481a9';
 
 /// Drives the recording screen. The native service keeps recording when this
 /// screen is closed; opening it again reads the live state back.

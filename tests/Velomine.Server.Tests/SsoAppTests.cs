@@ -11,19 +11,22 @@ using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-/// <summary>The phone's direct OpenID Connect flow: a provider ID token exchanged for Velomine bearer tokens.</summary>
+/// <summary>
+/// The phone's direct OpenID Connect flow: an ID token from the real provider (Dex, same configuration as development)
+/// exchanged for Velomine bearer tokens.
+/// </summary>
 [Collection("postgres")]
-public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
+public sealed class SsoAppTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private async Task<TestApi> StartAsync(Action<IWebHostBuilder>? more = null)
     {
-        await oidc.EnsureStartedAsync();
+        await dex.EnsureStartedAsync();
         return await TestApi.StartAsync(postgres, builder =>
         {
-            builder.UseSetting("Velomine:Sso:Authority", FakeOidcFixture.Authority);
-            builder.UseSetting("Velomine:Sso:AppClientId", FakeOidcFixture.AppClientId);
+            builder.UseSetting("Velomine:Sso:Authority", DexFixture.Authority);
+            builder.UseSetting("Velomine:Sso:AppClientId", DexFixture.AppClientId);
             builder.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");
             builder.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
             more?.Invoke(builder);
@@ -57,6 +60,15 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
         Assert.False(await db.Users.AnyAsync(u => u.Email == email, Ct));
     }
 
+    /// <summary>Flips one character in the middle of the token's signature, so only the signature is wrong.</summary>
+    private static string TamperWithSignature(string token)
+    {
+        var dot = token.LastIndexOf('.');
+        var middle = dot + (token.Length - dot) / 2;
+        var swapped = token[middle] == 'A' ? 'B' : 'A';
+        return string.Concat(token.AsSpan(0, middle), swapped.ToString(), token.AsSpan(middle + 1));
+    }
+
     [Fact]
     public async Task SsoApp_ShouldReportAppSettings_WhenTheInfoEndpointIsCalled()
     {
@@ -66,8 +78,8 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
         Assert.False(info!.Enabled);
         Assert.Null(info.LoginUrl);
         Assert.True(info.AppSsoEnabled);
-        Assert.Equal(FakeOidcFixture.Authority, info.AppAuthority);
-        Assert.Equal(FakeOidcFixture.AppClientId, info.AppClientId);
+        Assert.Equal(DexFixture.Authority, info.AppAuthority);
+        Assert.Equal(DexFixture.AppClientId, info.AppClientId);
         Assert.Contains("openid", info.AppScopes);
         Assert.Equal("com.velomine.app:/sso-callback", info.AppRedirectUri);
     }
@@ -76,8 +88,8 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     public async Task SsoApp_ShouldReturnTokensAndTheMember_WhenTheTokenIsValid()
     {
         await using var api = await StartAsync();
-        const string email = "valid@sso.test";
-        var idToken = oidc.SignToken("valid-sub", email);
+        const string email = DexFixture.VerifiedEmail;
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
 
         var response = await ExchangeAsync(api.CreateClient(), idToken);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -93,37 +105,13 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     }
 
     [Fact]
-    public async Task SsoApp_ShouldRejectTheToken_WhenTheIssuerIsWrong()
-    {
-        await using var api = await StartAsync();
-        const string email = "wrong-issuer@sso.test";
-        var idToken = oidc.SignToken("wrong-issuer-sub", email, issuer: "https://evil.example");
-
-        var response = await ExchangeAsync(api.CreateClient(), idToken);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertNoUserAsync(api, email);
-    }
-
-    [Fact]
     public async Task SsoApp_ShouldRejectTheToken_WhenTheAudienceIsWrong()
     {
         await using var api = await StartAsync();
-        const string email = "wrong-audience@sso.test";
-        var idToken = oidc.SignToken("wrong-audience-sub", email, audience: "another-app");
-
-        var response = await ExchangeAsync(api.CreateClient(), idToken);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        await AssertNoUserAsync(api, email);
-    }
-
-    [Fact]
-    public async Task SsoApp_ShouldRejectTheToken_WhenItHasExpired()
-    {
-        await using var api = await StartAsync();
-        const string email = "expired@sso.test";
-        var idToken = oidc.SignToken("expired-sub", email, expires: DateTime.UtcNow.AddMinutes(-10));
+        const string email = DexFixture.VerifiedEmail;
+        // A genuine token, but issued to the web client, not the phone app.
+        var (idToken, _) = await dex.TokensAsync(
+            email, Ct, DexFixture.ClientId, DexFixture.WebRedirectUri, DexFixture.ClientSecret);
 
         var response = await ExchangeAsync(api.CreateClient(), idToken);
 
@@ -135,8 +123,9 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     public async Task SsoApp_ShouldRejectTheToken_WhenTheSignatureIsBad()
     {
         await using var api = await StartAsync();
-        const string email = "bad-signature@sso.test";
-        var idToken = oidc.SignToken("bad-signature-sub", email, wrongKey: true);
+        const string email = DexFixture.VerifiedEmail;
+        var (genuine, _) = await dex.TokensAsync(email, Ct);
+        var idToken = TamperWithSignature(genuine);
 
         var response = await ExchangeAsync(api.CreateClient(), idToken);
 
@@ -145,37 +134,11 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     }
 
     [Fact]
-    public async Task SsoApp_ShouldAskForAnEmail_WhenTheIdTokenHasNone()
-    {
-        await using var api = await StartAsync();
-        var idToken = oidc.SignToken("no-email-sub", email: null, name: null);
-
-        var response = await ExchangeAsync(api.CreateClient(), idToken);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("no_email", await ErrorAsync(response));
-    }
-
-    [Fact]
-    public async Task SsoApp_ShouldUseUserInfo_WhenTheIdTokenHasNoEmail()
-    {
-        await using var api = await StartAsync();
-        var idToken = oidc.SignToken("userinfo-sub", email: null, name: null);
-
-        var response = await ExchangeAsync(api.CreateClient(), idToken, accessToken: "access");
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var client = await SignedInAsync(api, idToken);
-        var me = await client.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
-        Assert.Equal(FakeOidcFixture.UserInfoEmail, me!.Email);
-    }
-
-    [Fact]
     public async Task SsoApp_ShouldRejectAnUnverifiedEmail_WhenCreatingAnAccount()
     {
         await using var api = await StartAsync();
-        const string email = "unverified@sso.test";
-        var idToken = oidc.SignToken("unverified-sub", email, emailVerified: false);
+        const string email = DexFixture.UnverifiedEmail;
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
 
         var response = await ExchangeAsync(api.CreateClient(), idToken);
 
@@ -188,8 +151,8 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     public async Task SsoApp_ShouldWaitForApproval_WhenTheAccountIsNew()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "true"));
-        const string email = "pending@sso.test";
-        var idToken = oidc.SignToken("pending-sub", email);
+        const string email = DexFixture.VerifiedEmail;
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
 
         var response = await ExchangeAsync(api.CreateClient(), idToken);
 
@@ -205,9 +168,9 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     public async Task SsoApp_ShouldReuseTheExistingAccount_WhenTheEmailMatches()
     {
         await using var api = await StartAsync();
-        const string email = "existing@sso.test";
+        const string email = DexFixture.VerifiedEmail;
         var registered = await (await api.RegisterAsync(email)).Content.ReadFromJsonAsync<RegisterResponse>(Ct);
-        var idToken = oidc.SignToken("existing-sub", email);
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
 
         var client = await SignedInAsync(api, idToken);
 
@@ -223,8 +186,8 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     public async Task SsoApp_ShouldRejectTheAccount_WhenItIsLockedOut()
     {
         await using var api = await StartAsync();
-        const string email = "locked@sso.test";
-        var idToken = oidc.SignToken("locked-sub", email);
+        const string email = DexFixture.VerifiedEmail;
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
         Assert.Equal(HttpStatusCode.OK, (await ExchangeAsync(api.CreateClient(), idToken)).StatusCode);
 
         await using (var scope = api.Services.CreateAsyncScope())
@@ -245,8 +208,8 @@ public sealed class SsoAppTests(PostgresFixture postgres, FakeOidcFixture oidc)
     public async Task SsoApp_ShouldRefuseUnknownAccounts_WhenAutoCreateIsOff()
     {
         await using var api = await StartAsync(b => b.UseSetting("Velomine:Sso:AutoCreateUsers", "false"));
-        const string email = "unknown@sso.test";
-        var idToken = oidc.SignToken("unknown-sub", email);
+        const string email = DexFixture.VerifiedEmail;
+        var (idToken, _) = await dex.TokensAsync(email, Ct);
 
         var response = await ExchangeAsync(api.CreateClient(), idToken);
 

@@ -55,7 +55,7 @@ final class SessionProvider
   }
 }
 
-String _$sessionHash() => r'55b1b63cd2e3c890554eb08135b9a8b058e7af5e';
+String _$sessionHash() => r'ece465433a3aee88b70cb26159cd66fa69320cdd';
 
 /// The session's reactive state: status, member, server details and the reason
 /// a sign-in did not work. It mirrors [Session.states] into Riverpod.

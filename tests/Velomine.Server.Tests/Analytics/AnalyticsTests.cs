@@ -146,7 +146,7 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
     public async Task GetTotals_ShouldCountOnlyMyRides_WhenOthersHaveRides()
     {
         await using var api = await StartAsync();
-        var (member, _) = await NewMemberAsync(api);        var (_, otherId) = await NewMemberAsync(api);
+        var (member, _) = await NewMemberAsync(api); var (_, otherId) = await NewMemberAsync(api);
         await AddRideAsync(api, otherId, "2026-11-03T08:00:00", 80);
 
         var totals = await member.GetFromJsonAsync<TotalsResponse>("/api/v1/analytics/totals?period=week&count=1", Ct);
