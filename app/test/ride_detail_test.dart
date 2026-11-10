@@ -10,6 +10,8 @@ import 'fake_server.dart';
 
 Widget _detailApp(Session session, String id) => ProviderScope(
   overrides: [
+    // This is the root scope of the test, not a nested scoped override.
+    // ignore: scoped_providers_should_specify_dependencies
     sessionProvider.overrideWith((ref) => session),
     ridePollIntervalProvider.overrideWithValue(
       const Duration(milliseconds: 10),

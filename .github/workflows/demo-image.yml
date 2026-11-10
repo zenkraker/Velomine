@@ -51,7 +51,7 @@ jobs:
         run: dotnet restore Velomine.slnx --locked-mode
 
       - name: Test
-        run: dotnet test --solution Velomine.slnx --no-restore --logger "console;verbosity=normal"
+        run: dotnet test --solution Velomine.slnx --no-restore
 
   web-tests:
     name: Web tests
