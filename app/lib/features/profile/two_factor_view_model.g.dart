@@ -45,7 +45,7 @@ final class TwoFactorViewModelProvider
 }
 
 String _$twoFactorViewModelHash() =>
-    r'66a0d3d7401b64a7c8d69be55ab9452749c8d4f7';
+    r'b367b1fc3f280b3e87926878f60d8e656ed75ebe';
 
 /// The member's second factor. Route-scoped: it holds one visit, not the session.
 

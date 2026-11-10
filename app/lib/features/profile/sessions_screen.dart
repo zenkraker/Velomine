@@ -39,7 +39,10 @@ class SessionsScreen extends ConsumerWidget {
             Row(
               children: [
                 Expanded(child: Text(failureText(l10n, failure))),
-                TextButton(onPressed: notifier.load, child: Text(l10n.tryAgain)),
+                TextButton(
+                  onPressed: notifier.load,
+                  child: Text(l10n.tryAgain),
+                ),
               ],
             )
           else if (sessions != null && sessions.isEmpty)
@@ -68,7 +71,9 @@ class SessionsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             key: const Key('logout-others'),
-            onPressed: state.logoutOthers.running ? null : notifier.logoutOthers,
+            onPressed: state.logoutOthers.running
+                ? null
+                : notifier.logoutOthers,
             icon: const Icon(Icons.devices_other),
             label: Text(l10n.sessionLogoutOthers),
           ),

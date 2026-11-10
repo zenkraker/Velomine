@@ -13,7 +13,11 @@ void main() {
 
   setUp(() => server = FakeServer());
 
-  Future<void> signIn(WidgetTester tester, String email, String password) async {
+  Future<void> signIn(
+    WidgetTester tester,
+    String email,
+    String password,
+  ) async {
     await tester.enterText(find.byKey(const Key('email')), email);
     await tester.enterText(find.byKey(const Key('password')), password);
     await tester.tap(find.byKey(const Key('sign-in')));
@@ -145,5 +149,4 @@ void main() {
     expect(find.text('JBSWY3DPEHPK3PXP'), findsOneWidget);
     expect(find.byKey(const Key('two-factor-enable')), findsOneWidget);
   });
-
 }
