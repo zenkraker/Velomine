@@ -38,5 +38,4 @@ logging allocation-free.
 
 ## Recommendation
 Approve with conditions: Serilog types stay in `Observability/` and the composition root; application code
-uses `ILogger<T>` only; the console and Sentry sinks are enabled, with the OpenTelemetry sink reserved for
-the later Grafana/OTLP move; no member data in any property.
+uses `ILogger<T>` only; the console and Sentry sinks are enabled; no member data in any property.

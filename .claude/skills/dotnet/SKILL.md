@@ -1,31 +1,27 @@
 ---
 name: dotnet
-description: Use when writing, reviewing or testing Velomine's server code - .NET 10, C#, ASP.NET Core, EF Core, server-rendered HTML share pages, FIT file handling, configuration and tests.
+description: Use when writing, reviewing or testing Velomine's server code - .NET 10, C#, ASP.NET Core, EF Core, FastEndpoints, FIT file handling, configuration and tests.
 ---
 
 # .NET in Velomine
 
-Server: .NET 10 (LTS), ASP.NET Core, EF Core on PostgreSQL. Read `AGENTS.md` first; its dependency rule overrides anything here.
+Practical guidance for the server. The rules are in `AGENTS.md` (*Server*, *Clubs and isolation*, *Data*, *Ride processing*, *API*, *Security and privacy in code*, *Tests*); where this skill and `AGENTS.md` disagree, `AGENTS.md` wins.
 
-## Rules
+## Writing code
 
-- **Dependencies:** BCL, ASP.NET Core and EF Core first; then `Microsoft.*` / `System.*` packages and vendor SDKs for their own formats (`Garmin.FIT.Sdk`). Anything else needs `docs/dependencies/<package>.md` and approval before `dotnet add package`. Use central package management (`Directory.Packages.props`) and commit `packages.lock.json`.
-- **Language:** nullable reference types on, `TreatWarningsAsErrors` on, file-scoped namespaces, `record` for DTOs, `async` all the way with `CancellationToken` passed through.
-- **Don't reinvent the wheel.** Before writing anything, check ASP.NET Core, EF Core, the BCL and `Microsoft.*` packages: Identity, authentication, rate limiting, Data Protection, `IOptions` validation, hosted services, `System.Threading.Channels`, `HybridCache`, health checks, `TimeProvider`.
-- **Vertical slices:** one file per use case in `Features/<Area>/`, holding request, response, validator and a FastEndpoints `Endpoint<TReq, TRes>`. Validate every request with the endpoint's validator. Errors as `ProblemDetails`. OpenAPI through `FastEndpoints.OpenApi`.
-- **Data access:** the slice uses `VelomineDbContext` directly; no repository, service layer or mediator. Each feature area's tables are mapped to their own schema. `AsNoTracking()` for reads, project to DTOs with `Select`, no N+1 (check the generated SQL).
-- **Background work:** `BackgroundService` in the server (`Channel<T>` for queues, `PeriodicTimer` for schedules). No jobs table in PostgreSQL. Don't use FastEndpoints' job queues or messaging.
-- **Share and landing pages:** plain HTML rendered by the server (Razor Pages or Razor components rendered to HTML). No SPA framework, no client-side build step.
-- **Config and secrets:** `IOptions<T>` with validation on start; secrets from environment variables or user-secrets, never committed. Self-hosters must be able to run with just env vars.
-- **Auth:** ASP.NET Core Identity / built-in authentication. A member can only read and change their own data unless club roles grant more; enforce it server side.
-- **Logging:** `ILogger<T>` with structured templates; never log tokens, passwords or raw location tracks.
+- **Language:** nullable reference types and `TreatWarningsAsErrors` are on. File-scoped namespaces, `record` for DTOs, `async` all the way with the `CancellationToken` passed through.
+- **Packages:** central package management in `Directory.Packages.props`; `packages.lock.json` is committed. Check the approved list in `AGENTS.md` before reaching for a package.
+- **Queries:** `AsNoTracking()` for reads, project to DTOs with `Select`, no N+1 (check the generated SQL). A query on a club table always carries the caller's club.
+- **Time:** inject `TimeProvider`; never read `DateTime.UtcNow` in code you want to test.
+- **Logging:** `ILogger<T>` with message templates, route templates instead of paths, and nothing from the forbidden list in `AGENTS.md`.
+- **Configuration:** a new setting is an `IOptions<T>` with validation on start, documented in the README settings table when an operator may change it.
 
-## Checks before commit
+## Tests
 
-```bash
-dotnet format --verify-no-changes
-dotnet build -warnaserror
-dotnet test
-```
+- xUnit v3 with `Microsoft.AspNetCore.Mvc.Testing` for HTTP and `PostgresFixture` (Testcontainers) for a real database; single sign-on tests use Dex with the same configuration as `docker-compose.yml`.
+- Bogus is approved for fake data when needed: a fixed seed, and no assertions on exact generated values.
+- A slice that touches club data gets a second-club test.
 
-Tests: xUnit v3 (`xunit.v3`, run with `dotnet test --solution Velomine.slnx` through the Microsoft Testing Platform), `Microsoft.AspNetCore.Mvc.Testing` for HTTP tests, Testcontainers (`PostgresFixture`) for a real PostgreSQL in data tests, not the EF in-memory provider. Bogus is approved for fake data; use a fixed seed and don't assert exact generated values.
+## Before committing
+
+Run `just check`.

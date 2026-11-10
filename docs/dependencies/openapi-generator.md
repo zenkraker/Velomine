@@ -56,7 +56,7 @@ Generated from the server's actual OpenAPI 3.0 document with 7.26.0 and the thre
 - Docker Hub rate-limited the sandbox, so the first run used the same 7.26.0 release as a JAR from Maven Central (`OPENAPI_GENERATOR_JAR`); `tools/generate-api-client.sh` supports both.
 
 ## Recommendation
-Approved by the owner on 2026-11-02 (see `APPROVED.md`).
+Approved by the owner on 2026-11-02 (terms in `AGENTS.md`, *Approved community libraries*).
 
 Approve with conditions:
 - Use the `dart` target with the Docker image pinned to **v7.26.0** (documented stable); move to 7.27.x after it has been out for a few weeks.

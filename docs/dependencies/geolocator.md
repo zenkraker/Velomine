@@ -1,5 +1,7 @@
 # geolocator 14.1.2
 
+> **Scope widened on 2026-11-10:** the same single on-demand position also sorts nearby clubs on the same server. The binding terms are in `AGENTS.md`.
+
 Checked 2026-11-09 from [pub.dev](https://pub.dev/packages/geolocator), the [GitHub repository](https://github.com/Baseflow/flutter-geolocator) and the pub.dev API. *Unverified* items were not confirmed.
 
 ## Need

@@ -1,10 +1,18 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["@dietrichgebert/ponytail@5.3.3"],
+  "instructions": [
+    ".claude/skills/*/SKILL.md"
+  ],
+  "plugins": [
+    "@dietrichgebert/ponytail@5.3.3"
+  ],
   "mcp": {
     "dart": {
       "type": "local",
-      "command": ["dart", "mcp-server"],
+      "command": [
+        "dart",
+        "mcp-server"
+      ],
       "environment": {
         "AGENT_PLUGIN": "opencode"
       },
@@ -12,7 +20,9 @@
     },
     "sentry": {
       "type": "local",
-      "command": ["sentry-mcp"]
+      "command": [
+        "sentry-mcp"
+      ]
     }
   }
 }

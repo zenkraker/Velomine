@@ -4,7 +4,7 @@ These are the rules that decide what we build, how we price it, and what we refu
 They outrank feature requests, competitors and growth targets.
 
 `AGENTS.md` holds the code rules; `docs/architecture.md` holds the architecture. This
-document holds the product and ethical rules. When they conflict, a change to this document
+document holds the product and ethical rules and the product scope. When they conflict, a change to this document
 is a deliberate decision, not a side effect of a feature.
 
 ## Why this exists
@@ -35,7 +35,8 @@ again to see their own history.
 ### 3. The club controls its data and its administration
 
 - Managed cloud or self-hosted/on-premise, chosen by the club.
-- In cloud, each club has its own database and role; self-host runs the whole instance.
+- In cloud, clubs share one database and each club's records are kept apart by the
+  application and row-level security; self-host runs the whole instance for one club.
 - The club decides where the data lives and who administers it.
 - No vendor lock-in: documented backups, migrations and a supported export path.
 
@@ -44,7 +45,8 @@ again to see their own history.
 - Nothing a member records is visible to anyone else until the member shares it.
 - Sharing is per data type, per audience, revocable, and logged for the member.
 - Health and wellbeing data needs explicit consent and never appears in share links.
-- Telemetry is opt-in and anonymous: crash reports and performance/usage data are contributed only when the member chooses, never include rides, health data, names or emails, and can be withdrawn at any time.
+- Telemetry from the member's app is opt-in: crash reports and performance/usage data are contributed only when the member chooses, never include rides, health data, names or emails, and can be withdrawn at any time.
+- The server keeps anonymised operational logs, following GDPR, only to fix bugs and performance problems. A self-hosted server sends them nowhere unless its operator chooses to.
 - Minors are protected by default: no public profiles, no public individual results.
 
 ### 5. No engagement traps
@@ -62,7 +64,9 @@ again to see their own history.
 
 ### 7. Fair, transparent pricing
 
-- One club price. No per-seat surprises, no feature tiers, no paid add-ons.
+- One club price: a one-time activation fee, then a yearly fee per club. No per-seat
+  pricing, no feature tiers, no paid add-ons.
+- A self-hosted club pays for a licence that never limits seats and never blocks member data.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 
@@ -82,7 +86,8 @@ again to see their own history.
 
 - Public changelog and documented product decisions.
 - A security disclosure path.
-- Prefer a licence that lets clubs inspect, self-host and fork (AGPL or MIT, still open).
+- Licensed AGPL-3.0 with a trademark policy: clubs can inspect, self-host and fork; anyone
+  running it as a service publishes their source, and nobody else may use the Velomine name.
 
 ## Decision tests
 
@@ -96,6 +101,39 @@ Before building or shipping something, ask:
 6. Can a self-hosted club use it without a service we control?
 7. Would we be happy if a member's parent, club president and data-protection officer read
    this decision?
+
+## Product scope
+
+| Topic | Decision |
+|-------|----------|
+| Sports | Cycling only: road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific. |
+| Users | Clubs and teams, and riders on their own. One club per account, club admin and coach roles, sign-up with admin approval, single sign-on alongside local accounts. A club is an opt-in step, never a requirement. |
+| Social | Private rides and coach sharing instead of a feed or followers. Privacy zones hide home and other saved places. |
+| Clubs and coaches | The member decides what to share (rides, training, routes, wellbeing) and with whom (the club's coaches today). Every share is revocable and every view is logged. |
+| Health | A daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride. Cycle tracking is planned as optional, highly protected context. |
+| Body data | Weight is a single profile field, not a tracked series: W/kg, the VO2max estimate and calories need it. |
+| Brand | Velomine, direction D: Contour × Night Ride. Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
+| Languages | English and Italian first, as an account setting that follows the member to every device. |
+
+### What makes Velomine different
+
+| Feature | Why |
+|---------|-----|
+| Wheel-sensor speed and distance | Accurate distance in the woods with single-band GPS; GPS is only the fallback. |
+| Cycling analytics (NP, IF, TSS, TRIMP, power curve, FTP and VO2max estimates, fitness/fatigue/form) | Turns recorded streams into training guidance. |
+| Readiness view from load, check-in and recent RPE | The point of collecting wellbeing data. |
+| Clubs and coaches, private by default | Coaching without making anything public. |
+| Privacy zones and per-stream switches | Keeps home and saved places out of every shared view; the owner always sees the full track. |
+| Component wear by km, hours or months | Warns before a part fails, not after. |
+| Native phone recorder with standard Bluetooth sensors | No vendor app or account needed for any sensor. |
+
+### Out of scope
+
+- Gym and running concepts.
+- A social feed with followers: clubs and coaches replace it.
+- Health logging (steps, sleep, water, fasting, bowel log): the wellness check-in replaces it.
+- Health import from the phone: rides come from the phone recorder, a bike computer or connectors.
+- Passkeys: Flutter has no official passkey plugin, and iOS passkey sign-in needs a per-domain app association that self-hosted clubs cannot provide.
 
 ## Explicit non-goals
 

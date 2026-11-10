@@ -34,4 +34,4 @@ First run pulls `postgres:17` (about 650 MB) and `testcontainers/ryuk`. After th
 - Exit: only `PostgresFixture` uses it. Replace its body with a connection string to any PostgreSQL.
 
 ## Recommendation
-Approved by the owner on 2026-11-02. Pin 4.16.x; PostgreSQL module only. Keep the `VELOMINE_TEST_POSTGRES` escape hatch.
+Approved by the owner on 2026-11-02. Pin 4.16.x; the PostgreSQL module, plus the core generic `ContainerBuilder` to run Dex with the same configuration as `docker-compose.yml`. The binding terms are in `AGENTS.md`. Keep the `VELOMINE_TEST_POSTGRES` escape hatch.

@@ -5,36 +5,31 @@ description: Use when writing, reviewing or testing Velomine's Flutter/Dart code
 
 # Flutter in Velomine
 
-One Dart codebase ships Android, iOS and the web app. Read `AGENTS.md` first; its dependency rule overrides anything here.
+Practical guidance for the app. The rules are in `AGENTS.md` (*App*, *State and events*, *Phone recorder*, *API*, *Tests*): Riverpod with MVVM, `CommandState`, `Result<T>`, `go_router`, the generated API client. Where this skill and `AGENTS.md` disagree, `AGENTS.md` wins.
 
-## Tools and official skills
+## Tools
 
-The Dart MCP server ships with the pinned Flutter SDK and is started by `.mcp.json` (Claude Code) and `opencode.json` (OpenCode). Prefer it over guessing from source:
+The SDK-bundled Dart MCP server is started by both agents. Prefer it over guessing from source:
 
 - `analyze_files` for diagnostics, `run_tests` for tests, `dart_fix` / `dart_format` for mechanical fixes.
-- `pub` / `pub_dev_search` for dependencies, but the dependency rule still decides what may be added.
+- `pub` / `pub_dev_search` to look at packages; the dependency rule in `AGENTS.md` still decides what may be added.
 - `list_devices`, `launch_app`, `get_app_logs`, `get_runtime_errors`, `hot_reload`, `hot_restart`, `stop_app` for a running app.
 - `dtd`, `lsp`, `vm_service`, `widget_inspector` for runtime inspection.
 
-The official Flutter/Dart skills are installed in each agent (the Flutter agent plugin), not by the dev shell. Load the matching one before the task, for example `flutter-add-widget-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-setup-declarative-routing`, `flutter-setup-localization`, `dart-add-unit-test` or `dart-run-static-analysis`. This project's skill wins where they conflict, especially on dependencies, state management and the generated API client.
+Load the matching official Flutter/Dart skill before the task, for example `flutter-add-widget-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-setup-localization` or `dart-add-unit-test`. This skill and `AGENTS.md` win where they disagree, especially on dependencies, state management and the generated client.
 
-## Rules
+## Writing code
 
-- **Dependencies:** Flutter/Dart SDK first, then verified publishers `flutter.dev` / `dart.dev`. Anything else is a community package: write `docs/dependencies/<package>.md` and wait for approval. Never run `flutter pub add` for it. `pubspec.lock` is committed.
-- **One codebase, three targets.** Every feature must build and run on Android, iOS and web. Guard platform-only code with `kIsWeb` / `defaultTargetPlatform`, never `dart:io` imports in shared code (breaks web). Bluetooth sensors are mobile-only until a BLE package is approved.
-- **State:** start with `StatefulWidget`, `ValueNotifier`/`ChangeNotifier` + `ListenableBuilder`, and `InheritedWidget`. No state-management package without an evaluation.
-- **Navigation:** `go_router` (flutter.dev) for deep links and web URLs.
-- **API client:** use the client generated from the server's OpenAPI document, the package in `app/packages/velomine_api/`. Never edit generated files; run `tools/generate-api-client.sh` instead. If a call is missing or wrong, fix the endpoint's declaration in the server, not the client.
-- **Widgets:** small, `const` where possible, no business logic in `build`. Reuse existing widgets before adding new ones.
-- **Accessibility:** `Semantics` labels on icon-only buttons, respect text scaling, minimum 48x48 tap targets.
-- **Units and data:** keep SI units (metres, seconds, watts) internally; format only in the UI. Never drop or overwrite a member's activity data silently.
+- **New screen:** a route in `go_router`, a `<Screen>ViewModel` and immutable `<Screen>State`, data through the feature's `<area>_data.dart`. Run `just codegen` after changing a `@riverpod` provider.
+- **New string:** add it to both `app_en.arb` and `app_it.arb`.
+- **Widgets:** small and `const` where possible; leaf widgets take plain values and callbacks. Reuse existing widgets before adding new ones.
+- **Platforms:** check every change builds for web as well as the phone; keep `dart:io` out of shared code.
+- **Units:** SI internally (metres, seconds, watts); format only in the view. Never drop or overwrite a member's activity data silently.
 
-## Checks before commit
+## Tests
 
-```bash
-dart format --set-exit-if-changed lib test   # not packages/, which is generated
-flutter analyze
-flutter test
-```
+Widget tests with `flutter_test` against a fake server behind the generated client; ViewModels are tested without `BuildContext`. `integration_test` for flows on a device. Lints come from `flutter_lints` and `riverpod_lint`.
 
-Use `flutter_lints` (flutter.dev). Widget tests with `flutter_test`; integration tests with `integration_test`. New non-trivial logic gets a test.
+## Before committing
+
+Run `just check`.

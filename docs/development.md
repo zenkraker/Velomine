@@ -126,7 +126,7 @@ Install [Claude Code](https://claude.com/claude-code) as its documentation descr
 
 Ponytail keeps changes small (smallest complete change, YAGNI, stdlib first). Its hooks need `node`, which the dev shell provides. Useful commands: `/ponytail-review` before a PR, `/ponytail-audit` for the whole repo, `/ponytail-debt` to list `shortcut:` comments.
 
-CodeGraph indexes the code into a local symbol graph and gives Claude MCP tools (`codegraph_explore`, `codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook, so `codegraph` must be on PATH when Claude Code starts: start it from the dev shell. Without Nix, install it with `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`.
+CodeGraph indexes the code into a local symbol graph and gives the agent one MCP tool, `codegraph_explore`, which returns the source of the relevant symbols with their call paths (`codegraph explore "..."` does the same in a shell). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook, so `codegraph` must be on PATH when Claude Code starts: start it from the dev shell. Without Nix, install it with `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`.
 
 OpenCode reads `AGENTS.md` directly and takes its MCP servers and plugins from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. OpenCode needs no install command for ponytail: the `plugins` entry loads `@dietrichgebert/ponytail` from npm on first start and keeps it active in every session of this repository. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
 
@@ -153,6 +153,12 @@ npx skills add flutter/agent-plugins --skill '*' --agent universal --yes
 npx skills add dart-lang/skills --skill '*' --agent universal --yes
 ```
 
+#### Project skills
+
+The project skills in `.claude/skills/` (dotnet, flutter, postgres, software-architecture) are loaded into every session of both agents: `CLAUDE.md` imports them and `opencode.json` lists them under `instructions`. When you add a skill, add it to both files. `AGENTS.md` wins where a skill disagrees with it.
+
+#### Sentry MCP
+
 Sentry MCP is available in two forms. Claude Code uses the hosted server configured in `.mcp.json`. OpenCode 2
 currently fails the hosted server's OAuth with a 401 ([anomalyco/opencode#56195](https://github.com/anomalyco/opencode/issues/56195)),
 so the dev shell provides a local stdio server instead. **Temporary workaround:** remove the `sentry-mcp`
@@ -162,21 +168,11 @@ wrapper from `flake.nix` and point `opencode.json` back at `https://mcp.sentry.d
 sentry-mcp auth login     # once; opens the browser and stores the login
 ```
 
-`opencode.json` starts `sentry-mcp` with `MCP_SKILLS=inspect,triage`; the local server then uses the stored
+`opencode.json` starts the `sentry-mcp` wrapper, which defaults to `MCP_SKILLS=inspect,triage`; the local server then uses the stored
 login. `sentry-cli` is also in the shell for releases and debug-symbol uploads. Without an LLM provider the
 local server's AI-powered search tools are unavailable, but project/DSN discovery and the other tools work.
 If you need `project-management` for a setup task, run it explicitly with
 `MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
-
-Telemetry is off in the development server by default. To try the server path, set
-`VELOMINE__TELEMETRY__ENABLED=true`, `VELOMINE__TELEMETRY__SENTRY__DSN=<server dsn>` and
-`VELOMINE__TELEMETRY__SENTRY__APPDSN=<app dsn>` in the environment; the app reads the app DSN from
-`GET /api/v1/server` only after a member opts in under **Profile → Privacy** and restarts. If `AppDsn` is unset it
-falls back to `Dsn`, so one project still works. A self-hosted server with no DSN sends nothing.
-
-Release builds do not upload debug symbols or web source maps yet. When you want readable release stack traces,
-add the Sentry Dart Plugin and pass `SENTRY_AUTH_TOKEN` as a build secret; it is deliberately not enabled by
-default because a self-hosted image has no token.
 
 The dev shell points the NuGet, pub, Gradle and Android caches, the unpacked Flutter SDK and the server's ride files into `.dev/`.
 
@@ -235,6 +231,29 @@ Open the repository folder in VS Code and allow the `.envrc` when the direnv ext
 
 Nix also runs on other Linux distributions, macOS and WSL 2. Install it with the [official installer](https://nixos.org/download/), turn on flakes as in step 2, and continue from step 3. This has only been tried on CachyOS. The flake currently builds for `x86_64-linux` only.
 
+## Telemetry in development
+
+Telemetry is off in the development server by default. To send it locally, put the values in the git-ignored
+`.dev/telemetry.env`; `just server` sources that file before starting:
+
+```
+VELOMINE__TELEMETRY__ENABLED=true
+VELOMINE__TELEMETRY__SENTRY__DSN=<server dsn>
+VELOMINE__TELEMETRY__SENTRY__APPDSN=<app dsn>
+VELOMINE__TELEMETRY__SENTRY__ENVIRONMENT=development
+VELOMINE__TELEMETRY__TRACESAMPLERATIO=1
+ASPNETCORE_URLS=http://0.0.0.0:8080
+```
+
+The server starts logs, traces, metrics and errors. The phone reads the app DSN from `GET /api/v1/server`, but only
+after a member opts in under **Profile → Privacy** and restarts the app. If `AppDsn` is unset it falls back to
+`Dsn`, so one project still works. A self-hosted server with no DSN sends nothing. The app also reports its own
+sign-in, recording, upload and API signals through the same consent switches.
+
+Release builds do not upload debug symbols or web source maps yet. When you want readable release stack traces,
+add the Sentry Dart Plugin and pass `SENTRY_AUTH_TOKEN` as a build secret; it is deliberately not enabled by
+default because a self-hosted image has no token.
+
 ## Daily work
 
 Enter the folder and the shell loads. Run `just` on its own to list every command.
@@ -251,7 +270,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `just migration Name` | Adds an EF Core migration under `Data/Migrations` |
 | `just api-client` | Regenerates the Dart API client after an endpoint change (`tools/generate-api-client.sh`) |
 | `just codegen` | Regenerates the Riverpod providers (`build_runner`). Run it after changing a `@riverpod` provider; the generated `.g.dart` files are committed. |
-| `just check` | Runs the README's checks: server tests, Riverpod codegen, Dart format, analyzer and Flutter tests |
+| `just check` | Runs every check before a commit: .NET format check, server tests, Riverpod codegen, Dart format, analyzer and Flutter tests |
 | `nix fmt flake.nix` | Formats the flake with the pinned `nixfmt` |
 
 `flutter run -d chrome` also works for quick UI work. Password sign-in needs the cookie, which only works when the server serves the app, so use `just web` for anything that needs a session.

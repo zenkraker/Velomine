@@ -1,18 +1,51 @@
 # Velomine
 
-Cycling-only training platform for clubs and teams. Cloud is the default: one shared deployment with a database per club. Self-hosting runs the same image as a single-tenant instance. No feature paywall; every member owns their data.
+Cycling-only training platform for clubs and teams. Cloud is the default: one shared deployment and database for many clubs. Self-hosting runs the same image and schema for one club. No feature paywall; every member owns their data.
 
 ## Status
 
-Early development. Done so far: the server skeleton, the PostgreSQL data layer with migrations, and accounts (sign up with admin approval, password login with cookie or bearer token, refresh, roles club admin/member/coach). Password reset works by email link, or by a one-time link a club admin makes when the server has no email. Single sign-on works on the web with any OpenID Connect provider, and on the phone as a public client with PKCE, tested end to end. Two-factor sign-in is optional per member: an authenticator app and ten single-use recovery codes, with a code asked for after the password. Every member also has a device list: each signed-in phone and browser, when it was last used, and one button to sign out the others. Ride upload works: FIT, GPX and TCX files (also gzipped) are read in the background into rides with distance, moving time, climbing, speed, power, normalized power, heart rate and cadence. The Flutter web app is in place (sign in with a password, or single sign-on on the web; sign up, list and upload rides, admin approval of new accounts), tested in a real browser against the compose stack. Ride detail pages show the route on a map and charts of every signal. Rides also carry four optional dimensions (surface, e-bike, indoor/virtual, commute) inferred from FIT and GPX, editable by the member and filterable in the list, and laps read from FIT and TCX as a table that shades the charts and the map. A new ride takes a bike of the matching kind (road, gravel, mountain, e-bike, track or city) and falls back to the member's single default bike; the Progress totals and training dashboard can be filtered by surface. Bikes work: each member has bikes (with wheel circumference and the distance a used bike already had), parts with limits by distance, riding hours or months and a wear bar for each, a default bike that new rides are given, and a bike picker on every ride. Each member has a profile (FTP, weight, year of birth with an estimated maximum heart rate, time zone and the day weeks start on); the language chosen on one device follows the account to every device. A Progress page with weekly, monthly and yearly totals and goals per week, month or year (distance, climbing, riding time or number of rides), and in-app notifications: a ride read, failed or uploaded twice, a part nearly or fully worn, and, for club admins, an account waiting for approval. Accounts no longer need a club: a rider can record and analyse on their own. The current single-tenant build also lets a rider see clubs on the same server that opted into nearby discovery (sorted by distance from the device or a point saved on it) and ask one to join; the owner approves or declines. In the cloud model each club has its own database, so discovery and joining move to the opt-in inter-club directory (v2). Club admins have an Admin screen: every account (roles, lock, delete), the settings they can change (sign-up and approval), a server overview and a test email. Notifications can also go out by email when the server has an SMTP server set up, with a switch in each member's profile. Members can download all their data as a ZIP (with every original ride file) and delete their account with everything in it. The phone app asks for the club's server address once and keeps the member signed in across restarts with a refresh token in the device's secure storage. On Android the phone recorder now records a GPS ride with the screen off, connects to a paired Bluetooth heart-rate strap, keeps the raw samples on the phone, assembles a FIT file when the ride stops, uploads it to the server automatically (with retries) and lists it on the Record tab. It also pauses itself after three seconds at walking pace or slower and resumes after two seconds above 0.1 km/h, writing the pause into the FIT file; the start card asks for the ride type and whether it was e-assisted, and both are written into the FIT session. the server now leaves paused time and the jump across a stop out of moving time, averages and distance. Uploads continue through a background worker when the app is not open. Ride pages show heart-rate and power zones with intensity factor, TSS and TRIMP, and Progress adds a training dashboard (30/90/365 days) with daily load and fitness, fatigue and form. Progress also shows a power curve with FTP and VO2max estimates, a readiness view built from form, recent load and the daily check-in, and the check-in itself (fatigue, soreness, mood, stress, motivation) with RPE and notes on each ride; coaches see shared wellbeing and the power curve, but never the notes. Sensors pair directly over standard Bluetooth LE, without a vendor app or account; speed, cadence and power sensors are being integrated, and the iOS recorder is next. The presentation site is served by the server at `/`, with Home, Status, Pricing, Demo and Contact pages; the web app opens from *Sign in*. The v1 scope, release plan and open questions are in [docs/design/v1-scope-and-architecture.md](docs/design/v1-scope-and-architecture.md).
+Early development. The single-database model below is what runs today, locally and in self-host mode.
 
-## Deployment model
+**Works today**
 
-Cloud is the default: one shared Velomine deployment with one PostgreSQL database and role per club on a managed cluster. Self-hosting runs the same image as a single-tenant instance with one database and one file volume. Both plans have the same features; only the operator differs. The cloud tenant catalog, per-club onboarding and offline licensing are the next architectural step; the commands below run the single-tenant mode.
+- **Accounts:** sign-up with admin approval, password sign-in (cookie on the web, bearer token on the phone), roles club admin, member and coach, password reset by email or by a one-time link an admin makes, two-factor sign-in with an authenticator app and recovery codes, and a device list with "log out other devices".
+- **Single sign-on** with any OpenID Connect provider, on the web and on the phone (public client with PKCE).
+- **Rides:** FIT, GPX and TCX upload (also gzipped), read in the background into distance, moving time, climbing, speed, power, normalized power, heart rate and cadence. A route map, a chart per signal, laps, heart-rate and power zones, intensity factor, TSS and TRIMP. Four dimensions (surface, e-bike, indoor/virtual, commute), editable and filterable.
+- **Bikes:** wheel circumference, a default bike, a bike of the matching kind for each new ride, parts with wear by distance, hours or months, a shared parts catalogue and build templates.
+- **Progress:** weekly, monthly and yearly totals, goals, a training dashboard (fitness, fatigue, form), a power curve with FTP and VO2max estimates, readiness, and the daily wellbeing check-in with RPE and notes per ride.
+- **Clubs and coaches:** a rider can ride alone or join a club, find nearby clubs that opted in and ask to join. A member shares rides, training, routes or wellbeing with the club's coaches, and sees a log of who looked. Coaches never see notes.
+- **Privacy:** privacy zones, start and end trimming and per-stream switches on everything a non-owner sees.
+- **Notifications** in the app and by email (with an SMTP server): rides read, failed or duplicated, parts nearly worn, accounts waiting for approval.
+- **Your data:** download everything as a ZIP with every original ride file, or delete the account with everything in it.
+- **Admin:** accounts (roles, lock, delete, reset password or second factor), sign-up settings, a server overview and a test email.
+- **Phone (Android):** records GPS rides with the screen off, a paired Bluetooth heart-rate strap, auto-pause, ride type and e-bike switch written into the FIT file, and uploads with retries, also while the app is closed.
+- **Languages:** English and Italian, following the account to every device.
+- **Presentation site** at `/` (Home, Status, Pricing, Demo, Contact); the web app opens from *Sign in*.
+
+**Known gaps**
+
+- Row-level security on the club tables is not built yet; club isolation relies on query filters and tests.
+- Android allows cleartext HTTP everywhere so a self-hosted server on a LAN can use it; the cloud build should forbid it.
+- The iOS recorder and phone single sign-on on iOS have not been run yet.
+- Flutter's default Roboto font is still fetched from Google's font host on first load.
+- The same ride exported by two different apps is not detected as a duplicate.
+- There is no CI workflow right now: the demo pipeline waits in `to-move-out/` for the ops repository.
+- Server-rendered email is English only.
+
+**Roadmap**
+
+- *Next:* speed, cadence and power sensors and the wheel-speed source; the iOS recorder; audio announcements; row-level security on club tables; share links with server-rendered pages; photos, ride thumbnails and reverse geocoding; scoped API keys and a desktop USB upload tool; an audit log of sign-ins and admin actions; outbound address checks for admin-entered URLs; re-reading all rides after a parser update; the Italian presentation site; the self-host licence.
+- *Then:* Strava export import; connectors (Garmin personal key, Wahoo cloud, a watched Dropbox or Nextcloud folder); maintenance reminders; cycle tracking, encrypted and separately shared; whole-club sharing with a member-facing club view.
+- *Later:* USB import and Gadgetbridge hand-off on Android; live tracking with an expiring link; opt-in club features (group rides, club leaderboards, segments); FIT export of any ride; the inter-club layer ([v2](docs/design/v2.md)).
+
+**Open questions**
+
+- Weight as a single profile field: W/kg, VO2max and calories need it; confirm it stays one field.
+- Wellbeing and cycle data are health data under GDPR. Consent screens, export and deletion are built in; the legal side still needs checking with someone qualified.
 
 ## Run it on your computer
 
-This starts the single-tenant (self-host) mode with one command: the server, the web app, PostgreSQL, and a small test sign-in provider for trying single sign-on. You do not need .NET, Flutter or PostgreSQL installed.
+This starts the self-host mode with one command: the server, the web app, PostgreSQL, and a small test sign-in provider for trying single sign-on. You do not need .NET, Flutter or PostgreSQL installed.
 
 ### What to install
 
@@ -26,14 +59,13 @@ Also needed:
 - **About 8 GB of free disk and 4 GB of RAM for Docker.** The first build downloads the .NET SDK, the Flutter SDK and PostgreSQL, and compiles the web app inside Docker.
 - **Internet access for the first build.** It reaches `mcr.microsoft.com`, `ghcr.io`, `docker.io`, `nuget.org`, `pub.dev` and `storage.googleapis.com` (the Flutter SDK). Behind a company proxy, set that up in Docker first.
 - **Free ports 8080 (the app) and 5556 (the test sign-in provider).**
-- **Apple Silicon Macs (arm64):** Flutter only ships a Linux x64 build, so the web build step runs emulated and takes longer. This has not been tried on an arm64 machine; if the build fails there, tell me what it prints.
+- **Apple Silicon Macs (arm64):** Flutter only ships a Linux x64 build, so the web build step runs emulated and takes longer. This has not been tried on an arm64 machine; if the build fails there, please open an issue with the output.
 
 ### Start it
 
 ```
 git clone https://github.com/zenkraker/Velomine.git
 cd Velomine
-git checkout ccr-c5b2810d-ttm8ml
 docker compose up --build
 ```
 
@@ -74,6 +106,8 @@ Set them in a file named `.env` next to `docker-compose.yml` (for example `VELOM
 | `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `true` | Set to `false` to let new accounts in without approval (add it under `environment:` of the `velomine` service). An admin can also change this, and sign-up on or off, in the app (*Admin*, *Settings*); a saved value overrides the environment. |
 | `VELOMINE__SMTP__HOST`, `VELOMINE__SMTP__FROM` | empty | Email is on when both are set. `From` is the sender, for example `Velomine <velomine@club.example>`. |
 | `VELOMINE__SMTP__PORT`, `VELOMINE__SMTP__SECURITY` | `587`, `starttls` | `Security` is `starttls` (port 587), `ssl` (port 465) or `none` (a local relay only). |
+| `VELOMINE__SSO__AUTHORITY`, `VELOMINE__SSO__CLIENTID`, `VELOMINE__SSO__CLIENTSECRET` | empty | Single sign-on is on when all three are set. In the provider, allow the redirect address `https://your-club-host/signin-oidc`. `VELOMINE__SSO__DISPLAYNAME` is the button text; `VELOMINE__SSO__AUTOCREATEUSERS=false` limits sign-in to existing accounts. |
+| `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | `false` | Set to `true` behind a reverse proxy that ends TLS, so Velomine builds `https` addresses. |
 | `VELOMINE__SMTP__USER`, `VELOMINE__SMTP__PASSWORD` | empty | The SMTP login, if the server needs one. **Environment only, by design:** they are never stored in the database or shown in the app, and neither are the single sign-on secrets. The admin Settings page shows email and single sign-on read-only, with a *Send a test email* button. |
 
 The defaults are for trying it out on your own machine only. Do not expose this setup to the internet as it is.
@@ -100,40 +134,21 @@ Not needed for the steps above.
 
 | Install | For |
 |---------|-----|
-| **.NET SDK 10** | Building and testing the server: `dotnet test --solution Velomine.slnx` (the tests also need Docker; they start their own PostgreSQL and test provider). |
-| **Flutter 3.47** (comes with Dart 3.13) | The app: `cd app && flutter test`. Run `flutter doctor` to see what else your target needs (Android Studio for Android, Xcode for iOS). |
+| **.NET SDK 10** | Building and testing the server (the tests also need Docker; they start their own PostgreSQL and Dex). |
+| **Flutter 3.47.9** (comes with Dart 3.13.7) | The app. Run `flutter doctor` to see what else your target needs (Android Studio for Android, Xcode for iOS). |
+| **just** | `just check` runs every check before a commit; `just --list` shows the rest. |
 | **Java 11 or newer, or Docker** | Regenerating the API client with `tools/generate-api-client.sh`. |
 | **Claude Code or OpenCode, with the ponytail plugin, plus CodeGraph** | Required for working on this repository; see [AGENTS.md](AGENTS.md). |
-
-## Uploading rides
-
-`POST /api/v1/rides/uploads` with a multipart `file` (FIT, GPX or TCX, up to 30 MB) and a bearer token. It answers `202` with the ride id; the file is read in the background, so poll `GET /api/v1/rides/{id}` until `status` is no longer `processing` (`ready`, `failed` with an `error` code such as `corrupt_file` or `not_cycling`, or `duplicate`). Send an `Idempotency-Key` header (the phone sends its own ride id) so a retry returns the same ride. `GET /api/v1/rides` lists your rides newest first (`?limit=` and `?cursor=`), `DELETE /api/v1/rides/{id}` removes a ride and its file. Files are kept as received under `VELOMINE__FILESPATH`, so rides can be read again when a parser improves.
-
-```
-curl -H "Authorization: Bearer $TOKEN" -H "Idempotency-Key: my-ride-1" -F "file=@ride.fit" http://localhost:8080/api/v1/rides/uploads
-```
-
-## Single sign-on
-
-Velomine signs people in through any OpenID Connect provider (Keycloak, Authentik, Entra ID, Google, ...). It is on when `VELOMINE__SSO__AUTHORITY` is set, together with `VELOMINE__SSO__CLIENTID` and `VELOMINE__SSO__CLIENTSECRET`; `VELOMINE__SSO__DISPLAYNAME` is the button text, and `VELOMINE__SSO__AUTOCREATEUSERS=false` limits sign-in to people who already have an account. In the provider, allow the redirect address `https://your-club-host/signin-oidc`. The phone app signs in through the phone's browser and is handed back through its own link, so nothing else needs setting up. Behind a reverse proxy that ends TLS, set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so Velomine builds `https` addresses. In cloud, the platform supplies a default provider and each club may override it; a self-host instance configures its own.
-
-How it behaves: the first sign-in creates an account (waiting for admin approval unless `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL=false`), or links to an existing account with the same email when the provider says the email is verified. The client starts at `GET /api/v1/accounts/sso/login?returnUrl=/path` and comes back to `returnUrl`, with `?sso_error=<reason>` when it did not work (`not_approved`, `email_not_verified`, `no_account`, `locked_out`, `no_email`, `failed`). `GET /api/v1/accounts/sso` says whether to show the button.
-
-To try it locally, `docker compose up --build` also starts [Dex](docs/dependencies/dex.md), a small provider for development only. Open http://localhost:8080/api/v1/accounts/sso/login?returnUrl=%2Frides and sign in with `rider@sso.test` / `password`. The new account waits for approval, so approve it as the admin first (see above), then sign in again. Use Chrome or Firefox: they send `dex.localhost` to your own machine.
-
-## The Flutter app
-
-Code is in [app/](app/README.md). Its API client is generated: after changing an endpoint run `tools/generate-api-client.sh` (needs the .NET SDK, plus Docker or `OPENAPI_GENERATOR_JAR`) and commit the result. Checks: `cd app && dart format --set-exit-if-changed lib test && flutter analyze && flutter test`. The web build bundles its own rendering engine instead of fetching it from Google's CDN, so it works offline. One known gap: Flutter's default Roboto font is still fetched from Google's font host on first load; bundling it is a follow-up.
 
 ## Documents
 
 - [Development environment](docs/development.md)
 - [Architecture](docs/architecture.md)
-- [v1 scope and architecture](docs/design/v1-scope-and-architecture.md)
-- [Product values and principles](docs/design/values.md)
+- [Code, API and app rules](AGENTS.md)
+- [Product values and scope](docs/design/values.md)
 - [v2 ideas: inter-club social layer](docs/design/v2.md)
 - [Brand directions](docs/design/brand-directions.html)
 
 ## Contributing
 
-Read [AGENTS.md](AGENTS.md) first: it holds the rules for code, architecture and dependencies. Claude Code reads the same file through `CLAUDE.md`.
+Read [AGENTS.md](AGENTS.md) first: it holds the rules for code, the API, the app and dependencies, and the approved libraries. Run `just check` before every commit. Claude Code reads the same file through `CLAUDE.md`.

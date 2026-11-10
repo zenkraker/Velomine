@@ -1,24 +1,23 @@
 ---
 name: postgres
-description: Use when designing Velomine's PostgreSQL schema, writing EF Core migrations, raw SQL, indexes or queries, or handling time-series activity data, backups and data export.
+description: Use when designing Velomine's PostgreSQL schema, writing EF Core migrations, raw SQL, indexes or queries, or handling ride stream data, backups and data export.
 ---
 
 # PostgreSQL in Velomine
 
-PostgreSQL is the only database. Access goes through EF Core with the Npgsql provider. Read `AGENTS.md` first: `Npgsql.EntityFrameworkCore.PostgreSQL` is published by the Npgsql project, not Microsoft, so it needs an evaluation in `docs/dependencies/` like any community library.
+Practical guidance for the database. The rules are in `AGENTS.md` (*Server*, *Clubs and isolation*, *Data*); where this skill and `AGENTS.md` disagree, `AGENTS.md` wins. Access goes through EF Core with the approved Npgsql provider.
 
-## Schema
+## Migrations
 
-- Every schema change is an EF Core migration committed to the repo. Never edit an applied migration; add a new one. Review the generated SQL (`dotnet ef migrations script`) before committing.
-- Migrations must be safe for self-hosters upgrading in place: additive first (add nullable column, backfill, then constrain), no data loss, no long table locks on big tables (`CREATE INDEX CONCURRENTLY` via `migrationBuilder.Sql` where needed).
-- Types: `timestamptz` for all instants (store UTC), `bigint`/`uuid` keys, `numeric` only for money, `text` over `varchar(n)`, `jsonb` only for truly schemaless data.
-- Constraints in the database: `NOT NULL`, foreign keys, unique and check constraints. Don't rely on app code alone.
-- Snake_case table and column names.
+- Add a migration with `just migration Name`, and read the generated SQL (`dotnet ef migrations script`) before committing.
+- Self-hosters upgrade in place: add a nullable column, backfill, then constrain, across releases. Avoid long locks on big tables (`CREATE INDEX CONCURRENTLY` through `migrationBuilder.Sql`).
+- A new club table gets a non-null `club_id`, an index on it, and its place in the club deletion.
+- A new member table gets its place in the export and the account deletion cascade.
 
-## Activity data
+## Types and shape
 
-- Activity samples (power, heart rate, cadence, speed, position) are large time series: one row per sample with a composite index on `(activity_id, t)`, or a compact per-activity blob if queries never touch single samples. Decide with a measured query, not a guess.
-- Keep the original uploaded file (FIT/GPX/TCX) so data can be re-processed and exported. Members own their data: export and delete must cover every table that holds it.
+- `timestamptz` for instants, `uuid` keys, `text` over `varchar(n)`, `numeric` only for money, `jsonb` only for truly schemaless data.
+- Ride streams are arrays per signal on one row per ride; best efforts are rows in `rides.ride_power_bests`. Don't add per-sample rows without a measured query that needs them.
 
 ## Queries
 
@@ -26,7 +25,7 @@ PostgreSQL is the only database. Access goes through EF Core with the Npgsql pro
 - Paginate with keyset (`WHERE (t, id) < (@t, @id)`), not large `OFFSET`.
 - Raw SQL only through parameterised `FromSql`/`ExecuteSql` interpolation, never string concatenation.
 
-## Tests and ops
+## Tests and operations
 
-- Integration tests run against a real PostgreSQL through `PostgresFixture` (Testcontainers, `postgres:17`), with migrations applied from scratch and one database per test.
-- Document backup/restore for self-hosters with `pg_dump` / `pg_restore`.
+- Integration tests run against `postgres:17` through `PostgresFixture`, with migrations applied to an empty database.
+- Backups for self-hosters are `pg_dump -Fc` and `pg_restore`, together with the file volume and the Data Protection keys.

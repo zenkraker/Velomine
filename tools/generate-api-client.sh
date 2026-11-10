@@ -18,7 +18,7 @@ OUT=app/packages/velomine_api
 (cd src/Velomine.Server && rm -rf wwwroot/openapi && ASPNETCORE_URLS=http://127.0.0.1:0 dotnet run -- --export-openapi-docs true)
 SPEC=src/Velomine.Server/wwwroot/openapi/v1.json
 
-# 2. Generate. The options are the ones approved in docs/dependencies/APPROVED.md.
+# 2. Generate. The options are the ones approved in AGENTS.md (Approved community libraries).
 rm -rf "$OUT"
 ARGS=(generate -i "$SPEC" -g dart -o "$OUT"
   --additional-properties="pubName=velomine_api,pubLibrary=velomine_api,pubVersion=1.0.0,pubDescription=Generated client for the Velomine API. Do not edit.,useOptional=true,useFinalProperties=true,enumUnknownDefaultCase=true"
