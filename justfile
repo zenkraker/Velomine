@@ -31,15 +31,31 @@ nuke:
 db:
     docker compose exec postgres psql -U velomine velomine
 
-# start the Android emulator
+# run the app on the Android emulator: starts it if needed, then hot-reloads against the stack from `just up`
 emu:
-    flutter emulators --launch {{avd}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    device=$(adb devices | awk '/^emulator-/ {print $1; exit}')
+    if [ -z "$device" ]; then
+      flutter emulators --launch {{avd}}
+      until device=$(adb devices | awk '/^emulator-/ {print $1; exit}') && [ -n "$device" ] \
+        && [ "$(adb -s "$device" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do sleep 2; done
+    fi
+    adb -s "$device" reverse tcp:8080 tcp:8080
+    adb -s "$device" reverse tcp:5556 tcp:5556
+    cd app && flutter run -d "$device"
 
-# run the app on the emulator against the stack from `just up`; adb reverse lets it reach the server and Dex at localhost
-android:
-    adb reverse tcp:8080 tcp:8080
-    adb reverse tcp:5556 tcp:5556
-    cd app && flutter run
+# run the app on a phone over Wi-Fi adb: `just phone 192.168.1.20:5555`, or `just phone` if it is already connected
+phone address="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "{{address}}" ]; then adb connect "{{address}}"; fi
+    device="{{address}}"
+    [ -n "$device" ] || device=$(adb devices | awk 'NR > 1 && $2 == "device" && $1 !~ /^emulator-/ {print $1; exit}')
+    [ -n "$device" ] || { echo "No phone connected. Pair it with Wireless debugging, then run: just phone <ip:port>"; exit 1; }
+    adb -s "$device" reverse tcp:8080 tcp:8080
+    adb -s "$device" reverse tcp:5556 tcp:5556
+    cd app && flutter run -d "$device"
 
 # add an EF Core migration: just migration AddSomething
 migration name:

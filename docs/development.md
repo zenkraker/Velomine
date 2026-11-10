@@ -213,8 +213,7 @@ just up              # build and start PostgreSQL, Dex and the server in Docker
 Open http://localhost:8080 and sign in as `admin@velomine.local` / `Velomine-dev-1`. The server, the web app and the site run only in Docker, built from your working folder: after a change, run `just up` again. For Android:
 
 ```
-just emu             # start the emulator; wait until it has booted
-just android         # run the app on it
+just emu             # start the emulator if needed and run the app on it
 ```
 
 Open the repository folder in VS Code and allow the `.envrc` when the direnv extension asks.
@@ -255,8 +254,8 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `just logs` | Follows the server's log |
 | `just down` / `just nuke` | Stops the containers. `nuke` also deletes the database, the ride files and the Data Protection keys. |
 | `just db` | Opens psql on the database inside the postgres container |
-| `just emu` | Starts the Android emulator |
-| `just android` | Runs the app on the emulator against the stack from `just up`. `adb reverse` forwards ports 8080 and 5556, so the app reaches the server and Dex at `localhost`. |
+| `just emu` | Runs the app on the Android emulator against the stack from `just up`, starting the emulator first if it is not running. `adb reverse` forwards ports 8080 and 5556, so the app reaches the server and Dex at `localhost`. |
+| `just phone [ip:port]` | Runs the app on a real phone over Wi-Fi adb, with the same port forwarding. Turn on *Wireless debugging* on the phone and pair it once (`adb pair`); then `just phone 192.168.1.20:5555` connects and runs, and plain `just phone` uses a phone that is already connected. |
 | `just migration Name` | Adds an EF Core migration under `Data/Migrations` |
 | `just api-client` | Regenerates the Dart API client after an endpoint change (`tools/generate-api-client.sh`) |
 | `just codegen` | Regenerates the Riverpod providers (`build_runner`). Run it after changing a `@riverpod` provider; the generated `.g.dart` files are committed. |
