@@ -1,18 +1,11 @@
 include: package:flutter_lints/flutter.yaml
 
-plugins:
-  riverpod_lint: ^3.2.0
-
-# Both fire on legitimate structure here and are false positives: runApp in
-# telemetry.dart receives a widget that main.dart already wrapped in a
-# ProviderScope, and the provider override in ride_detail_test.dart is the root
-# scope of a widget test rather than a nested one. Riverpod's plugin does not
-# honour per-line ignores.
-custom_lint:
-  rules:
-    - missing_provider_scope: false
-    - scoped_providers_should_specify_dependencies: false
-
+# riverpod_lint is deliberately not enabled. Under the analyzer's plugin
+# mechanism it reports missing_provider_scope on the runApp calls in
+# telemetry.dart (the widget is already wrapped in a ProviderScope by main.dart)
+# and scoped_providers_should_specify_dependencies on a widget test's root
+# scope, and it honours neither per-line ignores nor custom_lint configuration,
+# so it could only be satisfied by disabling the checks in CI.
 analyzer:
   exclude:
     - build/**
