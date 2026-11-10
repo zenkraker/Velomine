@@ -1,0 +1,48 @@
+name: Set up Flutter
+description: >
+  Installs the pinned Flutter SDK from Flutter's own release bucket, verified by
+  checksum the same way the Dockerfile installs it, and restores the SDK and pub
+  caches. No community action in the chain.
+
+inputs:
+  version:
+    description: Flutter version; must match flake.nix and the Dockerfile.
+    required: true
+  sha256:
+    description: SHA-256 of the Flutter release archive.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache the Flutter SDK
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/flutter
+        key: flutter-${{ runner.os }}-${{ inputs.version }}-${{ inputs.sha256 }}
+
+    - name: Cache the pub packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.pub-cache
+        key: pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
+        restore-keys: pub-${{ runner.os }}-
+
+    - name: Install Flutter
+      shell: bash
+      env:
+        FLUTTER_VERSION: ${{ inputs.version }}
+        FLUTTER_SHA256: ${{ inputs.sha256 }}
+      run: |
+        set -euo pipefail
+        if [ ! -x "$HOME/flutter/bin/flutter" ]; then
+          archive="$RUNNER_TEMP/flutter.tar.xz"
+          curl -fsSL --retry 3 -o "$archive" \
+            "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
+          echo "${FLUTTER_SHA256}  $archive" | sha256sum -c -
+          tar -xJf "$archive" -C "$HOME"
+          rm "$archive"
+        fi
+        echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+        echo "FLUTTER_ROOT=$HOME/flutter" >> "$GITHUB_ENV"
+        echo "FLUTTER_SUPPRESS_ANALYTICS=true" >> "$GITHUB_ENV"

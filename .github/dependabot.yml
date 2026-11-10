@@ -1,0 +1,13 @@
+# Keeps the SHA-pinned actions current. Dependabot rewrites the SHA and the
+# version comment together; each update is still reviewed as a PR.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

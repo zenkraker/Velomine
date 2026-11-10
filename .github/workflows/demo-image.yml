@@ -17,10 +17,13 @@ on:
       - tests/**
       - app/**
       - .github/workflows/demo-image.yml
+      - .github/actions/**
   workflow_dispatch:
 
+# One run per branch: a newer push supersedes an older one on the same branch,
+# and branches no longer cancel each other.
 concurrency:
-  group: demo-image
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 # Least privilege: the workflow only reads the repository.
@@ -48,31 +51,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache the Flutter SDK
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
         with:
-          path: ~/flutter
-          key: flutter-${{ runner.os }}-${{ env.FLUTTER_VERSION }}
-
-      - name: Cache the pub packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
-          restore-keys: pub-${{ runner.os }}-
-
-      # The SDK comes from Flutter's own release bucket, pinned by checksum, the
-      # same way the Dockerfile installs it. No community action in the chain.
-      - name: Install Flutter
-        run: |
-          if [ ! -x "$HOME/flutter/bin/flutter" ]; then
-            curl -fsSL -o /tmp/flutter.tar.xz \
-              "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
-            echo "${FLUTTER_SHA256}  /tmp/flutter.tar.xz" | sha256sum -c -
-            tar -xJf /tmp/flutter.tar.xz -C "$HOME"
-          fi
-          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
-          echo "FLUTTER_ROOT=$HOME/flutter" >> "$GITHUB_ENV"
+          version: ${{ env.FLUTTER_VERSION }}
+          sha256: ${{ env.FLUTTER_SHA256 }}
 
       - name: Install dependencies
         run: flutter pub get --enforce-lockfile
@@ -86,10 +69,13 @@ jobs:
         with:
           name: web-build
           path: app/build/web
+          if-no-files-found: error
           retention-days: 3
 
   server-tests:
     name: Server tests
+    # Downloads the web-build artifact, so it must wait for the job that uploads it.
+    needs: web-build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -129,29 +115,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache the Flutter SDK
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
         with:
-          path: ~/flutter
-          key: flutter-${{ runner.os }}-${{ env.FLUTTER_VERSION }}
-
-      - name: Cache the pub packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('app/pubspec.lock') }}
-          restore-keys: pub-${{ runner.os }}-
-
-      - name: Install Flutter
-        run: |
-          if [ ! -x "$HOME/flutter/bin/flutter" ]; then
-            curl -fsSL -o /tmp/flutter.tar.xz \
-              "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
-            echo "${FLUTTER_SHA256}  /tmp/flutter.tar.xz" | sha256sum -c -
-            tar -xJf /tmp/flutter.tar.xz -C "$HOME"
-          fi
-          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
-          echo "FLUTTER_ROOT=$HOME/flutter" >> "$GITHUB_ENV"
+          version: ${{ env.FLUTTER_VERSION }}
+          sha256: ${{ env.FLUTTER_SHA256 }}
 
       - name: Install dependencies
         run: flutter pub get --enforce-lockfile
@@ -170,7 +138,7 @@ jobs:
 
   image:
     name: Build and push image
-    needs: [server-tests, web-tests]
+    needs: [web-build, server-tests, web-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     # Only the repository's default branch publishes the demo image, whatever
