@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Velomine.Server.Tests;
 
@@ -163,19 +164,61 @@ public sealed class SiteTests(PostgresFixture postgres)
         Assert.Contains("Resets every night", html);
     }
 
-    [Fact]
-    public async Task Website_ShouldStillServeTheFlutterApp_WhenSignInIsRequested()
+    private const string AppMarker = "<!-- velomine web app -->";
+
+    /// <summary>
+    /// Starts the server with a stand-in web app, so the fallback routing is tested without a Flutter build. What the
+    /// real index.html contains is Flutter's business; which requests reach it is the server's.
+    /// </summary>
+    private async Task<(TestApi Api, string WebRoot)> StartWithWebAppAsync()
     {
-        await using var api = await TestApi.StartAsync(postgres);
+        var webRoot = Directory.CreateTempSubdirectory("velomine-webroot-").FullName;
+        await File.WriteAllTextAsync(Path.Combine(webRoot, "index.html"), AppMarker, TestContext.Current.CancellationToken);
+        var api = await TestApi.StartAsync(postgres, b => b.UseWebRoot(webRoot));
+        return (api, webRoot);
+    }
 
-        using var response = await api.CreateClient().GetAsync("/sign-in", TestContext.Current.CancellationToken);
+    [Theory]
+    [InlineData("/sign-in")]
+    [InlineData("/rides/0190a5b2-7c3e-7000-8000-000000000000")]
+    [InlineData("/settings/profile")]
+    public async Task Website_ShouldServeTheWebApp_WhenAnAppRouteIsRequested(string path)
+    {
+        var (api, webRoot) = await StartWithWebAppAsync();
+        await using var _ = api;
+        try
+        {
+            using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        Assert.Contains("flutter_bootstrap.js", html);
-        Assert.Contains("<base href=\"/\">", html);
-        Assert.Contains("name=\"robots\" content=\"noindex\"", html);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+            Assert.Equal(AppMarker, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            Directory.Delete(webRoot, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData("/api/v1/does-not-exist")]
+    [InlineData("/api")]
+    [InlineData("/main.dart.js")]
+    [InlineData("/assets/missing.png")]
+    public async Task Website_ShouldNotServeTheWebApp_WhenAnApiPathOrFileIsMissing(string path)
+    {
+        var (api, webRoot) = await StartWithWebAppAsync();
+        await using var _ = api;
+        try
+        {
+            using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+        finally
+        {
+            Directory.Delete(webRoot, recursive: true);
+        }
     }
 
     [Fact]
