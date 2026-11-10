@@ -108,7 +108,7 @@ Before building or shipping something, ask:
 |-------|----------|
 | Sports | Cycling only: road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific. |
 | Users | Clubs and teams, and riders on their own. One club per account, club admin and coach roles, sign-up with admin approval, single sign-on alongside local accounts. A club is an opt-in step, never a requirement. |
-| Social | Private rides and coach sharing instead of a feed or followers. Privacy zones hide home and other saved places. |
+| Social | Private rides and coach sharing instead of a public feed or followers. Inside a club, members who opt in see each other's shared rides and routes, and can react, comment and rate; each member's own privacy settings still apply, and nothing leaves the club. Privacy zones hide home and other saved places. |
 | Clubs and coaches | The member decides what to share (rides, training, routes, wellbeing) and with whom (the club's coaches today). Every share is revocable and every view is logged. |
 | Health | A daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride. Cycle tracking is planned as optional, highly protected context. |
 | Body data | Weight is a single profile field, not a tracked series: W/kg, the VO2max estimate and calories need it. |
@@ -132,7 +132,7 @@ Before building or shipping something, ask:
 - Gym and running concepts.
 - A social feed with followers: clubs and coaches replace it.
 - Health logging (steps, sleep, water, fasting, bowel log): the wellness check-in replaces it.
-- Health import from the phone: rides come from the phone recorder, a bike computer or connectors.
+- Health logs imported from the phone (sleep, steps, mood): the member enters the wellbeing check-in. Rides come from the phone recorder or a bike computer's files.
 - Passkeys: Flutter has no official passkey plugin, and iOS passkey sign-in needs a per-domain app association that self-hosted clubs cannot provide.
 
 ## Explicit non-goals

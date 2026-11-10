@@ -1,15 +1,15 @@
 <!doctype html>
-<!-- Keep this page in sync with the Status section of README.md and the v1 release plan in docs/design. -->
+<!-- Keep this page in sync with the Status section of README.md. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Status — Velomine</title>
-  <meta name="description" content="What works today in Velomine, the cycling training platform for clubs self-hosted or in the cloud, and what is still on the way.">
+  <meta name="description" content="What works today in Velomine, the cycling training platform for clubs and solo riders, and what is still missing.">
   <meta name="theme-color" content="#F0EEE9">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Status — Velomine">
-  <meta property="og:description" content="The v1 goal and the features that are actually implemented in Velomine.">
+  <meta property="og:description" content="The v1 goal, what is implemented in Velomine today, and what is still missing.">
   <meta property="og:image" content="/static/img/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="/static/img/og.png">
@@ -56,7 +56,7 @@
         </nav>
         <p class="eyebrow">Status</p>
         <h1>What works today.</h1>
-        <p>Velomine is in early development. This page tracks the v1 goal and the features that are actually implemented, not the ones that are planned.</p>
+        <p>Velomine is in early development. This page states the v1 goal, lists what is implemented and usable today, and then what is still missing.</p>
       </div>
     </section>
 
@@ -64,85 +64,14 @@
       <div class="container">
         <div class="goal-card">
           <p class="eyebrow">The v1 goal</p>
-          <h2>Ride, record, share.</h2>
-          <p>Make Velomine usable on its own: record with the phone or upload any FIT file, see every ride, check in daily, and share safely.</p>
+          <h2>Move in, ride, belong.</h2>
+          <p>Bring your whole riding history with you, see every ride with its full analysis, and ride with your club. Nothing sits behind a payment, and your data stays yours.</p>
           <div class="goal-steps">
+            <span>Move in</span>
             <span>Ride</span>
-            <span>Record</span>
-            <span>Share</span>
+            <span>Belong</span>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="status-section">
-      <div class="container">
-        <div class="status-legend">
-          <span><i class="dot-done"></i>Done</span>
-          <span><i class="dot-progress"></i>In progress</span>
-          <span><i class="dot-next"></i>Next</span>
-        </div>
-
-        <div class="area-grid">
-          <article class="area-card card is-progress">
-            <h3>Cloud and enrollment</h3>
-            <p class="area-state">In progress</p>
-            <p>One app and one database for every club, with each club’s data kept apart; a self-hosted club runs the same thing with one club. Clubs, members and coach sharing work today; enrolling a new club is still done with me personally. Missing:</p>
-            <ul>
-              <li>database access rules that keep each club’s rows apart as a second line of defence</li>
-              <li>creating the club and its first admin when it enrolls</li>
-              <li>the plan agreement and the first invoice</li>
-              <li>the first import and the go-live checklist</li>
-            </ul>
-          </article>
-          <article class="area-card card is-progress">
-            <h3>Server core</h3>
-            <p class="area-state">In progress</p>
-            <p>Accounts, roles, single sign-on, admin approval, password reset, optional two-factor sign-in and the device list work. API keys are next.</p>
-          </article>
-          <article class="area-card card is-done">
-            <h3>Ride files</h3>
-            <p class="area-state">Done</p>
-            <p>FIT, GPX and TCX files read in the background into a ride.</p>
-          </article>
-          <article class="area-card card is-progress">
-            <h3>Rides</h3>
-            <p class="area-state">In progress</p>
-            <p>Maps, charts, every stream, heart-rate and power zones, IF, TSS, TRIMP and laps. Photos, thumbnails and reverse geocoding are next.</p>
-          </article>
-          <article class="area-card card is-done">
-            <h3>Bikes</h3>
-            <p class="area-state">Done</p>
-            <p>Bikes, wheel circumference, parts, wear by distance, hours or months, and a default bike.</p>
-          </article>
-          <article class="area-card card is-progress">
-            <h3>Mobile app</h3>
-            <p class="area-state">In progress</p>
-            <p>Android records with the screen off, a heart-rate strap, auto-pause and background upload. Speed, cadence and power sensors are being integrated; iOS is next.</p>
-          </article>
-          <article class="area-card card is-done">
-            <h3>Web app</h3>
-            <p class="area-state">Done</p>
-            <p>Sign in, upload, rides, bikes, progress, club and coach screens, plus club administration.</p>
-          </article>
-          <article class="area-card card is-done">
-            <h3>Wellbeing</h3>
-            <p class="area-state">Done</p>
-            <p>Daily check-in, RPE and notes, consent, and a readiness view.</p>
-          </article>
-          <article class="area-card card is-progress">
-            <h3>Sharing</h3>
-            <p class="area-state">In progress</p>
-            <p>Clubs, join codes, coach sharing and read-only coach views work. Privacy zones, start and end trimming and per-stream privacy apply to every coach view. Whole-club reading needs a member-facing club view; share links are next.</p>
-          </article>
-          <article class="area-card card is-done">
-            <h3>Analytics</h3>
-            <p class="area-state">Done</p>
-            <p>NP, IF, TSS, TRIMP, heart-rate and power zones, totals, goals, the 30/90/365 dashboard, a power curve with FTP and VO2max estimates, and readiness.</p>
-          </article>
-        </div>
-
-        <p class="last-updated">Last updated 10 November 2026. Checked against the roadmap in the repository’s README.</p>
       </div>
     </section>
 
@@ -180,6 +109,8 @@
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Heart-rate and power zones, IF, TSS and TRIMP</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Laps read from FIT and TCX, with numbers recomputed from the samples</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A bike picker on every ride</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ride type, e-bike, indoor and commute on every ride, editable and filterable</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A hidden duplicate when the same file is uploaded twice</span></li>
             </ul>
           </article>
 
@@ -211,6 +142,7 @@
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Parts with limits by distance, riding hours or months</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A wear bar on every part and a replace action</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A default bike for new rides</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A shared parts catalogue and build templates</span></li>
             </ul>
           </article>
 
@@ -218,6 +150,7 @@
             <h3>Clubs and sharing</h3>
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Clubs, membership and joining with a code</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Riding without a club, finding nearby clubs that opted in, and asking to join</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sharing rides, analytics, the route of a ride and wellbeing with coaches</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Wellbeing only with explicit consent; notes stay private</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every choice is revocable</span></li>
@@ -241,7 +174,7 @@
             <ul>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Every account, roles, lock, delete and club admin approval</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sign-up, club admin approval and map settings</span></li>
-              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>In-app notifications, and optional email</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>In-app notifications, and email when the server has a mail service: rides read or failed, parts nearly worn, accounts waiting</span></li>
               <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Day and night themes, English and Italian</span></li>
             </ul>
           </article>
@@ -254,47 +187,99 @@
         <div class="section-head">
           <p class="eyebrow">Gaps</p>
           <h2>What is still missing.</h2>
-          <p>Everything promised for v1 that is not usable yet, then what comes after it, then what the first pilot clubs added to the list.</p>
+          <p>Everything v1 needs that is not usable yet, then what comes right after it.</p>
         </div>
 
         <h3 class="gap-heading">Promised for v1, still missing</h3>
-        <table class="gap-table">
-          <thead><tr><th scope="col">Area</th><th scope="col">Missing</th></tr></thead>
-          <tbody>
-            <tr><td>Clubs and hosting</td><td>Database access rules per club, and automated enrollment.</td></tr>
-            <tr><td>Accounts</td><td>API keys.</td></tr>
-            <tr><td>Rides</td><td>Photos, thumbnails, reverse geocoding.</td></tr>
-            <tr><td>Web app</td><td>Drag-and-drop upload; a file picker works today.</td></tr>
-            <tr><td>Sharing</td><td>Share links, whole-club reading (member-facing club view).</td></tr>
-            <tr><td>Phone</td><td>Speed, cadence and power sensors; audio announcements; the iOS recorder.</td></tr>
-            <tr><td>Import</td><td>Strava export import.</td></tr>
-            <tr><td>Health</td><td>Cycle tracking: optional, encrypted, with its own consent and sharing switch.</td></tr>
-            <tr><td>Site</td><td>Italian presentation pages under <code>/it/</code>.</td></tr>
-          </tbody>
-        </table>
+        <div class="feature-groups feature-groups--gaps">
+          <article class="feature-group card">
+            <h3>Moving in</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Titles and descriptions on rides</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Search and a date filter on the ride list</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Strava export import</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Spotting the same ride exported by two apps</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Sign-up and payment</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Solo sign-up with a 30-day trial</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Clubs creating themselves; today I create each club by hand, at no charge</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Payment and VAT invoices</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>The member limit of each club band</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Bike computers</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>“Share to Velomine” for ride files on the phone</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Dropping a bike computer’s folder on the web app</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>USB import on Android</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Club</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>A ride calendar: date, meeting point, route, sign-up and a calendar feed</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>A club route library</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>The record of who looked, shown on each ride</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Hosting and email</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Database access rules per club</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Re-reading every ride when a parser improves</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Italian emails</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Email delivery for verification and receipts</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Bikes</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Maintenance reminders</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>A service log</span></li>
+            </ul>
+          </article>
+        </div>
 
         <h3 class="gap-heading">After v1</h3>
-        <table class="gap-table">
-          <thead><tr><th scope="col">Area</th><th scope="col">What comes later</th></tr></thead>
-          <tbody>
-            <tr><td>Connectors</td><td>Garmin Connect, Wahoo cloud and watched Dropbox or Nextcloud folders.</td></tr>
-            <tr><td>Desktop</td><td>A USB upload tool for bike computers without a connector.</td></tr>
-            <tr><td>Live</td><td>Live tracking with an expiring link for solo rides.</td></tr>
-            <tr><td>Club</td><td>Group rides, club leaderboards, self-hosted segments.</td></tr>
-            <tr><td>Export</td><td>FIT export of any ride.</td></tr>
-          </tbody>
-        </table>
+        <div class="feature-groups feature-groups--gaps">
+          <article class="feature-group card">
+            <h3>Phone</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Speed, cadence and power sensors</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Push notifications</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Club space</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Coach comments on a ride</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>An opt-in feed inside the club, with reactions and comments</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Always under each member’s own privacy settings; nothing is public</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Ratings, notes and suggested variants on club routes</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Rides and sharing</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>A shareable ride card</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Share links</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Photos, thumbnails and place names</span></li>
+            </ul>
+          </article>
+          <article class="feature-group card">
+            <h3>Bikes and site</h3>
+            <ul>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Cost per kilometre for each bike</span></li>
+              <li><svg class="check" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Italian presentation pages under <code>/it/</code></span></li>
+            </ul>
+          </article>
+        </div>
 
-        <h3 class="gap-heading">Added by the first pilot clubs</h3>
-        <table class="gap-table">
-          <thead><tr><th scope="col">Area</th><th scope="col">What is needed</th></tr></thead>
-          <tbody>
-            <tr><td>Demo</td><td>A seeded demo club, three shared logins, and a nightly reset that only touches the demo.</td></tr>
-            <tr><td>Solo</td><td>€39 a year, a 30-day trial, billing and VAT invoices.</td></tr>
-            <tr><td>Email</td><td>Email delivery for verification, password reset and receipts.</td></tr>
-            <tr><td>Directory</td><td>A small club directory (name, area, join code), so solo riders can find a club.</td></tr>
-          </tbody>
-        </table>
+        <p class="last-updated">Last updated 10 November 2026. Checked against the roadmap in the repository’s README, which also holds the longer-term list.</p>
       </div>
     </section>
 
