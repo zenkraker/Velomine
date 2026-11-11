@@ -1,19 +1,35 @@
-# Velomine demo infrastructure
+# Velomine infrastructure
 
-One VPS, one managed PostgreSQL database, one private network, one DNS zone and
-one backup bucket. No modules, no remote state, no tenancy.
-
-This is a **demo** stack. It is not the production home for real member data.
+OpenTofu for the hosted environments on Scaleway: the demo, and dev, staging and
+prod. No modules, no tenancy. What runs on the machines is in `deploy/host/`.
 
 ## What it creates
 
-- `STARDUST1-S` app VPS on Ubuntu 24.04, with Docker and a `deploy` user.
-- `DB-DEV-S` managed PostgreSQL, private network only, 7-day backups.
-- `velomine` database on that instance.
-- Private network between the VPS and the database.
-- Private Scaleway Container Registry namespace.
+Demo:
+
+- `STARDUST1-S` VPS on Ubuntu 24.04, with Docker and a `deploy` user.
+- `DB-DEV-S` managed PostgreSQL, private network only, 7-day backups, with the
+  `velomine` database.
+- A record for `demo`.
+
+Dev, staging and prod:
+
+- One `DEV1-M` VPS (4 GB) for the three environments.
+- One `DB-DEV-S` managed PostgreSQL instance with a database and a user per
+  environment (`velomine_dev`, `velomine_staging`, `velomine_prod`). A user can
+  connect only to its own database. The initial user `velomine_admin` is for
+  the operator only.
+- A records for `dev`, `staging` and `app` (prod).
+
+Shared:
+
+- One private network between the VPSs and the databases. The security group
+  opens 80/443 to everyone and 22 to `admin_cidr` only.
 - Object Storage bucket in another region for restic backups.
-- A records for `demo`, the root and `www`.
+- A records for the root and `www`, pointing at the host that runs `apex_env`.
+- A private Scaleway Container Registry namespace. Images are on GHCR now
+  (`ghcr.io/zenkraker/velomine`); remove the namespace once the demo pulls from
+  GHCR.
 
 ## What it does not create
 
@@ -21,18 +37,20 @@ This is a **demo** stack. It is not the production home for real member data.
 - A block volume. The demo uses the VPS disk and restic backups. Add a block
   volume before a real club.
 - HA, a load balancer, a second app instance or shared storage.
-- The application deployment. That is `deploy/demo/`.
+- The application deployment. That is `deploy/host/`.
 
 ## Apply
 
 ```bash
-cd infra/demo
+cd infra
 cp terraform.tfvars.example terraform.tfvars
 # edit project_id, domain and bucket name
 
 export SCW_ACCESS_KEY=...
 export SCW_SECRET_KEY=...
 export TF_VAR_db_password="$(openssl rand -base64 32)"
+export TF_VAR_envs_db_admin_password="$(openssl rand -base64 32)"
+export TF_VAR_env_db_passwords="{dev=\"$(openssl rand -hex 24)\",staging=\"$(openssl rand -hex 24)\",prod=\"$(openssl rand -hex 24)\"}"
 export TF_VAR_ssh_public_key="$(cat ~/.ssh/id_ed25519.pub)"
 export TF_VAR_admin_cidr="$(curl -fsS https://ifconfig.me)/32"
 
@@ -41,8 +59,15 @@ tofu plan
 tofu apply
 ```
 
-The password, state and real `terraform.tfvars` stay out of Git. Local state is
-plaintext; move to encrypted remote state before real data.
+Keep the passwords in your secret store: the environment files in
+`deploy/host/envs/` need them. The passwords, state and real `terraform.tfvars`
+stay out of Git. The state is local and holds the passwords in plaintext: move it
+to an encrypted remote backend before prod holds real data.
+
+**Upgrading an existing demo-only state:** the dev/staging/prod resources are
+additive and the demo resources keep their addresses. `tofu plan` must show only
+additions (and the root and `www` records unchanged while `apex_env` is `demo`).
+If it shows anything to destroy or replace, stop.
 
 ## Notes
 
@@ -54,12 +79,15 @@ plaintext; move to encrypted remote state before real data.
 - Scaleway blocks outbound SMTP by default. `enable_default_security = false`
   unblocks it only after the account is authorised.
 - The registry namespace and bucket name must be unique.
-- Backups are restic snapshots to the bucket; see `deploy/demo/`.
+- Backups are restic snapshots to the bucket; see `deploy/host/`.
+- Moving `apex_env` to `prod` points `velomine.eu` and `www` at the envs VPS; run
+  `deploy.sh` there with `APEX_ENV=prod` first, so the certificate is ready.
 
 ## Host credentials
 
-The VPS needs read access to the registry and read/write access to the backup
-bucket. It must never hold the account's API key: that key can delete the
+Each VPS needs read/write access to the backup bucket, and nothing else: it pulls
+the public image from GHCR without credentials. (The registry permission below is
+for the demo until it moves to GHCR.) It must never hold the account's API key: that key can delete the
 database and create Instances. Create a dedicated IAM application instead.
 
 ```bash

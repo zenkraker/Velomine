@@ -57,7 +57,8 @@ Trade-offs accepted: isolation depends on query filters, with tests proving one 
 - **Releases** use exact image versions, never `latest`, and can be rolled back to the previous version.
 - **Backups:** the database (point-in-time recovery where the host offers it, plus a nightly `pg_dump -Fc`), the file volume and the Data Protection key ring. Deleted data leaves the backups within 90 days.
 - **Supporter licence (self-host):** self-hosting is free. An optional supporter licence is paid once by a rider or yearly by a club; the offline signed key names the holder and, for a club, an expiry, is validated with a public key and shows a badge the holder can hide. It unlocks no feature, has no seat count and never phones home; a server without one works exactly the same.
-- **Operations** (hosting, inventory, secrets, backups, runbooks, billing) live in a private ops repository. This repository holds only what a self-hoster needs.
+- **Hosted environments:** dev, staging and prod on one VPS as three compose projects behind one Caddy, each with its own network, database and user, settings and data; the demo on its own VPS and database. The infrastructure (`infra/`) and host files (`deploy/host/`) live in this repository; their secrets do not.
+- **Releases:** CI builds and smoke-tests one image per commit and pushes it to GHCR with its build provenance. `main` deploys to dev; a tag `vX.Y.Z` deploys to staging, then, after an approval, the same digest to prod and the demo. Each host pulls its environment's tag, waits for `/health` and rolls back to the previous digest on its own; the release waits until the environment reports the new commit.
 - No Kubernetes, no multi-cloud, no active-active.
 
 ## 5. Ride ingestion
@@ -152,3 +153,6 @@ erDiagram
 | Wear, goals and totals computed on read; load and power bests stored | Always correct for the current profile, except the sums the dashboard needs fast. |
 | Optional, offline, signed supporter licence | Funds the project without a paywall: no phone-home, no seats, never a feature or a block on member data. |
 | Member telemetry opt-in; operational logs separate and anonymous | Health and location data never leave through diagnostics. |
+| Hosted environments and their pipelines in this repository, secrets outside it | Environments differ only by settings and secrets, so a second repository would only add drift. GitHub holds no host secret. |
+| Build once, promote the digest; hosts pull and roll back | Prod runs exactly what staging ran. No inbound deploy access, and a bad image undoes itself. |
+| dev, staging and prod share one VPS and one database instance | Cheapest isolation that still separates networks, databases and secrets. Revisit before prod holds a club's real data: prod then moves to its own VPS and an HA database. |

@@ -1,0 +1,44 @@
+# One Velomine environment. The same file runs dev, staging, prod and demo as
+# separate compose projects:
+#
+#   docker compose -p velomine-<env> -f compose.app.yml --env-file <env>/.env up -d
+#
+# <env>/.env (written by deploy.sh) sets VELOMINE_ENV and VELOMINE_IMAGE. The
+# settings and secrets are in /etc/velomine/<env>/app.env, the data under
+# /srv/velomine/<env>. The app joins only its own network, shared with Caddy.
+
+services:
+  app:
+    image: ${VELOMINE_IMAGE:?set VELOMINE_IMAGE in /opt/velomine/<env>/.env}
+    restart: unless-stopped
+    env_file:
+      - /etc/velomine/${VELOMINE_ENV:?set VELOMINE_ENV}/app.env
+    volumes:
+      - /srv/velomine/${VELOMINE_ENV}/files:/data/files
+      - /srv/velomine/${VELOMINE_ENV}/keys:/data/keys
+    expose:
+      - "8080"
+    networks:
+      edge:
+        aliases:
+          - velomine-${VELOMINE_ENV}
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: ${VELOMINE_MEM_LIMIT:-850m}
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  edge:
+    name: velomine-${VELOMINE_ENV}
+    external: true

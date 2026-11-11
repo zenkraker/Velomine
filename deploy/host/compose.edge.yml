@@ -1,0 +1,41 @@
+# The one public entry point of a host: Caddy with TLS on 80/443. It owns one
+# network per environment and joins all of them; each app joins only its own
+# (compose.app.yml), so dev, staging, prod and demo cannot reach each other.
+# Networks for environments a host does not run are created but stay empty.
+name: velomine-edge
+
+services:
+  caddy:
+    image: caddy:2.11.9-alpine@sha256:0bbb055bda6793c999bde78b1b5ce3e89f829fb031af2cf50056ea1246559fee
+    restart: unless-stopped
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-ops@velomine.eu}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [demo, dev, staging, prod]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  demo:
+    name: velomine-demo
+  dev:
+    name: velomine-dev
+  staging:
+    name: velomine-staging
+  prod:
+    name: velomine-prod
+
+volumes:
+  caddy-data:
+  caddy-config:

@@ -47,3 +47,30 @@ output "registry_namespace" {
   description = "Container Registry namespace."
   value       = scaleway_registry_namespace.main.name
 }
+
+# --- dev, staging and prod -----------------------------------------------------
+
+output "envs_public_ip" {
+  description = "Public IPv4 address of the dev/staging/prod VPS (DEPLOY_HOST for deploy.sh)."
+  value       = scaleway_instance_ip.envs.address
+}
+
+output "envs_db_host" {
+  description = "Private IP of the environment database instance (PGHOST and the connection string Host)."
+  value       = scaleway_rdb_instance.envs.private_network[0].ip
+}
+
+output "envs_db_port" {
+  description = "Private port of the environment database instance."
+  value       = scaleway_rdb_instance.envs.private_network[0].port
+}
+
+output "env_databases" {
+  description = "Database and user of each environment."
+  value       = { for env in var.envs : env => { database = scaleway_rdb_database.env[env].name, user = scaleway_rdb_user.env[env].name } }
+}
+
+output "env_urls" {
+  description = "Public address of each environment (Velomine__PublicUrl, and PUBLIC_URL on its GitHub environment)."
+  value       = { for env in var.envs : env => "https://${var.env_hosts[env]}.${var.domain}" }
+}

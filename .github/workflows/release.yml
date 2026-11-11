@@ -1,0 +1,187 @@
+name: Release
+
+# Builds the image once per commit and moves it through the environments:
+#
+#   push to main  ->  CI -> image ghcr.io/zenkraker/velomine:sha-<commit>         -> dev
+#   tag vX.Y.Z    ->  CI -> image ghcr.io/zenkraker/velomine:X.Y.Z (and X.Y)     -> staging -> prod (approval) -> demo
+#
+# Staging, prod and demo run the same digest: a promotion moves a pointer tag,
+# it never rebuilds. Nothing is pushed unless CI and the smoke test pass. No
+# secret is stored for this: GHCR takes the workflow's own token. Hosts pull
+# their pointer tag and roll back on their own (deploy/host/update.sh); the
+# deploy job waits until the environment reports the new commit.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+# A release in progress is never cancelled half-way; a newer push to main
+# waits, and if several pile up only the newest one runs.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/zenkraker/velomine
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  image:
+    name: Build, smoke-test and push the image
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # A tag vX.Y.Z is version X.Y.Z; a build from main is a prerelease of
+      # 0.0.0 numbered by the run, so the two can never be confused.
+      - name: Version and tags
+        id: version
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            tags="${IMAGE}:${version}"$'\n'"${IMAGE}:${version%.*}"
+          else
+            version="0.0.0-main.${GITHUB_RUN_NUMBER}"
+            tags="${IMAGE}:sha-${GITHUB_SHA}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          { echo "tags<<EOF"; echo "$tags"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          sbom: false
+          tags: velomine:smoke
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: tools/smoke-test-image.sh velomine:smoke "+${GITHUB_SHA::7}"
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Every layer comes from the cache of the build above, so this pushes the
+      # image that was just tested, with an SBOM and build provenance attached.
+      - name: Push
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: ${{ steps.version.outputs.tags }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
+          cache-from: type=gha
+
+      - name: Attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Summary
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAGS: ${{ steps.version.outputs.tags }}
+        run: |
+          {
+            echo "### Image ${VERSION}"
+            echo
+            echo "\`${IMAGE}@${DIGEST}\`"
+            echo
+            echo "Tags:"
+            tick='`'
+            while read -r tag; do echo "- ${tick}${tag}${tick}"; done <<< "$TAGS"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  dev:
+    name: Dev
+    needs: image
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: dev
+      digest: ${{ needs.image.outputs.digest }}
+      revision: ${{ github.sha }}
+
+  staging:
+    name: Staging
+    needs: image
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      digest: ${{ needs.image.outputs.digest }}
+      revision: ${{ github.sha }}
+
+  # The prod environment requires a reviewer (Settings -> Environments), so the
+  # run stops here until someone approves the digest staging is running.
+  prod:
+    name: Prod
+    needs: [image, staging]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: prod
+      digest: ${{ needs.image.outputs.digest }}
+      revision: ${{ github.sha }}
+
+  demo:
+    name: Demo
+    needs: [image, prod]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: demo
+      digest: ${{ needs.image.outputs.digest }}
+      revision: ${{ github.sha }}

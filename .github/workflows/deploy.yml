@@ -1,0 +1,156 @@
+name: Deploy
+
+# Points one environment at an image that CI already built and tested, then
+# waits until that environment reports the image's commit.
+#
+# The host does the rest: deploy/host/update.sh (a systemd timer, every minute)
+# pulls ghcr.io/zenkraker/velomine:<environment>, restarts the app, and rolls
+# back to the previous digest if the new one does not answer /health. So this
+# job needs no SSH key or host secret, and a rolled-back release shows here as
+# a failed deployment.
+#
+# Run it by hand to redeploy or roll back: pick the environment and a release
+# tag (vX.Y.Z) or, for dev only, a commit built from main.
+#
+# Each GitHub environment (dev, staging, prod, demo) holds:
+#   - variable PUBLIC_URL, for example https://staging.velomine.eu
+#   - prod and demo: required reviewers and "deploy from tags v* only"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      digest:
+        type: string
+        required: true
+      revision:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment
+        type: choice
+        options: [dev, staging, prod, demo]
+        required: true
+      ref:
+        description: Release tag (v1.2.3), or for dev a commit SHA built from main
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/zenkraker/velomine
+  # How long to wait for the host: its timer runs every minute and its health
+  # gate may wait two minutes, twice, before it rolls back.
+  WAIT_SECONDS: "900"
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.PUBLIC_URL }}
+    # One deployment per environment at a time, never cancelled half-way.
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve the image
+        id: image
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          DIGEST: ${{ inputs.digest }}
+          REVISION: ${{ inputs.revision }}
+          REF: ${{ inputs.ref }}
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$PUBLIC_URL" == https://* ]] || { echo "::error::Set the PUBLIC_URL variable on the '$ENVIRONMENT' environment."; exit 1; }
+
+          if [[ -z "$DIGEST" ]]; then
+            # Manual run: only release images reach staging, prod and demo.
+            if [[ "$REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              source="${IMAGE}:${REF#v}"
+            elif [[ "$ENVIRONMENT" == dev && "$REF" =~ ^[0-9a-f]{7,40}$ ]]; then
+              source="${IMAGE}:sha-$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)"
+            else
+              echo "::error::'$REF' is not a release tag vX.Y.Z$( [[ "$ENVIRONMENT" == dev ]] && echo ' or a commit SHA')."
+              exit 1
+            fi
+            REVISION="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)"
+            DIGEST="$(docker buildx imagetools inspect "$source" --format '{{json .Manifest}}' | jq -r .digest)"
+            [[ "$DIGEST" == sha256:* ]] || { echo "::error::No image $source. Was it built by the Release workflow?"; exit 1; }
+          fi
+
+          previous="$(docker buildx imagetools inspect "${IMAGE}:${ENVIRONMENT}" --format '{{json .Manifest}}' 2>/dev/null | jq -r .digest || true)"
+          {
+            echo "digest=$DIGEST"
+            echo "revision=$REVISION"
+            echo "previous=${previous:-none}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Point ${{ inputs.environment }} at the image
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: docker buildx imagetools create --tag "${IMAGE}:${ENVIRONMENT}" "${IMAGE}@${DIGEST}"
+
+      - name: Wait for ${{ inputs.environment }} to run it
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+          REVISION: ${{ steps.image.outputs.revision }}
+        run: |
+          set -euo pipefail
+          want="+${REVISION::7}"
+          deadline=$(( $(date +%s) + WAIT_SECONDS ))
+          running=""
+          while (( $(date +%s) < deadline )); do
+            running="$(curl -fsS --max-time 10 "${PUBLIC_URL%/}/api/v1/server" 2>/dev/null | jq -r '.version // empty' || true)"
+            if [[ "$running" == *"$want" ]]; then
+              echo "Running ${running}."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::After ${WAIT_SECONDS}s ${PUBLIC_URL} still reports '${running:-no answer}', not ...${want}. The host may have rolled back: journalctl -u velomine-update@${ENVIRONMENT} on the host."
+          exit 1
+
+      - name: Summary
+        if: ${{ always() }}
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          DIGEST: ${{ steps.image.outputs.digest }}
+          PREVIOUS: ${{ steps.image.outputs.previous }}
+          REVISION: ${{ steps.image.outputs.revision }}
+        run: |
+          {
+            echo "### ${ENVIRONMENT}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Commit | \`${REVISION}\` |"
+            echo "| Now | \`${IMAGE}@${DIGEST}\` |"
+            echo "| Before | \`${PREVIOUS}\` |"
+            echo
+            echo "Roll back: run **Deploy** with environment \`${ENVIRONMENT}\` and the previous release tag."
+          } >> "$GITHUB_STEP_SUMMARY"

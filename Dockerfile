@@ -34,8 +34,13 @@ COPY Directory.Build.props Directory.Packages.props ./
 COPY src/Velomine.Server/Velomine.Server.csproj src/Velomine.Server/packages.lock.json src/Velomine.Server/
 RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore src/Velomine.Server/Velomine.Server.csproj --locked-mode
 COPY src/Velomine.Server src/Velomine.Server
+# VERSION and REVISION reach the assembly, so GET /api/v1/server, logs and Sentry report the running build (BuildInfo.cs).
+# Declared here, after the restore, so a new commit does not invalidate the restored packages.
+ARG VERSION=0.0.0
+ARG REVISION=
 RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish src/Velomine.Server/Velomine.Server.csproj \
-    -c Release -p:ContinuousIntegrationBuild=true -p:UseAppHost=false -o /app --no-restore
+    -c Release -p:ContinuousIntegrationBuild=true -p:UseAppHost=false \
+    -p:Version="${VERSION}" -p:SourceRevisionId="${REVISION}" -o /app --no-restore
 
 # Alpine runtime: smaller than the Debian image, with the ICU data and time
 # zones the app needs for Italian/English formatting and member time zones.

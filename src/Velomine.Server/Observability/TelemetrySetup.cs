@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -25,7 +24,7 @@ public static class TelemetrySetup
             .ValidateOnStart();
 
         var telemetry = builder.Configuration.GetSection("Velomine:Telemetry").Get<TelemetryOptions>() ?? new();
-        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        var version = BuildInfo.Version;
         var environment = builder.Environment.EnvironmentName;
 
         builder.Services.AddHttpContextAccessor();

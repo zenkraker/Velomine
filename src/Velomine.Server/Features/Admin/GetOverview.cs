@@ -1,4 +1,3 @@
-using System.Reflection;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
@@ -27,7 +26,7 @@ public sealed class GetOverview(VelomineDbContext db, RideFileStore files, TimeP
         var waiting = await db.Users.CountAsync(u => !u.IsApproved, ct);
         var locked = await db.Users.CountAsync(u => u.LockoutEnd > now, ct);
         var rides = await db.Rides.CountAsync(r => r.Status == RideStatus.Ready, ct);
-        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        var version = BuildInfo.Version;
         await Send.OkAsync(new OverviewResponse(accounts, waiting, locked, rides, files.TotalBytes(), version), ct);
     }
 }

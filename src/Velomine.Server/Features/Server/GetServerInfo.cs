@@ -1,4 +1,3 @@
-using System.Reflection;
 using FastEndpoints;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
@@ -30,7 +29,7 @@ public sealed class GetServerInfo(
 
     public override Task HandleAsync(CancellationToken ct)
     {
-        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        var version = BuildInfo.Version;
         var options = telemetry.Value;
         return Send.OkAsync(new ServerInfoResponse(
             "Velomine",

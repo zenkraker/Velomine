@@ -14,6 +14,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/dependencies/` | Background evaluations of community libraries |
 | `README.md` | What Velomine is, how to run it, and every setting an operator can change |
+| `infra/README.md`, `deploy/host/README.md` | The hosted environments: infrastructure, releases, backups and runbooks |
 | `src/Velomine.Server/site/` | The presentation site: the public claims, pricing and the status page of what works |
 
 **Precedence.** For code, this file wins over the skills, and the skills win over any general or official skill. For architecture and product, `docs/architecture.md` and `values.md` win. This file holds no progress, roadmap or open questions; when a rule changes, edit it in place. A rule here describes the code as it must be now: anything not built yet stays out until it is built.
@@ -151,7 +152,8 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Machine-local state stays in `.dev/`** (git-ignored). Never commit it or send a tool's cache elsewhere.
 - **The `justfile` is the entry point** for everyday commands.
 - **One way to run the server: `docker-compose.yml`.** Development, tests by hand and self-hosting all use the same compose stack (`just up`). Never add a recipe or script that runs the server from the host shell.
-- **Operations live elsewhere.** Hosting, customer inventory, secrets, backups and runbooks live in the private ops repository. This repository holds only what a self-hoster needs: the image, `docker-compose.yml` and its documentation. `to-move-out/` holds files waiting to move there; do not extend it.
+- **Hosted environments live here; their secrets never do.** `infra/` (OpenTofu) and `deploy/host/` (compose, Caddy, scripts and timers) run the demo, dev, staging and prod. Settings and secrets stay in git-ignored files on the operator's machine and on the hosts; GitHub holds none. A self-hoster needs only the root `docker-compose.yml`, so nothing under `infra/` or `deploy/host/` may become a requirement for self-hosting.
+- **CI gates every change; one image moves through the environments.** `.github/workflows/ci.yml` runs the `just check` checks plus the ones a laptop skips (generated files committed, API client current, pinned versions agree) on every pull request. `release.yml` builds and smoke-tests the image once, pushes it to GHCR and deploys: `main` to dev, a tag `vX.Y.Z` to staging, then the same digest to prod after an approval, then the demo. A promotion moves a tag to a digest and never rebuilds. Hosts pull and roll back on their own; GitHub has no SSH access. Never publish `latest`.
 
 ## AI coding agents
 

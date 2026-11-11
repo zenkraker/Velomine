@@ -1,5 +1,6 @@
-# Keeps the SHA-pinned actions current. Dependabot rewrites the SHA and the
-# version comment together; each update is still reviewed as a PR.
+# Keeps pinned versions current. Dependabot rewrites the pin (SHA or digest) and
+# its version comment together; each update is still reviewed as a PR, and CI
+# runs on it.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -11,3 +12,20 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+
+  # The base images in the Dockerfile and the host's Caddy are pinned by digest,
+  # so without this they would never get security patches.
+  - package-ecosystem: docker
+    directories:
+      - /
+    schedule:
+      interval: weekly
+    groups:
+      images:
+        patterns: ["*"]
+
+  - package-ecosystem: docker-compose
+    directories:
+      - /deploy/host
+    schedule:
+      interval: weekly

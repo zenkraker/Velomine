@@ -1,0 +1,154 @@
+name: CI
+
+# The checks every change must pass: the same ones as `just check`, plus the
+# ones a laptop forgets (generated files committed, API client in step with the
+# server, Flutter pinned the same everywhere). Runs on every pull request, and
+# release.yml calls it before it builds an image, so nothing is published
+# without it. Nothing here holds a secret, so it is safe for pull requests from
+# forks.
+
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+# A newer push to a pull request supersedes the older run. When release.yml
+# calls this workflow the group is the run id, so a call never cancels itself
+# or its caller.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  versions:
+    name: Pinned versions agree
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: tools/check-versions.sh
+
+  server:
+    name: Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            Directory.Packages.props
+
+      - name: Restore
+        run: dotnet restore Velomine.slnx --locked-mode
+
+      - name: Format
+        run: dotnet format Velomine.slnx --verify-no-changes --no-restore
+
+      # The test platform cannot redraw its progress bar in CI and stays silent
+      # until the end; detailed output prints each test as it finishes.
+      # Testcontainers starts postgres:17 on the runner's Docker.
+      - name: Test
+        run: >-
+          dotnet test --solution Velomine.slnx --no-restore
+          --output Detailed --progress off
+          --results-directory "$RUNNER_TEMP/test-results"
+          --report-xunit-markdown --report-xunit-markdown-filename server-tests.md
+
+      - name: Publish the test summary
+        if: ${{ !cancelled() }}
+        run: |
+          shopt -s globstar nullglob
+          for report in "$RUNNER_TEMP"/test-results/**/server-tests.md; do
+            cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+  app:
+    name: App
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Install dependencies
+        run: flutter pub get --enforce-lockfile
+
+      # Generated .g.dart and localisation files are committed (AGENTS.md), so
+      # regenerating must change nothing.
+      - name: Generate
+        run: dart run build_runner build
+
+      - name: Generated files are committed
+        run: |
+          if [ -n "$(git status --porcelain .)" ]; then
+            git status --porcelain .
+            git --no-pager diff --stat .
+            echo "::error::Generated files are out of date. Run 'just codegen' and commit the result."
+            exit 1
+          fi
+
+      - name: Format
+        run: dart format --set-exit-if-changed lib test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      # Catches web-only compile errors minutes before the image build would.
+      # The image compiles the web app again from source, so
+      # `docker compose up --build` keeps working without CI.
+      - name: Build web
+        run: flutter build web --release --no-web-resources-cdn
+
+  api-client:
+    name: API client matches the server
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            Directory.Packages.props
+
+      # Dart runs tools/patch_api_client.dart after generation.
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Regenerate the client
+        run: tools/generate-api-client.sh
+
+      - name: The committed client is current
+        run: |
+          if [ -n "$(git status --porcelain app/packages/velomine_api)" ]; then
+            git status --porcelain app/packages/velomine_api
+            echo "::error::app/packages/velomine_api differs from the server's OpenAPI document. Run tools/generate-api-client.sh and commit the result."
+            exit 1
+          fi

@@ -163,11 +163,17 @@ resource "scaleway_domain_record" "demo" {
   ttl      = 300
 }
 
+# velomine.eu and www answer from the host that runs var.apex_env (deploy.sh
+# APEX_ENV must name the same environment). The demo until prod launches.
+locals {
+  apex_address = var.apex_env == "demo" ? scaleway_instance_ip.app.address : scaleway_instance_ip.envs.address
+}
+
 resource "scaleway_domain_record" "root" {
   dns_zone = var.domain
   name     = ""
   type     = "A"
-  data     = scaleway_instance_ip.app.address
+  data     = local.apex_address
   ttl      = 300
 }
 
@@ -175,6 +181,101 @@ resource "scaleway_domain_record" "www" {
   dns_zone = var.domain
   name     = "www"
   type     = "A"
-  data     = scaleway_instance_ip.app.address
+  data     = local.apex_address
+  ttl      = 300
+}
+
+# --- dev, staging and prod -----------------------------------------------------
+#
+# One VPS runs the three environments as separate compose projects behind one
+# Caddy (deploy/host). One managed PostgreSQL instance holds one database per
+# environment, each with its own user: Scaleway revokes CONNECT from PUBLIC, so
+# a user can reach only the database it is granted. The demo above stays on its
+# own VPS and database, so the public sandbox never shares an instance with
+# real member data.
+
+resource "scaleway_instance_ip" "envs" {
+  zone = var.zone
+  tags = [var.envs_name, "app"]
+}
+
+resource "scaleway_instance_server" "envs" {
+  zone              = var.zone
+  name              = "${var.envs_name}-app"
+  type              = var.envs_instance_type
+  image             = var.instance_image
+  ip_id             = scaleway_instance_ip.envs.id
+  security_group_id = scaleway_instance_security_group.app.id
+  state             = "started"
+  tags              = [var.envs_name, "app"]
+
+  private_network {
+    pn_id = scaleway_vpc_private_network.main.id
+  }
+
+  user_data = {
+    cloud-init = templatefile("${path.module}/cloud-init.yaml", {
+      ssh_public_key = var.ssh_public_key
+    })
+  }
+}
+
+# The initial user is an administrator for the operator only; the environments
+# use the users below. Point-in-time backups in another region, as for the demo.
+resource "scaleway_rdb_instance" "envs" {
+  region                    = var.region
+  name                      = "${var.envs_name}-db"
+  node_type                 = var.envs_db_node_type
+  engine                    = var.db_engine
+  is_ha_cluster             = var.envs_db_ha_enabled
+  disable_backup            = false
+  backup_schedule_frequency = 24
+  backup_schedule_retention = 7
+  backup_same_region        = false
+  encryption_at_rest        = true
+  user_name                 = "velomine_admin"
+  password                  = var.envs_db_admin_password
+
+  private_network {
+    pn_id       = scaleway_vpc_private_network.main.id
+    enable_ipam = true
+  }
+
+  tags = [var.envs_name, "db"]
+}
+
+resource "scaleway_rdb_database" "env" {
+  for_each    = var.envs
+  region      = var.region
+  instance_id = scaleway_rdb_instance.envs.id
+  name        = "velomine_${each.key}"
+}
+
+resource "scaleway_rdb_user" "env" {
+  for_each    = var.envs
+  region      = var.region
+  instance_id = scaleway_rdb_instance.envs.id
+  name        = "velomine_${each.key}"
+  password    = var.env_db_passwords[each.key]
+  is_admin    = false
+}
+
+# "all" on its own database lets the user create the feature schemas when the
+# app migrates; it has no right on the other environments' databases.
+resource "scaleway_rdb_privilege" "env" {
+  for_each      = var.envs
+  region        = var.region
+  instance_id   = scaleway_rdb_instance.envs.id
+  database_name = scaleway_rdb_database.env[each.key].name
+  user_name     = scaleway_rdb_user.env[each.key].name
+  permission    = "all"
+}
+
+resource "scaleway_domain_record" "env" {
+  for_each = var.envs
+  dns_zone = var.domain
+  name     = var.env_hosts[each.key]
+  type     = "A"
+  data     = scaleway_instance_ip.envs.address
   ttl      = 300
 }

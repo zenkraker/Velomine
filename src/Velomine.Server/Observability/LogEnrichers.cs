@@ -9,8 +9,7 @@ namespace Velomine.Server.Observability;
 /// <summary>Adds request context to logs without ever adding the raw path or query string.</summary>
 public sealed class RequestContextEnricher(IHttpContextAccessor accessor) : ILogEventEnricher
 {
-    private static readonly string Version =
-        typeof(RequestContextEnricher).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+    private static readonly string Version = BuildInfo.Version;
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {

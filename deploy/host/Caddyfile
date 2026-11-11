@@ -3,7 +3,7 @@
 	email {$ACME_EMAIL}
 }
 
-{$VELOMINE_DEMO_HOST}, {$VELOMINE_ROOT_HOST}, {$VELOMINE_WWW_HOST} {
+(common) {
 	encode zstd gzip
 
 	header {
@@ -17,6 +17,8 @@
 	request_body {
 		max_size 30MB
 	}
-
-	reverse_proxy app:8080
 }
+
+# One file per environment on this host, written by deploy.sh from each
+# environment's public address.
+import sites/*.caddy
