@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
@@ -43,6 +45,20 @@ class RecordingScreen extends ConsumerWidget {
     await notifier.pairSensor(sensor);
   }
 
+  /// Runs a recorder command and confirms it with a short vibration, but only once it succeeded.
+  Future<void> _haptic(
+    WidgetRef ref,
+    Future<void> Function() command,
+    Future<void> Function() feedback,
+  ) async {
+    await command();
+    final state = ref.read(recordingViewModelProvider);
+    // The command finishes Ok even when the recorder reports a failure, so the error code decides.
+    if (!kIsWeb && state.command.completed && state.errorCode == null) {
+      await feedback();
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(recordingViewModelProvider);
@@ -59,9 +75,12 @@ class RecordingScreen extends ConsumerWidget {
               state: s.snapshot,
               sensorsSupported: recorder?.sensorsSupported ?? false,
               busy: s.command.running,
-              onPause: notifier.pause,
-              onResume: notifier.resume,
-              onStop: notifier.stop,
+              onPause: () =>
+                  _haptic(ref, notifier.pause, HapticFeedback.lightImpact),
+              onResume: () =>
+                  _haptic(ref, notifier.resume, HapticFeedback.mediumImpact),
+              onStop: () =>
+                  _haptic(ref, notifier.stop, HapticFeedback.heavyImpact),
             )
           else
             _StartCard(
@@ -73,7 +92,8 @@ class RecordingScreen extends ConsumerWidget {
               onAutoPause: notifier.setAutoPause,
               onRideType: notifier.setRideType,
               onEbike: notifier.setEbike,
-              onStart: notifier.start,
+              onStart: () =>
+                  _haptic(ref, notifier.start, HapticFeedback.mediumImpact),
               sensorsSupported: recorder?.sensorsSupported ?? false,
               sensorName: s.snapshot.sensorName,
               sensorStatus: s.snapshot.sensorStatus,

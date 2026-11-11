@@ -70,17 +70,29 @@ class PowerSummary extends StatelessWidget {
               ),
             ] else ...[
               const SizedBox(height: 12),
-              SizedBox(
-                height: 180,
-                child: CustomPaint(
-                  painter: _PowerCurvePainter(
-                    points: curve.points,
-                    line: scheme.primary,
-                    dot: scheme.primary,
-                    grid: scheme.outlineVariant,
-                    labelStyle: labelStyle,
+              Semantics(
+                container: true,
+                label: l10n.powerCurveSummary(
+                  '${_wattsNear(5)}',
+                  '${_wattsNear(60)}',
+                  '${_wattsNear(300)}',
+                  '${_wattsNear(1200)}',
+                  curve.ftp?.watts.toString() ?? '–',
+                ),
+                child: ExcludeSemantics(
+                  child: SizedBox(
+                    height: 180,
+                    child: CustomPaint(
+                      painter: _PowerCurvePainter(
+                        points: curve.points,
+                        line: scheme.primary,
+                        dot: scheme.primary,
+                        grid: scheme.outlineVariant,
+                        labelStyle: labelStyle,
+                      ),
+                      child: const SizedBox.expand(),
+                    ),
                   ),
-                  child: const SizedBox.expand(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -152,6 +164,17 @@ class PowerSummary extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// The best power at the point closest to [seconds]; the chart's points are a fixed set of durations.
+  int _wattsNear(int seconds) {
+    var best = curve.points.first;
+    for (final point in curve.points) {
+      if ((point.seconds - seconds).abs() < (best.seconds - seconds).abs()) {
+        best = point;
+      }
+    }
+    return best.watts;
   }
 
   static String _shortDuration(int seconds) {

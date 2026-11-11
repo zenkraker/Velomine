@@ -17,21 +17,27 @@
   <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
+  <link rel="canonical" href="/privacy/">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
-      <a class="brand" href="/" aria-label="Velomine home">
+      <a class="brand" translate="no" href="/" aria-label="Velomine home">
         <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
           <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <circle class="mark-dot" cx="60" cy="31" r="8"/>
         </svg>
-        <span class="wordmark">velo<em>mine</em></span>
+        <span class="wordmark" translate="no">velo<em>mine</em></span>
       </a>
 
+      <details class="nav-menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+      </details>
       <nav class="nav" aria-label="Main">
         <a href="/">Home</a>
         <a href="/status/">Status</a>
@@ -39,8 +45,8 @@
         <a href="/demo/">Demo</a>
         <a href="/contact/">Contact</a>
         <a class="btn btn-ghost" href="/sign-in">Sign in</a>
-        <a class="btn btn-primary" href="/demo/">Try the demo</a>
       </nav>
+      <a class="btn btn-primary nav-cta" href="/demo/">Try the demo</a>
     </div>
   </header>
 
@@ -63,7 +69,7 @@
       <div class="container">
         <div class="legal-body">
           <h2>Who we are</h2>
-          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use our managed cloud service, which many clubs share with each club's data kept apart. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> with any question about it.</p>
+          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use our managed cloud service, which many clubs share with each club’s data kept apart. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> with any question about it.</p>
 
           <h2>What we collect</h2>
           <ul>
@@ -73,7 +79,7 @@
             <li><strong>Wellbeing data:</strong> daily check-in scores, the RPE and notes you add to a ride, and your consent record. This is health data and is treated as such.</li>
             <li><strong>Operational logs:</strong> request id, club, route template, status, duration and error code. They do not contain ride or health data, names, email addresses, IP addresses, tokens, cookies, request bodies or query strings. Kept for 30 days.</li>
             <li><strong>Sharing view log:</strong> which coach looked at which of your shared data, and when. Visible to you and kept for 3 months.</li>
-            <li><strong>Club billing data:</strong> the club's contact, contract and invoices. Members are never billed individually.</li>
+            <li><strong>Club billing data:</strong> the club’s contact, contract and invoices. Members are never billed individually.</li>
           </ul>
 
           <h2>Why we process it</h2>
@@ -91,12 +97,12 @@
           <ul>
             <li>No advertising, profiling, data sale or lead generation.</li>
             <li>No use of member data for AI training.</li>
-            <li>No analytics or third-party scripts on this site. The app's crash and performance reports are off until you choose them.</li>
+            <li>No analytics or third-party scripts on this site. The app’s crash and performance reports are off until you choose them.</li>
             <li>No public feed, follower graph or public individual leaderboard.</li>
           </ul>
 
           <h2>Sharing</h2>
-          <p>Nothing you record is visible to anyone else until you share it. Sharing is per data type (rides, analytics, the route of a ride, wellbeing), per audience (the club's coaches today; a member-facing whole-club view later), and revocable. Every coach view is logged and you can see who looked. Share links, when you create one, show only what you chose to share.</p>
+          <p>Nothing you record is visible to anyone else until you share it. Sharing is per data type (rides, analytics, the route of a ride, wellbeing), per audience (the club’s coaches today; a member-facing whole-club view later), and revocable. Every coach view is logged and you can see who looked. Share links, when you create one, show only what you chose to share.</p>
 
           <h2 id="subprocessors">Sub-processors and the DPA</h2>
           <p>Clubs on the managed cloud plan sign a data processing agreement (DPA) before go-live. It names the current sub-processors and their locations. The categories are:</p>
@@ -106,13 +112,13 @@
             <li>Object storage for encrypted backups.</li>
             <li>Email delivery for notifications and password reset.</li>
             <li>Monitoring and central log collection, fed only with the operational logs described above.</li>
-            <li>Payment and invoicing for the club's subscription.</li>
+            <li>Payment and invoicing for the club’s subscription.</li>
             <li>Optional providers a club chooses, such as its own single sign-on or map tile server.</li>
           </ul>
-          <p>Member data is hosted in the EU/EEA. We do not transfer it outside the EU/EEA without the club's instruction. Self-hosted clubs keep all data on their own infrastructure; the Velomine project receives nothing from a self-hosted instance.</p>
+          <p>Member data is hosted in the EU/EEA. We do not transfer it outside the EU/EEA without the club’s instruction. Self-hosted clubs keep all data on their own infrastructure; the Velomine project receives nothing from a self-hosted instance.</p>
 
           <h2>Where the data lives</h2>
-          <p>On the cloud plan, every club's data is stored in one database and file store in the EU/EEA, and each request is limited to its own club. Your rides, bikes, wellbeing and profile belong to you, not the club. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has a standing account inside a club's app; support access is break-glass only.</p>
+          <p>On the cloud plan, every club’s data is stored in one database and file store in the EU/EEA, and each request is limited to its own club. Your rides, bikes, wellbeing and profile belong to you, not the club. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has a standing account inside a club’s app; support access is break-glass only.</p>
 
           <h2>How long we keep it</h2>
           <ul>
@@ -127,13 +133,13 @@
           <p>You can access, correct, export, restrict, object to or delete your data, and withdraw consent for health data. Export and deletion are in the app: <strong>Download my data</strong> gives you a ZIP with your profile, bikes, goals, sessions, rides and every original ride file; <strong>Delete my account</strong> removes the account and its data. Backups expire within 90 days. You can also complain to your data protection authority. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> for any request.</p>
 
           <h2>Cookies and tracking</h2>
-          <p>This presentation site sets no cookies, no analytics and no third-party scripts. The web app uses a session cookie when you sign in, and the phone app keeps a refresh token in the device's secure storage. There is no advertising or cross-site tracking. The app sends crash reports and performance data only if you opt in, and you can withdraw at any time.</p>
+          <p>This presentation site sets no cookies, no analytics and no third-party scripts. The web app uses a session cookie when you sign in, and the phone app keeps a refresh token in the device’s secure storage. There is no advertising or cross-site tracking. The app sends crash reports and performance data only if you opt in, and you can withdraw at any time.</p>
 
           <h2>Minors</h2>
-          <p>Velomine has no public profiles and no public individual results. Clubs are responsible for obtaining a parent or guardian's consent where the law requires it for a member under the age of consent.</p>
+          <p>Velomine has no public profiles and no public individual results. Clubs are responsible for obtaining a parent or guardian’s consent where the law requires it for a member under the age of consent.</p>
 
           <h2>Security</h2>
-          <p>Traffic is encrypted in transit, access is role-based, and every coach view is logged. The app's opt-in crash and performance reports contain no member data. The server keeps anonymised operational logs only to fix bugs and performance problems, as GDPR requires. To report a vulnerability, use the <a href="/security/">security page</a>. Please do not include member data in a report.</p>
+          <p>Traffic is encrypted in transit, access is role-based, and every coach view is logged. The app’s opt-in crash and performance reports contain no member data. The server keeps anonymised operational logs only to fix bugs and performance problems, as GDPR requires. To report a vulnerability, use the <a href="/security/">security page</a>. Please do not include member data in a report.</p>
 
           <h2>Changes</h2>
           <p>We version this policy. A material change is announced to club administrators before it takes effect, and the date below changes. The version that applies is the one shown when you use the service.</p>
@@ -151,13 +157,13 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <a class="brand" href="/" aria-label="Velomine home">
+          <a class="brand" translate="no" href="/" aria-label="Velomine home">
             <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
               <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <circle class="mark-dot" cx="60" cy="31" r="8"/>
             </svg>
-            <span class="wordmark">velo<em>mine</em></span>
+            <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
           <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
         </div>

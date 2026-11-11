@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
@@ -637,4 +637,52 @@ void main() {
     expect(settings.rideType, 'gravel');
     expect(settings.ebike, isTrue);
   });
+
+  testWidgets('RecordingScreen_ShouldVibrate_WhenRecordingStarts', (
+    tester,
+  ) async {
+    final vibrations = recordVibrations(tester);
+    final recorder = FakeRecorder();
+    await pump(tester, recorder);
+
+    await tester.tap(find.byKey(const Key('record-start')));
+    await tester.pumpAndSettle();
+
+    expect(vibrations, ['HapticFeedbackType.mediumImpact']);
+  });
+
+  testWidgets('RecordingScreen_ShouldNotVibrate_WhenStartFails', (
+    tester,
+  ) async {
+    final vibrations = recordVibrations(tester);
+    final recorder = FakeRecorder()..permission = false;
+    await pump(tester, recorder);
+
+    await tester.tap(find.byKey(const Key('record-start')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('record-error')), findsOneWidget);
+    expect(vibrations, isEmpty);
+  });
+}
+
+/// Collects the haptic feedback the screen asks the platform for.
+List<String> recordVibrations(WidgetTester tester) {
+  final vibrations = <String>[];
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    (call) async {
+      if (call.method == 'HapticFeedback.vibrate') {
+        vibrations.add(call.arguments as String);
+      }
+      return null;
+    },
+  );
+  addTearDown(
+    () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    ),
+  );
+  return vibrations;
 }

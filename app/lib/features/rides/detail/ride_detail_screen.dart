@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
+import '../../../core/placeholder_block.dart';
 import '../../../core/l10n.dart';
 import '../../../core/theme.dart';
 import '../../../core/user_message_text.dart';
@@ -141,11 +142,27 @@ class RideDetailScreen extends ConsumerWidget {
       ];
     }
     if (s.load.running && s.ride == null) {
-      return const [
-        Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: CircularProgressIndicator(),
+      return [
+        Semantics(
+          liveRegion: true,
+          label: l10n.loading,
+          child: Column(
+            key: const Key('ride-loading'),
+            children: [
+              Row(
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    const Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: PlaceholderBlock(height: 64),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const PlaceholderBlock(height: 180, radius: 16),
+            ],
           ),
         ),
       ];
@@ -274,6 +291,7 @@ class RideDetailScreen extends ConsumerWidget {
             selectedLap: selection.selectedLap,
             tileUrl: tileUrl,
             attribution: attribution,
+            elevationGainM: ride.elevationGainM,
           ),
         if (s.series != null && s.series!.series.isNotEmpty) ...[
           ValueListenableBuilder<int?>(

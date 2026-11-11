@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#F0EEE9",
     "theme_color": "#0F4C4A",
-    "description": "Cycling training for clubs and teams. On-premise or cloud.",
+    "description": "Cycling training for clubs and teams. Self-hosted or cloud.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

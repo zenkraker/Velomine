@@ -17,21 +17,27 @@
   <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
+  <link rel="canonical" href="/security/">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
-      <a class="brand" href="/" aria-label="Velomine home">
+      <a class="brand" translate="no" href="/" aria-label="Velomine home">
         <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
           <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <circle class="mark-dot" cx="60" cy="31" r="8"/>
         </svg>
-        <span class="wordmark">velo<em>mine</em></span>
+        <span class="wordmark" translate="no">velo<em>mine</em></span>
       </a>
 
+      <details class="nav-menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+      </details>
       <nav class="nav" aria-label="Main">
         <a href="/">Home</a>
         <a href="/status/">Status</a>
@@ -39,8 +45,8 @@
         <a href="/demo/">Demo</a>
         <a href="/contact/">Contact</a>
         <a class="btn btn-ghost" href="/sign-in">Sign in</a>
-        <a class="btn btn-primary" href="/demo/">Try the demo</a>
       </nav>
+      <a class="btn btn-primary nav-cta" href="/demo/">Try the demo</a>
     </div>
   </header>
 
@@ -63,14 +69,14 @@
       <div class="container">
         <div class="legal-body">
           <h2>How to report</h2>
-          <p>Email <a href="mailto:horizontodawn@pm.me?subject=Velomine%20security">horizontodawn@pm.me</a> with the subject <strong>Security</strong>. Include enough to reproduce the issue: the URL or app version, the steps, the impact, and any proof that does not contain member data, health data or another person's credentials.</p>
+          <p>Email <a href="mailto:horizontodawn@pm.me?subject=Velomine%20security">horizontodawn@pm.me</a> with the subject <strong>Security</strong>. Include enough to reproduce the issue: the URL or app version, the steps, the impact, and any proof that does not contain member data, health data or another person’s credentials.</p>
           <p>If you need encryption, say so in the first email and we will arrange a key exchange. Do not open a public issue for a vulnerability.</p>
 
           <h2>What is in scope</h2>
           <ul>
             <li>The Velomine server, the web app, the Android app and the presentation site.</li>
             <li>Sign-in, permissions, keeping clubs’ data apart, sessions, and the export/delete flows.</li>
-            <li>Ways to read another club's data, another member's data, or a coach view without a grant.</li>
+            <li>Ways to read another club’s data, another member’s data, or a coach view without a grant.</li>
           </ul>
 
           <h2>What is out of scope</h2>
@@ -82,7 +88,7 @@
           </ul>
 
           <h2>Safe harbour</h2>
-          <p>We will not pursue legal action for good-faith research that follows these rules: do not access, change or store another person's data beyond what is needed to demonstrate the issue; do not disrupt the service; do not publish the issue before we have had a reasonable chance to fix it; and report promptly. If in doubt, ask first.</p>
+          <p>We will not pursue legal action for good-faith research that follows these rules: do not access, change or store another person’s data beyond what is needed to demonstrate the issue; do not disrupt the service; do not publish the issue before we have had a reasonable chance to fix it; and report promptly. If in doubt, ask first.</p>
 
           <h2>What happens next</h2>
           <ul>
@@ -94,9 +100,9 @@
 
           <h2>What we do on our side</h2>
           <ul>
-            <li>Encrypted traffic, role-based access, every request limited to its own club and tested against another club, and no platform admin inside a club's app.</li>
+            <li>Encrypted traffic, role-based access, every request limited to its own club and tested against another club, and no platform admin inside a club’s app.</li>
             <li>Optional two-factor sign-in with an authenticator app, single-use recovery codes, and a device list where a member can sign out the others.</li>
-            <li>A log of every coach view of a member's data, which the member can read.</li>
+            <li>A log of every coach view of a member’s data, which the member can read.</li>
             <li>The app sends crash reports and performance data only after the member opts in. The server keeps anonymised operational logs, with no member data, only to fix bugs and performance problems. The presentation site has no third-party scripts.</li>
             <li>Tested backups and a restore path, with a backup window disclosed in the privacy policy.</li>
           </ul>
@@ -114,13 +120,13 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <a class="brand" href="/" aria-label="Velomine home">
+          <a class="brand" translate="no" href="/" aria-label="Velomine home">
             <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
               <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <circle class="mark-dot" cx="60" cy="31" r="8"/>
             </svg>
-            <span class="wordmark">velo<em>mine</em></span>
+            <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
           <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
         </div>

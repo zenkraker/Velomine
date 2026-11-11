@@ -34,7 +34,7 @@ again to see their own history.
 
 ### 3. The club controls its data and its administration
 
-- Managed cloud or self-hosted/on-premise, chosen by the club.
+- Managed cloud or self-hosted, chosen by the club.
 - In cloud, clubs share one database and each club's records are kept apart by the
   application and row-level security; self-host runs the whole instance for one club.
 - The club decides where the data lives and who administers it.

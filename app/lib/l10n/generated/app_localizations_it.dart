@@ -2918,4 +2918,28 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get telemetryRestart => 'Riavvia l\'app per applicare questa scelta.';
+
+  @override
+  String powerCurveSummary(
+    String p5s,
+    String p1m,
+    String p5m,
+    String p20m,
+    String ftp,
+  ) {
+    return 'Curva di potenza. Migliori 5 secondi $p5s watt, 1 minuto $p1m, 5 minuti $p5m, 20 minuti $p20m. FTP stimato $ftp watt.';
+  }
+
+  @override
+  String routeMapSummary(String distance, String climb) {
+    return 'Mappa del percorso. $distance, con $climb di dislivello.';
+  }
+
+  @override
+  String routeMapDistanceSummary(String distance) {
+    return 'Mappa del percorso. $distance.';
+  }
+
+  @override
+  String get loading => 'Caricamento';
 }

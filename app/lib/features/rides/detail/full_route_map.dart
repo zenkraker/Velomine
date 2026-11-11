@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/format.dart';
+import '../../../core/l10n.dart';
 import '../../../core/map_defaults.dart';
 import '../../../core/theme.dart';
 import 'geo.dart';
@@ -18,6 +20,7 @@ class FullRouteMapScreen extends StatefulWidget {
     required this.selectedLap,
     this.tileUrl,
     this.attribution,
+    this.elevationGainM,
   });
 
   final RideSeries data;
@@ -25,6 +28,9 @@ class FullRouteMapScreen extends StatefulWidget {
   final ValueNotifier<LapRange?> selectedLap;
   final String? tileUrl;
   final String? attribution;
+
+  /// The ride's climbing, when the screen knows it; the route summary reads it out.
+  final double? elevationGainM;
 
   @override
   State<FullRouteMapScreen> createState() => _FullRouteMapScreenState();
@@ -67,6 +73,16 @@ class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = VelomineColors.of(context);
+    final l10n = context.l10n;
+    final distances =
+        widget.data.distance?.whereType<double>() ?? const <double>[];
+    final distanceM = distances.isEmpty ? null : distances.last;
+    final summary = widget.elevationGainM == null
+        ? l10n.routeMapDistanceSummary(km(distanceM))
+        : l10n.routeMapSummary(
+            km(distanceM),
+            '${widget.elevationGainM!.round()} m',
+          );
     return Scaffold(
       backgroundColor: Colors.black,
       body: Listener(
@@ -118,15 +134,21 @@ class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
                         ),
                       ),
                   Positioned.fill(
-                    child: CustomPaint(
-                      painter: RoutePainter(
-                        view: view,
-                        data: widget.data,
-                        selected: widget.selected,
-                        selectedLap: widget.selectedLap,
-                        colors: colors,
-                        heartRate: null,
-                        showHeartRate: false,
+                    child: Semantics(
+                      container: true,
+                      label: summary,
+                      child: ExcludeSemantics(
+                        child: CustomPaint(
+                          painter: RoutePainter(
+                            view: view,
+                            data: widget.data,
+                            selected: widget.selected,
+                            selectedLap: widget.selectedLap,
+                            colors: colors,
+                            heartRate: null,
+                            showHeartRate: false,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -156,10 +178,8 @@ class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
                                 ),
                                 child: Text(
                                   widget.attribution!,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.black87,
-                                  ),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: Colors.black87),
                                 ),
                               ),
                             ),

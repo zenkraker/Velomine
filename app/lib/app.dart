@@ -12,6 +12,7 @@ import 'core/back_guard.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
 import 'core/map_defaults.dart';
+import 'core/motion.dart';
 import 'core/providers.dart';
 import 'core/server_config.dart';
 import 'core/session.dart';
@@ -437,9 +438,18 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       builder: (context, child) {
         // Dates and numbers follow the language the app resolved to, not the machine's.
         Intl.defaultLocale = Localizations.localeOf(context).toLanguageTag();
-        return session.status == SessionStatus.loading
-            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-            : child!;
+        if (session.status == SessionStatus.loading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (!reduceMotion(context)) return child!;
+        // No page transition when the system asks to reduce motion.
+        return Theme(
+          data: Theme.of(context)
+              .copyWith(pageTransitionsTheme: noAnimationPageTransitions),
+          child: child!,
+        );
       },
     );
   }

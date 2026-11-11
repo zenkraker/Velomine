@@ -20,6 +20,7 @@ COPY app/pubspec.yaml app/pubspec.lock ./
 COPY app/packages packages
 RUN --mount=type=cache,target=/root/.pub-cache flutter pub get --enforce-lockfile
 COPY app/lib lib
+COPY app/assets assets
 COPY app/web web
 # The cache mount below is not a layer: .dart_tool/package_config.json points into
 # /root/.pub-cache, so the build step must mount the same cache or imports fail.

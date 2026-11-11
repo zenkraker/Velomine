@@ -92,14 +92,15 @@
   --depth-2: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 2px 4px rgba(14, 15, 12, 0.04),
     0 24px 50px -28px rgba(14, 15, 12, 0.32);
   --depth-3: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 40px 80px -40px rgba(14, 15, 12, 0.42);
-  --ink-strong: var(--ink-strong);
-  --ink-soft: var(--ink-soft);
-  --ink-muted: var(--ink-muted);
-  --ink-faint: var(--ink-faint);
+  --ink-strong: var(--ink);
+  --ink-soft: rgba(24, 32, 30, 0.82);
+  --ink-muted: rgba(24, 32, 30, 0.72);
+  --ink-faint: rgba(24, 32, 30, 0.66);
   --cloud-soft: rgba(240, 238, 233, 0.72);
   --cloud-muted: rgba(240, 238, 233, 0.5);
   --shadow: 0 28px 70px rgba(14, 15, 12, 0.16);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --header-h: 69px;
 }
 
 *,
@@ -110,6 +111,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 16px);
 }
 
 body {
@@ -196,6 +198,16 @@ a {
   background: var(--cloud);
 }
 
+/* The scroll shadow lives on a pseudo-element so it only fades opacity: no repaint while scrolling. */
+.site-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: 0 18px 40px -30px rgba(14, 15, 12, 0.55);
+  opacity: 0;
+}
+
 .site-header .container {
   display: flex;
   flex-wrap: wrap;
@@ -261,6 +273,29 @@ a {
   font-size: 0.84rem;
 }
 
+/* One markup for both: a native disclosure on phones, laid out open on desktop. */
+.nav-menu {
+  margin-left: auto;
+}
+
+.nav-menu summary {
+  display: none;
+}
+
+.nav-menu summary:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.nav-menu summary svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 /* Buttons and small pieces */
 
 .btn {
@@ -281,7 +316,6 @@ a {
     background 0.2s var(--ease),
     border-color 0.2s var(--ease),
     color 0.2s var(--ease),
-    box-shadow 0.2s var(--ease),
     transform 0.2s var(--ease);
 }
 
@@ -366,9 +400,8 @@ a {
   margin: 0 0 1.1rem;
   color: var(--teal);
   font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .eyebrow::before {
@@ -784,6 +817,7 @@ a {
 
 .segmented .active.coach {
   background: var(--valley);
+  color: #ffffff;
 }
 
 .share-foot {
@@ -801,13 +835,6 @@ a {
 .ownership-item {
   padding-top: 1.2rem;
   border-top: 1px solid rgba(24, 32, 30, 0.18);
-}
-
-.ownership-item .num {
-  color: var(--iron);
-  font-family: var(--serif);
-  font-size: 2.4rem;
-  line-height: 1;
 }
 
 .ownership-item h3 {
@@ -1298,7 +1325,7 @@ a {
 .breadcrumb li + li::before {
   content: '/';
   margin-right: 0.5rem;
-  color: var(--gravel);
+  color: var(--ink-faint);
 }
 
 .breadcrumb a {
@@ -1414,17 +1441,67 @@ a {
 }
 
 @media (max-width: 760px) {
+  :root {
+    --header-h: 65px;
+  }
+
   .site-header .container {
-    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding-block: 10px;
+  }
+
+  .site-header .brand {
+    flex: none;
+  }
+
+  .nav-menu summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--teal);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .nav-menu summary::-webkit-details-marker {
+    display: none;
   }
 
   .nav {
-    width: 100%;
-    gap: 10px 18px;
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 6px var(--pad) 14px;
+    border-bottom: 1px solid var(--line-strong);
+    background: var(--cloud);
+  }
+
+  .nav-menu[open] ~ .nav {
+    display: flex;
+  }
+
+  .nav a:not(.btn) {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
   }
 
   .nav .btn {
-    margin-left: 0;
+    margin: 6px 0 0;
+  }
+
+  .nav-cta {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.8rem;
   }
 
   .hero h1 {
@@ -1530,12 +1607,29 @@ a {
 }
 
 .lift {
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  position: relative;
+  isolation: isolate;
+  transition: transform 0.3s var(--ease);
+}
+
+/* The hover shadow fades in on a pseudo-element, so the transition never repaints the card. */
+.lift::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: var(--depth-3);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
 }
 
 .lift:hover {
   transform: translateY(-4px);
-  box-shadow: var(--depth-3);
+}
+
+.lift:hover::after {
+  opacity: 1;
 }
 
 /* Hero */
@@ -1774,13 +1868,6 @@ a {
   font-size: 0.95rem;
 }
 
-.num {
-  font-family: var(--serif);
-  font-size: 2.1rem;
-  line-height: 1;
-  color: var(--gravel);
-}
-
 .price-block .price-label {
   margin: 0 0 0.4rem;
   color: var(--ink-muted);
@@ -1992,25 +2079,6 @@ a {
     }
   }
 
-  @supports (animation-timeline: view()) {
-    .reveal {
-      animation: reveal-rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 26%;
-    }
-
-    @keyframes reveal-rise {
-      from {
-        opacity: 0;
-        translate: 0 26px;
-      }
-      to {
-        opacity: 1;
-        translate: 0 0;
-      }
-    }
-  }
-
   @supports (animation-timeline: scroll()) {
     body::after {
       content: '';
@@ -2032,7 +2100,7 @@ a {
       }
     }
 
-    .site-header {
+    .site-header::after {
       animation: header-depth linear both;
       animation-timeline: scroll(root);
       animation-range: 0 120px;
@@ -2040,7 +2108,7 @@ a {
 
     @keyframes header-depth {
       to {
-        box-shadow: 0 18px 40px -30px rgba(14, 15, 12, 0.55);
+        opacity: 1;
       }
     }
   }
@@ -2060,12 +2128,6 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
-    opacity: 1;
-    translate: none;
-    animation: none;
-  }
-
   .contour path {
     stroke-dashoffset: 0;
     animation: none;
@@ -2212,4 +2274,15 @@ a {
 /* Layout corrections from the first render. */
 .section--flush {
   padding-bottom: 0;
+}
+
+/* Fingers need room: 44 px targets wherever the pointer is coarse. */
+@media (pointer: coarse) {
+  .nav a:not(.btn),
+  .footer-col a,
+  .footer-legal a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }

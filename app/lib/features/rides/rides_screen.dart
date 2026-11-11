@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/placeholder_block.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -169,7 +170,22 @@ class RidesScreen extends ConsumerWidget {
                           ref.read(ridesViewModelProvider.notifier).loadMore(),
                 child: Text(l10n.loadMore),
               ),
-            if (s.load.running)
+            if (s.load.running && s.rides.isEmpty)
+              Semantics(
+                liveRegion: true,
+                label: l10n.loading,
+                child: Column(
+                  key: const Key('rides-loading'),
+                  children: [
+                    for (var i = 0; i < 5; i++)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: PlaceholderBlock(height: 96, radius: 16),
+                      ),
+                  ],
+                ),
+              )
+            else if (s.load.running)
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(16),

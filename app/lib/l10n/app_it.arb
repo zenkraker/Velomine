@@ -1054,5 +1054,9 @@
   "usageDataHelp": "Schermate lente e funzioni usate, senza le tue uscite o dati di salute.",
   "telemetryUnavailable": "Questo server non raccoglie telemetria.",
   "telemetrySaved": "Salvato.",
-  "telemetryRestart": "Riavvia l'app per applicare questa scelta."
+  "telemetryRestart": "Riavvia l'app per applicare questa scelta.",
+  "powerCurveSummary": "Curva di potenza. Migliori 5 secondi {p5s} watt, 1 minuto {p1m}, 5 minuti {p5m}, 20 minuti {p20m}. FTP stimato {ftp} watt.",
+  "routeMapSummary": "Mappa del percorso. {distance}, con {climb} di dislivello.",
+  "routeMapDistanceSummary": "Mappa del percorso. {distance}.",
+  "loading": "Caricamento"
 }

@@ -1497,5 +1497,45 @@
   "usageDataHelp": "Slow screens and which features are used, without your rides or health data.",
   "telemetryUnavailable": "This server does not collect telemetry.",
   "telemetrySaved": "Saved.",
-  "telemetryRestart": "Restart the app to apply this choice."
+  "telemetryRestart": "Restart the app to apply this choice.",
+  "powerCurveSummary": "Power curve. Best 5 seconds {p5s} watts, 1 minute {p1m}, 5 minutes {p5m}, 20 minutes {p20m}. Estimated FTP {ftp} watts.",
+  "@powerCurveSummary": {
+    "placeholders": {
+      "p5s": {
+        "type": "String"
+      },
+      "p1m": {
+        "type": "String"
+      },
+      "p5m": {
+        "type": "String"
+      },
+      "p20m": {
+        "type": "String"
+      },
+      "ftp": {
+        "type": "String"
+      }
+    }
+  },
+  "routeMapSummary": "Route map. {distance}, with {climb} of climbing.",
+  "@routeMapSummary": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "climb": {
+        "type": "String"
+      }
+    }
+  },
+  "routeMapDistanceSummary": "Route map. {distance}.",
+  "@routeMapDistanceSummary": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "loading": "Loading"
 }

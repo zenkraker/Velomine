@@ -17,21 +17,27 @@
   <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
+  <link rel="canonical" href="/terms/">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
-      <a class="brand" href="/" aria-label="Velomine home">
+      <a class="brand" translate="no" href="/" aria-label="Velomine home">
         <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
           <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <circle class="mark-dot" cx="60" cy="31" r="8"/>
         </svg>
-        <span class="wordmark">velo<em>mine</em></span>
+        <span class="wordmark" translate="no">velo<em>mine</em></span>
       </a>
 
+      <details class="nav-menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+      </details>
       <nav class="nav" aria-label="Main">
         <a href="/">Home</a>
         <a href="/status/">Status</a>
@@ -39,8 +45,8 @@
         <a href="/demo/">Demo</a>
         <a href="/contact/">Contact</a>
         <a class="btn btn-ghost" href="/sign-in">Sign in</a>
-        <a class="btn btn-primary" href="/demo/">Try the demo</a>
       </nav>
+      <a class="btn btn-primary nav-cta" href="/demo/">Try the demo</a>
     </div>
   </header>
 
@@ -63,7 +69,7 @@
       <div class="container">
         <div class="legal-body">
           <h2>The service</h2>
-          <p>Velomine is cycling training software for clubs and teams. A club can run it on its own server (self-hosted) or use our managed cloud service, shared by many clubs with each club's data kept apart. The features are the same; only the operator differs. The current feature list is on the <a href="/status/">status page</a>.</p>
+          <p>Velomine is cycling training software for clubs and teams. A club can run it on its own server (self-hosted) or use our managed cloud service, shared by many clubs with each club’s data kept apart. The features are the same; only the operator differs. The current feature list is on the <a href="/status/">status page</a>.</p>
 
           <h2>Your club account</h2>
           <p>The club is the customer. A club administrator manages the account, approves members and decides who is a coach. Members own their own data and keep their own sign-in. An account belongs to one club at a time; a member can leave and join another club and keeps their own data.</p>
@@ -72,7 +78,7 @@
           <ul>
             <li>One plan. Every feature is included for every member; there is no feature paywall.</li>
             <li>One yearly fee per club. Never per member. Guided setup is an optional one-time fee.</li>
-            <li>The amount for your club's size band is published on the <a href="/pricing/">pricing page</a>, and clubs of the same size pay the same. The band is the most members a club can have; a club that needs more room moves up a band and pays the difference for the rest of its year.</li>
+            <li>The amount for your club’s size band is published on the <a href="/pricing/">pricing page</a>, and clubs of the same size pay the same. The band is the most members a club can have; a club that needs more room moves up a band and pays the difference for the rest of its year.</li>
             <li>Cloud includes hosting, a secure connection, updates, monitoring and backups. Self-hosting is free: the club runs its own server, domain and backups, and may buy an optional supporter licence that unlocks nothing.</li>
             <li>Taxes are added where they apply. Invoices are issued annually in advance.</li>
           </ul>
@@ -86,13 +92,13 @@
           <h2>Acceptable use</h2>
           <ul>
             <li>Do not break the law, infringe rights, or upload malicious files.</li>
-            <li>Do not try to access another club's data, another member's account, or the service's infrastructure.</li>
+            <li>Do not try to access another club’s data, another member’s account, or the service’s infrastructure.</li>
             <li>Do not scrape, overload or resell the service without an agreement.</li>
-            <li>Club administrators are responsible for who they approve and for their own club's content.</li>
+            <li>Club administrators are responsible for who they approve and for their own club’s content.</li>
           </ul>
 
           <h2>Availability and support</h2>
-          <p>We aim for a reliable service but do not promise uninterrupted availability. Support is during business hours, with the response times in the club agreement; there is no fake 24/7 promise. Maintenance that may take more than a minute is announced to club administrators. Backups are for recovery, not a substitute for a member's own export.</p>
+          <p>We aim for a reliable service but do not promise uninterrupted availability. Support is during business hours, with the response times in the club agreement; there is no fake 24/7 promise. Maintenance that may take more than a minute is announced to club administrators. Backups are for recovery, not a substitute for a member’s own export.</p>
 
           <h2>Liability</h2>
           <p>To the extent the law allows, Velomine is not liable for indirect or consequential loss, or for loss that a backup and export could have prevented. Nothing here limits rights that cannot be limited by law. The signed club agreement states the governing law and jurisdiction.</p>
@@ -119,13 +125,13 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <a class="brand" href="/" aria-label="Velomine home">
+          <a class="brand" translate="no" href="/" aria-label="Velomine home">
             <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
               <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <circle class="mark-dot" cx="60" cy="31" r="8"/>
             </svg>
-            <span class="wordmark">velo<em>mine</em></span>
+            <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
           <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
         </div>

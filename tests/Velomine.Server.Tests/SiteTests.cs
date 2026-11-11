@@ -133,6 +133,36 @@ public sealed class SiteTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task SiteStylesheet_ShouldNotUseGravelForText_WhenServed()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/static/site.css", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var css = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.DoesNotContain("color: var(--gravel)", css);
+    }
+
+    [Fact]
+    public async Task SiteStylesheet_ShouldNotDefineACustomPropertyAsItself_WhenServed()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/static/site.css", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var css = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        foreach (var declaration in System.Text.RegularExpressions.Regex
+                     .Matches(css, @"--([a-z-]+)\s*:\s*([^;}]+)")
+                     .Cast<System.Text.RegularExpressions.Match>())
+        {
+            var name = declaration.Groups[1].Value;
+            Assert.DoesNotContain($"var(--{name})", declaration.Groups[2].Value);
+        }
+    }
+
+    [Fact]
     public async Task Website_ShouldNotListBuiltFeaturesAsNotYet_WhenStatusIsRequested()
     {
         await using var api = await TestApi.StartAsync(postgres);
@@ -221,36 +251,145 @@ public sealed class SiteTests(PostgresFixture postgres)
         }
     }
 
-    [Fact]
-    public async Task Website_ShouldRedirectToTheStatusPage_WhenTheTrailingSlashIsMissing()
+    [Theory]
+    [InlineData("/status")]
+    [InlineData("/pricing")]
+    [InlineData("/demo")]
+    [InlineData("/contact")]
+    [InlineData("/principles")]
+    [InlineData("/privacy")]
+    [InlineData("/terms")]
+    [InlineData("/security")]
+    public async Task SitePages_ShouldRedirectToTrailingSlash_WhenSlashIsMissing(string path)
     {
         await using var api = await TestApi.StartAsync(postgres);
 
-        using var response = await api.CreateClient().GetAsync("/status", TestContext.Current.CancellationToken);
+        using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
-        Assert.Equal("/status/", response.Headers.Location?.ToString());
+        Assert.Equal(path + "/", response.Headers.Location?.ToString());
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/status/")]
+    [InlineData("/pricing/")]
+    [InlineData("/demo/")]
+    [InlineData("/contact/")]
+    [InlineData("/principles/")]
+    [InlineData("/privacy/")]
+    [InlineData("/terms/")]
+    [InlineData("/security/")]
+    public async Task SitePages_ShouldOfferTheMenuDisclosure_WhenServed(string path)
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        var html = await FetchPageAsync(api, path);
+
+        Assert.Contains("<details class=\"nav-menu\">", html);
+        Assert.Contains("<summary aria-label=\"Menu\">", html);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/status/")]
+    [InlineData("/pricing/")]
+    [InlineData("/demo/")]
+    [InlineData("/contact/")]
+    [InlineData("/principles/")]
+    [InlineData("/privacy/")]
+    [InlineData("/terms/")]
+    [InlineData("/security/")]
+    public async Task SitePages_ShouldNotUseNumberedMarkers_WhenServed(string path)
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        var html = await FetchPageAsync(api, path);
+
+        Assert.DoesNotContain("class=\"num\"", html);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/status/")]
+    [InlineData("/pricing/")]
+    [InlineData("/demo/")]
+    [InlineData("/contact/")]
+    [InlineData("/principles/")]
+    [InlineData("/privacy/")]
+    [InlineData("/terms/")]
+    [InlineData("/security/")]
+    public async Task SitePages_ShouldDeclareACanonicalLink_WhenServed(string path)
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        var html = await FetchPageAsync(api, path);
+
+        Assert.Contains($"<link rel=\"canonical\" href=\"{path}\">", html);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "rel=\"canonical\""));
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/status/")]
+    [InlineData("/pricing/")]
+    [InlineData("/demo/")]
+    [InlineData("/contact/")]
+    [InlineData("/principles/")]
+    [InlineData("/privacy/")]
+    [InlineData("/terms/")]
+    [InlineData("/security/")]
+    public async Task SitePages_ShouldNotTranslateTheBrand_WhenServed(string path)
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        var html = await FetchPageAsync(api, path);
+
+        Assert.Contains("class=\"wordmark\" translate=\"no\"", html);
     }
 
     [Fact]
-    public async Task Website_ShouldRedirectToTheDemoPage_WhenTheTrailingSlashIsMissing()
+    public async Task SiteStylesheet_ShouldSetScrollPadding_WhenServed()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
-        using var response = await api.CreateClient().GetAsync("/demo", TestContext.Current.CancellationToken);
+        var css = await FetchPageAsync(api, "/static/site.css");
 
-        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
-        Assert.Equal("/demo/", response.Headers.Location?.ToString());
+        Assert.Contains("scroll-padding-top", css);
     }
 
     [Fact]
-    public async Task Website_ShouldRedirectToThePrivacyPage_WhenTheTrailingSlashIsMissing()
+    public async Task SiteStylesheet_ShouldNotAnimateBoxShadow_WhenServed()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
-        using var response = await api.CreateClient().GetAsync("/privacy", TestContext.Current.CancellationToken);
+        var css = await FetchPageAsync(api, "/static/site.css");
 
-        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
-        Assert.Equal("/privacy/", response.Headers.Location?.ToString());
+        Assert.DoesNotMatch(@"transition:\s*[^;]*box-shadow", css);
+        foreach (var keyframes in System.Text.RegularExpressions.Regex
+                     .Matches(css, @"@keyframes\s+[\w-]+\s*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}")
+                     .Cast<System.Text.RegularExpressions.Match>())
+        {
+            Assert.DoesNotContain("box-shadow", keyframes.Value);
+        }
+    }
+
+    [Fact]
+    public async Task ItalianPath_ShouldNotRedirectToAMissingFolder_WhenTheItalianSiteIsNotBuilt()
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        using var response = await api.CreateClient().GetAsync("/it", TestContext.Current.CancellationToken);
+
+        Assert.NotEqual(HttpStatusCode.MovedPermanently, response.StatusCode);
+        Assert.NotEqual("/it/", response.Headers.Location?.ToString());
+    }
+
+    private static async Task<string> FetchPageAsync(TestApi api, string path)
+    {
+        using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
     }
 }

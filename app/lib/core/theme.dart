@@ -131,17 +131,96 @@ ThemeData nightTheme() {
   return _theme(scheme, VelomineColors.night);
 }
 
-ThemeData _theme(ColorScheme scheme, VelomineColors colors) => ThemeData(
-  useMaterial3: true,
-  colorScheme: scheme,
-  scaffoldBackgroundColor: scheme.surface,
-  appBarTheme: AppBarTheme(
-    backgroundColor: scheme.surface,
-    foregroundColor: scheme.onSurface,
-    elevation: 0,
-  ),
-  inputDecorationTheme: const InputDecorationTheme(
-    border: OutlineInputBorder(),
-  ),
-  extensions: [colors],
-);
+ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
+  const sans = 'Geist';
+  const display = 'Instrument Serif';
+  final base = ThemeData(
+    useMaterial3: true,
+    colorScheme: scheme,
+    fontFamily: sans,
+  );
+  final baseText = base.textTheme.apply(fontFamily: sans);
+  TextStyle? tabular(TextStyle? style) =>
+      style?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+  // Numbers line up in columns in every stat, table and clock.
+  final text = baseText.copyWith(
+    displayLarge: tabular(baseText.displayLarge),
+    displayMedium: tabular(baseText.displayMedium),
+    displaySmall: tabular(baseText.displaySmall),
+    headlineLarge: tabular(baseText.headlineLarge),
+    headlineMedium: tabular(baseText.headlineMedium),
+    headlineSmall: tabular(baseText.headlineSmall),
+    titleLarge: tabular(baseText.titleLarge),
+    titleMedium: tabular(baseText.titleMedium),
+    titleSmall: tabular(baseText.titleSmall),
+    bodyLarge: tabular(baseText.bodyLarge),
+    bodyMedium: tabular(baseText.bodyMedium),
+    bodySmall: tabular(baseText.bodySmall),
+    labelLarge: tabular(baseText.labelLarge),
+    labelMedium: tabular(baseText.labelMedium),
+    labelSmall: tabular(baseText.labelSmall),
+  );
+  TextStyle displayStyle(TextStyle? style) => (style ?? const TextStyle())
+      .copyWith(fontFamily: display, fontWeight: FontWeight.w400);
+  final buttonShape = WidgetStatePropertyAll<OutlinedBorder>(
+    const StadiumBorder(),
+  );
+  final buttonLabel = const WidgetStatePropertyAll(
+    TextStyle(fontFamily: sans, fontWeight: FontWeight.w600),
+  );
+  ButtonStyle pill() => ButtonStyle(
+    shape: buttonShape,
+    minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+    textStyle: buttonLabel,
+  );
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: scheme,
+    fontFamily: sans,
+    scaffoldBackgroundColor: scheme.surface,
+    textTheme: text.copyWith(
+      displayLarge: displayStyle(text.displayLarge),
+      displayMedium: displayStyle(text.displayMedium),
+      displaySmall: displayStyle(text.displaySmall),
+      headlineLarge: displayStyle(text.headlineLarge),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: scheme.surface,
+      foregroundColor: scheme.onSurface,
+      elevation: 0,
+    ),
+    inputDecorationTheme: const InputDecorationTheme(
+      border: OutlineInputBorder(),
+    ),
+    filledButtonTheme: FilledButtonThemeData(style: pill()),
+    outlinedButtonTheme: OutlinedButtonThemeData(style: pill()),
+    textButtonTheme: TextButtonThemeData(style: pill()),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      shape: const StadiumBorder(),
+      side: BorderSide(color: scheme.outlineVariant),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      indicatorColor: scheme.primaryContainer,
+      labelTextStyle: buttonLabel,
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      indicatorColor: scheme.primaryContainer,
+      selectedLabelTextStyle: const TextStyle(
+        fontFamily: sans,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+    dialogTheme: DialogThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+    ),
+    extensions: [colors],
+  );
+}

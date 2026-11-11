@@ -55,6 +55,25 @@ void main() {
     expect(store.value, 'light');
   });
 
+  test('dayTheme_ShouldUseGeist_WhenBuilt', () {
+    expect(dayTheme().textTheme.bodyMedium!.fontFamily, 'Geist');
+  });
+
+  test('nightTheme_ShouldUseGeist_WhenBuilt', () {
+    expect(nightTheme().textTheme.bodyMedium!.fontFamily, 'Geist');
+  });
+
+  test('dayTheme_ShouldUseInstrumentSerifForDisplay_WhenBuilt', () {
+    expect(dayTheme().textTheme.displaySmall!.fontFamily, 'Instrument Serif');
+  });
+
+  test('dayTheme_ShouldGiveButtonsAStadiumShapeOf48_WhenBuilt', () {
+    final style = dayTheme().filledButtonTheme.style!;
+
+    expect(style.shape!.resolve({}), isA<StadiumBorder>());
+    expect(style.minimumSize!.resolve({}), const Size(48, 48));
+  });
+
   test(
     'ThemeChoiceViewModel_ShouldReadSavedChoiceAndFallBackToDevice_WhenLoaded',
     () async {

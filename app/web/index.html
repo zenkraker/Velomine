@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,9 +18,10 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Velomine — cycling training for clubs and teams, on-premise or cloud.">
+  <meta name="description" content="Velomine — cycling training for clubs and teams, self-hosted or cloud.">
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#0F4C4A">
+  <meta name="theme-color" content="#0F4C4A" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E0F0C" media="(prefers-color-scheme: dark)">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -33,16 +34,58 @@
 
   <title>Velomine</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- The brand shows while the engine and the app download; flutter_bootstrap.js removes it after the first frame. -->
+  <style>
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #f0eee9;
+    }
+
+    #splash .mark-dot {
+      animation: splash-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes splash-pulse {
+      50% {
+        opacity: 0.35;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #splash {
+        background: #0e0f0c;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #splash .mark-dot {
+        animation: none;
+      }
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <div id="splash" aria-hidden="true">
+    <svg viewBox="0 0 120 120" width="96" height="96">
+      <path d="M18 26 L60 96 L102 26" fill="none" stroke="#0F4C4A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M38 26 L60 60 L82 26" fill="none" stroke="#2E7D78" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="mark-dot" cx="60" cy="35" r="8" fill="#B24A22"/>
+    </svg>
+  </div>
+  <div role="status"><span class="visually-hidden">Loading Velomine…</span></div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

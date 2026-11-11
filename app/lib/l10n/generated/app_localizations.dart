@@ -5263,6 +5263,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restart the app to apply this choice.'**
   String get telemetryRestart;
+
+  /// No description provided for @powerCurveSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Power curve. Best 5 seconds {p5s} watts, 1 minute {p1m}, 5 minutes {p5m}, 20 minutes {p20m}. Estimated FTP {ftp} watts.'**
+  String powerCurveSummary(
+    String p5s,
+    String p1m,
+    String p5m,
+    String p20m,
+    String ftp,
+  );
+
+  /// No description provided for @routeMapSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Route map. {distance}, with {climb} of climbing.'**
+  String routeMapSummary(String distance, String climb);
+
+  /// No description provided for @routeMapDistanceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Route map. {distance}.'**
+  String routeMapDistanceSummary(String distance);
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading'**
+  String get loading;
 }
 
 class _AppLocalizationsDelegate

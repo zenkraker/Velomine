@@ -226,10 +226,8 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     ),
                     child: Text(
                       widget.attribution,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.black87,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: Colors.black87),
                     ),
                   ),
                 ),

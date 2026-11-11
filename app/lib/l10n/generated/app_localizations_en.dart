@@ -2894,4 +2894,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get telemetryRestart => 'Restart the app to apply this choice.';
+
+  @override
+  String powerCurveSummary(
+    String p5s,
+    String p1m,
+    String p5m,
+    String p20m,
+    String ftp,
+  ) {
+    return 'Power curve. Best 5 seconds $p5s watts, 1 minute $p1m, 5 minutes $p5m, 20 minutes $p20m. Estimated FTP $ftp watts.';
+  }
+
+  @override
+  String routeMapSummary(String distance, String climb) {
+    return 'Route map. $distance, with $climb of climbing.';
+  }
+
+  @override
+  String routeMapDistanceSummary(String distance) {
+    return 'Route map. $distance.';
+  }
+
+  @override
+  String get loading => 'Loading';
 }

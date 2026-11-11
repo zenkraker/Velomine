@@ -20,6 +20,7 @@ class RouteMap extends StatefulWidget {
     required this.selectedLap,
     this.tileUrl,
     this.attribution,
+    this.elevationGainM,
   });
 
   final RideSeries data;
@@ -27,6 +28,9 @@ class RouteMap extends StatefulWidget {
   final ValueNotifier<LapRange?> selectedLap;
   final String? tileUrl;
   final String? attribution;
+
+  /// The ride's climbing, when the caller knows it; the full map reads it out.
+  final double? elevationGainM;
 
   @override
   State<RouteMap> createState() => _RouteMapState();
@@ -125,10 +129,8 @@ class _RouteMapState extends State<RouteMap> {
                                 ),
                                 child: Text(
                                   widget.attribution!,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.black87,
-                                  ),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: Colors.black87),
                                 ),
                               ),
                             ),
@@ -182,6 +184,7 @@ class _RouteMapState extends State<RouteMap> {
           selectedLap: widget.selectedLap,
           tileUrl: widget.tileUrl,
           attribution: widget.attribution,
+          elevationGainM: widget.elevationGainM,
         ),
       ),
     );

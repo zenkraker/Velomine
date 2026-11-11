@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/placeholder_block.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import '../rides/ride_type_chips.dart';
@@ -194,7 +195,18 @@ class ProgressScreen extends ConsumerWidget {
                   ),
                   _TotalsTable(totals: totalsData),
                 ] else if (totals.load.running)
-                  const Center(child: CircularProgressIndicator()),
+                  Semantics(
+                    liveRegion: true,
+                    label: l10n.loading,
+                    child: const Column(
+                      key: Key('totals-loading'),
+                      children: [
+                        PlaceholderBlock(height: 180, radius: 16),
+                        SizedBox(height: 12),
+                        PlaceholderBlock(height: 120, radius: 16),
+                      ],
+                    ),
+                  ),
                 if (training.load.value case final trainingData?)
                   TrainingSummary(
                     training: trainingData,

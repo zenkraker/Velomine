@@ -96,7 +96,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Languages:** English and Italian through `gen-l10n` (`lib/l10n/app_en.arb`, `app_it.arb`). Every user-facing string goes in both files. The language is an account setting (`PUT /accounts/me/language`); before sign-in the app follows the device.
 - **Tokens:** the web app uses the HttpOnly cookie. The phone keeps the refresh token in Android Keystore (AES-GCM, `noBackupFilesDir`) or the iOS Keychain (`AfterFirstUnlockThisDeviceOnly`) through a small native channel, and the access token in memory only. The refresh token is never written to preferences, backups or logs. Refresh is single-flight; a refused refresh clears the token, an unreachable server keeps it. One HTTP-client wrapper turns any 401 into "the session ended".
 - **Maps and charts** are drawn with Flutter's own canvas and plain tile images (`features/rides/detail/geo.dart`, `series_chart.dart`). The tile address comes from `GET /api/v1/server`; OpenStreetMap is the default and the map cannot be turned off.
-- **Accessibility:** `Semantics` labels on icon-only buttons, respect text scaling, tap targets of at least 48×48.
+- **Accessibility:** `Semantics` labels on icon-only buttons, respect text scaling, tap targets of at least 48×48, and every animation goes through `lib/core/motion.dart` so it stops when the system asks to reduce motion.
 
 ### State and events
 

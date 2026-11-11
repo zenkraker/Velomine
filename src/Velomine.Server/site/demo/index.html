@@ -12,21 +12,27 @@
   <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/site.css">
+  <link rel="canonical" href="/demo/">
 </head>
 <body class="demo-page">
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
-      <a class="brand" href="/" aria-label="Velomine home">
+      <a class="brand" translate="no" href="/" aria-label="Velomine home">
         <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
           <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
           <circle class="mark-dot" cx="60" cy="31" r="8"/>
         </svg>
-        <span class="wordmark">velo<em>mine</em></span>
+        <span class="wordmark" translate="no">velo<em>mine</em></span>
       </a>
 
+      <details class="nav-menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+      </details>
       <nav class="nav" aria-label="Main">
         <a href="/">Home</a>
         <a href="/status/">Status</a>
@@ -34,8 +40,8 @@
         <a href="/demo/" aria-current="page">Demo</a>
         <a href="/contact/">Contact</a>
         <a class="btn btn-ghost" href="/sign-in">Sign in</a>
-        <a class="btn btn-primary" href="/sign-in">Open the demo</a>
       </nav>
+      <a class="btn btn-primary nav-cta" href="/sign-in">Open the demo</a>
     </div>
   </header>
 
@@ -122,13 +128,13 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <a class="brand" href="/" aria-label="Velomine home">
+          <a class="brand" translate="no" href="/" aria-label="Velomine home">
             <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
               <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
               <circle class="mark-dot" cx="60" cy="31" r="8"/>
             </svg>
-            <span class="wordmark">velo<em>mine</em></span>
+            <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
           <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
         </div>
