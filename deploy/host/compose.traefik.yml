@@ -1,0 +1,62 @@
+# The host's one public entry point: Traefik on 80 and 443. It gets and renews the Let's Encrypt certificates and routes
+# each host name to that environment's web container, reading the routes from the labels in compose.app.yml. Only web
+# containers join the `proxy` network; each environment's server stays on that environment's own network.
+#
+#   docker compose -f compose.traefik.yml up -d        (deploy.sh does this)
+name: velomine-traefik
+
+services:
+  traefik:
+    image: traefik:v3.7.17@sha256:f4bb143d1135a579b630ed491e17ec50f6f7c9c6a30585ff3d385471d2a86f5a
+    restart: unless-stopped
+    command:
+      # Routes come only from containers that ask for it (traefik.enable=true), on the proxy network.
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=proxy
+      # HTTP only redirects to HTTPS (and answers Let's Encrypt's challenge).
+      - --entryPoints.web.address=:80
+      - --entryPoints.web.http.redirections.entryPoint.to=websecure
+      - --entryPoints.web.http.redirections.entryPoint.scheme=https
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.websecure.http3=true
+      - --certificatesResolvers.letsencrypt.acme.email=${ACME_EMAIL:-ops@velomine.eu}
+      - --certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web
+      # No dashboard, no API, no anonymous usage report; errors only in the log, no access log (it would hold
+      # addresses and raw paths).
+      - --api=false
+      - --global.sendAnonymousUsage=false
+      - --global.checkNewVersion=false
+      - --log.level=WARN
+    labels:
+      - traefik.enable=true
+      # Middlewares the environments' routers use (compose.app.yml): HTTPS-only for a year, and noindex for dev and
+      # staging. nginx in the web image sets the other security headers.
+      - traefik.http.middlewares.hsts.headers.stsSeconds=31536000
+      - traefik.http.middlewares.noindex.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Read-only: Traefik only reads the containers' labels. It still gives Traefik a lot of power over the host;
+      # revisit (file provider or a socket proxy) before prod holds a club's real data (docs/architecture.md).
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks: [proxy]
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  proxy:
+    name: proxy
+
+volumes:
+  letsencrypt:

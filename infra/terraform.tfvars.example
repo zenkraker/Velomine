@@ -7,11 +7,6 @@ db_node_type       = "DB-DEV-S"
 backup_bucket_name = "velomine-demo-backups-REPLACE-ME"
 registry_namespace = "velomine-demo"
 
-# dev, staging and prod on one VPS and one database instance.
-envs_instance_type = "DEV1-M"
-envs_db_node_type  = "DB-DEV-S"
-apex_env           = "demo"
-
-# Do not put secrets in this file. Pass them as TF_VAR_db_password,
-# TF_VAR_envs_db_admin_password and TF_VAR_env_db_passwords. The SSH key and
+# Do not put secrets in this file. Pass them as TF_VAR_db_password (and, once
+# dev, staging and prod are on, TF_VAR_env_db_passwords). The SSH key and
 # admin CIDR can also be passed as TF_VAR_ssh_public_key and TF_VAR_admin_cidr.

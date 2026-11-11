@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Runs one environment's image pointer: pulls ghcr.io/zenkraker/velomine:<env>, which the Deploy workflow moves,
-# recreates the app and rolls back to the digest that was running before if the new one does not answer /health.
-# A digest that failed is quarantined, so the timer does not retry it every minute; a later, different image is still
-# deployed. Started by velomine-update@<env>.timer.
+# Runs one environment's image pointers: pulls ghcr.io/zenkraker/velomine-{server,web}:<env>, which the Deploy workflow
+# moves together, recreates the pair and rolls both back to the digests that were running before if the environment
+# does not answer /health through Traefik. A pair that failed is quarantined, so the timer does not retry it every
+# minute; a later, different pair is still deployed. Started by velomine-update@<env>.timer.
 #
 #   update.sh <env>
 set -euo pipefail
@@ -13,7 +13,6 @@ env="${1:-}"
 require_env "$env"
 
 state_dir="$VELOMINE_DIR/$env/state"
-container="velomine-$env-app-1"
 mkdir -p "$state_dir"
 
 repo_digest() {
@@ -27,44 +26,48 @@ container_ref() {
   [[ -n "$image" ]] && repo_digest "$image"
 }
 
-previous="$(container_ref "$container")"
+previous_server="$(container_ref "velomine-$env-server-1")"
+previous_web="$(container_ref "velomine-$env-web-1")"
 
-if ! app_compose "$env" pull --quiet app; then
-  # Before the first release reaches this environment the tag does not exist yet.
-  [[ -z "$previous" ]] && { log "[$env] no image to run yet"; exit 0; }
-  die "[$env] could not pull $(env_value "$env" VELOMINE_IMAGE)"
+if ! app_compose "$env" pull --quiet; then
+  # Before the first release reaches this environment the tags do not exist yet.
+  [[ -z "$previous_server" ]] && { log "[$env] no images to run yet"; exit 0; }
+  die "[$env] could not pull the images"
 fi
-pulled="$(repo_digest "$(env_value "$env" VELOMINE_IMAGE)")"
+pulled_server="$(repo_digest "$(env_value "$env" VELOMINE_SERVER_IMAGE)")"
+pulled_web="$(repo_digest "$(env_value "$env" VELOMINE_WEB_IMAGE)")"
+pair="${pulled_server} ${pulled_web}"
 
-if [[ -f "$state_dir/quarantined" && "$(cat "$state_dir/quarantined")" == "$pulled" ]]; then
-  exit 0 # failed its health check before; waiting for a new image
+if [[ -f "$state_dir/quarantined" && "$(cat "$state_dir/quarantined")" == "$pair" ]]; then
+  exit 0 # failed its health check before; waiting for a new pair
 fi
 
-if [[ -n "$previous" && "$previous" == "$pulled" ]]; then
+if [[ "$previous_server" == "$pulled_server" && "$previous_web" == "$pulled_web" ]]; then
   exit 0 # already running it
 fi
 
-log "[$env] running:  ${previous:-none}"
-log "[$env] new:      ${pulled:-unknown}"
-app_compose "$env" up --detach --remove-orphans app
+log "[$env] running: server ${previous_server:-none}, web ${previous_web:-none}"
+log "[$env] new:     server ${pulled_server}, web ${pulled_web}"
+app_compose "$env" up --detach --remove-orphans
 
 if wait_healthy "$env"; then
-  log "[$env] healthy:  ${pulled}"
+  log "[$env] healthy"
   rm -f "$state_dir/quarantined"
   exit 0
 fi
 
-log "[$env] health check failed for ${pulled:-the pulled image}"
-printf '%s\n' "$pulled" > "$state_dir/quarantined"
+log "[$env] health check failed for the new pair"
+printf '%s\n' "$pair" > "$state_dir/quarantined"
 
-[[ -n "$previous" ]] || die "[$env] no previous image to roll back to"
+[[ -n "$previous_server" && -n "$previous_web" ]] || die "[$env] no previous pair to roll back to"
 
-# Migrations are backward-compatible for one release (AGENTS.md), so the previous image runs on the migrated schema.
-log "[$env] rolling back to ${previous}"
-VELOMINE_IMAGE="$previous" app_compose "$env" up --detach --remove-orphans app
+# Migrations are backward-compatible for one release (AGENTS.md), so the previous server runs on the migrated schema.
+log "[$env] rolling back to the previous pair"
+VELOMINE_SERVER_IMAGE="$previous_server" VELOMINE_WEB_IMAGE="$previous_web" \
+  app_compose "$env" up --detach --remove-orphans
 
 if wait_healthy "$env"; then
-  log "[$env] rolled back and healthy: ${previous}"
+  log "[$env] rolled back and healthy"
   exit 0
 fi
 

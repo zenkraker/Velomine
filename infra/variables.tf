@@ -109,72 +109,27 @@ variable "registry_namespace" {
   default     = "velomine-demo"
 }
 
-# --- dev, staging and prod -----------------------------------------------------
-
-variable "envs" {
-  description = "Environments on the shared VPS and database instance."
-  type        = set(string)
-  default     = ["dev", "staging", "prod"]
-}
-
-variable "env_hosts" {
-  description = "DNS name of each environment under var.domain."
-  type        = map(string)
-  default = {
-    dev     = "dev"
-    staging = "staging"
-    prod    = "app"
-  }
-}
-
-variable "apex_env" {
-  description = "The environment that answers the domain itself and www: demo until prod launches, then prod."
-  type        = string
-  default     = "demo"
-
-  validation {
-    condition     = contains(["demo", "prod"], var.apex_env)
-    error_message = "apex_env must be demo or prod."
-  }
-}
-
-variable "envs_name" {
-  description = "Prefix for the names and tags of the dev/staging/prod resources."
-  type        = string
-  default     = "velomine-envs"
-}
-
-variable "envs_instance_type" {
-  description = "VPS for dev, staging and prod together. DEV1-M (4 GB) fits three apps at 850 MB each plus Caddy."
-  type        = string
-  default     = "DEV1-M"
-}
-
-variable "envs_db_node_type" {
-  description = "Managed PostgreSQL node for the three environment databases."
-  type        = string
-  default     = "DB-DEV-S"
-}
-
-variable "envs_db_ha_enabled" {
-  description = "HA replica for the environment databases. Turn on before prod holds real member data."
-  type        = bool
-  default     = false
-}
-
-variable "envs_db_admin_password" {
-  description = "Password of velomine_admin on the environment database instance, for the operator only. TF_VAR_envs_db_admin_password; never commit it."
-  type        = string
-  sensitive   = true
-}
-
-variable "env_db_passwords" {
-  description = "Password of each environment's database user, keyed by environment. TF_VAR_env_db_passwords='{dev=\"...\",staging=\"...\",prod=\"...\"}'; never commit them."
-  type        = map(string)
-  sensitive   = true
-
-  validation {
-    condition     = alltrue([for env in ["dev", "staging", "prod"] : length(lookup(var.env_db_passwords, env, "")) >= 24])
-    error_message = "env_db_passwords needs a password of at least 24 characters for dev, staging and prod."
-  }
-}
+# --- dev, staging and prod ---------------------------------------------------
+# Off until there are customers; uncomment with the block in main.tf.
+#
+# variable "envs" {
+#   description = "Environments that run besides the demo, on the same VPS and database instance."
+#   type        = set(string)
+#   default     = ["dev", "staging", "prod"]
+# }
+#
+# variable "env_hosts" {
+#   description = "DNS name of each environment under var.domain."
+#   type        = map(string)
+#   default = {
+#     dev     = "dev"
+#     staging = "staging"
+#     prod    = "app"
+#   }
+# }
+#
+# variable "env_db_passwords" {
+#   description = "Password of each environment's database user. TF_VAR_env_db_passwords='{dev=\"...\",staging=\"...\",prod=\"...\"}'; never commit them."
+#   type        = map(string)
+#   sensitive   = true
+# }

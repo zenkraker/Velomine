@@ -26,7 +26,7 @@ app_compose() {
 # env_value <env> <KEY>: a value from <env>/.env (VELOMINE_IMAGE, VELOMINE_HOST, ...).
 env_value() { sed -n "s/^$2=//p" "$VELOMINE_DIR/$1/.env" | tail -n 1; }
 
-# healthy <env>: /health through Caddy on the loopback, so a broken public path
+# healthy <env>: /health through Traefik and the web container on the loopback, so a broken public path
 # or DNS does not look like a broken image.
 healthy() {
   local host

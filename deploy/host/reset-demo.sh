@@ -18,8 +18,8 @@ set +a
 baseline=/srv/velomine/baseline
 [[ -f "$baseline/velomine.dump" && -f "$baseline/files.tar.gz" ]] || die "Missing $baseline. Run seed-baseline.sh first."
 
-log "Stopping the demo app..."
-app_compose demo stop app
+log "Stopping the demo server..."
+app_compose demo stop server
 
 log "Restoring the demo database..."
 pg demo "$PG_IMAGE" dropdb --if-exists "$PGDATABASE"
@@ -31,8 +31,8 @@ log "Restoring the demo ride files..."
 find /srv/velomine/demo/files -mindepth 1 -delete
 tar --numeric-owner -C /srv/velomine/demo/files -xzf "$baseline/files.tar.gz"
 
-log "Starting the demo app..."
-app_compose demo start app
+log "Starting the demo server..."
+app_compose demo start server
 
 wait_healthy demo 30 4 || die "The demo did not become healthy: docker compose -p velomine-demo logs --tail=100"
 log "Demo reset: https://$(env_value demo VELOMINE_HOST)"

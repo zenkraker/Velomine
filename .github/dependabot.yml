@@ -13,11 +13,13 @@ updates:
       actions:
         patterns: ["*"]
 
-  # The base images in the Dockerfile and the host's Caddy are pinned by digest,
-  # so without this they would never get security patches.
+  # The base images of both Dockerfiles (server, and the web image's nginx) and
+  # the host's Traefik are pinned by digest, so without this they would never
+  # get security patches.
   - package-ecosystem: docker
     directories:
       - /
+      - /app
     schedule:
       interval: weekly
     groups:

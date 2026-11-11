@@ -5,31 +5,34 @@ prod. No modules, no tenancy. What runs on the machines is in `deploy/host/`.
 
 ## What it creates
 
-Demo:
-
-- `STARDUST1-S` VPS on Ubuntu 24.04, with Docker and a `deploy` user.
-- `DB-DEV-S` managed PostgreSQL, private network only, 7-day backups, with the
-  `velomine` database.
-- A record for `demo`.
-
-Dev, staging and prod:
-
-- One `DEV1-M` VPS (4 GB) for the three environments.
-- One `DB-DEV-S` managed PostgreSQL instance with a database and a user per
-  environment (`velomine_dev`, `velomine_staging`, `velomine_prod`). A user can
-  connect only to its own database. The initial user `velomine_admin` is for
-  the operator only.
-- A records for `dev`, `staging` and `app` (prod).
-
-Shared:
-
-- One private network between the VPSs and the databases. The security group
+- One `STARDUST1-S` VPS on Ubuntu 24.04, with Docker and a `deploy` user. It runs
+  Traefik and every environment (`deploy/host/`); only the demo runs for now.
+- One `DB-DEV-S` managed PostgreSQL instance, private network only, 7-day
+  backups. The demo uses its `velomine` database.
+- One private network between the VPS and the database. The security group
   opens 80/443 to everyone and 22 to `admin_cidr` only.
 - Object Storage bucket in another region for restic backups.
-- A records for the root and `www`, pointing at the host that runs `apex_env`.
-- A private Scaleway Container Registry namespace. Images are on GHCR now
-  (`ghcr.io/zenkraker/velomine`); remove the namespace once the demo pulls from
-  GHCR.
+- A records for `demo`, the root and `www`, all pointing at the VPS. Traefik
+  decides which environment answers the root and `www` (the demo until prod
+  launches).
+- A private Scaleway Container Registry namespace from before the images moved
+  to GHCR (`ghcr.io/zenkraker/velomine-server` and `-web`). Remove it once the
+  demo runs from GHCR.
+
+### dev, staging and prod
+
+They are written out in `main.tf`, `variables.tf` and `outputs.tf`, commented
+out until there are customers. Turning them on:
+
+1. Resize the VPS (`instance_type`, for example `DEV1-M` or `DEV1-L`) and, if
+   needed, the database node (`db_node_type`).
+2. Uncomment the blocks, set `envs` to the environments to turn on, and pass
+   `TF_VAR_env_db_passwords` (one long random password per environment).
+3. `tofu plan`: it must show only additions besides the resize. Commented code
+   is not checked by `tofu validate`, so read the plan carefully.
+4. Each environment then has a database and a user `velomine_<env>` that can
+   reach only its own database, and an A record (`dev`, `staging`, `app` for
+   prod).
 
 ## What it does not create
 
@@ -49,8 +52,6 @@ cp terraform.tfvars.example terraform.tfvars
 export SCW_ACCESS_KEY=...
 export SCW_SECRET_KEY=...
 export TF_VAR_db_password="$(openssl rand -base64 32)"
-export TF_VAR_envs_db_admin_password="$(openssl rand -base64 32)"
-export TF_VAR_env_db_passwords="{dev=\"$(openssl rand -hex 24)\",staging=\"$(openssl rand -hex 24)\",prod=\"$(openssl rand -hex 24)\"}"
 export TF_VAR_ssh_public_key="$(cat ~/.ssh/id_ed25519.pub)"
 export TF_VAR_admin_cidr="$(curl -fsS https://ifconfig.me)/32"
 
@@ -64,10 +65,8 @@ Keep the passwords in your secret store: the environment files in
 stay out of Git. The state is local and holds the passwords in plaintext: move it
 to an encrypted remote backend before prod holds real data.
 
-**Upgrading an existing demo-only state:** the dev/staging/prod resources are
-additive and the demo resources keep their addresses. `tofu plan` must show only
-additions (and the root and `www` records unchanged while `apex_env` is `demo`).
-If it shows anything to destroy or replace, stop.
+`tofu plan` on today's state must show no changes: the dev, staging and prod
+resources are commented out.
 
 ## Notes
 
@@ -80,8 +79,8 @@ If it shows anything to destroy or replace, stop.
   unblocks it only after the account is authorised.
 - The registry namespace and bucket name must be unique.
 - Backups are restic snapshots to the bucket; see `deploy/host/`.
-- Moving `apex_env` to `prod` points `velomine.eu` and `www` at the envs VPS; run
-  `deploy.sh` there with `APEX_ENV=prod` first, so the certificate is ready.
+- Which environment answers `velomine.eu` and `www` is `APEX_ENV` in
+  `deploy/host/deploy.sh` (the demo until prod launches); DNS does not change.
 
 ## Host credentials
 

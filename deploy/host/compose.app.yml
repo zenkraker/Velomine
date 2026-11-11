@@ -1,36 +1,32 @@
-# One Velomine environment. The same file runs dev, staging, prod and demo as
-# separate compose projects:
+# One Velomine environment: the server and the web image, the same pair a self-hoster runs. The same file runs every
+# environment as its own compose project:
 #
 #   docker compose -p velomine-<env> -f compose.app.yml --env-file <env>/.env up -d
 #
-# <env>/.env (written by deploy.sh) sets VELOMINE_ENV and VELOMINE_IMAGE. The
-# settings and secrets are in /etc/velomine/<env>/app.env, the data under
-# /srv/velomine/<env>. The app joins only its own network, shared with Caddy.
+# <env>/.env (written by deploy.sh) sets VELOMINE_ENV, the two images, the host names Traefik routes here and the
+# middlewares. The settings and secrets are in /etc/velomine/<env>/app.env, the data under /srv/velomine/<env>.
+#
+# Networks: the web container joins Traefik's `proxy` network and this environment's own network; the server only this
+# environment's network. So no environment, and nothing on `proxy`, can reach another environment's server.
 
 services:
-  app:
-    image: ${VELOMINE_IMAGE:?set VELOMINE_IMAGE in /opt/velomine/<env>/.env}
+  server:
+    image: ${VELOMINE_SERVER_IMAGE:?set VELOMINE_SERVER_IMAGE in /opt/velomine/<env>/.env}
     restart: unless-stopped
     env_file:
       - /etc/velomine/${VELOMINE_ENV:?set VELOMINE_ENV}/app.env
     volumes:
       - /srv/velomine/${VELOMINE_ENV}/files:/data/files
       - /srv/velomine/${VELOMINE_ENV}/keys:/data/keys
-    expose:
-      - "8080"
-    networks:
-      edge:
-        aliases:
-          - velomine-${VELOMINE_ENV}
+    networks: [internal]
     read_only: true
     tmpfs:
       - /tmp:size=256m,mode=1777
-    cap_drop:
-      - ALL
+    cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
     pids_limit: 512
-    mem_limit: ${VELOMINE_MEM_LIMIT:-850m}
+    mem_limit: ${VELOMINE_SERVER_MEM_LIMIT:-600m}
     stop_grace_period: 30s
     logging:
       driver: json-file
@@ -38,7 +34,35 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  web:
+    image: ${VELOMINE_WEB_IMAGE:?set VELOMINE_WEB_IMAGE in /opt/velomine/<env>/.env}
+    restart: unless-stopped
+    depends_on: [server]
+    networks: [internal, proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.velomine-${VELOMINE_ENV}.rule=${VELOMINE_ROUTER_RULE:?set VELOMINE_ROUTER_RULE}
+      - traefik.http.routers.velomine-${VELOMINE_ENV}.entryPoints=websecure
+      - traefik.http.routers.velomine-${VELOMINE_ENV}.tls.certResolver=letsencrypt
+      - traefik.http.routers.velomine-${VELOMINE_ENV}.middlewares=${VELOMINE_MIDDLEWARES:-hsts@docker}
+      - traefik.http.services.velomine-${VELOMINE_ENV}.loadBalancer.server.port=8080
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
-  edge:
+  internal:
     name: velomine-${VELOMINE_ENV}
+  proxy:
+    name: proxy
     external: true
