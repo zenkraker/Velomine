@@ -66,7 +66,8 @@ again to see their own history.
 
 - One club price: a one-time activation fee, then a yearly fee per club. No per-seat
   pricing, no feature tiers, no paid add-ons.
-- A self-hosted club pays for a licence that never limits seats and never blocks member data.
+- Self-hosting is free under AGPL-3.0, for riders and clubs alike. An optional supporter
+  licence funds the project: it unlocks nothing, never limits seats and never blocks member data.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 

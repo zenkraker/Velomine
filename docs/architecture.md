@@ -57,7 +57,7 @@ Trade-offs accepted: isolation depends on query filters and row-level security i
 - **Migrations** are backward-compatible for one release (expand, backfill, contract). A database rollback is a restore, not a downgrade.
 - **Releases** use exact image versions, never `latest`, and can be rolled back to the previous version.
 - **Backups:** the database (point-in-time recovery where the host offers it, plus a nightly `pg_dump -Fc`), the file volume and the Data Protection key ring. Deleted data leaves the backups within 90 days.
-- **Licence (self-host):** an offline, signed licence per club with the club, its tier and an expiry, validated with a public key. No seat count and no phone-home. An expired licence warns; it never blocks reading, writing or exporting member data.
+- **Supporter key (self-host):** self-hosting is free. An optional supporter key, offline and signed, names the holder (a rider or a club) and an expiry, is validated with a public key and shows a supporter badge. It unlocks no feature, has no seat count and never phones home; a server without one works exactly the same.
 - **Operations** (hosting, inventory, secrets, backups, runbooks, billing) live in a private ops repository. This repository holds only what a self-hoster needs.
 - No Kubernetes, no multi-cloud, no active-active.
 
@@ -151,5 +151,5 @@ erDiagram
 | Original ride files kept forever; FIT as the phone's format | Any ride can be read again when a parser improves. |
 | Streams as one row per ride with an array per signal | A long ride is one row fetch. Revisit if queries must filter single samples across rides. |
 | Wear, goals and totals computed on read; load and power bests stored | Always correct for the current profile, except the sums the dashboard needs fast. |
-| Offline, signed self-host licence without seats | No phone-home, no per-seat pricing, never a block on member data. |
+| Optional, offline, signed supporter key | Funds the project without a paywall: no phone-home, no seats, never a feature or a block on member data. |
 | Member telemetry opt-in; operational logs separate and anonymous | Health and location data never leave through diagnostics. |

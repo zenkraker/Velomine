@@ -1,6 +1,6 @@
 # Velomine
 
-Cycling-only training platform for clubs and teams. Cloud is the default: one shared deployment and database for many clubs. Self-hosting runs the same image and schema for one club. No feature paywall; every member owns their data.
+Cycling-only training platform for clubs and teams. Cloud is the default: one shared deployment and database for many clubs. Self-hosting runs the same image and schema for one club. No feature paywall; every member owns their data. Self-hosting is free for riders and clubs; an optional supporter licence funds the project and unlocks nothing.
 
 ## Status
 
@@ -34,7 +34,7 @@ Early development. The single-database model below is what runs today, locally a
 
 **Roadmap**
 
-- *Launch:* ride titles and descriptions, search and a date filter on the ride list, then Strava export import with cross-app duplicate detection; self-serve sign-up and payment (solo trial, club creation, the member limit of each club band); "Share to Velomine" for ride files on the phone, drag-and-drop of a bike computer's folder on the web and USB import on Android; the view log shown on each ride; the club ride calendar (date, meeting point, route, sign-up, calendar feed) with a club route library that members add routes to; maintenance reminders and a service log for bikes. On the site: a plain comparison of what Strava charges for against what is included here, and a public pledge that no feature will ever move behind a payment. Before opening to paying clubs: row-level security on club tables, a cloud Android build that forbids cleartext HTTP, a bundled font instead of Google's font host, Italian emails, re-reading all rides after a parser update, the self-host licence.
+- *Launch:* ride titles and descriptions, search and a date filter on the ride list, then Strava export import with cross-app duplicate detection; self-serve sign-up and payment (solo trial, club creation, the member limit of each club band); "Share to Velomine" for ride files on the phone, drag-and-drop of a bike computer's folder on the web and USB import on Android; the view log shown on each ride; the club ride calendar (date, meeting point, route, sign-up, calendar feed) with a club route library that members add routes to; maintenance reminders and a service log for bikes. On the site: a plain comparison of what Strava charges for against what is included here, and a public pledge that no feature will ever move behind a payment. Before opening to paying clubs: row-level security on club tables, a cloud Android build that forbids cleartext HTTP, a bundled font instead of Google's font host, Italian emails, re-reading all rides after a parser update, the optional supporter key and badge for self-hosted servers.
 - *After launch:* speed, cadence and power sensors and the wheel-speed source; coach comments, then the opt-in club space (ride feed, reactions, comments between members, always under each member's own privacy settings), with "rode with" detection for clubmates on the same ride; a club's calendar and activity level shown to riders looking for a club, never its members' rides; push notifications on the phone; ratings, notes and suggested variants on club routes; a shareable ride card and share links with server-rendered pages; photos, ride thumbnails and reverse geocoding; cost per km for each bike; the Italian presentation site; an audit log of sign-ins and admin actions; outbound address checks for admin-entered URLs.
 - *Later:* the iOS recorder; a member's own history on repeated routes and climbs, with opt-in club comparison; a year review; scoped API keys; FIT export of any ride.
 - *Only if many riders ask:* reading rides (never health logs) from Health Connect and Apple Health.
@@ -44,6 +44,10 @@ Early development. The single-database model below is what runs today, locally a
 
 - Weight as a single profile field: W/kg, VO2max and calories need it; confirm it stays one field.
 - Wellbeing and cycle data are health data under GDPR. Consent screens, export and deletion are built in; the legal side still needs checking with someone qualified.
+
+## Licence
+
+Velomine is licensed under the [GNU AGPL-3.0](LICENSE). The Velomine name and marks are reserved: a fork may not present itself as Velomine.
 
 ## Run it on your computer
 
