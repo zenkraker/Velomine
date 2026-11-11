@@ -573,6 +573,9 @@
   "noSettings": "Nessuna impostazione.",
   "rideFilesOnDisk": "File delle uscite su disco",
   "serverVersion": "Versione del server",
+  "rideReaderVersion": "Versione del lettore delle uscite",
+  "ridesToReread": "Uscite in attesa di essere rilette",
+  "ridesNotReread": "Uscite che non è stato possibile rileggere",
 
   "profileTitle": "Profilo",
   "ftpHelper": "Soglia funzionale di potenza. Usata per il carico di allenamento e le zone di potenza.",

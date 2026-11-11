@@ -1834,6 +1834,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverVersion => 'Server version';
 
   @override
+  String get rideReaderVersion => 'Ride reader version';
+
+  @override
+  String get ridesToReread => 'Rides waiting to be read again';
+
+  @override
+  String get ridesNotReread => 'Rides that could not be read again';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override

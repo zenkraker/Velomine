@@ -1567,6 +1567,9 @@ extension on FakeServer {
         'rides': rides.length,
         'rideFilesBytes': 1234567,
         'version': '0.1.0',
+        'parserVersion': 3,
+        'ridesToReread': 12,
+        'ridesNotReread': 2,
       });
     }
     if (path == '/api/v1/admin/catalogue') {

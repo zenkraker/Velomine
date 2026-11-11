@@ -1009,6 +1009,9 @@
   "noOverview": "No overview.",
   "noSettings": "No settings.",  "rideFilesOnDisk": "Ride files on disk",
   "serverVersion": "Server version",
+  "rideReaderVersion": "Ride reader version",
+  "ridesToReread": "Rides waiting to be read again",
+  "ridesNotReread": "Rides that could not be read again",
 
   "profileTitle": "Profile",
   "ftpHelper": "Functional threshold power. Used for training load and power zones.",

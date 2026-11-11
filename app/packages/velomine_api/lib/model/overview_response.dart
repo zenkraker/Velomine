@@ -19,6 +19,9 @@ class OverviewResponse {
     required this.rides,
     required this.rideFilesBytes,
     required this.version,
+    required this.parserVersion,
+    required this.ridesToReread,
+    required this.ridesNotReread,
   });
 
   final int accounts;
@@ -33,6 +36,12 @@ class OverviewResponse {
 
   final String version;
 
+  final int parserVersion;
+
+  final int ridesToReread;
+
+  final int ridesNotReread;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is OverviewResponse &&
     other.accounts == accounts &&
@@ -40,7 +49,10 @@ class OverviewResponse {
     other.locked == locked &&
     other.rides == rides &&
     other.rideFilesBytes == rideFilesBytes &&
-    other.version == version;
+    other.version == version &&
+    other.parserVersion == parserVersion &&
+    other.ridesToReread == ridesToReread &&
+    other.ridesNotReread == ridesNotReread;
 
   @override
   int get hashCode =>
@@ -50,10 +62,13 @@ class OverviewResponse {
     (locked.hashCode) +
     (rides.hashCode) +
     (rideFilesBytes.hashCode) +
-    (version.hashCode);
+    (version.hashCode) +
+    (parserVersion.hashCode) +
+    (ridesToReread.hashCode) +
+    (ridesNotReread.hashCode);
 
   @override
-  String toString() => 'OverviewResponse[accounts=$accounts, waitingForApproval=$waitingForApproval, locked=$locked, rides=$rides, rideFilesBytes=$rideFilesBytes, version=$version]';
+  String toString() => 'OverviewResponse[accounts=$accounts, waitingForApproval=$waitingForApproval, locked=$locked, rides=$rides, rideFilesBytes=$rideFilesBytes, version=$version, parserVersion=$parserVersion, ridesToReread=$ridesToReread, ridesNotReread=$ridesNotReread]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -63,6 +78,9 @@ class OverviewResponse {
       json[r'rides'] = this.rides;
       json[r'rideFilesBytes'] = this.rideFilesBytes;
       json[r'version'] = this.version;
+      json[r'parserVersion'] = this.parserVersion;
+      json[r'ridesToReread'] = this.ridesToReread;
+      json[r'ridesNotReread'] = this.ridesNotReread;
     return json;
   }
 
@@ -75,6 +93,9 @@ class OverviewResponse {
     int? rides,
     int? rideFilesBytes,
     String? version,
+    int? parserVersion,
+    int? ridesToReread,
+    int? ridesNotReread,
   }) => OverviewResponse(
     accounts: accounts ?? this.accounts,
     waitingForApproval: waitingForApproval ?? this.waitingForApproval,
@@ -82,6 +103,9 @@ class OverviewResponse {
     rides: rides ?? this.rides,
     rideFilesBytes: rideFilesBytes ?? this.rideFilesBytes,
     version: version ?? this.version,
+    parserVersion: parserVersion ?? this.parserVersion,
+    ridesToReread: ridesToReread ?? this.ridesToReread,
+    ridesNotReread: ridesNotReread ?? this.ridesNotReread,
   );
 
   /// Returns a new [OverviewResponse] instance and imports its values from
@@ -107,6 +131,12 @@ class OverviewResponse {
         assert(json[r'rideFilesBytes'] != null, 'Required key "OverviewResponse[rideFilesBytes]" has a null value in JSON.');
         assert(json.containsKey(r'version'), 'Required key "OverviewResponse[version]" is missing from JSON.');
         assert(json[r'version'] != null, 'Required key "OverviewResponse[version]" has a null value in JSON.');
+        assert(json.containsKey(r'parserVersion'), 'Required key "OverviewResponse[parserVersion]" is missing from JSON.');
+        assert(json[r'parserVersion'] != null, 'Required key "OverviewResponse[parserVersion]" has a null value in JSON.');
+        assert(json.containsKey(r'ridesToReread'), 'Required key "OverviewResponse[ridesToReread]" is missing from JSON.');
+        assert(json[r'ridesToReread'] != null, 'Required key "OverviewResponse[ridesToReread]" has a null value in JSON.');
+        assert(json.containsKey(r'ridesNotReread'), 'Required key "OverviewResponse[ridesNotReread]" is missing from JSON.');
+        assert(json[r'ridesNotReread'] != null, 'Required key "OverviewResponse[ridesNotReread]" has a null value in JSON.');
         return true;
       }());
 
@@ -117,6 +147,9 @@ class OverviewResponse {
         rides: mapValueOfType<int>(json, r'rides')!,
         rideFilesBytes: mapValueOfType<int>(json, r'rideFilesBytes')!,
         version: mapValueOfType<String>(json, r'version')!,
+        parserVersion: mapValueOfType<int>(json, r'parserVersion')!,
+        ridesToReread: mapValueOfType<int>(json, r'ridesToReread')!,
+        ridesNotReread: mapValueOfType<int>(json, r'ridesNotReread')!,
       );
     }
     return null;
@@ -170,6 +203,9 @@ class OverviewResponse {
     'rides',
     'rideFilesBytes',
     'version',
+    'parserVersion',
+    'ridesToReread',
+    'ridesNotReread',
   };
 }
 

@@ -1844,6 +1844,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get serverVersion => 'Versione del server';
 
   @override
+  String get rideReaderVersion => 'Versione del lettore delle uscite';
+
+  @override
+  String get ridesToReread => 'Uscite in attesa di essere rilette';
+
+  @override
+  String get ridesNotReread => 'Uscite che non è stato possibile rileggere';
+
+  @override
   String get profileTitle => 'Profilo';
 
   @override
