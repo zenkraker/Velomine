@@ -64,7 +64,7 @@ namespace Velomine.Server.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_service_entries", x => x.id);
-                    table.CheckConstraint("ck_service_entries_cost", "(cost_amount IS NULL AND cost_currency IS NULL) OR (cost_amount >= 0 AND cost_currency IS NOT NULL)");
+                    table.CheckConstraint("ck_service_entries_cost", "(cost_amount IS NULL) = (cost_currency IS NULL) AND (cost_amount IS NULL OR cost_amount >= 0)");
                     table.ForeignKey(
                         name: "fk_service_entries_bike_components_component_id",
                         column: x => x.component_id,

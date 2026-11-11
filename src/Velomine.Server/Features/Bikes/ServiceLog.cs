@@ -112,7 +112,7 @@ public sealed class ServiceEntryConfiguration : IEntityTypeConfiguration<Service
     {
         entry.ToTable("service_entries", "bikes", t =>
         {
-            t.HasCheckConstraint("ck_service_entries_cost", "(cost_amount IS NULL AND cost_currency IS NULL) OR (cost_amount >= 0 AND cost_currency IS NOT NULL)");
+            t.HasCheckConstraint("ck_service_entries_cost", "(cost_amount IS NULL) = (cost_currency IS NULL) AND (cost_amount IS NULL OR cost_amount >= 0)");
         });
         entry.HasKey(e => e.Id);
         entry.Property(e => e.Title).HasMaxLength(200);

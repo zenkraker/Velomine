@@ -467,6 +467,29 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task ServiceEntries_ShouldRejectACurrencyWithoutAnAmount_WhenWrittenStraightToTheDatabase()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await NewMemberAsync(api);
+        var bike = await AddBikeAsync(member);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        db.ServiceEntries.Add(new ServiceEntry
+        {
+            Id = Guid.CreateVersion7(),
+            BikeId = bike.Bike.Id,
+            Date = new DateOnly(2026, 10, 5),
+            Title = "Service",
+            CostCurrency = "EUR",
+            CreatedAt = Now,
+        });
+
+        var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync(Ct));
+        Assert.Equal("23514", Assert.IsType<Npgsql.PostgresException>(error.InnerException).SqlState);
+    }
+
+    [Fact]
     public async Task ServiceLog_ShouldRefuseTheEntry_WhenTheDateIsInTheFutureOrTheTitleIsEmpty()
     {
         await using var api = await StartAsync();
