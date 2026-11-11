@@ -15,6 +15,8 @@ class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.enabled = true,
+    this.maxLength,
+    this.maxLines = 1,
   });
 
   /// The key a test or a finder looks the field up by; it lands on the `TextField` itself.
@@ -28,6 +30,12 @@ class AppTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool enabled;
 
+  /// The most characters the field takes; a counter shows how many are left.
+  final int? maxLength;
+
+  /// Lines shown at once; more than one makes a text area.
+  final int maxLines;
+
   @override
   Widget build(BuildContext context) => TextField(
     key: fieldKey,
@@ -35,6 +43,8 @@ class AppTextField extends StatelessWidget {
     keyboardType: keyboardType,
     inputFormatters: inputFormatters,
     enabled: enabled,
+    maxLength: maxLength,
+    maxLines: maxLines,
     decoration: InputDecoration(
       labelText: label,
       hintText: hint,

@@ -14,15 +14,34 @@ part 'rides_data.g.dart';
 /// One page of the member's rides.
 typedef RidesPage = ({List<RideResponse> rides, String? next});
 
+/// A day as the server reads it ("2026-11-03"), written by hand so the numerals do not follow the language.
+String calendarDay(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-'
+    '${day.month.toString().padLeft(2, '0')}-'
+    '${day.day.toString().padLeft(2, '0')}';
+
 /// The ride endpoints as values: the ViewModels never see an exception.
 class RidesData {
   RidesData(this._api);
 
   final RidesApi _api;
 
-  Future<Result<RidesPage>> page({String? cursor, String? discipline}) async =>
+  /// [query] matches the title and description; [from] and [to] are calendar days, both included.
+  Future<Result<RidesPage>> page({
+    String? cursor,
+    String? discipline,
+    String? query,
+    DateTime? from,
+    DateTime? to,
+  }) async =>
       (await _api
-              .listRides(cursor: cursor, discipline: discipline)
+              .listRides(
+                cursor: cursor,
+                discipline: discipline,
+                q: query == null || query.trim().isEmpty ? null : query.trim(),
+                from: from == null ? null : calendarDay(from),
+                to: to == null ? null : calendarDay(to),
+              )
               .guard(FailureAction.loadRides))
           .map(
             (page) => (

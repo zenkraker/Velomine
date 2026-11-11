@@ -1473,6 +1473,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("dedup_key");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
                     b.Property<string>("Device")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -1587,6 +1591,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
 
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
                     b.Property<double?>("Trimp")
                         .HasColumnType("double precision")
                         .HasColumnName("trimp");
@@ -1646,7 +1654,12 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ux_rides_user_source")
                         .HasFilter("source IS NOT NULL");
 
-                    b.ToTable("rides", "rides");
+                    b.ToTable("rides", "rides", t =>
+                        {
+                            t.HasCheckConstraint("ck_rides_description_length", "char_length(description) BETWEEN 1 AND 2000");
+
+                            t.HasCheckConstraint("ck_rides_title_length", "char_length(title) BETWEEN 1 AND 120");
+                        });
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Rides.RideLap", b =>
@@ -1858,6 +1871,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("member_id");
 
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
                     b.Property<Guid>("ViewerId")
                         .HasColumnType("uuid")
                         .HasColumnName("viewer_id");
@@ -1882,6 +1899,10 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("MemberId", "At")
                         .HasDatabaseName("ix_view_log_member_id_at");
+
+                    b.HasIndex("RideId", "At")
+                        .HasDatabaseName("ix_view_log_ride_id_at")
+                        .HasFilter("ride_id IS NOT NULL");
 
                     b.ToTable("view_log", "sharing");
                 });
@@ -2289,6 +2310,12 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_view_log_users_member_id");
+
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_view_log_rides_ride_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>

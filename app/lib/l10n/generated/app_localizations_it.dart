@@ -2415,6 +2415,88 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideFilterAll => 'Tutte';
 
   @override
+  String get rideFilterSearch => 'Cerca uscite';
+
+  @override
+  String get rideFilterSearchHint => 'Cerca nei titoli e nelle descrizioni';
+
+  @override
+  String get rideFilterClearSearch => 'Cancella la ricerca';
+
+  @override
+  String get rideFilterDatesTooltip => 'Scegli le date';
+
+  @override
+  String get rideFilterRemoveDates => 'Togli il filtro delle date';
+
+  @override
+  String get rideFilterClear => 'Azzera i filtri';
+
+  @override
+  String get noRidesMatch => 'Nessuna uscita corrisponde.';
+
+  @override
+  String rideDateRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String rideDefaultTitle(String period, String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'commute': 'Tragitto casa-lavoro',
+      'virtual': 'Uscita virtuale',
+      'indoor': 'Uscita indoor',
+      'road': 'Uscita su strada',
+      'gravel': 'Uscita gravel',
+      'mountain': 'Uscita in mountain bike',
+      'track': 'Uscita in pista',
+      'ebike': 'Uscita in e-bike',
+      'other': 'Uscita in bici',
+    });
+    String _temp1 = intl.Intl.selectLogic(period, {
+      'morning': 'del mattino',
+      'afternoon': 'del pomeriggio',
+      'evening': 'della sera',
+      'other': 'della notte',
+    });
+    return '$_temp0 $_temp1';
+  }
+
+  @override
+  String get rideTextEdit => 'Modifica titolo e descrizione';
+
+  @override
+  String get rideTextSheetTitle => 'Dai un nome all\'uscita';
+
+  @override
+  String get rideTextHelp =>
+      'Parole tue. Gli allenatori con cui condividi le uscite possono leggerle.';
+
+  @override
+  String get rideTextTitle => 'Titolo';
+
+  @override
+  String get rideTextTitleHelper =>
+      'Lascia vuoto per un nome ricavato da orario e tipo di uscita.';
+
+  @override
+  String get rideTextDescription => 'Descrizione';
+
+  @override
+  String get rideTextAdd => 'Aggiungi una descrizione';
+
+  @override
+  String get actionSaveRideDetails => 'salvare titolo e descrizione';
+
+  @override
+  String rideViewedBy(String name, String when) {
+    return 'Visto da $name · $when';
+  }
+
+  @override
+  String get rideViewsEmpty => 'Nessun altro ha guardato questa uscita.';
+
+  @override
   String get rideTypeTitle => 'Dettagli uscita';
 
   @override

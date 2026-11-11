@@ -74,6 +74,7 @@ class RideDetailViewModel extends _$RideDetailViewModel {
     final laps = (await data.laps(id)).valueOrNull ?? const [];
     final bikes = (await data.bikes()).valueOrNull ?? const [];
     final feel = (await data.feel(id)).valueOrNull;
+    final views = (await data.views(id)).valueOrNull;
     if (!ref.mounted) return;
     state = RideDetailState(
       ride: ride,
@@ -81,6 +82,7 @@ class RideDetailViewModel extends _$RideDetailViewModel {
       laps: laps,
       bikes: bikes,
       feel: feel,
+      views: views,
       load: state.load.finish(Ok(ride)),
       messages: state.messages,
     );
@@ -107,6 +109,39 @@ class RideDetailViewModel extends _$RideDetailViewModel {
           commute: commute,
         ),
   );
+
+  /// Saves the member's title and description. When the ride changed since it was read the server refuses,
+  /// the ride is read again so the next try carries the current version, and the member sees why.
+  Future<bool> saveDetails(String? title, String? description) async {
+    final ride = state.ride;
+    if (ride == null || state.action.running) return false;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(rideDetailDataProvider)
+        .setDetails(
+          id,
+          title: title,
+          description: description,
+          version: ride.version,
+        );
+    if (!ref.mounted) return false;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      if (failure.kind == FailureKind.conflict) {
+        final fresh = (await ref.read(rideDetailDataProvider).ride(id))
+            .valueOrNull;
+        if (ref.mounted && fresh != null) state = state.copyWith(ride: fresh);
+      }
+      return false;
+    }
+    // The save answers with the ride without its zones; read it whole again so the screen keeps them.
+    final saved = result.valueOrNull;
+    if (saved != null) state = state.copyWith(ride: saved);
+    final whole = (await ref.read(rideDetailDataProvider).ride(id)).valueOrNull;
+    if (ref.mounted && whole != null) state = state.copyWith(ride: whole);
+    return true;
+  }
 
   Future<bool> saveFeel(int rpe, String? notes) =>
       _feel(() => ref.read(rideDetailDataProvider).saveFeel(id, rpe, notes));

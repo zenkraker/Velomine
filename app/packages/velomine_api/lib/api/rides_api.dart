@@ -275,7 +275,13 @@ class RidesApi {
   /// * [String] environment:
   ///
   /// * [bool] commute:
-  Future<Response> listRidesWithHttpInfo({ String? cursor, int? limit, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [String] q:
+  ///
+  /// * [String] from:
+  ///
+  /// * [String] to:
+  Future<Response> listRidesWithHttpInfo({ String? cursor, int? limit, String? discipline, String? assist, String? environment, bool? commute, String? q, String? from, String? to, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/rides';
 
@@ -303,6 +309,15 @@ class RidesApi {
     }
     if (commute != null) {
       queryParams.addAll(_queryParams('', 'commute', commute));
+    }
+    if (q != null) {
+      queryParams.addAll(_queryParams('', 'q', q));
+    }
+    if (from != null) {
+      queryParams.addAll(_queryParams('', 'from', from));
+    }
+    if (to != null) {
+      queryParams.addAll(_queryParams('', 'to', to));
     }
 
     const contentTypes = <String>[];
@@ -333,8 +348,14 @@ class RidesApi {
   /// * [String] environment:
   ///
   /// * [bool] commute:
-  Future<ListRidesResponse?> listRides({ String? cursor, int? limit, String? discipline, String? assist, String? environment, bool? commute, Future<void>? abortTrigger, }) async {
-    final response = await listRidesWithHttpInfo(cursor: cursor, limit: limit, discipline: discipline, assist: assist, environment: environment, commute: commute, abortTrigger: abortTrigger,);
+  ///
+  /// * [String] q:
+  ///
+  /// * [String] from:
+  ///
+  /// * [String] to:
+  Future<ListRidesResponse?> listRides({ String? cursor, int? limit, String? discipline, String? assist, String? environment, bool? commute, String? q, String? from, String? to, Future<void>? abortTrigger, }) async {
+    final response = await listRidesWithHttpInfo(cursor: cursor, limit: limit, discipline: discipline, assist: assist, environment: environment, commute: commute, q: q, from: from, to: to, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -388,6 +409,59 @@ class RidesApi {
   /// * [SetRideBikeRequest] setRideBikeRequest (required):
   Future<RideResponse?> setRideBike(String id, SetRideBikeRequest setRideBikeRequest, { Future<void>? abortTrigger, }) async {
     final response = await setRideBikeWithHttpInfo(id, setRideBikeRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RideResponse',) as RideResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/rides/{id}/details' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SetRideDetailsRequest] setRideDetailsRequest (required):
+  Future<Response> setRideDetailsWithHttpInfo(String id, SetRideDetailsRequest setRideDetailsRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/rides/{id}/details'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setRideDetailsRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SetRideDetailsRequest] setRideDetailsRequest (required):
+  Future<RideResponse?> setRideDetails(String id, SetRideDetailsRequest setRideDetailsRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setRideDetailsWithHttpInfo(id, setRideDetailsRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

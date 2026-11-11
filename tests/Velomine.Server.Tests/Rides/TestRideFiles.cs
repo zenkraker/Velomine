@@ -20,7 +20,8 @@ public static class TestRideFiles
         IReadOnlyList<(int Start, int Stop)>? Pauses = null,
         SubSport SubSport = SubSport.Generic,
         IReadOnlyList<int>? LapSeconds = null,
-        bool NoPosition = false);
+        bool NoPosition = false,
+        string? WorkoutName = null);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -35,6 +36,13 @@ public static class TestRideFiles
         fileId.SetProduct(1);
         fileId.SetSerialNumber(1234);
         encode.Write(fileId);
+
+        if (sessions.Select(s => s.WorkoutName).FirstOrDefault(n => n is not null) is { } workoutName)
+        {
+            var workout = new WorkoutMesg();
+            workout.SetWktName(workoutName);
+            encode.Write(workout);
+        }
 
         foreach (var session in sessions)
         {

@@ -44,9 +44,7 @@ class RidesViewModel extends _$RidesViewModel {
   Future<void> refresh() async {
     final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
-    final result = await ref
-        .read(ridesDataProvider)
-        .page(discipline: state.disciplineFilter);
+    final result = await _page();
     if (!ref.mounted || generation != _loadGeneration) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
@@ -64,9 +62,7 @@ class RidesViewModel extends _$RidesViewModel {
     if (cursor == null) return;
     final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
-    final result = await ref
-        .read(ridesDataProvider)
-        .page(cursor: cursor, discipline: state.disciplineFilter);
+    final result = await _page(cursor: cursor);
     if (!ref.mounted || generation != _loadGeneration) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(
@@ -89,6 +85,47 @@ class RidesViewModel extends _$RidesViewModel {
     );
     await refresh();
   }
+
+  /// Shows only the rides whose title or description contains [value]; empty shows every ride.
+  Future<void> setQuery(String value) async {
+    final query = value.trim();
+    if (state.query == query) return;
+    state = state.copyWith(query: query, clearNext: true);
+    await refresh();
+  }
+
+  /// Shows only the rides on these days (both included), or every day when [value] is null.
+  Future<void> setDateRange(DateSpan? value) async {
+    if (state.dateRange == value) return;
+    state = state.copyWith(
+      dateRange: value,
+      clearDateRange: value == null,
+      clearNext: true,
+    );
+    await refresh();
+  }
+
+  /// Puts every filter back, so the whole list shows again.
+  Future<void> clearFilters() async {
+    if (!state.filtered) return;
+    state = state.copyWith(
+      query: '',
+      clearDateRange: true,
+      clearDisciplineFilter: true,
+      clearNext: true,
+    );
+    await refresh();
+  }
+
+  Future<Result<RidesPage>> _page({String? cursor}) => ref
+      .read(ridesDataProvider)
+      .page(
+        cursor: cursor,
+        discipline: state.disciplineFilter,
+        query: state.query,
+        from: state.dateRange?.from,
+        to: state.dateRange?.to,
+      );
 
   /// Picks a file, uploads it, then watches the ride until the server has read it.
   Future<void> upload() async {

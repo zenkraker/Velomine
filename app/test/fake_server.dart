@@ -560,10 +560,32 @@ class FakeServer {
     if (moreReply != null) return moreReply;
 
     if (path == '/api/v1/rides' && request.method == 'GET') {
-      final discipline = request.url.queryParameters['discipline'];
-      final found = discipline == null
-          ? rides
-          : rides.where((r) => r['discipline'] == discipline).toList();
+      final params = request.url.queryParameters;
+      final discipline = params['discipline'];
+      final query = params['q']?.trim().toLowerCase() ?? '';
+      final from = params['from'];
+      final to = params['to'];
+      final found = rides.where((r) {
+        if (discipline != null && r['discipline'] != discipline) return false;
+        if (query.isNotEmpty) {
+          final title = (r['title'] as String?)?.toLowerCase() ?? '';
+          final description =
+              (r['description'] as String?)?.toLowerCase() ?? '';
+          if (!title.contains(query) && !description.contains(query)) {
+            return false;
+          }
+        }
+        // A ride before the first day or after the last one drops out.
+        final start = r['startTime'] as String?;
+        final day = start?.substring(0, 10);
+        if (from != null && (day == null || day.compareTo(from) < 0)) {
+          return false;
+        }
+        if (to != null && (day == null || day.compareTo(to) > 0)) {
+          return false;
+        }
+        return true;
+      }).toList();
       return json({'rides': found, 'next': null});
     }
     if (path == '/api/v1/rides/uploads') {
@@ -610,6 +632,24 @@ class FakeServer {
     if (rideBike != null && request.method == 'PUT') {
       final ride = rides.firstWhere((r) => r['id'] == rideBike.group(1));
       ride['bikeId'] = (jsonDecode(request.body) as Map)['bikeId'];
+      return json(ride);
+    }
+    final rideDetails = RegExp(r'^/api/v1/rides/([^/]+)/details$')
+        .firstMatch(path);
+    if (rideDetails != null && request.method == 'PUT') {
+      final ride = rides.firstWhere((r) => r['id'] == rideDetails.group(1));
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      // The same token the server keeps: an older version loses instead of overwriting.
+      if (body['version'] != ride['version']) {
+        return json({
+          'errors': {
+            'version': ['The ride changed since you opened it.'],
+          },
+        }, 409);
+      }
+      ride['title'] = body['title'];
+      ride['description'] = body['description'];
+      ride['version'] = (ride['version'] as int) + 1;
       return json(ride);
     }
     final rideType = RegExp(r'^/api/v1/rides/([^/]+)/type$').firstMatch(path);
@@ -1296,7 +1336,12 @@ extension on FakeServer {
     http.Response Function(Object?, [int]) json,
   ) {
     if (path == '/api/v1/sharing/views') {
-      return json({'views': shareViews});
+      final rideId = request.url.queryParameters['rideId'];
+      return json({
+        'views': rideId == null
+            ? shareViews
+            : shareViews.where((v) => v['rideId'] == rideId).toList(),
+      });
     }
     if (path == '/api/v1/sharing') {
       if (request.method == 'PUT') {
@@ -1956,6 +2001,11 @@ Map<String, Object?> rideJson(
   String? assist,
   String? environment,
   bool? commute,
+  String? title,
+  String? description,
+  int version = 1,
+  String startTime = '2026-11-01T07:30:00Z',
+  int? utcOffsetMinutes,
 }) => {
   'id': id,
   'status': status,
@@ -1963,13 +2013,16 @@ Map<String, Object?> rideJson(
   'duplicateOf': null,
   'fileName': fileName,
   'uploadedAt': '2026-11-02T08:00:00Z',
-  'startTime': status == 'ready' ? '2026-11-01T07:30:00Z' : null,
-  'utcOffsetMinutes': null,
+  'startTime': status == 'ready' ? startTime : null,
+  'utcOffsetMinutes': utcOffsetMinutes,
   'device': null,
   'discipline': discipline,
   'assist': assist,
   'environment': environment,
   'commute': commute,
+  'title': title,
+  'description': description,
+  'version': version,
   'distanceM': distanceM,
   'elapsedS': movingS,
   'movingS': movingS,

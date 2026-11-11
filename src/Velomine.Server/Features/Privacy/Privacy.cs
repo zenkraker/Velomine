@@ -118,6 +118,11 @@ public static class PrivacyRules
         return ids.ToDictionary(id => id, id => PrivacyProfile.From(byUser.GetValueOrDefault(id), []));
     }
 
+    /// <summary>
+    /// A ride for a viewer with the rides grant. Title and description are the member's own words about the ride and
+    /// pass through on purpose (unlike the per-ride wellbeing note, which only the owner ever reads); a viewer
+    /// without the grant never reaches this function.
+    /// </summary>
     public static RideResponse ForViewer(RideResponse ride, PrivacyProfile privacy) => ride with
     {
         AvgHeartRate = privacy.HideHeartRate ? null : ride.AvgHeartRate,

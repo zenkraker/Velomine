@@ -10,6 +10,8 @@ import '../../../core/theme.dart';
 import '../../../core/user_message_text.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../rides_screen.dart';
+import '../ride_text_sheet.dart';
+import '../ride_title.dart';
 import '../ride_type_chips.dart';
 import '../ride_type_sheet.dart';
 import 'lap_table.dart';
@@ -21,6 +23,7 @@ import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
 import '../../../core/tokens.dart';
+import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/stat_tile.dart';
 
 class RideDetailScreen extends ConsumerWidget {
@@ -180,14 +183,49 @@ class RideDetailScreen extends ConsumerWidget {
     final powerZones = ride.powerZones.orElse(null) ?? const <ZoneTime>[];
 
     return [
-      Text(
-        dateTime(ride.startTime ?? ride.uploadedAt),
-        style: text.headlineSmall,
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              rideTitle(l10n, ride),
+              key: const Key('ride-title'),
+              style: text.headlineSmall,
+            ),
+          ),
+          if (ride.status == 'ready')
+            IconButton(
+              key: const Key('edit-ride-text'),
+              tooltip: l10n.rideTextEdit,
+              onPressed: () =>
+                  showRideTextSheet(context, ride, notifier.saveDetails),
+              icon: const Icon(Icons.edit_outlined),
+            ),
+        ],
       ),
+      Text(dateTime(ride.startTime ?? ride.uploadedAt), style: text.bodyMedium),
       Text(
         [ride.fileName, if (ride.device != null) ride.device!].join(' · '),
-        style: text.bodyMedium,
+        style: text.bodySmall,
       ),
+      if (ride.description case final description?
+          when description.trim().isNotEmpty)
+        Text(
+          description,
+          key: const Key('ride-description'),
+          style: text.bodyMedium,
+        )
+      else if (ride.status == 'ready')
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('add-ride-description'),
+            onPressed: () =>
+                showRideTextSheet(context, ride, notifier.saveDetails),
+            icon: const Icon(Icons.notes, size: 18),
+            label: Text(l10n.rideTextAdd),
+          ),
+        ),
       if (s.load.failure case final failure?)
         Text(
           failureText(l10n, failure),
@@ -279,6 +317,7 @@ class RideDetailScreen extends ConsumerWidget {
           onSave: notifier.saveFeel,
           onDelete: notifier.deleteFeel,
         ),
+        if (s.views case final views?) _ViewsCard(views: views),
         if (s.series?.hasRoute ?? false)
           RouteMap(
             data: s.series!,
@@ -320,6 +359,36 @@ class RideDetailScreen extends ConsumerWidget {
     return l10n.momentAt(
       clock(data.time[index]),
       distance == null ? '' : ' · ${km(distance)}',
+    );
+  }
+}
+
+/// Who else has looked at this ride, most recent first. Only the owner ever sees this.
+class _ViewsCard extends StatelessWidget {
+  const _ViewsCard({required this.views});
+
+  final List<ShareViewResponse> views;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return SectionCard(
+      key: const Key('ride-views'),
+      title: l10n.viewsTitle,
+      children: [
+        if (views.isEmpty)
+          Text(
+            l10n.rideViewsEmpty,
+            key: const Key('ride-views-empty'),
+            style: Theme.of(context).textTheme.bodyMedium,
+          )
+        else
+          for (final view in views)
+            Text(
+              l10n.rideViewedBy(view.viewerName, weekdayTime(view.at)),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+      ],
     );
   }
 }

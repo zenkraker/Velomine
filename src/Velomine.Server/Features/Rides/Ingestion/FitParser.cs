@@ -27,6 +27,7 @@ public static class FitParser
         var timerEvents = new List<(System.DateTime Time, EventType Type)>();
         var lapMessages = new List<(System.DateTime Start, double Elapsed)>();
         string? device = null;
+        string? workoutName = null;
         int? offsetMinutes = null;
 
         var broadcaster = new MesgBroadcaster();
@@ -76,6 +77,8 @@ public static class FitParser
                 elapsed = (float)(stamp.GetDateTime() - start.GetDateTime()).TotalSeconds;
             lapMessages.Add((start.GetDateTime(), elapsed));
         };
+        // The only name a FIT activity can carry that the rider chose: the structured workout it followed.
+        broadcaster.WorkoutMesgEvent += (_, e) => workoutName ??= ((WorkoutMesg)e.mesg).GetWktName() is { } bytes ? System.Text.Encoding.UTF8.GetString(bytes).Trim().TrimEnd((char)0) : null;
         broadcaster.FileIdMesgEvent += (_, e) => device ??= ManufacturerName(((FileIdMesg)e.mesg).GetManufacturer());
         broadcaster.ActivityMesgEvent += (_, e) =>
         {
@@ -94,11 +97,12 @@ public static class FitParser
         }
 
         if (records.Count == 0) throw new RideParseException("no_records", "The FIT file has no recorded data.");
+        var title = RideText.Imported(workoutName, RideText.MaxTitle);
 
         var rides = new List<ParsedRide>();
         if (sessions.Count == 0)
         {
-            rides.Add(Build(records, device, offsetMinutes, normalizedPower: null, timerEvents, laps: lapMessages));
+            rides.Add(Build(records, device, title, offsetMinutes, normalizedPower: null, timerEvents, laps: lapMessages));
         }
         else
         {
@@ -114,6 +118,7 @@ public static class FitParser
                     rides.Add(Build(
                         inSession,
                         device,
+                        title,
                         offsetMinutes,
                         session.NormalizedPower,
                         timerEvents.Where(e => e.Time >= session.Start && e.Time <= end),
@@ -140,6 +145,7 @@ public static class FitParser
     private static ParsedRide Build(
         List<Raw> records,
         string? device,
+        string? title,
         int? offsetMinutes,
         int? normalizedPower,
         IEnumerable<(System.DateTime Time, EventType Type)> timerEvents,
@@ -172,6 +178,7 @@ public static class FitParser
             StartTime = new DateTimeOffset(System.DateTime.SpecifyKind(first, DateTimeKind.Utc)),
             UtcOffsetMinutes = offsetMinutes,
             Device = device,
+            Title = title,
             Discipline = dimensions.Discipline,
             Assist = dimensions.Assist,
             Environment = dimensions.Environment,

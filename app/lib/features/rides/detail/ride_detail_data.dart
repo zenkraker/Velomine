@@ -10,10 +10,11 @@ part 'ride_detail_data.g.dart';
 
 /// The ride detail endpoints as values: the ViewModel never sees an exception.
 class RideDetailData {
-  RideDetailData(this._rides, this._bikes);
+  RideDetailData(this._rides, this._bikes, this._sharing);
 
   final RidesApi _rides;
   final BikesApi _bikes;
+  final SharingApi _sharing;
 
   Future<Result<RideResponse?>> ride(String id) =>
       _rides.getRide(id).guard(FailureAction.loadRide);
@@ -31,6 +32,11 @@ class RideDetailData {
   Future<Result<List<BikeResponse>>> bikes() async =>
       (await _bikes.listBikes().guard(FailureAction.loadBikes))
           .map((bikes) => bikes?.bikes ?? const <BikeResponse>[]);
+
+  /// Who looked at this ride, most recent first. Only the owner can read it.
+  Future<Result<List<ShareViewResponse>>> views(String id) async =>
+      (await _sharing.getShareViews(rideId: id).guard(FailureAction.loadRide))
+          .map((views) => views?.views ?? const <ShareViewResponse>[]);
 
   Future<Result<RideFeelResponse?>> feel(String id) =>
       _rides.wellbeingGetRideFeel(id).guard(FailureAction.loadRide);
@@ -59,6 +65,24 @@ class RideDetailData {
       )
       .guard(FailureAction.changeRideType);
 
+  /// Both texts replace what was there; null removes one. [version] is the ride's version as the member last
+  /// saw it, so a change made elsewhere meanwhile is refused instead of overwritten.
+  Future<Result<RideResponse?>> setDetails(
+    String id, {
+    String? title,
+    String? description,
+    required int version,
+  }) => _rides
+      .setRideDetails(
+        id,
+        SetRideDetailsRequest(
+          title: Optional.present(title),
+          description: Optional.present(description),
+          version: Optional.present(version),
+        ),
+      )
+      .guard(FailureAction.saveRideDetails);
+
   Future<Result<RideFeelResponse?>> saveFeel(
     String id,
     int rpe,
@@ -80,5 +104,5 @@ class RideDetailData {
 @Riverpod(keepAlive: true)
 RideDetailData rideDetailData(Ref ref) {
   final session = ref.watch(sessionProvider);
-  return RideDetailData(session.rides, session.bikes);
+  return RideDetailData(session.rides, session.bikes, session.sharing);
 }

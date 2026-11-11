@@ -110,9 +110,9 @@ public sealed class ImportService(
             // What a newer export of the same account would list again.
             var alreadyImported = (await db.Rides.AsNoTracking()
                     .Where(r => r.UserId == import.UserId && r.Source == StravaExport.Source && r.SourceId != null)
-                    .Select(r => r.SourceId!)
+                    .Select(r => new { r.SourceId, r.Id, HasTitle = r.Title != null, HasDescription = r.Description != null })
                     .ToListAsync(ct))
-                .ToHashSet(StringComparer.Ordinal);
+                .ToDictionary(r => r.SourceId!, r => (r.Id, r.HasTitle, r.HasDescription), StringComparer.Ordinal);
 
             var watched = Stopwatch.GetTimestamp();
             foreach (var activity in activities)
@@ -120,7 +120,11 @@ public sealed class ImportService(
                 if (activity.File.Length == 0) continue;
                 var entry = zip.GetEntry(activity.File);
                 if (entry is null || entry.Length == 0 || entry.Length > MaxFileBytes) continue;
-                if (activity.SourceId is { } known && alreadyImported.Contains(known)) continue;
+                if (activity.SourceId is { } known && alreadyImported.TryGetValue(known, out var here))
+                {
+                    await FillTextAsync(db, here, activity, ct);
+                    continue;
+                }
 
                 string sha;
                 try
@@ -142,6 +146,8 @@ public sealed class ImportService(
                     Source = StravaExport.Source,
                     SourceId = activity.SourceId,
                     Commute = activity.Commute,
+                    Title = activity.Name,
+                    Description = activity.Description,
                     FileSha256 = sha,
                     FileName = StravaExport.FileName(activity.File, "ride"),
                     UploadedAt = time.GetUtcNow(),
@@ -158,7 +164,7 @@ public sealed class ImportService(
                     continue; // the same activity was added by an earlier run of this import
                 }
                 db.Entry(ride).State = EntityState.Detached;
-                if (activity.SourceId is { } added) alreadyImported.Add(added);
+                if (activity.SourceId is { } added) alreadyImported[added] = (ride.Id, activity.Name is not null, activity.Description is not null);
                 rides.Enqueue(ride.Id);
             }
 
@@ -212,6 +218,29 @@ public sealed class ImportService(
             // The import is done; a wear warning that failed must not turn it into a failed import.
             logger.LogWarning(ex, "Wear warnings after import {ImportId} failed.", id);
         }
+    }
+
+    /// <summary>
+    /// A newer export meets a ride that is already here: its name and description fill what is still empty, and
+    /// never replace anything the member or an earlier import put there.
+    /// </summary>
+    private static async Task FillTextAsync(
+        VelomineDbContext db,
+        (Guid Id, bool HasTitle, bool HasDescription) here,
+        StravaActivity activity,
+        CancellationToken ct)
+    {
+        var fillTitle = !here.HasTitle && activity.Name is not null;
+        var fillDescription = !here.HasDescription && activity.Description is not null;
+        if (!fillTitle && !fillDescription) return;
+
+        // Only rows whose text is still empty are touched, so a member's edit made meanwhile is never overwritten.
+        if (fillTitle)
+            await db.Rides.Where(r => r.Id == here.Id && r.Title == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Title, activity.Name), ct);
+        if (fillDescription)
+            await db.Rides.Where(r => r.Id == here.Id && r.Description == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(r => r.Description, activity.Description), ct);
     }
 
     private static Task<int> PendingAsync(VelomineDbContext db, Guid importId, CancellationToken ct) =>

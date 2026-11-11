@@ -369,6 +369,8 @@ class ApiClient {
           return SetMyLanguageRequest.fromJson(value);
         case 'SetRideBikeRequest':
           return SetRideBikeRequest.fromJson(value);
+        case 'SetRideDetailsRequest':
+          return SetRideDetailsRequest.fromJson(value);
         case 'SetRideTypeRequest':
           return SetRideTypeRequest.fromJson(value);
         case 'SetTelemetryRequest':

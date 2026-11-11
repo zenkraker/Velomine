@@ -25,6 +25,10 @@ internal static class XmlRideFiles
     public static IEnumerable<XElement> Named(this XElement parent, string localName) =>
         parent.Descendants().Where(e => e.Name.LocalName.Equals(localName, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>The text of a direct child, so a track's own name is not mistaken for a point's or a segment's.</summary>
+    public static string? ChildText(this XElement parent, string localName) =>
+        parent.Elements().FirstOrDefault(e => e.Name.LocalName.Equals(localName, StringComparison.OrdinalIgnoreCase))?.Value;
+
     public static XElement? First(this XElement parent, string localName) => parent.Named(localName).FirstOrDefault();
 
     public static double? Number(string? text) =>
@@ -44,7 +48,8 @@ internal static class XmlRideFiles
         List<(DateTimeOffset Time, Sample Sample)> points,
         string? device = null,
         RideDimensions? dimensions = null,
-        IReadOnlyList<ParsedLap>? laps = null)
+        IReadOnlyList<ParsedLap>? laps = null,
+        string? title = null)
     {
         var ordered = points.OrderBy(p => p.Time).ToList();
         var first = ordered[0].Time;
@@ -60,6 +65,7 @@ internal static class XmlRideFiles
             Environment = d.Environment,
             Commute = d.Commute,
             Laps = laps ?? [],
+            Title = RideText.Imported(title, RideText.MaxTitle),
         };
     }
 }

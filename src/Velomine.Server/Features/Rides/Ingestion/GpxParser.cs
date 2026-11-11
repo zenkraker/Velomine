@@ -20,6 +20,8 @@ public static class GpxParser
     {
         var rides = new List<ParsedRide>();
         var otherSport = 0;
+        var fileName = document.Root!.Elements()
+            .FirstOrDefault(e => e.Name.LocalName.Equals("metadata", StringComparison.OrdinalIgnoreCase))?.ChildText("name");
         foreach (var track in document.Root!.Named("trk"))
         {
             var type = track.First("type")?.Value;
@@ -42,7 +44,9 @@ public static class GpxParser
                 var hasPositions = points.Any(p => p.Item2.Latitude is not null && p.Item2.Longitude is not null);
                 if (dimensions.Environment is null && hasPositions)
                     dimensions = dimensions with { Environment = Environments.Outdoor };
-                rides.Add(XmlRideFiles.Build(points[0].Item1, points, dimensions: dimensions));
+                // The track's own name wins over the file's; either is only used when it says something.
+                var title = RideText.Clean(track.ChildText("name")) is { } trackName ? trackName : fileName;
+                rides.Add(XmlRideFiles.Build(points[0].Item1, points, dimensions: dimensions, title: title));
             }
         }
 

@@ -447,4 +447,71 @@ void main() {
 
     expect(find.byKey(const Key('lap-2-selected')), findsOneWidget);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheTitleAndDescription_WhenItHasThem',
+    (tester) async {
+      server.rides[0]['title'] = 'Dawn patrol';
+      server.rides[0]['description'] = 'Cold start, warm finish.';
+      await open(tester);
+
+      expect(find.text('Dawn patrol'), findsOneWidget);
+      expect(find.text('Cold start, warm finish.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldSaveTheText_WhenTheSheetIsUsed', (
+    tester,
+  ) async {
+    await open(tester);
+
+    await tester.tap(find.byKey(const Key('edit-ride-text')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('ride-title-field')),
+      'Dawn patrol',
+    );
+    await tester.enterText(
+      find.byKey(const Key('ride-description-field')),
+      'Cold start',
+    );
+    await tester.tap(find.byKey(const Key('ride-text-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/rides/r1/details'));
+    expect(find.text('Dawn patrol'), findsOneWidget);
+    expect(find.text('Cold start'), findsOneWidget);
+  });
+
+  testWidgets('RideDetailScreen_ShouldListWhoLooked_WhenACoachOpenedTheRide', (
+    tester,
+  ) async {
+    server.shareViews.add({
+      'viewerName': 'Marco',
+      'what': 'ride',
+      'at': '2026-11-03T14:10:00Z',
+      'rideId': 'r1',
+    });
+    await open(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('ride-views')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('Seen by Marco'), findsOneWidget);
+  });
+
+  testWidgets('RideDetailScreen_ShouldSayNobodyLooked_WhenTheLogIsEmpty', (
+    tester,
+  ) async {
+    await open(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('ride-views')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const Key('ride-views-empty')), findsOneWidget);
+  });
 }

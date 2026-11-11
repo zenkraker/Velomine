@@ -55,7 +55,7 @@ public sealed class GetCoachRideLaps(VelomineDbContext db, TimeProvider time)
 
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
-            await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct);
+            await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct, req.RideId);
 
         var laps = await db.RideLaps.AsNoTracking()
             .Where(l => l.RideId == req.RideId)

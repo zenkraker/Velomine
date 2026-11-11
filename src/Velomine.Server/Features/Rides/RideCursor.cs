@@ -32,6 +32,9 @@ internal static class RideCursor
         query.Where(r => (r.StartTime ?? r.UploadedAt) < lastTime
             || ((r.StartTime ?? r.UploadedAt) == lastTime && r.Id.CompareTo(lastId) < 0));
 
+    /// <summary>The Next value that continues the list after this ride.</summary>
+    public static string Format(Ride ride) => $"{(ride.StartTime ?? ride.UploadedAt).UtcTicks}:{ride.Id}";
+
     /// <summary>One page and the Next value, or null on the last page.</summary>
     public static async Task<(List<Ride> Page, string? Next)> PageAsync(
         IQueryable<Ride> query, int limit, CancellationToken ct)
@@ -45,7 +48,7 @@ internal static class RideCursor
         var hasMore = page.Count > limit;
         if (hasMore) page.RemoveAt(page.Count - 1);
         var last = page.LastOrDefault();
-        var next = hasMore && last is not null ? $"{(last.StartTime ?? last.UploadedAt).UtcTicks}:{last.Id}" : null;
+        var next = hasMore && last is not null ? Format(last) : null;
         return (page, next);
     }
 }

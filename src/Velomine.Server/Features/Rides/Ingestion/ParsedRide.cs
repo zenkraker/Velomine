@@ -31,6 +31,9 @@ public sealed class ParsedRide
 
     public string? Device { get; init; }
 
+    /// <summary>A name the file gives the ride (a GPX track name, a TCX note, a FIT workout name), already cleaned and cut to fit; null when it has none.</summary>
+    public string? Title { get; init; }
+
     /// <summary>road, gravel, mountain or track; null when the file does not say.</summary>
     public string? Discipline { get; init; }
 

@@ -37,6 +37,13 @@ String stopwatch(double? seconds) {
 String dateTime(DateTime? value) =>
     value == null ? '–' : DateFormat.yMMMd().add_Hm().format(value.toLocal());
 
+/// A calendar date without a time: "Nov 3, 2026".
+String dateOnly(DateTime value) => DateFormat.yMMMd().format(value);
+
+/// A moment with its weekday, for a log of when something happened: "Tue, Nov 3 14:10".
+String weekdayTime(DateTime? value) =>
+    value == null ? '–' : DateFormat.MMMEd().add_Hm().format(value.toLocal());
+
 /// A size on disk: "0 B", "12 KB", "3.4 MB", "1.2 GB".
 String bytes(num size) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];

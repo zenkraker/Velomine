@@ -65,6 +65,12 @@ public sealed class Ride
 
     public string? Device { get; set; }
 
+    /// <summary>The member's own name for the ride, up to <see cref="RideText.MaxTitle"/> characters; null when none was given.</summary>
+    public string? Title { get; set; }
+
+    /// <summary>The member's own words about the ride, up to <see cref="RideText.MaxDescription"/> characters; null when none.</summary>
+    public string? Description { get; set; }
+
     /// <summary>road, gravel, mountain or track; null when the file and the member have not said.</summary>
     public string? Discipline { get; set; }
 
