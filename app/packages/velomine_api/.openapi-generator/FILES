@@ -9,11 +9,13 @@ lib/api/accounts_api.dart
 lib/api/admin_api.dart
 lib/api/analytics_api.dart
 lib/api/bikes_api.dart
+lib/api/calendar_api.dart
 lib/api/club_api.dart
 lib/api/clubs_api.dart
 lib/api/notifications_api.dart
 lib/api/privacy_api.dart
 lib/api/rides_api.dart
+lib/api/routes_api.dart
 lib/api/server_api.dart
 lib/api/sharing_api.dart
 lib/api/wellbeing_api.dart
@@ -32,6 +34,8 @@ lib/model/apply_template_request.dart
 lib/model/bike_detail_response.dart
 lib/model/bike_response.dart
 lib/model/bike_template_response.dart
+lib/model/calendar_feed_address_response.dart
+lib/model/calendar_feed_status_response.dart
 lib/model/catalogue_admin_response.dart
 lib/model/catalogue_contribution_response.dart
 lib/model/catalogue_counts_response.dart
@@ -41,6 +45,10 @@ lib/model/check_ins_response.dart
 lib/model/club_member_response.dart
 lib/model/club_plan_response.dart
 lib/model/club_response.dart
+lib/model/club_ride_detail_response.dart
+lib/model/club_ride_list_response.dart
+lib/model/club_ride_participant_response.dart
+lib/model/club_ride_summary_response.dart
 lib/model/coach_athlete_response.dart
 lib/model/coach_athletes_response.dart
 lib/model/coach_rpe_response.dart
@@ -53,6 +61,7 @@ lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
 lib/model/create_privacy_zone_request.dart
 lib/model/create_reminder_request.dart
+lib/model/create_route_request.dart
 lib/model/create_service_entry_request.dart
 lib/model/create_template_request.dart
 lib/model/delete_my_account_request.dart
@@ -94,6 +103,7 @@ lib/model/password_confirmation.dart
 lib/model/password_reset_link_response.dart
 lib/model/pending_join_request_response.dart
 lib/model/period_totals.dart
+lib/model/plan_club_ride_request.dart
 lib/model/power_curve_point.dart
 lib/model/power_curve_response.dart
 lib/model/privacy_response.dart
@@ -114,6 +124,11 @@ lib/model/ride_import_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
+lib/model/route_detail_response.dart
+lib/model/route_download_link_response.dart
+lib/model/route_draft_response.dart
+lib/model/route_list_response.dart
+lib/model/route_summary_response.dart
 lib/model/save_bike_as_template_request.dart
 lib/model/save_check_in_request.dart
 lib/model/save_ride_feel_request.dart
@@ -153,11 +168,13 @@ lib/model/two_factor_setup.dart
 lib/model/two_factor_state.dart
 lib/model/update_bike_request.dart
 lib/model/update_club_request.dart
+lib/model/update_club_ride_request.dart
 lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
 lib/model/update_privacy_request.dart
 lib/model/update_profile_request.dart
 lib/model/update_reminder_request.dart
+lib/model/update_route_request.dart
 lib/model/update_service_entry_request.dart
 lib/model/update_settings_request.dart
 lib/model/update_sharing_request.dart

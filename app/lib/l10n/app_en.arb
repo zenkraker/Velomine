@@ -1969,5 +1969,174 @@
         "type": "String"
       }
     }
+  },
+  "actionLoadRoutes": "load the club's routes",
+  "actionLoadRoute": "load this route",
+  "actionAddRoute": "add the route",
+  "actionSaveRoute": "save the route",
+  "actionDeleteRoute": "delete the route",
+  "actionLoadClubRides": "load the club's rides",
+  "actionLoadClubRide": "load this club ride",
+  "actionSaveClubRide": "save the club ride",
+  "actionCancelClubRide": "cancel the club ride",
+  "actionJoinClubRide": "say you are in",
+  "actionLeaveClubRide": "take your name off",
+  "actionLoadCalendarFeed": "load your calendar address",
+  "actionSaveCalendarFeed": "change your calendar address",
+  "clubRidesTitle": "Rides",
+  "clubRidesHelp": "The club's next rides, and who is in.",
+  "clubRidesSeeAll": "See all rides",
+  "clubPlanRide": "Plan a ride",
+  "clubRoutesTitle": "Routes",
+  "clubRoutesHelp": "Lines the club shares, each one kept by the member who added it.",
+  "clubRoutesSeeAll": "See all routes",
+  "clubAddRoute": "Add a route",
+  "clubRoutesEmpty": "No routes yet. Add one from one of your rides or from a GPX file.",
+  "routesFilterAll": "All surfaces",
+  "routesSortNewest": "Newest",
+  "routesSortShortest": "Shortest",
+  "routesSortLongest": "Longest",
+  "routeSurfaceRoad": "Road",
+  "routeSurfaceGravel": "Gravel",
+  "routeSurfaceMountain": "Mountain",
+  "routeSurfaceMixed": "Mixed",
+  "routeAddedBy": "Added by {name}",
+  "@routeAddedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeNotSharedBody": "This route is yours, but it is not in the club library.",
+  "routeOpenGpx": "Download GPX",
+  "routeEdit": "Edit",
+  "routeWithdraw": "Remove from club",
+  "routeWithdrawConfirmTitle": "Remove this route from the club?",
+  "routeWithdrawConfirmBody": "It stays yours and you can share it again at any time.",
+  "routeShare": "Share again",
+  "routeDelete": "Delete for good",
+  "routeDeleteConfirmTitle": "Delete this route?",
+  "routeDeleteConfirmBody": "The line is gone for good. Club rides that planned it keep their own details.",
+  "routeOwnerOnly": "Only the member who added this route can change it.",
+  "addRouteTitle": "Add a route",
+  "addRouteHelp": "A route is a line on the map with a name. Nothing about how you rode it is shared.",
+  "addRouteFromRide": "From one of my rides",
+  "addRouteFromFile": "From a GPX file",
+  "addRouteChooseFile": "Choose a GPX file",
+  "addRouteNoRides": "You have no rides with a map yet. Import a ride first, then come back.",
+  "addRoutePreview": "This is the line the club will see",
+  "addRoutePrivacyNote": "Your privacy zones and your start and end trimming are already applied.",
+  "addRouteDetails": "Name and details",
+  "addRouteName": "Name",
+  "addRouteDescription": "Description (optional)",
+  "addRouteSurface": "Surface",
+  "addRouteSave": "Add to the club library",
+  "editRouteTitle": "Edit the route",
+  "ridesEmpty": "No rides planned yet. A coach can plan the club's next ride.",
+  "ridesUpcoming": "Coming up",
+  "ridesPast": "Just happened",
+  "rideCancelled": "Cancelled",
+  "rideFull": "Full",
+  "rideSignedUp": "You are in",
+  "rideCountIn": "{count} in",
+  "@rideCountIn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ridePlacesLeft": "{count} of {max} places left",
+  "@ridePlacesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "ridePaceEasy": "Easy",
+  "ridePaceSteady": "Steady",
+  "ridePaceFast": "Fast",
+  "rideNoDrop": "No-drop",
+  "ridePlannedBy": "Planned by {name}",
+  "@ridePlannedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rideMeeting": "Meeting point",
+  "rideRoute": "Route",
+  "rideNotes": "Notes",
+  "rideWhoIsIn": "Who is in",
+  "rideNobodyIn": "Nobody is in yet.",
+  "rideImIn": "I'm in",
+  "rideImOut": "Take me out",
+  "rideEdit": "Edit ride",
+  "rideCancel": "Cancel ride",
+  "rideCancelConfirmTitle": "Cancel this ride?",
+  "rideCancelConfirmBody": "The riders who are in get a notification. The ride stays on the calendar, marked cancelled.",
+  "rideCancelledReason": "This ride is cancelled.",
+  "rideFullReason": "This ride is full.",
+  "rideStartedReason": "This ride has already started.",
+  "planRideTitle": "Plan a ride",
+  "editRideTitle": "Edit the ride",
+  "rideFormTitle": "Title",
+  "rideFormMeetingName": "Meeting point name",
+  "rideFormPickMeeting": "Pick the meeting point on the map",
+  "rideFormRoute": "Route (optional)",
+  "rideFormNoRoute": "No route",
+  "rideFormPace": "Pace",
+  "rideFormNoDrop": "No-drop",
+  "rideFormNotes": "Notes (optional)",
+  "rideFormMaxRiders": "Maximum riders (optional)",
+  "rideFormSave": "Save the ride",
+  "rideFormNeedTitle": "Give the ride a title.",
+  "rideFormNeedMeeting": "Name the meeting point.",
+  "rideFormNeedPoint": "Pick the meeting point on the map.",
+  "rideFormFuture": "Choose a date and time in the future.",
+  "rideFormMaxRange": "The limit is a number from 1 to 500, or leave it empty.",
+  "calendarTitle": "Calendar subscription",
+  "calendarHelp": "Subscribe the calendar on your phone or computer to the club's rides. The address is private: whoever has it sees the club's rides, never who is in.",
+  "calendarInactive": "No calendar address yet.",
+  "calendarActive": "A calendar address is active.",
+  "calendarCreate": "Create the address",
+  "calendarReplace": "Replace the address",
+  "calendarReplaceConfirmTitle": "Replace the calendar address?",
+  "calendarReplaceConfirmBody": "The old address stops working at once and your calendar needs the new one.",
+  "calendarDelete": "Stop the address",
+  "calendarDeleteConfirmTitle": "Stop the calendar address?",
+  "calendarDeleteConfirmBody": "Your calendar stops updating. You can make a new address at any time.",
+  "calendarCopy": "Copy the address",
+  "calendarAddressCopied": "Address copied",
+  "calendarShownOnce": "Copy it now. The server keeps only a hash, so it cannot show the address again; if you lose it, replace it.",
+  "notificationClubRidePlanned": "{ride}: the club planned a ride.",
+  "@notificationClubRidePlanned": {
+    "placeholders": {
+      "ride": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubRideChanged": "{ride}: the time or the meeting point changed.",
+  "@notificationClubRideChanged": {
+    "placeholders": {
+      "ride": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubRideCancelled": "{ride}: the ride is cancelled.",
+  "@notificationClubRideCancelled": {
+    "placeholders": {
+      "ride": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -296,6 +296,7 @@ void main() {
       type: type,
       subject: '2027-03-31',
       rideId: null,
+      plannedRideId: null,
       bikeId: null,
       componentId: null,
       aboutUserId: null,

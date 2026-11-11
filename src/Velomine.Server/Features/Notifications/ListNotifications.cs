@@ -21,6 +21,7 @@ public sealed record NotificationResponse(
     Guid? BikeId,
     Guid? ComponentId,
     Guid? AboutUserId,
+    Guid? PlannedRideId,
     DateTimeOffset CreatedAt,
     bool IsRead);
 
@@ -47,7 +48,7 @@ public sealed class ListNotifications(VelomineDbContext db) : Endpoint<ListNotif
         var list = await mine
             .OrderByDescending(n => n.CreatedAt).ThenByDescending(n => n.Id)
             .Take(req.Limit ?? 50)
-            .Select(n => new NotificationResponse(n.Id, n.Type, n.Subject, n.RideId, n.BikeId, n.ComponentId, n.AboutUserId, n.CreatedAt, n.ReadAt != null))
+            .Select(n => new NotificationResponse(n.Id, n.Type, n.Subject, n.RideId, n.BikeId, n.ComponentId, n.AboutUserId, n.PlannedRideId, n.CreatedAt, n.ReadAt != null))
             .ToArrayAsync(ct);
         var unread = await mine.CountAsync(n => n.ReadAt == null, ct);
         await Send.OkAsync(new ListNotificationsResponse(list, unread), ct);

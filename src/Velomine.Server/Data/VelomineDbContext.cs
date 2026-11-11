@@ -11,6 +11,7 @@ using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Import;
+using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Sharing;
 using Velomine.Server.Features.Wellbeing;
 
@@ -78,6 +79,16 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<PrivacyZone> PrivacyZones => Set<PrivacyZone>();
 
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+
+    public DbSet<CyclingRoute> Routes => Set<CyclingRoute>();
+
+    public DbSet<RouteLine> RouteLines => Set<RouteLine>();
+
+    public DbSet<PlannedRide> PlannedRides => Set<PlannedRide>();
+
+    public DbSet<RideSignUp> RideSignUps => Set<RideSignUp>();
+
+    public DbSet<CalendarFeed> CalendarFeeds => Set<CalendarFeed>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

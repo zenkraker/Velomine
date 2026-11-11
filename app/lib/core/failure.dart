@@ -135,6 +135,19 @@ enum FailureAction {
   declineJoinRequest,
   loadSecurity,
   changeSecurity,
+  loadRoutes,
+  loadRoute,
+  addRoute,
+  saveRoute,
+  deleteRoute,
+  loadClubRides,
+  loadClubRide,
+  saveClubRide,
+  cancelClubRide,
+  joinClubRide,
+  leaveClubRide,
+  loadCalendarFeed,
+  saveCalendarFeed,
 }
 
 class Failure {
@@ -278,6 +291,19 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.declineJoinRequest => l10n.actionDeclineJoinRequest,
       FailureAction.loadSecurity => l10n.actionLoadSecurity,
       FailureAction.changeSecurity => l10n.actionChangeSecurity,
+      FailureAction.loadRoutes => l10n.actionLoadRoutes,
+      FailureAction.loadRoute => l10n.actionLoadRoute,
+      FailureAction.addRoute => l10n.actionAddRoute,
+      FailureAction.saveRoute => l10n.actionSaveRoute,
+      FailureAction.deleteRoute => l10n.actionDeleteRoute,
+      FailureAction.loadClubRides => l10n.actionLoadClubRides,
+      FailureAction.loadClubRide => l10n.actionLoadClubRide,
+      FailureAction.saveClubRide => l10n.actionSaveClubRide,
+      FailureAction.cancelClubRide => l10n.actionCancelClubRide,
+      FailureAction.joinClubRide => l10n.actionJoinClubRide,
+      FailureAction.leaveClubRide => l10n.actionLeaveClubRide,
+      FailureAction.loadCalendarFeed => l10n.actionLoadCalendarFeed,
+      FailureAction.saveCalendarFeed => l10n.actionSaveCalendarFeed,
     };
 
 /// The sentence for a failure in the language on screen.

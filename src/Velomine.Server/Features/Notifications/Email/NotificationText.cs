@@ -19,6 +19,9 @@ public static class NotificationText
         NotificationTypes.ClubJoinDeclined => EmailStrings.Format("ClubJoinDeclined", n.Subject),
         NotificationTypes.ClubPlanEnding => EmailStrings.Format("ClubPlanEnding", PlanDate(n.Subject)),
         NotificationTypes.ClubPlanEnded => EmailStrings.Format("ClubPlanEnded", PlanDate(n.Subject)),
+        NotificationTypes.ClubRidePlanned => EmailStrings.Format("ClubRidePlanned", n.Subject),
+        NotificationTypes.ClubRideChanged => EmailStrings.Format("ClubRideChanged", n.Subject),
+        NotificationTypes.ClubRideCancelled => EmailStrings.Format("ClubRideCancelled", n.Subject),
         _ => n.Subject,
     };
 

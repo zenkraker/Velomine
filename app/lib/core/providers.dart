@@ -100,6 +100,9 @@ final importFilePickerProvider = Provider<FilePicker>(
   (ref) => pickStravaExport,
 );
 
+/// Opens the picker for a GPX file to turn into a club route. Tests override it too.
+final gpxFilePickerProvider = Provider<FilePicker>((ref) => pickGpxFile);
+
 /// How often an import is checked until the server has read the archive.
 final importPollIntervalProvider = Provider<Duration>(
   (ref) => const Duration(seconds: 1),

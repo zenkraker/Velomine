@@ -9,6 +9,7 @@ using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Routes;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -52,6 +53,12 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(m => m.UserId == userId).OrderBy(m => m.JoinedAt).ToListAsync(ct);
         var joinRequest = await db.ClubJoinRequests.AsNoTracking().Include(r => r.Club)
             .FirstOrDefaultAsync(r => r.UserId == userId, ct);
+        var routes = await db.Routes.AsNoTracking().Include(r => r.Line).Where(r => r.UserId == userId).OrderBy(r => r.CreatedAt).ToListAsync(ct);
+        var signUps = await db.RideSignUps.AsNoTracking()
+            .Where(s => s.UserId == userId)
+            .OrderBy(s => s.CreatedAt)
+            .Select(s => new { s.PlannedRide.Title, s.PlannedRide.StartsAt, s.CreatedAt })
+            .ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -217,6 +224,24 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 ? null
                 : new { joinRequest.ClubId, ClubName = joinRequest.Club.Name, joinRequest.Note, joinRequest.CreatedAt },
         }, ct);
+        await AddJsonAsync(zip, "routes.json", routes.Select(r => new
+        {
+            r.Id,
+            r.Name,
+            r.Description,
+            r.Surface,
+            r.DistanceM,
+            r.ClimbingM,
+            r.CreatedAt,
+            SharedWithClub = r.ClubId != null,
+            File = $"routes/{r.Id.ToString("N")[..12]}-{SafeName(r.Name)}.gpx",
+        }), ct);
+        foreach (var route in routes.Where(r => r.Line is not null))
+        {
+            await using var target = zip.CreateEntry($"routes/{route.Id.ToString("N")[..12]}-{SafeName(route.Name)}.gpx", CompressionLevel.Optimal).Open();
+            await target.WriteAsync(RouteGeometry.ToGpx(route.Name, route.Description, RouteGeometry.PointsOf(route.Line!)), ct);
+        }
+        await AddJsonAsync(zip, "club-rides.json", signUps, ct);
         await AddTextAsync(zip, "README.txt", ReadMe, ct);
     }
 
@@ -253,6 +278,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         sharingViews.json   who looked at your data through a club, and what they saw
         templates.json      your saved bike builds
         clubs.json          the club you belong to, your role, and any open join request
+        routes.json         the routes you added to the club library, and routes/ holds each one as a GPX file
+        club-rides.json     the club rides you said you were in
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.
 

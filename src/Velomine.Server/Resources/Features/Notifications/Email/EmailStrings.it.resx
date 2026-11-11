@@ -91,4 +91,13 @@
   <data name="ClubPlanEnded" xml:space="preserve">
     <value>Il piano del tuo club è scaduto dopo il {0}. Tutto continua a funzionare, ma il club non può accogliere nuovi iscritti finché il piano non viene rinnovato. Contattaci per rinnovarlo.</value>
   </data>
+  <data name="ClubRidePlanned" xml:space="preserve">
+    <value>{0}: il club ha programmato un'uscita.</value>
+  </data>
+  <data name="ClubRideChanged" xml:space="preserve">
+    <value>{0}: sono cambiati l'orario o il punto di ritrovo.</value>
+  </data>
+  <data name="ClubRideCancelled" xml:space="preserve">
+    <value>{0}: l'uscita è annullata.</value>
+  </data>
 </root>

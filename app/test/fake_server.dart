@@ -159,6 +159,17 @@ class FakeServer {
   int privacyTrimEndM = 0;
   final privacyZones = <Map<String, Object?>>[];
 
+  /// The club's route library and planned rides, as the app sees them.
+  final routeLibrary = <Map<String, Object?>>[];
+  final clubRides = <Map<String, Object?>>[];
+
+  /// Who said "I'm in", by ride id.
+  final rideSignUps = <String, List<String>>{};
+
+  /// The private calendar address, once the member made one.
+  String? calendarAddress;
+  DateTime? calendarAddressCreatedAt;
+
   /// Whether the fake member accepted the wellbeing terms, today's check-in and its history.
   bool wellbeingConsent = false;
   Map<String, Object?>? wellbeingToday;
@@ -585,6 +596,8 @@ class FakeServer {
 
     final bikeReply = _bikes(request, path, json);
     if (bikeReply != null) return bikeReply;
+    final libraryReply = _library(request, path, caller, json);
+    if (libraryReply != null) return libraryReply;
     final moreReply = _more(request, path, caller, json);
     if (moreReply != null) return moreReply;
 
@@ -755,6 +768,7 @@ Map<String, Object?> notificationJson(
   'bikeId': bikeId,
   'componentId': null,
   'aboutUserId': null,
+  'plannedRideId': null,
   'createdAt': '2026-11-04T09:00:00Z',
   'isRead': isRead,
 };
@@ -2513,5 +2527,321 @@ class FakeAppSso implements AppSso {
     calls++;
     lastConfig = config;
     return result;
+  }
+}
+
+/// The club's route library, its ride calendar and the private calendar address.
+extension LibraryApi on FakeServer {
+  http.Response? _library(
+    http.Request request,
+    String path,
+    FakeAccount? caller,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    final role = caller == null ? null : clubRoles[caller.email];
+    final planned = RegExp(
+      r'^/api/v1/club/rides/([^/]+)(?:/(cancel|participation))?$',
+    ).firstMatch(path);
+    final oneRoute = RegExp(r'^/api/v1/routes/([^/]+)(?:/(share|gpx-link))?$')
+        .firstMatch(path);
+    final draft = RegExp(r'^/api/v1/rides/([^/]+)/route-draft$')
+        .firstMatch(path);
+
+    if (draft != null && request.method == 'GET') {
+      if (role == null) return http.Response('', 404);
+      return json(_draftJson());
+    }
+    if (path == '/api/v1/routes' && request.method == 'GET') {
+      if (role == null) return http.Response('', 404);
+      final surface = request.url.queryParameters['surface'];
+      final sort = request.url.queryParameters['sort'];
+      final found = routeLibrary
+          .where((r) => r['shared'] == true)
+          .where((r) => surface == null || r['surface'] == surface)
+          .toList();
+      if (sort == 'shortest') {
+        found.sort(
+          (a, b) =>
+              (a['distanceM']! as double).compareTo(b['distanceM']! as double),
+        );
+      } else if (sort == 'longest') {
+        found.sort(
+          (a, b) =>
+              (b['distanceM']! as double).compareTo(a['distanceM']! as double),
+        );
+      }
+      return json({
+        'routes': [for (final r in found) _routeSummary(r, caller!)],
+      });
+    }
+    if (path == '/api/v1/routes/mine' && request.method == 'GET') {
+      if (caller == null) return http.Response('', 401);
+      return json({
+        'routes': [
+          for (final r in routeLibrary)
+            if (r['ownerId'] == caller.id) _routeSummary(r, caller),
+        ],
+      });
+    }
+    if (path == '/api/v1/routes' && request.method == 'POST') {
+      if (role == null) return http.Response('', 404);
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final line = body['rideId'] != null
+          ? _draftJson()
+          : <String, Object?>{
+              'latitude': body['latitude'],
+              'longitude': body['longitude'],
+              'elevation': body['elevation'],
+            };
+      final route = <String, Object?>{
+        'id': 'route-${routeLibrary.length + 1}',
+        'name': (body['name']! as String).trim(),
+        'description': body['description'],
+        'surface': body['surface'],
+        'distanceM': 1100.0,
+        'climbingM': line['elevation'] == null ? null : 40.0,
+        'ownerId': caller!.id,
+        'ownerName': caller.name,
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
+        'shared': true,
+        'latitude': line['latitude'],
+        'longitude': line['longitude'],
+        'elevation': line['elevation'],
+      };
+      routeLibrary.insert(0, route);
+      return json(_routeDetail(route, caller), 201);
+    }
+    if (oneRoute != null) {
+      final route = routeLibrary
+          .where((r) => r['id'] == oneRoute.group(1))
+          .firstOrNull;
+      if (route == null || role == null) return http.Response('', 404);
+      if (request.method == 'GET' && oneRoute.group(2) == null) {
+        return json(_routeDetail(route, caller!));
+      }
+      if (request.method == 'PUT' && oneRoute.group(2) == null) {
+        if (route['ownerId'] != caller!.id) return http.Response('', 403);
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        route['name'] = body['name'];
+        route['description'] = body['description'];
+        route['surface'] = body['surface'];
+        return json(_routeSummary(route, caller));
+      }
+      if (request.method == 'DELETE' && oneRoute.group(2) == null) {
+        if (route['ownerId'] != caller!.id) return http.Response('', 403);
+        routeLibrary.remove(route);
+        return http.Response('', 204);
+      }
+      if (oneRoute.group(2) == 'share') {
+        // Only the owner puts it back; the club's owner may take anyone's out of the library.
+        if (route['ownerId'] != caller!.id &&
+            (request.method == 'POST' || role != 'owner')) {
+          return http.Response('', 403);
+        }
+        route['shared'] = request.method == 'POST';
+        if (request.method == 'DELETE') return http.Response('', 204);
+        return json(_routeSummary(route, caller));
+      }
+      if (oneRoute.group(2) == 'gpx-link' && request.method == 'POST') {
+        return json({
+          'path': '/api/v1/routes/downloads/fake',
+          'expiresAt': DateTime.now()
+              .add(const Duration(minutes: 2))
+              .toUtc()
+              .toIso8601String(),
+        });
+      }
+    }
+    if (path == '/api/v1/routes/gpx-draft' && request.method == 'POST') {
+      if (role == null) return http.Response('', 404);
+      return json(_draftJson(name: 'valley'));
+    }
+
+    if (path == '/api/v1/club/rides' && request.method == 'GET') {
+      if (role == null) return http.Response('', 404);
+      final now = DateTime.now();
+      final upcoming = clubRides
+          .where((r) => DateTime.parse(r['startsAt']! as String).isAfter(now))
+          .toList();
+      final past = clubRides
+          .where((r) => !DateTime.parse(r['startsAt']! as String).isAfter(now))
+          .toList();
+      return json({
+        'upcoming': [for (final r in upcoming) _rideSummary(r, caller!)],
+        'past': [for (final r in past) _rideSummary(r, caller!)],
+      });
+    }
+    if (path == '/api/v1/club/rides' && request.method == 'POST') {
+      if (role != 'owner' && role != 'coach') return http.Response('', 403);
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final ride = <String, Object?>{
+        'id': 'ride-plan-${clubRides.length + 1}',
+        ...body,
+        'createdByName': caller!.name,
+        'cancelledAt': null,
+      };
+      clubRides.insert(0, ride);
+      return json(_rideDetail(ride, caller), 201);
+    }
+    if (planned != null) {
+      final ride = clubRides
+          .where((r) => r['id'] == planned.group(1))
+          .firstOrNull;
+      if (ride == null || role == null) return http.Response('', 404);
+      final action = planned.group(2);
+      if (action == 'cancel' && request.method == 'POST') {
+        if (role != 'owner' && role != 'coach') return http.Response('', 403);
+        ride['cancelledAt'] = DateTime.now().toUtc().toIso8601String();
+        return json(_rideDetail(ride, caller!));
+      }
+      if (action == 'participation') {
+        final signUps = rideSignUps.putIfAbsent(
+          ride['id']! as String,
+          () => [],
+        );
+        if (request.method == 'POST') {
+          if (ride['cancelledAt'] != null) {
+            return http.Response(
+              '{"errors":{"generalErrors":["This ride is cancelled."]}}',
+              409,
+            );
+          }
+          final max = ride['maxRiders'] as int?;
+          if (max != null &&
+              signUps.length >= max &&
+              !signUps.contains(caller!.id)) {
+            return http.Response(
+              '{"errors":{"generalErrors":["This ride is full."]}}',
+              409,
+            );
+          }
+          if (!signUps.contains(caller!.id)) signUps.add(caller.id);
+          return json(_rideDetail(ride, caller));
+        }
+        signUps.remove(caller!.id);
+        return http.Response('', 204);
+      }
+      if (request.method == 'GET') return json(_rideDetail(ride, caller!));
+      if (request.method == 'PUT') {
+        if (role != 'owner' && role != 'coach') return http.Response('', 403);
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        ride.addAll(body);
+        return json(_rideDetail(ride, caller!));
+      }
+    }
+
+    if (path == '/api/v1/club/calendar-feed') {
+      if (role == null) return http.Response('', 404);
+      if (request.method == 'POST') {
+        calendarAddress = 'http://server/api/v1/calendar/fake.ics';
+        calendarAddressCreatedAt = DateTime.now().toUtc();
+        return json({
+          'url': calendarAddress,
+          'createdAt': calendarAddressCreatedAt!.toIso8601String(),
+        });
+      }
+      if (request.method == 'DELETE') {
+        calendarAddress = null;
+        calendarAddressCreatedAt = null;
+        return http.Response('', 204);
+      }
+      return json({
+        'active': calendarAddress != null,
+        'createdAt': calendarAddressCreatedAt?.toIso8601String(),
+      });
+    }
+    return null;
+  }
+
+  static const _draftLatitude = [46.0, 46.001, 46.002, 46.003, 46.004];
+  static const _draftLongitude = [11.0, 11.0002, 11.0004, 11.0006, 11.0008];
+  static const _draftElevation = [300.0, 320.0, 340.0, 320.0, 300.0];
+
+  Map<String, Object?> _draftJson({String? name}) => {
+    'name': name ?? 'morning',
+    'latitude': _draftLatitude,
+    'longitude': _draftLongitude,
+    'elevation': _draftElevation,
+    'distanceM': 1100.0,
+    'climbingM': 40.0,
+  };
+
+  Map<String, Object?> _routeSummary(
+    Map<String, Object?> r,
+    FakeAccount caller,
+  ) => {
+    'id': r['id'],
+    'name': r['name'],
+    'description': r['description'],
+    'surface': r['surface'],
+    'distanceM': r['distanceM'],
+    'climbingM': r['climbingM'],
+    'ownerId': r['ownerId'],
+    'ownerName': r['ownerName'],
+    'createdAt': r['createdAt'],
+    'isMine': r['ownerId'] == caller.id,
+    'isShared': r['shared'] == true,
+  };
+
+  Map<String, Object?> _routeDetail(
+    Map<String, Object?> r,
+    FakeAccount caller,
+  ) => {
+    ..._routeSummary(r, caller),
+    'latitude': r['latitude'],
+    'longitude': r['longitude'],
+    'elevation': r['elevation'],
+  };
+
+  Map<String, Object?> _rideSummary(
+    Map<String, Object?> r,
+    FakeAccount caller,
+  ) {
+    final signUps = rideSignUps[r['id']] ?? const <String>[];
+    final route = routeLibrary
+        .where((x) => x['id'] == r['routeId'])
+        .firstOrNull;
+    final max = r['maxRiders'] as int?;
+    final startsAt = DateTime.parse(r['startsAt']! as String);
+    return {
+      'id': r['id'],
+      'title': r['title'],
+      'startsAt': startsAt.toUtc().toIso8601String(),
+      'endsAt': startsAt
+          .toUtc()
+          .add(const Duration(hours: 2))
+          .toIso8601String(),
+      'utcOffsetMinutes': r['utcOffsetMinutes'] ?? 60,
+      'meetingName': r['meetingName'],
+      'pace': r['pace'] ?? 'steady',
+      'noDrop': r['noDrop'] == true,
+      'routeId': route?['id'],
+      'routeName': route == null ? null : route['name'],
+      'routeDistanceM': route?['distanceM'],
+      'signUpCount': signUps.length,
+      'maxRiders': max,
+      'isFull': max != null && signUps.length >= max,
+      'isSignedUp': signUps.contains(caller.id),
+      'isCancelled': r['cancelledAt'] != null,
+      'createdByName': r['createdByName'],
+    };
+  }
+
+  Map<String, Object?> _rideDetail(Map<String, Object?> r, FakeAccount caller) {
+    final signUps = rideSignUps[r['id']] ?? const <String>[];
+    final role = clubRoles[caller.email];
+    return {
+      'ride': _rideSummary(r, caller),
+      'meetingLatitude': r['latitude'],
+      'meetingLongitude': r['longitude'],
+      'notes': r['notes'],
+      'canPlan': role == 'owner' || role == 'coach',
+      'participants': [
+        for (final id in signUps)
+          if (accounts.values.where((a) => a.id == id).firstOrNull
+              case final member?)
+            {'userId': member.id, 'displayName': member.name},
+      ],
+    };
   }
 }

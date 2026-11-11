@@ -14,7 +14,8 @@ namespace Velomine.Server.Features.Notifications;
 public static class Notify
 {
     public static void Add(VelomineDbContext db, TimeProvider time, Guid userId, string type, string subject,
-        Guid? rideId = null, Guid? bikeId = null, Guid? componentId = null, Guid? aboutUserId = null) =>
+        Guid? rideId = null, Guid? bikeId = null, Guid? componentId = null, Guid? aboutUserId = null,
+        Guid? plannedRideId = null) =>
         db.Notifications.Add(new Notification
         {
             Id = Guid.CreateVersion7(),
@@ -25,6 +26,7 @@ public static class Notify
             BikeId = bikeId,
             ComponentId = componentId,
             AboutUserId = aboutUserId,
+            PlannedRideId = plannedRideId,
             CreatedAt = time.GetUtcNow(),
         });
 

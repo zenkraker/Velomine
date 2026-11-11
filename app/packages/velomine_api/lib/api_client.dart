@@ -197,6 +197,10 @@ class ApiClient {
           return BikeResponse.fromJson(value);
         case 'BikeTemplateResponse':
           return BikeTemplateResponse.fromJson(value);
+        case 'CalendarFeedAddressResponse':
+          return CalendarFeedAddressResponse.fromJson(value);
+        case 'CalendarFeedStatusResponse':
+          return CalendarFeedStatusResponse.fromJson(value);
         case 'CatalogueAdminResponse':
           return CatalogueAdminResponse.fromJson(value);
         case 'CatalogueContributionResponse':
@@ -215,6 +219,14 @@ class ApiClient {
           return ClubPlanResponse.fromJson(value);
         case 'ClubResponse':
           return ClubResponse.fromJson(value);
+        case 'ClubRideDetailResponse':
+          return ClubRideDetailResponse.fromJson(value);
+        case 'ClubRideListResponse':
+          return ClubRideListResponse.fromJson(value);
+        case 'ClubRideParticipantResponse':
+          return ClubRideParticipantResponse.fromJson(value);
+        case 'ClubRideSummaryResponse':
+          return ClubRideSummaryResponse.fromJson(value);
         case 'CoachAthleteResponse':
           return CoachAthleteResponse.fromJson(value);
         case 'CoachAthletesResponse':
@@ -239,6 +251,8 @@ class ApiClient {
           return CreatePrivacyZoneRequest.fromJson(value);
         case 'CreateReminderRequest':
           return CreateReminderRequest.fromJson(value);
+        case 'CreateRouteRequest':
+          return CreateRouteRequest.fromJson(value);
         case 'CreateServiceEntryRequest':
           return CreateServiceEntryRequest.fromJson(value);
         case 'CreateTemplateRequest':
@@ -321,6 +335,8 @@ class ApiClient {
           return PendingJoinRequestResponse.fromJson(value);
         case 'PeriodTotals':
           return PeriodTotals.fromJson(value);
+        case 'PlanClubRideRequest':
+          return PlanClubRideRequest.fromJson(value);
         case 'PowerCurvePoint':
           return PowerCurvePoint.fromJson(value);
         case 'PowerCurveResponse':
@@ -361,6 +377,16 @@ class ApiClient {
           return RideResponse.fromJson(value);
         case 'RideStreamsResponse':
           return RideStreamsResponse.fromJson(value);
+        case 'RouteDetailResponse':
+          return RouteDetailResponse.fromJson(value);
+        case 'RouteDownloadLinkResponse':
+          return RouteDownloadLinkResponse.fromJson(value);
+        case 'RouteDraftResponse':
+          return RouteDraftResponse.fromJson(value);
+        case 'RouteListResponse':
+          return RouteListResponse.fromJson(value);
+        case 'RouteSummaryResponse':
+          return RouteSummaryResponse.fromJson(value);
         case 'SaveBikeAsTemplateRequest':
           return SaveBikeAsTemplateRequest.fromJson(value);
         case 'SaveCheckInRequest':
@@ -439,6 +465,8 @@ class ApiClient {
           return UpdateBikeRequest.fromJson(value);
         case 'UpdateClubRequest':
           return UpdateClubRequest.fromJson(value);
+        case 'UpdateClubRideRequest':
+          return UpdateClubRideRequest.fromJson(value);
         case 'UpdateComponentRequest':
           return UpdateComponentRequest.fromJson(value);
         case 'UpdateGoalRequest':
@@ -449,6 +477,8 @@ class ApiClient {
           return UpdateProfileRequest.fromJson(value);
         case 'UpdateReminderRequest':
           return UpdateReminderRequest.fromJson(value);
+        case 'UpdateRouteRequest':
+          return UpdateRouteRequest.fromJson(value);
         case 'UpdateServiceEntryRequest':
           return UpdateServiceEntryRequest.fromJson(value);
         case 'UpdateSettingsRequest':

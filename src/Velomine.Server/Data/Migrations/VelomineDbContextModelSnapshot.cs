@@ -1201,6 +1201,38 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.CalendarFeed", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_calendar_feeds");
+
+                    b.HasIndex("ClubId")
+                        .HasDatabaseName("ix_calendar_feeds_club_id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_calendar_feeds_token_hash");
+
+                    b.ToTable("calendar_feeds", "calendar");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Clubs.Club", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1358,6 +1390,137 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.PlannedRide", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<int?>("MaxRiders")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_riders");
+
+                    b.Property<double>("MeetingLatitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("meeting_latitude");
+
+                    b.Property<double>("MeetingLongitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("meeting_longitude");
+
+                    b.Property<string>("MeetingName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("meeting_name");
+
+                    b.Property<bool>("NoDrop")
+                        .HasColumnType("boolean")
+                        .HasColumnName("no_drop");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Pace")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("pace");
+
+                    b.Property<Guid?>("RouteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("route_id");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UtcOffsetMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("utc_offset_minutes");
+
+                    b.HasKey("Id")
+                        .HasName("pk_planned_rides");
+
+                    b.HasIndex("CreatedByUserId")
+                        .HasDatabaseName("ix_planned_rides_created_by_user_id");
+
+                    b.HasIndex("RouteId")
+                        .HasDatabaseName("ix_planned_rides_route_id");
+
+                    b.HasIndex("ClubId", "StartsAt")
+                        .HasDatabaseName("ix_planned_rides_club_id_starts_at");
+
+                    b.ToTable("planned_rides", "calendar", t =>
+                        {
+                            t.HasCheckConstraint("ck_planned_rides_latitude", "meeting_latitude BETWEEN -90 AND 90");
+
+                            t.HasCheckConstraint("ck_planned_rides_longitude", "meeting_longitude BETWEEN -180 AND 180");
+
+                            t.HasCheckConstraint("ck_planned_rides_max_riders", "max_riders IS NULL OR max_riders > 0");
+
+                            t.HasCheckConstraint("ck_planned_rides_meeting", "char_length(btrim(meeting_name)) > 0");
+
+                            t.HasCheckConstraint("ck_planned_rides_offset", "utc_offset_minutes BETWEEN -840 AND 840");
+
+                            t.HasCheckConstraint("ck_planned_rides_pace", "pace IN ('easy', 'steady', 'fast')");
+
+                            t.HasCheckConstraint("ck_planned_rides_title", "char_length(btrim(title)) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.RideSignUp", b =>
+                {
+                    b.Property<Guid>("PlannedRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("planned_ride_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("PlannedRideId", "UserId")
+                        .HasName("pk_ride_sign_ups");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_ride_sign_ups_user_id");
+
+                    b.ToTable("ride_sign_ups", "calendar");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1384,6 +1547,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<DateTimeOffset?>("EmailedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("emailed_at");
+
+                    b.Property<Guid?>("PlannedRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("planned_ride_id");
 
                     b.Property<DateTimeOffset?>("ReadAt")
                         .HasColumnType("timestamp with time zone")
@@ -1420,6 +1587,9 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("ComponentId")
                         .HasDatabaseName("ix_notifications_component_id");
+
+                    b.HasIndex("PlannedRideId")
+                        .HasDatabaseName("ix_notifications_planned_ride_id");
 
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_notifications_ride_id");
@@ -1992,6 +2162,100 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("ride_streams", "rides");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Routes.CyclingRoute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<double?>("ClimbingM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("climbing_m");
+
+                    b.Property<Guid?>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<double>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Surface")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("surface");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_routes");
+
+                    b.HasIndex("ClubId", "CreatedAt")
+                        .HasDatabaseName("ix_routes_club_id_created_at");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_routes_user_id_created_at");
+
+                    b.ToTable("routes", "routes", t =>
+                        {
+                            t.HasCheckConstraint("ck_routes_distance_m", "distance_m >= 0");
+
+                            t.HasCheckConstraint("ck_routes_name", "char_length(btrim(name)) > 0");
+
+                            t.HasCheckConstraint("ck_routes_surface", "surface IN ('road', 'gravel', 'mountain', 'mixed')");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Routes.RouteLine", b =>
+                {
+                    b.Property<Guid>("RouteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("route_id");
+
+                    b.PrimitiveCollection<float[]>("Elevation")
+                        .HasColumnType("real[]")
+                        .HasColumnName("elevation");
+
+                    b.PrimitiveCollection<double[]>("Latitude")
+                        .IsRequired()
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("latitude");
+
+                    b.PrimitiveCollection<double[]>("Longitude")
+                        .IsRequired()
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("longitude");
+
+                    b.HasKey("RouteId")
+                        .HasName("pk_route_lines");
+
+                    b.ToTable("route_lines", "routes", t =>
+                        {
+                            t.HasCheckConstraint("ck_route_lines_aligned", "cardinality(latitude) = cardinality(longitude) AND (elevation IS NULL OR cardinality(elevation) = cardinality(latitude))");
+
+                            t.HasCheckConstraint("ck_route_lines_points", "cardinality(latitude) >= 2");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareGrant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2351,6 +2615,23 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_service_entries_maintenance_reminders_reminder_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.CalendarFeed", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_calendar_feeds_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_calendar_feeds_users_user_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubJoinRequest", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Clubs.Club", "Club")
@@ -2393,6 +2674,49 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.PlannedRide", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_planned_rides_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_planned_rides_users_created_by_user_id");
+
+                    b.HasOne("Velomine.Server.Features.Routes.CyclingRoute", null)
+                        .WithMany()
+                        .HasForeignKey("RouteId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_planned_rides_routes_route_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.RideSignUp", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.PlannedRide", "PlannedRide")
+                        .WithMany("SignUps")
+                        .HasForeignKey("PlannedRideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ride_sign_ups_planned_rides_planned_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ride_sign_ups_users_user_id");
+
+                    b.Navigation("PlannedRide");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Notifications.Notification", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
@@ -2412,6 +2736,12 @@ namespace Velomine.Server.Data.Migrations
                         .HasForeignKey("ComponentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_notifications_bike_components_component_id");
+
+                    b.HasOne("Velomine.Server.Features.Clubs.PlannedRide", null)
+                        .WithMany()
+                        .HasForeignKey("PlannedRideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_notifications_planned_rides_planned_ride_id");
 
                     b.HasOne("Velomine.Server.Features.Rides.Ride", null)
                         .WithMany()
@@ -2513,6 +2843,34 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_ride_streams_rides_ride_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Routes.CyclingRoute", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_routes_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_routes_users_user_id");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Routes.RouteLine", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Routes.CyclingRoute", null)
+                        .WithOne("Line")
+                        .HasForeignKey("Velomine.Server.Features.Routes.RouteLine", "RouteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_route_lines_routes_route_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareGrant", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
@@ -2574,6 +2932,11 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("Memberships");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Clubs.PlannedRide", b =>
+                {
+                    b.Navigation("SignUps");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
                     b.Navigation("Laps");
@@ -2581,6 +2944,11 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("PowerBests");
 
                     b.Navigation("Streams");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Routes.CyclingRoute", b =>
+                {
+                    b.Navigation("Line");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,9 +9,14 @@ import '../../core/l10n.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../sharing/sharing_state.dart';
 import '../sharing/sharing_view_model.dart';
+import '../calendar/club_ride_widgets.dart';
+import '../calendar/club_rides_view_model.dart';
+import '../routes/route_widgets.dart';
+import '../routes/routes_view_model.dart';
 import 'club_view_model.dart';
 import 'join_requests_state.dart';
 import 'join_requests_view_model.dart';
@@ -47,6 +52,12 @@ class ClubScreen extends ConsumerWidget {
     required this.onStartClub,
     required this.onOpenClubs,
     required this.onOpenAthletes,
+    required this.onOpenRides,
+    required this.onOpenRide,
+    required this.onPlanRide,
+    required this.onOpenRoutes,
+    required this.onOpenRoute,
+    required this.onAddRoute,
     required this.tileUrl,
     required this.attribution,
   });
@@ -56,6 +67,12 @@ class ClubScreen extends ConsumerWidget {
   final VoidCallback onStartClub;
   final VoidCallback onOpenClubs;
   final VoidCallback onOpenAthletes;
+  final VoidCallback onOpenRides;
+  final void Function(String id) onOpenRide;
+  final VoidCallback onPlanRide;
+  final VoidCallback onOpenRoutes;
+  final void Function(String id) onOpenRoute;
+  final VoidCallback onAddRoute;
   final String tileUrl;
   final String attribution;
 
@@ -460,6 +477,8 @@ class ClubScreen extends ConsumerWidget {
                     club,
                     busy: clubState.action.running,
                   ),
+                _ridesSection(context, ref, canPlan: coach),
+                _routesSection(context, ref),
                 Text(
                   l10n.clubMembers,
                   style: Theme.of(context).textTheme.titleMedium,
@@ -609,6 +628,123 @@ class ClubScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// The next few club rides, with the way to the whole calendar and to planning one.
+  Widget _ridesSection(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool canPlan,
+  }) {
+    final l10n = context.l10n;
+    final s = ref.watch(clubRidesViewModelProvider);
+    return SectionCard(
+      title: l10n.clubRidesTitle,
+      description: l10n.clubRidesHelp,
+      children: [
+        if (s.load.failure case final failure?)
+          Text(
+            failureText(l10n, failure),
+            key: const Key('club-rides-error'),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        if (s.load.running && s.upcoming.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (s.upcoming.isEmpty && s.load.failure == null)
+          Text(l10n.ridesEmpty, key: const Key('club-rides-empty'))
+        else
+          for (final ride in s.upcoming.take(3))
+            ListTile(
+              key: Key('club-ride-${ride.id}'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.event),
+              title: Text(ride.title),
+              subtitle: Text(
+                '${rideStartText(context, ride.startsAt, ride.utcOffsetMinutes)} · '
+                '${ride.meetingName} · ${ridePlaces(l10n, ride)}',
+              ),
+              onTap: () => onOpenRide(ride.id),
+            ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            TextButton(
+              key: const Key('open-club-rides'),
+              onPressed: onOpenRides,
+              child: Text(l10n.clubRidesSeeAll),
+            ),
+            if (canPlan)
+              FilledButton.tonalIcon(
+                key: const Key('plan-ride-from-club'),
+                onPressed: onPlanRide,
+                icon: const Icon(Icons.add),
+                label: Text(l10n.clubPlanRide),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// The newest club routes, with the way to the library and to adding one.
+  Widget _routesSection(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final s = ref.watch(routesViewModelProvider);
+    return SectionCard(
+      title: l10n.clubRoutesTitle,
+      description: l10n.clubRoutesHelp,
+      children: [
+        if (s.load.failure case final failure?)
+          Text(
+            failureText(l10n, failure),
+            key: const Key('club-routes-error'),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        if (s.load.running && s.routes.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (s.routes.isEmpty && s.load.failure == null)
+          Text(l10n.clubRoutesEmpty, key: const Key('club-routes-empty'))
+        else
+          for (final route in s.routes.take(3))
+            ListTile(
+              key: Key('club-route-${route.id}'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.route),
+              title: Text(route.name),
+              subtitle: Text(
+                '${routeLineOf(route.distanceM, route.climbingM)} · '
+                '${routeSurfaceName(l10n, route.surface)}',
+              ),
+              onTap: () => onOpenRoute(route.id),
+            ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            TextButton(
+              key: const Key('open-club-routes'),
+              onPressed: onOpenRoutes,
+              child: Text(l10n.clubRoutesSeeAll),
+            ),
+            FilledButton.tonalIcon(
+              key: const Key('add-route-from-club'),
+              onPressed: onAddRoute,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.clubAddRoute),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

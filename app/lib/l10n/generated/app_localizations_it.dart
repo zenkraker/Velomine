@@ -3649,4 +3649,387 @@ class AppLocalizationsIt extends AppLocalizations {
   String notificationReminderDue(String subject) {
     return 'Manutenzione da fare: $subject.';
   }
+
+  @override
+  String get actionLoadRoutes => 'caricare le rotte del club';
+
+  @override
+  String get actionLoadRoute => 'caricare questa rotta';
+
+  @override
+  String get actionAddRoute => 'aggiungere la rotta';
+
+  @override
+  String get actionSaveRoute => 'salvare la rotta';
+
+  @override
+  String get actionDeleteRoute => 'eliminare la rotta';
+
+  @override
+  String get actionLoadClubRides => 'caricare le uscite del club';
+
+  @override
+  String get actionLoadClubRide => 'caricare questa uscita del club';
+
+  @override
+  String get actionSaveClubRide => 'salvare l\'uscita del club';
+
+  @override
+  String get actionCancelClubRide => 'annullare l\'uscita del club';
+
+  @override
+  String get actionJoinClubRide => 'confermare la tua presenza';
+
+  @override
+  String get actionLeaveClubRide => 'ritirare la tua presenza';
+
+  @override
+  String get actionLoadCalendarFeed => 'caricare l\'indirizzo del calendario';
+
+  @override
+  String get actionSaveCalendarFeed => 'modificare l\'indirizzo del calendario';
+
+  @override
+  String get clubRidesTitle => 'Uscite';
+
+  @override
+  String get clubRidesHelp => 'Le prossime uscite del club e chi c\'è.';
+
+  @override
+  String get clubRidesSeeAll => 'Vedi tutte le uscite';
+
+  @override
+  String get clubPlanRide => 'Programma un\'uscita';
+
+  @override
+  String get clubRoutesTitle => 'Rotte';
+
+  @override
+  String get clubRoutesHelp =>
+      'Le linee condivise dal club, ognuna custodita da chi l\'ha aggiunta.';
+
+  @override
+  String get clubRoutesSeeAll => 'Vedi tutte le rotte';
+
+  @override
+  String get clubAddRoute => 'Aggiungi una rotta';
+
+  @override
+  String get clubRoutesEmpty =>
+      'Ancora nessuna rotta. Aggiungine una dalle tue uscite o da un file GPX.';
+
+  @override
+  String get routesFilterAll => 'Tutti i fondi';
+
+  @override
+  String get routesSortNewest => 'Più recenti';
+
+  @override
+  String get routesSortShortest => 'Più corte';
+
+  @override
+  String get routesSortLongest => 'Più lunghe';
+
+  @override
+  String get routeSurfaceRoad => 'Asfalto';
+
+  @override
+  String get routeSurfaceGravel => 'Sterrato';
+
+  @override
+  String get routeSurfaceMountain => 'Montagna';
+
+  @override
+  String get routeSurfaceMixed => 'Misto';
+
+  @override
+  String routeAddedBy(String name) {
+    return 'Aggiunta da $name';
+  }
+
+  @override
+  String get routeNotSharedBody =>
+      'Questa rotta è tua, ma non è nella libreria del club.';
+
+  @override
+  String get routeOpenGpx => 'Scarica il GPX';
+
+  @override
+  String get routeEdit => 'Modifica';
+
+  @override
+  String get routeWithdraw => 'Rimuovi dal club';
+
+  @override
+  String get routeWithdrawConfirmTitle => 'Rimuovere questa rotta dal club?';
+
+  @override
+  String get routeWithdrawConfirmBody =>
+      'Resta tua e puoi condividerla di nuovo quando vuoi.';
+
+  @override
+  String get routeShare => 'Condividi di nuovo';
+
+  @override
+  String get routeDelete => 'Elimina definitivamente';
+
+  @override
+  String get routeDeleteConfirmTitle => 'Eliminare questa rotta?';
+
+  @override
+  String get routeDeleteConfirmBody =>
+      'La linea sparisce per sempre. Le uscite del club che l\'avevano scelta mantengono i loro dettagli.';
+
+  @override
+  String get routeOwnerOnly => 'Solo chi ha aggiunto la rotta può modificarla.';
+
+  @override
+  String get addRouteTitle => 'Aggiungi una rotta';
+
+  @override
+  String get addRouteHelp =>
+      'Una rotta è una linea sulla mappa con un nome. Niente di come l\'hai percorsa viene condiviso.';
+
+  @override
+  String get addRouteFromRide => 'Da una delle mie uscite';
+
+  @override
+  String get addRouteFromFile => 'Da un file GPX';
+
+  @override
+  String get addRouteChooseFile => 'Scegli un file GPX';
+
+  @override
+  String get addRouteNoRides =>
+      'Non hai ancora uscite con una mappa. Importa un\'uscita e torna qui.';
+
+  @override
+  String get addRoutePreview => 'Questa è la linea che vedrà il club';
+
+  @override
+  String get addRoutePrivacyNote =>
+      'Le tue zone privacy e il taglio di inizio e fine sono già applicati.';
+
+  @override
+  String get addRouteDetails => 'Nome e dettagli';
+
+  @override
+  String get addRouteName => 'Nome';
+
+  @override
+  String get addRouteDescription => 'Descrizione (facoltativa)';
+
+  @override
+  String get addRouteSurface => 'Fondo';
+
+  @override
+  String get addRouteSave => 'Aggiungi alla libreria del club';
+
+  @override
+  String get editRouteTitle => 'Modifica la rotta';
+
+  @override
+  String get ridesEmpty =>
+      'Ancora nessuna uscita programmata. Un coach può programmare la prossima.';
+
+  @override
+  String get ridesUpcoming => 'In arrivo';
+
+  @override
+  String get ridesPast => 'Appena fatte';
+
+  @override
+  String get rideCancelled => 'Annullata';
+
+  @override
+  String get rideFull => 'Completa';
+
+  @override
+  String get rideSignedUp => 'Ci sei';
+
+  @override
+  String rideCountIn(int count) {
+    return '$count presenti';
+  }
+
+  @override
+  String ridePlacesLeft(int count, int max) {
+    return '$count posti liberi su $max';
+  }
+
+  @override
+  String get ridePaceEasy => 'Facile';
+
+  @override
+  String get ridePaceSteady => 'Regolare';
+
+  @override
+  String get ridePaceFast => 'Veloce';
+
+  @override
+  String get rideNoDrop => 'Nessuno resta indietro';
+
+  @override
+  String ridePlannedBy(String name) {
+    return 'Programmata da $name';
+  }
+
+  @override
+  String get rideMeeting => 'Punto di ritrovo';
+
+  @override
+  String get rideRoute => 'Rotta';
+
+  @override
+  String get rideNotes => 'Note';
+
+  @override
+  String get rideWhoIsIn => 'Chi c\'è';
+
+  @override
+  String get rideNobodyIn => 'Ancora nessuno.';
+
+  @override
+  String get rideImIn => 'Ci sono';
+
+  @override
+  String get rideImOut => 'Non vengo più';
+
+  @override
+  String get rideEdit => 'Modifica l\'uscita';
+
+  @override
+  String get rideCancel => 'Annulla l\'uscita';
+
+  @override
+  String get rideCancelConfirmTitle => 'Annullare questa uscita?';
+
+  @override
+  String get rideCancelConfirmBody =>
+      'Chi è iscritto riceve una notifica. L\'uscita resta sul calendario, annullata.';
+
+  @override
+  String get rideCancelledReason => 'Questa uscita è annullata.';
+
+  @override
+  String get rideFullReason => 'Questa uscita è completa.';
+
+  @override
+  String get rideStartedReason => 'Questa uscita è già iniziata.';
+
+  @override
+  String get planRideTitle => 'Programma un\'uscita';
+
+  @override
+  String get editRideTitle => 'Modifica l\'uscita';
+
+  @override
+  String get rideFormTitle => 'Titolo';
+
+  @override
+  String get rideFormMeetingName => 'Nome del punto di ritrovo';
+
+  @override
+  String get rideFormPickMeeting => 'Scegli il punto di ritrovo sulla mappa';
+
+  @override
+  String get rideFormRoute => 'Rotta (facoltativa)';
+
+  @override
+  String get rideFormNoRoute => 'Nessuna rotta';
+
+  @override
+  String get rideFormPace => 'Andatura';
+
+  @override
+  String get rideFormNoDrop => 'Nessuno resta indietro';
+
+  @override
+  String get rideFormNotes => 'Note (facoltative)';
+
+  @override
+  String get rideFormMaxRiders =>
+      'Numero massimo di partecipanti (facoltativo)';
+
+  @override
+  String get rideFormSave => 'Salva l\'uscita';
+
+  @override
+  String get rideFormNeedTitle => 'Dai un titolo all\'uscita.';
+
+  @override
+  String get rideFormNeedMeeting => 'Dai un nome al punto di ritrovo.';
+
+  @override
+  String get rideFormNeedPoint => 'Scegli il punto di ritrovo sulla mappa.';
+
+  @override
+  String get rideFormFuture => 'Scegli una data e un\'ora future.';
+
+  @override
+  String get rideFormMaxRange =>
+      'Il limite è un numero da 1 a 500, oppure lascialo vuoto.';
+
+  @override
+  String get calendarTitle => 'Abbonamento al calendario';
+
+  @override
+  String get calendarHelp =>
+      'Abbona il calendario del telefono o del computer alle uscite del club. L\'indirizzo è privato: chi lo ha vede le uscite del club, mai chi partecipa.';
+
+  @override
+  String get calendarInactive => 'Nessun indirizzo del calendario.';
+
+  @override
+  String get calendarActive => 'Un indirizzo del calendario è attivo.';
+
+  @override
+  String get calendarCreate => 'Crea l\'indirizzo';
+
+  @override
+  String get calendarReplace => 'Sostituisci l\'indirizzo';
+
+  @override
+  String get calendarReplaceConfirmTitle =>
+      'Sostituire l\'indirizzo del calendario?';
+
+  @override
+  String get calendarReplaceConfirmBody =>
+      'Il vecchio indirizzo smette subito di funzionare e il calendario ha bisogno del nuovo.';
+
+  @override
+  String get calendarDelete => 'Ferma l\'indirizzo';
+
+  @override
+  String get calendarDeleteConfirmTitle =>
+      'Fermare l\'indirizzo del calendario?';
+
+  @override
+  String get calendarDeleteConfirmBody =>
+      'Il calendario smette di aggiornarsi. Puoi creare un nuovo indirizzo quando vuoi.';
+
+  @override
+  String get calendarCopy => 'Copia l\'indirizzo';
+
+  @override
+  String get calendarAddressCopied => 'Indirizzo copiato';
+
+  @override
+  String get calendarShownOnce =>
+      'Copialo ora. Il server conserva solo un hash, quindi non può mostrarlo di nuovo; se lo perdi, sostituiscilo.';
+
+  @override
+  String notificationClubRidePlanned(String ride) {
+    return '$ride: il club ha programmato un\'uscita.';
+  }
+
+  @override
+  String notificationClubRideChanged(String ride) {
+    return '$ride: sono cambiati l\'orario o il punto di ritrovo.';
+  }
+
+  @override
+  String notificationClubRideCancelled(String ride) {
+    return '$ride: l\'uscita è annullata.';
+  }
 }

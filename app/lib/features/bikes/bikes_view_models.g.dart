@@ -123,7 +123,7 @@ final class BikeDetailViewModelProvider
 }
 
 String _$bikeDetailViewModelHash() =>
-    r'c9b6f41eeea581a2d8afa16edd872491478568c0';
+    r'4ca9627ce3400a721f9156b9b58df9530fed324f';
 
 /// One bike: editing it and its parts, and applying a template. Route-scoped,
 /// so it lives exactly as long as the detail screen.
