@@ -50,6 +50,33 @@
         });
       });
 
+      # Claude Code from Anthropic's release manifest, ahead of nixpkgs. To update, take the
+      # version from https://downloads.claude.ai/claude-code-releases/latest and the
+      # linux-x64 checksum from <that URL's folder>/<version>/manifest.zst.json. Drop this
+      # override once nixpkgs' claude-code is at least this version.
+      claudeCode = pkgs.claude-code.override {
+        manifest = {
+          version = "2.1.322";
+          platforms.linux-x64 = {
+            binary = "claude.zst";
+            checksum = "9bb7558bd992ca457e6458bf1686572f7a3156b8331dd8443391dbfe590c1eed";
+          };
+        };
+      };
+
+      # The VS Code extension at the same version as the CLI above (it bundles its own binary).
+      # Update both together; the hash is the Marketplace VSIX for linux-x64.
+      claudeCodeExtension = pkgs.vscode-extensions.anthropic.claude-code.overrideAttrs (_: rec {
+        version = claudeCode.version;
+        src = pkgs.vscode-utils.fetchVsixFromVscodeMarketplace {
+          name = "claude-code";
+          publisher = "anthropic";
+          arch = "linux-x64";
+          inherit version;
+          hash = "sha256-5y+nUr4ZNdkzOXwYvbqDrj1KZ+x2zeWoQuh+Wh1aHPQ=";
+        };
+      });
+
       # TEMPORARY: OpenCode 2 rejects the hosted Sentry MCP OAuth with a 401
       # (https://github.com/anomalyco/opencode/issues/56195). Remove this local
       # stdio wrapper and point opencode.json back at https://mcp.sentry.dev/mcp
@@ -79,7 +106,7 @@
       vscode = pkgs.vscode-with-extensions.override {
         vscode = pkgs.vscode;
         vscodeExtensions = [
-          pkgs.vscode-extensions.anthropic.claude-code
+          claudeCodeExtension
           pkgs.vscode-extensions.dart-code.flutter
           pkgs.vscode-extensions.jnoortheen.nix-ide
           pkgs.vscode-extensions.mkhl.direnv
@@ -92,7 +119,12 @@
       formatter.${system} = pkgs.nixfmt;
 
       packages.${system} = {
-        inherit opencode vscode sentryMcp;
+        inherit
+          opencode
+          vscode
+          sentryMcp
+          claudeCode
+          ;
       };
 
       devShells.${system}.default = pkgs.mkShell {
@@ -111,6 +143,7 @@
           # (Flutter/Dart skills plus the `dart mcp-server` MCP server used by
           # .mcp.json and opencode.json). Install them per agent; see
           # docs/development.md.
+          claudeCode # the only Claude Code install: no host copy, no self-update
           pkgs.nodejs # ponytail's Claude Code hooks
           pkgs.codegraph
           pkgs.sentry-cli # releases and debug-symbol uploads
