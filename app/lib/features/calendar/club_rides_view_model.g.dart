@@ -45,7 +45,7 @@ final class ClubRidesViewModelProvider
 }
 
 String _$clubRidesViewModelHash() =>
-    r'61acf0a7d9ef064dad5fd053f9f49109bd98f3d5';
+    r'62fd02903267370cc0a97e82b1eb4bdfd185e82e';
 
 /// The club's rides, route-scoped so a screen inside the club reloads them when it opens.
 
@@ -122,7 +122,7 @@ final class ClubRideDetailViewModelProvider
 }
 
 String _$clubRideDetailViewModelHash() =>
-    r'127ee7222e602e73bc867f6860fe796427fa0937';
+    r'8e2464759ff5a58e8cd1240dd654b06eac2eff13';
 
 /// One club ride, saying "I'm in" and taking it back.
 
@@ -230,7 +230,7 @@ final class PlanRideViewModelProvider
   }
 }
 
-String _$planRideViewModelHash() => r'4b2bcb24dc72b371410e08d4487d8b3457215032';
+String _$planRideViewModelHash() => r'6f6e71370412475828b479bc757eeb1937ea3dcf';
 
 /// Plans a ride, or changes one: the club's routes and, when editing, the ride as it is now.
 
@@ -321,7 +321,7 @@ final class CalendarFeedViewModelProvider
 }
 
 String _$calendarFeedViewModelHash() =>
-    r'1683819a7575f84b80d4ca289458830d72af449f';
+    r'77bbe5fdce96e1a4adf22e088c1ed27cd7db41b5';
 
 /// The member's private calendar address.
 

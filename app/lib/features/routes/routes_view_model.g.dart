@@ -47,7 +47,7 @@ final class RoutesViewModelProvider
   }
 }
 
-String _$routesViewModelHash() => r'4b364013ea2891261898277ebe3f44063e8be03e';
+String _$routesViewModelHash() => r'255353e6a476fdcbf360dd4db6e099e1ff76fc33';
 
 /// The club's route library. Route-scoped: it reloads when a screen needs it and is
 /// rebuilt empty when the account changes.
