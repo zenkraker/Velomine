@@ -98,6 +98,7 @@ class LocalRide {
     this.serverRideId,
     this.uploadError,
     this.uploadAttempts = 0,
+    this.imported = false,
   });
 
   final String id;
@@ -117,6 +118,9 @@ class LocalRide {
   final String? serverRideId;
   final String? uploadError;
   final int uploadAttempts;
+
+  /// Kept from a file another app shared or opened, not recorded on this phone.
+  final bool imported;
 
   bool get isUploaded => uploadState == 'uploaded';
 
@@ -143,6 +147,7 @@ class LocalRide {
       serverRideId: map['serverRideId'] as String?,
       uploadError: map['uploadError'] as String?,
       uploadAttempts: (map['uploadAttempts'] as num?)?.toInt() ?? 0,
+      imported: map['imported'] as bool? ?? false,
     );
   }
 }

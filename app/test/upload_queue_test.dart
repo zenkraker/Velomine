@@ -76,6 +76,7 @@ class QueueRecorder implements Recorder {
           serverRideId: ride.serverRideId,
           uploadError: ride.uploadError,
           uploadAttempts: ride.uploadAttempts,
+          imported: ride.imported,
         );
         rides[i] = ride;
       }
@@ -144,7 +145,11 @@ class MemoryUploadStore implements UploadStateStore {
       this.states = {...states};
 }
 
-LocalRide ready(String id, {String accountId = 'id-rider'}) => LocalRide(
+LocalRide ready(
+  String id, {
+  String accountId = 'id-rider',
+  bool imported = false,
+}) => LocalRide(
   id: id,
   startedAt: DateTime(2026, 11, 6, 9),
   endedAt: DateTime(2026, 11, 6, 10),
@@ -152,6 +157,7 @@ LocalRide ready(String id, {String accountId = 'id-rider'}) => LocalRide(
   distanceM: 10000,
   movingS: 1800,
   accountId: accountId,
+  imported: imported,
 );
 
 Future<void> settle(RideUploadQueue queue, String id) async {
@@ -253,6 +259,19 @@ void main() {
     await settle(queue, 'r1');
 
     expect(queue.stateFor('r1')?.error, 'sign_in');
+  });
+
+  test('UploadQueue_ShouldUploadImportedRide_WhenResumed', () async {
+    final recorded = ready('r1');
+    final imported = ready('r2', imported: true);
+    recorder.rides.add(imported);
+
+    await queue.init();
+    await queue.resume([recorded, imported]);
+    await settle(queue, 'r2');
+
+    expect(uploader.keys, contains('r2'));
+    expect(queue.stateFor('r2')?.isUploaded, isTrue);
   });
 
   test('UploadQueue_ShouldNotResendRide_WhenAlreadyUploaded', () async {

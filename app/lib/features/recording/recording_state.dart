@@ -25,6 +25,13 @@ class RideRecordingState {
   final RecorderSnapshot snapshot;
   final List<LocalRide> rides;
 
+  /// The rides recorded on this phone. Imports from a shared file upload like
+  /// any other ride but are not shown on the Record tab.
+  List<LocalRide> get recordedRides => [
+    for (final ride in rides)
+      if (!ride.imported) ride,
+  ];
+
   /// What the upload queue is doing with each local ride, by local id.
   final Map<String, UploadState> uploads;
 
