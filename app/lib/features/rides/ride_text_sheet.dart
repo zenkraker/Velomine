@@ -7,7 +7,10 @@ import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
 
 /// Saves the title and description and answers whether the server took them.
-typedef RideTextSaver = Future<bool> Function(String? title, String? description);
+typedef RideTextSaver = Future<bool> Function(
+  String? title,
+  String? description,
+);
 
 /// The longest title and description the server accepts.
 const rideTitleLimit = 120;

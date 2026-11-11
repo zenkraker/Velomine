@@ -360,6 +360,7 @@ class RideCard extends StatelessWidget {
                 dateTime(ride.startTime ?? ride.uploadedAt),
                 style: text.bodySmall,
               ),
+              Text(ride.fileName, style: text.bodySmall),
               if (ready && rideTypeIsSet(ride)) ...[
                 const SizedBox(height: 6),
                 RideTypeChips(ride: ride),

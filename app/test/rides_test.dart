@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine/features/rides/rides_screen.dart';
+import 'package:velomine/features/rides/rides_view_model.dart';
 
 import 'fake_server.dart';
 
@@ -232,4 +233,127 @@ void main() {
       expect(find.text('gravel.fit'), findsNothing);
     },
   );
+
+  testWidgets('RidesScreen_ShouldShowTheTitleAsTheMainLine_WhenTheRideHasOne', (
+    tester,
+  ) async {
+    server.rides.add(
+      rideJson(
+        'r1',
+        'ready',
+        fileName: 'sunday.gpx',
+        title: 'Gravel with Marco',
+      ),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(find.text('Gravel with Marco'), findsOneWidget);
+    expect(find.text('sunday.gpx'), findsOneWidget);
+  });
+
+  testWidgets('RidesScreen_ShouldMakeUpATitle_WhenTheRideHasNone', (
+    tester,
+  ) async {
+    server.rides.add(
+      rideJson('r1', 'ready', discipline: 'gravel', utcOffsetMinutes: 0),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(find.text('Morning gravel ride'), findsOneWidget);
+  });
+
+  testWidgets('RidesScreen_ShouldFindRidesByAWord_WhenTheMemberSearches', (
+    tester,
+  ) async {
+    server.rides.add(
+      rideJson('r1', 'ready', fileName: 'a.fit', title: 'Gravel with Marco'),
+    );
+    server.rides.add(
+      rideJson(
+        'r2',
+        'ready',
+        fileName: 'b.fit',
+        title: 'Road loop',
+        description: 'Rain all day',
+      ),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.enterText(find.byKey(const Key('ride-search')), 'marco');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Gravel with Marco'), findsOneWidget);
+    expect(find.text('Road loop'), findsNothing);
+  });
+
+  testWidgets('RidesScreen_ShouldExplainAndClear_WhenNothingMatchesTheSearch', (
+    tester,
+  ) async {
+    server.rides.add(
+      rideJson('r1', 'ready', fileName: 'a.fit', title: 'Gravel with Marco'),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.enterText(find.byKey(const Key('ride-search')), 'nothing');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('no-rides-match')), findsOneWidget);
+    expect(find.text('No rides match.'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clear-filters')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Gravel with Marco'), findsOneWidget);
+    expect(find.byKey(const Key('no-rides-match')), findsNothing);
+  });
+
+  testWidgets('RidesScreen_ShouldNarrowToTheChosenDays_WhenADateRangeIsSet', (
+    tester,
+  ) async {
+    server.rides.add(
+      rideJson(
+        'r1',
+        'ready',
+        fileName: 'a.fit',
+        startTime: '2026-11-01T07:30:00Z',
+      ),
+    );
+    server.rides.add(
+      rideJson(
+        'r2',
+        'ready',
+        fileName: 'b.fit',
+        startTime: '2026-11-05T07:30:00Z',
+      ),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    await containerOf(tester)
+        .read(ridesViewModelProvider.notifier)
+        .setDateRange((from: DateTime(2026, 11, 1), to: DateTime(2026, 11, 1)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('a.fit'), findsOneWidget);
+    expect(find.text('b.fit'), findsNothing);
+    expect(find.byKey(const Key('ride-dates-chip')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Remove the date filter'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('a.fit'), findsOneWidget);
+    expect(find.text('b.fit'), findsOneWidget);
+    expect(find.byKey(const Key('ride-dates-chip')), findsNothing);
+  });
+
+  testWidgets('RidesScreen_ShouldOpenTheDayPicker_WhenDatesArePressed', (
+    tester,
+  ) async {
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.tap(find.byKey(const Key('ride-dates')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+  });
 }

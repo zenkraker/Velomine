@@ -2424,9 +2424,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideFilterClearSearch => 'Cancella la ricerca';
 
   @override
-  String get rideFilterDates => 'Date';
-
-  @override
   String get rideFilterDatesTooltip => 'Scegli le date';
 
   @override
@@ -2446,7 +2443,7 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String rideDefaultTitle(String period, String kind) {
     String _temp0 = intl.Intl.selectLogic(kind, {
-      'commute': 'Tragitto pendolare',
+      'commute': 'Tragitto casa-lavoro',
       'virtual': 'Uscita virtuale',
       'indoor': 'Uscita indoor',
       'road': 'Uscita su strada',

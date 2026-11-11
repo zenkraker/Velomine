@@ -203,10 +203,7 @@ class RideDetailScreen extends ConsumerWidget {
             ),
         ],
       ),
-      Text(
-        dateTime(ride.startTime ?? ride.uploadedAt),
-        style: text.bodyMedium,
-      ),
+      Text(dateTime(ride.startTime ?? ride.uploadedAt), style: text.bodyMedium),
       Text(
         [ride.fileName, if (ride.device != null) ride.device!].join(' · '),
         style: text.bodySmall,

@@ -117,8 +117,9 @@ class RidesViewModel extends _$RidesViewModel {
     await refresh();
   }
 
-  Future<Result<RidesPage>> _page({String? cursor}) =>
-      ref.read(ridesDataProvider).page(
+  Future<Result<RidesPage>> _page({String? cursor}) => ref
+      .read(ridesDataProvider)
+      .page(
         cursor: cursor,
         discipline: state.disciplineFilter,
         query: state.query,

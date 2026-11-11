@@ -1222,7 +1222,6 @@
   "rideFilterSearch": "Search rides",
   "rideFilterSearchHint": "Search titles and descriptions",
   "rideFilterClearSearch": "Clear search",
-  "rideFilterDates": "Dates",
   "rideFilterDatesTooltip": "Choose dates",
   "rideFilterRemoveDates": "Remove the date filter",
   "rideFilterClear": "Clear filters",

@@ -4418,12 +4418,6 @@ abstract class AppLocalizations {
   /// **'Clear search'**
   String get rideFilterClearSearch;
 
-  /// No description provided for @rideFilterDates.
-  ///
-  /// In en, this message translates to:
-  /// **'Dates'**
-  String get rideFilterDates;
-
   /// No description provided for @rideFilterDatesTooltip.
   ///
   /// In en, this message translates to:

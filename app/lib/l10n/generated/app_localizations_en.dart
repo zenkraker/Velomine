@@ -2405,9 +2405,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideFilterClearSearch => 'Clear search';
 
   @override
-  String get rideFilterDates => 'Dates';
-
-  @override
   String get rideFilterDatesTooltip => 'Choose dates';
 
   @override

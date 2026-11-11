@@ -779,7 +779,6 @@
   "rideFilterSearch": "Cerca uscite",
   "rideFilterSearchHint": "Cerca nei titoli e nelle descrizioni",
   "rideFilterClearSearch": "Cancella la ricerca",
-  "rideFilterDates": "Date",
   "rideFilterDatesTooltip": "Scegli le date",
   "rideFilterRemoveDates": "Togli il filtro delle date",
   "rideFilterClear": "Azzera i filtri",
@@ -795,7 +794,7 @@
       }
     }
   },
-  "rideDefaultTitle": "{kind, select, commute{Tragitto pendolare} virtual{Uscita virtuale} indoor{Uscita indoor} road{Uscita su strada} gravel{Uscita gravel} mountain{Uscita in mountain bike} track{Uscita in pista} ebike{Uscita in e-bike} other{Uscita in bici}} {period, select, morning{del mattino} afternoon{del pomeriggio} evening{della sera} other{della notte}}",
+  "rideDefaultTitle": "{kind, select, commute{Tragitto casa-lavoro} virtual{Uscita virtuale} indoor{Uscita indoor} road{Uscita su strada} gravel{Uscita gravel} mountain{Uscita in mountain bike} track{Uscita in pista} ebike{Uscita in e-bike} other{Uscita in bici}} {period, select, morning{del mattino} afternoon{del pomeriggio} evening{della sera} other{della notte}}",
   "@rideDefaultTitle": {
     "placeholders": {
       "period": {
