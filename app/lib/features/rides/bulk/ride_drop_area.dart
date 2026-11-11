@@ -22,7 +22,10 @@ class RideDropArea extends ConsumerWidget {
     if (!kIsWeb) return child;
     final l10n = context.l10n;
 
-    ref.listen(bulkUploadViewModelProvider.select((s) => s.notice), (_, notice) {
+    ref.listen(bulkUploadViewModelProvider.select((s) => s.notice), (
+      _,
+      notice,
+    ) {
       if (notice == null) return;
       final text = switch (notice) {
         BulkNotice.signedOut => l10n.bulkSignedOut,
@@ -48,9 +51,7 @@ class RideDropArea extends ConsumerWidget {
       children: [
         child,
         if (dragging)
-          const Positioned.fill(
-            child: IgnorePointer(child: _DropTarget()),
-          ),
+          const Positioned.fill(child: IgnorePointer(child: _DropTarget())),
       ],
     );
   }
@@ -81,7 +82,11 @@ class _DropTarget extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               spacing: AppSpacing.sm,
               children: [
-                Icon(Icons.file_download_outlined, size: 48, color: scheme.primary),
+                Icon(
+                  Icons.file_download_outlined,
+                  size: 48,
+                  color: scheme.primary,
+                ),
                 Text(
                   l10n.bulkDropTitle,
                   style: text.headlineSmall,

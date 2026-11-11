@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -2060,6 +2061,7 @@ Future<void> startApp(
   LocationService? locationService,
   HomeLocationStore? homeLocationStore,
   SoloHintStore? soloHintStore,
+  List<Override> overrides = const [],
 }) async {
   await tester.runAsync(session.restore);
   await tester.pumpWidget(
@@ -2091,6 +2093,7 @@ Future<void> startApp(
         ssoStarterProvider.overrideWithValue(startSso ?? () async {}),
         linkOpenerProvider.overrideWithValue(openLink ?? (_) async {}),
         changeServerProvider.overrideWithValue(onChangeServer),
+        ...overrides,
       ],
       child: const VelomineApp(),
     ),

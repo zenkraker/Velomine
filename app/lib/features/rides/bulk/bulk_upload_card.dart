@@ -119,7 +119,10 @@ class BulkUploadCard extends ConsumerWidget {
       if (summary.skipped > 0)
         Text(l10n.bulkSkipped(summary.skipped), key: const Key('bulk-skipped')),
       if (summary.notRead > 0)
-        Text(l10n.bulkNotRead(summary.notRead), key: const Key('bulk-not-read')),
+        Text(
+          l10n.bulkNotRead(summary.notRead),
+          key: const Key('bulk-not-read'),
+        ),
       Align(
         alignment: Alignment.centerRight,
         child: FilledButton(

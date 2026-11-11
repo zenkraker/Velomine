@@ -153,6 +153,8 @@ class BulkUploadRunner {
       onWaiting?.call(true);
       await _wait(throttleWait);
       onWaiting?.call(false);
+      // Cancelled while waiting: the file is not sent again.
+      if (isCancelled()) return null;
     }
   }
 }

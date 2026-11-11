@@ -188,8 +188,9 @@ Future<List<web.FileSystemEntry>> _readBatch(
         for (final item in found.toDart) item as web.FileSystemEntry,
       ]);
     }).toJS,
-    ((JSAny _) => done.completeError(StateError('Could not read a folder.')))
-        .toJS,
+    ((JSAny _) => done.completeError(
+      StateError('Could not read a folder.'),
+    )).toJS,
   );
   return done.future;
 }
@@ -198,8 +199,9 @@ Future<web.File> _fileOf(web.FileSystemFileEntry entry) {
   final done = Completer<web.File>();
   entry.file(
     ((web.File file) => done.complete(file)).toJS,
-    ((JSAny _) => done.completeError(StateError('Could not open a file.')))
-        .toJS,
+    ((JSAny _) => done.completeError(
+      StateError('Could not open a file.'),
+    )).toJS,
   );
   return done.future;
 }

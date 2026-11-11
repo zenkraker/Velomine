@@ -1,4 +1,5 @@
-import 'drop_source_stub.dart' if (dart.library.js_interop) 'drop_source_web.dart';
+import 'drop_source_stub.dart'
+    if (dart.library.js_interop) 'drop_source_web.dart';
 import 'ride_file.dart';
 
 /// Where ride files come from on the web: dragged onto the page, or chosen with a button.
