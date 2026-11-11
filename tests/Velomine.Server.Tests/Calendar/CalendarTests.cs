@@ -211,6 +211,24 @@ public sealed class CalendarTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task AccountExport_ShouldIncludeClubRides_WhenTheMemberIsIn()
+    {
+        await using var api = await CalendarTestKit.StartAsync(postgres);
+        var world = await NewWorldAsync(api);
+        var ride = await CalendarTestKit.PlanAsync(world.Coach.Client, CalendarTestKit.Request(title: "Sunday ride"));
+        (await world.Rider.Client.PostAsync($"/api/v1/club/rides/{ride.Ride.Id}/participation", null, Ct)).EnsureSuccessStatusCode();
+
+        var link = (await (await world.Rider.Client.PostAsync("/api/v1/accounts/me/export-link", null, Ct))
+            .Content.ReadFromJsonAsync<Velomine.Server.Features.Accounts.ExportLinkResponse>(Ct))!;
+        var zip = new System.IO.Compression.ZipArchive(
+            await (await api.CreateClient().GetAsync(link.Path, Ct)).Content.ReadAsStreamAsync(Ct));
+
+        using var reader = new StreamReader(zip.GetEntry("club-rides.json")!.Open());
+        var json = await reader.ReadToEndAsync(Ct);
+        Assert.Contains("Sunday ride", json);
+    }
+
+    [Fact]
     public async Task UpdateClubRide_ShouldTellOnlyTheRidersWhoAreIn_WhenTheTimeOrMeetingPointChanges()
     {
         await using var api = await CalendarTestKit.StartAsync(postgres);
