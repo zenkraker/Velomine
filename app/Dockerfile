@@ -35,6 +35,8 @@ ARG REVISION=unknown
 COPY app/nginx.conf /etc/nginx/nginx.conf
 COPY site /srv/site
 COPY --from=build /src/app/build/web /srv/app
+# The build this image is, at /version.json: a deploy checks it the way it checks the server's /api/v1/server.
+RUN printf '{"version":"%s","revision":"%s"}\n' "$VERSION" "$REVISION" > /srv/app/version.json
 LABEL org.opencontainers.image.title="Velomine web" \
       org.opencontainers.image.description="Velomine web app and presentation site" \
       org.opencontainers.image.version="${VERSION}" \

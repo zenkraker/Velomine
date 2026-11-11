@@ -1,20 +1,18 @@
 name: Deploy
 
-# Points one environment at an image that CI already built and tested, then
-# waits until that environment reports the image's commit.
+# Points one environment at a server and web image pair that CI already built and tested, then waits until that
+# environment reports the pair's commit: the server through GET /api/v1/server, the web image through /version.json.
 #
-# The host does the rest: deploy/host/update.sh (a systemd timer, every minute)
-# pulls ghcr.io/zenkraker/velomine:<environment>, restarts the app, and rolls
-# back to the previous digest if the new one does not answer /health. So this
-# job needs no SSH key or host secret, and a rolled-back release shows here as
-# a failed deployment.
+# The host does the rest: deploy/host/update.sh (a systemd timer, every minute) pulls
+# ghcr.io/zenkraker/velomine-{server,web}:<environment>, restarts the environment, and rolls back to the previous pair
+# if it does not answer /health. So this job needs no SSH key or host secret, and a rolled-back release shows here as a
+# failed deployment.
 #
-# Run it by hand to redeploy or roll back: pick the environment and a release
-# tag (vX.Y.Z) or, for dev only, a commit built from main.
+# Run it by hand to redeploy or roll back: pick the environment and a release tag (vX.Y.Z).
 #
-# Each GitHub environment (dev, staging, prod, demo) holds:
-#   - variable PUBLIC_URL, for example https://staging.velomine.eu
-#   - prod and demo: required reviewers and "deploy from tags v* only"
+# Each GitHub environment holds the variable PUBLIC_URL (for example https://demo.velomine.eu); demo and prod require a
+# reviewer. Only the demo runs until there are customers: add dev, staging and prod to the choices below when they are
+# turned on (dev may then also take a commit SHA built from main).
 
 on:
   workflow_call:
@@ -22,7 +20,10 @@ on:
       environment:
         type: string
         required: true
-      digest:
+      server-digest:
+        type: string
+        required: true
+      web-digest:
         type: string
         required: true
       revision:
@@ -33,10 +34,10 @@ on:
       environment:
         description: Environment
         type: choice
-        options: [dev, staging, prod, demo]
+        options: [demo]
         required: true
       ref:
-        description: Release tag (v1.2.3), or for dev a commit SHA built from main
+        description: Release tag (v1.2.3)
         type: string
         required: true
 
@@ -44,9 +45,10 @@ permissions:
   contents: read
 
 env:
-  IMAGE: ghcr.io/zenkraker/velomine
-  # How long to wait for the host: its timer runs every minute and its health
-  # gate may wait two minutes, twice, before it rolls back.
+  SERVER_IMAGE: ghcr.io/zenkraker/velomine-server
+  WEB_IMAGE: ghcr.io/zenkraker/velomine-web
+  # How long to wait for the host: its timer runs every minute and its health gate may wait two minutes, twice, before
+  # it rolls back.
   WAIT_SECONDS: "900"
 
 jobs:
@@ -73,11 +75,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve the image
-        id: image
+      - name: Resolve the images
+        id: images
         env:
           ENVIRONMENT: ${{ inputs.environment }}
-          DIGEST: ${{ inputs.digest }}
+          SERVER_DIGEST: ${{ inputs.server-digest }}
+          WEB_DIGEST: ${{ inputs.web-digest }}
           REVISION: ${{ inputs.revision }}
           REF: ${{ inputs.ref }}
           PUBLIC_URL: ${{ vars.PUBLIC_URL }}
@@ -86,71 +89,76 @@ jobs:
           set -euo pipefail
           [[ "$PUBLIC_URL" == https://* ]] || { echo "::error::Set the PUBLIC_URL variable on the '$ENVIRONMENT' environment."; exit 1; }
 
-          if [[ -z "$DIGEST" ]]; then
-            # Manual run: only release images reach staging, prod and demo.
-            if [[ "$REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              source="${IMAGE}:${REF#v}"
-            elif [[ "$ENVIRONMENT" == dev && "$REF" =~ ^[0-9a-f]{7,40}$ ]]; then
-              source="${IMAGE}:sha-$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)"
-            else
-              echo "::error::'$REF' is not a release tag vX.Y.Z$( [[ "$ENVIRONMENT" == dev ]] && echo ' or a commit SHA')."
-              exit 1
-            fi
+          digest_of() { docker buildx imagetools inspect "$1" --format '{{json .Manifest}}' 2>/dev/null | jq -r '.digest // empty'; }
+
+          if [[ -z "$SERVER_DIGEST" ]]; then
+            # Manual run: only release images, built by the Release workflow from a tag.
+            [[ "$REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::'$REF' is not a release tag vX.Y.Z."; exit 1; }
+            SERVER_DIGEST="$(digest_of "${SERVER_IMAGE}:${REF#v}")"
+            WEB_DIGEST="$(digest_of "${WEB_IMAGE}:${REF#v}")"
+            [[ "$SERVER_DIGEST" == sha256:* && "$WEB_DIGEST" == sha256:* ]] \
+              || { echo "::error::No images for $REF. Was it built by the Release workflow?"; exit 1; }
             REVISION="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)"
-            DIGEST="$(docker buildx imagetools inspect "$source" --format '{{json .Manifest}}' | jq -r .digest)"
-            [[ "$DIGEST" == sha256:* ]] || { echo "::error::No image $source. Was it built by the Release workflow?"; exit 1; }
           fi
 
-          previous="$(docker buildx imagetools inspect "${IMAGE}:${ENVIRONMENT}" --format '{{json .Manifest}}' 2>/dev/null | jq -r .digest || true)"
           {
-            echo "digest=$DIGEST"
+            echo "server-digest=$SERVER_DIGEST"
+            echo "web-digest=$WEB_DIGEST"
             echo "revision=$REVISION"
-            echo "previous=${previous:-none}"
+            echo "previous-server=$(digest_of "${SERVER_IMAGE}:${ENVIRONMENT}" || true)"
+            echo "previous-web=$(digest_of "${WEB_IMAGE}:${ENVIRONMENT}" || true)"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Point ${{ inputs.environment }} at the image
+      - name: Point ${{ inputs.environment }} at the images
         env:
           ENVIRONMENT: ${{ inputs.environment }}
-          DIGEST: ${{ steps.image.outputs.digest }}
-        run: docker buildx imagetools create --tag "${IMAGE}:${ENVIRONMENT}" "${IMAGE}@${DIGEST}"
+          SERVER_DIGEST: ${{ steps.images.outputs.server-digest }}
+          WEB_DIGEST: ${{ steps.images.outputs.web-digest }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create --tag "${SERVER_IMAGE}:${ENVIRONMENT}" "${SERVER_IMAGE}@${SERVER_DIGEST}"
+          docker buildx imagetools create --tag "${WEB_IMAGE}:${ENVIRONMENT}" "${WEB_IMAGE}@${WEB_DIGEST}"
 
-      - name: Wait for ${{ inputs.environment }} to run it
+      - name: Wait for ${{ inputs.environment }} to run them
         env:
           ENVIRONMENT: ${{ inputs.environment }}
           PUBLIC_URL: ${{ vars.PUBLIC_URL }}
-          REVISION: ${{ steps.image.outputs.revision }}
+          REVISION: ${{ steps.images.outputs.revision }}
         run: |
           set -euo pipefail
-          want="+${REVISION::7}"
+          base="${PUBLIC_URL%/}"
           deadline=$(( $(date +%s) + WAIT_SECONDS ))
-          running=""
+          server="" web=""
           while (( $(date +%s) < deadline )); do
-            running="$(curl -fsS --max-time 10 "${PUBLIC_URL%/}/api/v1/server" 2>/dev/null | jq -r '.version // empty' || true)"
-            if [[ "$running" == *"$want" ]]; then
-              echo "Running ${running}."
+            server="$(curl -fsS --max-time 10 "$base/api/v1/server" 2>/dev/null | jq -r '.version // empty' || true)"
+            web="$(curl -fsS --max-time 10 "$base/version.json" 2>/dev/null | jq -r '.revision // empty' || true)"
+            if [[ "$server" == *"+${REVISION::7}" && "$web" == "$REVISION" ]]; then
+              echo "Running server ${server}, web ${web::7}."
               exit 0
             fi
             sleep 15
           done
-          echo "::error::After ${WAIT_SECONDS}s ${PUBLIC_URL} still reports '${running:-no answer}', not ...${want}. The host may have rolled back: journalctl -u velomine-update@${ENVIRONMENT} on the host."
+          echo "::error::After ${WAIT_SECONDS}s ${PUBLIC_URL} runs server '${server:-no answer}' and web '${web:-no answer}', not ${REVISION::7}. The host may have rolled back: journalctl -u velomine-update@${ENVIRONMENT} on the host."
           exit 1
 
       - name: Summary
         if: ${{ always() }}
         env:
           ENVIRONMENT: ${{ inputs.environment }}
-          DIGEST: ${{ steps.image.outputs.digest }}
-          PREVIOUS: ${{ steps.image.outputs.previous }}
-          REVISION: ${{ steps.image.outputs.revision }}
+          REVISION: ${{ steps.images.outputs.revision }}
+          SERVER_DIGEST: ${{ steps.images.outputs.server-digest }}
+          WEB_DIGEST: ${{ steps.images.outputs.web-digest }}
+          PREVIOUS_SERVER: ${{ steps.images.outputs.previous-server }}
+          PREVIOUS_WEB: ${{ steps.images.outputs.previous-web }}
         run: |
+          tick='`'
           {
             echo "### ${ENVIRONMENT}"
             echo
-            echo "| | |"
-            echo "|---|---|"
-            echo "| Commit | \`${REVISION}\` |"
-            echo "| Now | \`${IMAGE}@${DIGEST}\` |"
-            echo "| Before | \`${PREVIOUS}\` |"
+            echo "| | Server | Web |"
+            echo "|---|---|---|"
+            echo "| Now | ${tick}${SERVER_DIGEST}${tick} | ${tick}${WEB_DIGEST}${tick} |"
+            echo "| Before | ${tick}${PREVIOUS_SERVER:-none}${tick} | ${tick}${PREVIOUS_WEB:-none}${tick} |"
             echo
-            echo "Roll back: run **Deploy** with environment \`${ENVIRONMENT}\` and the previous release tag."
+            echo "Commit ${tick}${REVISION}${tick}. Roll back: run **Deploy** with environment ${tick}${ENVIRONMENT}${tick} and the previous release tag."
           } >> "$GITHUB_STEP_SUMMARY"

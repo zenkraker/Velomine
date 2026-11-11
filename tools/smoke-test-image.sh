@@ -48,6 +48,7 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
+# shellcheck disable=SC2054 # the commas belong to the --tmpfs value
 hardened=(--read-only --tmpfs /tmp:size=64m,mode=1777 --cap-drop ALL --security-opt no-new-privileges:true)
 
 # The server is not published: like on a host, only the web image reaches it, by the name `server`.
@@ -77,6 +78,11 @@ version="$(curl -fsS "$base/api/v1/server" | sed -n 's/.*"version":"\([^"]*\)".*
 [[ -n "$version" ]] || fail "/api/v1/server has no version"
 [[ -z "$expect" || "$version" == *"$expect"* ]] || fail "/api/v1/server reports '$version', expected '$expect'"
 ok "/api/v1/server version $version"
+
+web_version="$(curl -fsS "$base/version.json" | sed -n 's/.*"version":"\([^"]*\)".*"revision":"\([^"]*\)".*/\1+\2/p')"
+[[ -n "$web_version" ]] || fail "/version.json has no version"
+[[ -z "$expect" || "$web_version" == *"${expect#+}"* ]] || fail "/version.json reports '$web_version', expected '$expect'"
+ok "/version.json (web image) $web_version"
 
 # status <path>: the HTTP status, without following redirects.
 status() { curl -s -o /dev/null -w '%{http_code}' "$base$1"; }
