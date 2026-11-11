@@ -111,7 +111,9 @@ class BulkUploadViewModel extends _$BulkUploadViewModel {
       state = state.copyWith(phase: BulkPhase.scanning, clearSummary: true);
     }
 
-    final found = await pending.catchError((Object _) => const <RideFileEntry>[]);
+    final found = await pending.catchError(
+      (Object _) => const <RideFileEntry>[],
+    );
     if (!ref.mounted || run.cancelled) return;
     // Closing the chooser without picking anything is not a mistake worth a message.
     if (found.isEmpty && !scanning) {
