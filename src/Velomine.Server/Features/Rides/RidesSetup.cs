@@ -16,11 +16,13 @@ public static class RidesSetup
         services.AddSingleton<IngestionQueue>();
         services.AddSingleton<ImportQueue>();
         services.AddSingleton<PowerBestsBackfill>();
+        services.AddSingleton<RideReparseService>();
         if (configuration.GetValue("Velomine:Background:Enabled", true))
         {
             services.AddHostedService<RideIngestionService>();
             services.AddHostedService<ImportService>();
             services.AddHostedService(sp => sp.GetRequiredService<PowerBestsBackfill>());
+            services.AddHostedService(sp => sp.GetRequiredService<RideReparseService>());
         }
         return services;
     }

@@ -1538,6 +1538,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("intensity_factor");
 
+                    b.Property<int?>("LoadFtpW")
+                        .HasColumnType("integer")
+                        .HasColumnName("load_ftp_w");
+
+                    b.Property<int?>("LoadMaxHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("load_max_heart_rate");
+
                     b.Property<int?>("MaxHeartRate")
                         .HasColumnType("integer")
                         .HasColumnName("max_heart_rate");
@@ -1558,9 +1566,17 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("normalized_power_w");
 
+                    b.Property<int>("ParserVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("parser_version");
+
                     b.Property<DateTimeOffset?>("PowerBestsBackfilledAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("power_bests_backfilled_at");
+
+                    b.Property<int?>("ReparseFailedVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("reparse_failed_version");
 
                     b.Property<string>("Source")
                         .HasMaxLength(16)
@@ -1640,6 +1656,10 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("UserId", "StartTime")
                         .HasDatabaseName("ix_rides_user_id_start_time");
+
+                    b.HasIndex("ParserVersion", "UploadedAt", "Id")
+                        .HasDatabaseName("ix_rides_reparse")
+                        .HasFilter("status IN ('Ready','Failed')");
 
                     b.HasIndex("UserId", "Source", "SourceId")
                         .IsUnique()

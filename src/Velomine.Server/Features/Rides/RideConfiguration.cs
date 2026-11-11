@@ -51,6 +51,11 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.HasIndex(r => r.Id)
             .HasFilter("status = 'Ready' AND power_bests_backfilled_at IS NULL")
             .HasDatabaseName("ix_rides_power_bests_backfill");
+        // The re-read picks the oldest parser version first, then the oldest upload; the partial index serves that order
+        // without scanning rides that are already current.
+        ride.HasIndex(r => new { r.ParserVersion, r.UploadedAt, r.Id })
+            .HasFilter("status IN ('Ready','Failed')")
+            .HasDatabaseName("ix_rides_reparse");
     }
 
     public void Configure(EntityTypeBuilder<RideStreams> streams)

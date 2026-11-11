@@ -156,6 +156,7 @@ public sealed class RideIngestionService(
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
             Apply(target, metrics);
+            target.StampRead(profile.FtpW, maxHeartRate);
 
             if (await FindOriginalAsync(db, target, ct) is { } original)
             {
@@ -170,17 +171,7 @@ public sealed class RideIngestionService(
             target.Laps.Clear();
             target.Laps.AddRange(LapMetrics.Build(target.Id, file.Laps, file.Samples, file.Pauses, profile.FtpW, maxHeartRate));
             target.PowerBests.Clear();
-            var bests = metrics.PowerBests ?? [];
-            for (var i = 0; i < bests.Length && i < PowerBests.Durations.Length; i++)
-            {
-                if (bests[i] <= 0) continue;
-                target.PowerBests.Add(new RidePowerBest
-                {
-                    RideId = target.Id,
-                    DurationS = PowerBests.Durations[i],
-                    Watts = bests[i],
-                });
-            }
+            target.PowerBests.AddRange(PowerBests.Rows(target.Id, metrics.PowerBests));
             target.PowerBestsBackfilledAt = time.GetUtcNow();
         }
 
@@ -245,6 +236,7 @@ public sealed class RideIngestionService(
         VelomineMetrics.UploadFailures.Add(1, new KeyValuePair<string, object?>("reason", code));
         ride.Status = RideStatus.Failed;
         ride.Error = code;
+        ride.ParserVersion = RideParserVersion.Current;
         // An import reports its failures once, in its counts; only a direct upload notifies per ride.
         if (ride.ImportId is null) Notify.RideRead(db, time, ride);
         await db.SaveChangesAsync(ct);
@@ -276,7 +268,7 @@ public sealed class RideIngestionService(
         await FailAsync(db, ride, code, ct);
     }
 
-    private static void Apply(Ride ride, RideMetricValues m)
+    internal static void Apply(Ride ride, RideMetricValues m)
     {
         ride.ElapsedS = m.ElapsedS;
         ride.MovingS = m.MovingS;
@@ -298,7 +290,7 @@ public sealed class RideIngestionService(
     }
 
     /// <summary>One array per signal; a signal the file never had is left null instead of an array of nulls.</summary>
-    private static RideStreams ToStreams(IReadOnlyList<Sample> samples)
+    internal static RideStreams ToStreams(IReadOnlyList<Sample> samples)
     {
         static T?[]? Column<T>(IReadOnlyList<Sample> all, Func<Sample, T?> pick)
             where T : struct
