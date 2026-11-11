@@ -59,9 +59,8 @@ tag vX.Y.Z    ──► Release: CI ─► build both images ─► smoke test t
 1. **Environments** (*Settings → Environments*): `demo` with the variable `PUBLIC_URL` = `https://demo.velomine.eu`,
    a required reviewer, and deployments limited to the branch `main` and tags `v*`. (`dev`, `staging` and `prod` exist
    already with their `PUBLIC_URL`; they are unused until turned on.)
-2. **The packages:** after the first release run, open *Packages → velomine-server* and *velomine-web → Package
-   settings*, make each **public** (the host pulls without credentials) and link it to the repository. The old
-   `velomine` package can be deleted.
+2. **The images** need nothing: pushed from this public repository, `velomine-server` and `velomine-web` are public on
+   GHCR, so the host pulls them without credentials. The old `velomine` package can be deleted.
 3. **Branch protection on `main`:** require a pull request and the CI checks. Protect tags `v*` so only maintainers can
    start a release.
 
