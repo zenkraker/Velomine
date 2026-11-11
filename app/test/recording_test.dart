@@ -324,6 +324,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Opens the sheet the start card keeps its choices in.
+  Future<void> openSettings(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('record-settings')));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('RecordingScreen_ShouldStartPauseResumeAndSave_WhenRiding', (
     tester,
   ) async {
@@ -364,6 +370,7 @@ void main() {
       final settings = MemoryRecorderSettings();
       await pump(tester, recorder, settings: settings);
 
+      await openSettings(tester);
       final toggle = find.byKey(const Key('auto-pause-switch'));
       expect(toggle, findsOneWidget);
       expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
@@ -372,6 +379,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(settings.autoPause, isFalse);
 
+      await tester.tap(find.byKey(const Key('record-settings-done')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('record-start')));
       await tester.pumpAndSettle();
       expect(recorder.lastAutoPause, isFalse);
@@ -507,6 +516,7 @@ void main() {
       );
     await pump(tester, recorder);
 
+    await openSettings(tester);
     expect(find.byKey(const Key('pair-sensor')), findsOneWidget);
     await tester.tap(find.byKey(const Key('pair-sensor')));
     await tester.pumpAndSettle();
@@ -535,6 +545,7 @@ void main() {
         sensorStatus: 'paired',
       );
     await pump(tester, recorder);
+    await openSettings(tester);
 
     await tester.tap(find.byKey(const Key('forget-sensor')));
     await tester.pumpAndSettle();
@@ -548,6 +559,7 @@ void main() {
   ) async {
     final recorder = FakeRecorder()..sensorSupport = false;
     await pump(tester, recorder);
+    await openSettings(tester);
 
     expect(find.byKey(const Key('pair-sensor')), findsNothing);
     expect(find.text('Heart-rate strap'), findsNothing);
@@ -558,6 +570,7 @@ void main() {
   ) async {
     final recorder = FakeRecorder()..sensorPermission = false;
     await pump(tester, recorder);
+    await openSettings(tester);
 
     await tester.tap(find.byKey(const Key('pair-sensor')));
     await tester.pumpAndSettle();
@@ -623,11 +636,14 @@ void main() {
     final settings = MemoryRecorderSettings();
     await pump(tester, recorder, settings: settings);
 
+    await openSettings(tester);
     await tester.tap(find.byKey(const Key('record-ride-type')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Gravel').last);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('record-ebike-switch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('record-settings-done')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('record-start')));
     await tester.pumpAndSettle();

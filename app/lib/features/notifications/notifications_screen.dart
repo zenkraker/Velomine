@@ -8,6 +8,7 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'notifications_text.dart';
 import 'notifications_view_model.dart';
+import '../../core/tokens.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key, required this.onOpen});
@@ -29,50 +30,36 @@ class NotificationsScreen extends ConsumerWidget {
     final s = ref.watch(notificationsViewModelProvider);
     final l10n = context.l10n;
 
-    ref.listen(
-      notificationsViewModelProvider.select((state) => state.messages),
-      (_, messages) {
-        for (final message in messages) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(userMessageText(l10n, message))),
-          );
-          ref
-              .read(notificationsViewModelProvider.notifier)
-              .messageShown(message.id);
-        }
-      },
+    listenUserMessages(
+      ref,
+      context,
+      notificationsViewModelProvider.select((s) => s.messages),
+      ref.read(notificationsViewModelProvider.notifier).messageShown,
     );
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.notifications,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
+                if (s.unread > 0)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      key: const Key('notifications-read-all'),
+                      onPressed: s.markAll.running
+                          ? null
+                          : () => ref
+                                .read(notificationsViewModelProvider.notifier)
+                                .markAllRead(),
+                      child: Text(l10n.markAllRead),
                     ),
-                    if (s.unread > 0)
-                      TextButton(
-                        key: const Key('notifications-read-all'),
-                        onPressed: s.markAll.running
-                            ? null
-                            : () => ref
-                                  .read(notificationsViewModelProvider.notifier)
-                                  .markAllRead(),
-                        child: Text(l10n.markAllRead),
-                      ),
-                  ],
-                ),
+                  ),
                 if (s.load.failure case final failure?)
                   Text(
                     failureText(l10n, failure),

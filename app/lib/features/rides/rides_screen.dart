@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -7,9 +9,12 @@ import '../../core/format.dart';
 import '../../core/placeholder_block.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/stat_tile.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'ride_type_chips.dart';
 import 'rides_view_model.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
 
 String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
   'corrupt_file' => l10n.rideErrorCorrupt,
@@ -22,7 +27,7 @@ String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
   _ => l10n.rideErrorUnknown,
 };
 
-class RidesScreen extends ConsumerWidget {
+class RidesScreen extends ConsumerStatefulWidget {
   const RidesScreen({
     super.key,
     required this.onOpen,
@@ -40,37 +45,78 @@ class RidesScreen extends ConsumerWidget {
   final VoidCallback? onDismissSoloCard;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RidesScreen> createState() => _RidesScreenState();
+}
+
+class _RidesScreenState extends ConsumerState<RidesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // The ViewModel keeps the offset; the list has no size yet, so it is applied after the frame.
+    final vm = ref.read(ridesViewModelProvider.notifier);
+    if (vm.scrollOffset <= 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !vm.scroll.hasClients) return;
+      vm.scroll.jumpTo(
+        vm.scrollOffset.clamp(0, vm.scroll.position.maxScrollExtent),
+      );
+    });
+  }
+
+  /// Called with a ride's id when its card is pressed.
+  void Function(String id) get onOpen => widget.onOpen;
+  bool get showSoloCard => widget.showSoloCard;
+  VoidCallback? get onOpenClubs => widget.onOpenClubs;
+  VoidCallback? get onDismissSoloCard => widget.onDismissSoloCard;
+
+  @override
+  Widget build(BuildContext context) {
     final s = ref.watch(ridesViewModelProvider);
     final l10n = context.l10n;
 
-    ref.listen(ridesViewModelProvider.select((state) => state.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(ridesViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      ridesViewModelProvider.select((s) => s.messages),
+      ref.read(ridesViewModelProvider.notifier).messageShown,
+    );
 
+    // One column on a phone; on a tablet the list keeps a readable measure instead of stretching.
+    final width = MediaQuery.sizeOf(context).width;
+    final side = math.max(16.0, (width - 720) / 2);
+    final wide = width >= 600;
+    final upload = s.upload.running
+        ? null
+        : () => ref.read(ridesViewModelProvider.notifier).upload();
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('upload'),
-        onPressed: s.upload.running
-            ? null
-            : () => ref.read(ridesViewModelProvider.notifier).upload(),
-        icon: const Icon(Icons.upload_file),
-        label: Text(s.upload.running ? l10n.uploading : l10n.uploadRide),
-      ),
+      // Wide: the action sits with the list. Compact: it floats, and the list ends above it.
+      floatingActionButton: wide
+          ? null
+          : FloatingActionButton.extended(
+              key: const Key('upload'),
+              onPressed: upload,
+              icon: const Icon(Icons.upload_file),
+              label: Text(s.upload.running ? l10n.uploading : l10n.uploadRide),
+            ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(ridesViewModelProvider.notifier).refresh(),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          controller: ref.read(ridesViewModelProvider.notifier).scroll,
+          padding: EdgeInsets.fromLTRB(side, 8, side, wide ? 16 : 96),
           children: [
+            if (wide)
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                  key: const Key('upload'),
+                  onPressed: upload,
+                  icon: const Icon(Icons.upload_file),
+                  label: Text(
+                    s.upload.running ? l10n.uploading : l10n.uploadRide,
+                  ),
+                ),
+              ),
             if (s.load.failure case final failure?)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -124,7 +170,7 @@ class RidesScreen extends ConsumerWidget {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  spacing: 8,
+                  spacing: AppSpacing.sm,
                   children: [
                     ChoiceChip(
                       key: const Key('filter-all'),
@@ -153,11 +199,10 @@ class RidesScreen extends ConsumerWidget {
               ),
             ),
             if (s.rides.isEmpty && !s.load.running)
-              Padding(
-                padding: const EdgeInsets.all(32),
-                child: Center(
-                  child: Text(l10n.noRides, key: const Key('no-rides')),
-                ),
+              EmptyState(
+                key: const Key('no-rides'),
+                message: l10n.noRides,
+                icon: Icons.directions_bike,
               ),
             for (final ride in s.rides)
               RideCard(ride: ride, onTap: () => onOpen(ride.id)),
@@ -188,7 +233,7 @@ class RidesScreen extends ConsumerWidget {
             else if (s.load.running)
               const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   child: CircularProgressIndicator(),
                 ),
               ),
@@ -210,17 +255,26 @@ class RideCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final ready = ride.status == 'ready';
-    final facts = <String>[
+    // A file with no samples parses but says nothing: it reads as empty, not as a ride of zeros.
+    final empty =
+        ready && (ride.distanceM ?? 0) <= 0 && (ride.movingS ?? 0) <= 0;
+    // Each number carries its name: a row of unlabelled values is a puzzle on a phone.
+    final facts = <(String, String)>[
       if (ready) ...[
-        km(ride.distanceM),
-        duration(ride.movingS),
+        (l10n.statDistance, km(ride.distanceM)),
+        (l10n.statMovingTime, duration(ride.movingS)),
         if (ride.elevationGainM != null)
-          l10n.metresUp(ride.elevationGainM!.round()),
-        kmh(ride.avgSpeedMs),
+          (l10n.statClimbing, l10n.metresUp(ride.elevationGainM!.round())),
+        (l10n.statAverageSpeed, kmh(ride.avgSpeedMs)),
         if (ride.avgPowerW != null)
-          '${ride.avgPowerW} W${ride.normalizedPowerW == null ? '' : ' (NP ${ride.normalizedPowerW})'}',
-        if (ride.avgHeartRate != null) '${ride.avgHeartRate} bpm',
-        if (ride.avgCadence != null) '${ride.avgCadence} rpm',
+          (
+            l10n.statAveragePower,
+            '${ride.avgPowerW} W${ride.normalizedPowerW == null ? '' : ' (NP ${ride.normalizedPowerW})'}',
+          ),
+        if (ride.avgHeartRate != null)
+          (l10n.statAverageHeartRate, '${ride.avgHeartRate} bpm'),
+        if (ride.avgCadence != null)
+          (l10n.statAverageCadence, '${ride.avgCadence} rpm'),
       ],
     ];
     return Card(
@@ -230,7 +284,7 @@ class RideCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -243,7 +297,7 @@ class RideCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 RideTypeChips(ride: ride),
               ],
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               if (ride.status == 'processing')
                 Row(
                   children: [
@@ -252,7 +306,7 @@ class RideCard extends StatelessWidget {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(l10n.readingFile, key: const Key('processing')),
                   ],
                 )
@@ -262,11 +316,22 @@ class RideCard extends StatelessWidget {
                   key: const Key('ride-failed'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 )
+              else if (empty)
+                Text(
+                  l10n.rideNoData,
+                  key: const Key('ride-no-data'),
+                  style: text.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                )
               else
                 Wrap(
-                  spacing: 12,
-                  runSpacing: 4,
-                  children: [for (final f in facts) Text(f)],
+                  spacing: statRowSpacing,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final (label, value) in facts)
+                      StatTile(label: label, value: value),
+                  ],
                 ),
             ],
           ),

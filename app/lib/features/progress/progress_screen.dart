@@ -15,6 +15,7 @@ import 'readiness_card.dart';
 import 'totals_chart.dart';
 import 'training_summary.dart';
 import 'wellbeing_card.dart';
+import '../../core/tokens.dart';
 
 /// Totals per week, month or year, goals, readiness, training, power and the
 /// daily check-in. Each source is its own ViewModel, so one failing endpoint
@@ -60,36 +61,24 @@ class ProgressScreen extends ConsumerWidget {
     final readiness = ref.watch(readinessViewModelProvider);
     final wellbeing = ref.watch(wellbeingViewModelProvider);
 
-    ref.listen(goalsViewModelProvider.select((s) => s.messages), (_, messages) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(goalsViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
-    ref.listen(powerCurveViewModelProvider.select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(powerCurveViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
-    ref.listen(wellbeingViewModelProvider.select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(wellbeingViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      goalsViewModelProvider.select((s) => s.messages),
+      ref.read(goalsViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      powerCurveViewModelProvider.select((s) => s.messages),
+      ref.read(powerCurveViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      wellbeingViewModelProvider.select((s) => s.messages),
+      ref.read(wellbeingViewModelProvider.notifier).messageShown,
+    );
 
     final failures = [
       totals.load.failure,
@@ -108,36 +97,60 @@ class ProgressScreen extends ConsumerWidget {
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
-                Text(l10n.navProgress, style: text.titleLarge),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    ChoiceChip(
-                      key: const Key('progress-filter-all'),
-                      label: Text(l10n.rideFilterAll),
-                      selected: filters.discipline == null,
-                      onSelected: (_) => ref
-                          .read(progressFiltersViewModelProvider.notifier)
-                          .setDiscipline(null),
-                    ),
-                    for (final discipline in [
-                      'road',
-                      'gravel',
-                      'mountain',
-                      'track',
-                    ])
+                // One row for every filter, the period first: it scrolls sideways rather than stacking.
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    spacing: AppSpacing.sm,
+                    children: [
+                      SegmentedButton<String>(
+                        key: const Key('progress-period'),
+                        showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(
+                            value: 'week',
+                            label: Text(l10n.periodWeeks),
+                          ),
+                          ButtonSegment(
+                            value: 'month',
+                            label: Text(l10n.periodMonths),
+                          ),
+                          ButtonSegment(
+                            value: 'year',
+                            label: Text(l10n.periodYears),
+                          ),
+                        ],
+                        selected: {filters.period},
+                        onSelectionChanged: (s) => ref
+                            .read(progressFiltersViewModelProvider.notifier)
+                            .setPeriod(s.single),
+                      ),
                       ChoiceChip(
-                        key: Key('progress-filter-$discipline'),
-                        label: Text(disciplineName(l10n, discipline)),
-                        selected: filters.discipline == discipline,
+                        key: const Key('progress-filter-all'),
+                        label: Text(l10n.rideFilterAll),
+                        selected: filters.discipline == null,
                         onSelected: (_) => ref
                             .read(progressFiltersViewModelProvider.notifier)
-                            .setDiscipline(discipline),
+                            .setDiscipline(null),
                       ),
-                  ],
+                      for (final discipline in [
+                        'road',
+                        'gravel',
+                        'mountain',
+                        'track',
+                      ])
+                        ChoiceChip(
+                          key: Key('progress-filter-$discipline'),
+                          label: Text(disciplineName(l10n, discipline)),
+                          selected: filters.discipline == discipline,
+                          onSelected: (_) => ref
+                              .read(progressFiltersViewModelProvider.notifier)
+                              .setDiscipline(discipline),
+                        ),
+                    ],
+                  ),
                 ),
                 if (failures.isNotEmpty)
                   Text(
@@ -147,21 +160,9 @@ class ProgressScreen extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                SegmentedButton<String>(
-                  key: const Key('progress-period'),
-                  segments: [
-                    ButtonSegment(value: 'week', label: Text(l10n.periodWeeks)),
-                    ButtonSegment(
-                      value: 'month',
-                      label: Text(l10n.periodMonths),
-                    ),
-                    ButtonSegment(value: 'year', label: Text(l10n.periodYears)),
-                  ],
-                  selected: {filters.period},
-                  onSelectionChanged: (s) => ref
-                      .read(progressFiltersViewModelProvider.notifier)
-                      .setPeriod(s.single),
-                ),
+                if (readiness.load.value case final readinessData?)
+                  ReadinessCard(readiness: readinessData),
+                // The check-in feeds the score above it.
                 WellbeingCard(
                   wellbeing: wellbeing.today,
                   checkIns: wellbeing.checkIns,
@@ -175,8 +176,6 @@ class ProgressScreen extends ConsumerWidget {
                       .read(wellbeingViewModelProvider.notifier)
                       .saveCheckIn(fatigue, soreness, mood, stress, motivation),
                 ),
-                if (readiness.load.value case final readinessData?)
-                  ReadinessCard(readiness: readinessData),
                 if (power.load.value case final curve?)
                   PowerSummary(
                     curve: curve,
@@ -202,7 +201,7 @@ class ProgressScreen extends ConsumerWidget {
                       key: Key('totals-loading'),
                       children: [
                         PlaceholderBlock(height: 180, radius: 16),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.md),
                         PlaceholderBlock(height: 120, radius: 16),
                       ],
                     ),
@@ -215,7 +214,7 @@ class ProgressScreen extends ConsumerWidget {
                         .read(progressFiltersViewModelProvider.notifier)
                         .setTrainingDays(days),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Expanded(child: Text(l10n.goals, style: text.titleLarge)),

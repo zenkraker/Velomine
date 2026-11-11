@@ -1,4 +1,5 @@
 avd := "velomine"
+device := "medium_phone"
 image := "system-images;android-36;google_apis_playstore;x86_64"
 
 # list commands
@@ -9,7 +10,7 @@ default:
 setup:
     dotnet tool restore
     cd app && flutter pub get
-    avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}"
+    avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}" -d {{device}}
 
 # build and start the whole stack in Docker on http://localhost:8080; run it again after any change
 up:
@@ -68,6 +69,24 @@ api-client:
 # regenerate the Riverpod providers after changing a @riverpod declaration
 codegen:
     cd app && dart run build_runner build
+
+# count the duplicated UI patterns the shared-widget rule keeps down; lower is better
+ui-dupes:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd app/lib
+    count() { printf '%-22s %s\n' "$1" "$(grep -rn "$2" features core --include=*.dart | wc -l)"; }
+    count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
+    count "Card(" 'Card('
+    count "TextField(" 'TextField(\|TextFormField('
+    count "showSnackBar" 'showSnackBar'
+    count "SegmentedButton" 'SegmentedButton'
+    count "TextStyle(" 'TextStyle('
+    count "Color(0x" 'Color(0x'
+    count "EdgeInsets.all(n)" 'EdgeInsets.all([0-9]'
+    count "SizedBox(height: n)" 'SizedBox(height: [0-9]'
+    count "SizedBox(width: n)" 'SizedBox(width: [0-9]'
+    count "spacing: n" 'spacing: [0-9]'
 
 # every check to run before a commit
 check:

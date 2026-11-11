@@ -5,6 +5,7 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import 'admin_view_models.dart';
+import '../../core/tokens.dart';
 
 /// Totals for the whole server. Counts only: an admin never sees whose rides they are.
 class OverviewTab extends ConsumerWidget {
@@ -34,7 +35,7 @@ class OverviewTab extends ConsumerWidget {
       ),
     );
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(

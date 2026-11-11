@@ -6,6 +6,8 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/range_selector.dart';
+import '../../core/tokens.dart';
 
 /// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
 class TrainingSummary extends StatelessWidget {
@@ -36,30 +38,24 @@ class TrainingSummary extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(l10n.trainingLoad, style: text.titleMedium),
-                ),
-                SegmentedButton<int>(
-                  key: const Key('training-range'),
-                  segments: [
-                    ButtonSegment(value: 30, label: Text(l10n.range30Days)),
-                    ButtonSegment(value: 90, label: Text(l10n.range90Days)),
-                    ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
-                  ],
-                  selected: {days},
-                  onSelectionChanged: (selection) => onDays(selection.single),
-                ),
+            RangeSelector<int>(
+              title: l10n.trainingLoad,
+              segmentKey: const Key('training-range'),
+              segments: [
+                ButtonSegment(value: 30, label: Text(l10n.range30Days)),
+                ButtonSegment(value: 90, label: Text(l10n.range90Days)),
+                ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
               ],
+              selected: days,
+              onChanged: onDays,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
-              spacing: 24,
+              spacing: AppSpacing.xl,
               runSpacing: 8,
               children: [
                 _Value(
@@ -93,22 +89,27 @@ class TrainingSummary extends StatelessWidget {
                   style: text.bodySmall,
                 ),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
                 Expanded(
                   child: Text(l10n.fitnessFatigueForm, style: text.titleSmall),
                 ),
-                Text(
-                  '${DateFormat.MMMd().format(training.from)} – '
-                  '${DateFormat.MMMd().format(training.to)}',
-                  style: text.labelSmall,
+                // Twice the text does not fit beside the title; it wraps instead of overflowing.
+                Flexible(
+                  child: Text(
+                    '${DateFormat.MMMd().format(training.from)} – '
+                    '${DateFormat.MMMd().format(training.to)}',
+                    style: text.labelSmall,
+                    textAlign: TextAlign.end,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 6),
-            Row(
-              spacing: 16,
+            Wrap(
+              spacing: AppSpacing.lg,
+              runSpacing: 6,
               children: [
                 _LegendDot(color: colors[0], label: l10n.fitness),
                 _LegendDot(color: colors[1], label: l10n.fatigue),
@@ -137,7 +138,7 @@ class TrainingSummary extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(l10n.dailyLoad, style: text.titleSmall),
             const SizedBox(height: 6),
             Semantics(
@@ -157,7 +158,7 @@ class TrainingSummary extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(l10n.trainingLoadHelp, style: text.bodySmall),
           ],
         ),

@@ -176,6 +176,7 @@ void main() {
       await signIn(tester, 'rider@example.com', 'Rider-pass-123');
 
       expect(find.byKey(const Key('upload')), findsOneWidget);
+      await openAccountMenu(tester);
       expect(find.text('Alex Rider'), findsOneWidget);
       expect(find.text('42.3 km'), findsOneWidget);
       expect(
@@ -206,7 +207,7 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 
-    await tester.tap(find.byKey(const Key('sign-out')));
+    await openAccount(tester, 'sign-out');
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('sign-in')), findsOneWidget);

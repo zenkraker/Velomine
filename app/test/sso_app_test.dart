@@ -52,7 +52,7 @@ void main() {
     expect(appSso.lastConfig?.scopes, ['openid', 'profile', 'email']);
     expect(session.me?.email, 'rider@sso.test');
     expect(server.requests, contains('POST /api/v1/accounts/sso/token'));
-    expect(find.byKey(const Key('sign-out')), findsOneWidget);
+    expect(find.byKey(const Key('account-menu')), findsOneWidget);
   });
 
   testWidgets('SsoApp_ShouldShowTheReason_WhenTheExchangeFails', (

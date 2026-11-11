@@ -3,6 +3,8 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/section_card.dart';
 
 /// The daily check-in: consent first, then either today's scores or a short form.
 class WellbeingCard extends StatefulWidget {
@@ -81,161 +83,145 @@ class _WellbeingCardState extends State<WellbeingCard> {
     }
 
     if (wellbeing.consentRequired) {
-      return Card(
+      return SectionCard(
         key: const Key('wellbeing-consent-card'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.wellbeing, style: text.titleMedium),
-              const SizedBox(height: 8),
-              Text(l10n.wellbeingConsentTitle, style: text.titleSmall),
-              const SizedBox(height: 4),
-              Text(l10n.wellbeingConsentBody, style: text.bodySmall),
-              const SizedBox(height: 12),
-              FilledButton(
-                key: const Key('wellbeing-consent'),
-                onPressed: widget.saving ? null : widget.onConsent,
-                child: Text(l10n.wellbeingConsentAction),
-              ),
-            ],
+        title: l10n.wellbeing,
+        children: [
+          Text(l10n.wellbeingConsentTitle, style: text.titleSmall),
+          Text(l10n.wellbeingConsentBody, style: text.bodySmall),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton(
+              key: const Key('wellbeing-consent'),
+              onPressed: widget.saving ? null : widget.onConsent,
+              child: Text(l10n.wellbeingConsentAction),
+            ),
           ),
-        ),
+        ],
       );
     }
 
     final today = wellbeing.today;
 
-    return Card(
+    return SectionCard(
       key: const Key('wellbeing-card'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.wellbeing, style: text.titleMedium),
-            const SizedBox(height: 8),
-            if (today != null && !_editing)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      title: l10n.wellbeing,
+      children: [
+        if (today != null && !_editing)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.wellbeingSaved, style: text.titleSmall),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 6,
                       children: [
-                        Text(l10n.wellbeingSaved, style: text.titleSmall),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 14,
-                          runSpacing: 6,
-                          children: [
-                            _Score(
-                              label: l10n.wellbeingFatigue,
-                              value: today.fatigue,
-                            ),
-                            _Score(
-                              label: l10n.wellbeingSoreness,
-                              value: today.soreness,
-                            ),
-                            _Score(
-                              label: l10n.wellbeingMood,
-                              value: today.mood,
-                            ),
-                            _Score(
-                              label: l10n.wellbeingStress,
-                              value: today.stress,
-                            ),
-                            _Score(
-                              label: l10n.wellbeingMotivation,
-                              value: today.motivation,
-                            ),
-                          ],
+                        _Score(
+                          label: l10n.wellbeingFatigue,
+                          value: today.fatigue,
+                        ),
+                        _Score(
+                          label: l10n.wellbeingSoreness,
+                          value: today.soreness,
+                        ),
+                        _Score(label: l10n.wellbeingMood, value: today.mood),
+                        _Score(
+                          label: l10n.wellbeingStress,
+                          value: today.stress,
+                        ),
+                        _Score(
+                          label: l10n.wellbeingMotivation,
+                          value: today.motivation,
                         ),
                       ],
                     ),
-                  ),
-                  TextButton(
-                    key: const Key('wellbeing-edit'),
-                    onPressed: () => setState(() => _editing = true),
-                    child: Text(l10n.wellbeingEdit),
-                  ),
-                ],
-              )
-            else ...[
-              Text(l10n.wellbeingToday, style: text.titleSmall),
-              const SizedBox(height: 8),
-              _ScoreRow(
-                label: l10n.wellbeingFatigue,
-                keyName: 'fatigue',
-                value: _values[0],
-                onChanged: (v) => setState(() => _values[0] = v),
-              ),
-              _ScoreRow(
-                label: l10n.wellbeingSoreness,
-                keyName: 'soreness',
-                value: _values[1],
-                onChanged: (v) => setState(() => _values[1] = v),
-              ),
-              _ScoreRow(
-                label: l10n.wellbeingMood,
-                keyName: 'mood',
-                value: _values[2],
-                onChanged: (v) => setState(() => _values[2] = v),
-              ),
-              _ScoreRow(
-                label: l10n.wellbeingStress,
-                keyName: 'stress',
-                value: _values[3],
-                onChanged: (v) => setState(() => _values[3] = v),
-              ),
-              _ScoreRow(
-                label: l10n.wellbeingMotivation,
-                keyName: 'motivation',
-                value: _values[4],
-                onChanged: (v) => setState(() => _values[4] = v),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  FilledButton(
-                    key: const Key('wellbeing-save'),
-                    onPressed: widget.saving ? null : _save,
-                    child: Text(l10n.wellbeingSave),
-                  ),
-                  if (today != null) ...[
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () => setState(() {
-                        _editing = false;
-                        _values = _initialValues();
-                      }),
-                      child: Text(l10n.cancel),
-                    ),
                   ],
-                ],
+                ),
+              ),
+              TextButton(
+                key: const Key('wellbeing-edit'),
+                onPressed: () => setState(() => _editing = true),
+                child: Text(l10n.wellbeingEdit),
               ),
             ],
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                key: const Key('wellbeing-withdraw'),
-                onPressed: widget.saving ? null : widget.onWithdraw,
-                child: Text(l10n.wellbeingWithdrawConsent),
+          )
+        else ...[
+          Text(l10n.wellbeingToday, style: text.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          _ScoreRow(
+            label: l10n.wellbeingFatigue,
+            keyName: 'fatigue',
+            value: _values[0],
+            onChanged: (v) => setState(() => _values[0] = v),
+          ),
+          _ScoreRow(
+            label: l10n.wellbeingSoreness,
+            keyName: 'soreness',
+            value: _values[1],
+            onChanged: (v) => setState(() => _values[1] = v),
+          ),
+          _ScoreRow(
+            label: l10n.wellbeingMood,
+            keyName: 'mood',
+            value: _values[2],
+            onChanged: (v) => setState(() => _values[2] = v),
+          ),
+          _ScoreRow(
+            label: l10n.wellbeingStress,
+            keyName: 'stress',
+            value: _values[3],
+            onChanged: (v) => setState(() => _values[3] = v),
+          ),
+          _ScoreRow(
+            label: l10n.wellbeingMotivation,
+            keyName: 'motivation',
+            value: _values[4],
+            onChanged: (v) => setState(() => _values[4] = v),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              FilledButton(
+                key: const Key('wellbeing-save'),
+                onPressed: widget.saving ? null : _save,
+                child: Text(l10n.wellbeingSave),
               ),
-            ),
-            if (widget.checkIns case final checkIns?
-                when checkIns.checkIns.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Text(l10n.wellbeingHistory, style: text.labelLarge),
-              const SizedBox(height: 4),
-              for (final checkIn in checkIns.checkIns.reversed.take(7))
-                _HistoryRow(checkIn: checkIn),
+              if (today != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _editing = false;
+                    _values = _initialValues();
+                  }),
+                  child: Text(l10n.cancel),
+                ),
+              ],
             ],
-          ],
+          ),
+        ],
+        const SizedBox(height: AppSpacing.sm),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            key: const Key('wellbeing-withdraw'),
+            onPressed: widget.saving ? null : widget.onWithdraw,
+            child: Text(l10n.wellbeingWithdrawConsent),
+          ),
         ),
-      ),
+        if (widget.checkIns case final checkIns?
+            when checkIns.checkIns.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text(l10n.wellbeingHistory, style: text.labelLarge),
+          const SizedBox(height: AppSpacing.xs),
+          for (final checkIn in checkIns.checkIns.reversed.take(7))
+            _HistoryRow(checkIn: checkIn),
+        ],
+      ],
     );
   }
 }

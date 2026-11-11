@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
+import '../../core/tokens.dart';
 
 String _roleName(AppLocalizations l10n, String role) => switch (role) {
   'member' => l10n.roleMember,
@@ -19,8 +20,22 @@ String _roleName(AppLocalizations l10n, String role) => switch (role) {
 };
 
 /// Every account, with what an admin can do to it.
-class AccountsTab extends ConsumerWidget {
+class AccountsTab extends ConsumerStatefulWidget {
   const AccountsTab({super.key});
+
+  @override
+  ConsumerState<AccountsTab> createState() => _AccountsTabState();
+}
+
+class _AccountsTabState extends ConsumerState<AccountsTab> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   Future<void> _roles(
     BuildContext context,
@@ -118,30 +133,53 @@ class AccountsTab extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final s = ref.watch(adminAccountsViewModelProvider);
     final myId = ref.watch(signedInUserIdProvider);
     final l10n = context.l10n;
 
-    ref.listen(
-      adminAccountsViewModelProvider.select((state) => state.messages),
-      (_, messages) {
-        for (final message in messages) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(userMessageText(l10n, message))),
-          );
-          ref
-              .read(adminAccountsViewModelProvider.notifier)
-              .messageShown(message.id);
-        }
-      },
+    listenUserMessages(
+      ref,
+      context,
+      adminAccountsViewModelProvider.select((s) => s.messages),
+      ref.read(adminAccountsViewModelProvider.notifier).messageShown,
     );
 
+    // Waiting accounts always show: they are what an admin opens this tab for.
+    final query = _query.trim().toLowerCase();
     final waiting = s.users.where((u) => !u.isApproved).toList();
-    final rest = s.users.where((u) => u.isApproved).toList();
+    final rest = s.users
+        .where(
+          (u) =>
+              u.isApproved &&
+              (query.isEmpty ||
+                  u.displayName.toLowerCase().contains(query) ||
+                  u.email.toLowerCase().contains(query)),
+        )
+        .toList();
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
+        TextField(
+          key: const Key('account-search'),
+          controller: _search,
+          decoration: InputDecoration(
+            labelText: l10n.accountSearch,
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: l10n.clearSearch,
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      _search.clear();
+                      setState(() => _query = '');
+                    },
+                  ),
+          ),
+          onChanged: (value) => setState(() => _query = value),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         if (s.load.failure case final failure?)
           Text(
             failureText(l10n, failure),
@@ -153,12 +191,12 @@ class AccountsTab extends ConsumerWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         if (waiting.isEmpty && !s.load.running)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+          Align(
+            alignment: Alignment.centerLeft,
             child: Text(l10n.nonePending, key: const Key('none-pending')),
           ),
         for (final user in waiting) _tile(context, ref, user, myId),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         Text(
           l10n.adminAccounts,
           style: Theme.of(context).textTheme.titleMedium,
@@ -180,7 +218,7 @@ class AccountsTab extends ConsumerWidget {
       key: Key('user-${user.id}'),
       child: ListTile(
         title: Wrap(
-          spacing: 8,
+          spacing: AppSpacing.sm,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(user.displayName),
@@ -285,7 +323,7 @@ class _ResetLinkDialogState extends State<_ResetLinkDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 12,
+        spacing: AppSpacing.md,
         children: [
           Text(l10n.resetPasswordLinkHelp),
           SelectableText(

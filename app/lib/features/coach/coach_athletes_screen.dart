@@ -5,6 +5,7 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import 'coach_athletes_view_model.dart';
+import '../../core/tokens.dart';
 
 /// The athletes in this club who share rides or training.
 class CoachAthletesScreen extends ConsumerWidget {
@@ -22,19 +23,15 @@ class CoachAthletesScreen extends ConsumerWidget {
     final s = ref.watch(coachAthletesViewModelProvider(clubId));
     final l10n = context.l10n;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
-                Text(
-                  l10n.athletesTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
                 if (s.load.failure case final failure?)
                   Text(
                     failureText(l10n, failure),

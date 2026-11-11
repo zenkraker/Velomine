@@ -11,6 +11,7 @@ import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../club/location_picker.dart';
 import 'privacy_view_model.dart';
+import '../../core/tokens.dart';
 
 /// What other people see of the member's rides, and the places every view hides.
 class PrivacyScreen extends ConsumerStatefulWidget {
@@ -162,20 +163,15 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     final l10n = context.l10n;
     final privacy = state.privacy;
 
-    ref.listen(privacyViewModelProvider.select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(privacyViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      privacyViewModelProvider.select((s) => s.messages),
+      ref.read(privacyViewModelProvider.notifier).messageShown,
+    );
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
@@ -190,12 +186,8 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                   )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 16,
+                    spacing: AppSpacing.lg,
                     children: [
-                      Text(
-                        l10n.privacyTitle,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
                       Text(l10n.privacyHelp),
                       const Divider(),
                       Text(
@@ -244,7 +236,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Row(
-                        spacing: 12,
+                        spacing: AppSpacing.md,
                         children: [
                           Expanded(
                             child: _trimField(
@@ -363,9 +355,8 @@ class _LoadFailed extends StatelessWidget {
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 12,
+      spacing: AppSpacing.md,
       children: [
-        Text(l10n.privacyTitle, style: Theme.of(context).textTheme.titleLarge),
         Text(
           failure == null ? l10n.actionGeneral : failureText(l10n, failure!),
           key: const Key('privacy-error'),
@@ -423,7 +414,7 @@ class _ZoneDialogState extends State<_ZoneDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 12,
+        spacing: AppSpacing.md,
         children: [
           TextField(
             key: const Key('privacy-zone-name'),

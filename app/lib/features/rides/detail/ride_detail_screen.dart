@@ -20,19 +20,18 @@ import 'ride_selection.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
+import '../../../core/tokens.dart';
 
 class RideDetailScreen extends ConsumerWidget {
   const RideDetailScreen({
     super.key,
     required this.id,
-    required this.onBack,
     required this.onDeleted,
     this.tileUrl,
     this.attribution,
   });
 
   final String id;
-  final VoidCallback onBack;
   final VoidCallback onDeleted;
   final String? tileUrl;
   final String? attribution;
@@ -69,51 +68,46 @@ class RideDetailScreen extends ConsumerWidget {
     final selection = ref.watch(rideSelectionProvider(id));
     final l10n = context.l10n;
 
-    ref.listen(rideDetailViewModelProvider(id).select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref
-            .read(rideDetailViewModelProvider(id).notifier)
-            .messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      rideDetailViewModelProvider(id).select((s) => s.messages),
+      ref.read(rideDetailViewModelProvider(id).notifier).messageShown,
+    );
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 920),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 16,
+              spacing: AppSpacing.lg,
               children: [
-                Row(
-                  children: [
-                    TextButton.icon(
-                      key: const Key('back'),
-                      onPressed: onBack,
-                      icon: const Icon(Icons.arrow_back),
-                      label: Text(l10n.navRides),
-                    ),
-                    const Spacer(),
-                    if (s.ride != null)
-                      TextButton.icon(
-                        key: const Key('delete'),
-                        onPressed: () => _confirmDelete(context, ref),
-                        icon: const Icon(Icons.delete_outline),
-                        label: Text(l10n.delete),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
+                // One menu for the rare actions: a ride's numbers stay the loudest thing on the screen.
+                if (s.ride != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PopupMenuButton<String>(
+                      key: const Key('ride-actions'),
+                      tooltip: l10n.rideActions,
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (_) => _confirmDelete(context, ref),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          key: const Key('delete'),
+                          value: 'delete',
+                          child: Text(
+                            l10n.delete,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
                 ..._body(context, ref, s, selection),
               ],
             ),
@@ -160,7 +154,7 @@ class RideDetailScreen extends ConsumerWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               const PlaceholderBlock(height: 180, radius: 16),
             ],
           ),
@@ -201,7 +195,7 @@ class RideDetailScreen extends ConsumerWidget {
         ),
       if (ride.status == 'processing')
         Row(
-          spacing: 8,
+          spacing: AppSpacing.sm,
           children: [
             const SizedBox(
               width: 16,
@@ -388,14 +382,14 @@ class _Stats extends StatelessWidget {
     ];
     final text = Theme.of(context).textTheme;
     return Wrap(
-      spacing: 12,
+      spacing: AppSpacing.md,
       runSpacing: 12,
       children: [
         for (final (id, label, value) in tiles)
           Container(
             key: Key('stat-$id'),
             width: 150,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(10),
@@ -444,7 +438,7 @@ class _ZonesCard extends StatelessWidget {
     final total = zones.fold<double>(0, (sum, zone) => sum + zone.seconds);
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -455,7 +449,7 @@ class _ZonesCard extends StatelessWidget {
                 Text(duration(total), style: text.bodySmall),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             for (final (index, zone) in zones.indexed) ...[
               Semantics(
                 label: l10n.zoneSemantics(

@@ -18,7 +18,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.byKey(const Key('open-profile')));
+    await openAccount(tester, 'profile');
     await tester.pumpAndSettle();
   }
 
@@ -203,7 +203,7 @@ void main() {
       server.session(useCookies: true),
       openLink: (uri) async => opened = uri,
     );
-    await tester.tap(find.byKey(const Key('open-profile')));
+    await openAccount(tester, 'profile');
     await tester.pumpAndSettle();
 
     await tapVisible(tester, 'export-data');
@@ -269,7 +269,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byKey(const Key('open-profile')),
+        find.byKey(const Key('account-menu')),
         findsOneWidget,
       ); // still signed in
     });
@@ -302,7 +302,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(server.accounts, isNot(contains('rider@example.com')));
-      expect(find.byKey(const Key('open-profile')), findsNothing);
+      expect(find.byKey(const Key('account-menu')), findsNothing);
       expect(find.text('Sign in'), findsWidgets); // back at the sign-in screen
     });
 

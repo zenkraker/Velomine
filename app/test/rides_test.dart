@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/features/rides/rides_screen.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -10,10 +12,74 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
   });
 
+  testWidgets(
+    'RidesScreen_ShouldKeepItsScroll_WhenTheMemberComesBackToTheTab',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      for (var i = 0; i < 12; i++) {
+        server.rides.add(
+          rideJson('r$i', 'ready', distanceM: 1000, movingS: 600),
+        );
+      }
+      await startApp(tester, server.session(useCookies: true));
+
+      final list = find
+          .descendant(
+            of: find.byType(RidesScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.drag(
+        find.byKey(const Key('ride-r0')),
+        const Offset(0, -400),
+      );
+      await tester.pumpAndSettle();
+      final offset = tester.state<ScrollableState>(list).position.pixels;
+      expect(offset, greaterThan(0));
+
+      await tester.tap(find.text('Progress').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rides').last);
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .state<ScrollableState>(
+              find
+                  .descendant(
+                    of: find.byType(RidesScreen),
+                    matching: find.byType(Scrollable),
+                  )
+                  .first,
+            )
+            .position
+            .pixels,
+        closeTo(offset, 1),
+      );
+    },
+  );
+
   testWidgets('RidesScreen_ShouldShowNoRides_WhenThereAreNone', (tester) async {
     await startApp(tester, server.session(useCookies: true));
 
     expect(find.byKey(const Key('no-rides')), findsOneWidget);
+  });
+
+  testWidgets('RidesScreen_ShouldPutUploadInTheList_WhenTheScreenIsWide', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(
+      tester.widget<FilledButton>(find.byKey(const Key('upload'))),
+      isA<FilledButton>(),
+    );
   });
 
   testWidgets('RidesScreen_ShouldShowRideNumbers_WhenReady', (tester) async {
@@ -44,6 +110,16 @@ void main() {
     ]) {
       expect(find.text(text), findsOneWidget, reason: text);
     }
+  });
+
+  testWidgets('RidesScreen_ShouldSayNoData_WhenTheFileHasNoSamples', (
+    tester,
+  ) async {
+    server.rides.add(rideJson('r3', 'ready', distanceM: 0, movingS: 0));
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(find.byKey(const Key('ride-no-data')), findsOneWidget);
+    expect(find.text('0.0 km'), findsNothing);
   });
 
   testWidgets('RidesScreen_ShouldExplainFailure_WhenReadFails', (tester) async {

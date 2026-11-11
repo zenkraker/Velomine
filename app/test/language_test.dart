@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/language_choice.dart';
 
@@ -25,7 +24,7 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
     expect(containerOf(tester).read(languageChoiceViewModelProvider), 'it');
 
-    await tester.tap(find.byKey(const Key('sign-out')));
+    await openAccount(tester, 'sign-out');
     await tester.pumpAndSettle();
 
     expect(containerOf(tester).read(languageChoiceViewModelProvider), isNull);

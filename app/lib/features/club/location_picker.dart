@@ -5,6 +5,7 @@ import '../../core/l10n.dart';
 import '../../core/location_service.dart';
 import '../../core/map_defaults.dart';
 import '../rides/detail/geo.dart';
+import '../../core/tokens.dart';
 
 /// Picks a point for a club, or for the rider's saved fallback. The map is always there: the pin stays at the
 /// centre and the map moves under it.
@@ -119,7 +120,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             ),
             Expanded(child: _map()),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(

@@ -8,6 +8,8 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
 import 'bikes_view_models.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
 
 class BikesScreen extends ConsumerWidget {
   const BikesScreen({super.key, required this.onOpen});
@@ -28,17 +30,12 @@ class BikesScreen extends ConsumerWidget {
     final s = ref.watch(bikesViewModelProvider);
     final l10n = context.l10n;
 
-    ref.listen(bikesViewModelProvider.select((state) => state.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(bikesViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      bikesViewModelProvider.select((s) => s.messages),
+      ref.read(bikesViewModelProvider.notifier).messageShown,
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -56,12 +53,8 @@ class BikesScreen extends ConsumerWidget {
               constraints: const BoxConstraints(maxWidth: 720),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 12,
+                spacing: AppSpacing.md,
                 children: [
-                  Text(
-                    l10n.navBikes,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
                   if (s.load.failure case final failure?)
                     Text(
                       failureText(l10n, failure),
@@ -73,7 +66,11 @@ class BikesScreen extends ConsumerWidget {
                   if (s.load.running && s.bikes.isEmpty)
                     const Center(child: CircularProgressIndicator())
                   else if (s.bikes.isEmpty && s.load.failure == null)
-                    Text(l10n.noBikes, key: const Key('no-bikes')),
+                    EmptyState(
+                      key: const Key('no-bikes'),
+                      message: l10n.noBikes,
+                      icon: Icons.pedal_bike,
+                    ),
                   for (final bike in s.bikes)
                     _BikeCard(bike: bike, onOpen: onOpen),
                 ],
@@ -106,7 +103,7 @@ class _BikeCard extends StatelessWidget {
           color: bike.isActive ? null : Theme.of(context).disabledColor,
         ),
         title: Row(
-          spacing: 8,
+          spacing: AppSpacing.sm,
           children: [
             Flexible(child: Text(bike.name, style: text.titleMedium)),
             if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),

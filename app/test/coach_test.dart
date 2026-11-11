@@ -134,7 +134,7 @@ void main() {
 
     // The athlete shares routes too: the same ride now has its map.
     server.sharingChoices['routes'] = 'coaches';
-    await tester.tap(find.byKey(const Key('coach-ride-back')));
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('coach-ride-r1')));
     await tester.pumpAndSettle();

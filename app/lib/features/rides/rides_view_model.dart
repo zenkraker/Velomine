@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/failure.dart';
@@ -17,9 +18,24 @@ class RidesViewModel extends _$RidesViewModel {
 
   int _messageId = 0;
   int _loadGeneration = 0;
+  ScrollController? _scroll;
+  double _offset = 0;
+
+  /// The list's controller. It outlives the screen, so coming back to the tab lands where it left.
+  ScrollController get scroll =>
+      _scroll ??= (ScrollController()
+        ..addListener(() => _offset = _scroll!.offset));
+
+  double get scrollOffset => _offset;
 
   @override
   RidesState build() {
+    // A rebuild registers this again; the controller is dropped once.
+    ref.onDispose(() {
+      final scroll = _scroll;
+      _scroll = null;
+      scroll?.dispose();
+    });
     if (ref.watch(signedInUserIdProvider) == null) return const RidesState();
     Future.microtask(refresh);
     return const RidesState();

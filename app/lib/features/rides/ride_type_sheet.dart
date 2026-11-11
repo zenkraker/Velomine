@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
+import '../../core/motion.dart';
 
 /// Saves the four dimensions of a ride and answers whether the server took them.
 typedef RideTypeSaver = Future<bool> Function({
@@ -19,6 +21,10 @@ Future<void> showRideTypeSheet(
 ) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
+  // The sheet keeps the app's motion, or none when the system asks for none.
+  sheetAnimationStyle: AnimationStyle(
+    duration: motionDuration(context, AppMotion.standard),
+  ),
   builder: (_) => _RideTypeSheet(ride: ride, save: save),
 );
 
@@ -79,7 +85,7 @@ class _RideTypeSheetState extends State<_RideTypeSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
+          spacing: AppSpacing.md,
           children: [
             Text(
               l10n.rideTypeTitle,
@@ -140,7 +146,7 @@ class _RideTypeSheetState extends State<_RideTypeSheet> {
                   onPressed: _saving ? null : () => Navigator.of(context).pop(),
                   child: Text(l10n.cancel),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 FilledButton(
                   key: const Key('ride-type-save'),
                   onPressed: _saving ? null : _save,

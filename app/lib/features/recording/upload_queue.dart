@@ -116,6 +116,7 @@ class RideUploadQueue {
     this.serverUrl,
     this.pollInterval = const Duration(seconds: 1),
     this.onUnauthorized,
+    this.onRideUploaded,
   });
 
   final Recorder recorder;
@@ -128,6 +129,9 @@ class RideUploadQueue {
   final String? serverUrl;
   final Duration pollInterval;
   final VoidCallback? onUnauthorized;
+
+  /// Called with the server id once a ride is uploaded, so the rides list can read again.
+  final void Function(String serverRideId)? onRideUploaded;
 
   final _states = <String, UploadState>{};
   final _running = <String>{};
@@ -314,6 +318,7 @@ class RideUploadQueue {
               attempts: attempts,
             ),
           );
+          onRideUploaded?.call(result.serverRideId);
           return;
         }
         _fail(rideId, status.error ?? 'server_failed', attempts);

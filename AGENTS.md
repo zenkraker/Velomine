@@ -91,6 +91,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 - **One Flutter codebase** builds Android, iOS and the web app. Every feature builds on all three. Guard platform-only code with `kIsWeb` / `defaultTargetPlatform`; never import `dart:io` in shared code.
 - **Layout:** `lib/core/` for session, theme, formatting, language, charts and maps; `lib/features/<area>/` per feature, each with one data source `<area>_data.dart` that wraps the generated client.
+- **Shared widgets** live in `lib/core/widgets/`. A view assembles them instead of building its own card, field, switch row or section heading; a widget moves there once a second feature needs it. Layout numbers come from `lib/core/tokens.dart`.
 - **Navigation** is `go_router` with real URLs on the web. `redirect` is pure: it reads state and returns a location, and the app calls `GoRouter.refresh()` from `ref.listen` when the session or club changes.
 - **The web app** is built into the server's `wwwroot` and served at the same address as the API, so the cookie and single sign-on work without cross-origin setup. A path that is not an API path falls back to `index.html`. The web build bundles its own rendering engine.
 - **The presentation site** is plain HTML and CSS in `src/Velomine.Server/site/`, served before `wwwroot`: no JavaScript, no external assets, no cookies, no analytics and no third-party scripts. Share pages, when built, are server-rendered HTML too.

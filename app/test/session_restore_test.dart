@@ -25,6 +25,7 @@ void main() {
     );
 
     expect(find.byKey(const Key('upload')), findsOneWidget);
+    await openAccountMenu(tester);
     expect(find.text('Alex Rider'), findsOneWidget);
     expect(server.refreshCount, 1);
     expect(server.requests, contains('POST /api/v1/accounts/refresh'));
@@ -67,7 +68,7 @@ void main() {
       tester,
       server.session(useCookies: false, tokenStore: store),
     );
-    await tester.tap(find.byKey(const Key('sign-out')));
+    await openAccount(tester, 'sign-out');
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('sign-in')), findsOneWidget);

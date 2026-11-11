@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
 import 'accounts_tab.dart';
 import 'clubs_tab.dart';
 import 'overview_tab.dart';
@@ -16,6 +17,8 @@ class AdminScreen extends StatelessWidget {
     child: Column(
       children: [
         TabBar(
+          // Four labels fit 320 dp only with a tighter label padding; scrolling hid one at rest.
+          labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           tabs: [
             Tab(
               key: const Key('tab-accounts'),

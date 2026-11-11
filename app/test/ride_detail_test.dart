@@ -19,7 +19,7 @@ Widget _detailApp(Session session, String id) => ProviderScope(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
-      body: RideDetailScreen(id: id, onBack: () {}, onDeleted: () {}),
+      body: RideDetailScreen(id: id, onDeleted: () {}),
     ),
   ),
 );
@@ -266,7 +266,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('not-found')), findsOneWidget);
-    expect(find.byKey(const Key('delete')), findsNothing);
+    expect(find.byKey(const Key('ride-actions')), findsNothing);
   });
 
   testWidgets('RideDetailScreen_ShouldFillInAfterProcessing_WhenRideIsRead', (
@@ -296,7 +296,7 @@ void main() {
   testWidgets('RideDetailScreen_ShouldGoBack_WhenBackIsTapped', (tester) async {
     await open(tester);
 
-    await tester.tap(find.byKey(const Key('back')));
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('upload')), findsOneWidget);
@@ -306,14 +306,18 @@ void main() {
   testWidgets('RideDetailScreen_ShouldAskAndDelete_WhenTapped', (tester) async {
     await open(tester);
 
+    await tester.tap(find.byKey(const Key('ride-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('delete')));
     await tester.pumpAndSettle();
     expect(find.text('Delete this ride?'), findsOneWidget);
     await tester.tap(find.text('Keep it'));
     await tester.pumpAndSettle();
     expect(server.requests, isNot(contains('DELETE /api/v1/rides/r1')));
-    expect(find.byKey(const Key('delete')), findsOneWidget);
+    expect(find.byKey(const Key('ride-actions')), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('ride-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('delete')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirm-delete')));

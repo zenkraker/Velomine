@@ -10,11 +10,14 @@ import '../../core/l10n.dart';
 import '../../core/language_choice.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
+import '../../core/tokens.dart';
 
 const weekDayIds = [
   'monday',
@@ -216,8 +219,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String suffix, {
     String? helper,
     bool decimals = false,
-  }) => TextField(
-    key: Key(key),
+  }) => AppTextField(
+    fieldKey: Key(key),
     controller: c,
     keyboardType: TextInputType.numberWithOptions(decimal: decimals),
     inputFormatters: [
@@ -225,11 +228,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         RegExp(decimals ? r'[0-9.,]' : r'[0-9]'),
       ),
     ],
-    decoration: InputDecoration(
-      labelText: label,
-      suffixText: suffix,
-      helperText: helper,
-    ),
+    label: label,
+    suffix: suffix,
+    helper: helper,
   );
 
   @override
@@ -242,17 +243,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         false;
     final l10n = context.l10n;
 
-    ref.listen(profileViewModelProvider.select((state) => state.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(profileViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      profileViewModelProvider.select((s) => s.messages),
+      ref.read(profileViewModelProvider.notifier).messageShown,
+    );
 
     final problem = switch (_problem) {
       null => null,
@@ -263,7 +259,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     };
     final failure = s.load.failure;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
@@ -272,87 +268,83 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 16,
+                    spacing: AppSpacing.lg,
                     children: [
-                      Text(
-                        l10n.profileTitle,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      TextField(
-                        key: const Key('profile-name'),
-                        controller: _name,
-                        decoration: InputDecoration(labelText: l10n.name),
-                      ),
-                      _number(
-                        'profile-ftp',
-                        _ftp,
-                        'FTP',
-                        'W',
-                        helper: l10n.ftpHelper,
-                      ),
-                      _number(
-                        'profile-weight',
-                        _weight,
-                        l10n.weight,
-                        'kg',
-                        decimals: true,
-                      ),
-                      _number(
-                        'profile-birth-year',
-                        _birthYear,
-                        l10n.birthYear,
-                        '',
-                        helper: l10n.birthYearHelper,
-                      ),
-                      Text(
-                        _estimatedMaxHr == null
-                            ? l10n.estimatedMaxHeartRateNone
-                            : l10n.estimatedMaxHeartRate(_estimatedMaxHr!),
-                        key: const Key('profile-max-hr-estimate'),
-                      ),
-                      TextField(
-                        key: const Key('profile-zone'),
-                        controller: _zone,
-                        decoration: InputDecoration(
-                          labelText: l10n.timeZone,
-                          hintText: 'Europe/Rome',
-                          helperText: l10n.timeZoneHelper,
-                        ),
-                      ),
-                      DropdownButtonFormField<String>(
-                        key: const Key('profile-first-day'),
-                        initialValue: _firstDay,
-                        decoration: InputDecoration(
-                          labelText: l10n.firstDayOfWeek,
-                        ),
-                        items: [
-                          for (final day in weekDayIds)
-                            DropdownMenuItem(
-                              value: day,
-                              child: Text(weekDayName(l10n, day)),
-                            ),
-                        ],
-                        onChanged: (v) =>
-                            setState(() => _firstDay = v ?? _firstDay),
-                      ),
-                      Builder(
-                        builder: (context) {
-                          final device = Localizations.localeOf(context)
-                              .languageCode;
-                          final current =
-                              language ??
-                              (supportedLanguages.contains(device)
-                                  ? device
-                                  : 'en');
-                          return InputDecorator(
+                      SectionCard(
+                        title: l10n.profileAthlete,
+                        children: [
+                          AppTextField(
+                            fieldKey: const Key('profile-name'),
+                            controller: _name,
+                            label: l10n.name,
+                          ),
+                          _number(
+                            'profile-ftp',
+                            _ftp,
+                            'FTP',
+                            'W',
+                            helper: l10n.ftpHelper,
+                          ),
+                          _number(
+                            'profile-weight',
+                            _weight,
+                            l10n.weight,
+                            'kg',
+                            decimals: true,
+                          ),
+                          _number(
+                            'profile-birth-year',
+                            _birthYear,
+                            l10n.birthYear,
+                            '',
+                            helper: l10n.birthYearHelper,
+                          ),
+                          Text(
+                            _estimatedMaxHr == null
+                                ? l10n.estimatedMaxHeartRateNone
+                                : l10n.estimatedMaxHeartRate(_estimatedMaxHr!),
+                            key: const Key('profile-max-hr-estimate'),
+                          ),
+                          AppTextField(
+                            fieldKey: const Key('profile-zone'),
+                            controller: _zone,
+                            label: l10n.timeZone,
+                            hint: 'Europe/Rome',
+                            helper: l10n.timeZoneHelper,
+                          ),
+                          DropdownButtonFormField<String>(
+                            key: const Key('profile-first-day'),
+                            initialValue: _firstDay,
+                            // Twice the text needs to ellipsize inside the field, not spill out.
+                            isExpanded: true,
                             decoration: InputDecoration(
-                              labelText: l10n.language,
+                              labelText: l10n.firstDayOfWeek,
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
+                            items: [
+                              for (final day in weekDayIds)
+                                DropdownMenuItem(
+                                  value: day,
+                                  child: Text(weekDayName(l10n, day)),
+                                ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _firstDay = v ?? _firstDay),
+                          ),
+                          Builder(
+                            builder: (context) {
+                              final device = Localizations.localeOf(context)
+                                  .languageCode;
+                              return DropdownButtonFormField<String>(
                                 key: const Key('profile-language'),
-                                value: current,
                                 isExpanded: true,
+                                initialValue:
+                                    language ??
+                                    (supportedLanguages.contains(device)
+                                        ? device
+                                        : 'en'),
+                                decoration: InputDecoration(
+                                  labelText: l10n.language,
+                                ),
                                 items: [
                                   for (final code in supportedLanguages)
                                     DropdownMenuItem(
@@ -373,193 +365,196 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         .choose(code);
                                   }
                                 },
+                              );
+                            },
+                          ),
+                          if ((problem ??
+                                  (failure == null
+                                      ? null
+                                      : failureText(l10n, failure)))
+                              case final message?)
+                            Text(
+                              message,
+                              key: const Key('profile-error'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
                               ),
                             ),
-                          );
-                        },
-                      ),
-                      SwitchListTile(
-                        key: const Key('profile-email'),
-                        contentPadding: EdgeInsets.zero,
-                        value: _email,
-                        title: Text(l10n.emailNotifications),
-                        subtitle: Text(
-                          widget.emailAvailable
-                              ? l10n.emailAvailableHelp
-                              : l10n.emailUnavailableHelp,
-                        ),
-                        onChanged: widget.emailAvailable
-                            ? (v) => setState(() => _email = v)
-                            : null,
-                      ),
-                      CheckboxListTile(
-                        key: const Key('profile-email-account'),
-                        contentPadding: const EdgeInsets.only(left: 32),
-                        value: _emailAccount,
-                        title: Text(l10n.emailAccountNotifications),
-                        subtitle: Text(l10n.emailAccountNotificationsHelp),
-                        enabled: _email && widget.emailAvailable,
-                        onChanged: (v) =>
-                            setState(() => _emailAccount = v ?? _emailAccount),
-                      ),
-                      CheckboxListTile(
-                        key: const Key('profile-email-training'),
-                        contentPadding: const EdgeInsets.only(left: 32),
-                        value: _emailTraining,
-                        title: Text(l10n.emailTrainingNotifications),
-                        subtitle: Text(l10n.emailTrainingNotificationsHelp),
-                        enabled: _email && widget.emailAvailable,
-                        onChanged: (v) => setState(
-                          () => _emailTraining = v ?? _emailTraining,
-                        ),
-                      ),
-                      const Divider(),
-                      Text(
-                        l10n.privacy,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      ListTile(
-                        key: const Key('profile-ride-privacy'),
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.privacyRidePrivacy),
-                        subtitle: Text(l10n.privacyRidePrivacyHelp),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: widget.onOpenPrivacy,
-                      ),
-                      Text(l10n.telemetryHelp),
-                      if (!telemetryAvailable)
-                        Text(l10n.telemetryUnavailable)
-                      else ...[
-                        SwitchListTile(
-                          key: const Key('telemetry-crash'),
-                          contentPadding: EdgeInsets.zero,
-                          value: telemetry?.crash ?? false,
-                          title: Text(l10n.crashReports),
-                          subtitle: Text(l10n.crashReportsHelp),
-                          onChanged: s.telemetrySave.running
-                              ? null
-                              : (v) => _setTelemetry(
-                                  crash: v,
-                                  usage: telemetry?.usage ?? false,
-                                ),
-                        ),
-                        SwitchListTile(
-                          key: const Key('telemetry-usage'),
-                          contentPadding: EdgeInsets.zero,
-                          value: telemetry?.usage ?? false,
-                          title: Text(l10n.usageData),
-                          subtitle: Text(l10n.usageDataHelp),
-                          onChanged: s.telemetrySave.running
-                              ? null
-                              : (v) => _setTelemetry(
-                                  crash: telemetry?.crash ?? false,
-                                  usage: v,
-                                ),
-                        ),
-                        if (s.telemetrySave.completed &&
-                            !s.telemetrySave.running)
-                          Text(
-                            '${l10n.telemetrySaved} ${l10n.telemetryRestart}',
-                            key: const Key('telemetry-saved'),
+                          if (s.save.completed)
+                            Text(l10n.saved, key: const Key('profile-saved')),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton(
+                              key: const Key('profile-save'),
+                              onPressed: s.save.running ? null : _save,
+                              child: Text(l10n.save),
+                            ),
                           ),
-                      ],
-                      if ((problem ??
-                              (failure == null
+                        ],
+                      ),
+                      SectionCard(
+                        title: l10n.notifications,
+                        children: [
+                          SwitchListTile(
+                            key: const Key('profile-email'),
+                            contentPadding: EdgeInsets.zero,
+                            value: _email,
+                            title: Text(l10n.emailNotifications),
+                            subtitle: Text(
+                              widget.emailAvailable
+                                  ? l10n.emailAvailableHelp
+                                  : l10n.emailUnavailableHelp,
+                            ),
+                            onChanged: widget.emailAvailable
+                                ? (v) => setState(() => _email = v)
+                                : null,
+                          ),
+                          CheckboxListTile(
+                            key: const Key('profile-email-account'),
+                            contentPadding: EdgeInsets.zero,
+                            value: _emailAccount,
+                            title: Text(l10n.emailAccountNotifications),
+                            subtitle: Text(l10n.emailAccountNotificationsHelp),
+                            enabled: _email && widget.emailAvailable,
+                            onChanged: (v) => setState(
+                              () => _emailAccount = v ?? _emailAccount,
+                            ),
+                          ),
+                          CheckboxListTile(
+                            key: const Key('profile-email-training'),
+                            contentPadding: EdgeInsets.zero,
+                            value: _emailTraining,
+                            title: Text(l10n.emailTrainingNotifications),
+                            subtitle: Text(l10n.emailTrainingNotificationsHelp),
+                            enabled: _email && widget.emailAvailable,
+                            onChanged: (v) => setState(
+                              () => _emailTraining = v ?? _emailTraining,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SectionCard(
+                        title: l10n.privacy,
+                        description: l10n.telemetryHelp,
+                        children: [
+                          ListTile(
+                            key: const Key('profile-ride-privacy'),
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(l10n.privacyRidePrivacy),
+                            subtitle: Text(l10n.privacyRidePrivacyHelp),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: widget.onOpenPrivacy,
+                          ),
+                          if (!telemetryAvailable)
+                            Text(l10n.telemetryUnavailable)
+                          else ...[
+                            SwitchListTile(
+                              key: const Key('telemetry-crash'),
+                              contentPadding: EdgeInsets.zero,
+                              value: telemetry?.crash ?? false,
+                              title: Text(l10n.crashReports),
+                              subtitle: Text(l10n.crashReportsHelp),
+                              onChanged: s.telemetrySave.running
                                   ? null
-                                  : failureText(l10n, failure)))
-                          case final message?)
-                        Text(
-                          message,
-                          key: const Key('profile-error'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                                  : (v) => _setTelemetry(
+                                      crash: v,
+                                      usage: telemetry?.usage ?? false,
+                                    ),
+                            ),
+                            SwitchListTile(
+                              key: const Key('telemetry-usage'),
+                              contentPadding: EdgeInsets.zero,
+                              value: telemetry?.usage ?? false,
+                              title: Text(l10n.usageData),
+                              subtitle: Text(l10n.usageDataHelp),
+                              onChanged: s.telemetrySave.running
+                                  ? null
+                                  : (v) => _setTelemetry(
+                                      crash: telemetry?.crash ?? false,
+                                      usage: v,
+                                    ),
+                            ),
+                            if (s.telemetrySave.completed &&
+                                !s.telemetrySave.running)
+                              Text(
+                                '${l10n.telemetrySaved} ${l10n.telemetryRestart}',
+                                key: const Key('telemetry-saved'),
+                              ),
+                          ],
+                        ],
+                      ),
+                      SectionCard(
+                        title: l10n.accountMenu,
+                        children: [
+                          if (s.profile?.hasPassword ?? false) ...[
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: OutlinedButton.icon(
+                                key: const Key('change-password'),
+                                onPressed: s.password.running
+                                    ? null
+                                    : _changePassword,
+                                icon: const Icon(Icons.lock_reset),
+                                label: Text(l10n.changePassword),
+                              ),
+                            ),
+                          ],
+                          Text(l10n.twoFactorIntro),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              key: const Key('two-factor-settings'),
+                              onPressed: () =>
+                                  context.push('/profile/two-factor'),
+                              icon: const Icon(Icons.verified_user),
+                              label: Text(l10n.twoFactorTitle),
+                            ),
                           ),
-                        ),
-                      if (s.save.completed)
-                        Text(l10n.saved, key: const Key('profile-saved')),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton(
-                          key: const Key('profile-save'),
-                          onPressed: s.save.running ? null : _save,
-                          child: Text(l10n.save),
-                        ),
-                      ),
-                      if (s.profile?.hasPassword ?? false) ...[
-                        const Divider(),
-                        Text(
-                          l10n.changePasswordTitle,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            key: const Key('change-password'),
-                            onPressed: s.password.running
-                                ? null
-                                : _changePassword,
-                            icon: const Icon(Icons.lock_reset),
-                            label: Text(l10n.changePassword),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              key: const Key('sessions'),
+                              onPressed: () =>
+                                  context.push('/profile/sessions'),
+                              icon: const Icon(Icons.devices),
+                              label: Text(l10n.sessionsTitle),
+                            ),
                           ),
-                        ),
-                      ],
-                      const Divider(),
-                      Text(
-                        l10n.twoFactorTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        ],
                       ),
-                      Text(l10n.twoFactorIntro),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          key: const Key('two-factor-settings'),
-                          onPressed: () => context.push('/profile/two-factor'),
-                          icon: const Icon(Icons.verified_user),
-                          label: Text(l10n.twoFactorTitle),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          key: const Key('sessions'),
-                          onPressed: () => context.push('/profile/sessions'),
-                          icon: const Icon(Icons.devices),
-                          label: Text(l10n.sessionsTitle),
-                        ),
-                      ),
-                      const Divider(),
-                      Text(
-                        l10n.yourData,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(l10n.yourDataHelp),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          key: const Key('export-data'),
-                          onPressed: s.export.running ? null : _export,
-                          icon: const Icon(Icons.download),
-                          label: Text(l10n.downloadMyData),
-                        ),
-                      ),
-                      if (s.export.completed)
-                        Text(
-                          l10n.exportStarted,
-                          key: const Key('export-started'),
-                        ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          key: const Key('delete-account'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Theme.of(context)
-                                .colorScheme
-                                .error,
+                      SectionCard(
+                        title: l10n.yourData,
+                        description: l10n.yourDataHelp,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              key: const Key('export-data'),
+                              onPressed: s.export.running ? null : _export,
+                              icon: const Icon(Icons.download),
+                              label: Text(l10n.downloadMyData),
+                            ),
                           ),
-                          onPressed: _delete,
-                          icon: const Icon(Icons.delete_forever),
-                          label: Text(l10n.deleteMyAccount),
-                        ),
+                          if (s.export.completed)
+                            Text(
+                              l10n.exportStarted,
+                              key: const Key('export-started'),
+                            ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              key: const Key('delete-account'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .error,
+                              ),
+                              onPressed: _delete,
+                              icon: const Icon(Icons.delete_forever),
+                              label: Text(l10n.deleteMyAccount),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -635,7 +630,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       title: Text(l10n.changePasswordTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
-        spacing: 16,
+        spacing: AppSpacing.lg,
         children: [
           PasswordField(
             fieldKey: const Key('current-password'),
@@ -708,7 +703,7 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
       title: Text(l10n.deleteAccountTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
-        spacing: 16,
+        spacing: AppSpacing.lg,
         children: [
           Text(l10n.deleteAccountBody),
           TextField(

@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../../core/format.dart';
 import '../../../core/l10n.dart';
 import 'lap_range.dart';
+import '../../../core/tokens.dart';
 
 /// The ride's laps as a compact table. Tapping a lap highlights its range on every chart and the map.
 class LapTable extends StatelessWidget {
@@ -26,12 +27,12 @@ class LapTable extends StatelessWidget {
     return Card(
       key: const Key('laps'),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(l10n.lapsTitle, style: text.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 cell(l10n.lap, width: 64),

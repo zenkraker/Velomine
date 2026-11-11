@@ -64,6 +64,16 @@ void main() {
     expect(server.bikes, isEmpty);
   });
 
+  testWidgets('BikeForm_ShouldOpenAsASheet_WhenAddingABike', (tester) async {
+    await openBikes(tester);
+    await tester.tap(find.byKey(const Key('add-bike')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byKey(const Key('bike-name')), findsOneWidget);
+    expect(find.byKey(const Key('bike-save')), findsOneWidget);
+  });
+
   testWidgets('BikesScreen_ShouldFillWheelSize_WhenPicked', (tester) async {
     await openBikes(tester);
     await tester.tap(find.byKey(const Key('add-bike')));
@@ -108,7 +118,7 @@ void main() {
       ..['usedDistanceM'] = 3400000.0
       ..['wearPercent'] = 85
       ..['status'] = 'soon';
-    await tester.tap(find.byKey(const Key('back')));
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('bike-bike-1')));
     await tester.pumpAndSettle();
@@ -171,7 +181,7 @@ void main() {
   ) async {
     await openBikes(tester);
     await addBike(tester, 'First');
-    await tester.tap(find.byKey(const Key('back')));
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     await addBike(tester, 'Second');
     expect(find.byKey(const Key('make-default')), findsOneWidget);

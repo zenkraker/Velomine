@@ -13,6 +13,7 @@ import 'bike_forms.dart';
 import 'bikes_state.dart';
 import 'bikes_view_models.dart';
 import 'component_names.dart';
+import '../../core/tokens.dart';
 
 DateTime _today() {
   final now = DateTime.now();
@@ -23,12 +24,10 @@ class BikeDetailScreen extends ConsumerWidget {
   const BikeDetailScreen({
     super.key,
     required this.id,
-    required this.onBack,
     required this.onDeleted,
   });
 
   final String id;
-  final VoidCallback onBack;
   final VoidCallback onDeleted;
 
   Future<void> _edit(BuildContext context, WidgetRef ref) async {
@@ -188,43 +187,24 @@ class BikeDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(bikeDetailViewModelProvider(id));
-    final l10n = context.l10n;
 
-    ref.listen(bikeDetailViewModelProvider(id).select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref
-            .read(bikeDetailViewModelProvider(id).notifier)
-            .messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      bikeDetailViewModelProvider(id).select((s) => s.messages),
+      ref.read(bikeDetailViewModelProvider(id).notifier).messageShown,
+    );
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 16,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('back'),
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back),
-                    label: Text(l10n.navBikes),
-                  ),
-                ),
-                ..._body(context, ref, s),
-              ],
+              spacing: AppSpacing.lg,
+              children: [..._body(context, ref, s)],
             ),
           ),
         ),
@@ -273,7 +253,7 @@ class BikeDetailScreen extends ConsumerWidget {
     final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
     return [
       Row(
-        spacing: 8,
+        spacing: AppSpacing.sm,
         children: [
           Flexible(child: Text(bike.name, style: text.headlineSmall)),
           if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
@@ -289,7 +269,7 @@ class BikeDetailScreen extends ConsumerWidget {
         ].join(' · '),
       ),
       Wrap(
-        spacing: 24,
+        spacing: AppSpacing.xl,
         runSpacing: 8,
         children: [
           _Stat(l10n.statDistance, km(bike.distanceM)),
@@ -298,13 +278,13 @@ class BikeDetailScreen extends ConsumerWidget {
         ],
       ),
       Wrap(
-        spacing: 8,
+        spacing: AppSpacing.sm,
         runSpacing: 8,
         children: [
           OutlinedButton.icon(
             key: const Key('edit-bike'),
             onPressed: () => _edit(context, ref),
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit_outlined),
             label: Text(l10n.edit),
           ),
           OutlinedButton.icon(
@@ -460,7 +440,7 @@ class _PartCard extends StatelessWidget {
     return Card(
       key: Key('part-${part.id}'),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 6,
@@ -508,7 +488,7 @@ class _PartCard extends StatelessWidget {
                 style: text.bodySmall,
               ),
             Wrap(
-              spacing: 8,
+              spacing: AppSpacing.sm,
               children: [
                 TextButton(
                   key: Key('edit-${part.id}'),

@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/motion.dart';
+import '../rides/ride_type_chips.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'recorder.dart';
 import 'recording_providers.dart';
 import 'recording_view_model.dart';
 import 'upload_queue.dart';
+import '../../core/tokens.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
   'permission' => l10n.recorderPermission,
@@ -30,20 +33,6 @@ String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
 /// Record a ride with the phone, and see the rides saved on this phone.
 class RecordingScreen extends ConsumerWidget {
   const RecordingScreen({super.key});
-
-  Future<void> _pairSensor(BuildContext context, WidgetRef ref) async {
-    final notifier = ref.read(recordingViewModelProvider.notifier);
-    final sensor = await showModalBottomSheet<SensorInfo>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => _SensorSheet(
-        requestPermission: notifier.requestSensorPermissions,
-        scan: notifier.scanSensors,
-      ),
-    );
-    if (sensor == null) return;
-    await notifier.pairSensor(sensor);
-  }
 
   /// Runs a recorder command and confirms it with a short vibration, but only once it succeeded.
   Future<void> _haptic(
@@ -89,31 +78,24 @@ class RecordingScreen extends ConsumerWidget {
               autoPause: s.autoPause,
               rideType: s.rideType,
               ebike: s.ebike,
-              onAutoPause: notifier.setAutoPause,
-              onRideType: notifier.setRideType,
-              onEbike: notifier.setEbike,
               onStart: () =>
                   _haptic(ref, notifier.start, HapticFeedback.mediumImpact),
-              sensorsSupported: recorder?.sensorsSupported ?? false,
               sensorName: s.snapshot.sensorName,
-              sensorStatus: s.snapshot.sensorStatus,
-              onPair: () => _pairSensor(context, ref),
-              onForget: notifier.forgetSensor,
             ),
           if (s.errorCode != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               recorderErrorText(context.l10n, s.errorCode),
               key: const Key('record-error'),
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           Text(
             context.l10n.onThisPhone,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           if (s.rides.isEmpty && !s.loading)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
@@ -143,6 +125,14 @@ class RecordingScreen extends ConsumerWidget {
   }
 }
 
+/// The name of a recorder ride type, including the ones a saved ride has no field for.
+String _rideTypeName(AppLocalizations l10n, String id) => switch (id) {
+  'indoor' => l10n.rideTypeIndoor,
+  'virtual' => l10n.rideTypeVirtual,
+  'commute' => l10n.rideTypeCommute,
+  _ => disciplineName(l10n, id),
+};
+
 class _StartCard extends StatelessWidget {
   const _StartCard({
     required this.busy,
@@ -150,15 +140,8 @@ class _StartCard extends StatelessWidget {
     required this.autoPause,
     required this.rideType,
     required this.ebike,
-    required this.onAutoPause,
-    required this.onRideType,
-    required this.onEbike,
     required this.onStart,
-    required this.sensorsSupported,
     required this.sensorName,
-    required this.sensorStatus,
-    required this.onPair,
-    required this.onForget,
   });
 
   final bool busy;
@@ -166,113 +149,211 @@ class _StartCard extends StatelessWidget {
   final bool autoPause;
   final String rideType;
   final bool ebike;
-  final Future<void> Function(bool value) onAutoPause;
-  final Future<void> Function(String value) onRideType;
-  final Future<void> Function(bool value) onEbike;
   final Future<void> Function() onStart;
-  final bool sensorsSupported;
   final String? sensorName;
-  final String sensorStatus;
-  final VoidCallback onPair;
-  final Future<void> Function() onForget;
+
+  /// What the ride will be recorded as, in one line, so Start needs no scrolling first.
+  String _summary(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      _rideTypeName(l10n, rideType),
+      if (ebike) l10n.recorderEbike,
+      if (autoPause) l10n.pauseWhenStopped,
+      ?sensorName,
+    ].join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpacing.sm,
           children: [
             Text(
               l10n.recordRide,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 8),
-            Text(l10n.recordIntro),
-            const SizedBox(height: 20),
+            // Said before the system asks: starting needs the position and keeps a notification.
+            Text(
+              l10n.recordPermissionHelp,
+              key: const Key('record-permission-help'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
             FilledButton.icon(
               key: const Key('record-start'),
               onPressed: busy || loading ? null : onStart,
               icon: const Icon(Icons.play_arrow),
               label: Text(busy ? l10n.starting : l10n.startRecording),
             ),
-            const SizedBox(height: 12),
-            InputDecorator(
-              decoration: InputDecoration(labelText: l10n.recorderRideType),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  key: const Key('record-ride-type'),
-                  value: rideType,
-                  isExpanded: true,
-                  items: [
-                    DropdownMenuItem(
-                      value: 'road',
-                      child: Text(l10n.bikeKindRoad),
-                    ),
-                    DropdownMenuItem(
-                      value: 'gravel',
-                      child: Text(l10n.bikeKindGravel),
-                    ),
-                    DropdownMenuItem(
-                      value: 'mountain',
-                      child: Text(l10n.bikeKindMountain),
-                    ),
-                    DropdownMenuItem(
-                      value: 'track',
-                      child: Text(l10n.bikeKindTrack),
-                    ),
-                    DropdownMenuItem(
-                      value: 'indoor',
-                      child: Text(l10n.rideTypeIndoor),
-                    ),
-                    DropdownMenuItem(
-                      value: 'virtual',
-                      child: Text(l10n.rideTypeVirtual),
-                    ),
-                    DropdownMenuItem(
-                      value: 'commute',
-                      child: Text(l10n.rideTypeCommute),
-                    ),
-                  ],
-                  onChanged: busy || loading
-                      ? null
-                      : (value) {
-                          if (value != null) onRideType(value);
-                        },
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _summary(context),
+                    key: const Key('record-settings-summary'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ),
-              ),
+                IconButton(
+                  key: const Key('record-settings'),
+                  tooltip: l10n.recorderSettings,
+                  onPressed: () => showRecorderSettings(context),
+                  icon: const Icon(Icons.tune),
+                ),
+              ],
             ),
-            SwitchListTile(
-              key: const Key('record-ebike-switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.recorderEbike),
-              subtitle: Text(l10n.recorderEbikeHelp),
-              value: ebike,
-              onChanged: busy || loading ? null : onEbike,
-            ),
-            SwitchListTile(
-              key: const Key('auto-pause-switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.pauseWhenStopped),
-              subtitle: Text(l10n.pauseWhenStoppedHelp),
-              value: autoPause,
-              onChanged: busy || loading ? null : onAutoPause,
-            ),
-            if (sensorsSupported) ...[
-              const Divider(height: 32),
-              _SensorTile(
-                name: sensorName,
-                status: sensorStatus,
-                busy: busy || loading,
-                onPair: onPair,
-                onForget: onForget,
-              ),
-            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The choices a ride needs before it starts: type, e-bike, auto-pause and the strap.
+///
+/// The sheet watches the recorder itself, so a strap paired from inside it appears without reopening.
+Future<void> showRecorderSettings(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      sheetAnimationStyle: AnimationStyle(
+        duration: motionDuration(context, AppMotion.standard),
+      ),
+      builder: (_) => const _SettingsSheet(),
+    );
+
+class _SettingsSheet extends ConsumerStatefulWidget {
+  const _SettingsSheet();
+
+  @override
+  ConsumerState<_SettingsSheet> createState() => _SettingsSheetState();
+}
+
+class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
+  bool _pairing = false;
+
+  Future<void> _pair() async {
+    final notifier = ref.read(recordingViewModelProvider.notifier);
+    final sensor = await showModalBottomSheet<SensorInfo>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _SensorSheet(
+        requestPermission: notifier.requestSensorPermissions,
+        scan: notifier.scanSensors,
+      ),
+    );
+    if (sensor == null) return;
+    setState(() => _pairing = true);
+    await notifier.pairSensor(sensor);
+    if (mounted) setState(() => _pairing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final s = ref.watch(recordingViewModelProvider);
+    final notifier = ref.read(recordingViewModelProvider.notifier);
+    final sensorsSupported =
+        ref.watch(recorderProvider)?.sensorsSupported ?? false;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Center(
+          child: Container(
+            width: 32,
+            height: 4,
+            margin: const EdgeInsets.only(top: 8, bottom: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: AppSpacing.md,
+              children: [
+                Text(
+                  l10n.recorderSettings,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                DropdownButtonFormField<String>(
+                  key: const Key('record-ride-type'),
+                  initialValue: s.rideType,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.recorderRideType),
+                  items: [
+                    for (final id in const [
+                      'road',
+                      'gravel',
+                      'mountain',
+                      'track',
+                      'indoor',
+                      'virtual',
+                      'commute',
+                    ])
+                      DropdownMenuItem(
+                        value: id,
+                        child: Text(_rideTypeName(l10n, id)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) notifier.setRideType(value);
+                  },
+                ),
+                // The strap row is what needs the room at the bottom of a phone sheet, so the two
+                // switches stay to one line each.
+                SwitchListTile(
+                  key: const Key('record-ebike-switch'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  title: Text(l10n.recorderEbike),
+                  value: s.ebike,
+                  onChanged: notifier.setEbike,
+                ),
+                SwitchListTile(
+                  key: const Key('auto-pause-switch'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  title: Text(l10n.pauseWhenStopped),
+                  subtitle: Text(l10n.pauseWhenStoppedHelp),
+                  value: s.autoPause,
+                  onChanged: notifier.setAutoPause,
+                ),
+                if (sensorsSupported)
+                  _SensorTile(
+                    name: s.snapshot.sensorName,
+                    status: s.snapshot.sensorStatus,
+                    busy: _pairing,
+                    onPair: _pair,
+                    onForget: notifier.forgetSensor,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              key: const Key('record-settings-done'),
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.done),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -357,7 +438,7 @@ class _LiveCard extends StatelessWidget {
     final autoPaused = paused && state.autoPaused;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -373,7 +454,7 @@ class _LiveCard extends StatelessWidget {
                       ? Theme.of(context).colorScheme.secondary
                       : Theme.of(context).colorScheme.error,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   autoPaused
                       ? l10n.autoPaused
@@ -385,15 +466,15 @@ class _LiveCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               stopwatch(state.elapsedS),
               key: const Key('record-clock'),
               style: Theme.of(context).textTheme.displaySmall,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
-              spacing: 24,
+              spacing: AppSpacing.xl,
               runSpacing: 8,
               children: [
                 _Value(label: l10n.moving, value: stopwatch(state.movingS)),
@@ -416,7 +497,7 @@ class _LiveCard extends StatelessWidget {
               ],
             ),
             if (sensorsSupported && state.sensorName != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   Icon(
@@ -433,7 +514,7 @@ class _LiveCard extends StatelessWidget {
                     state.sensorName!,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     sensorStatusText(l10n, state.sensorStatus),
                     key: const Key('sensor-status'),
@@ -691,12 +772,12 @@ class _SensorSheetState extends State<_SensorSheet> {
               l10n.pairStrapTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(l10n.pairStrapHelp),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             if (_scanning) ...[
               const LinearProgressIndicator(),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(l10n.searchingStraps, key: const Key('sensor-searching')),
             ],
             if (_errorCode != null || _found == null && !_scanning)
@@ -722,7 +803,7 @@ class _SensorSheetState extends State<_SensorSheet> {
                     : Text('${sensor.rssi} dBm'),
                 onTap: () => Navigator.of(context).pop(sensor),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             if (!_scanning)
               TextButton(
                 key: const Key('sensor-scan-again'),

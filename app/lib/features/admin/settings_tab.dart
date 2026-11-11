@@ -6,6 +6,7 @@ import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
+import '../../core/tokens.dart';
 
 /// The settings an admin can change, and (read-only) what only the server's environment sets.
 class SettingsTab extends ConsumerWidget {
@@ -18,18 +19,11 @@ class SettingsTab extends ConsumerWidget {
     final settings = s.settings;
     final catalogue = s.catalogue;
 
-    ref.listen(
-      adminSettingsViewModelProvider.select((state) => state.messages),
-      (_, messages) {
-        for (final message in messages) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(userMessageText(l10n, message))),
-          );
-          ref
-              .read(adminSettingsViewModelProvider.notifier)
-              .messageShown(message.id);
-        }
-      },
+    listenUserMessages(
+      ref,
+      context,
+      adminSettingsViewModelProvider.select((s) => s.messages),
+      ref.read(adminSettingsViewModelProvider.notifier).messageShown,
     );
 
     if (settings == null) {
@@ -44,14 +38,14 @@ class SettingsTab extends ConsumerWidget {
       );
     }
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
                 Text(
                   l10n.signUp,

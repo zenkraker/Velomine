@@ -31,6 +31,22 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navAdmin => 'Admin';
 
   @override
+  String get accountMenu => 'Account';
+
+  @override
+  String get recordPermissionHelp =>
+      'All\'avvio l\'app chiede la posizione e mostra una notifica mentre registra, anche a schermo spento.';
+
+  @override
+  String get rideNoData => 'Nessun dato';
+
+  @override
+  String get sessionsNavTitle => 'Sessioni';
+
+  @override
+  String get twoFactorNavTitle => 'Due fattori';
+
+  @override
   String get notifications => 'Notifiche';
 
   @override
@@ -907,6 +923,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get delete => 'Elimina';
 
   @override
+  String get rideActions => 'Azioni uscita';
+
+  @override
   String get deleteRideTitle => 'Eliminare questa uscita?';
 
   @override
@@ -1215,8 +1234,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Per esempio SL 7, Comp o il nome del gruppo. Facoltativo.';
 
   @override
-  String get frameSizeHelper =>
-      'Nella forma usata dalla marca: 56, M, S3, 17,5\". Facoltativo.';
+  String get frameSizeHelper => '56, M o 17,5\".';
 
   @override
   String get wheelCircumference => 'Circonferenza ruota (mm)';
@@ -1259,6 +1277,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get close => 'Chiudi';
+
+  @override
+  String get openFullMap => 'Apri la mappa intera';
 
   @override
   String get save => 'Salva';
@@ -1668,6 +1689,12 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get trainingLoadHelp =>
       'La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.';
+
+  @override
+  String get accountSearch => 'Cerca un account';
+
+  @override
+  String get clearSearch => 'Cancella la ricerca';
 
   @override
   String get adminAccounts => 'Account';
@@ -2445,6 +2472,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get recorderRideType => 'Tipo di uscita';
 
   @override
+  String get done => 'Fatto';
+
+  @override
+  String get recorderSettings => 'Impostazioni di registrazione';
+
+  @override
   String get recorderEbike => 'E-bike';
 
   @override
@@ -2891,6 +2924,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get privacy => 'Privacy';
+
+  @override
+  String get profileAthlete => 'Atleta';
 
   @override
   String get telemetryHelp =>

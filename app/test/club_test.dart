@@ -139,7 +139,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Admin'));
+    await openAccount(tester, 'admin');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tab-clubs')));
     await tester.pumpAndSettle();
@@ -181,7 +181,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Admin'));
+    await openAccount(tester, 'admin');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tab-clubs')));
     await tester.pumpAndSettle();
@@ -224,7 +224,7 @@ void main() {
     // An admin without a club still reaches the admin pages.
     expect(find.text('Rides'), findsWidgets);
 
-    await tester.tap(find.text('Admin'));
+    await openAccount(tester, 'admin');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tab-clubs')));
     await tester.pumpAndSettle();

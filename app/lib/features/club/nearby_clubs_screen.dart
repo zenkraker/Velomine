@@ -9,6 +9,8 @@ import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import 'location_picker.dart';
 import 'nearby_clubs_view_model.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
 
 /// The suggestion page: a rider without a club sees which clubs are within reach and may ask to join one.
 class NearbyClubsScreen extends ConsumerStatefulWidget {
@@ -95,25 +97,19 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
     final l10n = context.l10n;
     final s = ref.watch(nearbyClubsViewModelProvider);
 
-    ref.listen(nearbyClubsViewModelProvider.select((state) => state.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref
-            .read(nearbyClubsViewModelProvider.notifier)
-            .messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      nearbyClubsViewModelProvider.select((s) => s.messages),
+      ref.read(nearbyClubsViewModelProvider.notifier).messageShown,
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.nearbyTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: widget.onBack,
         ),
       ),
@@ -125,7 +121,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(l10n.nearbyLocating),
                 ],
               ),
@@ -152,13 +148,13 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
                 Text(l10n.nearbyIntro),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   l10n.nearbyLocationHelp,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (s.usingSavedPoint) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Icon(
@@ -176,12 +172,12 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                     ],
                   ),
                 ],
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Expanded(
                       child: Wrap(
-                        spacing: 8,
+                        spacing: AppSpacing.sm,
                         runSpacing: 4,
                         children: [
                           for (final km in NearbyClubsViewModel.radii)
@@ -200,7 +196,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     IconButton.filledTonal(
                       key: const Key('nearby-relocate'),
                       tooltip: l10n.nearbyUseDevice,
@@ -219,7 +215,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                   ],
                 ),
                 if (s.load.failure case final failure?) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     failureText(l10n, failure),
                     key: const Key('nearby-error'),
@@ -229,13 +225,13 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                   ),
                 ],
                 if (s.request != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   Card(
                     key: const Key('pending-join-request'),
                     color: Theme.of(context).colorScheme.secondaryContainer
                         .withValues(alpha: 0.5),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 6,
@@ -269,21 +265,19 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                 if (s.load.running)
                   const Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: EdgeInsets.all(AppSpacing.xl),
                       child: CircularProgressIndicator(),
                     ),
                   )
                 else if (s.clubs.isEmpty && s.load.failure == null) ...[
-                  const SizedBox(height: 24),
-                  Center(
-                    child: Text(
-                      l10n.nearbyEmpty(s.radiusKm),
-                      key: const Key('nearby-empty'),
-                      textAlign: TextAlign.center,
-                    ),
+                  const SizedBox(height: AppSpacing.xl),
+                  EmptyState(
+                    key: const Key('nearby-empty'),
+                    message: l10n.nearbyEmpty(s.radiusKm),
+                    icon: Icons.explore_outlined,
                   ),
                   if (nextRadius != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     Center(
                       child: TextButton(
                         key: const Key('nearby-widen'),
@@ -328,18 +322,16 @@ class _WhereAreYou extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        Text(l10n.nearbyTitle, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
         Text(l10n.nearbyIntro),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xl),
         if (askedDevice) ...[
           Text(
             l10n.locationCurrentUnavailable,
             key: const Key('nearby-location-denied'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
         ],
         FilledButton.tonalIcon(
           key: const Key('nearby-use-device'),
@@ -347,7 +339,7 @@ class _WhereAreYou extends StatelessWidget {
           icon: const Icon(Icons.my_location),
           label: Text(l10n.nearbyUseDevice),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         OutlinedButton.icon(
           key: const Key('nearby-set-location'),
           onPressed: onPick,

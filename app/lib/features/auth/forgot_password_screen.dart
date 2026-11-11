@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
+import 'auth_page.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'auth_state.dart';
 import 'auth_view_models.dart';
+import '../../core/tokens.dart';
 
 String forgotProblemText(AppLocalizations l10n, ForgotProblem problem) =>
     switch (problem) {
@@ -41,59 +43,46 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final s = ref.watch(forgotPasswordViewModelProvider);
     final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go('/sign-in')),
-        title: Text(l10n.forgotPasswordTitle),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(24),
-            children: [
-              Text(l10n.forgotPasswordHelp),
-              const SizedBox(height: 16),
-              TextField(
-                key: const Key('forgot-email'),
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email],
-                decoration: InputDecoration(labelText: l10n.email),
-                onSubmitted: (_) => _send(),
-              ),
-              if (s.sent) ...[
-                const SizedBox(height: 16),
-                Text(l10n.forgotPasswordSent, key: const Key('forgot-sent')),
-                const SizedBox(height: 12),
-                TextButton(
-                  key: const Key('forgot-back'),
-                  onPressed: () => context.go('/sign-in'),
-                  child: Text(l10n.goToSignIn),
-                ),
-              ] else ...[
-                if (s.problem != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    forgotProblemText(l10n, s.problem!),
-                    key: const Key('forgot-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                FilledButton(
-                  key: const Key('forgot-submit'),
-                  onPressed: s.command.running ? null : _send,
-                  child: Text(l10n.sendResetLink),
-                ),
-              ],
-            ],
-          ),
+    return AuthPage(
+      title: l10n.forgotPasswordTitle,
+      onBack: () => context.go('/sign-in'),
+      children: [
+        Text(l10n.forgotPasswordHelp),
+        const SizedBox(height: AppSpacing.lg),
+        TextField(
+          key: const Key('forgot-email'),
+          controller: _email,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
+          decoration: InputDecoration(labelText: l10n.email),
+          onSubmitted: (_) => _send(),
         ),
-      ),
+        if (s.sent) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text(l10n.forgotPasswordSent, key: const Key('forgot-sent')),
+          const SizedBox(height: AppSpacing.md),
+          TextButton(
+            key: const Key('forgot-back'),
+            onPressed: () => context.go('/sign-in'),
+            child: Text(l10n.goToSignIn),
+          ),
+        ] else ...[
+          if (s.problem != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              forgotProblemText(l10n, s.problem!),
+              key: const Key('forgot-error'),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton(
+            key: const Key('forgot-submit'),
+            onPressed: s.command.running ? null : _send,
+            child: Text(l10n.sendResetLink),
+          ),
+        ],
+      ],
     );
   }
 }

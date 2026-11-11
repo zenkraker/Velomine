@@ -15,7 +15,7 @@ void main() {
   });
 
   ThemeData current(WidgetTester tester) =>
-      Theme.of(tester.element(find.byKey(const Key('sign-out'))));
+      Theme.of(tester.element(find.byKey(const Key('account-menu'))));
 
   Future<void> choose(WidgetTester tester, String key) async {
     await tester.tap(find.byKey(const Key('theme-choice')));

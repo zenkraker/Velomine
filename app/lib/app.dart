@@ -186,29 +186,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
         ),
       ),
       GoRoute(
-        path: '/join',
-        builder: (context, state) {
-          final session = ref.read(sessionProvider);
-          final code = state.uri.queryParameters['code'];
-          return BackGuard(
-            location: state.uri.path,
-            child: JoinClubScreen(
-              initialCode: code != null && code.isNotEmpty
-                  ? code
-                  : (session.pendingJoinCode ?? ''),
-              onJoined: () {
-                session.pendingJoinCode = null;
-                context.go('/rides');
-              },
-              onSkip: () {
-                session.pendingJoinCode = null;
-                context.go('/rides');
-              },
-            ),
-          );
-        },
-      ),
-      GoRoute(
         path: '/register',
         builder: (context, state) =>
             BackGuard(location: state.uri.path, child: const RegisterScreen()),
@@ -279,7 +256,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             builder: (context, state) => RideDetailScreen(
               key: ValueKey(state.pathParameters['id']),
               id: state.pathParameters['id']!,
-              onBack: () => _backOrGo(context, '/rides'),
               onDeleted: () {
                 ref.read(ridesViewModelProvider.notifier).refresh();
                 _backOrGo(context, '/rides');
@@ -322,7 +298,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               key: ValueKey(state.pathParameters['id']),
               clubId: ref.read(clubViewModelProvider).club!.id,
               userId: state.pathParameters['id']!,
-              onBack: () => _backOrGo(context, '/club/athletes'),
               onOpenRide: (rideId) => context.push(
                 '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
               ),
@@ -337,10 +312,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               clubId: ref.read(clubViewModelProvider).club!.id,
               userId: state.pathParameters['id']!,
               rideId: state.pathParameters['rideId']!,
-              onBack: () => _backOrGo(
-                context,
-                '/club/athletes/${state.pathParameters['id']}',
-              ),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,
@@ -348,6 +319,26 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
                   ref.read(sessionProvider).serverInfo?.mapAttribution ??
                   defaultMapAttribution,
             ),
+          ),
+          GoRoute(
+            path: '/join',
+            builder: (context, state) {
+              final session = ref.read(sessionProvider);
+              final code = state.uri.queryParameters['code'];
+              return JoinClubScreen(
+                initialCode: code != null && code.isNotEmpty
+                    ? code
+                    : (session.pendingJoinCode ?? ''),
+                onJoined: () {
+                  session.pendingJoinCode = null;
+                  context.go('/rides');
+                },
+                onSkip: () {
+                  session.pendingJoinCode = null;
+                  context.go('/rides');
+                },
+              );
+            },
           ),
           GoRoute(
             path: '/notifications',
@@ -396,7 +387,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             builder: (context, state) => BikeDetailScreen(
               key: ValueKey(state.pathParameters['id']),
               id: state.pathParameters['id']!,
-              onBack: () => _backOrGo(context, '/bikes'),
               onDeleted: () {
                 ref.read(bikesViewModelProvider.notifier).refresh();
                 _backOrGo(context, '/bikes');

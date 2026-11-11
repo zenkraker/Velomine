@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/l10n.dart';
+import '../../../core/tokens.dart';
 
 /// How hard the ride felt and an optional note. Owner-only; coaches see the RPE but never the note.
 class RideFeelCard extends StatefulWidget {
@@ -79,7 +80,7 @@ class _RideFeelCardState extends State<RideFeelCard> {
       return Card(
         key: const Key('ride-feel-card'),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Text(l10n.wellbeingConsentNeeded, style: text.bodySmall),
         ),
       );
@@ -89,7 +90,7 @@ class _RideFeelCardState extends State<RideFeelCard> {
     return Card(
       key: const Key('ride-feel-card'),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -107,19 +108,19 @@ class _RideFeelCardState extends State<RideFeelCard> {
               ],
             ),
             if (!showForm && feel.rpe != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 l10n.wellbeingRpeSaved(feel.rpe!),
                 key: const Key('ride-feel-saved'),
                 style: text.titleSmall,
               ),
               if (feel.notes case final notes? when notes.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(notes, style: text.bodySmall),
               ],
             ] else ...[
               Text(l10n.wellbeingRpeHint, style: text.bodySmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -143,7 +144,7 @@ class _RideFeelCardState extends State<RideFeelCard> {
                 maxLines: 2,
                 decoration: InputDecoration(labelText: l10n.wellbeingNotes),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   FilledButton(
@@ -152,7 +153,7 @@ class _RideFeelCardState extends State<RideFeelCard> {
                     child: Text(l10n.wellbeingRpeSave),
                   ),
                   if (feel.rpe != null) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     TextButton(
                       onPressed: widget.saving ? null : _delete,
                       child: Text(l10n.wellbeingRpeDelete),

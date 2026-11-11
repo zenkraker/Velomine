@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/widgets/range_selector.dart';
+import '../../core/tokens.dart';
 
 /// Best efforts over a range, with an FTP suggestion and (for the member) VO2max.
 class PowerSummary extends StatelessWidget {
@@ -36,31 +38,24 @@ class PowerSummary extends StatelessWidget {
     return Card(
       key: const Key('power-curve-card'),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    readOnly ? l10n.coachPowerCurve : l10n.powerCurve,
-                    style: text.titleMedium,
-                  ),
-                ),
-                if (!readOnly)
-                  SegmentedButton<int>(
-                    key: const Key('power-range'),
-                    segments: [
-                      ButtonSegment(value: 30, label: Text(l10n.range30Days)),
-                      ButtonSegment(value: 90, label: Text(l10n.range90Days)),
-                      ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
-                    ],
-                    selected: {days},
-                    onSelectionChanged: (s) => onDays(s.single),
-                  ),
-              ],
-            ),
+            if (readOnly)
+              Text(l10n.coachPowerCurve, style: text.titleMedium)
+            else
+              RangeSelector<int>(
+                title: l10n.powerCurve,
+                segmentKey: const Key('power-range'),
+                segments: [
+                  ButtonSegment(value: 30, label: Text(l10n.range30Days)),
+                  ButtonSegment(value: 90, label: Text(l10n.range90Days)),
+                  ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
+                ],
+                selected: days,
+                onChanged: onDays,
+              ),
             if (!curve.hasPower) ...[
               const SizedBox(height: 10),
               Text(
@@ -69,7 +64,7 @@ class PowerSummary extends StatelessWidget {
                 style: text.bodyMedium,
               ),
             ] else ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Semantics(
                 container: true,
                 label: l10n.powerCurveSummary(
@@ -95,9 +90,9 @@ class PowerSummary extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(l10n.powerBestEfforts, style: text.labelLarge),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Wrap(
                 spacing: 14,
                 runSpacing: 4,
@@ -110,9 +105,9 @@ class PowerSummary extends StatelessWidget {
                 ],
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Wrap(
-              spacing: 24,
+              spacing: AppSpacing.xl,
               runSpacing: 12,
               crossAxisAlignment: WrapCrossAlignment.start,
               children: [

@@ -39,7 +39,7 @@ void main() {
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: screen,
+          home: Scaffold(body: screen),
         ),
       ),
     );

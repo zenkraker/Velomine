@@ -87,6 +87,11 @@ void main() {
     expect(server.requests, contains('POST /api/v1/notifications/n-3/read'));
     expect(server.notifications.first['isRead'], isTrue);
     expect(find.text('Road bike'), findsWidgets); // the bike's screen
+    // Back to a tab: the title bar keeps its actions there, not on a pushed screen.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
     expect(
       find.descendant(
         of: find.byKey(const Key('open-notifications')),

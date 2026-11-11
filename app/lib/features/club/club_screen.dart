@@ -8,7 +8,6 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
-import '../../core/user_message.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../sharing/sharing_state.dart';
@@ -18,6 +17,7 @@ import 'join_requests_state.dart';
 import 'join_requests_view_model.dart';
 import 'location_picker.dart';
 import 'nearby_clubs_view_model.dart';
+import '../../core/tokens.dart';
 
 String clubRoleName(AppLocalizations l10n, String role) => switch (role) {
   'owner' => l10n.clubOwner,
@@ -220,12 +220,6 @@ class ClubScreen extends ConsumerWidget {
     }
   }
 
-  void _showMessage(BuildContext context, UserMessage message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(userMessageText(context.l10n, message))),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -234,43 +228,30 @@ class ClubScreen extends ConsumerWidget {
     final requests = ref.watch(joinRequestsViewModelProvider);
     final nearby = ref.watch(nearbyClubsViewModelProvider);
 
-    ref.listen(clubViewModelProvider.select((s) => s.messages), (_, messages) {
-      for (final message in messages) {
-        _showMessage(context, message);
-        ref.read(clubViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
-    ref.listen(sharingViewModelProvider.select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        _showMessage(context, message);
-        ref.read(sharingViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
-    ref.listen(joinRequestsViewModelProvider.select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        _showMessage(context, message);
-        ref
-            .read(joinRequestsViewModelProvider.notifier)
-            .messageShown(message.id);
-      }
-    });
-    ref.listen(nearbyClubsViewModelProvider.select((s) => s.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        _showMessage(context, message);
-        ref
-            .read(nearbyClubsViewModelProvider.notifier)
-            .messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      clubViewModelProvider.select((s) => s.messages),
+      ref.read(clubViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      sharingViewModelProvider.select((s) => s.messages),
+      ref.read(sharingViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      joinRequestsViewModelProvider.select((s) => s.messages),
+      ref.read(joinRequestsViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      nearbyClubsViewModelProvider.select((s) => s.messages),
+      ref.read(nearbyClubsViewModelProvider.notifier).messageShown,
+    );
 
     final club = clubState.club;
     if (club == null) {
@@ -278,17 +259,17 @@ class ClubScreen extends ConsumerWidget {
         return const Center(child: CircularProgressIndicator());
       }
       return ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         children: [
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 12,
+                    spacing: AppSpacing.md,
                     children: [
                       Text(
                         l10n.clubNoneTitle,
@@ -328,7 +309,7 @@ class ClubScreen extends ConsumerWidget {
                           ),
                         ),
                       Wrap(
-                        spacing: 8,
+                        spacing: AppSpacing.sm,
                         runSpacing: 8,
                         children: [
                           FilledButton.icon(
@@ -366,7 +347,7 @@ class ClubScreen extends ConsumerWidget {
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
                 Row(
                   children: [
@@ -383,7 +364,7 @@ class ClubScreen extends ConsumerWidget {
                   Card(
                     color: Theme.of(context).colorScheme.errorContainer,
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: Text(
                         l10n.clubInactive,
                         key: const Key('club-inactive'),
@@ -419,10 +400,10 @@ class ClubScreen extends ConsumerWidget {
                 if (owner && club.joinCode != null) ...[
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 8,
+                        spacing: AppSpacing.sm,
                         children: [
                           Text(
                             l10n.clubJoinCode,
@@ -439,7 +420,7 @@ class ClubScreen extends ConsumerWidget {
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           Wrap(
-                            spacing: 8,
+                            spacing: AppSpacing.sm,
                             children: [
                               OutlinedButton.icon(
                                 key: const Key('copy-join-link'),
@@ -574,10 +555,10 @@ class ClubScreen extends ConsumerWidget {
     return Card(
       key: const Key('join-requests-card'),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8,
+          spacing: AppSpacing.sm,
           children: [
             Row(
               children: [
@@ -628,7 +609,7 @@ class ClubScreen extends ConsumerWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Wrap(
-                    spacing: 8,
+                    spacing: AppSpacing.sm,
                     children: [
                       TextButton(
                         key: Key('decline-${request.id}'),
@@ -665,10 +646,10 @@ class ClubScreen extends ConsumerWidget {
     return Card(
       key: const Key('club-location-card'),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8,
+          spacing: AppSpacing.sm,
           children: [
             Text(
               l10n.clubLocation,
@@ -767,10 +748,10 @@ class _SharingCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
+          spacing: AppSpacing.md,
           children: [
             Text(
               l10n.sharingTitle,

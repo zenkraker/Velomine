@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n.dart';
+import '../../../core/widgets/chart_chrome.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'lap_range.dart';
 import 'ride_series.dart';
 import 'scale.dart';
+import '../../../core/tokens.dart';
 
 /// The name of a signal in the language on screen. The id is what the ride file gave it.
 String seriesName(AppLocalizations l10n, Series series) => switch (series.id) {
@@ -47,7 +49,6 @@ class SeriesChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final name = seriesName(l10n, series);
     return Semantics(
@@ -60,34 +61,21 @@ class SeriesChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Text(name, style: text.titleSmall),
-              const Spacer(),
-              ValueListenableBuilder<int?>(
-                valueListenable: selected,
-                builder: (_, index, _) => Text(
-                  index == null
-                      ? l10n.chartAverageMax(
-                          series.format(series.average),
-                          series.format(series.max),
-                        )
-                      : series.format(series.values[index]),
-                  key: Key('readout-${series.id}'),
-                  style: text.bodySmall?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-            ],
+          ValueListenableBuilder<int?>(
+            valueListenable: selected,
+            builder: (_, index, _) => ChartHeader(
+              title: name,
+              color: color,
+              readoutKey: Key('readout-${series.id}'),
+              readout: index == null
+                  ? l10n.chartAverageMax(
+                      series.format(series.average),
+                      series.format(series.max),
+                    )
+                  : series.format(series.values[index]),
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           SizedBox(
             height: height,
             child: LayoutBuilder(
@@ -108,13 +96,7 @@ class SeriesChart extends StatelessWidget {
                       selected: selected,
                       selectedLap: selectedLap,
                       color: color,
-                      textStyle:
-                          (text.labelSmall ?? const TextStyle(fontSize: 11))
-                              .copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
+                      textStyle: chartLabelStyle(context),
                       gridColor: Theme.of(context).colorScheme.outlineVariant,
                       background: Theme.of(context).colorScheme.surface,
                     ),

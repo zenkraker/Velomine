@@ -31,6 +31,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAdmin => 'Admin';
 
   @override
+  String get accountMenu => 'Account';
+
+  @override
+  String get recordPermissionHelp =>
+      'Starting asks for your position and shows a notification while the ride records, even with the screen off.';
+
+  @override
+  String get rideNoData => 'No data';
+
+  @override
+  String get sessionsNavTitle => 'Sessions';
+
+  @override
+  String get twoFactorNavTitle => 'Two-factor';
+
+  @override
   String get notifications => 'Notifications';
 
   @override
@@ -901,6 +917,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
+  String get rideActions => 'Ride actions';
+
+  @override
   String get deleteRideTitle => 'Delete this ride?';
 
   @override
@@ -1209,8 +1228,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Such as SL 7, Comp or the groupset name. Optional.';
 
   @override
-  String get frameSizeHelper =>
-      'In the brand\'s own form: 56, M, S3, 17.5\". Optional.';
+  String get frameSizeHelper => '56, M or 17.5\".';
 
   @override
   String get wheelCircumference => 'Wheel circumference (mm)';
@@ -1252,6 +1270,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get openFullMap => 'Open the full map';
 
   @override
   String get save => 'Save';
@@ -1658,6 +1679,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get trainingLoadHelp =>
       'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
+
+  @override
+  String get accountSearch => 'Find an account';
+
+  @override
+  String get clearSearch => 'Clear the search';
 
   @override
   String get adminAccounts => 'Accounts';
@@ -2427,6 +2454,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recorderRideType => 'Ride type';
 
   @override
+  String get done => 'Done';
+
+  @override
+  String get recorderSettings => 'Recording settings';
+
+  @override
   String get recorderEbike => 'E-bike';
 
   @override
@@ -2867,6 +2900,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacy => 'Privacy';
+
+  @override
+  String get profileAthlete => 'Athlete';
 
   @override
   String get telemetryHelp =>

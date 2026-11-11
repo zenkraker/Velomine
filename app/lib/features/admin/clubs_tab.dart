@@ -6,6 +6,8 @@ import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
 
 /// Every club on the server, for the instance admin: create one, and turn it on or off.
 class ClubsTab extends ConsumerWidget {
@@ -43,27 +45,22 @@ class ClubsTab extends ConsumerWidget {
     final l10n = context.l10n;
     final s = ref.watch(adminClubsViewModelProvider);
 
-    ref.listen(adminClubsViewModelProvider.select((state) => state.messages), (
-      _,
-      messages,
-    ) {
-      for (final message in messages) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userMessageText(l10n, message))));
-        ref.read(adminClubsViewModelProvider.notifier).messageShown(message.id);
-      }
-    });
+    listenUserMessages(
+      ref,
+      context,
+      adminClubsViewModelProvider.select((s) => s.messages),
+      ref.read(adminClubsViewModelProvider.notifier).messageShown,
+    );
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
                 Row(
                   children: [
@@ -90,46 +87,75 @@ class ClubsTab extends ConsumerWidget {
                     ),
                   ),
                 if (s.clubs.isEmpty && !s.load.running)
-                  Text(l10n.adminNoClubs, key: const Key('no-clubs')),
+                  EmptyState(
+                    key: const Key('no-clubs'),
+                    message: l10n.adminNoClubs,
+                    icon: Icons.groups_outlined,
+                  ),
                 for (final club in s.clubs)
                   Card(
                     key: Key('club-${club.id}'),
-                    child: ListTile(
-                      leading: const Icon(Icons.groups_outlined),
-                      title: Text(club.name),
-                      subtitle: Text(
-                        [
-                          l10n.clubMemberCount(club.memberCount),
-                          if (club.ownerName != null) club.ownerName!,
-                          if (club.ownerEmail != null) club.ownerEmail!,
-                          '${l10n.adminClubJoinCode}: ${club.joinCode}',
-                        ].join(' · '),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (club.members.any((m) => m.userId != club.ownerId))
-                            IconButton(
-                              key: Key('change-owner-${club.id}'),
-                              tooltip: l10n.changeOwner,
-                              icon: const Icon(Icons.person_pin_outlined),
-                              onPressed: s.action.running
-                                  ? null
-                                  : () => _changeOwner(context, ref, club),
-                            ),
-                          Switch(
-                            key: Key('club-active-${club.id}'),
-                            value: club.isActive,
-                            onChanged: s.action.running
-                                ? null
-                                : (on) => ref
-                                      .read(
-                                        adminClubsViewModelProvider.notifier,
-                                      )
-                                      .setActive(club, on),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          title: Text(club.name),
+                          trailing:
+                              club.members.any((m) => m.userId != club.ownerId)
+                              ? IconButton(
+                                  key: Key('change-owner-${club.id}'),
+                                  tooltip: l10n.changeOwner,
+                                  icon: const Icon(Icons.person_pin_outlined),
+                                  onPressed: s.action.running
+                                      ? null
+                                      : () => _changeOwner(context, ref, club),
+                                )
+                              : null,
+                        ),
+                        // The facts sit under the tile with the card's whole width: beside the
+                        // trailing switch an email had a third of it and broke mid-word.
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            0,
+                            AppSpacing.lg,
+                            AppSpacing.sm,
                           ),
-                        ],
-                      ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: AppSpacing.xs,
+                            children: [
+                              Text(
+                                l10n.clubMemberCount(club.memberCount),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (club.ownerName != null)
+                                Text(
+                                  club.ownerName!,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              if (club.ownerEmail != null)
+                                Text(
+                                  club.ownerEmail!,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              Text(
+                                '${l10n.adminClubJoinCode}: ${club.joinCode}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SwitchListTile(
+                          key: Key('club-active-${club.id}'),
+                          title: Text(l10n.adminClubActive),
+                          value: club.isActive,
+                          onChanged: s.action.running
+                              ? null
+                              : (on) => ref
+                                    .read(adminClubsViewModelProvider.notifier)
+                                    .setActive(club, on),
+                        ),
+                      ],
                     ),
                   ),
               ],
@@ -178,7 +204,7 @@ class _CreateClubDialogState extends State<_CreateClubDialog> {
         width: 420,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          spacing: 12,
+          spacing: AppSpacing.md,
           children: [
             TextField(
               key: const Key('club-name'),
@@ -194,7 +220,7 @@ class _CreateClubDialogState extends State<_CreateClubDialog> {
               decoration: InputDecoration(
                 labelText: l10n.adminClubOwnerEmail,
                 helperText: l10n.adminClubOwnerHelp,
-                helperMaxLines: 2,
+                helperMaxLines: 3,
               ),
             ),
             if (problem != null)
@@ -254,7 +280,7 @@ class _OwnerDialogState extends State<_OwnerDialog> {
         width: 420,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          spacing: 12,
+          spacing: AppSpacing.md,
           children: [
             Text(l10n.chooseOwner),
             DropdownButtonFormField<String>(

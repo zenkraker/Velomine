@@ -21,7 +21,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Admin'));
+    await openAccount(tester, 'admin');
     await tester.pumpAndSettle();
   }
 
@@ -31,6 +31,22 @@ void main() {
     await tester.tap(find.byKey(Key('$item-${a.id}')));
     await tester.pumpAndSettle();
   }
+
+  testWidgets('AccountsTab_ShouldShowOnlyMatchingAccounts_WhenSearched', (
+    tester,
+  ) async {
+    final ada = server.add('ada@example.com', name: 'Ada');
+    final bob = server.add('bob@example.com', name: 'Bob');
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-accounts')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('account-search')), 'ada');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(Key('user-${ada.id}')), findsOneWidget);
+    expect(find.byKey(Key('user-${bob.id}')), findsNothing);
+  });
 
   testWidgets('AccountsTab_ShouldApproveWaitingAccount_WhenApproved', (
     tester,
@@ -227,7 +243,8 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 
-    expect(find.text('Admin'), findsNothing);
+    await openAccountMenu(tester);
+    expect(find.byKey(const Key('account-admin')), findsNothing);
     expect(find.text('Bikes'), findsOneWidget);
   });
 }

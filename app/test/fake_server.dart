@@ -2074,6 +2074,19 @@ ProviderContainer containerOf(WidgetTester tester) => ProviderScope.containerOf(
   listen: false,
 );
 
+/// Opens the account menu in the title bar.
+Future<void> openAccountMenu(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('account-menu')));
+  await tester.pumpAndSettle();
+}
+
+/// Opens the account menu and picks [item]: `profile`, `admin` or `sign-out`.
+Future<void> openAccount(WidgetTester tester, String item) async {
+  await openAccountMenu(tester);
+  await tester.tap(find.byKey(Key('account-$item')));
+  await tester.pumpAndSettle();
+}
+
 class FakeLocationService implements LocationService {
   FakeLocationService([this.position]);
 

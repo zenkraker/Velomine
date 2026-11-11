@@ -201,7 +201,7 @@ codegraph telemetry off
 codegraph init
 ```
 
-- `just setup` restores the .NET tools, fetches the Flutter packages (`flutter pub get`) and creates an Android emulator named `velomine`.
+- `just setup` restores the .NET tools, fetches the Flutter packages (`flutter pub get`) and creates an Android emulator named `velomine`: a 1080×2400 phone at 420 dpi, the most common Android screen in use.
 - `codegraph telemetry off` is a one-time setting per machine. `codegraph init` builds the code index in `.codegraph/`, which is git-ignored.
 
 ### 8. Try it

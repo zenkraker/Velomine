@@ -196,6 +196,24 @@ void main() {
     expect(store.states['r1']?.isUploaded, isTrue);
   });
 
+  test('UploadQueue_ShouldReportTheServerRide_WhenTheUploadIsDone', () async {
+    final uploaded = <String>[];
+    queue = RideUploadQueue(
+      recorder: recorder,
+      uploader: uploader,
+      store: store,
+      accountId: 'id-rider',
+      pollInterval: Duration.zero,
+      telemetry: telemetry,
+      onRideUploaded: uploaded.add,
+    );
+    await queue.init();
+    await queue.resume([ready('r1')]);
+    await settle(queue, 'r1');
+
+    expect(uploaded, ['server-r1']);
+  });
+
   test('UploadQueue_ShouldTreatAsUploaded_WhenServerSaysDuplicate', () async {
     uploader.pollStatus = 'duplicate';
     await queue.init();

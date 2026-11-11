@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/chart_chrome.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 String _periodWord(AppLocalizations l10n, String period) => switch (period) {
@@ -43,7 +44,6 @@ class TotalsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = Theme.of(context).textTheme.labelSmall!;
     final l10n = context.l10n;
     final current = totals.isEmpty ? null : totals.last;
     return Semantics(
@@ -60,7 +60,7 @@ class TotalsChart extends StatelessWidget {
             labels: [for (final t in totals) periodLabel(period, t.start)],
             bar: scheme.primary.withValues(alpha: 0.55),
             currentBar: scheme.primary,
-            labelStyle: label.copyWith(color: scheme.onSurfaceVariant),
+            labelStyle: chartLabelStyle(context),
           ),
         ),
       ),

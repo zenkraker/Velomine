@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers.dart';
 import '../../core/telemetry.dart';
+import '../rides/rides_view_model.dart';
 import 'recorder.dart';
 import 'recorder_factory.dart';
 import 'recorder_settings.dart';
@@ -45,6 +48,9 @@ RideUploadQueue? uploadQueue(Ref ref) {
     serverUrl: session.serverUrl,
     pollInterval: ref.watch(ridePollIntervalProvider),
     onUnauthorized: session.sessionExpired,
+    // A ride that just arrived belongs in the list, with its filters, without a pull.
+    onRideUploaded: (_) =>
+        unawaited(ref.read(ridesViewModelProvider.notifier).refresh()),
   );
   Future.microtask(queue.init);
   ref.onDispose(queue.dispose);

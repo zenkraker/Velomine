@@ -140,6 +140,36 @@ abstract class AppLocalizations {
   /// **'Admin'**
   String get navAdmin;
 
+  /// No description provided for @accountMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountMenu;
+
+  /// No description provided for @recordPermissionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting asks for your position and shows a notification while the ride records, even with the screen off.'**
+  String get recordPermissionHelp;
+
+  /// No description provided for @rideNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get rideNoData;
+
+  /// No description provided for @sessionsNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get sessionsNavTitle;
+
+  /// No description provided for @twoFactorNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor'**
+  String get twoFactorNavTitle;
+
   /// No description provided for @notifications.
   ///
   /// In en, this message translates to:
@@ -1730,6 +1760,12 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @rideActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride actions'**
+  String get rideActions;
+
   /// No description provided for @deleteRideTitle.
   ///
   /// In en, this message translates to:
@@ -2249,7 +2285,7 @@ abstract class AppLocalizations {
   /// No description provided for @frameSizeHelper.
   ///
   /// In en, this message translates to:
-  /// **'In the brand\'s own form: 56, M, S3, 17.5\". Optional.'**
+  /// **'56, M or 17.5\".'**
   String get frameSizeHelper;
 
   /// No description provided for @wheelCircumference.
@@ -2323,6 +2359,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @openFullMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the full map'**
+  String get openFullMap;
 
   /// No description provided for @save.
   ///
@@ -3055,6 +3097,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.'**
   String get trainingLoadHelp;
+
+  /// No description provided for @accountSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Find an account'**
+  String get accountSearch;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the search'**
+  String get clearSearch;
 
   /// No description provided for @adminAccounts.
   ///
@@ -4460,6 +4514,18 @@ abstract class AppLocalizations {
   /// **'Ride type'**
   String get recorderRideType;
 
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @recorderSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording settings'**
+  String get recorderSettings;
+
   /// No description provided for @recorderEbike.
   ///
   /// In en, this message translates to:
@@ -5215,6 +5281,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy'**
   String get privacy;
+
+  /// No description provided for @profileAthlete.
+  ///
+  /// In en, this message translates to:
+  /// **'Athlete'**
+  String get profileAthlete;
 
   /// No description provided for @telemetryHelp.
   ///

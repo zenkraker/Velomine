@@ -13,7 +13,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.byKey(const Key('open-profile')));
+    await openAccount(tester, 'profile');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('profile-ride-privacy')));
     await tester.tap(find.byKey(const Key('profile-ride-privacy')));

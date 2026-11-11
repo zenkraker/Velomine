@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
 
 /// Today's readiness: a band, the advice, and the factors that produced it.
 class ReadinessCard extends StatelessWidget {
@@ -19,7 +20,7 @@ class ReadinessCard extends StatelessWidget {
       return Card(
         key: const Key('readiness-card'),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -54,22 +55,22 @@ class ReadinessCard extends StatelessWidget {
     return Card(
       key: const Key('readiness-card'),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.readiness, style: text.titleMedium),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 CircleAvatar(
-                  radius: 27,
+                  radius: 34,
                   backgroundColor: color.withValues(alpha: 0.15),
                   child: Text(
                     '${readiness.score}',
                     key: const Key('readiness-score'),
-                    style: text.titleLarge?.copyWith(
+                    style: text.headlineMedium?.copyWith(
                       color: color,
                       fontWeight: FontWeight.w700,
                     ),
@@ -106,7 +107,7 @@ class ReadinessCard extends StatelessWidget {
             if (readiness.factors.isNotEmpty) ...[
               const SizedBox(height: 14),
               Text(l10n.readinessWhy, style: text.labelLarge),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               for (final factor in readiness.factors)
                 _FactorRow(factor: factor),
             ],

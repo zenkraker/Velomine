@@ -5,6 +5,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../core/tokens.dart';
 
 const goalPeriodIds = ['week', 'month', 'year'];
 
@@ -109,7 +110,7 @@ class _GoalFormState extends State<_GoalForm> {
         width: 360,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          spacing: 16,
+          spacing: AppSpacing.lg,
           children: [
             DropdownButtonFormField<String>(
               key: const Key('goal-period'),
@@ -209,7 +210,7 @@ class GoalCard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 4, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8,
+          spacing: AppSpacing.sm,
           children: [
             Row(
               children: [
@@ -229,7 +230,7 @@ class GoalCard extends StatelessWidget {
                 IconButton(
                   key: Key('goal-edit-${goal.id}'),
                   tooltip: l10n.goalChangeTarget,
-                  icon: const Icon(Icons.edit),
+                  icon: const Icon(Icons.edit_outlined),
                   onPressed: onEdit,
                 ),
                 IconButton(

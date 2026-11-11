@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n.dart';
 import '../../../core/map_defaults.dart';
+import '../../../core/widgets/chart_chrome.dart';
 import '../../../core/theme.dart';
 import 'full_route_map.dart';
 import 'geo.dart';
 import 'lap_range.dart';
 import 'ride_series.dart';
 import 'route_painter.dart';
+import '../../../core/tokens.dart';
 
 /// The route on a map. With a tile address the map has a background of map tiles; without one the route is drawn
 /// alone and nothing is requested from any outside server. A marker follows the selected moment.
@@ -120,34 +122,29 @@ class _RouteMapState extends State<RouteMap> {
                             Positioned(
                               right: 0,
                               bottom: 0,
-                              child: Container(
+                              child: MapAttribution(
                                 key: const Key('map-attribution'),
-                                color: Colors.white.withValues(alpha: 0.75),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                child: Text(
-                                  widget.attribution!,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: Colors.black87),
-                                ),
+                                text: widget.attribution!,
                               ),
                             ),
                           Positioned(
                             top: 8,
                             right: 8,
-                            child: Container(
+                            child: MapControl(
                               key: const Key('open-full-map'),
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.45),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.open_in_full,
-                                size: 18,
-                                color: Colors.white,
+                              icon: Icons.open_in_full,
+                              tooltip: l10n.openFullMap,
+                              filled: false,
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => FullRouteMapScreen(
+                                    data: widget.data,
+                                    selected: widget.selected,
+                                    selectedLap: widget.selectedLap,
+                                    tileUrl: widget.tileUrl,
+                                    attribution: widget.attribution,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -215,7 +212,7 @@ class _HeartRateLegend extends StatelessWidget {
     return Row(
       children: [
         Text(context.l10n.seriesHeartRate, style: text.labelSmall),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Container(
             key: const Key('heart-rate-legend'),
@@ -231,7 +228,7 @@ class _HeartRateLegend extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Text('$min–$max bpm', style: text.labelSmall),
       ],
     );

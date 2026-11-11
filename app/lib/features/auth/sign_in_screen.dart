@@ -10,6 +10,7 @@ import '../../core/session.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'auth_view_models.dart';
 import 'password_field.dart';
+import '../../core/tokens.dart';
 
 String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
     switch (problem) {
@@ -86,7 +87,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               child: AutofillGroup(
                 child: ListView(
                   shrinkWrap: true,
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   children: [
                     Text(
                       'Velomine',
@@ -94,7 +95,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       textAlign: TextAlign.center,
                     ),
                     if (widget.onChangeServer != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -114,15 +115,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         ],
                       ),
                     ],
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xl),
                     if (s.challenge != null) ...[
                       Text(
                         l10n.twoFactorTitle,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(l10n.twoFactorHelp),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       TextField(
                         key: const Key('two-factor-code'),
                         controller: _code,
@@ -134,7 +135,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         onSubmitted: (_) => _verifyCode(),
                       ),
                       if (message != null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           message,
                           key: const Key('sign-in-error'),
@@ -143,7 +144,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       FilledButton(
                         key: const Key('two-factor-verify'),
                         onPressed: s.command.running ? null : _verifyCode,
@@ -166,7 +167,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         autofillHints: const [AutofillHints.email],
                         decoration: InputDecoration(labelText: l10n.email),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       PasswordField(
                         fieldKey: const Key('password'),
                         visibilityKey: const Key('password-visibility'),
@@ -194,7 +195,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         ),
                       ),
                       if (message != null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           message,
                           key: const Key('sign-in-error'),
@@ -204,7 +205,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         ),
                       ],
                       if (restoreProblem != null) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         OutlinedButton(
                           key: const Key('retry-session'),
                           onPressed: ref
@@ -213,7 +214,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           child: Text(l10n.tryAgain),
                         ),
                       ],
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       FilledButton(
                         key: const Key('sign-in'),
                         onPressed: s.command.running ? null : _signIn,
@@ -222,7 +223,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       if (kIsWeb
                           ? (sso?.enabled ?? false)
                           : (sso?.appSsoEnabled ?? false)) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         OutlinedButton(
                           key: const Key('sso'),
                           onPressed: widget.startSso,
@@ -233,7 +234,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       TextButton(
                         key: const Key('to-register'),
                         onPressed: () => context.push('/register'),

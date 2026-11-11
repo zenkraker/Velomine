@@ -10,6 +10,7 @@ import '../rides/detail/route_map.dart';
 import '../rides/detail/series_chart.dart';
 import '../rides/ride_type_chips.dart';
 import 'coach_ride_view_model.dart';
+import '../../core/tokens.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
 class CoachRideScreen extends ConsumerWidget {
@@ -18,7 +19,6 @@ class CoachRideScreen extends ConsumerWidget {
     required this.clubId,
     required this.userId,
     required this.rideId,
-    required this.onBack,
     this.tileUrl,
     this.attribution,
   });
@@ -26,7 +26,6 @@ class CoachRideScreen extends ConsumerWidget {
   final String clubId;
   final String userId;
   final String rideId;
-  final VoidCallback onBack;
   final String? tileUrl;
   final String? attribution;
 
@@ -40,26 +39,15 @@ class CoachRideScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final ride = c.ride;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 920),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
-                Row(
-                  children: [
-                    TextButton.icon(
-                      key: const Key('coach-ride-back'),
-                      onPressed: onBack,
-                      icon: const Icon(Icons.arrow_back),
-                      label: Text(l10n.athletesTitle),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
                 if (c.notFound)
                   Text(
                     l10n.coachRideNotFound,
@@ -76,7 +64,7 @@ class CoachRideScreen extends ConsumerWidget {
                   Text(l10n.coachReadOnly, style: text.bodySmall),
                   if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
                   Wrap(
-                    spacing: 24,
+                    spacing: AppSpacing.xl,
                     runSpacing: 12,
                     children: [
                       _Value(l10n.statDistance, km(ride.distanceM)),

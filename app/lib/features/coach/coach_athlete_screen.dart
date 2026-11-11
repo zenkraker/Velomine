@@ -9,6 +9,7 @@ import '../../core/l10n.dart';
 import '../progress/power_summary.dart';
 import '../progress/training_summary.dart';
 import 'coach_athlete_view_model.dart';
+import '../../core/tokens.dart';
 
 /// One athlete as their coach sees them: shared summary, training load and recent rides.
 class CoachAthleteScreen extends ConsumerWidget {
@@ -16,13 +17,11 @@ class CoachAthleteScreen extends ConsumerWidget {
     super.key,
     required this.clubId,
     required this.userId,
-    required this.onBack,
     required this.onOpenRide,
   });
 
   final String clubId;
   final String userId;
-  final VoidCallback onBack;
   final void Function(String rideId) onOpenRide;
 
   @override
@@ -32,24 +31,15 @@ class CoachAthleteScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final summary = c.summary;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 920),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
+              spacing: AppSpacing.md,
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('coach-back-to-athletes'),
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back),
-                    label: Text(l10n.athletesTitle),
-                  ),
-                ),
                 if (c.notFound)
                   Text(
                     l10n.coachAthleteNotFound,
@@ -71,7 +61,7 @@ class CoachAthleteScreen extends ConsumerWidget {
                   ),
                   Text(l10n.coachReadOnly, style: text.bodySmall),
                   Wrap(
-                    spacing: 8,
+                    spacing: AppSpacing.sm,
                     children: [
                       if (summary.sharesRides)
                         Chip(label: Text(l10n.sharesRides)),
@@ -172,15 +162,15 @@ class _CoachWellbeingCard extends StatelessWidget {
     return Card(
       key: const Key('coach-wellbeing'),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.coachWellbeing, style: text.titleMedium),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(l10n.coachWellbeingNoNotes, style: text.bodySmall),
             if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
             ],
             for (final checkIn in wellbeing.checkIns)

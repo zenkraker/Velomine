@@ -262,7 +262,7 @@ void main() {
       expect(find.byKey(const Key('total-0')), findsOneWidget);
       expect(find.text('42.5 km'), findsWidgets);
 
-      await tester.tap(find.byKey(const Key('sign-out')));
+      await openAccount(tester, 'sign-out');
       await tester.pumpAndSettle();
       server.totals.clear();
       server.goals.clear();

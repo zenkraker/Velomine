@@ -80,7 +80,7 @@ void main() {
 
     expect(find.text('Rides'), findsWidgets);
 
-    await tester.tap(find.byKey(const Key('open-profile')));
+    await openAccount(tester, 'profile');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('profile-language')));
     await tester.tap(find.byKey(const Key('profile-language')));

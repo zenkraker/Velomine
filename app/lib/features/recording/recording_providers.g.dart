@@ -60,7 +60,7 @@ final class UploadQueueProvider
   }
 }
 
-String _$uploadQueueHash() => r'5a63670093e31a12d6b2a051885382e60f1a4c3e';
+String _$uploadQueueHash() => r'7e92a33770f163d3df59e73dae0b51914027bc9a';
 
 /// The upload queue's state as a stream: one subscription for every screen that
 /// shows upload progress. Empty on the web, which has no recorder.

@@ -8,6 +8,11 @@
   "navProgress": "Progress",
   "navBikes": "Bikes",
   "navAdmin": "Admin",
+  "accountMenu": "Account",
+  "recordPermissionHelp": "Starting asks for your position and shows a notification while the ride records, even with the screen off.",
+  "rideNoData": "No data",
+  "sessionsNavTitle": "Sessions",
+  "twoFactorNavTitle": "Two-factor",
 
   "notifications": "Notifications",
   "notificationsUnread": "Notifications, {count} unread",
@@ -395,6 +400,7 @@
     }
   },
   "delete": "Delete",
+  "rideActions": "Ride actions",
   "deleteRideTitle": "Delete this ride?",
   "deleteRideBody": "The ride, its charts and the file you uploaded are removed. This cannot be undone.",
   "keepIt": "Keep it",
@@ -650,7 +656,7 @@
   "frameSize": "Frame size",
   "modelYearHelper": "Such as 2023. Optional.",
   "buildSpecHelper": "Such as SL 7, Comp or the groupset name. Optional.",
-  "frameSizeHelper": "In the brand's own form: 56, M, S3, 17.5\". Optional.",
+  "frameSizeHelper": "56, M or 17.5\".",
   "wheelCircumference": "Wheel circumference (mm)",
   "wheelHelper": "Typical values below; measure one roll of your own wheel for the exact number.",
   "initialDistance": "Distance before Velomine (km)",
@@ -670,6 +676,7 @@
   "errorInitialDistance": "Distance before Velomine must be 0 or more.",
   "cancel": "Cancel",
   "close": "Close",
+  "openFullMap": "Open the full map",
   "save": "Save",
 
   "replacePartTitle": "Replace {name}",
@@ -891,6 +898,8 @@
   },
   "trainingLoadHelp": "Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.",
 
+  "accountSearch": "Find an account",
+  "clearSearch": "Clear the search",
   "adminAccounts": "Accounts",
   "adminSettings": "Settings",
   "adminOverview": "Overview",
@@ -1229,6 +1238,8 @@
   "lapsTitle": "Laps",
   "lap": "Lap",
   "recorderRideType": "Ride type",
+  "done": "Done",
+  "recorderSettings": "Recording settings",
   "recorderEbike": "E-bike",
   "recorderEbikeHelp": "Counts as assisted and prefers your e-bike.",
 
@@ -1490,6 +1501,7 @@
   "customPart": "Custom",
   "customHelper": "Keep this part out of the shared catalogue; it will not be sent to the publisher.",
   "privacy": "Privacy",
+  "profileAthlete": "Athlete",
   "telemetryHelp": "Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.",
   "crashReports": "Crash reports",
   "crashReportsHelp": "Stack traces and app version, so a bug can be fixed.",

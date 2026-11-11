@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/format.dart';
 import '../../../core/l10n.dart';
 import '../../../core/map_defaults.dart';
+import '../../../core/widgets/chart_chrome.dart';
 import '../../../core/theme.dart';
 import 'geo.dart';
 import 'lap_range.dart';
@@ -159,10 +160,11 @@ class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
                           Positioned(
                             top: 8,
                             left: 8,
-                            child: IconButton.filledTonal(
+                            child: MapControl(
                               key: const Key('full-map-close'),
+                              icon: Icons.close,
+                              tooltip: l10n.close,
                               onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(Icons.close),
                             ),
                           ),
                           if (widget.attribution != null &&
@@ -170,18 +172,7 @@ class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
                             Positioned(
                               right: 0,
                               bottom: 0,
-                              child: Container(
-                                color: Colors.white.withValues(alpha: 0.75),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                child: Text(
-                                  widget.attribution!,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: Colors.black87),
-                                ),
-                              ),
+                              child: MapAttribution(text: widget.attribution!),
                             ),
                         ],
                       ),

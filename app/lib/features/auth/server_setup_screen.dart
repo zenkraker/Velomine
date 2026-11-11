@@ -5,6 +5,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
 import '../../core/server_config.dart';
+import '../../core/tokens.dart';
 
 part 'server_setup_screen.g.dart';
 
@@ -119,20 +120,20 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
           constraints: const BoxConstraints(maxWidth: 440),
           child: ListView(
             shrinkWrap: true,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             children: [
               Text(
                 'Velomine',
                 style: Theme.of(context).textTheme.headlineLarge,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 l10n.setupTitle,
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
               TextField(
                 key: const Key('server-url'),
                 controller: _url,
@@ -150,7 +151,7 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
                 },
               ),
               if (_url.text.trim().toLowerCase().startsWith('http://')) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   l10n.setupInsecure,
                   key: const Key('server-insecure'),
@@ -158,20 +159,20 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
                 ),
               ],
               if (error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Text(
                   error,
                   key: const Key('server-error'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 key: const Key('server-save'),
                 onPressed: s.busy ? null : _save,
                 child: Text(s.busy ? l10n.setupChecking : l10n.setupConnect),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 l10n.setupHelp,
                 style: Theme.of(context).textTheme.bodySmall,

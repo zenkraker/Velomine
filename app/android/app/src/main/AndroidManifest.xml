@@ -17,7 +17,7 @@
     <!-- A phone without Bluetooth LE still records GPS rides. -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
     <application
-        android:label="velomine"
+        android:label="Velomine"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">

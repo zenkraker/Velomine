@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'tokens.dart';
+
 // Brand direction D, "Contour × Night Ride" (docs/design/brand-directions.html): the Contour palette by day,
 // the Night Ride palette at night.
 
@@ -198,7 +200,7 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         side: BorderSide(color: scheme.outlineVariant),
       ),
     ),
@@ -219,7 +221,9 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     ),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
     dialogTheme: DialogThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.large),
+      ),
     ),
     extensions: [colors],
   );
