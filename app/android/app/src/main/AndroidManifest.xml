@@ -41,6 +41,52 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Share to Velomine, one file or several, from any app. Ride files arrive with unreliable types
+                 (octet-stream, text/xml, none at all), so everything is accepted here and the app decides by the
+                 file's name and first bytes. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*"/>
+            </intent-filter>
+            <!-- Open with Velomine: by the types ride files are known by... -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="application/vnd.ant.fit"/>
+                <data android:mimeType="application/fit"/>
+                <data android:mimeType="application/gpx+xml"/>
+                <data android:mimeType="application/vnd.garmin.tcx+xml"/>
+                <data android:mimeType="application/gzip"/>
+                <data android:mimeType="application/x-gzip"/>
+            </intent-filter>
+            <!-- ...and by the file's name, whatever type the sender gave it. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:host="*"/>
+                <data android:mimeType="*/*"/>
+                <data android:pathPattern=".*\\.fit"/>
+                <data android:pathPattern=".*\\.FIT"/>
+                <data android:pathPattern=".*\\.gpx"/>
+                <data android:pathPattern=".*\\.GPX"/>
+                <data android:pathPattern=".*\\.tcx"/>
+                <data android:pathPattern=".*\\.TCX"/>
+                <data android:pathPattern=".*\\.fit\\.gz"/>
+                <data android:pathPattern=".*\\.gpx\\.gz"/>
+                <data android:pathPattern=".*\\.tcx\\.gz"/>
+            </intent-filter>
         </activity>
         <service
             android:name=".RecorderService"

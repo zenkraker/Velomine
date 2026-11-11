@@ -7,6 +7,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -22,6 +23,7 @@ class MainActivity : FlutterActivity() {
     private var sensorScanner: HeartRateScanner? = null
     private val sensorScanHandler = Handler(Looper.getMainLooper())
     private val sensorStore by lazy { SensorStore(applicationContext) }
+    private var incomingChannel: MethodChannel? = null
     private val debug: Boolean
         get() = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
@@ -35,6 +37,52 @@ class MainActivity : FlutterActivity() {
         }
         registerSecureStorage(flutterEngine)
         registerRecorder(flutterEngine)
+        registerIncomingFiles(flutterEngine)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // A recreated activity (rotation) still holds the intent it was started with; it was handled the first time.
+        if (savedInstanceState == null) receiveFiles(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        receiveFiles(intent)
+    }
+
+    /** What other apps send: Share, and Open with. The app asks for the result with `take`. */
+    private fun registerIncomingFiles(flutterEngine: FlutterEngine) {
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "velomine/incoming")
+        channel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "take" -> result.success(IncomingFiles.take())
+                "peek" -> result.success(IncomingFiles.peek())
+                else -> result.notImplemented()
+            }
+        }
+        incomingChannel = channel
+    }
+
+    /** Copies the files of a Share or Open with into the app's storage, then tells the app they arrived. */
+    private fun receiveFiles(intent: Intent?) {
+        if (!IncomingIntent.isIncoming(intent)) return
+        val uris = IncomingIntent.uris(intent)
+        // Handled once: the same intent comes back after a restart of the activity.
+        intent?.action = Intent.ACTION_MAIN
+        val importer = RideImporter(applicationContext.contentResolver, RideStore(applicationContext))
+        Thread {
+            val outcome = try {
+                // A share that carried no file at all (plain text) counts as one thing that is not a ride.
+                if (uris.isEmpty()) ImportOutcome(0, 0, listOf("")) else importer.import(uris)
+            } catch (e: Exception) {
+                log("receiving files failed: $e")
+                ImportOutcome(0, 0, listOf(""))
+            }
+            IncomingFiles.record(outcome)
+            log("received files: added=${outcome.added} alreadyHere=${outcome.alreadyHere} rejected=${outcome.rejected.size}")
+            runOnUiThread { incomingChannel?.invokeMethod("arrived", null) }
+        }.start()
     }
 
     private fun registerSecureStorage(flutterEngine: FlutterEngine) {

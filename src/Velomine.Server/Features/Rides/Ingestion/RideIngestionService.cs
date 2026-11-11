@@ -135,6 +135,7 @@ public sealed class RideIngestionService(
                     UploadedAt = ride.UploadedAt,
                     // Every ride read from an imported file belongs to that import; the activity id only to the first.
                     ImportId = ride.ImportId,
+                    Quiet = ride.Quiet,
                     Source = ride.Source,
                 }
                 : ride;
@@ -190,7 +191,7 @@ public sealed class RideIngestionService(
             return;
         }
 
-        foreach (var r in read.Where(r => r.ImportId is null)) Notify.RideRead(db, time, r);
+        foreach (var r in read.Where(r => r.NotifiesMember)) Notify.RideRead(db, time, r);
         try
         {
             await db.SaveChangesAsync(ct);
@@ -208,7 +209,7 @@ public sealed class RideIngestionService(
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
         VelomineMetrics.RidesIngested.Add(read.Count(r => r.Status == RideStatus.Ready));
         // An import warns once when it finishes, not once per ride: wear is recomputed from every ride each time.
-        if (ride.ImportId is null) await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
+        if (ride.NotifiesMember) await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
     }
 
     /// <summary>
@@ -246,7 +247,7 @@ public sealed class RideIngestionService(
         ride.Status = RideStatus.Failed;
         ride.Error = code;
         // An import reports its failures once, in its counts; only a direct upload notifies per ride.
-        if (ride.ImportId is null) Notify.RideRead(db, time, ride);
+        if (ride.NotifiesMember) Notify.RideRead(db, time, ride);
         await db.SaveChangesAsync(ct);
     }
 
@@ -265,7 +266,7 @@ public sealed class RideIngestionService(
         ride.DedupKey = dedupKey;
         ride.Status = RideStatus.Duplicate;
         ride.DuplicateOf = survivor;
-        if (ride.ImportId is null) Notify.RideRead(db, time, ride);
+        if (ride.NotifiesMember) Notify.RideRead(db, time, ride);
         await db.SaveChangesAsync(ct);
     }
 

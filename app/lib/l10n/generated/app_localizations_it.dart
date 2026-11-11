@@ -906,6 +906,117 @@ class AppLocalizationsIt extends AppLocalizations {
   String get uploading => 'Caricamento…';
 
   @override
+  String get bulkChooseFolder => 'Scegli una cartella';
+
+  @override
+  String get bulkChooseFiles => 'Scegli i file';
+
+  @override
+  String get bulkDropTitle => 'Rilascia per aggiungere le tue uscite';
+
+  @override
+  String get bulkDropHint =>
+      'File o una cartella intera: vengono letti i file .fit, .gpx e .tcx, anche compressi (.gz).';
+
+  @override
+  String get bulkTitle => 'Aggiunta di uscite da file';
+
+  @override
+  String get bulkScanning => 'Sto guardando i file…';
+
+  @override
+  String bulkProgress(int done, int total) {
+    return 'Lettura di $done su $total';
+  }
+
+  @override
+  String get bulkCancel => 'Annulla';
+
+  @override
+  String get bulkStopping => 'Mi fermo…';
+
+  @override
+  String get bulkDone => 'Tutti i file sono stati letti';
+
+  @override
+  String get bulkStopped => 'Fermato prima della fine';
+
+  @override
+  String bulkAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite nuove',
+      one: '1 uscita nuova',
+      zero: 'Nessuna uscita nuova',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkAlreadyHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite erano già qui',
+      one: '1 uscita era già qui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkUnreadable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file non sono stati letti',
+      one: '1 file non è stato letto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file saltati: non sono file di uscita',
+      one: '1 file saltato: non è un file di uscita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkNotRead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file non sono stati letti',
+      one: '1 file non è stato letto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkAndMore(int count) {
+    return 'e altri $count';
+  }
+
+  @override
+  String get bulkClose => 'Chiudi';
+
+  @override
+  String get bulkSignedOut =>
+      'Accedi prima, poi aggiungi di nuovo le tue uscite.';
+
+  @override
+  String get bulkNothing =>
+      'Nessun file di uscita trovato. Velomine legge i file .fit, .gpx e .tcx, anche compressi (.gz).';
+
+  @override
+  String get bulkWaiting => 'Attendo un momento, il server è occupato…';
+
+  @override
   String get noRides => 'Nessuna uscita. Carica un file FIT, GPX o TCX.';
 
   @override

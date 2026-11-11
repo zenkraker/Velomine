@@ -1562,6 +1562,12 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("power_bests_backfilled_at");
 
+                    b.Property<bool>("Quiet")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("quiet");
+
                     b.Property<string>("Source")
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")

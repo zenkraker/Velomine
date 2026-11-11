@@ -180,6 +180,55 @@ class RideStore(context: Context) {
         return rides
     }
 
+    /** A place in the rides folder to copy a received file into before it is known to be a ride. */
+    fun newTemporaryFile(): File {
+        ridesDir.mkdirs()
+        return File.createTempFile("incoming", ".tmp", ridesDir)
+    }
+
+    /**
+     * Keeps a ride file received from another app as a ready ride, so the upload queue sends it like a recorded one.
+     * [source] is already a copy in the app's own storage; it moves into the ride's folder. [id] comes from the
+     * file's content, so the same file received twice is one ride: false means it is already here.
+     * The ride has no account until the member signed in on this phone lists it, like rides recorded before accounts.
+     */
+    fun addFile(id: String, source: File, fileName: String): Boolean {
+        val dir = File(ridesDir, id)
+        if (File(dir, SIDECAR).exists()) {
+            log("addFile $id: already here")
+            source.delete()
+            return false
+        }
+        dir.mkdirs()
+        val target = File(dir, FIT_FILE)
+        if (!source.renameTo(target)) {
+            source.copyTo(target, overwrite = true)
+            source.delete()
+        }
+        val now = System.currentTimeMillis()
+        writeSidecar(
+            dir,
+            JSONObject()
+                .put("id", id)
+                .put("startedAt", now)
+                .put("endedAt", now)
+                .put("state", "ready")
+                .put("distanceM", 0.0)
+                .put("movingS", 0.0)
+                .put("timeZoneOffsetMinutes", offsetMinutes(now))
+                .put("fileName", fileName)
+                .put("imported", true),
+        )
+        log("addFile $id: kept $fileName (${target.length()} bytes)")
+        return true
+    }
+
+    /** The name a received file arrived with, so the server lists the ride under it. */
+    fun fileName(id: String): String? {
+        val dir = rideDir(id) ?: return null
+        return readSidecar(dir)?.optString("fileName")?.takeIf { it.isNotEmpty() }
+    }
+
     fun delete(id: String): Boolean {
         log("delete $id requested")
         val dir = rideDir(id) ?: return false
