@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Notifications;
+using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Clubs;
 
@@ -17,14 +18,8 @@ public sealed class ClubsTests(PostgresFixture postgres)
     private static Task<HttpClient> AdminAsync(TestApi api) =>
         api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
 
-    private sealed record Member(string Email, Guid Id, HttpClient Client);
 
-    private static async Task<Member> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        var id = (await (await api.RegisterAsync(email)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!.Id;
-        return new Member(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
-    }
+    private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
 
     private static async Task<AdminClubResponse> CreateClubAsync(
         HttpClient admin,

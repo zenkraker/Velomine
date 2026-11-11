@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
+using Velomine.Server.Data;
 
 namespace Velomine.Server.Tests;
 
@@ -12,6 +14,7 @@ public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly List<string> databases = [];
     private PostgreSqlContainer? container;
+    private string? template;
 
     public string ServerConnection { get; private set; } = "";
 
@@ -21,23 +24,40 @@ public sealed class PostgresFixture : IAsyncLifetime
         if (existing is not null)
         {
             ServerConnection = existing;
-            return;
+        }
+        else
+        {
+            container = new PostgreSqlBuilder("postgres:17").Build();
+            await container.StartAsync();
+            ServerConnection = container.GetConnectionString();
         }
 
-        container = new PostgreSqlBuilder("postgres:17").Build();
-        await container.StartAsync();
-        ServerConnection = container.GetConnectionString();
+        // Migrate once, then clone: every test still gets its own database, but not its own migration run.
+        template = "t_template_" + Guid.NewGuid().ToString("N");
+        await ExecuteAsync($"CREATE DATABASE {template}");
+        var options = new DbContextOptionsBuilder<VelomineDbContext>()
+            .UseNpgsql(new NpgsqlConnectionStringBuilder(ServerConnection) { Database = template }.ConnectionString)
+            .Options;
+        await using var db = new VelomineDbContext(options);
+        await db.Database.MigrateAsync();
+        // A pooled connection would keep the template busy, and PostgreSQL refuses to clone a template in use.
+        NpgsqlConnection.ClearAllPools();
     }
 
     /// <summary>Creates an empty database and returns its connection string.</summary>
     public async Task<string> CreateDatabaseAsync()
     {
         var name = "t_" + Guid.NewGuid().ToString("N");
-        await using var admin = new NpgsqlConnection(ServerConnection);
-        await admin.OpenAsync();
-        await new NpgsqlCommand($"CREATE DATABASE {name}", admin).ExecuteNonQueryAsync();
+        await ExecuteAsync($"CREATE DATABASE {name} TEMPLATE {template}");
         databases.Add(name);
         return new NpgsqlConnectionStringBuilder(ServerConnection) { Database = name }.ConnectionString;
+    }
+
+    private async Task ExecuteAsync(string sql)
+    {
+        await using var admin = new NpgsqlConnection(ServerConnection);
+        await admin.OpenAsync();
+        await new NpgsqlCommand(sql, admin).ExecuteNonQueryAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -54,6 +74,8 @@ public sealed class PostgresFixture : IAsyncLifetime
         await admin.OpenAsync();
         foreach (var name in databases)
             await new NpgsqlCommand($"DROP DATABASE IF EXISTS {name} WITH (FORCE)", admin).ExecuteNonQueryAsync();
+        if (template is not null)
+            await new NpgsqlCommand($"DROP DATABASE IF EXISTS {template} WITH (FORCE)", admin).ExecuteNonQueryAsync();
     }
 }
 

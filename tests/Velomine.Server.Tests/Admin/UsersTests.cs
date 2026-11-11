@@ -11,6 +11,7 @@ using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
+using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Admin;
 
@@ -23,31 +24,13 @@ public sealed class UsersTests(PostgresFixture postgres)
 
     private static Task<HttpClient> AdminAsync(TestApi api) => api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
 
-    private sealed record Member(string Email, Guid Id, HttpClient Client);
 
-    private static async Task<Member> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        var id = (await (await api.RegisterAsync(email)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!.Id;
-        return new Member(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
-    }
+    private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
 
     private static async Task<AdminUserSummary[]> UsersAsync(HttpClient admin) =>
         (await admin.GetFromJsonAsync<ListAdminUsersResponse>("/api/v1/admin/users", Ct))!.Users;
 
-    private static async Task UploadAndWaitAsync(HttpClient client, byte[] file)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            if ((await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task UploadAndWaitAsync(HttpClient client, byte[] file) => TestApi.UploadAndWaitAsync(client, file);
 
     private static int FileCount(TestApi api)
     {

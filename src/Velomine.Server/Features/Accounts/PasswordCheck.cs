@@ -20,8 +20,7 @@ public static class PasswordCheck
         if (string.IsNullOrEmpty(password)) return Result.Wrong;
 
         var check = await signIn.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
-        // Identity reports a right password on a two-factor account as "needs a second factor", not as success.
-        if (check.Succeeded || check.RequiresTwoFactor) return Result.Ok;
+        if (check.Succeeded) return Result.Ok;
         return check.IsLockedOut ? Result.LockedOut : Result.Wrong;
     }
 }

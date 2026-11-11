@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -357,10 +355,5 @@ void main() {
         findsOneWidget,
       );
     });
-  });
-
-  test('FakeServer_ShouldKeepNumbersAsIntegers_WhenDecodingProfileJson', () {
-    // Guards the test helper: the app sends numbers, not strings.
-    expect(jsonDecode('{"ftpW":265}')['ftpW'], isA<int>());
   });
 }

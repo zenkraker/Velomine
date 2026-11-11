@@ -49,6 +49,12 @@ public sealed class PasswordTests(PostgresFixture postgres)
     private static async Task<HttpResponseMessage> ForgotAsync(TestApi api, string email) =>
         await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/password/forgot", new ForgotPasswordRequest(email), Ct);
 
+    /// <summary>The reset email is sent after the 202; wait for the background send before reading it.</summary>
+    private static async Task WaitForMailAsync(FakeEmailSender mail)
+    {
+        for (var i = 0; i < 100 && mail.Sent.Count == 0; i++) await Task.Delay(20, Ct);
+    }
+
     private static Dictionary<string, string> Fragment(string link) =>
         new Uri(link).Fragment.TrimStart('#')
             .Split('&', StringSplitOptions.RemoveEmptyEntries)
@@ -79,6 +85,24 @@ public sealed class PasswordTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task ForgotPassword_ShouldAnswerBeforeTheEmailIsSent()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+        var (email, _) = await NewMemberAsync(api);
+        var gate = new TaskCompletionSource<bool>();
+        mail.Gate = gate;
+
+        var response = await ForgotAsync(api, email);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        Assert.Empty(mail.Sent);
+        gate.SetResult(true);
+        for (var i = 0; i < 100 && mail.Sent.Count == 0; i++) await Task.Delay(20, Ct);
+        Assert.Single(mail.Sent);
+    }
+
+    [Fact]
     public async Task ForgotPassword_ShouldSendOneLink_WhenAccountHasPassword()
     {
         var (api, mail) = await StartAsync(postgres);
@@ -86,6 +110,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         var (email, _) = await NewMemberAsync(api);
 
         var response = await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var sent = Assert.Single(mail.Sent);
@@ -116,6 +141,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         var response = await api.CreateClient().SendAsync(request, Ct);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        await WaitForMailAsync(mail);
         var link = Regex.Match(Assert.Single(mail.Sent).Body, @"https?://\S+").Value;
         Assert.StartsWith("https://club.example/reset-password#", link);
         Assert.DoesNotContain("evil.example", link);
@@ -129,6 +155,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         var (email, _) = await NewMemberAsync(api);
 
         var response = await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
 
         Assert.Equal((HttpStatusCode)503, response.StatusCode);
         Assert.Empty(mail.Sent);
@@ -155,6 +182,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         }
 
         var response = await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var sent = Assert.Single(mail.Sent);
@@ -173,6 +201,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
             "/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "it" }, Ct);
 
         await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
 
         var sent = Assert.Single(mail.Sent);
         Assert.Equal("Reimposta la password di Velomine", sent.Subject);
@@ -190,6 +219,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
             "/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "de" }, Ct);
 
         await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
 
         var sent = Assert.Single(mail.Sent);
         Assert.Equal("Reset your Velomine password", sent.Subject);
@@ -203,6 +233,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await using var _ = api;
         var (email, _) = await NewMemberAsync(api);
         await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
         var (linkEmail, token) = FromEmail(mail);
 
         var response = await ResetAsync(api, linkEmail, token, "New-password-1");
@@ -219,6 +250,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await using var _ = api;
         var (email, _) = await NewMemberAsync(api);
         await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
         var (linkEmail, token) = FromEmail(mail);
         Assert.Equal(HttpStatusCode.NoContent, (await ResetAsync(api, linkEmail, token, "New-password-1")).StatusCode);
 
@@ -235,6 +267,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await using var _ = api;
         var (email, _) = await NewMemberAsync(api);
         await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
         var (linkEmail, token) = FromEmail(mail);
 
         await Task.Delay(300, Ct);
@@ -250,6 +283,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await using var _ = api;
         var (email, _) = await NewMemberAsync(api);
         await ForgotAsync(api, email);
+        await WaitForMailAsync(mail);
         var (linkEmail, token) = FromEmail(mail);
 
         var response = await ResetAsync(api, linkEmail, token, "short");
@@ -287,6 +321,24 @@ public sealed class PasswordTests(PostgresFixture postgres)
             new RefreshRequest(oldRefresh), Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, refreshed.StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await api.LoginAsync(email, "New-password-1")).StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_ShouldLockTheAccount_WhenTheCurrentPasswordIsWrongRepeatedly()
+    {
+        var (api, _) = await StartAsync(postgres);
+        await using var __ = api;
+        var (email, member) = await NewMemberAsync(api);
+
+        for (var attempt = 0; attempt < 5; attempt++)
+            await member.PutAsJsonAsync("/api/v1/accounts/me/password",
+                new ChangePasswordRequest("Wrong-password-1", "New-password-1"), Ct);
+
+        var blocked = await member.PutAsJsonAsync("/api/v1/accounts/me/password",
+            new ChangePasswordRequest(TestApi.MemberPassword, "New-password-1"), Ct);
+
+        Assert.Equal((HttpStatusCode)423, blocked.StatusCode);
+        Assert.Equal((HttpStatusCode)423, (await api.LoginAsync(email, TestApi.MemberPassword)).StatusCode);
     }
 
     [Fact]

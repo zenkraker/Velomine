@@ -175,7 +175,17 @@ public sealed class UpdateBike(VelomineDbContext db, TimeProvider time) : Endpoi
             if (!active) bike.IsDefault = false; // an archived bike cannot be the default
         }
 
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            AddError("This bike changed on another device. Reload it and try again.");
+            await Send.ErrorsAsync(409, ct);
+            return;
+        }
+
         await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }
 }

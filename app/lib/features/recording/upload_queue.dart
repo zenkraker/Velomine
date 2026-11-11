@@ -114,6 +114,7 @@ class RideUploadQueue {
     required this.telemetry,
     this.serverUrl,
     this.pollInterval = const Duration(seconds: 1),
+    this.maxRemembered = 200,
     this.onRideUploaded,
   });
 
@@ -126,6 +127,9 @@ class RideUploadQueue {
   final String accountId;
   final String? serverUrl;
   final Duration pollInterval;
+
+  /// How many finished uploads stay in memory and in preferences, so the map does not grow for every ride ever.
+  final int maxRemembered;
 
   /// Called with the server id once a ride is uploaded, so the rides list can read again.
   final void Function(String serverRideId)? onRideUploaded;
@@ -432,8 +436,24 @@ class RideUploadQueue {
 
   void _set(String rideId, UploadState state, {required bool persist}) {
     _states[rideId] = state;
+    if (state.isUploaded) _pruneUploaded();
     if (persist) unawaited(_persist());
     _notify();
+  }
+
+  /// The map keeps insertion order, so the oldest finished entries go first.
+  void _pruneUploaded() {
+    final extra =
+        _states.values.where((state) => state.isUploaded).length -
+        maxRemembered;
+    if (extra <= 0) return;
+    final oldest = _states.entries
+        .where((entry) => entry.value.isUploaded)
+        .take(extra)
+        .toList();
+    for (final entry in oldest) {
+      _states.remove(entry.key);
+    }
   }
 
   Future<void> _persist() => store.write(Map.unmodifiable(_states));

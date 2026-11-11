@@ -31,21 +31,7 @@ public sealed class PowerCurveTests(PostgresFixture postgres)
             new UpdateProfileRequest("Rider", ftpW, weightKg, 2000, "UTC", "monday"),
             Ct);
 
-    private static async Task UploadAsync(HttpClient client, byte[] file)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task UploadAsync(HttpClient client, byte[] file) => TestApi.UploadAndWaitAsync(client, file);
 
     private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, string ownerEmail)
     {

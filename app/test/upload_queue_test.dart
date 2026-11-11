@@ -196,6 +196,29 @@ void main() {
     expect(store.states['r1']?.isUploaded, isTrue);
   });
 
+  test('UploadQueue_ShouldForgetTheOldestFinished_WhenTheListIsLong', () async {
+    final bounded = RideUploadQueue(
+      recorder: recorder,
+      uploader: uploader,
+      store: store,
+      accountId: 'id-rider',
+      pollInterval: Duration.zero,
+      maxRemembered: 2,
+      telemetry: telemetry,
+    );
+    await bounded.init();
+    for (final id in ['r1', 'r2', 'r3']) {
+      if (!recorder.rides.any((ride) => ride.id == id)) {
+        recorder.rides.add(ready(id));
+      }
+      await bounded.enqueue(id);
+      await settle(bounded, id);
+    }
+
+    expect(bounded.states.length, 2);
+    expect(bounded.states.containsKey('r1'), isFalse);
+  });
+
   test('UploadQueue_ShouldReportTheServerRide_WhenTheUploadIsDone', () async {
     final uploaded = <String>[];
     queue = RideUploadQueue(

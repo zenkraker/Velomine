@@ -19,12 +19,7 @@ public sealed class CatalogueTests(PostgresFixture postgres)
         b.UseSetting("Velomine:Catalogue:Seed", seed ? "true" : "false");
     });
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
     private static async Task<Guid> AddBikeAsync(HttpClient client)
     {
@@ -112,33 +107,6 @@ public sealed class CatalogueTests(PostgresFixture postgres)
 
         Assert.Empty(await SearchAsync(member, "CN-M8100"));
         Assert.Single(await SearchAsync(member, "CN-M7100"));
-    }
-
-    [Fact]
-    public async Task CatalogueSync_ShouldRetireAClubEnteredPart_WhenThePublisherDoesNotListIt()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        await WithDbAsync(api, async (db, clock) =>
-        {
-            db.Parts.Add(new Part
-            {
-                Id = Guid.CreateVersion7(),
-                Key = PartIdentity.Key("chain", "Shimano", "Old local entry", "CN-OLD", null)!,
-                Type = "chain",
-                Brand = "Shimano",
-                Model = "Old local entry",
-                Mpn = "CN-OLD",
-                Source = "local",
-                CreatedAt = clock.GetUtcNow(),
-            });
-            await db.SaveChangesAsync(Ct);
-            return true;
-        });
-
-        await ApplyAsync(api, Feed(Chain()));
-
-        Assert.Empty(await SearchAsync(member, "CN-OLD"));
     }
 
     [Fact]

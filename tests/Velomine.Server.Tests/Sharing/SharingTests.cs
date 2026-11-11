@@ -12,6 +12,7 @@ using Velomine.Server.Features.Coach;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Sharing;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
+using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Sharing;
 
@@ -22,14 +23,8 @@ public sealed class SharingTests(PostgresFixture postgres)
 
     private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    private sealed record Member(string Email, Guid Id, HttpClient Client);
 
-    private static async Task<Member> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        var id = (await (await api.RegisterAsync(email)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!.Id;
-        return new Member(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
-    }
+    private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
 
     private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
     {
@@ -59,21 +54,7 @@ public sealed class SharingTests(PostgresFixture postgres)
             new UpdateSharingRequest { Rides = rides, Analytics = analytics, Routes = routes, Wellbeing = wellbeing },
             Ct);
 
-    private static async Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file) => TestApi.UploadAndWaitAsync(client, file);
 
     /// <summary>Counts the reads a request made, so a batching change that adds one per athlete is caught.</summary>
     private sealed class SelectCounter : DbCommandInterceptor

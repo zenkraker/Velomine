@@ -4,19 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/theme.dart';
 
-/// WCAG relative luminance of [color].
-double _luminance(Color color) {
-  double channel(double value) => value <= 0.03928
-      ? value / 12.92
-      : math.pow((value + 0.055) / 1.055, 2.4).toDouble();
-  return 0.2126 * channel(color.r) +
-      0.7152 * channel(color.g) +
-      0.0722 * channel(color.b);
-}
-
 double _contrast(Color foreground, Color background) {
-  final a = _luminance(foreground);
-  final b = _luminance(background);
+  final a = foreground.computeLuminance();
+  final b = background.computeLuminance();
   return (math.max(a, b) + 0.05) / (math.min(a, b) + 0.05);
 }
 

@@ -40,7 +40,17 @@ public sealed class SetRideBike(VelomineDbContext db) : Endpoint<SetRideBikeRequ
         }
 
         ride.BikeId = req.BikeId;
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            AddError("This ride changed on another device. Reload it and try again.");
+            await Send.ErrorsAsync(409, ct);
+            return;
+        }
+
         await Send.OkAsync(RideResponse.From(ride), ct);
     }
 }

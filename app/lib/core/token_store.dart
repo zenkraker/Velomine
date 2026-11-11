@@ -13,6 +13,12 @@ abstract interface class TokenStore {
   Future<T> locked<T>(Future<T> Function() body);
 }
 
+/// The refresh lock is held by the background worker; releasing it and rotating anyway would make the server treat
+/// the second rotation as a stolen token.
+class TokenLockBusy implements Exception {
+  const TokenLockBusy();
+}
+
 /// The web build (and tests that do not exercise storage) keep nothing.
 class NoopTokenStore implements TokenStore {
   const NoopTokenStore();

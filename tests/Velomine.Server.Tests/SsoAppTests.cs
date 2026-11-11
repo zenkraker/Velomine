@@ -25,7 +25,7 @@ public sealed class SsoAppTests(PostgresFixture postgres, DexFixture dex)
         await dex.EnsureStartedAsync();
         return await TestApi.StartAsync(postgres, builder =>
         {
-            builder.UseSetting("Velomine:Sso:Authority", DexFixture.Authority);
+            builder.UseSetting("Velomine:Sso:Authority", dex.Authority);
             builder.UseSetting("Velomine:Sso:AppClientId", DexFixture.AppClientId);
             builder.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");
             builder.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
@@ -78,7 +78,7 @@ public sealed class SsoAppTests(PostgresFixture postgres, DexFixture dex)
         Assert.False(info!.Enabled);
         Assert.Null(info.LoginUrl);
         Assert.True(info.AppSsoEnabled);
-        Assert.Equal(DexFixture.Authority, info.AppAuthority);
+        Assert.Equal(dex.Authority, info.AppAuthority);
         Assert.Equal(DexFixture.AppClientId, info.AppClientId);
         Assert.Contains("openid", info.AppScopes);
         Assert.Equal("com.velomine.app:/sso-callback", info.AppRedirectUri);

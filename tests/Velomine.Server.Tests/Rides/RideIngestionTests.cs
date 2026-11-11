@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using Dynastream.Fit;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Analytics;
@@ -25,12 +27,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
             more?.Invoke(b);
         });
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
     private static Task<HttpResponseMessage> UploadAsync(HttpClient client, byte[] file, string name = "ride.fit", string? key = null)
     {
@@ -566,6 +563,49 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         var response = await bob.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/type", new { Discipline = "gravel" }, Ct);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetRideType_ShouldReturnConflict_WhenTheRideChangedOnAnotherDevice()
+    {
+        var conflict = new ForcedConflict();
+        await using var api = await StartAsync(b => b.ConfigureTestServices(s => s.AddSingleton<IInterceptor>(conflict)));
+        var member = await NewMemberAsync(api);
+        var ride = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 60)));
+        conflict.RideId = ride.Id;
+
+        var response = await member.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/type", new { Discipline = "gravel" }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>Makes the ride's update carry an old xmin, as a second device's save would.</summary>
+    private sealed class ForcedConflict : SaveChangesInterceptor
+    {
+        public Guid? RideId { get; set; }
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            Conflict(eventData);
+            return ValueTask.FromResult(result);
+        }
+
+        public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
+        {
+            Conflict(eventData);
+            return result;
+        }
+
+        private void Conflict(DbContextEventData eventData)
+        {
+            if (eventData.Context is not { } db || RideId is not { } id) return;
+            foreach (var entry in db.ChangeTracker.Entries<Ride>()
+                         .Where(e => e.State == EntityState.Modified && e.Entity.Id == id))
+                entry.Property(r => r.Version).OriginalValue = 0u;
+        }
     }
 
     [Fact]

@@ -39,6 +39,7 @@ class NativeTokenStore implements TokenStore {
   Future<T> locked<T>(Future<T> Function() body) async {
     // The native side only tries once, so the waiting happens here as short pauses instead of a frozen UI.
     var held = false;
+    var unavailable = false;
     for (var attempt = 0; attempt < 50 && !held; attempt++) {
       if (attempt > 0) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -46,9 +47,11 @@ class NativeTokenStore implements TokenStore {
       try {
         held = await _channel.invokeMethod<bool>('lockRefresh') ?? false;
       } on Object {
-        break; // storage unavailable: carry on unlocked rather than block the sign-in
+        unavailable = true;
+        break; // storage unavailable: carry on unlocked rather than fail the sign-in
       }
     }
+    if (!held && !unavailable) throw const TokenLockBusy();
     try {
       return await body();
     } finally {

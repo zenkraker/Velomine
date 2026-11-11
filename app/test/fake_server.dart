@@ -18,6 +18,7 @@ import 'package:velomine/core/session.dart';
 import 'package:velomine/core/session_auth.dart';
 import 'package:velomine/core/solo_hint.dart';
 import 'package:velomine/core/telemetry.dart';
+import 'package:velomine/core/telemetry_http_client.dart';
 import 'package:velomine/core/theme_choice.dart';
 import 'package:velomine/core/token_store.dart';
 import 'package:velomine_api/api.dart';
@@ -191,6 +192,9 @@ class FakeServer {
   /// Responses held for a test, in order, by path.
   final _replyGates = <String, List<Completer<void>>>{};
 
+  /// Paths that answer 401, to prove every failed call ends the session.
+  final unauthorized = <String>{};
+
   /// Holds the next answer to [path] until the returned completer completes.
   Completer<void> delayNext(String path) {
     final gate = Completer<void>();
@@ -242,17 +246,24 @@ class FakeServer {
       refreshClient: client,
       now: now,
     );
+    final telemetryRuntime = telemetry ?? FakeTelemetryRuntime();
+    final httpClient = TelemetryHttpClient(
+      inner: client,
+      telemetry: telemetryRuntime,
+    );
     final api = ApiClient(basePath: baseUrl, authentication: auth)
-      ..client = client;
-    return Session(
+      ..client = httpClient;
+    final session = Session(
       client: api,
       auth: auth,
       appSso: appSso ?? FakeAppSso(),
       useCookies: useCookies,
       serverUrl: baseUrl,
       ssoError: ssoError,
-      telemetry: telemetry ?? FakeTelemetryRuntime(),
+      telemetry: telemetryRuntime,
     );
+    httpClient.onUnauthorized = session.sessionExpired;
+    return session;
   }
 
   FakeAccount? _caller(http.Request request) {
@@ -269,6 +280,7 @@ class FakeServer {
     }
     final path = request.url.path;
     requests.add('${request.method} $path');
+    if (unauthorized.contains(path)) return http.Response('', 401);
     final waiting = _replyGates[path];
     if (waiting != null && waiting.isNotEmpty) {
       await waiting.removeAt(0).future;

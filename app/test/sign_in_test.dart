@@ -28,6 +28,18 @@ void main() {
     },
   );
 
+  testWidgets('App_ShouldGoBackToSignIn_WhenAnApiCallAnswers401', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com');
+    server.signInBrowser(rider);
+    server.unauthorized.add('/api/v1/rides');
+
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(find.byKey(const Key('sign-in')), findsOneWidget);
+  });
+
   testWidgets(
     'SignInScreen_ShouldShowSsoButtonAndStartIt_WhenServerOffersSso',
     (tester) async {

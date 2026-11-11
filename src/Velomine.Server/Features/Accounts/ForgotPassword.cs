@@ -75,17 +75,30 @@ public sealed class ForgotPassword(
                     mail = new OutgoingEmail(user.Email!, content.Subject, content.Text, content.Html);
                 }
 
-                var result = await sender.SendAsync([mail], ct);
-                if (result.Failure is not null || result.Results[0].Outcome != EmailOutcome.Sent)
-                    logger.LogWarning("Could not send a password reset email ({Exception}).", result.Failure?.GetType().Name ?? "refused");
+                // Send after answering: waiting for SMTP here would make a registered address measurably slower.
+                SendInBackground(mail);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Never log the token. The member can try again; a failed address lookup is not revealed.
-                logger.LogWarning("Could not send a password reset email ({Exception}).", ex.GetType().Name);
+                logger.LogWarning("Could not prepare a password reset email ({Exception}).", ex.GetType().Name);
             }
         }
 
         await Send.ResponseAsync(new { }, 202, ct);
     }
+
+    private void SendInBackground(OutgoingEmail mail) => _ = Task.Run(async () =>
+    {
+        try
+        {
+            var result = await sender.SendAsync([mail], CancellationToken.None);
+            if (result.Failure is not null || result.Results[0].Outcome != EmailOutcome.Sent)
+                logger.LogWarning("Could not send a password reset email ({Exception}).", result.Failure?.GetType().Name ?? "refused");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Could not send a password reset email ({Exception}).", ex.GetType().Name);
+        }
+    });
 }

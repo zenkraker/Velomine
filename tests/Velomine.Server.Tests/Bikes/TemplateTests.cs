@@ -16,12 +16,7 @@ public sealed class TemplateTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
     private static async Task<Guid> AddBikeAsync(HttpClient client, string name = "Road bike")
     {

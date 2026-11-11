@@ -80,22 +80,6 @@ public static class ContributionOutbox
     public static string? KeyOf(BikeComponent component) =>
         PartIdentity.Key(component.Type, component.Brand, component.Model, component.Mpn, component.Gtin);
 
-    /// <summary>
-    /// Drops a copy that has not been sent yet. An edit or a switch to "custom" must not let the old values reach the
-    /// publisher.
-    /// </summary>
-    public static async Task DiscardPendingAsync(VelomineDbContext db, BikeComponent component, CancellationToken ct)
-    {
-        if (KeyOf(component) is not { } key) return;
-        var pending = await db.PartContributions
-            .Where(c => c.Key == key && c.Status == "pending")
-            .ToListAsync(ct);
-        if (pending.Count == 0) return;
-        // Saved here so the row is really gone before the new values are queued, even when nothing changed.
-        db.PartContributions.RemoveRange(pending);
-        await db.SaveChangesAsync(ct);
-    }
-
     public static async Task EnqueueAsync(VelomineDbContext db, BikeComponent component, TimeProvider clock, CancellationToken ct)
     {
         if (KeyOf(component) is null) return;

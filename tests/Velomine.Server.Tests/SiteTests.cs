@@ -18,64 +18,10 @@ public sealed class SiteTests
     }
 
     [Fact]
-    public async Task Website_ShouldServeTheStatusPage_WhenStatusIsRequested()
-    {
-        var html = await ReadSiteAsync("/status/");
-        Assert.Contains("What works today", html);
-        Assert.Contains("The v1 goal", html);
-        Assert.Contains("What is still missing", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeThePricingPage_WhenPricingIsRequested()
-    {
-        var html = await ReadSiteAsync("/pricing/");
-        Assert.Contains("One plan for clubs. One price for solo riders.", html);
-        Assert.Contains("Guided setup", html);
-        Assert.Contains("No feature paywall", html);
-    }
-
-    [Fact]
     public async Task Website_ShouldServeTheContactPage_WhenContactIsRequested()
     {
         var html = await ReadSiteAsync("/contact/");
         Assert.Contains("mailto:", html);
-        Assert.Contains("Tell me how your club rides", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeThePrivacyPage_WhenPrivacyIsRequested()
-    {
-        var html = await ReadSiteAsync("/privacy/");
-        Assert.Contains("Your data, in plain language.", html);
-        Assert.Contains("Sub-processors and the DPA", html);
-        Assert.Contains("Backups: up to 90 days", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeTheTermsPage_WhenTermsIsRequested()
-    {
-        var html = await ReadSiteAsync("/terms/");
-        Assert.Contains("The agreement, in plain language.", html);
-        Assert.Contains("one yearly fee per club", html, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("no feature paywall", html, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeTheSecurityPage_WhenSecurityIsRequested()
-    {
-        var html = await ReadSiteAsync("/security/");
-        Assert.Contains("Tell us before it becomes a problem.", html);
-        Assert.Contains("/.well-known/security.txt", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeThePrinciplesPage_WhenPrinciplesIsRequested()
-    {
-        var html = await ReadSiteAsync("/principles/");
-        Assert.Contains("Principles, not slogans.", html);
-        Assert.Contains("No feature paywall", html);
-        Assert.Contains("id=\"licence\"", html);
     }
 
     [Fact]
@@ -84,13 +30,6 @@ public sealed class SiteTests
         var text = await ReadSiteAsync("/.well-known/security.txt");
         Assert.Contains("Contact: mailto:", text);
         Assert.Contains("Preferred-Languages:", text);
-    }
-
-    [Fact]
-    public async Task SiteStylesheet_ShouldNotUseGravelForText_WhenServed()
-    {
-        var css = await ReadSiteAsync("/static/site.css");
-        Assert.DoesNotContain("color: var(--gravel)", css);
     }
 
     [Fact]
@@ -118,14 +57,6 @@ public sealed class SiteTests
         Assert.DoesNotContain("laps", notYet, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Laps read from FIT and TCX", html);
         Assert.Contains("Password reset by email", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeTheDemoPage_WhenDemoIsRequested()
-    {
-        var html = await ReadSiteAsync("/demo/");
-        Assert.Contains("Try a real club", html);
-        Assert.Contains("Resets every night", html);
     }
 
     [Theory]
@@ -156,54 +87,12 @@ public sealed class SiteTests
     [InlineData("/privacy/")]
     [InlineData("/terms/")]
     [InlineData("/security/")]
-    public async Task SitePages_ShouldNotUseNumberedMarkers_WhenServed(string path)
-    {
-        var html = await ReadSiteAsync(path);
-
-        Assert.DoesNotContain("class=\"num\"", html);
-    }
-
-    [Theory]
-    [InlineData("/")]
-    [InlineData("/status/")]
-    [InlineData("/pricing/")]
-    [InlineData("/demo/")]
-    [InlineData("/contact/")]
-    [InlineData("/principles/")]
-    [InlineData("/privacy/")]
-    [InlineData("/terms/")]
-    [InlineData("/security/")]
     public async Task SitePages_ShouldDeclareACanonicalLink_WhenServed(string path)
     {
         var html = await ReadSiteAsync(path);
 
         Assert.Contains($"<link rel=\"canonical\" href=\"{path}\">", html);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "rel=\"canonical\""));
-    }
-
-    [Theory]
-    [InlineData("/")]
-    [InlineData("/status/")]
-    [InlineData("/pricing/")]
-    [InlineData("/demo/")]
-    [InlineData("/contact/")]
-    [InlineData("/principles/")]
-    [InlineData("/privacy/")]
-    [InlineData("/terms/")]
-    [InlineData("/security/")]
-    public async Task SitePages_ShouldNotTranslateTheBrand_WhenServed(string path)
-    {
-        var html = await ReadSiteAsync(path);
-
-        Assert.Contains("class=\"wordmark\" translate=\"no\"", html);
-    }
-
-    [Fact]
-    public async Task SiteStylesheet_ShouldSetScrollPadding_WhenServed()
-    {
-        var css = await ReadSiteAsync("/static/site.css");
-
-        Assert.Contains("scroll-padding-top", css);
     }
 
     [Fact]

@@ -15,36 +15,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Admin;
 
-/// <summary>Stands in for the mail server: keeps what was sent, and can be told to fail.</summary>
-public sealed class FakeEmailSender : IEmailSender
-{
-    public List<OutgoingEmail> Sent { get; } = [];
-
-    public Exception? Fail { get; set; }
-
-    public HashSet<string> Rejected { get; } = [];
-
-    public Task<EmailBatchResult> SendAsync(IReadOnlyList<OutgoingEmail> emails, CancellationToken ct)
-    {
-        var results = new List<EmailResult>(emails.Count);
-        foreach (var email in emails)
-        {
-            if (Rejected.Contains(email.To))
-            {
-                results.Add(new EmailResult(email, EmailOutcome.RecipientRejected));
-                continue;
-            }
-
-            if (Fail is not null) return Task.FromResult(new EmailBatchResult(results, Fail));
-
-            Sent.Add(email);
-            results.Add(new EmailResult(email, EmailOutcome.Sent));
-        }
-
-        return Task.FromResult(new EmailBatchResult(results, null));
-    }
-}
-
 [Collection("postgres")]
 public sealed class EmailTests(PostgresFixture postgres)
 {

@@ -18,12 +18,7 @@ public sealed class ContributionsTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
     private static Task<HttpClient> AdminAsync(TestApi api) =>
         api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
@@ -119,31 +114,6 @@ public sealed class ContributionsTests(PostgresFixture postgres)
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
         await AddChainAsync(member, await AddBikeAsync(member), custom: true);
-
-        Assert.Equal(0, await WithDbAsync(api, (db, _) => db.PartContributions.CountAsync(Ct)));
-    }
-
-    [Fact]
-    public async Task CatalogueContributions_ShouldDropThePendingPart_WhenItBecomesCustom()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        var bikeId = await AddBikeAsync(member);
-        await AddChainAsync(member, bikeId);
-
-        var bike = await member.GetFromJsonAsync<BikeDetailResponse>($"/api/v1/bikes/{bikeId}", Ct);
-        var component = Assert.Single(bike!.Components);
-        var update = new UpdateComponentRequest
-        {
-            Type = "chain",
-            Brand = "Shimano",
-            Model = "Ultegra CN-M8100",
-            Mpn = "CN-M8100",
-            Custom = true,
-            InstalledOn = new DateOnly(2026, 1, 1),
-        };
-        (await member.PutAsJsonAsync($"/api/v1/bikes/{bikeId}/components/{component.Id}", update, Ct))
-            .EnsureSuccessStatusCode();
 
         Assert.Equal(0, await WithDbAsync(api, (db, _) => db.PartContributions.CountAsync(Ct)));
     }

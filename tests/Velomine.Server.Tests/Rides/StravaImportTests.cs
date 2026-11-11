@@ -23,12 +23,7 @@ public sealed class StravaImportTests(PostgresFixture postgres)
             more?.Invoke(b);
         });
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
     /// <summary>
     /// A Strava export with Italian column names and a quoted field holding a comma, as the real archive has: the

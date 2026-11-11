@@ -13,8 +13,11 @@ using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
+using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
+using Velomine.Server.Features.Sharing;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
+using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests;
 
@@ -24,35 +27,22 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
+    private async Task<TestApi> StartAsync()
     {
-        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.UseSetting("Velomine:Sso:Authority", DexFixture.Authority);
-        b.UseSetting("Velomine:Sso:AppClientId", DexFixture.AppClientId);
-        b.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");
-    });
-
-    private sealed record Member(string Email, Guid Id, HttpClient Client);
-
-    private static async Task<Member> NewMemberAsync(TestApi api, string name = "Test Rider")
-    {
-        var email = TestApi.NewEmail();
-        var id = (await (await api.RegisterAsync(email, name: name)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!.Id;
-        return new Member(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
-    }
-
-    private static async Task UploadAsync(HttpClient client, byte[] file, string name = "morning.fit")
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", name } };
-        var id = (await (await client.PostAsync("/api/v1/rides/uploads", form, Ct)).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
+        await dex.EnsureStartedAsync();
+        return await TestApi.StartAsync(postgres, b =>
         {
-            if ((await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.UseSetting("Velomine:Sso:Authority", dex.Authority);
+            b.UseSetting("Velomine:Sso:AppClientId", DexFixture.AppClientId);
+            b.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");
+        });
     }
+
+
+    private static Task<Member> NewMemberAsync(TestApi api, string name = "Test Rider") => api.NewMemberAsync(name);
+
+    private static Task UploadAsync(HttpClient client, byte[] file, string name = "morning.fit") => TestApi.UploadAndWaitAsync(client, file, name);
 
     private static int FileCount(TestApi api)
     {
@@ -108,7 +98,27 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         }, Ct);
         var bike = await (await me.Client.PostAsJsonAsync("/api/v1/bikes", new CreateBikeRequest { Name = "Road", Kind = "road", WheelCircumferenceMm = 2105, InitialDistanceM = 1000 }, Ct)).Content.ReadFromJsonAsync<BikeDetailResponse>(Ct);
         await me.Client.PostAsJsonAsync($"/api/v1/bikes/{bike!.Bike.Id}/components", new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 10, 1), ExpectedDistanceM = 4_000_000 }, Ct);
+        await me.Client.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/templates", new SaveBikeAsTemplateRequest { BikeId = bike.Bike.Id, Name = "Race build" }, Ct);
         await me.Client.PostAsJsonAsync("/api/v1/analytics/goals", new CreateGoalRequest { Period = "week", Metric = "distance", Target = 100_000 }, Ct);
+
+        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+        var club = await (await admin.PostAsJsonAsync("/api/v1/admin/clubs",
+            new CreateClubRequest { Name = "Test Club", OwnerEmail = me.Email }, Ct)).Content.ReadFromJsonAsync<AdminClubResponse>(Ct);
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            db.ShareViews.Add(new ShareView
+            {
+                Id = Guid.NewGuid(),
+                MemberId = me.Id,
+                ClubId = club!.Id,
+                ViewerId = other.Id,
+                ViewerName = "Grace",
+                What = ViewKinds.Summary,
+                At = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync(Ct);
+        }
 
         // The link is the sign-in: a browser with no session of its own can open it.
         var download = await api.CreateClient().GetAsync(await LinkAsync(me.Client), Ct);
@@ -136,6 +146,16 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         Assert.Equal(500, privacy.GetProperty("trimStartM").GetInt32());
         Assert.Equal("Home", privacy.GetProperty("zones")[0].GetProperty("name").GetString());
         Assert.Equal(0, JsonDocument.Parse(Text("sharing.json")).RootElement.GetArrayLength());
+
+        var templates = JsonDocument.Parse(Text("templates.json")).RootElement;
+        Assert.Equal("Race build", templates[0].GetProperty("name").GetString());
+        Assert.Equal("chain", templates[0].GetProperty("parts")[0].GetProperty("type").GetString());
+        var clubs = JsonDocument.Parse(Text("clubs.json")).RootElement;
+        Assert.Equal("Test Club", clubs.GetProperty("memberships")[0].GetProperty("clubName").GetString());
+        Assert.Equal("owner", clubs.GetProperty("memberships")[0].GetProperty("role").GetString());
+        var views = JsonDocument.Parse(Text("sharingViews.json")).RootElement;
+        Assert.Equal("Grace", views[0].GetProperty("viewerName").GetString());
+        Assert.Equal("summary", views[0].GetProperty("what").GetString());
 
         // One ride, and its original file is in the ZIP byte for byte.
         var rides = JsonDocument.Parse(Text("rides.json")).RootElement;

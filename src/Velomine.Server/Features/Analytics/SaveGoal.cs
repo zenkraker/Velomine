@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 
@@ -75,7 +76,18 @@ public sealed class CreateGoal(VelomineDbContext db, TimeProvider time) : Endpoi
             CreatedAt = time.GetUtcNow(),
         };
         db.Add(goal);
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+        { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            // Two requests passed the check together; the unique index is the real guard.
+            AddError("You already have a goal for that. Change its target instead.");
+            await Send.ErrorsAsync(409, ct);
+            return;
+        }
 
         var clock = await MemberClock.ForAsync(db, userId, time, ct);
         await Send.ResponseAsync((await GoalProgress.ForAsync(db, userId, clock, [goal], ct))[0], 201, ct);

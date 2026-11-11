@@ -16,7 +16,7 @@ public sealed class SsoTests(PostgresFixture postgres, DexFixture dex)
         await dex.EnsureStartedAsync();
         return await TestApi.StartAsync(postgres, builder =>
         {
-            builder.UseSetting("Velomine:Sso:Authority", DexFixture.Authority);
+            builder.UseSetting("Velomine:Sso:Authority", dex.Authority);
             builder.UseSetting("Velomine:Sso:ClientId", DexFixture.ClientId);
             builder.UseSetting("Velomine:Sso:ClientSecret", DexFixture.ClientSecret);
             builder.UseSetting("Velomine:Sso:AllowInsecureHttp", "true");

@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
+using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
+using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -40,6 +42,13 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var privacy = await db.PrivacySettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == userId, ct);
         var zones = await db.PrivacyZones.AsNoTracking().Where(z => z.UserId == userId).OrderBy(z => z.CreatedAt).ToListAsync(ct);
         var grants = await db.ShareGrants.AsNoTracking().Where(g => g.MemberId == userId).OrderBy(g => g.DataType).ToListAsync(ct);
+        var views = await db.ShareViews.AsNoTracking().Where(v => v.MemberId == userId).OrderBy(v => v.At).ToListAsync(ct);
+        var templates = await db.BikeTemplates.AsNoTracking().Include(t => t.Parts)
+            .Where(t => t.UserId == userId).OrderBy(t => t.CreatedAt).ToListAsync(ct);
+        var memberships = await db.ClubMemberships.AsNoTracking().Include(m => m.Club)
+            .Where(m => m.UserId == userId).OrderBy(m => m.JoinedAt).ToListAsync(ct);
+        var joinRequest = await db.ClubJoinRequests.AsNoTracking().Include(r => r.Club)
+            .FirstOrDefaultAsync(r => r.UserId == userId, ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -155,6 +164,32 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             Zones = zones.Select(z => new { z.Name, z.Latitude, z.Longitude, z.RadiusM, z.CreatedAt }),
         }, ct);
         await AddJsonAsync(zip, "sharing.json", grants.Select(g => new { g.ClubId, g.DataType, g.Audience }), ct);
+        await AddJsonAsync(zip, "sharingViews.json", views.Select(v => new { v.ClubId, v.ViewerName, v.What, v.At }), ct);
+        await AddJsonAsync(zip, "templates.json", templates.Select(t => new
+        {
+            t.Id,
+            t.Name,
+            t.CreatedAt,
+            Parts = t.Parts.OrderBy(p => p.Type).Select(p => new
+            {
+                p.Type,
+                p.Brand,
+                p.Model,
+                p.Mpn,
+                p.Gtin,
+                p.IsCustom,
+                p.ExpectedDistanceM,
+                p.ExpectedHours,
+                p.ExpectedMonths,
+            }),
+        }), ct);
+        await AddJsonAsync(zip, "clubs.json", new
+        {
+            Memberships = memberships.Select(m => new { m.ClubId, ClubName = m.Club.Name, m.Role, m.JoinedAt }),
+            JoinRequest = joinRequest is null
+                ? null
+                : new { joinRequest.ClubId, ClubName = joinRequest.Club.Name, joinRequest.Note, joinRequest.CreatedAt },
+        }, ct);
         await AddTextAsync(zip, "README.txt", ReadMe, ct);
     }
 
@@ -188,6 +223,9 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         privacy.json        your privacy switches, start and end trimming, and your saved zones
         sharing.json        what you share with your club, and with whom
+        sharingViews.json   who looked at your data through a club, and what they saw
+        templates.json      your saved bike builds
+        clubs.json          the club you belong to, your role, and any open join request
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.
 

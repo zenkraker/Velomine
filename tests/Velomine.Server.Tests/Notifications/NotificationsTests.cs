@@ -17,28 +17,9 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync(bool approval = false) =>
         TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", approval ? "true" : "false"));
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
-    private static async Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file, string name = "ride.fit")
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", name } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file, string name = "ride.fit") => TestApi.UploadAndWaitAsync(client, file, name);
 
     private static async Task<ListNotificationsResponse> ListAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct))!;

@@ -144,7 +144,15 @@ class SessionAuth implements Authentication {
     return future;
   }
 
-  Future<bool> _doRefresh() => store.locked(_refreshNow);
+  Future<bool> _doRefresh() async {
+    try {
+      return await store.locked(_refreshNow);
+    } on TokenLockBusy {
+      // The worker is rotating the same token. Keep it and try again later rather than start a second rotation.
+      _lastRefreshUnavailable = true;
+      return false;
+    }
+  }
 
   Future<bool> _refreshNow() async {
     // The background upload worker rotates the same token file; use whatever is stored now, so a token it just

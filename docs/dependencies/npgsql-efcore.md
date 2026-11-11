@@ -30,7 +30,7 @@ PostgreSQL licence (NuGet and GitHub). It is a permissive licence (MIT/BSD style
 ## Platform support
 - .NET: net10.0 (the 10.0.x line); `Npgsql` targets net8.0, net9.0 and net10.0.
 - Flutter: not applicable.
-- Feature support, checked by the spike in `tests/Velomine.Server.Tests/Spikes/NpgsqlProviderSpikeTests.cs` against PostgreSQL 16.15 and 17 (all passing):
+- Feature support, checked on 2026-11-02 with a one-off spike against PostgreSQL 16.15 and 17 (all passing; the spike was removed after the check, so it does not run as a test):
   - `Guid` → `uuid`, `DateTimeOffset` → `timestamptz`, `float[]` → `real[]`, `byte[]` → `bytea`.
   - **Only UTC is accepted for `timestamptz`:** writing a `DateTimeOffset` with a non-zero offset throws (`DbUpdateException` with an inner `ArgumentException`). Code must store UTC and keep the ride's local offset in its own column, as the architecture says.
   - A table in a non-default schema (one schema per feature area) works.

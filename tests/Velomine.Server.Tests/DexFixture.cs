@@ -16,9 +16,7 @@ namespace Velomine.Server.Tests;
 /// </summary>
 public sealed partial class DexFixture : IAsyncLifetime
 {
-    private const int HostPort = 15556; // fixed: the issuer in the ID token must match what the server is configured with
-
-    public const string Authority = "http://localhost:15556/dex";
+    public string Authority { get; private set; } = "";
     public const string ClientId = "velomine";
     public const string ClientSecret = "velomine-dev-secret";
     public const string AppClientId = "velomine-app";
@@ -39,9 +37,11 @@ public sealed partial class DexFixture : IAsyncLifetime
         try
         {
             if (container is not null) return;
+            var hostPort = FreePort();
+            Authority = $"http://localhost:{hostPort}/dex";
             var config = IssuerLine().Replace(await File.ReadAllTextAsync(DevConfigPath()), $"issuer: {Authority}");
             container = new ContainerBuilder("ghcr.io/dexidp/dex:v2.46.1")
-                .WithPortBinding(HostPort, 5556)
+                .WithPortBinding(hostPort, 5556)
                 .WithResourceMapping(Encoding.UTF8.GetBytes(config), "/etc/dex/config.yaml")
                 .WithCommand("dex", "serve", "/etc/dex/config.yaml")
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(5556).ForPath("/dex/.well-known/openid-configuration")))
@@ -118,6 +118,20 @@ public sealed partial class DexFixture : IAsyncLifetime
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(ct));
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
         return (json.RootElement.GetProperty("id_token").GetString()!, json.RootElement.GetProperty("access_token").GetString()!);
+    }
+
+    private static int FreePort()
+    {
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        }
+        finally
+        {
+            listener.Stop();
+        }
     }
 
     public async ValueTask DisposeAsync()

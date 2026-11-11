@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
@@ -208,6 +210,52 @@ public sealed class AnalyticsTests(PostgresFixture postgres)
 
         var post = await member.PostAsJsonAsync("/api/v1/analytics/goals", new CreateGoalRequest { Period = period, Metric = metric, Target = target }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateGoal_ShouldReturnConflict_WhenTwoGoalsRace()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.ConfigureTestServices(s => s.AddSingleton<IInterceptor>(new InsertRivalGoal()));
+        });
+        var (member, _) = await NewMemberAsync(api);
+
+        var response = await member.PostAsJsonAsync("/api/v1/analytics/goals",
+            new CreateGoalRequest { Period = "week", Metric = "distance", Target = 100_000 }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    /// <summary>Inserts the goal another request would have saved, after this request's check has passed.</summary>
+    private sealed class InsertRivalGoal : SaveChangesInterceptor
+    {
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            if (eventData.Context is VelomineDbContext db
+                && db.ChangeTracker.Entries<Goal>().FirstOrDefault(e => e.State == EntityState.Added) is { Entity: var goal })
+            {
+                await using var rival = new VelomineDbContext(
+                    new DbContextOptionsBuilder<VelomineDbContext>()
+                        .UseNpgsql(db.Database.GetConnectionString()).Options);
+                rival.Goals.Add(new Goal
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = goal.UserId,
+                    Period = goal.Period,
+                    Metric = goal.Metric,
+                    Target = 1,
+                    CreatedAt = goal.CreatedAt,
+                });
+                await rival.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
+        }
     }
 
     [Fact]

@@ -14,12 +14,7 @@ public sealed class BikesTests(PostgresFixture postgres)
 
     private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    private static async Task<HttpClient> NewMemberAsync(TestApi api)
-    {
-        var email = TestApi.NewEmail();
-        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        return await api.SignedInClientAsync(email, TestApi.MemberPassword);
-    }
+    private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
     private static CreateBikeRequest NewBike(string name = "Road bike") =>
         new() { Name = name, Kind = "road", WheelCircumferenceMm = 2105, InitialDistanceM = 5_000_000 };

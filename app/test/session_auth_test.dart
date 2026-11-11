@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/session_auth.dart';
+import 'package:velomine/core/token_store.dart';
 import 'package:velomine_api/api.dart';
 
 import 'fake_server.dart';
@@ -131,6 +132,25 @@ void main() {
   );
 
   test(
+    'SessionAuth_ShouldKeepTheToken_WhenAnotherWriterHoldsTheLock',
+    () async {
+      final busy = BusyTokenStore('r-rider@example.com');
+      final session = SessionAuth(
+        baseUrl: 'http://server',
+        store: busy,
+        useCookies: false,
+        refreshClient: server.client,
+      );
+
+      final result = await session.restore();
+
+      expect(result, SessionRestore.unavailable);
+      expect(busy.token, 'r-rider@example.com');
+      expect(server.refreshCount, 0);
+    },
+  );
+
+  test(
     'SessionAuth_ShouldShareOneRefresh_WhenTwoRequestsExpireAtOnce',
     () async {
       final session = auth();
@@ -144,6 +164,13 @@ void main() {
       expect(server.refreshCount, 1);
     },
   );
+}
+
+class BusyTokenStore extends MemoryTokenStore {
+  BusyTokenStore(super.token);
+
+  @override
+  Future<T> locked<T>(Future<T> Function() body) => throw const TokenLockBusy();
 }
 
 /// Records whether the rotation happened inside [locked], which is what keeps the upload worker out.

@@ -184,13 +184,21 @@ public sealed class UpdateComponent(VelomineDbContext db, TimeProvider time) : E
             return;
         }
 
-        // A pending copy of the previous values must not reach the publisher after an edit, or after "custom" is ticked.
-        await ContributionOutbox.DiscardPendingAsync(db, component, ct);
         CreateComponent.Apply(component, req);
         var part = req.Custom ? null : await PartCatalogue.FindAsync(db, component, ct);
         component.PartId = part?.Id;
         if (part is null && !req.Custom) await ContributionOutbox.EnqueueAsync(db, component, time, ct);
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            AddError("This part changed on another device. Reload it and try again.");
+            await Send.ErrorsAsync(409, ct);
+            return;
+        }
+
         await Send.OkAsync(await BikeQueries.DetailAsync(db, bike, await MemberClock.ForAsync(db, User.UserId(), time, ct), ct), ct);
     }
 }
