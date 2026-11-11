@@ -1017,6 +1017,58 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bulkWaiting => 'Attendo un momento, il server è occupato…';
 
   @override
+  String incomingAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite aggiunte. Verranno caricate in background.',
+      one: '1 uscita aggiunta. Verrà caricata in background.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingAlreadyHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite erano già qui.',
+      one: '1 uscita era già qui.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingRejectedOne(String name) {
+    return '$name non è un file di uscita ed è stato saltato.';
+  }
+
+  @override
+  String incomingRejectedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file non sono file di uscita e sono stati saltati.',
+      one: '1 file non è un file di uscita ed è stato saltato.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingSignedOut(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite sono state tenute. Accedi e verranno caricate.',
+      one: '1 uscita è stata tenuta. Accedi e verrà caricata.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incomingOpen => 'Elenco uscite';
+
+  @override
   String get noRides => 'Nessuna uscita. Carica un file FIT, GPX o TCX.';
 
   @override

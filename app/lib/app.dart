@@ -45,6 +45,7 @@ import 'features/progress/progress_screen.dart';
 import 'features/recording/recording_screen.dart';
 import 'features/rides/bulk/ride_drop_area.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
+import 'features/rides/incoming/incoming_rides_area.dart';
 import 'features/rides/import/import_screen.dart';
 import 'features/rides/rides_view_model.dart';
 import 'features/rides/rides_screen.dart';
@@ -444,10 +445,14 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final page = RideDropArea(
-          // A folder dropped on any page is followed on the ride list.
-          onStarted: () => _router.go('/rides'),
-          child: child!,
+        final page = IncomingRidesArea(
+          // "Share to Velomine" ends on the ride list, like a drop on the web.
+          onOpenRides: () => _router.go('/rides'),
+          child: RideDropArea(
+            // A folder dropped on any page is followed on the ride list.
+            onStarted: () => _router.go('/rides'),
+            child: child!,
+          ),
         );
         if (!reduceMotion(context)) return page;
         // No page transition when the system asks to reduce motion.

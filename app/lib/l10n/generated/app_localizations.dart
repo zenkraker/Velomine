@@ -1856,6 +1856,42 @@ abstract class AppLocalizations {
   /// **'Waiting a moment, the server is busy…'**
   String get bulkWaiting;
 
+  /// No description provided for @incomingAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride added. It will upload in the background.} other{{count} rides added. They will upload in the background.}}'**
+  String incomingAdded(int count);
+
+  /// No description provided for @incomingAlreadyHere.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride was already here.} other{{count} rides were already here.}}'**
+  String incomingAlreadyHere(int count);
+
+  /// No description provided for @incomingRejectedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is not a ride file and was skipped.'**
+  String incomingRejectedOne(String name);
+
+  /// No description provided for @incomingRejectedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file is not a ride file and was skipped.} other{{count} files are not ride files and were skipped.}}'**
+  String incomingRejectedMany(int count);
+
+  /// No description provided for @incomingSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride is kept. Sign in and it will upload.} other{{count} rides are kept. Sign in and they will upload.}}'**
+  String incomingSignedOut(int count);
+
+  /// No description provided for @incomingOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride list'**
+  String get incomingOpen;
+
   /// No description provided for @noRides.
   ///
   /// In en, this message translates to:

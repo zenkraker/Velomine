@@ -1010,6 +1010,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bulkWaiting => 'Waiting a moment, the server is busy…';
 
   @override
+  String incomingAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides added. They will upload in the background.',
+      one: '1 ride added. It will upload in the background.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingAlreadyHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides were already here.',
+      one: '1 ride was already here.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingRejectedOne(String name) {
+    return '$name is not a ride file and was skipped.';
+  }
+
+  @override
+  String incomingRejectedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files are not ride files and were skipped.',
+      one: '1 file is not a ride file and was skipped.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingSignedOut(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides are kept. Sign in and they will upload.',
+      one: '1 ride is kept. Sign in and it will upload.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incomingOpen => 'Ride list';
+
+  @override
   String get noRides => 'No rides yet. Upload a FIT, GPX or TCX file.';
 
   @override

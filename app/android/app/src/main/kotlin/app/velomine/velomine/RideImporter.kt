@@ -101,9 +101,6 @@ object IncomingFiles {
         rejected += outcome.rejected
     }
 
-    /** What is waiting, left in place. Null when nothing is. */
-    fun peek(): Map<String, Any?>? = synchronized(lock) { snapshot() }
-
     /** What is waiting, cleared. Null when nothing is. */
     fun take(): Map<String, Any?>? = synchronized(lock) {
         val result = snapshot()

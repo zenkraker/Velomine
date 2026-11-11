@@ -57,7 +57,6 @@ class MainActivity : FlutterActivity() {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "take" -> result.success(IncomingFiles.take())
-                "peek" -> result.success(IncomingFiles.peek())
                 else -> result.notImplemented()
             }
         }
@@ -70,14 +69,15 @@ class MainActivity : FlutterActivity() {
         val uris = IncomingIntent.uris(intent)
         // Handled once: the same intent comes back after a restart of the activity.
         intent?.action = Intent.ACTION_MAIN
+        // A share of text carries no file; there is nothing to say.
+        if (uris.isEmpty()) return
         val importer = RideImporter(applicationContext.contentResolver, RideStore(applicationContext))
         Thread {
             val outcome = try {
-                // A share that carried no file at all (plain text) counts as one thing that is not a ride.
-                if (uris.isEmpty()) ImportOutcome(0, 0, listOf("")) else importer.import(uris)
+                importer.import(uris)
             } catch (e: Exception) {
                 log("receiving files failed: $e")
-                ImportOutcome(0, 0, listOf(""))
+                ImportOutcome(0, 0, emptyList())
             }
             IncomingFiles.record(outcome)
             log("received files: added=${outcome.added} alreadyHere=${outcome.alreadyHere} rejected=${outcome.rejected.size}")
