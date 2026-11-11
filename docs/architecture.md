@@ -150,6 +150,11 @@ erDiagram
 | Decision | Why |
 |----------|-----|
 | One database for cloud and self-host, clubs scoped by `club_id` | One code and migration path; a self-hosted club is the same system with one club. |
+| A club plan: member limit and paid-until, set by the operator and later by a payment webhook | Admission is one checked step with the club row locked; a full or ended plan stops new members without taking anything from existing ones, and no price lives in the server. |
+| A route belongs to the member who added it, with a nullable club share | Withdrawing, leaving the club or the club going away clears the share and keeps the route with its owner; it is in one club's library at a time. |
+| A planned ride is club data, with a nullable creator | A coach or the owner plans it and every member sees it; it stays on the club's calendar when the planner's account goes. |
+| A calendar feed address is verified by hash, never stored or logged | The database keeps only the SHA-256, so a dump cannot be replayed into a member's calendar; the address is shown once and replacing it stops the old one. |
+| A member's sign-ups are in the account export | Saying "I'm in" is the member's own statement, so `club-rides.json` carries it even though the ride belongs to the club. |
 | Vertical slices in one project, with FastEndpoints | Each use case is one file; no layers to keep in sync. |
 | One PostgreSQL schema per feature area | Keeps a large database readable without splitting it. |
 | Background work in the application; PostgreSQL is storage only | No extra service to run or monitor. |
@@ -158,10 +163,13 @@ erDiagram
 | Original ride files kept forever; FIT as the phone's format | Any ride can be read again when a parser improves. |
 | Streams as one row per ride with an array per signal | A long ride is one row fetch. Revisit if queries must filter single samples across rides. |
 | Wear, goals and totals computed on read; load and power bests stored | Always correct for the current profile, except the sums the dashboard needs fast. |
+| Recurring maintenance jobs reuse the part-wear calculation | One set of interval rules for parts and service jobs; the reminder stores only its interval and last-done date, and the rest comes from the rides. |
 | Optional, offline, signed supporter licence | Funds the project without a paywall: no phone-home, no seats, never a feature or a block on member data. |
 | Member telemetry opt-in; operational logs separate and anonymous | Health and location data never leave through diagnostics. |
 | Two images, server and web, behind one origin | A Flutter build never blocks or slows a server image, and the server is API-only. One origin keeps the cookie and single sign-on simple. Costs a third container for self-hosters. |
 | Another app's history comes from the member's own export, never that app's API | The bulk export is the data the member downloads themselves, needs no token or outside service, and keeps a self-hosted instance independent. A ride records its source and that app's activity id, so a later export skips what is already here. |
+| Quiet bulk import: a `Bulk-Import` header and a token-bucket upload limit | A dropped bike computer folder sends many files at once; the member gets one summary instead of a notification per file, while the sustained rate stays capped. |
+| `sharing.view_log.ride_id`, set null when the ride goes | "Who looked" is kept per ride, and deleting a ride must not delete the member's record that someone looked. |
 | The presentation site ships in the web image, as plain HTML in `site/` | It is static front-end material; it stays plain HTML because Flutter web draws on a canvas, which is poor for search, link previews, first load and accessibility. |
 | nginx inside the web image; Traefik at the hosts' edge | nginx serves the static files and forwards the API, the same for a self-hoster and on the hosts. Traefik gives each environment its route through labels in its own compose and handles certificates itself. The read-only Docker socket gives Traefik a lot of power over the host: revisit (file provider or a socket proxy) before prod holds a club's real data. |
 | Hosted environments and their pipelines in this repository, secrets outside it | Environments differ only by settings and secrets, so a second repository would only add drift. GitHub holds no host secret. |
