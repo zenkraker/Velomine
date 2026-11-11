@@ -130,6 +130,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - Wellbeing is health data: explicit, versioned consent before the first save. A coach sees scores and RPE when granted; free-text notes are returned only to the owner. The readiness score is member-only.
 - Every coach or share view of a member's data is recorded in the sharing view log, which the member can read.
 - Secrets come from configuration or a secret store, never the database or an API response. SMTP and single sign-on credentials are environment-only.
+- **A calendar feed address is a secret:** only its SHA-256 is stored, it is verified by hash and it is never logged; the address is shown once and replacing it ends the old one.
 - Never log ride or health data, names, email addresses, IP addresses, tokens, cookies, request bodies or query strings. Log route templates, not raw paths.
 - Application code logs through `Microsoft.Extensions.Logging.ILogger<T>` and instruments with `System.Diagnostics.ActivitySource`/`Meter`. Serilog, OpenTelemetry and Sentry types stay in `Observability/` and the composition root.
 

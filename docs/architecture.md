@@ -151,6 +151,10 @@ erDiagram
 |----------|-----|
 | One database for cloud and self-host, clubs scoped by `club_id` | One code and migration path; a self-hosted club is the same system with one club. |
 | A club plan: member limit and paid-until, set by the operator and later by a payment webhook | Admission is one checked step with the club row locked; a full or ended plan stops new members without taking anything from existing ones, and no price lives in the server. |
+| A route belongs to the member who added it, with a nullable club share | Withdrawing, leaving the club or the club going away clears the share and keeps the route with its owner; it is in one club's library at a time. |
+| A planned ride is club data, with a nullable creator | A coach or the owner plans it and every member sees it; it stays on the club's calendar when the planner's account goes. |
+| A calendar feed address is verified by hash, never stored or logged | The database keeps only the SHA-256, so a dump cannot be replayed into a member's calendar; the address is shown once and replacing it stops the old one. |
+| A member's sign-ups are in the account export | Saying "I'm in" is the member's own statement, so `club-rides.json` carries it even though the ride belongs to the club. |
 | Vertical slices in one project, with FastEndpoints | Each use case is one file; no layers to keep in sync. |
 | One PostgreSQL schema per feature area | Keeps a large database readable without splitting it. |
 | Background work in the application; PostgreSQL is storage only | No extra service to run or monitor. |
