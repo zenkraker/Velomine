@@ -1559,7 +1559,7 @@ abstract class AppLocalizations {
   /// No description provided for @routeNotShared.
   ///
   /// In en, this message translates to:
-  /// **'The athlete has not shared the route.'**
+  /// **'Not in the club'**
   String get routeNotShared;
 
   /// No description provided for @adminClubs.
@@ -5461,6 +5461,708 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your import of {subject} has finished.'**
   String notificationRideImport(String subject);
+
+  /// No description provided for @actionLoadRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'load the club\'s routes'**
+  String get actionLoadRoutes;
+
+  /// No description provided for @actionLoadRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'load this route'**
+  String get actionLoadRoute;
+
+  /// No description provided for @actionAddRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'add the route'**
+  String get actionAddRoute;
+
+  /// No description provided for @actionSaveRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'save the route'**
+  String get actionSaveRoute;
+
+  /// No description provided for @actionDeleteRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the route'**
+  String get actionDeleteRoute;
+
+  /// No description provided for @actionLoadClubRides.
+  ///
+  /// In en, this message translates to:
+  /// **'load the club\'s rides'**
+  String get actionLoadClubRides;
+
+  /// No description provided for @actionLoadClubRide.
+  ///
+  /// In en, this message translates to:
+  /// **'load this club ride'**
+  String get actionLoadClubRide;
+
+  /// No description provided for @actionSaveClubRide.
+  ///
+  /// In en, this message translates to:
+  /// **'save the club ride'**
+  String get actionSaveClubRide;
+
+  /// No description provided for @actionCancelClubRide.
+  ///
+  /// In en, this message translates to:
+  /// **'cancel the club ride'**
+  String get actionCancelClubRide;
+
+  /// No description provided for @actionJoinClubRide.
+  ///
+  /// In en, this message translates to:
+  /// **'say you are in'**
+  String get actionJoinClubRide;
+
+  /// No description provided for @actionLeaveClubRide.
+  ///
+  /// In en, this message translates to:
+  /// **'take your name off'**
+  String get actionLeaveClubRide;
+
+  /// No description provided for @actionLoadCalendarFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'load your calendar address'**
+  String get actionLoadCalendarFeed;
+
+  /// No description provided for @actionSaveCalendarFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'change your calendar address'**
+  String get actionSaveCalendarFeed;
+
+  /// No description provided for @clubRidesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get clubRidesTitle;
+
+  /// No description provided for @clubRidesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The club\'s next rides, and who is in.'**
+  String get clubRidesHelp;
+
+  /// No description provided for @clubRidesSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all rides'**
+  String get clubRidesSeeAll;
+
+  /// No description provided for @clubPlanRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan a ride'**
+  String get clubPlanRide;
+
+  /// No description provided for @clubRoutesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Routes'**
+  String get clubRoutesTitle;
+
+  /// No description provided for @clubRoutesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines the club shares, each one kept by the member who added it.'**
+  String get clubRoutesHelp;
+
+  /// No description provided for @clubRoutesSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all routes'**
+  String get clubRoutesSeeAll;
+
+  /// No description provided for @clubAddRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route'**
+  String get clubAddRoute;
+
+  /// No description provided for @clubRoutesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No routes yet. Add one from one of your rides or from a GPX file.'**
+  String get clubRoutesEmpty;
+
+  /// No description provided for @routesFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All surfaces'**
+  String get routesFilterAll;
+
+  /// No description provided for @routesSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get routesSortNewest;
+
+  /// No description provided for @routesSortShortest.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortest'**
+  String get routesSortShortest;
+
+  /// No description provided for @routesSortLongest.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest'**
+  String get routesSortLongest;
+
+  /// No description provided for @routeSurfaceRoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Road'**
+  String get routeSurfaceRoad;
+
+  /// No description provided for @routeSurfaceGravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gravel'**
+  String get routeSurfaceGravel;
+
+  /// No description provided for @routeSurfaceMountain.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain'**
+  String get routeSurfaceMountain;
+
+  /// No description provided for @routeSurfaceMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed'**
+  String get routeSurfaceMixed;
+
+  /// No description provided for @routeAddedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by {name}'**
+  String routeAddedBy(String name);
+
+  /// No description provided for @routeNotSharedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This route is yours, but it is not in the club library.'**
+  String get routeNotSharedBody;
+
+  /// No description provided for @routeOpenGpx.
+  ///
+  /// In en, this message translates to:
+  /// **'Download GPX'**
+  String get routeOpenGpx;
+
+  /// No description provided for @routeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get routeEdit;
+
+  /// No description provided for @routeWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from club'**
+  String get routeWithdraw;
+
+  /// No description provided for @routeWithdrawConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this route from the club?'**
+  String get routeWithdrawConfirmTitle;
+
+  /// No description provided for @routeWithdrawConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It stays yours and you can share it again at any time.'**
+  String get routeWithdrawConfirmBody;
+
+  /// No description provided for @routeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share again'**
+  String get routeShare;
+
+  /// No description provided for @routeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for good'**
+  String get routeDelete;
+
+  /// No description provided for @routeDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this route?'**
+  String get routeDeleteConfirmTitle;
+
+  /// No description provided for @routeDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The line is gone for good. Club rides that planned it keep their own details.'**
+  String get routeDeleteConfirmBody;
+
+  /// No description provided for @routeOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the member who added this route can change it.'**
+  String get routeOwnerOnly;
+
+  /// No description provided for @addRouteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route'**
+  String get addRouteTitle;
+
+  /// No description provided for @addRouteHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A route is a line on the map with a name. Nothing about how you rode it is shared.'**
+  String get addRouteHelp;
+
+  /// No description provided for @addRouteFromRide.
+  ///
+  /// In en, this message translates to:
+  /// **'From one of my rides'**
+  String get addRouteFromRide;
+
+  /// No description provided for @addRouteFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'From a GPX file'**
+  String get addRouteFromFile;
+
+  /// No description provided for @addRouteChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a GPX file'**
+  String get addRouteChooseFile;
+
+  /// No description provided for @addRouteNoRides.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no rides with a map yet. Import a ride first, then come back.'**
+  String get addRouteNoRides;
+
+  /// No description provided for @addRoutePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the line the club will see'**
+  String get addRoutePreview;
+
+  /// No description provided for @addRoutePrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your privacy zones and your start and end trimming are already applied.'**
+  String get addRoutePrivacyNote;
+
+  /// No description provided for @addRouteDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Name and details'**
+  String get addRouteDetails;
+
+  /// No description provided for @addRouteName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get addRouteName;
+
+  /// No description provided for @addRouteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get addRouteDescription;
+
+  /// No description provided for @addRouteSurface.
+  ///
+  /// In en, this message translates to:
+  /// **'Surface'**
+  String get addRouteSurface;
+
+  /// No description provided for @addRouteSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the club library'**
+  String get addRouteSave;
+
+  /// No description provided for @editRouteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the route'**
+  String get editRouteTitle;
+
+  /// No description provided for @ridesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides planned yet. A coach can plan the club\'s next ride.'**
+  String get ridesEmpty;
+
+  /// No description provided for @ridesUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming up'**
+  String get ridesUpcoming;
+
+  /// No description provided for @ridesPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Just happened'**
+  String get ridesPast;
+
+  /// No description provided for @rideCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get rideCancelled;
+
+  /// No description provided for @rideFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Full'**
+  String get rideFull;
+
+  /// No description provided for @rideSignedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in'**
+  String get rideSignedUp;
+
+  /// No description provided for @rideCountIn.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in'**
+  String rideCountIn(int count);
+
+  /// No description provided for @ridePlacesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max} places left'**
+  String ridePlacesLeft(int count, int max);
+
+  /// No description provided for @ridePaceEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get ridePaceEasy;
+
+  /// No description provided for @ridePaceSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady'**
+  String get ridePaceSteady;
+
+  /// No description provided for @ridePaceFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get ridePaceFast;
+
+  /// No description provided for @rideNoDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'No-drop'**
+  String get rideNoDrop;
+
+  /// No description provided for @ridePlannedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned by {name}'**
+  String ridePlannedBy(String name);
+
+  /// No description provided for @rideMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting point'**
+  String get rideMeeting;
+
+  /// No description provided for @rideRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get rideRoute;
+
+  /// No description provided for @rideNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get rideNotes;
+
+  /// No description provided for @rideWhoIsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is in'**
+  String get rideWhoIsIn;
+
+  /// No description provided for @rideNobodyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody is in yet.'**
+  String get rideNobodyIn;
+
+  /// No description provided for @rideImIn.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m in'**
+  String get rideImIn;
+
+  /// No description provided for @rideImOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Take me out'**
+  String get rideImOut;
+
+  /// No description provided for @rideEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit ride'**
+  String get rideEdit;
+
+  /// No description provided for @rideCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel ride'**
+  String get rideCancel;
+
+  /// No description provided for @rideCancelConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this ride?'**
+  String get rideCancelConfirmTitle;
+
+  /// No description provided for @rideCancelConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The riders who are in get a notification. The ride stays on the calendar, marked cancelled.'**
+  String get rideCancelConfirmBody;
+
+  /// No description provided for @rideCancelledReason.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride is cancelled.'**
+  String get rideCancelledReason;
+
+  /// No description provided for @rideFullReason.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride is full.'**
+  String get rideFullReason;
+
+  /// No description provided for @rideStartedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride has already started.'**
+  String get rideStartedReason;
+
+  /// No description provided for @planRideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan a ride'**
+  String get planRideTitle;
+
+  /// No description provided for @editRideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the ride'**
+  String get editRideTitle;
+
+  /// No description provided for @rideFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get rideFormTitle;
+
+  /// No description provided for @rideFormMeetingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting point name'**
+  String get rideFormMeetingName;
+
+  /// No description provided for @rideFormPickMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the meeting point on the map'**
+  String get rideFormPickMeeting;
+
+  /// No description provided for @rideFormRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route (optional)'**
+  String get rideFormRoute;
+
+  /// No description provided for @rideFormNoRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'No route'**
+  String get rideFormNoRoute;
+
+  /// No description provided for @rideFormPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get rideFormPace;
+
+  /// No description provided for @rideFormNoDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'No-drop'**
+  String get rideFormNoDrop;
+
+  /// No description provided for @rideFormNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get rideFormNotes;
+
+  /// No description provided for @rideFormMaxRiders.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum riders (optional)'**
+  String get rideFormMaxRiders;
+
+  /// No description provided for @rideFormSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the ride'**
+  String get rideFormSave;
+
+  /// No description provided for @rideFormNeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the ride a title.'**
+  String get rideFormNeedTitle;
+
+  /// No description provided for @rideFormNeedMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Name the meeting point.'**
+  String get rideFormNeedMeeting;
+
+  /// No description provided for @rideFormNeedPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the meeting point on the map.'**
+  String get rideFormNeedPoint;
+
+  /// No description provided for @rideFormFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date and time in the future.'**
+  String get rideFormFuture;
+
+  /// No description provided for @rideFormMaxRange.
+  ///
+  /// In en, this message translates to:
+  /// **'The limit is a number from 1 to 500, or leave it empty.'**
+  String get rideFormMaxRange;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar subscription'**
+  String get calendarTitle;
+
+  /// No description provided for @calendarHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe the calendar on your phone or computer to the club\'s rides. The address is private: whoever has it sees the club\'s rides, never who is in.'**
+  String get calendarHelp;
+
+  /// No description provided for @calendarInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar address yet.'**
+  String get calendarInactive;
+
+  /// No description provided for @calendarActive.
+  ///
+  /// In en, this message translates to:
+  /// **'A calendar address is active.'**
+  String get calendarActive;
+
+  /// No description provided for @calendarCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create the address'**
+  String get calendarCreate;
+
+  /// No description provided for @calendarReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace the address'**
+  String get calendarReplace;
+
+  /// No description provided for @calendarReplaceConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace the calendar address?'**
+  String get calendarReplaceConfirmTitle;
+
+  /// No description provided for @calendarReplaceConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The old address stops working at once and your calendar needs the new one.'**
+  String get calendarReplaceConfirmBody;
+
+  /// No description provided for @calendarDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the address'**
+  String get calendarDelete;
+
+  /// No description provided for @calendarDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the calendar address?'**
+  String get calendarDeleteConfirmTitle;
+
+  /// No description provided for @calendarDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your calendar stops updating. You can make a new address at any time.'**
+  String get calendarDeleteConfirmBody;
+
+  /// No description provided for @calendarCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the address'**
+  String get calendarCopy;
+
+  /// No description provided for @calendarAddressCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Address copied'**
+  String get calendarAddressCopied;
+
+  /// No description provided for @calendarShownOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy it now. The server keeps only a hash, so it cannot show the address again; if you lose it, replace it.'**
+  String get calendarShownOnce;
+
+  /// No description provided for @notificationClubRidePlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'{ride}: the club planned a ride.'**
+  String notificationClubRidePlanned(String ride);
+
+  /// No description provided for @notificationClubRideChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{ride}: the time or the meeting point changed.'**
+  String notificationClubRideChanged(String ride);
+
+  /// No description provided for @notificationClubRideCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'{ride}: the ride is cancelled.'**
+  String notificationClubRideCancelled(String ride);
 
   /// No description provided for @loading.
   ///

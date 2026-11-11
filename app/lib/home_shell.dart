@@ -70,6 +70,9 @@ class HomeShell extends ConsumerWidget {
     if (path.startsWith('/progress')) return l10n.navProgress;
     if (path.startsWith('/bikes')) return l10n.navBikes;
     if (path.startsWith('/club/athletes')) return l10n.athletesTitle;
+    if (path.startsWith('/club/rides')) return l10n.clubRidesTitle;
+    if (path.startsWith('/club/routes')) return l10n.clubRoutesTitle;
+    if (path.startsWith('/club/calendar')) return l10n.calendarTitle;
     if (path.startsWith('/club')) return l10n.navClub;
     if (path.startsWith('/join')) return l10n.joinTitle;
     if (path.startsWith('/profile/two-factor')) return l10n.twoFactorNavTitle;

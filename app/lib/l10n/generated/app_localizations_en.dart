@@ -799,7 +799,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coachNoRides => 'No rides shared yet.';
 
   @override
-  String get routeNotShared => 'The athlete has not shared the route.';
+  String get routeNotShared => 'Not in the club';
 
   @override
   String get adminClubs => 'Clubs';
@@ -3040,6 +3040,387 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notificationRideImport(String subject) {
     return 'Your import of $subject has finished.';
+  }
+
+  @override
+  String get actionLoadRoutes => 'load the club\'s routes';
+
+  @override
+  String get actionLoadRoute => 'load this route';
+
+  @override
+  String get actionAddRoute => 'add the route';
+
+  @override
+  String get actionSaveRoute => 'save the route';
+
+  @override
+  String get actionDeleteRoute => 'delete the route';
+
+  @override
+  String get actionLoadClubRides => 'load the club\'s rides';
+
+  @override
+  String get actionLoadClubRide => 'load this club ride';
+
+  @override
+  String get actionSaveClubRide => 'save the club ride';
+
+  @override
+  String get actionCancelClubRide => 'cancel the club ride';
+
+  @override
+  String get actionJoinClubRide => 'say you are in';
+
+  @override
+  String get actionLeaveClubRide => 'take your name off';
+
+  @override
+  String get actionLoadCalendarFeed => 'load your calendar address';
+
+  @override
+  String get actionSaveCalendarFeed => 'change your calendar address';
+
+  @override
+  String get clubRidesTitle => 'Rides';
+
+  @override
+  String get clubRidesHelp => 'The club\'s next rides, and who is in.';
+
+  @override
+  String get clubRidesSeeAll => 'See all rides';
+
+  @override
+  String get clubPlanRide => 'Plan a ride';
+
+  @override
+  String get clubRoutesTitle => 'Routes';
+
+  @override
+  String get clubRoutesHelp =>
+      'Lines the club shares, each one kept by the member who added it.';
+
+  @override
+  String get clubRoutesSeeAll => 'See all routes';
+
+  @override
+  String get clubAddRoute => 'Add a route';
+
+  @override
+  String get clubRoutesEmpty =>
+      'No routes yet. Add one from one of your rides or from a GPX file.';
+
+  @override
+  String get routesFilterAll => 'All surfaces';
+
+  @override
+  String get routesSortNewest => 'Newest';
+
+  @override
+  String get routesSortShortest => 'Shortest';
+
+  @override
+  String get routesSortLongest => 'Longest';
+
+  @override
+  String get routeSurfaceRoad => 'Road';
+
+  @override
+  String get routeSurfaceGravel => 'Gravel';
+
+  @override
+  String get routeSurfaceMountain => 'Mountain';
+
+  @override
+  String get routeSurfaceMixed => 'Mixed';
+
+  @override
+  String routeAddedBy(String name) {
+    return 'Added by $name';
+  }
+
+  @override
+  String get routeNotSharedBody =>
+      'This route is yours, but it is not in the club library.';
+
+  @override
+  String get routeOpenGpx => 'Download GPX';
+
+  @override
+  String get routeEdit => 'Edit';
+
+  @override
+  String get routeWithdraw => 'Remove from club';
+
+  @override
+  String get routeWithdrawConfirmTitle => 'Remove this route from the club?';
+
+  @override
+  String get routeWithdrawConfirmBody =>
+      'It stays yours and you can share it again at any time.';
+
+  @override
+  String get routeShare => 'Share again';
+
+  @override
+  String get routeDelete => 'Delete for good';
+
+  @override
+  String get routeDeleteConfirmTitle => 'Delete this route?';
+
+  @override
+  String get routeDeleteConfirmBody =>
+      'The line is gone for good. Club rides that planned it keep their own details.';
+
+  @override
+  String get routeOwnerOnly =>
+      'Only the member who added this route can change it.';
+
+  @override
+  String get addRouteTitle => 'Add a route';
+
+  @override
+  String get addRouteHelp =>
+      'A route is a line on the map with a name. Nothing about how you rode it is shared.';
+
+  @override
+  String get addRouteFromRide => 'From one of my rides';
+
+  @override
+  String get addRouteFromFile => 'From a GPX file';
+
+  @override
+  String get addRouteChooseFile => 'Choose a GPX file';
+
+  @override
+  String get addRouteNoRides =>
+      'You have no rides with a map yet. Import a ride first, then come back.';
+
+  @override
+  String get addRoutePreview => 'This is the line the club will see';
+
+  @override
+  String get addRoutePrivacyNote =>
+      'Your privacy zones and your start and end trimming are already applied.';
+
+  @override
+  String get addRouteDetails => 'Name and details';
+
+  @override
+  String get addRouteName => 'Name';
+
+  @override
+  String get addRouteDescription => 'Description (optional)';
+
+  @override
+  String get addRouteSurface => 'Surface';
+
+  @override
+  String get addRouteSave => 'Add to the club library';
+
+  @override
+  String get editRouteTitle => 'Edit the route';
+
+  @override
+  String get ridesEmpty =>
+      'No rides planned yet. A coach can plan the club\'s next ride.';
+
+  @override
+  String get ridesUpcoming => 'Coming up';
+
+  @override
+  String get ridesPast => 'Just happened';
+
+  @override
+  String get rideCancelled => 'Cancelled';
+
+  @override
+  String get rideFull => 'Full';
+
+  @override
+  String get rideSignedUp => 'You are in';
+
+  @override
+  String rideCountIn(int count) {
+    return '$count in';
+  }
+
+  @override
+  String ridePlacesLeft(int count, int max) {
+    return '$count of $max places left';
+  }
+
+  @override
+  String get ridePaceEasy => 'Easy';
+
+  @override
+  String get ridePaceSteady => 'Steady';
+
+  @override
+  String get ridePaceFast => 'Fast';
+
+  @override
+  String get rideNoDrop => 'No-drop';
+
+  @override
+  String ridePlannedBy(String name) {
+    return 'Planned by $name';
+  }
+
+  @override
+  String get rideMeeting => 'Meeting point';
+
+  @override
+  String get rideRoute => 'Route';
+
+  @override
+  String get rideNotes => 'Notes';
+
+  @override
+  String get rideWhoIsIn => 'Who is in';
+
+  @override
+  String get rideNobodyIn => 'Nobody is in yet.';
+
+  @override
+  String get rideImIn => 'I\'m in';
+
+  @override
+  String get rideImOut => 'Take me out';
+
+  @override
+  String get rideEdit => 'Edit ride';
+
+  @override
+  String get rideCancel => 'Cancel ride';
+
+  @override
+  String get rideCancelConfirmTitle => 'Cancel this ride?';
+
+  @override
+  String get rideCancelConfirmBody =>
+      'The riders who are in get a notification. The ride stays on the calendar, marked cancelled.';
+
+  @override
+  String get rideCancelledReason => 'This ride is cancelled.';
+
+  @override
+  String get rideFullReason => 'This ride is full.';
+
+  @override
+  String get rideStartedReason => 'This ride has already started.';
+
+  @override
+  String get planRideTitle => 'Plan a ride';
+
+  @override
+  String get editRideTitle => 'Edit the ride';
+
+  @override
+  String get rideFormTitle => 'Title';
+
+  @override
+  String get rideFormMeetingName => 'Meeting point name';
+
+  @override
+  String get rideFormPickMeeting => 'Pick the meeting point on the map';
+
+  @override
+  String get rideFormRoute => 'Route (optional)';
+
+  @override
+  String get rideFormNoRoute => 'No route';
+
+  @override
+  String get rideFormPace => 'Pace';
+
+  @override
+  String get rideFormNoDrop => 'No-drop';
+
+  @override
+  String get rideFormNotes => 'Notes (optional)';
+
+  @override
+  String get rideFormMaxRiders => 'Maximum riders (optional)';
+
+  @override
+  String get rideFormSave => 'Save the ride';
+
+  @override
+  String get rideFormNeedTitle => 'Give the ride a title.';
+
+  @override
+  String get rideFormNeedMeeting => 'Name the meeting point.';
+
+  @override
+  String get rideFormNeedPoint => 'Pick the meeting point on the map.';
+
+  @override
+  String get rideFormFuture => 'Choose a date and time in the future.';
+
+  @override
+  String get rideFormMaxRange =>
+      'The limit is a number from 1 to 500, or leave it empty.';
+
+  @override
+  String get calendarTitle => 'Calendar subscription';
+
+  @override
+  String get calendarHelp =>
+      'Subscribe the calendar on your phone or computer to the club\'s rides. The address is private: whoever has it sees the club\'s rides, never who is in.';
+
+  @override
+  String get calendarInactive => 'No calendar address yet.';
+
+  @override
+  String get calendarActive => 'A calendar address is active.';
+
+  @override
+  String get calendarCreate => 'Create the address';
+
+  @override
+  String get calendarReplace => 'Replace the address';
+
+  @override
+  String get calendarReplaceConfirmTitle => 'Replace the calendar address?';
+
+  @override
+  String get calendarReplaceConfirmBody =>
+      'The old address stops working at once and your calendar needs the new one.';
+
+  @override
+  String get calendarDelete => 'Stop the address';
+
+  @override
+  String get calendarDeleteConfirmTitle => 'Stop the calendar address?';
+
+  @override
+  String get calendarDeleteConfirmBody =>
+      'Your calendar stops updating. You can make a new address at any time.';
+
+  @override
+  String get calendarCopy => 'Copy the address';
+
+  @override
+  String get calendarAddressCopied => 'Address copied';
+
+  @override
+  String get calendarShownOnce =>
+      'Copy it now. The server keeps only a hash, so it cannot show the address again; if you lose it, replace it.';
+
+  @override
+  String notificationClubRidePlanned(String ride) {
+    return '$ride: the club planned a ride.';
+  }
+
+  @override
+  String notificationClubRideChanged(String ride) {
+    return '$ride: the time or the meeting point changed.';
+  }
+
+  @override
+  String notificationClubRideCancelled(String ride) {
+    return '$ride: the ride is cancelled.';
   }
 
   @override

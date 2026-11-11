@@ -33,6 +33,8 @@ void main() {
     await tester.tap(find.text('Club'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.byKey(const Key('share-rides')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('share-rides')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('My coaches').last);

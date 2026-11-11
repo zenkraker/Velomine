@@ -15,6 +15,9 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'club_join_request' => l10n.notificationClubJoinRequest(n.subject),
       'club_join_approved' => l10n.notificationClubJoinApproved(n.subject),
       'club_join_declined' => l10n.notificationClubJoinDeclined(n.subject),
+      'club_ride_planned' => l10n.notificationClubRidePlanned(n.subject),
+      'club_ride_changed' => l10n.notificationClubRideChanged(n.subject),
+      'club_ride_cancelled' => l10n.notificationClubRideCancelled(n.subject),
       _ => n.subject,
     };
 
@@ -28,5 +31,8 @@ String? notificationTarget(NotificationResponse n) => switch (n.type) {
   'club_join_request' ||
   'club_join_approved' ||
   'club_join_declined' => '/club',
+  'club_ride_planned' || 'club_ride_changed' || 'club_ride_cancelled'
+      when n.plannedRideId != null =>
+    '/club/rides/${n.plannedRideId}',
   _ => null,
 };

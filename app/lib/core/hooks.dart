@@ -17,6 +17,13 @@ Future<XFile?> pickStravaExport() => openFile(
   ],
 );
 
+/// Opens the picker for a GPX file to turn into a club route.
+Future<XFile?> pickGpxFile() => openFile(
+  acceptedTypeGroups: const [
+    XTypeGroup(label: 'GPX', extensions: ['gpx']),
+  ],
+);
+
 /// Opens an address in the phone's or computer's browser (the data export download). The real one is in app.dart.
 typedef LinkOpener = Future<void> Function(Uri uri);
 

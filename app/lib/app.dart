@@ -33,6 +33,15 @@ import 'features/club/club_view_model.dart';
 import 'features/club/club_screen.dart';
 import 'features/club/join_club_screen.dart';
 import 'features/club/nearby_clubs_screen.dart';
+import 'features/calendar/calendar_feed_screen.dart';
+import 'features/calendar/club_ride_detail_screen.dart';
+import 'features/calendar/club_rides_screen.dart';
+import 'features/calendar/club_rides_view_model.dart';
+import 'features/calendar/plan_ride_screen.dart';
+import 'features/routes/route_detail_screen.dart';
+import 'features/routes/route_forms.dart';
+import 'features/routes/routes_screen.dart';
+import 'features/routes/routes_view_model.dart';
 import 'features/coach/coach_athlete_screen.dart';
 import 'features/coach/coach_athletes_screen.dart';
 import 'features/coach/coach_ride_screen.dart';
@@ -287,6 +296,12 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               onJoin: () => context.push('/join'),
               onOpenClubs: () => context.push('/clubs'),
               onOpenAthletes: () => context.push('/club/athletes'),
+              onOpenRides: () => context.push('/club/rides'),
+              onOpenRide: (id) => context.push('/club/rides/$id'),
+              onPlanRide: () => context.push('/club/rides/new'),
+              onOpenRoutes: () => context.push('/club/routes'),
+              onOpenRoute: (id) => context.push('/club/routes/$id'),
+              onAddRoute: () => context.push('/club/routes/new'),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,
@@ -294,6 +309,123 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
                   ref.read(sessionProvider).serverInfo?.mapAttribution ??
                   defaultMapAttribution,
             ),
+          ),
+          GoRoute(
+            path: '/club/rides',
+            builder: (context, _) => ClubRidesScreen(
+              canPlan: switch (ref.watch(clubViewModelProvider).club?.myRole) {
+                'owner' || 'coach' => true,
+                _ => false,
+              },
+              onOpen: (id) => context.push('/club/rides/$id'),
+              onPlan: () => context.push('/club/rides/new'),
+              onCalendar: () => context.push('/club/calendar'),
+            ),
+          ),
+          GoRoute(
+            path: '/club/rides/new',
+            builder: (context, _) => PlanRideScreen(
+              rideId: '',
+              onSaved: (id) => context.pushReplacement('/club/rides/$id'),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
+            ),
+          ),
+          GoRoute(
+            path: '/club/rides/:id',
+            builder: (context, state) => ClubRideDetailScreen(
+              key: ValueKey(state.pathParameters['id']),
+              id: state.pathParameters['id']!,
+              onEdit: () => context.push(
+                '/club/rides/${state.pathParameters['id']}/edit',
+              ),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
+            ),
+          ),
+          GoRoute(
+            path: '/club/rides/:id/edit',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return PlanRideScreen(
+                key: ValueKey('edit-$id'),
+                rideId: id,
+                onSaved: (_) {
+                  ref.invalidate(clubRideDetailViewModelProvider(id));
+                  _backOrGo(context, '/club/rides/$id');
+                },
+                tileUrl:
+                    ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                    defaultMapTileUrl,
+                attribution:
+                    ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                    defaultMapAttribution,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/club/calendar',
+            builder: (context, _) => const CalendarFeedScreen(),
+          ),
+          GoRoute(
+            path: '/club/routes',
+            builder: (context, _) => RoutesScreen(
+              onOpen: (id) => context.push('/club/routes/$id'),
+              onAdd: () => context.push('/club/routes/new'),
+            ),
+          ),
+          GoRoute(
+            path: '/club/routes/new',
+            builder: (context, _) => AddRouteScreen(
+              onAdded: (id) => context.pushReplacement('/club/routes/$id'),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
+            ),
+          ),
+          GoRoute(
+            path: '/club/routes/:id',
+            builder: (context, state) => RouteDetailScreen(
+              key: ValueKey(state.pathParameters['id']),
+              id: state.pathParameters['id']!,
+              onEdit: () => context.push(
+                '/club/routes/${state.pathParameters['id']}/edit',
+              ),
+              onDeleted: () => _backOrGo(context, '/club/routes'),
+              serverUrl: ref.read(sessionProvider).serverUrl,
+              openLink: ref.read(linkOpenerProvider),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
+            ),
+          ),
+          GoRoute(
+            path: '/club/routes/:id/edit',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return EditRouteScreen(
+                key: ValueKey('edit-$id'),
+                id: id,
+                onSaved: () {
+                  ref.invalidate(routeDetailViewModelProvider(id));
+                  _backOrGo(context, '/club/routes/$id');
+                },
+              );
+            },
           ),
           GoRoute(
             path: '/club/athletes',

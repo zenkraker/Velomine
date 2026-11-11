@@ -76,6 +76,7 @@ class Session {
        privacy = PrivacyApi(client),
        wellbeing = WellbeingApi(client),
        notifications = NotificationsApi(client),
+       routes = RoutesApi(client),
        server = ServerApi(client) {
     auth.onSignedOut = sessionExpired;
   }
@@ -97,6 +98,9 @@ class Session {
   /// Check-ins, ride RPE and notes.
   final WellbeingApi wellbeing;
   final NotificationsApi notifications;
+
+  /// The club's route library and the draft of a ride's line.
+  final RoutesApi routes;
   final ServerApi server;
   final SessionAuth auth;
   final AppSso appSso;
