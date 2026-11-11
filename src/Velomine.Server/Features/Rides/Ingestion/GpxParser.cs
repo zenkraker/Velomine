@@ -8,11 +8,27 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// </summary>
 public static class GpxParser
 {
+    /// <summary>
+    /// Track types that are clearly not a bike ride, so a Strava export's runs and hikes do not become rides. A file
+    /// that says nothing is still read as a ride: many writers leave the type empty.
+    /// </summary>
+    private static readonly string[] OtherSports =
+        ["run", "walk", "hike", "swim", "row", "ski", "snowboard", "skate", "paddle", "surf", "kayak", "canoe",
+            "yoga", "workout", "weight", "stair", "sail", "horse", "golf", "climb"];
+
     public static IReadOnlyList<ParsedRide> Parse(XDocument document)
     {
         var rides = new List<ParsedRide>();
+        var otherSport = 0;
         foreach (var track in document.Root!.Named("trk"))
         {
+            var type = track.First("type")?.Value;
+            if (type is not null && OtherSports.Any(s => type.Contains(s, StringComparison.OrdinalIgnoreCase)))
+            {
+                otherSport++;
+                continue;
+            }
+
             var points = new List<(DateTimeOffset, Sample)>();
             foreach (var point in track.Named("trkpt"))
             {
@@ -22,7 +38,7 @@ public static class GpxParser
 
             if (points.Count >= 2)
             {
-                var dimensions = RideDimensions.FromText(track.First("type")?.Value);
+                var dimensions = RideDimensions.FromText(type);
                 var hasPositions = points.Any(p => p.Item2.Latitude is not null && p.Item2.Longitude is not null);
                 if (dimensions.Environment is null && hasPositions)
                     dimensions = dimensions with { Environment = Environments.Outdoor };
@@ -31,7 +47,11 @@ public static class GpxParser
         }
 
         if (rides.Count == 0)
-            throw new RideParseException("no_timestamps", "The GPX file has no track with timestamped points.");
+        {
+            throw otherSport > 0
+                ? new RideParseException("not_cycling", "The activity is not cycling.")
+                : new RideParseException("no_timestamps", "The GPX file has no track with timestamped points.");
+        }
         return rides;
     }
 

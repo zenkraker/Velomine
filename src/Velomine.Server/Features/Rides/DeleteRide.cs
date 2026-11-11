@@ -6,8 +6,11 @@ using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Features.Rides;
 
-/// <summary>Deletes a ride, its hidden duplicates and its samples. The original file goes too, unless another ride was read from the same file.</summary>
-public sealed class DeleteRide(VelomineDbContext db, RideFileStore files) : Endpoint<RideIdRequest>
+/// <summary>
+/// Deletes a ride and its samples. A hidden copy of it is not deleted: it is read again and becomes visible, so a ride
+/// wrongly hidden as a duplicate can be recovered. The original file goes too, unless another ride still uses it.
+/// </summary>
+public sealed class DeleteRide(VelomineDbContext db, RideFileStore files, IngestionQueue queue) : Endpoint<RideIdRequest>
 {
     public override void Configure() => Delete("rides/{id}");
 
@@ -24,10 +27,16 @@ public sealed class DeleteRide(VelomineDbContext db, RideFileStore files) : Endp
         var hidden = await db.Rides
             .Where(r => r.UserId == userId && r.DuplicateOf == ride.Id)
             .ToListAsync(ct);
-        db.Rides.RemoveRange(hidden);
+        foreach (var copy in hidden)
+        {
+            copy.Status = RideStatus.Processing;
+            copy.DuplicateOf = null;
+            copy.DedupKey = null; // the reader works it out again; it must not clash with the ride being removed
+        }
         db.Rides.Remove(ride);
         await db.SaveChangesAsync(ct);
 
+        foreach (var copy in hidden) queue.Enqueue(copy.Id);
         if (!await db.Rides.AnyAsync(r => r.FileSha256 == ride.FileSha256, ct)) files.Delete(ride.FileSha256);
         await Send.NoContentAsync(ct);
     }

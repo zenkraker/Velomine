@@ -111,6 +111,24 @@ class RidesViewModel extends _$RidesViewModel {
     await _watch(rideId);
   }
 
+  /// Picks a Strava export, sends it, and returns its import id so the route can
+  /// show the progress. The server reads the archive in the background.
+  Future<String?> startImport() async {
+    if (state.import.running) return null;
+    final picked = await ref.read(importFilePickerProvider)();
+    if (picked == null || !ref.mounted) return null;
+
+    state = state.copyWith(import: state.import.start());
+    final result = await ref.read(ridesDataProvider).startImport(picked);
+    if (!ref.mounted) return null;
+    state = state.copyWith(import: state.import.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return null;
+    }
+    return result.valueOrNull;
+  }
+
   void messageShown(int id) => state = state.copyWith(
     messages: [
       for (final message in state.messages)

@@ -92,6 +92,16 @@ final locationServiceProvider = Provider<LocationService>(
 /// Opens the ride file picker. Tests override it with a file that needs no disk.
 final filePickerProvider = Provider<FilePicker>((ref) => pickRideFile);
 
+/// Opens the picker for a Strava export archive. Tests override it like the ride one.
+final importFilePickerProvider = Provider<FilePicker>(
+  (ref) => pickStravaExport,
+);
+
+/// How often an import is checked until the server has read the archive.
+final importPollIntervalProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 1),
+);
+
 /// How often an upload is checked until the server has read it. Tests shorten
 /// it so they do not wait a second per poll.
 final ridePollIntervalProvider = Provider<Duration>(

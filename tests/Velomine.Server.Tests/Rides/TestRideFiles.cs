@@ -184,5 +184,21 @@ public static class TestRideFiles
         return output.ToArray();
     }
 
+    /// <summary>A ZIP with the entries in the order given, used for Strava exports.</summary>
+    public static byte[] Zip(params (string Name, byte[] Content)[] entries)
+    {
+        using var output = new MemoryStream();
+        using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var (name, content) in entries)
+            {
+                var entry = zip.CreateEntry(name);
+                using var stream = entry.Open();
+                stream.Write(content);
+            }
+        }
+        return output.ToArray();
+    }
+
     public static byte[] Bytes(string text) => Encoding.UTF8.GetBytes(text);
 }

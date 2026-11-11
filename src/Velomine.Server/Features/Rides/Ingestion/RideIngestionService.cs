@@ -126,7 +126,17 @@ public sealed class RideIngestionService(
             }
 
             var target = used
-                ? new Ride { Id = Guid.CreateVersion7(), UserId = ride.UserId, FileSha256 = ride.FileSha256, FileName = ride.FileName, UploadedAt = ride.UploadedAt }
+                ? new Ride
+                {
+                    Id = Guid.CreateVersion7(),
+                    UserId = ride.UserId,
+                    FileSha256 = ride.FileSha256,
+                    FileName = ride.FileName,
+                    UploadedAt = ride.UploadedAt,
+                    // Every ride read from an imported file belongs to that import; the activity id only to the first.
+                    ImportId = ride.ImportId,
+                    Source = ride.Source,
+                }
                 : ride;
             if (used) db.Rides.Add(target);
             used = true;
@@ -141,24 +151,19 @@ public sealed class RideIngestionService(
             target.Discipline = file.Discipline;
             target.Assist = file.Assist;
             target.Environment = file.Environment;
-            target.Commute = file.Commute;
+            // The export's CSV is the only source for a commute, so it outlives what the file says.
+            target.Commute = file.Commute ?? target.Commute;
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
+            Apply(target, metrics);
 
-            var original = await db.Rides.AsNoTracking()
-                .Where(r => r.UserId == ride.UserId && r.DedupKey == target.DedupKey
-                    && (r.Status == RideStatus.Processing || r.Status == RideStatus.Ready)
-                    && r.Id != target.Id)
-                .Select(r => (Guid?)r.Id)
-                .FirstOrDefaultAsync(ct);
-            if (original is not null)
+            if (await FindOriginalAsync(db, target, ct) is { } original)
             {
                 target.Status = RideStatus.Duplicate;
                 target.DuplicateOf = original;
                 continue;
             }
 
-            Apply(target, metrics);
             target.BikeId ??= DefaultBike.For(memberBikes, file.Discipline, file.Assist, file.Environment, file.Commute);
             target.Status = RideStatus.Ready;
             target.Streams = ToStreams(file.Samples);
@@ -185,7 +190,7 @@ public sealed class RideIngestionService(
             return;
         }
 
-        foreach (var r in read) Notify.RideRead(db, time, r);
+        foreach (var r in read.Where(r => r.ImportId is null)) Notify.RideRead(db, time, r);
         try
         {
             await db.SaveChangesAsync(ct);
@@ -202,15 +207,46 @@ public sealed class RideIngestionService(
         // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
         VelomineMetrics.RidesIngested.Add(read.Count(r => r.Status == RideStatus.Ready));
-        await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
+        // An import warns once when it finishes, not once per ride: wear is recomputed from every ride each time.
+        if (ride.ImportId is null) await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
     }
+
+    /// <summary>
+    /// The ride this one repeats, or null. The same file is known by its hash and start time; another app's copy of the
+    /// same ride is recognised by the same member, the same start within two minutes, the same elapsed time and the
+    /// same distance.
+    /// </summary>
+    private static async Task<Guid?> FindOriginalAsync(VelomineDbContext db, Ride ride, CancellationToken ct)
+    {
+        var exact = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == ride.UserId && r.DedupKey == ride.DedupKey
+                && (r.Status == RideStatus.Processing || r.Status == RideStatus.Ready)
+                && r.Id != ride.Id)
+            .Select(r => (Guid?)r.Id)
+            .FirstOrDefaultAsync(ct);
+        if (exact is not null) return exact;
+
+        if (ride.StartTime is not { } start || ride.ElapsedS is not { } elapsed) return null;
+        var from = start.AddSeconds(-StartWindowS);
+        var to = start.AddSeconds(StartWindowS);
+        var candidates = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == ride.UserId && r.Status == RideStatus.Ready && r.Id != ride.Id
+                && r.StartTime >= from && r.StartTime <= to)
+            .Select(r => new { r.Id, r.ElapsedS, r.DistanceM })
+            .ToListAsync(ct);
+        return candidates.FirstOrDefault(c => RideMatch.SameRide(elapsed, ride.DistanceM, c.ElapsedS, c.DistanceM))?.Id;
+    }
+
+    /// <summary>How far apart two devices' start times may be and still be the same ride.</summary>
+    private const int StartWindowS = 120;
 
     private async Task FailAsync(VelomineDbContext db, Ride ride, string code, CancellationToken ct)
     {
         VelomineMetrics.UploadFailures.Add(1, new KeyValuePair<string, object?>("reason", code));
         ride.Status = RideStatus.Failed;
         ride.Error = code;
-        Notify.RideRead(db, time, ride);
+        // An import reports its failures once, in its counts; only a direct upload notifies per ride.
+        if (ride.ImportId is null) Notify.RideRead(db, time, ride);
         await db.SaveChangesAsync(ct);
     }
 
@@ -229,7 +265,7 @@ public sealed class RideIngestionService(
         ride.DedupKey = dedupKey;
         ride.Status = RideStatus.Duplicate;
         ride.DuplicateOf = survivor;
-        Notify.RideRead(db, time, ride);
+        if (ride.ImportId is null) Notify.RideRead(db, time, ride);
         await db.SaveChangesAsync(ct);
     }
 

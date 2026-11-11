@@ -43,6 +43,15 @@ public sealed class Ride
     /// <summary>Identifies a ride for duplicate checks: the file hash plus the start time.</summary>
     public string? DedupKey { get; set; }
 
+    /// <summary>The import that brought this ride in, or null when the member uploaded it directly.</summary>
+    public Guid? ImportId { get; set; }
+
+    /// <summary>Another app this ride came from, such as "strava"; null when it was recorded here or uploaded by hand.</summary>
+    public string? Source { get; set; }
+
+    /// <summary>The ride's id in that app, so importing the same activity again is recognised.</summary>
+    public string? SourceId { get; set; }
+
     public DateTimeOffset UploadedAt { get; set; }
 
     /// <summary>When the startup backfill finished with this ride; null only for old rides it has not reached yet.</summary>

@@ -27,6 +27,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var goals = await db.Set<Goal>().AsNoTracking().Where(g => g.UserId == userId).OrderBy(g => g.CreatedAt).ToListAsync(ct);
         var notifications = await db.Notifications.AsNoTracking().Where(n => n.UserId == userId).OrderBy(n => n.CreatedAt).ToListAsync(ct);
         var sessions = await db.UserSessions.AsNoTracking().Where(s => s.UserId == userId).OrderByDescending(s => s.LastUsedAt).ToListAsync(ct);
+        var imports = await db.RideImports.AsNoTracking().Where(i => i.UserId == userId).OrderBy(i => i.CreatedAt).ToListAsync(ct);
         var checkIns = await db.DailyCheckIns.AsNoTracking()
             .Where(c => c.UserId == userId).OrderBy(c => c.LocalDate).ToListAsync(ct);
         var feels = await (
@@ -109,6 +110,17 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
+        await AddJsonAsync(zip, "imports.json", imports.Select(i => new
+        {
+            i.Id,
+            i.Source,
+            i.FileName,
+            Status = i.Status.ToString().ToLowerInvariant(),
+            i.Total,
+            i.Error,
+            i.CreatedAt,
+            i.FinishedAt,
+        }), ct);
         await AddJsonAsync(zip, "wellbeing.json", new
         {
             ConsentAt = user.WellbeingConsentAt,
@@ -156,6 +168,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         goals.json          your goals
         notifications.json  your notifications
         sessions.json       where you are signed in: the device label and the times, never an address
+        imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.

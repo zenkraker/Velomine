@@ -45,6 +45,21 @@ class RidesData {
   Future<Result<RideResponse?>> ride(String id) =>
       _api.getRide(id).guard(FailureAction.loadRide);
 
+  /// Uploads a Strava export archive. The server reads it in the background:
+  /// [importStatus] follows it until it is done.
+  Future<Result<String?>> startImport(XFile file) => (() async {
+    final upload = MultipartFile(
+      'file',
+      file.openRead(),
+      await file.length(),
+      filename: file.name,
+    );
+    return (await _api.startRideImport(upload))?.importId;
+  })().guard(FailureAction.importRides);
+
+  Future<Result<RideImportResponse?>> importStatus(String id) =>
+      _api.getRideImport(id).guard(FailureAction.loadImport);
+
   static String _newKey() {
     final random = Random.secure();
     return List.generate(

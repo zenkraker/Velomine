@@ -8,6 +8,7 @@ public static class NotificationText
         NotificationTypes.RideReady => EmailStrings.Format("RideReady", n.Subject),
         NotificationTypes.RideFailed => EmailStrings.Format("RideFailed", n.Subject),
         NotificationTypes.RideDuplicate => EmailStrings.Format("RideDuplicate", n.Subject),
+        NotificationTypes.RideImport => EmailStrings.Format("RideImport", n.Subject),
         NotificationTypes.SignUpWaiting => EmailStrings.Format("SignUpWaiting", n.Subject),
         NotificationTypes.PartSoon => EmailStrings.Format("PartSoon", n.Subject),
         NotificationTypes.PartWorn => EmailStrings.Format("PartWorn", n.Subject),

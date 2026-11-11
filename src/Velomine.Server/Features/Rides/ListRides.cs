@@ -65,7 +65,9 @@ public sealed class ListRides(VelomineDbContext db) : Endpoint<ListRidesRequest,
     {
         var userId = User.UserId();
         var limit = req.Limit ?? 50;
-        var query = db.Rides.AsNoTracking().Where(r => r.UserId == userId && r.Status != RideStatus.Duplicate);
+        // Duplicates stay out; a file an import could not read is reported by the import, not as a failed ride card.
+        var query = db.Rides.AsNoTracking().Where(r => r.UserId == userId && r.Status != RideStatus.Duplicate
+            && (r.ImportId == null || r.Status != RideStatus.Failed));
 
         if (req.Cursor is not null)
         {

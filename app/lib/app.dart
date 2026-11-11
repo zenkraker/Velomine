@@ -44,6 +44,7 @@ import 'features/privacy/privacy_screen.dart';
 import 'features/progress/progress_screen.dart';
 import 'features/recording/recording_screen.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
+import 'features/rides/import/import_screen.dart';
 import 'features/rides/rides_view_model.dart';
 import 'features/rides/rides_screen.dart';
 import 'home_shell.dart';
@@ -242,6 +243,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
                 final dismissed = ref.watch(soloHintViewModelProvider);
                 return RidesScreen(
                   onOpen: (id) => context.push('/rides/$id'),
+                  onOpenImport: (id) => context.push('/rides/import/$id'),
                   showSoloCard: club.loaded && club.club == null && !dismissed,
                   onOpenClubs: () => context.push('/clubs'),
                   onDismissSoloCard: ref
@@ -249,6 +251,14 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
                       .dismiss,
                 );
               },
+            ),
+          ),
+          GoRoute(
+            path: '/rides/import/:id',
+            builder: (context, state) => ImportScreen(
+              key: ValueKey(state.pathParameters['id']),
+              id: state.pathParameters['id']!,
+              onDone: () => context.go('/rides'),
             ),
           ),
           GoRoute(

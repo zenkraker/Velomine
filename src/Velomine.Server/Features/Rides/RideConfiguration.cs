@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Velomine.Server.Features.Rides.Import;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -16,6 +17,8 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.Property(r => r.FileSha256).HasMaxLength(64);
         ride.Property(r => r.FileName).HasMaxLength(256);
         ride.Property(r => r.DedupKey).HasMaxLength(128);
+        ride.Property(r => r.Source).HasMaxLength(16);
+        ride.Property(r => r.SourceId).HasMaxLength(64);
         ride.Property(r => r.Device).HasMaxLength(128);
         ride.Property(r => r.Discipline).HasMaxLength(16);
         ride.Property(r => r.Assist).HasMaxLength(16);
@@ -28,6 +31,14 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
 
         ride.HasOne<Bikes.Bike>().WithMany().HasForeignKey(r => r.BikeId).OnDelete(DeleteBehavior.SetNull);
         ride.HasIndex(r => r.BikeId);
+
+        ride.HasOne<RideImport>().WithMany().HasForeignKey(r => r.ImportId).OnDelete(DeleteBehavior.SetNull);
+        ride.HasIndex(r => r.ImportId);
+        // One row per activity from another app: importing a newer export skips what is already here.
+        ride.HasIndex(r => new { r.UserId, r.Source, r.SourceId })
+            .IsUnique()
+            .HasFilter("source IS NOT NULL")
+            .HasDatabaseName("ux_rides_user_source");
 
         ride.HasIndex(r => new { r.UserId, r.IdempotencyKey }).IsUnique();
         ride.HasIndex(r => new { r.UserId, r.DedupKey })

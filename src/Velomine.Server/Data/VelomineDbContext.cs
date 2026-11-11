@@ -10,6 +10,7 @@ using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
+using Velomine.Server.Features.Rides.Import;
 using Velomine.Server.Features.Sharing;
 using Velomine.Server.Features.Wellbeing;
 
@@ -29,6 +30,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<RidePowerBest> RidePowerBests => Set<RidePowerBest>();
 
     public DbSet<RideLap> RideLaps => Set<RideLap>();
+
+    public DbSet<RideImport> RideImports => Set<RideImport>();
 
     public DbSet<Bike> Bikes => Set<Bike>();
 

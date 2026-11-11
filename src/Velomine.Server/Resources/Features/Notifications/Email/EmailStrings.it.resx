@@ -58,6 +58,9 @@
   <data name="RideDuplicate" xml:space="preserve">
     <value>{0} era già stata caricata, quindi è nascosta.</value>
   </data>
+  <data name="RideImport" xml:space="preserve">
+    <value>L'importazione di {0} è terminata. Apri Velomine per vedere le uscite.</value>
+  </data>
   <data name="SignUpWaiting" xml:space="preserve">
     <value>{0} si è iscritto e attende l'approvazione.</value>
   </data>

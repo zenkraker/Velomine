@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FastEndpoints.OpenApi;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,11 @@ using Velomine.Server.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddVelomineTelemetry();
+
+// A Strava export can be a gigabyte. Only the import request is let past Kestrel's 30 MB default (see the middleware
+// below); the endpoint itself enforces this cap, and the form parser has to accept the wrapping around it.
+var importMaxBytes = (builder.Configuration.GetValue("Velomine:Imports:MaxArchiveMb", 1024) + 8) * 1024L * 1024L;
+builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = importMaxBytes);
 
 // The connection string is read when the context is first created, so tests can override it.
 builder.Services.AddDbContext<VelomineDbContext>((services, options) =>
@@ -100,6 +106,14 @@ if (builder.IsExportMode()) builder.Services.RemoveAll<IHostedService>();
 
 var app = builder.Build();
 app.UseForwardedHeaders();
+// Only the import endpoint may send more than Kestrel's 30 MB default; every other request keeps that cap.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "POST" && context.Request.Path == "/api/v1/rides/imports"
+        && context.Features.Get<IHttpMaxRequestBodySizeFeature>() is { IsReadOnly: false } feature)
+        feature.MaxRequestBodySize = importMaxBytes;
+    await next(context);
+});
 // API only: the web app and the presentation site are served by the web image (app/Dockerfile), which forwards /api,
 // /health and /openapi here, so the browser sees one address.
 app.UseVelomineTelemetry();

@@ -58,6 +58,9 @@
   <data name="RideDuplicate" xml:space="preserve">
     <value>{0} was already uploaded, so it is hidden.</value>
   </data>
+  <data name="RideImport" xml:space="preserve">
+    <value>Your import of {0} has finished. Open Velomine to see the rides.</value>
+  </data>
   <data name="SignUpWaiting" xml:space="preserve">
     <value>{0} signed up and is waiting for approval.</value>
   </data>

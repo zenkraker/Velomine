@@ -8,6 +8,7 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'ride_ready' => l10n.notificationRideReady(n.subject),
       'ride_failed' => l10n.notificationRideFailed(n.subject),
       'ride_duplicate' => l10n.notificationRideDuplicate(n.subject),
+      'ride_import' => l10n.notificationRideImport(n.subject),
       'signup_waiting' => l10n.notificationSignupWaiting(n.subject),
       'part_soon' => l10n.notificationPartSoon(n.subject),
       'part_worn' => l10n.notificationPartWorn(n.subject),

@@ -61,6 +61,7 @@ public sealed record RideDimensions(string? Discipline, string? Assist, string? 
 
         var assist = words.Contains("e-bike", StringComparison.Ordinal)
                      || words.Contains("ebike", StringComparison.Ordinal)
+                     || words.Contains("emountainbike", StringComparison.Ordinal)
                      || words.Contains("e bike", StringComparison.Ordinal)
                      || words.Contains("electric", StringComparison.Ordinal)
                      || words.Contains("pedelec", StringComparison.Ordinal)

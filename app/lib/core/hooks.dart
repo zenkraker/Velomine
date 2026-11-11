@@ -10,6 +10,13 @@ Future<XFile?> pickRideFile() => openFile(
   ],
 );
 
+/// Opens the picker for a Strava export, the ZIP Strava hands out.
+Future<XFile?> pickStravaExport() => openFile(
+  acceptedTypeGroups: const [
+    XTypeGroup(label: 'Strava export', extensions: ['zip']),
+  ],
+);
+
 /// Opens an address in the phone's or computer's browser (the data export download). The real one is in app.dart.
 typedef LinkOpener = Future<void> Function(Uri uri);
 

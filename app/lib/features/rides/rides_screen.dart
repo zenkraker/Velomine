@@ -31,6 +31,7 @@ class RidesScreen extends ConsumerStatefulWidget {
   const RidesScreen({
     super.key,
     required this.onOpen,
+    required this.onOpenImport,
     this.showSoloCard = false,
     this.onOpenClubs,
     this.onDismissSoloCard,
@@ -38,6 +39,9 @@ class RidesScreen extends ConsumerStatefulWidget {
 
   /// Called with a ride's id when its card is pressed.
   final void Function(String id) onOpen;
+
+  /// Called with an import's id once the archive has been sent.
+  final void Function(String id) onOpenImport;
 
   /// Whether to point a rider without a club at the nearby clubs.
   final bool showSoloCard;
@@ -88,6 +92,14 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
     final upload = s.upload.running
         ? null
         : () => ref.read(ridesViewModelProvider.notifier).upload();
+    final startImport = s.import.running
+        ? null
+        : () async {
+            final id = await ref
+                .read(ridesViewModelProvider.notifier)
+                .startImport();
+            if (id != null && context.mounted) widget.onOpenImport(id);
+          };
     return Scaffold(
       backgroundColor: Colors.transparent,
       // Wide: the action sits with the list. Compact: it floats, and the list ends above it.
@@ -105,18 +117,35 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
           controller: ref.read(ridesViewModelProvider.notifier).scroll,
           padding: EdgeInsets.fromLTRB(side, 8, side, wide ? 16 : 96),
           children: [
-            if (wide)
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  key: const Key('upload'),
-                  onPressed: upload,
-                  icon: const Icon(Icons.upload_file),
-                  label: Text(
-                    s.upload.running ? l10n.uploading : l10n.uploadRide,
+            Align(
+              alignment: Alignment.centerRight,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  TextButton.icon(
+                    key: const Key('import-strava'),
+                    onPressed: startImport,
+                    icon: const Icon(Icons.cloud_download_outlined),
+                    label: Text(
+                      s.import.running
+                          ? l10n.importStarting
+                          : l10n.importFromStrava,
+                    ),
                   ),
-                ),
+                  if (wide)
+                    FilledButton.icon(
+                      key: const Key('upload'),
+                      onPressed: upload,
+                      icon: const Icon(Icons.upload_file),
+                      label: Text(
+                        s.upload.running ? l10n.uploading : l10n.uploadRide,
+                      ),
+                    ),
+                ],
               ),
+            ),
             if (s.load.failure case final failure?)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),

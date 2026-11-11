@@ -12,42 +12,58 @@ public sealed partial class RideFileStore(IOptions<RidesOptions> options)
 {
     private string Root => Path.GetFullPath(options.Value.FilesPath);
 
-    /// <summary>Writes the content and returns its SHA-256 as 64 lowercase hex characters.</summary>
-    public async Task<string> SaveAsync(Stream content, CancellationToken ct)
+    /// <summary>
+    /// Writes the content and returns its SHA-256 as 64 lowercase hex characters. <paramref name="maxBytes"/> caps what
+    /// the stream may really hold, which is not the same as the size a container claims.
+    /// </summary>
+    public async Task<string> SaveAsync(Stream content, CancellationToken ct, long? maxBytes = null)
     {
         Directory.CreateDirectory(Path.Combine(Root, "tmp"));
         var temp = Path.Combine(Root, "tmp", Guid.NewGuid().ToString("N"));
-        string sha;
-        await using (var output = File.Create(temp))
+        try
         {
-            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            var buffer = new byte[81920];
-            int read;
-            while ((read = await content.ReadAsync(buffer, ct)) > 0)
+            string sha;
+            long total = 0;
+            await using (var output = File.Create(temp))
             {
-                hash.AppendData(buffer, 0, read);
-                await output.WriteAsync(buffer.AsMemory(0, read), ct);
+                using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                var buffer = new byte[81920];
+                int read;
+                while ((read = await content.ReadAsync(buffer, ct)) > 0)
+                {
+                    total += read;
+                    if (maxBytes is { } max && total > max)
+                        throw new InvalidDataException("The file is larger than it is allowed to be.");
+                    hash.AppendData(buffer, 0, read);
+                    await output.WriteAsync(buffer.AsMemory(0, read), ct);
+                }
+
+                sha = Convert.ToHexStringLower(hash.GetHashAndReset());
             }
 
-            sha = Convert.ToHexStringLower(hash.GetHashAndReset());
+            var target = PathFor(sha);
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            if (File.Exists(target)) File.Delete(temp);
+            else
+            {
+                try
+                {
+                    File.Move(temp, target);
+                }
+                catch (IOException) when (File.Exists(target))
+                {
+                    // Another upload of the same file won the race; the bytes are identical, so keep one copy.
+                    File.Delete(temp);
+                }
+            }
+            return sha;
         }
-
-        var target = PathFor(sha);
-        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-        if (File.Exists(target)) File.Delete(temp);
-        else
+        catch
         {
-            try
-            {
-                File.Move(temp, target);
-            }
-            catch (IOException) when (File.Exists(target))
-            {
-                // Another upload of the same file won the race; the bytes are identical, so keep one copy.
-                File.Delete(temp);
-            }
+            // A cancelled or oversized upload must not leave its bytes behind.
+            if (File.Exists(temp)) File.Delete(temp);
+            throw;
         }
-        return sha;
     }
 
     public Task<byte[]> ReadAsync(string sha, CancellationToken ct) => File.ReadAllBytesAsync(PathFor(sha), ct);

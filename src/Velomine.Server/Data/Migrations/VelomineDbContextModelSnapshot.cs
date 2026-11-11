@@ -1386,6 +1386,71 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Rides.Import.RideImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ArchiveSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("archive_sha256");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("error");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("file_name");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("Total")
+                        .HasColumnType("integer")
+                        .HasColumnName("total");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_imports");
+
+                    b.HasIndex("UserId", "ArchiveSha256")
+                        .IsUnique()
+                        .HasDatabaseName("ix_imports_user_id_archive_sha256");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_imports_user_id_created_at");
+
+                    b.ToTable("imports", "rides");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1484,6 +1549,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("idempotency_key");
 
+                    b.Property<Guid?>("ImportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("import_id");
+
                     b.Property<double?>("IntensityFactor")
                         .HasColumnType("double precision")
                         .HasColumnName("intensity_factor");
@@ -1511,6 +1580,16 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<DateTimeOffset?>("PowerBestsBackfilledAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("power_bests_backfilled_at");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("SourceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("source_id");
 
                     b.Property<string>("SpeedSource")
                         .HasMaxLength(16)
@@ -1563,6 +1642,9 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_rides_power_bests_backfill")
                         .HasFilter("status = 'Ready' AND power_bests_backfilled_at IS NULL");
 
+                    b.HasIndex("ImportId")
+                        .HasDatabaseName("ix_rides_import_id");
+
                     b.HasIndex("UserId", "DedupKey")
                         .IsUnique()
                         .HasDatabaseName("ux_rides_user_dedup_key")
@@ -1577,6 +1659,11 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("UserId", "StartTime")
                         .HasDatabaseName("ix_rides_user_id_start_time");
+
+                    b.HasIndex("UserId", "Source", "SourceId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_rides_user_source")
+                        .HasFilter("source IS NOT NULL");
 
                     b.ToTable("rides", "rides");
                 });
@@ -2137,6 +2224,18 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_zones_users_user_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Rides.Import.RideImport", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_imports_users_user_id");
+
+                    b.Navigation("Owner");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Rides.Ride", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Bikes.Bike", null)
@@ -2144,6 +2243,12 @@ namespace Velomine.Server.Data.Migrations
                         .HasForeignKey("BikeId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_rides_bikes_bike_id");
+
+                    b.HasOne("Velomine.Server.Features.Rides.Import.RideImport", null)
+                        .WithMany()
+                        .HasForeignKey("ImportId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_rides_imports_import_id");
 
                     b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
                         .WithMany()

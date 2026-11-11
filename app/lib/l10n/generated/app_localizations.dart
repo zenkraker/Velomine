@@ -5360,6 +5360,108 @@ abstract class AppLocalizations {
   /// **'Route map. {distance}.'**
   String routeMapDistanceSummary(String distance);
 
+  /// No description provided for @importFromStrava.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Strava'**
+  String get importFromStrava;
+
+  /// No description provided for @importStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting import…'**
+  String get importStarting;
+
+  /// No description provided for @importTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Strava'**
+  String get importTitle;
+
+  /// No description provided for @importRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading your archive. This can take a few minutes.'**
+  String get importRunning;
+
+  /// No description provided for @importProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} activities read'**
+  String importProgress(int done, int total);
+
+  /// No description provided for @importFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Import finished'**
+  String get importFinished;
+
+  /// No description provided for @importSummaryImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride imported} other{{count} rides imported}}'**
+  String importSummaryImported(int count);
+
+  /// No description provided for @importSummaryDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride was already here} other{{count} rides were already here}}'**
+  String importSummaryDuplicates(int count);
+
+  /// No description provided for @importSummaryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file could not be read} other{{count} files could not be read}}'**
+  String importSummaryFailed(int count);
+
+  /// No description provided for @importSummarySkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 activity skipped, not a ride or without a file} other{{count} activities skipped, not rides or without a file}}'**
+  String importSummarySkipped(int count);
+
+  /// No description provided for @importBackToRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to rides'**
+  String get importBackToRides;
+
+  /// No description provided for @importErrorNotStrava.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a Strava export: it has no activities.csv.'**
+  String get importErrorNotStrava;
+
+  /// No description provided for @importErrorMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive is no longer on the server. Choose it again.'**
+  String get importErrorMissing;
+
+  /// No description provided for @importErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The archive could not be read.'**
+  String get importErrorUnknown;
+
+  /// No description provided for @actionImportRides.
+  ///
+  /// In en, this message translates to:
+  /// **'import your rides'**
+  String get actionImportRides;
+
+  /// No description provided for @actionLoadImport.
+  ///
+  /// In en, this message translates to:
+  /// **'check the import'**
+  String get actionLoadImport;
+
+  /// No description provided for @notificationRideImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Your import of {subject} has finished.'**
+  String notificationRideImport(String subject);
+
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:

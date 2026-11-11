@@ -64,6 +64,7 @@ class HomeShell extends ConsumerWidget {
   String _title(BuildContext context) {
     final l10n = context.l10n;
     final path = location;
+    if (path.startsWith('/rides/import')) return l10n.importTitle;
     if (path.startsWith('/rides')) return l10n.navRides;
     if (path.startsWith('/record')) return l10n.navRecord;
     if (path.startsWith('/progress')) return l10n.navProgress;

@@ -46,8 +46,11 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
         // The generated Dart client sends a text field named "file" next to the file part. Automatic form binding
         // would refuse that, so the file is read from Files instead.
         AllowFileUploads(dontAutoBindFormData: true);
-        Description(d => d.Accepts<UploadRideRequest>("multipart/form-data").Produces<UploadRideResponse>(202).ProducesProblem(400).Produces(401).ProducesProblem(409), clearDefaults: true);
+        Description(d => d.Accepts<UploadRideRequest>("multipart/form-data").Produces<UploadRideResponse>(202).ProducesProblem(400).Produces(401).ProducesProblem(409).ProducesProblem(413), clearDefaults: true);
     }
+
+    /// <summary>One ride file, not an archive: anything bigger than this is refused.</summary>
+    private const long MaxFileBytes = 30L * 1024 * 1024;
 
     public override async Task HandleAsync(UploadRideRequest req, CancellationToken ct)
     {
@@ -59,6 +62,12 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
         }
 
         var file = Files[0];
+        if (file.Length > MaxFileBytes)
+        {
+            AddError("The file is larger than 30 MB.");
+            await Send.ErrorsAsync(413, ct);
+            return;
+        }
         var userId = User.UserId();
 
         string sha;

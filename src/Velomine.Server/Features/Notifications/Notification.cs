@@ -18,6 +18,9 @@ public static class NotificationTypes
     /// <summary>The ride was already uploaded and is hidden. Refers to the new ride; its duplicateOf is the original.</summary>
     public const string RideDuplicate = "ride_duplicate";
 
+    /// <summary>An export archive has been read. The subject is the archive's file name.</summary>
+    public const string RideImport = "ride_import";
+
     /// <summary>For admins: someone signed up and waits for approval. Refers to that account.</summary>
     public const string SignUpWaiting = "signup_waiting";
 
@@ -61,6 +64,7 @@ public static class NotificationKinds
         NotificationTypes.RideReady,
         NotificationTypes.RideFailed,
         NotificationTypes.RideDuplicate,
+        NotificationTypes.RideImport,
         NotificationTypes.PartSoon,
         NotificationTypes.PartWorn,
     ];

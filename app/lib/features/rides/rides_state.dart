@@ -12,6 +12,7 @@ class RidesState {
     this.disciplineFilter,
     this.load = const CommandState.idle(),
     this.upload = const CommandState.idle(),
+    this.import = const CommandState.idle(),
     this.messages = const [],
   });
 
@@ -25,6 +26,7 @@ class RidesState {
 
   final CommandState<RidesPage> load;
   final VoidCommand upload;
+  final CommandState<String?> import;
   final List<UserMessage> messages;
 
   bool get loading => load.running;
@@ -37,6 +39,7 @@ class RidesState {
     bool clearDisciplineFilter = false,
     CommandState<RidesPage>? load,
     VoidCommand? upload,
+    CommandState<String?>? import,
     List<UserMessage>? messages,
   }) => RidesState(
     rides: rides ?? this.rides,
@@ -46,6 +49,7 @@ class RidesState {
         : (disciplineFilter ?? this.disciplineFilter),
     load: load ?? this.load,
     upload: upload ?? this.upload,
+    import: import ?? this.import,
     messages: messages ?? this.messages,
   );
 }

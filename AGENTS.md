@@ -53,12 +53,14 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - Privacy defaults and the default bike are copied onto a ride at import, so changing a default never changes or exposes older rides.
 - **Computed on read, never stored:** part wear, goals and weekly/monthly/yearly totals, from each ride's local date and the member's first day of the week. **Stored when a ride is read:** intensity factor, TSS and TRIMP from the FTP and maximum heart rate at that moment, because the dashboard sums them over a range. Zone seconds are recomputed on every request from the current profile.
 - **Export and deletion cover every table a member owns.** A new table that holds member data is added to the export and to the deletion cascade in the same change.
+- A ride that came from another app records that app and the activity id, so the same activity is recognised when a later export lists it again.
 
 ## Ride processing
 
 - FIT with `Garmin.FIT.Sdk`; GPX and TCX with the BCL XML APIs, reading every common extension (`gpxtpx:hr`, `cad`, `speed`, `atemp`, `PowerInWatts`). Gzipped files are accepted.
 - A multi-activity FIT file becomes one ride per activity.
-- A duplicate is the same file hash plus start time; it is kept hidden and the member is notified.
+- A duplicate is the same file hash plus start time, or, for the same member, a start time within two minutes with the same elapsed time and distance: the same ride from another app or device. It is kept hidden; a single upload says so, an import counts it. Deleting the ride that was kept reads its hidden copies again, so a wrong match is recoverable.
+- **A Strava export is read in the server**: the ZIP is stored as a temporary archive, `activities.csv` and `activities/` are read, and each activity becomes a ride with `source = strava` and its activity id, so importing a newer export skips what is already here. Photos and the other files are ignored; the archive is deleted when the import finishes. Non-cycling activities are skipped and counted, never stored as failed rides.
 - Speed comes from a wheel sensor when present, otherwise GPS; each ride records which.
 - A gap between samples longer than `max(30 s, 5 × the median gap)` is a pause; FIT timer events are pauses too. Pauses are left out of moving time, averages, distance and normalized power. Speed under 0.5 m/s is stopped.
 - **NP:** the device's NP from the FIT file when present; otherwise a 30-second rolling average of power resampled to 1 Hz, fourth powers, mean, fourth root.

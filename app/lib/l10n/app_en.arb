@@ -1549,5 +1549,67 @@
       }
     }
   },
+  "importFromStrava": "Import from Strava",
+  "importStarting": "Starting import…",
+  "importTitle": "Import from Strava",
+  "importRunning": "Reading your archive. This can take a few minutes.",
+  "importProgress": "{done} of {total} activities read",
+  "@importProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importFinished": "Import finished",
+  "importSummaryImported": "{count, plural, =1{1 ride imported} other{{count} rides imported}}",
+  "@importSummaryImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryDuplicates": "{count, plural, =1{1 ride was already here} other{{count} rides were already here}}",
+  "@importSummaryDuplicates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryFailed": "{count, plural, =1{1 file could not be read} other{{count} files could not be read}}",
+  "@importSummaryFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummarySkipped": "{count, plural, =1{1 activity skipped, not a ride or without a file} other{{count} activities skipped, not rides or without a file}}",
+  "@importSummarySkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importBackToRides": "Back to rides",
+  "importErrorNotStrava": "This is not a Strava export: it has no activities.csv.",
+  "importErrorMissing": "The archive is no longer on the server. Choose it again.",
+  "importErrorUnknown": "The archive could not be read.",
+  "actionImportRides": "import your rides",
+  "actionLoadImport": "check the import",
+  "notificationRideImport": "Your import of {subject} has finished.",
+  "@notificationRideImport": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
   "loading": "Loading"
 }

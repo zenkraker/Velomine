@@ -186,6 +186,7 @@ class FakeServer {
   final ssoTokenResponses = <String, http.Response>{};
   FakeAccount? _cookieUser;
   int _pollsLeft = 1;
+  int importPolls = 0;
 
   /// Responses held for a test, in order, by path.
   final _replyGates = <String, List<Completer<void>>>{};
@@ -560,6 +561,29 @@ class FakeServer {
       );
       _pollsLeft = 1;
       return json({'rideId': 'ride-new', 'status': 'processing'}, 202);
+    }
+    if (path == '/api/v1/rides/imports' && request.method == 'POST') {
+      importPolls = 0;
+      return json({'importId': 'import-1', 'status': 'processing'}, 202);
+    }
+    final importStatus = RegExp(r'^/api/v1/rides/imports/([^/]+)$')
+        .firstMatch(path);
+    if (importStatus != null) {
+      importPolls++;
+      final done = importPolls > 1;
+      return json({
+        'id': importStatus.group(1),
+        'status': done ? 'completed' : 'processing',
+        'total': 3,
+        'imported': done ? 2 : 1,
+        'duplicates': done ? 1 : 0,
+        'failed': 0,
+        'skipped': 0,
+        'pending': done ? 0 : 1,
+        'createdAt': '2026-11-11T10:00:00Z',
+        'finishedAt': done ? '2026-11-11T10:01:00Z' : null,
+        'error': null,
+      });
     }
     final samples = RegExp(r'^/api/v1/rides/([^/]+)/streams$').firstMatch(path);
     if (samples != null) {
@@ -2052,7 +2076,13 @@ Future<void> startApp(
           soloHintStore ?? MemorySoloHintStore(),
         ),
         filePickerProvider.overrideWithValue(pickFile ?? () async => null),
+        importFilePickerProvider.overrideWithValue(
+          pickFile ?? () async => null,
+        ),
         ridePollIntervalProvider.overrideWithValue(
+          const Duration(milliseconds: 10),
+        ),
+        importPollIntervalProvider.overrideWithValue(
           const Duration(milliseconds: 10),
         ),
         themeChoiceStoreProvider.overrideWithValue(

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Clubs;
+using Velomine.Server.Features.Rides.Import;
 using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Features.Accounts;
@@ -18,7 +19,7 @@ public enum AccountDeletionResult
 /// parts, goals, notifications, sign-ins); this also removes the original ride files that nothing else uses, so no
 /// member data is left on disk. Used when an admin deletes an account and when a member deletes their own.
 /// </summary>
-public sealed class AccountDeletion(VelomineDbContext db, UserManager<User> users, RideFileStore files)
+public sealed class AccountDeletion(VelomineDbContext db, UserManager<User> users, RideFileStore files, ImportStore imports)
 {
     /// <summary>False when there is no such account.</summary>
     public async Task<AccountDeletionResult> DeleteAsync(Guid userId, CancellationToken ct)
@@ -34,6 +35,7 @@ public sealed class AccountDeletion(VelomineDbContext db, UserManager<User> user
             return AccountDeletionResult.SoleClubOwner;
 
         var hashes = await db.Rides.Where(r => r.UserId == userId).Select(r => r.FileSha256).Distinct().ToListAsync(ct);
+        var archives = await db.RideImports.Where(i => i.UserId == userId).Select(i => i.ArchiveSha256).ToListAsync(ct);
 
         var result = await users.DeleteAsync(user);
         if (!result.Succeeded)
@@ -42,6 +44,7 @@ public sealed class AccountDeletion(VelomineDbContext db, UserManager<User> user
         // Files are named by their hash, so two members who uploaded the same file share it: keep it while a ride still uses it.
         foreach (var sha in hashes)
             if (!await db.Rides.AnyAsync(r => r.FileSha256 == sha, ct)) files.Delete(sha);
+        foreach (var sha in archives) imports.Delete(userId, sha);
         return AccountDeletionResult.Deleted;
     }
 }

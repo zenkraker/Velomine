@@ -2977,5 +2977,95 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get importFromStrava => 'Importa da Strava';
+
+  @override
+  String get importStarting => 'Avvio dell\'importazione…';
+
+  @override
+  String get importTitle => 'Importa da Strava';
+
+  @override
+  String get importRunning =>
+      'Sto leggendo l\'archivio. Può richiedere qualche minuto.';
+
+  @override
+  String importProgress(int done, int total) {
+    return '$done di $total attività lette';
+  }
+
+  @override
+  String get importFinished => 'Importazione terminata';
+
+  @override
+  String importSummaryImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite importate',
+      one: '1 uscita importata',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummaryDuplicates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite erano già qui',
+      one: '1 uscita era già qui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummaryFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file non sono stati letti',
+      one: '1 file non è stato letto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummarySkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attività saltate, non sono uscite o non hanno un file',
+      one: '1 attività saltata, non è un\'uscita o non ha un file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importBackToRides => 'Torna alle uscite';
+
+  @override
+  String get importErrorNotStrava =>
+      'Non è un\'esportazione di Strava: manca activities.csv.';
+
+  @override
+  String get importErrorMissing =>
+      'L\'archivio non è più sul server. Scegli di nuovo il file.';
+
+  @override
+  String get importErrorUnknown => 'Non è stato possibile leggere l\'archivio.';
+
+  @override
+  String get actionImportRides => 'importare le tue uscite';
+
+  @override
+  String get actionLoadImport => 'controllare l\'importazione';
+
+  @override
+  String notificationRideImport(String subject) {
+    return 'L\'importazione di $subject è terminata.';
+  }
+
+  @override
   String get loading => 'Caricamento';
 }

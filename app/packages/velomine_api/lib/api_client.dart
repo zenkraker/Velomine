@@ -337,6 +337,8 @@ class ApiClient {
           return ResetPasswordRequest.fromJson(value);
         case 'RideFeelResponse':
           return RideFeelResponse.fromJson(value);
+        case 'RideImportResponse':
+          return RideImportResponse.fromJson(value);
         case 'RideLapsResponse':
           return RideLapsResponse.fromJson(value);
         case 'RideResponse':
@@ -387,6 +389,8 @@ class ApiClient {
           return SsoInfoResponse.fromJson(value);
         case 'SsoStatus':
           return SsoStatus.fromJson(value);
+        case 'StartRideImportResponse':
+          return StartRideImportResponse.fromJson(value);
         case 'TelemetryResponse':
           return TelemetryResponse.fromJson(value);
         case 'TemplatePartRequest':

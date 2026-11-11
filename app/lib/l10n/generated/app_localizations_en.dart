@@ -2953,5 +2953,95 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get importFromStrava => 'Import from Strava';
+
+  @override
+  String get importStarting => 'Starting import…';
+
+  @override
+  String get importTitle => 'Import from Strava';
+
+  @override
+  String get importRunning =>
+      'Reading your archive. This can take a few minutes.';
+
+  @override
+  String importProgress(int done, int total) {
+    return '$done of $total activities read';
+  }
+
+  @override
+  String get importFinished => 'Import finished';
+
+  @override
+  String importSummaryImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides imported',
+      one: '1 ride imported',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummaryDuplicates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides were already here',
+      one: '1 ride was already here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummaryFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files could not be read',
+      one: '1 file could not be read',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSummarySkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count activities skipped, not rides or without a file',
+      one: '1 activity skipped, not a ride or without a file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importBackToRides => 'Back to rides';
+
+  @override
+  String get importErrorNotStrava =>
+      'This is not a Strava export: it has no activities.csv.';
+
+  @override
+  String get importErrorMissing =>
+      'The archive is no longer on the server. Choose it again.';
+
+  @override
+  String get importErrorUnknown => 'The archive could not be read.';
+
+  @override
+  String get actionImportRides => 'import your rides';
+
+  @override
+  String get actionLoadImport => 'check the import';
+
+  @override
+  String notificationRideImport(String subject) {
+    return 'Your import of $subject has finished.';
+  }
+
+  @override
   String get loading => 'Loading';
 }

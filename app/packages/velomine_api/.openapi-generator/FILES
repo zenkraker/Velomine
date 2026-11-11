@@ -102,6 +102,7 @@ lib/model/register_response.dart
 lib/model/request_to_join_request.dart
 lib/model/reset_password_request.dart
 lib/model/ride_feel_response.dart
+lib/model/ride_import_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
@@ -127,6 +128,7 @@ lib/model/sharing_response.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart
+lib/model/start_ride_import_response.dart
 lib/model/telemetry_response.dart
 lib/model/template_part_request.dart
 lib/model/template_part_response.dart

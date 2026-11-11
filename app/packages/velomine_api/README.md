@@ -168,11 +168,13 @@ Class | Method | HTTP request | Description
 *PrivacyApi* | [**updatePrivacy**](doc//PrivacyApi.md#updateprivacy) | **PUT** /api/v1/privacy/settings | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
+*RidesApi* | [**getRideImport**](doc//RidesApi.md#getrideimport) | **GET** /api/v1/rides/imports/{id} | 
 *RidesApi* | [**getRideLaps**](doc//RidesApi.md#getridelaps) | **GET** /api/v1/rides/{id}/laps | 
 *RidesApi* | [**getRideStreams**](doc//RidesApi.md#getridestreams) | **GET** /api/v1/rides/{id}/streams | 
 *RidesApi* | [**listRides**](doc//RidesApi.md#listrides) | **GET** /api/v1/rides | 
 *RidesApi* | [**setRideBike**](doc//RidesApi.md#setridebike) | **PUT** /api/v1/rides/{id}/bike | 
 *RidesApi* | [**setRideType**](doc//RidesApi.md#setridetype) | **PUT** /api/v1/rides/{id}/type | 
+*RidesApi* | [**startRideImport**](doc//RidesApi.md#startrideimport) | **POST** /api/v1/rides/imports | 
 *RidesApi* | [**uploadRide**](doc//RidesApi.md#uploadride) | **POST** /api/v1/rides/uploads | 
 *RidesApi* | [**wellbeingDeleteRideFeel**](doc//RidesApi.md#wellbeingdeleteridefeel) | **DELETE** /api/v1/rides/{id}/feel | 
 *RidesApi* | [**wellbeingGetRideFeel**](doc//RidesApi.md#wellbeinggetridefeel) | **GET** /api/v1/rides/{id}/feel | 
@@ -267,6 +269,7 @@ Class | Method | HTTP request | Description
  - [RequestToJoinRequest](doc//RequestToJoinRequest.md)
  - [ResetPasswordRequest](doc//ResetPasswordRequest.md)
  - [RideFeelResponse](doc//RideFeelResponse.md)
+ - [RideImportResponse](doc//RideImportResponse.md)
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
@@ -292,6 +295,7 @@ Class | Method | HTTP request | Description
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
+ - [StartRideImportResponse](doc//StartRideImportResponse.md)
  - [TelemetryResponse](doc//TelemetryResponse.md)
  - [TemplatePartRequest](doc//TemplatePartRequest.md)
  - [TemplatePartResponse](doc//TemplatePartResponse.md)
