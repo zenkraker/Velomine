@@ -17,31 +17,10 @@ require_env() {
   [[ -f "$VELOMINE_DIR/$env/.env" ]] || die "Environment '${env}' is not installed on this host (no $VELOMINE_DIR/$env/.env)."
 }
 
-# app_compose <env> <compose args...>
+# app_compose <env> <compose args...>: docker compose in the environment's folder, with its compose.yaml and .env.
 app_compose() {
   local env="$1"; shift
-  docker compose -p "velomine-$env" -f "$VELOMINE_DIR/compose.app.yml" --env-file "$VELOMINE_DIR/$env/.env" "$@"
-}
-
-# env_value <env> <KEY>: a value from <env>/.env (VELOMINE_IMAGE, VELOMINE_HOST, ...).
-env_value() { sed -n "s/^$2=//p" "$VELOMINE_DIR/$1/.env" | tail -n 1; }
-
-# healthy <env>: /health through Traefik and the web container on the loopback, so a broken public path
-# or DNS does not look like a broken image.
-healthy() {
-  local host
-  host="$(env_value "$1" VELOMINE_HOST)"
-  curl -fsS --max-time 5 --resolve "${host}:443:127.0.0.1" "https://${host}/health" >/dev/null 2>&1
-}
-
-# wait_healthy <env> [attempts] [interval]
-wait_healthy() {
-  local env="$1" attempts="${2:-24}" interval="${3:-5}" i
-  for ((i = 1; i <= attempts; i++)); do
-    healthy "$env" && return 0
-    sleep "$interval"
-  done
-  return 1
+  docker compose --project-directory "$VELOMINE_DIR/$env" "$@"
 }
 
 # pg <env> <docker run args...>: a PostgreSQL client with the environment's db.env.

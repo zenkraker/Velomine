@@ -1,17 +1,13 @@
 name: Release
 
-# Builds the server and web images together, once per commit, and moves them through the environments:
+# Builds the server and web images together, once per commit, smoke-tests them as a pair and pushes them to GHCR:
 #
-#   push to main  ->  CI -> images ghcr.io/zenkraker/velomine-{server,web}:sha-<commit>
-#   tag vX.Y.Z    ->  CI -> images :X.Y.Z (and X.Y) -> demo (after an approval)
+#   push to main  ->  ghcr.io/zenkraker/velomine-{server,web}:0.0.0-main.<run> and :sha-<commit>
+#   tag vX.Y.Z    ->  :X.Y.Z, :X.Y and :sha-<commit>
 #
-# The two images always share one version and move together. A deploy moves each environment's pointer tag to the
-# digests it was given; it never rebuilds. Nothing is pushed unless CI and the smoke test pass. No secret is stored for
-# this: GHCR takes the workflow's own token. Hosts pull their pointer tags and roll back on their own
-# (deploy/host/update.sh); the deploy job waits until the environment reports the new commit.
-#
-# Only the demo runs until there are customers (docs/architecture.md). dev, staging and prod are written out below,
-# commented out: to turn one on, uncomment its job, and check it, since commented code is not linted.
+# Tags and OCI labels come from docker/metadata-action, and both images always get the same ones. Nothing is pushed
+# unless CI and the smoke test pass, and `latest` is never published. Deploying is manual and GitHub has no access to the
+# hosts: the operator sets the version on the host and runs docker compose (deploy/host/README.md, "Releasing").
 
 on:
   push:
@@ -26,10 +22,6 @@ concurrency:
 
 permissions:
   contents: read
-
-env:
-  SERVER_IMAGE: ghcr.io/zenkraker/velomine-server
-  WEB_IMAGE: ghcr.io/zenkraker/velomine-web
 
 jobs:
   ci:
@@ -46,40 +38,46 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    outputs:
-      server-digest: ${{ steps.push-server.outputs.digest }}
-      web-digest: ${{ steps.push-web.outputs.digest }}
-      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       # A tag vX.Y.Z is version X.Y.Z; a build from main is a prerelease of 0.0.0 numbered by the run, so the two can
-      # never be confused. Both images get the same tags.
-      - name: Version and tags
-        id: version
-        run: |
-          set -euo pipefail
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            version="${GITHUB_REF_NAME#v}"
-            suffixes=("${version}" "${version%.*}")
-          else
-            version="0.0.0-main.${GITHUB_RUN_NUMBER}"
-            suffixes=("sha-${GITHUB_SHA}")
-          fi
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          for name in server web; do
-            image_var="${name^^}_IMAGE"
-            {
-              echo "${name}-tags<<EOF"
-              for suffix in "${suffixes[@]}"; do echo "${!image_var}:${suffix}"; done
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-          done
+      # never be confused. The version is the highest-priority tag (semver, then the main build, then the commit).
+      - name: Server tags and labels
+        id: meta-server
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/zenkraker/velomine-server
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=0.0.0-main.${{ github.run_number }},enable={{is_default_branch}}
+            type=sha,format=long
+          labels: |
+            org.opencontainers.image.title=Velomine server
+            org.opencontainers.image.description=Velomine API and background work
+
+      - name: Web tags and labels
+        id: meta-web
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/zenkraker/velomine-web
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=0.0.0-main.${{ github.run_number }},enable={{is_default_branch}}
+            type=sha,format=long
+          labels: |
+            org.opencontainers.image.title=Velomine web
+            org.opencontainers.image.description=Velomine web app and presentation site
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
+      # Build and load both images locally first: nothing reaches the registry before the pair passes the smoke test.
       - name: Build the server image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -87,12 +85,12 @@ jobs:
           file: Dockerfile
           platforms: linux/amd64
           load: true
-          push: false
           provenance: false
           sbom: false
           tags: velomine-server:smoke
+          labels: ${{ steps.meta-server.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
+            VERSION=${{ steps.meta-server.outputs.version }}
             REVISION=${{ github.sha }}
           cache-from: type=gha,scope=server
           cache-to: type=gha,mode=max,scope=server
@@ -104,12 +102,12 @@ jobs:
           file: app/Dockerfile
           platforms: linux/amd64
           load: true
-          push: false
           provenance: false
           sbom: false
           tags: velomine-web:smoke
+          labels: ${{ steps.meta-web.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
+            VERSION=${{ steps.meta-web.outputs.version }}
             REVISION=${{ github.sha }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
@@ -135,9 +133,10 @@ jobs:
           push: true
           provenance: mode=max
           sbom: true
-          tags: ${{ steps.version.outputs.server-tags }}
+          tags: ${{ steps.meta-server.outputs.tags }}
+          labels: ${{ steps.meta-server.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
+            VERSION=${{ steps.meta-server.outputs.version }}
             REVISION=${{ github.sha }}
           cache-from: type=gha,scope=server
 
@@ -151,101 +150,23 @@ jobs:
           push: true
           provenance: mode=max
           sbom: true
-          tags: ${{ steps.version.outputs.web-tags }}
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
+            VERSION=${{ steps.meta-web.outputs.version }}
             REVISION=${{ github.sha }}
           cache-from: type=gha,scope=web
 
       - name: Attest the server image
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ${{ env.SERVER_IMAGE }}
+          subject-name: ghcr.io/zenkraker/velomine-server
           subject-digest: ${{ steps.push-server.outputs.digest }}
           push-to-registry: true
 
       - name: Attest the web image
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ${{ env.WEB_IMAGE }}
+          subject-name: ghcr.io/zenkraker/velomine-web
           subject-digest: ${{ steps.push-web.outputs.digest }}
           push-to-registry: true
-
-      - name: Summary
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          SERVER_DIGEST: ${{ steps.push-server.outputs.digest }}
-          WEB_DIGEST: ${{ steps.push-web.outputs.digest }}
-          SERVER_TAGS: ${{ steps.version.outputs.server-tags }}
-          WEB_TAGS: ${{ steps.version.outputs.web-tags }}
-        run: |
-          tick='`'
-          {
-            echo "### Images ${VERSION}"
-            echo
-            echo "- ${tick}${SERVER_IMAGE}@${SERVER_DIGEST}${tick}"
-            echo "- ${tick}${WEB_IMAGE}@${WEB_DIGEST}${tick}"
-            echo
-            echo "Tags:"
-            while read -r tag; do echo "- ${tick}${tag}${tick}"; done <<< "${SERVER_TAGS}"$'\n'"${WEB_TAGS}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  # The demo environment requires a reviewer (Settings -> Environments), so a release waits here until someone
-  # approves it.
-  demo:
-    name: Demo
-    needs: images
-    if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/deploy.yml
-    with:
-      environment: demo
-      server-digest: ${{ needs.images.outputs.server-digest }}
-      web-digest: ${{ needs.images.outputs.web-digest }}
-      revision: ${{ github.sha }}
-
-  # Off until there are customers. To turn on: uncomment, add the environment to deploy.yml's choices, and install it on
-  # the host (deploy/host/README.md). When prod is on, move the demo after it (needs: [images, prod]).
-  #
-  # dev:
-  #   name: Dev
-  #   needs: images
-  #   if: github.ref == 'refs/heads/main'
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   uses: ./.github/workflows/deploy.yml
-  #   with:
-  #     environment: dev
-  #     server-digest: ${{ needs.images.outputs.server-digest }}
-  #     web-digest: ${{ needs.images.outputs.web-digest }}
-  #     revision: ${{ github.sha }}
-  #
-  # staging:
-  #   name: Staging
-  #   needs: images
-  #   if: startsWith(github.ref, 'refs/tags/v')
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   uses: ./.github/workflows/deploy.yml
-  #   with:
-  #     environment: staging
-  #     server-digest: ${{ needs.images.outputs.server-digest }}
-  #     web-digest: ${{ needs.images.outputs.web-digest }}
-  #     revision: ${{ github.sha }}
-  #
-  # prod:
-  #   name: Prod
-  #   needs: [images, staging]
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   uses: ./.github/workflows/deploy.yml
-  #   with:
-  #     environment: prod
-  #     server-digest: ${{ needs.images.outputs.server-digest }}
-  #     web-digest: ${{ needs.images.outputs.web-digest }}
-  #     revision: ${{ github.sha }}

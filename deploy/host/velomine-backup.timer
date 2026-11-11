@@ -1,5 +1,5 @@
 [Unit]
-Description=Nightly Velomine demo backup
+Description=Nightly Velomine backup
 
 [Timer]
 OnCalendar=*-*-* 03:15:00 UTC

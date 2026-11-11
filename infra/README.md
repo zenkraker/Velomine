@@ -79,8 +79,9 @@ resources are commented out.
   unblocks it only after the account is authorised.
 - The registry namespace and bucket name must be unique.
 - Backups are restic snapshots to the bucket; see `deploy/host/`.
-- Which environment answers `velomine.eu` and `www` is `APEX_ENV` in
-  `deploy/host/deploy.sh` (the demo until prod launches); DNS does not change.
+- Which environment answers `velomine.eu` and `www` is that environment's
+  `VELOMINE_ROUTER_RULE` on the host (`deploy/host/app/.env.example`; the demo
+  until prod launches); DNS does not change.
 
 ## Host credentials
 

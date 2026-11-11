@@ -2,6 +2,3 @@
 envs/*/
 restic.env
 .generated/
-# The demo's files from before the per-environment layout, until they are moved (README, "Moving the demo").
-velomine.env
-backup.env

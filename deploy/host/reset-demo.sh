@@ -32,7 +32,5 @@ find /srv/velomine/demo/files -mindepth 1 -delete
 tar --numeric-owner -C /srv/velomine/demo/files -xzf "$baseline/files.tar.gz"
 
 log "Starting the demo server..."
-app_compose demo start server
-
-wait_healthy demo 30 4 || die "The demo did not become healthy: docker compose -p velomine-demo logs --tail=100"
-log "Demo reset: https://$(env_value demo VELOMINE_HOST)"
+app_compose demo up -d --wait || die "The demo did not become healthy: cd $VELOMINE_DIR/demo && docker compose logs --tail=100"
+log "Demo reset."

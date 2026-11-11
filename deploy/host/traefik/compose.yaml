@@ -1,8 +1,8 @@
 # The host's one public entry point: Traefik on 80 and 443. It gets and renews the Let's Encrypt certificates and routes
-# each host name to that environment's web container, reading the routes from the labels in compose.app.yml. Only web
+# each host name to that environment's web container, reading the routes from the labels in app/compose.yaml. Only web
 # containers join the `proxy` network; each environment's server stays on that environment's own network.
 #
-#   docker compose -f compose.traefik.yml up -d        (deploy.sh does this)
+#   cd /opt/velomine/traefik && docker compose up -d
 name: velomine-traefik
 
 services:
@@ -31,7 +31,7 @@ services:
       - --log.level=WARN
     labels:
       - traefik.enable=true
-      # Middlewares the environments' routers use (compose.app.yml): HTTPS-only for a year, and noindex for dev and
+      # Middlewares the environments' routers use (app/compose.yaml): HTTPS-only for a year, and noindex for dev and
       # staging. nginx in the web image sets the other security headers.
       - traefik.http.middlewares.hsts.headers.stsSeconds=31536000
       - traefik.http.middlewares.noindex.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow

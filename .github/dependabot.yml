@@ -28,6 +28,6 @@ updates:
 
   - package-ecosystem: docker-compose
     directories:
-      - /deploy/host
+      - /deploy/host/traefik
     schedule:
       interval: weekly

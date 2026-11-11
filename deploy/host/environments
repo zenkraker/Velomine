@@ -1,7 +1,0 @@
-# The environments the host runs, one per line. Only the demo runs until there are customers (docs/architecture.md).
-# To turn one on: uncomment it, give it envs/<env>/app.env and db.env, its database and DNS record (infra/), resize the
-# VPS if needed, and uncomment its job in .github/workflows/release.yml. Then run deploy.sh.
-demo
-# dev
-# staging
-# prod

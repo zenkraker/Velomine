@@ -163,8 +163,8 @@ resource "scaleway_domain_record" "demo" {
   ttl      = 300
 }
 
-# velomine.eu and www point at the one VPS; Traefik there decides which environment answers them (deploy.sh APEX_ENV:
-# the demo until prod launches).
+# velomine.eu and www point at the one VPS; Traefik there decides which environment answers them (VELOMINE_ROUTER_RULE
+# in deploy/host/app/.env.example: the demo until prod launches).
 resource "scaleway_domain_record" "root" {
   dns_zone = var.domain
   name     = ""
