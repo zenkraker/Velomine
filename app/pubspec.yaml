@@ -26,6 +26,7 @@ dependencies:
   url_launcher: ^6.3.3
   velomine_api:
     path: packages/velomine_api
+  # dart.dev's official browser interop: drag-and-drop, folder and file pickers without a plugin.
   web: ^1.1.2
 
 dev_dependencies:
