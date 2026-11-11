@@ -55,6 +55,15 @@ public sealed class CreateComponentRequest : IComponentFields
     public double? ExpectedHours { get; set; }
 
     public int? ExpectedMonths { get; set; }
+
+    /// <summary>
+    /// The part this one replaces: it is taken off on the day this one is fitted, and a service log entry is written
+    /// in the same step. Leave out for a part that replaces nothing.
+    /// </summary>
+    public Guid? ReplacesId { get; set; }
+
+    /// <summary>The title of that log entry, in the member's language ("Replaced chain: Shimano CN-HG701"). Optional; the server words one in English when it is left out.</summary>
+    public string? LogTitle { get; set; }
 }
 
 /// <summary>Changing a part: all fields are sent each time. Set RemovedOn to retire it.</summary>
@@ -115,7 +124,10 @@ public class ComponentFieldsValidator<T> : Validator<T> where T : IComponentFiel
     }
 }
 
-public sealed class CreateComponentValidator : ComponentFieldsValidator<CreateComponentRequest>;
+public sealed class CreateComponentValidator : ComponentFieldsValidator<CreateComponentRequest>
+{
+    public CreateComponentValidator() => RuleFor(x => x.LogTitle).MaximumLength(200);
+}
 
 public sealed class UpdateComponentValidator : ComponentFieldsValidator<UpdateComponentRequest>;
 
@@ -139,6 +151,30 @@ public sealed class CreateComponent(VelomineDbContext db, TimeProvider time) : E
 
         var component = new BikeComponent { Id = Guid.CreateVersion7(), BikeId = bike.Id };
         Apply(component, req);
+
+        // Replacing is one step: the old part comes off the day the new one goes on, and the log says so.
+        if (req.ReplacesId is { } replacesId)
+        {
+            var old = bike.Components.FirstOrDefault(c => c.Id == replacesId && c.RemovedOn == null);
+            if (old is null)
+            {
+                await Send.NotFoundAsync(ct);
+                return;
+            }
+            if (req.InstalledOn < old.InstalledOn)
+            {
+                ThrowError("The new part cannot be fitted before the old one was.");
+                return;
+            }
+
+            old.RemovedOn = req.InstalledOn;
+            var make = string.Join(' ', new[] { component.Brand, component.Model }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            var title = string.IsNullOrWhiteSpace(req.LogTitle)
+                ? $"Replaced {ComponentTypes.NameOf(old.Type).ToLowerInvariant()}" + (make.Length > 0 ? ": " + make : "")
+                : req.LogTitle;
+            ServiceLogQueries.Add(db, time, bike.Id, req.InstalledOn, title, ServiceOrigins.Part, componentId: component.Id);
+        }
+
         var part = req.Custom ? null : await PartCatalogue.FindAsync(db, component, ct);
         component.PartId = part?.Id;
         // Publisher-authoritative: a non-custom part that is not in the shared list is offered to the publisher, never

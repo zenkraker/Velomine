@@ -70,6 +70,12 @@
   <data name="PartWorn" xml:space="preserve">
     <value>{0} è usurato. È ora di sostituirlo.</value>
   </data>
+  <data name="ReminderSoon" xml:space="preserve">
+    <value>Manutenzione in scadenza: {0}.</value>
+  </data>
+  <data name="ReminderDue" xml:space="preserve">
+    <value>Manutenzione da fare: {0}.</value>
+  </data>
   <data name="ClubJoinRequest" xml:space="preserve">
     <value>{0} ha chiesto di entrare nel tuo club.</value>
   </data>

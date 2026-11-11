@@ -5,7 +5,10 @@ using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Bikes;
 
-/// <summary>A bike with what it has done so far: the distance it came with plus every ready ride on it.</summary>
+/// <summary>
+/// A bike with what it has done so far: the distance it came with plus every ready ride on it. The service counts are how
+/// many of its maintenance reminders are due and nearly due; an archived bike counts none, so it never nags.
+/// </summary>
 public sealed record BikeResponse(
     Guid Id,
     string Name,
@@ -22,7 +25,9 @@ public sealed record BikeResponse(
     bool IsActive,
     int RideCount,
     double DistanceM,
-    double MovingS);
+    double MovingS,
+    int ServiceDueCount,
+    int ServiceSoonCount);
 
 /// <summary>A part with its limits and how much of them it has used. Percent is null when it has no limit.</summary>
 public sealed record ComponentResponse(
@@ -46,11 +51,11 @@ public sealed record ComponentResponse(
     int? WearPercent,
     string Status);
 
-public sealed record BikeDetailResponse(BikeResponse Bike, ComponentResponse[] Components);
+public sealed record BikeDetailResponse(BikeResponse Bike, ComponentResponse[] Components, MaintenanceReminderResponse[] Reminders);
 
 public static class BikeQueries
 {
-    public static async Task<BikeResponse[]> SummariesAsync(VelomineDbContext db, IReadOnlyList<Bike> bikes, CancellationToken ct)
+    public static async Task<BikeResponse[]> SummariesAsync(VelomineDbContext db, IReadOnlyList<Bike> bikes, MemberClock clock, CancellationToken ct)
     {
         var ids = bikes.Select(b => b.Id).ToList();
         var totals = await db.Rides.AsNoTracking()
@@ -59,24 +64,48 @@ public static class BikeQueries
             .Select(g => new { Id = g.Key, Count = g.Count(), Distance = g.Sum(r => r.DistanceM ?? 0), Moving = g.Sum(r => r.MovingS ?? 0) })
             .ToDictionaryAsync(t => t.Id, ct);
 
+        var service = await ServiceCountsAsync(db, bikes, clock, ct);
+
         return [.. bikes.Select(b =>
         {
             totals.TryGetValue(b.Id, out var t);
+            service.TryGetValue(b.Id, out var counts);
             return new BikeResponse(b.Id, b.Name, b.Brand, b.Model, b.ModelYear, b.BuildSpec, b.FrameSize, b.Kind, b.WheelCircumferenceMm, b.InitialDistanceM, b.PurchasedOn,
-                b.IsDefault, b.IsActive, t?.Count ?? 0, b.InitialDistanceM + (t?.Distance ?? 0), t?.Moving ?? 0);
+                b.IsDefault, b.IsActive, t?.Count ?? 0, b.InitialDistanceM + (t?.Distance ?? 0), t?.Moving ?? 0, counts.Due, counts.Soon);
         })];
+    }
+
+    private static async Task<Dictionary<Guid, (int Due, int Soon)>> ServiceCountsAsync(
+        VelomineDbContext db, IReadOnlyList<Bike> bikes, MemberClock clock, CancellationToken ct)
+    {
+        var ids = bikes.Where(b => b.IsActive).Select(b => b.Id).ToList();
+        var reminders = await db.MaintenanceReminders.AsNoTracking()
+            .Where(r => ids.Contains(r.BikeId) && !r.IsPaused).ToListAsync(ct);
+
+        var counts = new Dictionary<Guid, (int Due, int Soon)>();
+        foreach (var group in reminders.GroupBy(r => r.BikeId))
+        {
+            var rides = await RideUsesAsync(db, group.Key, clock, ct);
+            var statuses = group.Select(r => MaintenanceProgress.Compute(r, rides, clock.Today).Status).ToList();
+            counts[group.Key] = (statuses.Count(s => s == "due"), statuses.Count(s => s == "soon"));
+        }
+        return counts;
     }
 
     public static async Task<BikeDetailResponse> DetailAsync(VelomineDbContext db, Bike bike, MemberClock clock, CancellationToken ct)
     {
-        var components = Wear(bike, await RideUsesAsync(db, bike.Id, clock, ct), clock.Today)
+        var rides = await RideUsesAsync(db, bike.Id, clock, ct);
+        var components = Wear(bike, rides, clock.Today)
             .OrderBy(x => x.Component.RemovedOn != null)
             .ThenBy(x => ComponentTypes.NameOf(x.Component.Type))
             .ThenByDescending(x => x.Component.InstalledOn)
             .Select(x => Component(x.Component, x.Wear))
             .ToArray();
 
-        return new BikeDetailResponse((await SummariesAsync(db, [bike], ct))[0], components);
+        var reminders = (await db.MaintenanceReminders.AsNoTracking().Where(r => r.BikeId == bike.Id).ToListAsync(ct))
+            .Select(r => (r, MaintenanceProgress.Compute(r, rides, clock.Today)));
+
+        return new BikeDetailResponse((await SummariesAsync(db, [bike], clock, ct))[0], components, MaintenanceProgress.Sorted(reminders));
     }
 
     /// <summary>Each of the bike's parts (loaded with it) with its wear.</summary>

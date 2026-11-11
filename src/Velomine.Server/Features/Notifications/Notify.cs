@@ -51,7 +51,8 @@ public static class Notify
     }
 
     /// <summary>
-    /// Warns about parts on these bikes that are nearly or fully worn. A part is warned about once per level:
+    /// Warns about parts on these bikes that are nearly or fully worn, and about maintenance reminders on them that are
+    /// nearly due or due. A part is warned about once per level:
     /// the notifications already sent are the record of that, so nothing else is stored.
     /// </summary>
     public static async Task WornPartsAsync(VelomineDbContext db, TimeProvider time, Guid userId, IReadOnlyCollection<Guid> bikeIds, CancellationToken ct)
@@ -83,5 +84,8 @@ public static class Notify
         }
 
         await db.SaveChangesAsync(ct);
+
+        // The same rides move maintenance reminders on these bikes.
+        await MaintenanceNotifications.CheckAsync(db, time, userId, bikeIds, ct);
     }
 }

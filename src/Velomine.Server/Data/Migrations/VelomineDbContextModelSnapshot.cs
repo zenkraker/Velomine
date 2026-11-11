@@ -881,6 +881,72 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("catalogue_meta", "bikes");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.MaintenanceReminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BikeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bike_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<double?>("IntervalDistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("interval_distance_m");
+
+                    b.Property<double?>("IntervalHours")
+                        .HasColumnType("double precision")
+                        .HasColumnName("interval_hours");
+
+                    b.Property<int?>("IntervalMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("interval_months");
+
+                    b.Property<bool>("IsPaused")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_paused");
+
+                    b.Property<DateOnly>("LastDoneOn")
+                        .HasColumnType("date")
+                        .HasColumnName("last_done_on");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NotifiedStatus")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("notified_status");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_maintenance_reminders");
+
+                    b.HasIndex("BikeId")
+                        .HasDatabaseName("ix_maintenance_reminders_bike_id");
+
+                    b.ToTable("maintenance_reminders", "bikes", t =>
+                        {
+                            t.HasCheckConstraint("ck_maintenance_reminders_has_interval", "interval_distance_m IS NOT NULL OR interval_hours IS NOT NULL OR interval_months IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_maintenance_reminders_positive_intervals", "(interval_distance_m IS NULL OR interval_distance_m > 0) AND (interval_hours IS NULL OR interval_hours > 0) AND (interval_months IS NULL OR interval_months > 0)");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Part", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1046,6 +1112,89 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_part_contributions_status_next_attempt_at");
 
                     b.ToTable("part_contributions", "bikes");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.ServiceEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BikeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bike_id");
+
+                    b.Property<Guid?>("ComponentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("component_id");
+
+                    b.Property<decimal?>("CostAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("cost_amount");
+
+                    b.Property<string>("CostCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("cost_currency");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("origin");
+
+                    b.Property<string>("Place")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("place");
+
+                    b.Property<Guid?>("ReminderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reminder_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_service_entries");
+
+                    b.HasIndex("ComponentId")
+                        .HasDatabaseName("ix_service_entries_component_id");
+
+                    b.HasIndex("ReminderId")
+                        .HasDatabaseName("ix_service_entries_reminder_id");
+
+                    b.HasIndex("BikeId", "Date", "Id")
+                        .HasDatabaseName("ix_service_entries_bike_id_date_id");
+
+                    b.ToTable("service_entries", "bikes", t =>
+                        {
+                            t.HasCheckConstraint("ck_service_entries_cost", "(cost_amount IS NULL AND cost_currency IS NULL) OR (cost_amount >= 0 AND cost_currency IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Clubs.Club", b =>
@@ -2107,6 +2256,38 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_bike_template_parts_bike_templates_template_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.MaintenanceReminder", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Bikes.Bike", null)
+                        .WithMany()
+                        .HasForeignKey("BikeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_maintenance_reminders_bikes_bike_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Bikes.ServiceEntry", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Bikes.Bike", null)
+                        .WithMany()
+                        .HasForeignKey("BikeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_service_entries_bikes_bike_id");
+
+                    b.HasOne("Velomine.Server.Features.Bikes.BikeComponent", null)
+                        .WithMany()
+                        .HasForeignKey("ComponentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_service_entries_bike_components_component_id");
+
+                    b.HasOne("Velomine.Server.Features.Bikes.MaintenanceReminder", null)
+                        .WithMany()
+                        .HasForeignKey("ReminderId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_service_entries_maintenance_reminders_reminder_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Clubs.ClubJoinRequest", b =>
