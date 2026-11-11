@@ -97,7 +97,7 @@ class RecordingScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (s.rides.isEmpty && !s.loading)
+          if (s.recordedRides.isEmpty && !s.loading)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
@@ -106,7 +106,7 @@ class RecordingScreen extends ConsumerWidget {
               ),
             )
           else
-            for (final ride in s.rides)
+            for (final ride in s.recordedRides)
               _LocalRideCard(
                 ride: ride,
                 upload: s.uploads[ride.id],

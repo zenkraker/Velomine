@@ -219,6 +219,7 @@ class FakeRecorder implements Recorder {
           serverRideId: ride.serverRideId,
           uploadError: ride.uploadError,
           uploadAttempts: ride.uploadAttempts,
+          imported: ride.imported,
         );
         rides[i] = ride;
       }
@@ -503,6 +504,75 @@ void main() {
 
     expect(recorder.deleted, ['ride-1']);
     expect(find.byKey(const Key('local-ride-ride-1')), findsNothing);
+  });
+
+  testWidgets('RecordingScreen_ShouldListOnlyRecordedRides_WhenOneIsImported', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder()
+      ..rides.add(
+        LocalRide(
+          id: 'recorded-ride',
+          startedAt: DateTime(2026, 11, 5, 8),
+          state: 'ready',
+          distanceM: 1200,
+          movingS: 300,
+        ),
+      )
+      ..rides.add(
+        LocalRide(
+          id: 'imported-ride',
+          startedAt: DateTime(2026, 11, 4, 8),
+          state: 'ready',
+          distanceM: 2200,
+          movingS: 400,
+          imported: true,
+        ),
+      );
+    await pump(tester, recorder);
+
+    expect(find.byKey(const Key('local-ride-recorded-ride')), findsOneWidget);
+    expect(find.byKey(const Key('local-ride-imported-ride')), findsNothing);
+    expect(find.byKey(const Key('no-local-rides')), findsNothing);
+  });
+
+  testWidgets('RecordingScreen_ShouldShowNoLocalRides_WhenOnlyImportsExist', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder()
+      ..rides.add(
+        LocalRide(
+          id: 'imported-ride',
+          startedAt: DateTime(2026, 11, 4, 8),
+          state: 'ready',
+          distanceM: 2200,
+          movingS: 400,
+          imported: true,
+        ),
+      );
+    await pump(tester, recorder);
+
+    expect(find.byKey(const Key('no-local-rides')), findsOneWidget);
+    expect(find.byKey(const Key('local-ride-imported-ride')), findsNothing);
+  });
+
+  test('LocalRide_ShouldBeImported_WhenTheSidecarSaysSo', () {
+    final ride = LocalRide.fromMap({
+      'id': 'imported-ride',
+      'startedAt': DateTime(2026, 11, 4, 8).millisecondsSinceEpoch,
+      'state': 'ready',
+      'imported': true,
+    });
+
+    expect(ride.imported, isTrue);
+    expect(
+      LocalRide.fromMap({
+        'id': 'recorded-ride',
+        'startedAt': DateTime(2026, 11, 5, 8).millisecondsSinceEpoch,
+        'state': 'ready',
+      }).imported,
+      isFalse,
+    );
   });
 
   testWidgets('SensorPairing_ShouldPairAndKeepStrap_WhenFound', (tester) async {

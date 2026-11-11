@@ -592,7 +592,9 @@ class RidesApi {
   /// * [MultipartFile] file (required):
   ///
   /// * [String] idempotencyKey:
-  Future<Response> uploadRideWithHttpInfo(MultipartFile file, { String? idempotencyKey, Future<void>? abortTrigger, }) async {
+  ///
+  /// * [bool] bulkImport:
+  Future<Response> uploadRideWithHttpInfo(MultipartFile file, { String? idempotencyKey, bool? bulkImport, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/rides/uploads';
 
@@ -605,6 +607,9 @@ class RidesApi {
 
     if (idempotencyKey != null) {
       headerParams[r'Idempotency-Key'] = parameterToString(idempotencyKey);
+    }
+    if (bulkImport != null) {
+      headerParams[r'Bulk-Import'] = parameterToString(bulkImport);
     }
 
     const contentTypes = <String>['multipart/form-data'];
@@ -637,8 +642,10 @@ class RidesApi {
   /// * [MultipartFile] file (required):
   ///
   /// * [String] idempotencyKey:
-  Future<UploadRideResponse?> uploadRide(MultipartFile file, { String? idempotencyKey, Future<void>? abortTrigger, }) async {
-    final response = await uploadRideWithHttpInfo(file, idempotencyKey: idempotencyKey, abortTrigger: abortTrigger,);
+  ///
+  /// * [bool] bulkImport:
+  Future<UploadRideResponse?> uploadRide(MultipartFile file, { String? idempotencyKey, bool? bulkImport, Future<void>? abortTrigger, }) async {
+    final response = await uploadRideWithHttpInfo(file, idempotencyKey: idempotencyKey, bulkImport: bulkImport, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

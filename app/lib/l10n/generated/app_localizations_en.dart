@@ -900,6 +900,168 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploading => 'Uploading…';
 
   @override
+  String get bulkChooseFolder => 'Choose a folder';
+
+  @override
+  String get bulkChooseFiles => 'Choose files';
+
+  @override
+  String get bulkDropTitle => 'Drop to add your rides';
+
+  @override
+  String get bulkDropHint =>
+      'Files or a whole folder: .fit, .gpx and .tcx files are read, also zipped (.gz).';
+
+  @override
+  String get bulkTitle => 'Adding rides from files';
+
+  @override
+  String get bulkScanning => 'Looking through the files…';
+
+  @override
+  String bulkProgress(int done, int total) {
+    return 'Reading $done of $total';
+  }
+
+  @override
+  String get bulkCancel => 'Cancel';
+
+  @override
+  String get bulkStopping => 'Stopping…';
+
+  @override
+  String get bulkDone => 'All files read';
+
+  @override
+  String get bulkStopped => 'Stopped before the end';
+
+  @override
+  String bulkAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new rides',
+      one: '1 new ride',
+      zero: 'No new rides',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkAlreadyHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides were already here',
+      one: '1 ride was already here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkUnreadable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files could not be read',
+      one: '1 file could not be read',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files skipped: not ride files',
+      one: '1 file skipped: not a ride file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkNotRead(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files were not read',
+      one: '1 file was not read',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkAndMore(int count) {
+    return 'and $count more';
+  }
+
+  @override
+  String get bulkClose => 'Close';
+
+  @override
+  String get bulkSignedOut => 'Sign in first, then add your rides again.';
+
+  @override
+  String get bulkNothing =>
+      'No ride files found. Velomine reads .fit, .gpx and .tcx files, also zipped (.gz).';
+
+  @override
+  String get bulkWaiting => 'Waiting a moment, the server is busy…';
+
+  @override
+  String incomingAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides added. They will upload in the background.',
+      one: '1 ride added. It will upload in the background.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingAlreadyHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides were already here.',
+      one: '1 ride was already here.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingRejectedOne(String name) {
+    return '$name is not a ride file and was skipped.';
+  }
+
+  @override
+  String incomingRejectedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files are not ride files and were skipped.',
+      one: '1 file is not a ride file and was skipped.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incomingSignedOut(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides are kept. Sign in and they will upload.',
+      one: '1 ride is kept. Sign in and it will upload.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incomingOpen => 'Ride list';
+
+  @override
   String get noRides => 'No rides yet. Upload a FIT, GPX or TCX file.';
 
   @override

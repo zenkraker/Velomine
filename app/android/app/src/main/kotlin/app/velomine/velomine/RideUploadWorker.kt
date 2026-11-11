@@ -80,7 +80,7 @@ class RideUploadWorker(
 
             val attempts = ((ride["uploadAttempts"] as? Number)?.toInt() ?: 0) + 1
             store.markUpload(id, "uploading", attempts = attempts)
-            val result = upload(serverUrl, id, bytes, accessToken, tokens)
+            val result = upload(serverUrl, id, bytes, accessToken, tokens, store.fileName(id) ?: "ride.fit")
             accessToken = result.token
             if (result.signedOut) {
                 signedOut = true
@@ -125,15 +125,16 @@ class RideUploadWorker(
         bytes: ByteArray,
         token: String,
         tokens: SecureTokenStore,
+        fileName: String,
     ): UploadOutcome {
         var access = token
-        var response = uploadFit(serverUrl, localId, bytes, access)
+        var response = uploadFit(serverUrl, localId, bytes, access, fileName)
 
         if (response.code == 401) {
             val refreshed = refresh(serverUrl, tokens)
             if (refreshed.networkError) return UploadOutcome("retry", access, error = "offline")
             access = refreshed.token ?: return signedOut(token)
-            response = uploadFit(serverUrl, localId, bytes, access)
+            response = uploadFit(serverUrl, localId, bytes, access, fileName)
         }
 
         if (response.networkError) return UploadOutcome("retry", access, error = "offline")
@@ -218,10 +219,13 @@ class RideUploadWorker(
         localId: String,
         bytes: ByteArray,
         token: String,
+        fileName: String,
     ): HttpResult {
+        // A received file keeps the name it came with; quotes and line breaks would break the header.
+        val safeName = fileName.replace(Regex("[\"\\\\\\r\\n]"), "_")
         val boundary = "----Velomine${System.nanoTime()}"
         val prefix = "--$boundary\r\n" +
-            "Content-Disposition: form-data; name=\"file\"; filename=\"ride.fit\"\r\n" +
+            "Content-Disposition: form-data; name=\"file\"; filename=\"$safeName\"\r\n" +
             "Content-Type: application/octet-stream\r\n\r\n"
         val suffix = "\r\n--$boundary--\r\n"
         val body = ByteArrayOutputStream().apply {

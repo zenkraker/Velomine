@@ -52,10 +52,14 @@ builder.Services.OpenApiDocument(o =>
     o.ConfigureOpenApi = openApi =>
     {
         openApi.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0;
-        // The Idempotency-Key is a header, so it does not belong in the multipart form's schema as well.
+        // The Idempotency-Key and Bulk-Import are headers, so it does not belong in the multipart form's schema as well.
         openApi.AddSchemaTransformer((schema, context, _) =>
         {
-            if (context.JsonTypeInfo.Type == typeof(UploadRideRequest)) schema.Properties?.Remove("idempotencyKey");
+            if (context.JsonTypeInfo.Type == typeof(UploadRideRequest))
+            {
+                schema.Properties?.Remove("idempotencyKey");
+                schema.Properties?.Remove("bulkImport");
+            }
             return Task.CompletedTask;
         });
 
@@ -95,13 +99,19 @@ builder.Services.AddRateLimiter(options =>
         }));
 
     // Uploads are signed in, so the key is the member: a whole club behind one address must not share a budget.
-    var uploadsPerHour = builder.Configuration.GetValue("Velomine:RateLimits:UploadsPerHour", 60);
-    options.AddPolicy("uploads", context => RateLimitPartition.GetFixedWindowLimiter(
+    // A bucket rather than a window: a member dropping a bike computer's whole Activities folder sends hundreds of
+    // files at once, and that must work; what stays limited is the sustained rate (UploadsPerHour, refilled every
+    // minute), so nobody can keep the server busy for long.
+    var uploadsPerHour = builder.Configuration.GetValue("Velomine:RateLimits:UploadsPerHour", 600);
+    var uploadBurst = builder.Configuration.GetValue("Velomine:RateLimits:UploadBurst", 1000);
+    options.AddPolicy("uploads", context => RateLimitPartition.GetTokenBucketLimiter(
         context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
-        _ => new FixedWindowRateLimiterOptions
+        _ => new TokenBucketRateLimiterOptions
         {
-            PermitLimit = uploadsPerHour,
-            Window = TimeSpan.FromHours(1),
+            TokenLimit = uploadBurst,
+            TokensPerPeriod = Math.Max(1, uploadsPerHour / 60),
+            ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
         }));
 
     // Starting a club is for a signed-in rider with no club, so the key is the member; a handful a day is plenty.

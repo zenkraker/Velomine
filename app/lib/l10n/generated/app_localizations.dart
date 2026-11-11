@@ -1730,6 +1730,168 @@ abstract class AppLocalizations {
   /// **'Uploading…'**
   String get uploading;
 
+  /// No description provided for @bulkChooseFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder'**
+  String get bulkChooseFolder;
+
+  /// No description provided for @bulkChooseFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose files'**
+  String get bulkChooseFiles;
+
+  /// No description provided for @bulkDropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to add your rides'**
+  String get bulkDropTitle;
+
+  /// No description provided for @bulkDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Files or a whole folder: .fit, .gpx and .tcx files are read, also zipped (.gz).'**
+  String get bulkDropHint;
+
+  /// No description provided for @bulkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding rides from files'**
+  String get bulkTitle;
+
+  /// No description provided for @bulkScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking through the files…'**
+  String get bulkScanning;
+
+  /// No description provided for @bulkProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading {done} of {total}'**
+  String bulkProgress(int done, int total);
+
+  /// No description provided for @bulkCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get bulkCancel;
+
+  /// No description provided for @bulkStopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping…'**
+  String get bulkStopping;
+
+  /// No description provided for @bulkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All files read'**
+  String get bulkDone;
+
+  /// No description provided for @bulkStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped before the end'**
+  String get bulkStopped;
+
+  /// No description provided for @bulkAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No new rides} =1{1 new ride} other{{count} new rides}}'**
+  String bulkAdded(int count);
+
+  /// No description provided for @bulkAlreadyHere.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride was already here} other{{count} rides were already here}}'**
+  String bulkAlreadyHere(int count);
+
+  /// No description provided for @bulkUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file could not be read} other{{count} files could not be read}}'**
+  String bulkUnreadable(int count);
+
+  /// No description provided for @bulkSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file skipped: not a ride file} other{{count} files skipped: not ride files}}'**
+  String bulkSkipped(int count);
+
+  /// No description provided for @bulkNotRead.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file was not read} other{{count} files were not read}}'**
+  String bulkNotRead(int count);
+
+  /// No description provided for @bulkAndMore.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count} more'**
+  String bulkAndMore(int count);
+
+  /// No description provided for @bulkClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get bulkClose;
+
+  /// No description provided for @bulkSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in first, then add your rides again.'**
+  String get bulkSignedOut;
+
+  /// No description provided for @bulkNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No ride files found. Velomine reads .fit, .gpx and .tcx files, also zipped (.gz).'**
+  String get bulkNothing;
+
+  /// No description provided for @bulkWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting a moment, the server is busy…'**
+  String get bulkWaiting;
+
+  /// No description provided for @incomingAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride added. It will upload in the background.} other{{count} rides added. They will upload in the background.}}'**
+  String incomingAdded(int count);
+
+  /// No description provided for @incomingAlreadyHere.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride was already here.} other{{count} rides were already here.}}'**
+  String incomingAlreadyHere(int count);
+
+  /// No description provided for @incomingRejectedOne.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is not a ride file and was skipped.'**
+  String incomingRejectedOne(String name);
+
+  /// No description provided for @incomingRejectedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file is not a ride file and was skipped.} other{{count} files are not ride files and were skipped.}}'**
+  String incomingRejectedMany(int count);
+
+  /// No description provided for @incomingSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride is kept. Sign in and it will upload.} other{{count} rides are kept. Sign in and they will upload.}}'**
+  String incomingSignedOut(int count);
+
+  /// No description provided for @incomingOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride list'**
+  String get incomingOpen;
+
   /// No description provided for @noRides.
   ///
   /// In en, this message translates to:

@@ -46,6 +46,15 @@ public sealed class Ride
     /// <summary>The import that brought this ride in, or null when the member uploaded it directly.</summary>
     public Guid? ImportId { get; set; }
 
+    /// <summary>
+    /// Set for a file that came in a bulk drop (a whole folder at once): the member is told how it went once, in the
+    /// summary on screen, not with a notification per file.
+    /// </summary>
+    public bool Quiet { get; set; }
+
+    /// <summary>Whether reading this ride tells the member with a notification of its own.</summary>
+    public bool NotifiesMember => ImportId is null && !Quiet;
+
     /// <summary>Another app this ride came from, such as "strava"; null when it was recorded here or uploaded by hand.</summary>
     public string? Source { get; set; }
 

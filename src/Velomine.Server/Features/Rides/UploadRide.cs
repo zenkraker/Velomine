@@ -21,6 +21,13 @@ public sealed class UploadRideRequest
     /// </summary>
     [FromHeader("Idempotency-Key", IsRequired = false)]
     public string? IdempotencyKey { get; set; }
+
+    /// <summary>
+    /// "true" when the file is one of many sent together, such as a dropped folder. The ride is read and listed as usual,
+    /// but no notification is made for it: the caller shows one summary.
+    /// </summary>
+    [FromHeader("Bulk-Import", IsRequired = false)]
+    public bool? BulkImport { get; set; }
 }
 
 public sealed record UploadRideResponse(Guid RideId, string Status);
@@ -90,6 +97,7 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
             UserId = userId,
             Status = RideStatus.Processing,
             IdempotencyKey = string.IsNullOrEmpty(req.IdempotencyKey) ? null : req.IdempotencyKey,
+            Quiet = req.BulkImport == true,
             FileSha256 = sha,
             FileName = SafeName(file.FileName),
             UploadedAt = clock.GetUtcNow(),

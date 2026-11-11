@@ -83,7 +83,8 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     {
         await using var api = await TestApi.StartAsync(postgres, b => b
             .UseSetting("Velomine:Accounts:RequireAdminApproval", "false")
-            .UseSetting("Velomine:RateLimits:UploadsPerHour", "2"));
+            .UseSetting("Velomine:RateLimits:UploadsPerHour", "2")
+            .UseSetting("Velomine:RateLimits:UploadBurst", "2"));
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
         var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);

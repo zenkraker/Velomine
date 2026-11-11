@@ -38,6 +38,7 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
 
         ride.HasOne<RideImport>().WithMany().HasForeignKey(r => r.ImportId).OnDelete(DeleteBehavior.SetNull);
         ride.HasIndex(r => r.ImportId);
+        ride.Property(r => r.Quiet).HasDefaultValue(false);
         // One row per activity from another app: importing a newer export skips what is already here.
         ride.HasIndex(r => new { r.UserId, r.Source, r.SourceId })
             .IsUnique()

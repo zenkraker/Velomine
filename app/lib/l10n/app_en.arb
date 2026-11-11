@@ -388,6 +388,120 @@
 
   "uploadRide": "Upload ride",
   "uploading": "Uploading…",
+  "bulkChooseFolder": "Choose a folder",
+  "bulkChooseFiles": "Choose files",
+  "bulkDropTitle": "Drop to add your rides",
+  "bulkDropHint": "Files or a whole folder: .fit, .gpx and .tcx files are read, also zipped (.gz).",
+  "bulkTitle": "Adding rides from files",
+  "bulkScanning": "Looking through the files…",
+  "bulkProgress": "Reading {done} of {total}",
+  "@bulkProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkCancel": "Cancel",
+  "bulkStopping": "Stopping…",
+  "bulkDone": "All files read",
+  "bulkStopped": "Stopped before the end",
+  "bulkAdded": "{count, plural, =0{No new rides} =1{1 new ride} other{{count} new rides}}",
+  "@bulkAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkAlreadyHere": "{count, plural, =1{1 ride was already here} other{{count} rides were already here}}",
+  "@bulkAlreadyHere": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkUnreadable": "{count, plural, =1{1 file could not be read} other{{count} files could not be read}}",
+  "@bulkUnreadable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkSkipped": "{count, plural, =1{1 file skipped: not a ride file} other{{count} files skipped: not ride files}}",
+  "@bulkSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkNotRead": "{count, plural, =1{1 file was not read} other{{count} files were not read}}",
+  "@bulkNotRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkAndMore": "and {count} more",
+  "@bulkAndMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkClose": "Close",
+  "bulkSignedOut": "Sign in first, then add your rides again.",
+  "bulkNothing": "No ride files found. Velomine reads .fit, .gpx and .tcx files, also zipped (.gz).",
+  "bulkWaiting": "Waiting a moment, the server is busy…",
+  "incomingAdded": "{count, plural, =1{1 ride added. It will upload in the background.} other{{count} rides added. They will upload in the background.}}",
+  "@incomingAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incomingAlreadyHere": "{count, plural, =1{1 ride was already here.} other{{count} rides were already here.}}",
+  "@incomingAlreadyHere": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incomingRejectedOne": "{name} is not a ride file and was skipped.",
+  "@incomingRejectedOne": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "incomingRejectedMany": "{count, plural, =1{1 file is not a ride file and was skipped.} other{{count} files are not ride files and were skipped.}}",
+  "@incomingRejectedMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incomingSignedOut": "{count, plural, =1{1 ride is kept. Sign in and it will upload.} other{{count} rides are kept. Sign in and they will upload.}}",
+  "@incomingSignedOut": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incomingOpen": "Ride list",
   "noRides": "No rides yet. Upload a FIT, GPX or TCX file.",
   "loadMore": "Load more",
   "readingFile": "Reading the file…",

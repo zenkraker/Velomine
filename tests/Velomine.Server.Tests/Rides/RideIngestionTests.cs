@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
+using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
@@ -29,11 +30,12 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
 
     private static Task<HttpClient> NewMemberAsync(TestApi api) => api.NewMemberClientAsync();
 
-    private static Task<HttpResponseMessage> UploadAsync(HttpClient client, byte[] file, string name = "ride.fit", string? key = null)
+    private static Task<HttpResponseMessage> UploadAsync(HttpClient client, byte[] file, string name = "ride.fit", string? key = null, bool bulk = false)
     {
         var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", name } };
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/rides/uploads") { Content = form };
         if (key is not null) request.Headers.Add("Idempotency-Key", key);
+        if (bulk) request.Headers.Add("Bulk-Import", "true");
         return client.SendAsync(request, Ct);
     }
 
@@ -251,6 +253,41 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         Assert.Equal(first.Id, again.DuplicateOf);
         var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
         Assert.Equal(first.Id, Assert.Single(list!.Rides).Id);
+    }
+
+    [Fact]
+    public async Task UploadRide_ShouldMakeNoNotification_WhenTheFilesCameInABulkDrop()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var file = Fit(new FitSession(Start, 90));
+        var broken = Bytes("not a ride");
+
+        async Task<RideResponse> BulkAsync(byte[] bytes, string key)
+        {
+            var accepted = await UploadAsync(member, bytes, key: key, bulk: true);
+            Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
+            return await WaitAsync(member, (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId);
+        }
+
+        Assert.Equal("ready", (await BulkAsync(file, "a")).Status);
+        Assert.Equal("duplicate", (await BulkAsync(file, "b")).Status);
+        Assert.Equal("failed", (await BulkAsync(broken, "c")).Status);
+
+        var notifications = await member.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct);
+        Assert.Empty(notifications!.Notifications);
+    }
+
+    [Fact]
+    public async Task UploadRide_ShouldNotifyTheMember_WhenASingleFileIsUploaded()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 90)));
+
+        var notifications = await member.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct);
+        Assert.Single(notifications!.Notifications);
     }
 
     [Fact]

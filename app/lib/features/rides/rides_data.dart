@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:http/http.dart' show MultipartFile;
@@ -58,7 +59,22 @@ class RidesData {
       await file.readAsBytes(),
       filename: file.name,
     );
-    return (await _api.uploadRide(upload, idempotencyKey: _newKey()))?.rideId;
+    return (await _api.uploadRide(upload, idempotencyKey: newKey()))?.rideId;
+  })().guard(FailureAction.uploadRide);
+
+  /// Sends one file of a bulk drop. The server makes no notification for it; the screen shows one summary.
+  /// [key] is kept for a retry, so a file sent twice (after a pause for the rate limit) is still one ride.
+  Future<Result<String?>> uploadBulk(
+    String name,
+    Uint8List bytes,
+    String key,
+  ) => (() async {
+    final upload = MultipartFile.fromBytes('file', bytes, filename: name);
+    return (await _api.uploadRide(
+      upload,
+      idempotencyKey: key,
+      bulkImport: true,
+    ))?.rideId;
   })().guard(FailureAction.uploadRide);
 
   Future<Result<RideResponse?>> ride(String id) =>
@@ -79,7 +95,8 @@ class RidesData {
   Future<Result<RideImportResponse?>> importStatus(String id) =>
       _api.getRideImport(id).guard(FailureAction.loadImport);
 
-  static String _newKey() {
+  /// A random key for one upload.
+  static String newKey() {
     final random = Random.secure();
     return List.generate(
       16,

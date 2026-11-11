@@ -11,6 +11,8 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/stat_tile.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'bulk/bulk_upload_card.dart';
+import 'bulk/bulk_upload_view_model.dart';
 import 'ride_filters.dart';
 import 'ride_title.dart';
 import 'ride_type_chips.dart';
@@ -102,6 +104,11 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
                 .startImport();
             if (id != null && context.mounted) widget.onOpenImport(id);
           };
+    final bulk = ref.read(bulkUploadViewModelProvider.notifier);
+    final bulkSupported = ref.watch(dropSourceProvider).supported;
+    final bulkBusy = ref.watch(
+      bulkUploadViewModelProvider.select((s) => s.busy),
+    );
     return Scaffold(
       backgroundColor: Colors.transparent,
       // Wide: the action sits with the list. Compact: it floats, and the list ends above it.
@@ -126,6 +133,20 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.xs,
                 children: [
+                  if (bulkSupported) ...[
+                    TextButton.icon(
+                      key: const Key('bulk-folder'),
+                      onPressed: bulkBusy ? null : bulk.chooseFolder,
+                      icon: const Icon(Icons.folder_open_outlined),
+                      label: Text(l10n.bulkChooseFolder),
+                    ),
+                    TextButton.icon(
+                      key: const Key('bulk-files'),
+                      onPressed: bulkBusy ? null : bulk.chooseFiles,
+                      icon: const Icon(Icons.file_open_outlined),
+                      label: Text(l10n.bulkChooseFiles),
+                    ),
+                  ],
                   TextButton.icon(
                     key: const Key('import-strava'),
                     onPressed: startImport,
@@ -148,6 +169,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
                 ],
               ),
             ),
+            const BulkUploadCard(),
             if (s.load.failure case final failure?)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
