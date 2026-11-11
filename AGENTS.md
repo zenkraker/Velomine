@@ -13,7 +13,8 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `docs/design/v2.md` | Inter-club ideas, not committed |
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/dependencies/` | Background evaluations of community libraries |
-| `README.md` | What works today, known gaps, roadmap, how to run it |
+| `README.md` | What Velomine is, how to run it, and every setting an operator can change |
+| `src/Velomine.Server/site/` | The presentation site: the public claims, pricing and the status page of what works |
 
 **Precedence.** For code, this file wins over the skills, and the skills win over any general or official skill. For architecture and product, `docs/architecture.md` and `values.md` win. This file holds no progress, roadmap or open questions; when a rule changes, edit it in place. A rule here describes the code as it must be now: anything not built yet stays out until it is built.
 
@@ -92,7 +93,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Layout:** `lib/core/` for session, theme, formatting, language, charts and maps; `lib/features/<area>/` per feature, each with one data source `<area>_data.dart` that wraps the generated client.
 - **Navigation** is `go_router` with real URLs on the web. `redirect` is pure: it reads state and returns a location, and the app calls `GoRouter.refresh()` from `ref.listen` when the session or club changes.
 - **The web app** is built into the server's `wwwroot` and served at the same address as the API, so the cookie and single sign-on work without cross-origin setup. A path that is not an API path falls back to `index.html`. The web build bundles its own rendering engine.
-- **The presentation site** is plain HTML and CSS in `src/Velomine.Server/site/`, served before `wwwroot`: no JavaScript and no external assets. Share pages, when built, are server-rendered HTML too.
+- **The presentation site** is plain HTML and CSS in `src/Velomine.Server/site/`, served before `wwwroot`: no JavaScript, no external assets, no cookies, no analytics and no third-party scripts. Share pages, when built, are server-rendered HTML too.
 - **Languages:** English and Italian through `gen-l10n` (`lib/l10n/app_en.arb`, `app_it.arb`). Every user-facing string goes in both files. The language is an account setting (`PUT /accounts/me/language`); before sign-in the app follows the device.
 - **Tokens:** the web app uses the HttpOnly cookie. The phone keeps the refresh token in Android Keystore (AES-GCM, `noBackupFilesDir`) or the iOS Keychain (`AfterFirstUnlockThisDeviceOnly`) through a small native channel, and the access token in memory only. The refresh token is never written to preferences, backups or logs. Refresh is single-flight; a refused refresh clears the token, an unreachable server keeps it. One HTTP-client wrapper turns any 401 into "the session ended".
 - **Maps and charts** are drawn with Flutter's own canvas and plain tile images (`features/rides/detail/geo.dart`, `series_chart.dart`). The tile address comes from `GET /api/v1/server`; OpenStreetMap is the default and the map cannot be turned off.
@@ -111,8 +112,8 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 ### Phone recorder
 
-- Recording, Bluetooth and local ride storage are mobile only, in a native recorder (Kotlin foreground service, Swift) that keeps GPS and sensors running with the screen off.
-- Sensors use the standard Bluetooth LE services (heart rate `0x180D`, speed/cadence `0x1816`, power `0x1818`) through the platform APIs, without a vendor app or a Flutter BLE package. Bluetooth only, no ANT+. A missing sensor never blocks a ride.
+- Recording, Bluetooth and local ride storage are mobile only, in a native recorder (Kotlin foreground service; Swift follows) that keeps GPS and sensors running with the screen off.
+- Sensors use the standard Bluetooth LE services through the platform APIs, without a vendor app or a Flutter BLE package: heart rate `0x180D` today, speed/cadence `0x1816` and power `0x1818` when their support ships. Bluetooth only, no ANT+. A missing sensor never blocks a ride.
 - A ride is saved on the phone first: raw samples in `rides/<id>/raw.jsonl`, then a FIT file on stop. Pauses, the ride type and the e-bike switch are written into the FIT file.
 - The upload queue sends finished FIT files with the local ride id as the idempotency key and retries until the server confirms, also from a WorkManager worker while the app is closed. A duplicate counts as uploaded.
 - With a paired speed sensor, speed and distance come from wheel revolutions × the bike's wheel circumference; otherwise from GPS.

@@ -12,8 +12,8 @@ is a deliberate decision, not a side effect of a feature.
 Cycling data is personal. A ride file reveals where someone lives, when they are away, how
 their health is, and who they ride with. Most platforms treat that data as fuel for
 subscriptions, ads and growth. Velomine exists so a club and its members can own the record
-of their riding: the club pays for the platform, the member owns the data, and nobody pays
-again to see their own history.
+of their riding: the club pays for the platform (a rider alone pays a small solo fee), the
+member owns the data, and nobody pays again to see their own history.
 
 ## The values
 
@@ -26,17 +26,17 @@ again to see their own history.
 
 ### 2. No feature paywall
 
-- Every feature is included for every member of a club.
+- Every feature is included for every member, whatever the plan.
 - No paid tier for analysis, routes, history, exports, safety or coaching.
-- The club pays. Members never do.
-- Plans differ only in who operates the server, not in features.
-- We do not remove a feature from the free experience to sell it back later.
+- The club pays for its members; a rider without a club pays one small solo fee instead.
+- Plans differ in whether a rider belongs to a club and in who operates the server, never in features.
+- We do not remove a feature to sell it back later.
 
 ### 3. The club controls its data and its administration
 
 - Managed cloud or self-hosted, chosen by the club.
-- In cloud, clubs share one database and each club's records are kept apart by the
-  application and row-level security; self-host runs the whole instance for one club.
+- In cloud, clubs share one service and each club's records are kept apart by the
+  application; self-host runs the whole instance for one club.
 - The club decides where the data lives and who administers it.
 - No vendor lock-in: documented backups, migrations and a supported export path.
 
@@ -57,17 +57,19 @@ again to see their own history.
 
 ### 6. Interoperability over lock-in
 
-- Import from other platforms: Strava export, FIT, GPX and TCX.
+- Import FIT, GPX and TCX today, and a Strava export when that import ships.
 - Export everything, always, without a support ticket.
 - A documented API for clubs that want to integrate their own tools.
 - Open standards where they exist: FIT, GPX, ICS, OIDC.
 
 ### 7. Fair, transparent pricing
 
-- One club price: a one-time activation fee, then a yearly fee per club. No per-seat
-  pricing, no feature tiers, no paid add-ons.
+- One club price: a yearly fee per club, set by a size band, with an optional one-time
+  guided setup. No per-seat pricing, no feature tiers, no paid add-ons, and accepting a
+  member inside a band never changes the bill. A rider on their own pays one solo fee a year.
 - Self-hosting is free under AGPL-3.0, for riders and clubs alike. An optional supporter
-  licence funds the project: it unlocks nothing, never limits seats and never blocks member data.
+  licence (a one-time rider fee or a yearly club fee) funds the project: it unlocks
+  nothing, never limits seats and never blocks member data.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 
@@ -108,7 +110,7 @@ Before building or shipping something, ask:
 | Topic | Decision |
 |-------|----------|
 | Sports | Cycling only: road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific. |
-| Users | Clubs and teams, and riders on their own. One club per account, club admin and coach roles, sign-up with admin approval, single sign-on alongside local accounts. A club is an opt-in step, never a requirement. |
+| Users | Clubs and teams, and riders on their own. One club per account, club admin and coach roles, sign-up with admin approval, joining a club with a code, single sign-on alongside local accounts. A club is an opt-in step, never a requirement. |
 | Social | Private rides and coach sharing instead of a public feed or followers. Inside a club, members who opt in see each other's shared rides and routes, and can react, comment and rate; each member's own privacy settings still apply, and nothing leaves the club. Privacy zones hide home and other saved places. |
 | Clubs and coaches | The member decides what to share (rides, training, routes, wellbeing) and with whom (the club's coaches today). Every share is revocable and every view is logged. |
 | Health | A daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride. Cycle tracking is planned as optional, highly protected context. |
@@ -120,7 +122,7 @@ Before building or shipping something, ask:
 
 | Feature | Why |
 |---------|-----|
-| Wheel-sensor speed and distance | Accurate distance in the woods with single-band GPS; GPS is only the fallback. |
+| Wheel-sensor speed and distance, once the sensors ship | Accurate distance in the woods with single-band GPS; GPS is only the fallback. |
 | Cycling analytics (NP, IF, TSS, TRIMP, power curve, FTP and VO2max estimates, fitness/fatigue/form) | Turns recorded streams into training guidance. |
 | Readiness view from load, check-in and recent RPE | The point of collecting wellbeing data. |
 | Clubs and coaches, private by default | Coaching without making anything public. |
