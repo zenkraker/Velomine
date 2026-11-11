@@ -3044,4 +3044,234 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loading => 'Loading';
+
+  @override
+  String get actionLoadServiceLog => 'load the service log';
+
+  @override
+  String get actionSaveReminder => 'save the reminder';
+
+  @override
+  String get actionRemoveReminder => 'delete the reminder';
+
+  @override
+  String get actionCompleteReminder => 'mark the job as done';
+
+  @override
+  String get actionSaveServiceEntry => 'save the entry';
+
+  @override
+  String get actionRemoveServiceEntry => 'delete the entry';
+
+  @override
+  String get service => 'Service';
+
+  @override
+  String get serviceRemindersIntro =>
+      'Reminders tell you when a job on this bike comes round again, like lubing the chain or topping up sealant. Pick a common one to start.';
+
+  @override
+  String get serviceAddReminder => 'Add reminder';
+
+  @override
+  String get serviceCommonJobs => 'Common jobs';
+
+  @override
+  String get reminderStatusOk => 'Fine';
+
+  @override
+  String get reminderStatusSoon => 'Due soon';
+
+  @override
+  String get reminderStatusDue => 'Due';
+
+  @override
+  String get reminderStatusPaused => 'Paused';
+
+  @override
+  String reminderLastDone(String date) {
+    return 'Last done $date';
+  }
+
+  @override
+  String get reminderDone => 'Done';
+
+  @override
+  String get reminderDoneSaved => 'Done. It is in the service log.';
+
+  @override
+  String get reminderDoneBody =>
+      'Counting starts again from the day you pick, and the job goes in the service log.';
+
+  @override
+  String doneOnDate(String date) {
+    return 'Done on $date';
+  }
+
+  @override
+  String get reminderPause => 'Pause';
+
+  @override
+  String get reminderResume => 'Resume';
+
+  @override
+  String get reminderFormAddTitle => 'Add a reminder';
+
+  @override
+  String get reminderFormEditTitle => 'Edit reminder';
+
+  @override
+  String get reminderName => 'What needs doing?';
+
+  @override
+  String get reminderIntervalHelp =>
+      'It is due at the first of these. Leave empty what you do not need.';
+
+  @override
+  String get reminderErrorName => 'Give the job a name.';
+
+  @override
+  String get reminderErrorInterval => 'Set a distance, hours or months.';
+
+  @override
+  String get reminderRemoveTitle => 'Delete this reminder?';
+
+  @override
+  String get reminderRemoveBody =>
+      'The service log keeps what you already did.';
+
+  @override
+  String get jobChainLube => 'Lube the chain';
+
+  @override
+  String get jobChainWearCheck => 'Check chain wear';
+
+  @override
+  String get jobSealantTopUp => 'Top up tyre sealant';
+
+  @override
+  String get jobBrakeBleed => 'Bleed the brakes';
+
+  @override
+  String get jobForkService => 'Service the fork lowers';
+
+  @override
+  String get jobShockService => 'Service the rear shock';
+
+  @override
+  String get jobBoltCheck => 'Check bolt torque';
+
+  @override
+  String get jobShiftingBattery => 'Charge the electronic shifting';
+
+  @override
+  String get serviceLog => 'Service log';
+
+  @override
+  String get serviceLogIntro =>
+      'Everything done to this bike goes here, with the distance it had at the time.';
+
+  @override
+  String get serviceAddEntry => 'Add entry';
+
+  @override
+  String entryAtDistance(String distance) {
+    return 'at $distance';
+  }
+
+  @override
+  String get entryAtHome => 'At home';
+
+  @override
+  String get entryFormAddTitle => 'Add to the service log';
+
+  @override
+  String get entryFormEditTitle => 'Edit entry';
+
+  @override
+  String get entryTitleField => 'What was done?';
+
+  @override
+  String get entryNotes => 'Notes';
+
+  @override
+  String get entryPlace => 'Where';
+
+  @override
+  String get entryPlaceHelp =>
+      'A shop\'s name. Leave empty if you did it at home.';
+
+  @override
+  String get entryCost => 'Cost';
+
+  @override
+  String get entryCurrency => 'Currency';
+
+  @override
+  String get entryPart => 'About which part?';
+
+  @override
+  String get entryNoPart => 'No particular part';
+
+  @override
+  String get entryReminder => 'About which reminder?';
+
+  @override
+  String get entryNoReminder => 'No particular reminder';
+
+  @override
+  String get entryErrorTitle => 'Say what was done.';
+
+  @override
+  String get entryErrorCost =>
+      'Enter the cost as a number, with a three-letter currency like EUR.';
+
+  @override
+  String get entryRemoveTitle => 'Delete this entry?';
+
+  @override
+  String get entryRemoveBody =>
+      'It is removed from the log. This cannot be undone.';
+
+  @override
+  String get entryRemoveDoneBody =>
+      'It is removed from the log. The reminder keeps counting from the day it was done.';
+
+  @override
+  String get logFilterLabel => 'Show';
+
+  @override
+  String get logFilterAll => 'Everything';
+
+  @override
+  String get logFilterEmpty => 'Nothing in the log for this part yet.';
+
+  @override
+  String get logShowMore => 'Show more';
+
+  @override
+  String logReplacedPart(String part) {
+    return 'Replaced $part';
+  }
+
+  @override
+  String logReplacedPartWith(String part, String make) {
+    return 'Replaced $part: $make';
+  }
+
+  @override
+  String get bikeServiceDue => 'Service due';
+
+  @override
+  String get bikeServiceSoon => 'Service due soon';
+
+  @override
+  String notificationReminderSoon(String subject) {
+    return 'Maintenance nearly due: $subject.';
+  }
+
+  @override
+  String notificationReminderDue(String subject) {
+    return 'Maintenance due: $subject.';
+  }
 }

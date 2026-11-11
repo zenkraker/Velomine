@@ -51,6 +51,8 @@ lib/model/create_club_request.dart
 lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
 lib/model/create_privacy_zone_request.dart
+lib/model/create_reminder_request.dart
+lib/model/create_service_entry_request.dart
 lib/model/create_template_request.dart
 lib/model/delete_my_account_request.dart
 lib/model/enable_two_factor_request.dart
@@ -70,9 +72,14 @@ lib/model/list_component_types_response.dart
 lib/model/list_goals_response.dart
 lib/model/list_notifications_response.dart
 lib/model/list_rides_response.dart
+lib/model/list_service_entries_response.dart
+lib/model/list_service_jobs_response.dart
 lib/model/list_templates_response.dart
 lib/model/login_request.dart
 lib/model/login_two_factor_request.dart
+lib/model/maintenance_job.dart
+lib/model/maintenance_reminder_response.dart
+lib/model/mark_reminder_done_request.dart
 lib/model/me_response.dart
 lib/model/my_club_response.dart
 lib/model/my_join_request_response.dart
@@ -111,6 +118,7 @@ lib/model/save_check_in_request.dart
 lib/model/save_ride_feel_request.dart
 lib/model/search_parts_response.dart
 lib/model/server_info_response.dart
+lib/model/service_entry_response.dart
 lib/model/session_response.dart
 lib/model/set_club_location_request.dart
 lib/model/set_club_member_role_request.dart
@@ -145,6 +153,8 @@ lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
 lib/model/update_privacy_request.dart
 lib/model/update_profile_request.dart
+lib/model/update_reminder_request.dart
+lib/model/update_service_entry_request.dart
 lib/model/update_settings_request.dart
 lib/model/update_sharing_request.dart
 lib/model/update_template_request.dart

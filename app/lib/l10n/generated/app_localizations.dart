@@ -5467,6 +5467,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading'**
   String get loading;
+
+  /// No description provided for @actionLoadServiceLog.
+  ///
+  /// In en, this message translates to:
+  /// **'load the service log'**
+  String get actionLoadServiceLog;
+
+  /// No description provided for @actionSaveReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'save the reminder'**
+  String get actionSaveReminder;
+
+  /// No description provided for @actionRemoveReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the reminder'**
+  String get actionRemoveReminder;
+
+  /// No description provided for @actionCompleteReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'mark the job as done'**
+  String get actionCompleteReminder;
+
+  /// No description provided for @actionSaveServiceEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'save the entry'**
+  String get actionSaveServiceEntry;
+
+  /// No description provided for @actionRemoveServiceEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the entry'**
+  String get actionRemoveServiceEntry;
+
+  /// No description provided for @service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get service;
+
+  /// No description provided for @serviceRemindersIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders tell you when a job on this bike comes round again, like lubing the chain or topping up sealant. Pick a common one to start.'**
+  String get serviceRemindersIntro;
+
+  /// No description provided for @serviceAddReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add reminder'**
+  String get serviceAddReminder;
+
+  /// No description provided for @serviceCommonJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Common jobs'**
+  String get serviceCommonJobs;
+
+  /// No description provided for @reminderStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine'**
+  String get reminderStatusOk;
+
+  /// No description provided for @reminderStatusSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Due soon'**
+  String get reminderStatusSoon;
+
+  /// No description provided for @reminderStatusDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get reminderStatusDue;
+
+  /// No description provided for @reminderStatusPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get reminderStatusPaused;
+
+  /// No description provided for @reminderLastDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Last done {date}'**
+  String reminderLastDone(String date);
+
+  /// No description provided for @reminderDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get reminderDone;
+
+  /// No description provided for @reminderDoneSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Done. It is in the service log.'**
+  String get reminderDoneSaved;
+
+  /// No description provided for @reminderDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting starts again from the day you pick, and the job goes in the service log.'**
+  String get reminderDoneBody;
+
+  /// No description provided for @doneOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Done on {date}'**
+  String doneOnDate(String date);
+
+  /// No description provided for @reminderPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get reminderPause;
+
+  /// No description provided for @reminderResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get reminderResume;
+
+  /// No description provided for @reminderFormAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a reminder'**
+  String get reminderFormAddTitle;
+
+  /// No description provided for @reminderFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reminder'**
+  String get reminderFormEditTitle;
+
+  /// No description provided for @reminderName.
+  ///
+  /// In en, this message translates to:
+  /// **'What needs doing?'**
+  String get reminderName;
+
+  /// No description provided for @reminderIntervalHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It is due at the first of these. Leave empty what you do not need.'**
+  String get reminderIntervalHelp;
+
+  /// No description provided for @reminderErrorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the job a name.'**
+  String get reminderErrorName;
+
+  /// No description provided for @reminderErrorInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a distance, hours or months.'**
+  String get reminderErrorInterval;
+
+  /// No description provided for @reminderRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this reminder?'**
+  String get reminderRemoveTitle;
+
+  /// No description provided for @reminderRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The service log keeps what you already did.'**
+  String get reminderRemoveBody;
+
+  /// No description provided for @jobChainLube.
+  ///
+  /// In en, this message translates to:
+  /// **'Lube the chain'**
+  String get jobChainLube;
+
+  /// No description provided for @jobChainWearCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check chain wear'**
+  String get jobChainWearCheck;
+
+  /// No description provided for @jobSealantTopUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Top up tyre sealant'**
+  String get jobSealantTopUp;
+
+  /// No description provided for @jobBrakeBleed.
+  ///
+  /// In en, this message translates to:
+  /// **'Bleed the brakes'**
+  String get jobBrakeBleed;
+
+  /// No description provided for @jobForkService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service the fork lowers'**
+  String get jobForkService;
+
+  /// No description provided for @jobShockService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service the rear shock'**
+  String get jobShockService;
+
+  /// No description provided for @jobBoltCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check bolt torque'**
+  String get jobBoltCheck;
+
+  /// No description provided for @jobShiftingBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Charge the electronic shifting'**
+  String get jobShiftingBattery;
+
+  /// No description provided for @serviceLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Service log'**
+  String get serviceLog;
+
+  /// No description provided for @serviceLogIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything done to this bike goes here, with the distance it had at the time.'**
+  String get serviceLogIntro;
+
+  /// No description provided for @serviceAddEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get serviceAddEntry;
+
+  /// No description provided for @entryAtDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'at {distance}'**
+  String entryAtDistance(String distance);
+
+  /// No description provided for @entryAtHome.
+  ///
+  /// In en, this message translates to:
+  /// **'At home'**
+  String get entryAtHome;
+
+  /// No description provided for @entryFormAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the service log'**
+  String get entryFormAddTitle;
+
+  /// No description provided for @entryFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get entryFormEditTitle;
+
+  /// No description provided for @entryTitleField.
+  ///
+  /// In en, this message translates to:
+  /// **'What was done?'**
+  String get entryTitleField;
+
+  /// No description provided for @entryNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get entryNotes;
+
+  /// No description provided for @entryPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get entryPlace;
+
+  /// No description provided for @entryPlaceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A shop\'s name. Leave empty if you did it at home.'**
+  String get entryPlaceHelp;
+
+  /// No description provided for @entryCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get entryCost;
+
+  /// No description provided for @entryCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get entryCurrency;
+
+  /// No description provided for @entryPart.
+  ///
+  /// In en, this message translates to:
+  /// **'About which part?'**
+  String get entryPart;
+
+  /// No description provided for @entryNoPart.
+  ///
+  /// In en, this message translates to:
+  /// **'No particular part'**
+  String get entryNoPart;
+
+  /// No description provided for @entryReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'About which reminder?'**
+  String get entryReminder;
+
+  /// No description provided for @entryNoReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'No particular reminder'**
+  String get entryNoReminder;
+
+  /// No description provided for @entryErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what was done.'**
+  String get entryErrorTitle;
+
+  /// No description provided for @entryErrorCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the cost as a number, with a three-letter currency like EUR.'**
+  String get entryErrorCost;
+
+  /// No description provided for @entryRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this entry?'**
+  String get entryRemoveTitle;
+
+  /// No description provided for @entryRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It is removed from the log. This cannot be undone.'**
+  String get entryRemoveBody;
+
+  /// No description provided for @entryRemoveDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It is removed from the log. The reminder keeps counting from the day it was done.'**
+  String get entryRemoveDoneBody;
+
+  /// No description provided for @logFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get logFilterLabel;
+
+  /// No description provided for @logFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything'**
+  String get logFilterAll;
+
+  /// No description provided for @logFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in the log for this part yet.'**
+  String get logFilterEmpty;
+
+  /// No description provided for @logShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get logShowMore;
+
+  /// No description provided for @logReplacedPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaced {part}'**
+  String logReplacedPart(String part);
+
+  /// No description provided for @logReplacedPartWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaced {part}: {make}'**
+  String logReplacedPartWith(String part, String make);
+
+  /// No description provided for @bikeServiceDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Service due'**
+  String get bikeServiceDue;
+
+  /// No description provided for @bikeServiceSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Service due soon'**
+  String get bikeServiceSoon;
+
+  /// No description provided for @notificationReminderSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance nearly due: {subject}.'**
+  String notificationReminderSoon(String subject);
+
+  /// No description provided for @notificationReminderDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance due: {subject}.'**
+  String notificationReminderDue(String subject);
 }
 
 class _AppLocalizationsDelegate

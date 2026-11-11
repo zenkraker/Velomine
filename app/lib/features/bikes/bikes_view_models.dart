@@ -97,16 +97,166 @@ class BikeDetailViewModel extends _$BikeDetailViewModel {
 
     final types = await data.types();
     final templates = (await data.templates()).valueOrNull ?? const [];
+    final jobs = (await data.serviceJobs(id)).valueOrNull ?? const [];
     if (!ref.mounted) return;
     state = BikeDetailState(
       detail: bikeResult.valueOrNull,
       types: types.valueOrNull ?? const [],
       templates: templates,
+      jobs: jobs,
+      log: state.log,
+      logHasMore: state.logHasMore,
+      logComponentId: state.logComponentId,
+      logLoad: state.logLoad,
       load: types.isOk
           ? state.load.finish(bikeResult)
           : state.load.finish(Failed(types.failureOrNull!)),
       messages: state.messages,
     );
+    await loadLog();
+  }
+
+  /// Reads the service log from the top, for the current part filter.
+  Future<void> loadLog() => _readLog(more: false);
+
+  /// Adds the next page below the entries already shown.
+  Future<void> loadMoreLog() => _readLog(more: true);
+
+  Future<void> _readLog({required bool more}) async {
+    if (state.logLoad.running) return;
+    state = state.copyWith(logLoad: state.logLoad.start());
+    final result = await ref
+        .read(bikesDataProvider)
+        .serviceEntries(
+          id,
+          componentId: state.logComponentId,
+          after: more && state.log.isNotEmpty ? state.log.last : null,
+        );
+    if (!ref.mounted) return;
+    final page = result.valueOrNull;
+    state = switch (result) {
+      Ok() when page != null => state.copyWith(
+        log: more ? [...state.log, ...page.entries] : page.entries,
+        logHasMore: page.hasMore,
+        logLoad: state.logLoad.finish(const Ok(null)),
+      ),
+      Ok() => state.copyWith(logLoad: state.logLoad.finish(const Ok(null))),
+      Failed(:final failure) => state.copyWith(
+        logLoad: state.logLoad.finish(Failed(failure)),
+      ),
+    };
+  }
+
+  /// Shows only the entries about one part, or all of them for null.
+  Future<void> filterLog(String? componentId) {
+    state = componentId == null
+        ? state.copyWith(clearLogFilter: true, log: const [], logHasMore: false)
+        : state.copyWith(
+            logComponentId: componentId,
+            log: const [],
+            logHasMore: false,
+          );
+    return loadLog();
+  }
+
+  /// Adds a reminder; a job picked from the common list starts from its interval.
+  Future<bool> addReminder(CreateReminderRequest reminder) =>
+      _change(() => ref.read(bikesDataProvider).addReminder(id, reminder));
+
+  Future<bool> editReminder(
+    String reminderId,
+    UpdateReminderRequest reminder,
+  ) => _change(
+    () => ref.read(bikesDataProvider).editReminder(id, reminderId, reminder),
+  );
+
+  /// Pausing keeps the reminder but silences it.
+  Future<bool> setReminderPaused(MaintenanceReminderResponse r, bool paused) =>
+      editReminder(
+        r.id,
+        UpdateReminderRequest(
+          name: r.name,
+          intervalDistanceM: Optional.present(r.intervalDistanceM),
+          intervalHours: Optional.present(r.intervalHours),
+          intervalMonths: Optional.present(r.intervalMonths),
+          isPaused: Optional.present(paused),
+        ),
+      );
+
+  Future<bool> removeReminder(String reminderId) async {
+    if (state.action.running) return false;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(bikesDataProvider)
+        .removeReminder(id, reminderId);
+    if (!ref.mounted) return false;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+    await load();
+    return true;
+  }
+
+  /// Marks a reminder done on [doneOn]: the count restarts and the log gets an entry.
+  Future<bool> completeReminder(String reminderId, DateTime doneOn) async {
+    final done = await _change(
+      () =>
+          ref.read(bikesDataProvider).completeReminder(id, reminderId, doneOn),
+    );
+    if (done) await loadLog();
+    return done;
+  }
+
+  Future<bool> addServiceEntry(CreateServiceEntryRequest entry) async {
+    final saved = await _saveEntry(
+      () => ref.read(bikesDataProvider).addServiceEntry(id, entry),
+    );
+    if (saved) await loadLog();
+    return saved;
+  }
+
+  Future<bool> editServiceEntry(
+    String entryId,
+    UpdateServiceEntryRequest entry,
+  ) async {
+    final saved = await _saveEntry(
+      () => ref.read(bikesDataProvider).editServiceEntry(id, entryId, entry),
+    );
+    if (saved) await loadLog();
+    return saved;
+  }
+
+  Future<bool> _saveEntry(
+    Future<Result<ServiceEntryResponse?>> Function() call,
+  ) async {
+    if (state.action.running) return false;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return false;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> removeServiceEntry(String entryId) async {
+    if (state.action.running) return false;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(bikesDataProvider)
+        .removeServiceEntry(id, entryId);
+    if (!ref.mounted) return false;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+    await loadLog();
+    return true;
   }
 
   Future<bool> save(UpdateBikeRequest bike) =>
@@ -211,26 +361,32 @@ class BikeDetailViewModel extends _$BikeDetailViewModel {
     () => ref.read(bikesDataProvider).applyTemplate(id, templateId, _today()),
   );
 
-  /// Takes the old part off today and fits [replacement].
+  /// Takes the old part off the day [replacement] is fitted and fits it, in one step on the server, which also writes
+  /// the service log entry ([logTitle] is its wording in the member's language).
   Future<bool> replacePart(
     ComponentResponse old,
-    CreateComponentRequest replacement,
-  ) async {
-    final today = _today();
-    final retired = await editPart(
-      old.id,
-      UpdateComponentRequest(
-        type: old.type,
-        brand: Optional.present(old.brand),
-        model: Optional.present(old.model),
-        installedOn: old.installedOn,
-        removedOn: Optional.present(today),
-        expectedDistanceM: Optional.present(old.expectedDistanceM),
-        expectedHours: Optional.present(old.expectedHours),
-        expectedMonths: Optional.present(old.expectedMonths),
+    CreateComponentRequest replacement, {
+    required String logTitle,
+  }) async {
+    final replaced = await addPart(
+      CreateComponentRequest(
+        type: replacement.type,
+        brand: replacement.brand,
+        model: replacement.model,
+        mpn: replacement.mpn,
+        gtin: replacement.gtin,
+        custom: replacement.custom,
+        installedOn: replacement.installedOn,
+        removedOn: replacement.removedOn,
+        expectedDistanceM: replacement.expectedDistanceM,
+        expectedHours: replacement.expectedHours,
+        expectedMonths: replacement.expectedMonths,
+        replacesId: Optional.present(old.id),
+        logTitle: Optional.present(logTitle),
       ),
     );
-    return retired && await addPart(replacement);
+    if (replaced) await loadLog();
+    return replaced;
   }
 
   /// Waits for a pause in typing before asking the server, and ignores answers
