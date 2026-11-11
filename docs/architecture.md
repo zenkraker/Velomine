@@ -18,13 +18,19 @@ It describes only what is decided. Features that are not built yet are on the st
 ```mermaid
 flowchart LR
   M[Flutter phone app] --> HOST[Deployment host]
-  W[Flutter web app] --> HOST
+  B[Browser] --> HOST
   U[Bike computer files] --> HOST
-  HOST --> APP
+  HOST --> WEBIMG
 
-  subgraph APP[".NET 10 application, one image"]
-    API[REST API /api/v1]
+  subgraph WEBIMG["Web image: nginx"]
+    WEBAPP[Flutter web app]
     SITE[Presentation site]
+  end
+
+  WEBIMG -->|/api, /health, /openapi| APP
+
+  subgraph APP[".NET 10 application, server image"]
+    API[REST API /api/v1]
     BG[Background services]
   end
 
@@ -48,8 +54,8 @@ Trade-offs accepted: isolation depends on query filters, with tests proving one 
 
 ## 4. Deployment
 
-- **One Docker image** (amd64, non-root) with the API, the Flutter web build, the presentation site and the background services.
-- **Cloud:** one deployment in the EU/EEA over a managed PostgreSQL database, behind TLS. **Self-host:** the same image with PostgreSQL as a second container or an existing server, and one volume for files. Both run the same features; only the operator differs.
+- **Two Docker images, one origin** (amd64, non-root). The **server image** holds the .NET API and the background services, and no front-end. The **web image** is the official nginx image with the Flutter web build and the presentation site: it serves both and forwards `/api`, `/health` and `/openapi` to the server, so the browser sees one address and the cookie and single sign-on need no cross-origin setup. Both images share one version and are released together.
+- **Cloud:** one deployment in the EU/EEA over a managed PostgreSQL database, behind TLS. **Self-host:** the same two images with PostgreSQL as a third container or an existing server, and one volume for files. Both run the same features; only the operator differs.
 - **Volumes:** ride files on `/data/files`, the Data Protection key ring on `/data/keys`. Every instance mounts the same key ring, because it signs the session cookies and download links.
 - **Background work runs on exactly one instance** (`VELOMINE__BACKGROUND__ENABLED`); migrations run on every instance under EF Core's migration lock.
 - **Configuration** is environment variables, validated on start. Secrets come from the environment or a secret store, never the database.
@@ -57,8 +63,9 @@ Trade-offs accepted: isolation depends on query filters, with tests proving one 
 - **Releases** use exact image versions, never `latest`, and can be rolled back to the previous version.
 - **Backups:** the database (point-in-time recovery where the host offers it, plus a nightly `pg_dump -Fc`), the file volume and the Data Protection key ring. Deleted data leaves the backups within 90 days.
 - **Supporter licence (self-host):** self-hosting is free. An optional supporter licence is paid once by a rider or yearly by a club; the offline signed key names the holder and, for a club, an expiry, is validated with a public key and shows a badge the holder can hide. It unlocks no feature, has no seat count and never phones home; a server without one works exactly the same.
-- **Hosted environments:** dev, staging and prod on one VPS as three compose projects behind one Caddy, each with its own network, database and user, settings and data; the demo on its own VPS and database. The infrastructure (`infra/`) and host files (`deploy/host/`) live in this repository; their secrets do not.
-- **Releases:** CI builds and smoke-tests one image per commit and pushes it to GHCR with its build provenance. `main` deploys to dev; a tag `vX.Y.Z` deploys to staging, then, after an approval, the same digest to prod and the demo. Each host pulls its environment's tag, waits for `/health` and rolls back to the previous digest on its own; the release waits until the environment reports the new commit.
+- **Hosted environments:** one VPS runs a Traefik compose and one compose project per environment. Traefik owns ports 80 and 443, gets and renews the Let's Encrypt certificates, and routes each host name to that environment's web container; it reads the routes from labels in each environment's compose through the Docker socket, mounted read-only. Only web containers join Traefik's shared `proxy` network: each environment's server sits on that environment's own network, so no environment can reach another's server. One managed PostgreSQL instance holds the databases, reached over the private network.
+- **Only the demo runs for now.** The VPS (STARDUST1-S) and database instance that host the demo are the shared ones; the demo keeps its `velomine` database. dev, staging and prod are written out but commented out in the host compose files, the release workflow and OpenTofu. A release tag deploys the demo after an approval. Turning another environment on means uncommenting it, resizing the VPS, and giving it its own database and user on the same instance; prod then answers at `app.velomine.eu`. `velomine.eu` and `www` are served by the demo until prod launches. The infrastructure (`infra/`) and host files (`deploy/host/`) live in this repository; their secrets do not.
+- **Releases:** CI builds and smoke-tests the server and web images per commit, together, and pushes them to GHCR with their build provenance. `main` deploys to dev; a tag `vX.Y.Z` deploys to staging, then, after an approval, the same pair of digests to prod and the demo. Each host pulls its environment's tags, waits for `/health` and rolls back to the previous pair on its own; the release waits until the environment reports the new commit.
 - No Kubernetes, no multi-cloud, no active-active.
 
 ## 5. Ride ingestion
@@ -133,8 +140,8 @@ erDiagram
 
 ## 9. Clients
 
-- **One Flutter codebase** for Android, iOS and the web app. The web app is served by the server at the same address as the API, so cookie sessions and single sign-on need no cross-origin setup.
-- **The presentation site** is plain server-served HTML with no JavaScript, no cookies, no analytics and no third-party scripts, because Flutter web cannot be crawled or previewed.
+- **One Flutter codebase** for Android, iOS and the web app. The web app is served by the web image at the same address as the API, so cookie sessions and single sign-on need no cross-origin setup.
+- **The presentation site** is plain HTML in `site/`, served by the web image, with no JavaScript, no cookies, no analytics and no third-party scripts, because Flutter web cannot be crawled or previewed.
 - **The phone records natively** (Kotlin, Swift) with the screen off, pairs standard Bluetooth LE sensors without vendor apps, saves each ride as a FIT file first and uploads it through an idempotent queue.
 - **Design system:** a day theme (Cloud Dancer, deep teal, iron oxide) and a night-ride theme (asphalt, Volt) for recording.
 
@@ -153,6 +160,9 @@ erDiagram
 | Wear, goals and totals computed on read; load and power bests stored | Always correct for the current profile, except the sums the dashboard needs fast. |
 | Optional, offline, signed supporter licence | Funds the project without a paywall: no phone-home, no seats, never a feature or a block on member data. |
 | Member telemetry opt-in; operational logs separate and anonymous | Health and location data never leave through diagnostics. |
+| Two images, server and web, behind one origin | A Flutter build never blocks or slows a server image, and the server is API-only. One origin keeps the cookie and single sign-on simple. Costs a third container for self-hosters. |
+| The presentation site ships in the web image, as plain HTML in `site/` | It is static front-end material; it stays plain HTML because Flutter web draws on a canvas, which is poor for search, link previews, first load and accessibility. |
+| nginx inside the web image; Traefik at the hosts' edge | nginx serves the static files and forwards the API, the same for a self-hoster and on the hosts. Traefik gives each environment its route through labels in its own compose and handles certificates itself. The read-only Docker socket gives Traefik a lot of power over the host: revisit (file provider or a socket proxy) before prod holds a club's real data. |
 | Hosted environments and their pipelines in this repository, secrets outside it | Environments differ only by settings and secrets, so a second repository would only add drift. GitHub holds no host secret. |
 | Build once, promote the digest; hosts pull and roll back | Prod runs exactly what staging ran. No inbound deploy access, and a bad image undoes itself. |
-| dev, staging and prod share one VPS and one database instance | Cheapest isolation that still separates networks, databases and secrets. Revisit before prod holds a club's real data: prod then moves to its own VPS and an HA database. |
+| One VPS and one database instance for every environment; only the demo runs until there are customers | No cost for environments nobody uses yet. The others are written out and commented out, so turning one on is uncommenting, not designing. Commented-out code is not checked by CI or `tofu validate`: check it when turning it on. The public demo will live next to prod: revisit before prod holds a club's real data, when prod moves to its own VPS and an HA database. |
