@@ -408,6 +408,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    b.Property<bool?>("ClubCreationEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("club_creation_enabled");
+
                     b.Property<DateTimeOffset?>("EmailStartedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("email_started_at");
@@ -1085,11 +1089,19 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
+                    b.Property<int?>("MemberLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("member_limit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
+
+                    b.Property<DateOnly?>("PaidUntil")
+                        .HasColumnType("date")
+                        .HasColumnName("paid_until");
 
                     b.HasKey("Id")
                         .HasName("pk_clubs");
@@ -1111,6 +1123,8 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_clubs_location", "(latitude IS NULL) = (longitude IS NULL)");
 
                             t.HasCheckConstraint("ck_clubs_longitude", "longitude IS NULL OR (longitude BETWEEN -180 AND 180)");
+
+                            t.HasCheckConstraint("ck_clubs_member_limit", "member_limit IS NULL OR member_limit > 0");
                         });
                 });
 

@@ -15,6 +15,7 @@ class SettingsResponse {
   SettingsResponse({
     required this.signUpEnabled,
     required this.requireAdminApproval,
+    required this.clubCreationEnabled,
     required this.smtp,
     required this.sso,
   });
@@ -22,6 +23,8 @@ class SettingsResponse {
   final bool signUpEnabled;
 
   final bool requireAdminApproval;
+
+  final bool clubCreationEnabled;
 
   final SmtpStatus smtp;
 
@@ -31,6 +34,7 @@ class SettingsResponse {
   bool operator ==(Object other) => identical(this, other) || other is SettingsResponse &&
     other.signUpEnabled == signUpEnabled &&
     other.requireAdminApproval == requireAdminApproval &&
+    other.clubCreationEnabled == clubCreationEnabled &&
     other.smtp == smtp &&
     other.sso == sso;
 
@@ -39,16 +43,18 @@ class SettingsResponse {
     // ignore: unnecessary_parenthesis
     (signUpEnabled.hashCode) +
     (requireAdminApproval.hashCode) +
+    (clubCreationEnabled.hashCode) +
     (smtp.hashCode) +
     (sso.hashCode);
 
   @override
-  String toString() => 'SettingsResponse[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval, smtp=$smtp, sso=$sso]';
+  String toString() => 'SettingsResponse[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval, clubCreationEnabled=$clubCreationEnabled, smtp=$smtp, sso=$sso]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'signUpEnabled'] = this.signUpEnabled;
       json[r'requireAdminApproval'] = this.requireAdminApproval;
+      json[r'clubCreationEnabled'] = this.clubCreationEnabled;
       json[r'smtp'] = this.smtp;
       json[r'sso'] = this.sso;
     return json;
@@ -59,11 +65,13 @@ class SettingsResponse {
   SettingsResponse copyWith({
     bool? signUpEnabled,
     bool? requireAdminApproval,
+    bool? clubCreationEnabled,
     SmtpStatus? smtp,
     SsoStatus? sso,
   }) => SettingsResponse(
     signUpEnabled: signUpEnabled ?? this.signUpEnabled,
     requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
+    clubCreationEnabled: clubCreationEnabled ?? this.clubCreationEnabled,
     smtp: smtp ?? this.smtp,
     sso: sso ?? this.sso,
   );
@@ -83,6 +91,8 @@ class SettingsResponse {
         assert(json[r'signUpEnabled'] != null, 'Required key "SettingsResponse[signUpEnabled]" has a null value in JSON.');
         assert(json.containsKey(r'requireAdminApproval'), 'Required key "SettingsResponse[requireAdminApproval]" is missing from JSON.');
         assert(json[r'requireAdminApproval'] != null, 'Required key "SettingsResponse[requireAdminApproval]" has a null value in JSON.');
+        assert(json.containsKey(r'clubCreationEnabled'), 'Required key "SettingsResponse[clubCreationEnabled]" is missing from JSON.');
+        assert(json[r'clubCreationEnabled'] != null, 'Required key "SettingsResponse[clubCreationEnabled]" has a null value in JSON.');
         assert(json.containsKey(r'smtp'), 'Required key "SettingsResponse[smtp]" is missing from JSON.');
         assert(json[r'smtp'] != null, 'Required key "SettingsResponse[smtp]" has a null value in JSON.');
         assert(json.containsKey(r'sso'), 'Required key "SettingsResponse[sso]" is missing from JSON.');
@@ -93,6 +103,7 @@ class SettingsResponse {
       return SettingsResponse(
         signUpEnabled: mapValueOfType<bool>(json, r'signUpEnabled')!,
         requireAdminApproval: mapValueOfType<bool>(json, r'requireAdminApproval')!,
+        clubCreationEnabled: mapValueOfType<bool>(json, r'clubCreationEnabled')!,
         smtp: SmtpStatus.fromJson(json[r'smtp'])!,
         sso: SsoStatus.fromJson(json[r'sso'])!,
       );
@@ -144,6 +155,7 @@ class SettingsResponse {
   static const requiredKeys = <String>{
     'signUpEnabled',
     'requireAdminApproval',
+    'clubCreationEnabled',
     'smtp',
     'sso',
   };

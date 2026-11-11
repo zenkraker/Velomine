@@ -3158,5 +3158,100 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get actionStartClub => 'avviare il club';
+
+  @override
+  String get actionSetClubPlan => 'salvare il piano del club';
+
+  @override
+  String get startClubButton => 'Avvia un club';
+
+  @override
+  String get startClubTitle => 'Avvia un club';
+
+  @override
+  String get startClubIntro =>
+      'Avvia un club per le persone con cui pedali. Ne sarai il proprietario e potrai invitare gli altri con un codice. Hai un mese per provarlo.';
+
+  @override
+  String get startClubName => 'Nome del club';
+
+  @override
+  String get startClubNameRequired => 'Dai un nome al club.';
+
+  @override
+  String get startClubAction => 'Avvia il club';
+
+  @override
+  String get clubPlanTitle => 'Piano';
+
+  @override
+  String clubPlanMembers(int count, int limit) {
+    return '$count iscritti su $limit';
+  }
+
+  @override
+  String clubPlanPaidUntil(String date) {
+    return 'Pagato fino al $date';
+  }
+
+  @override
+  String get clubPlanFullNotice =>
+      'Il club è al completo. Per accogliere altri iscritti, contattaci per passare a una fascia più ampia.';
+
+  @override
+  String clubPlanEndedNotice(String date) {
+    return 'Il piano del club è scaduto il $date. Tutto continua a funzionare, ma nessuno può entrare finché non viene rinnovato. Contattaci per rinnovarlo.';
+  }
+
+  @override
+  String get joinRequestsBlockedFull =>
+      'Il club è al completo, quindi per ora non puoi accettare richieste. Contattaci per passare a una fascia più ampia.';
+
+  @override
+  String get joinRequestsBlockedEnded =>
+      'Il piano del club è scaduto, quindi non puoi accettare richieste finché non viene rinnovato.';
+
+  @override
+  String notificationClubPlanEnding(String date) {
+    return 'Il piano del tuo club scade il $date. Contattaci per rinnovarlo.';
+  }
+
+  @override
+  String notificationClubPlanEnded(String date) {
+    return 'Il piano del tuo club è scaduto dopo il $date. Gli iscritti non perdono nulla, ma nessuno può entrare finché non viene rinnovato.';
+  }
+
+  @override
+  String get adminClubCreation => 'Chi non ha un club può avviarne uno';
+
+  @override
+  String get adminClubCreationHelp =>
+      'Chi ha un account e non è in un club può avviarne uno. Parte con posto per 25 iscritti e un mese di prova.';
+
+  @override
+  String get adminClubEditPlan => 'Modifica il piano';
+
+  @override
+  String get adminClubLimit => 'Posti';
+
+  @override
+  String get adminClubLimitNone => 'Oltre 150 iscritti (nessun limite)';
+
+  @override
+  String adminClubLimitOption(int count) {
+    return 'Fino a $count iscritti';
+  }
+
+  @override
+  String get adminClubPaidUntil => 'Pagato fino al';
+
+  @override
+  String get adminClubNoDate => 'Nessuna scadenza';
+
+  @override
+  String get adminClubChooseDate => 'Scegli una data';
+
+  @override
   String get loading => 'Caricamento';
 }

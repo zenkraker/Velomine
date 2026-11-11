@@ -14,21 +14,26 @@ class MyClubResponse {
   /// Returns a new [MyClubResponse] instance.
   MyClubResponse({
     required this.club,
+    required this.canStartClub,
   });
 
   final ClubResponse? club;
 
+  final bool canStartClub;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is MyClubResponse &&
-    other.club == club;
+    other.club == club &&
+    other.canStartClub == canStartClub;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (club == null ? 0 : club!.hashCode);
+    (club == null ? 0 : club!.hashCode) +
+    (canStartClub.hashCode);
 
   @override
-  String toString() => 'MyClubResponse[club=$club]';
+  String toString() => 'MyClubResponse[club=$club, canStartClub=$canStartClub]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -37,6 +42,7 @@ class MyClubResponse {
     } else {
       json[r'club'] = null;
     }
+      json[r'canStartClub'] = this.canStartClub;
     return json;
   }
 
@@ -45,8 +51,10 @@ class MyClubResponse {
   MyClubResponse copyWith({
     ClubResponse? club,
     bool clubSetToNull = false,
+    bool? canStartClub,
   }) => MyClubResponse(
     club: clubSetToNull ? null : club ?? this.club,
+    canStartClub: canStartClub ?? this.canStartClub,
   );
 
   /// Returns a new [MyClubResponse] instance and imports its values from
@@ -61,11 +69,14 @@ class MyClubResponse {
       // Note 2: this code is stripped in release mode!
       assert(() {
         assert(json.containsKey(r'club'), 'Required key "MyClubResponse[club]" is missing from JSON.');
+        assert(json.containsKey(r'canStartClub'), 'Required key "MyClubResponse[canStartClub]" is missing from JSON.');
+        assert(json[r'canStartClub'] != null, 'Required key "MyClubResponse[canStartClub]" has a null value in JSON.');
         return true;
       }());
 
       return MyClubResponse(
         club: ClubResponse.fromJson(json[r'club']),
+        canStartClub: mapValueOfType<bool>(json, r'canStartClub')!,
       );
     }
     return null;
@@ -114,6 +125,7 @@ class MyClubResponse {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'club',
+    'canStartClub',
   };
 }
 

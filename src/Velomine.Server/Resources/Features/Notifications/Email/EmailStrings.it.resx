@@ -79,4 +79,10 @@
   <data name="ClubJoinDeclined" xml:space="preserve">
     <value>{0} ha rifiutato la tua richiesta.</value>
   </data>
+  <data name="ClubPlanEnding" xml:space="preserve">
+    <value>Il piano del tuo club scade il {0}. Contattaci per rinnovarlo, così il club potrà continuare ad accogliere nuovi iscritti.</value>
+  </data>
+  <data name="ClubPlanEnded" xml:space="preserve">
+    <value>Il piano del tuo club è scaduto dopo il {0}. Tutto continua a funzionare, ma il club non può accogliere nuovi iscritti finché il piano non viene rinnovato. Contattaci per rinnovarlo.</value>
+  </data>
 </root>

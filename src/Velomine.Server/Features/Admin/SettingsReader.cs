@@ -6,7 +6,7 @@ using Velomine.Server.Features.Accounts;
 namespace Velomine.Server.Features.Admin;
 
 /// <summary>What the server actually does: the saved setting if there is one, else the environment value.</summary>
-public sealed record EffectiveSettings(bool SignUpEnabled, bool RequireAdminApproval);
+public sealed record EffectiveSettings(bool SignUpEnabled, bool RequireAdminApproval, bool ClubCreationEnabled);
 
 public sealed class SettingsReader(VelomineDbContext db, IOptions<AccountsOptions> accounts)
 {
@@ -18,6 +18,7 @@ public sealed class SettingsReader(VelomineDbContext db, IOptions<AccountsOption
         var saved = await SavedAsync(ct);
         return new EffectiveSettings(
             saved?.SignUpEnabled ?? accounts.Value.SignUpEnabled,
-            saved?.RequireAdminApproval ?? accounts.Value.RequireAdminApproval);
+            saved?.RequireAdminApproval ?? accounts.Value.RequireAdminApproval,
+            saved?.ClubCreationEnabled ?? accounts.Value.ClubCreationEnabled);
     }
 }

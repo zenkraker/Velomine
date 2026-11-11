@@ -44,6 +44,7 @@ class ClubScreen extends ConsumerWidget {
     super.key,
     required this.serverUrl,
     required this.onJoin,
+    required this.onStartClub,
     required this.onOpenClubs,
     required this.onOpenAthletes,
     required this.tileUrl,
@@ -52,6 +53,7 @@ class ClubScreen extends ConsumerWidget {
 
   final String serverUrl;
   final VoidCallback onJoin;
+  final VoidCallback onStartClub;
   final VoidCallback onOpenClubs;
   final VoidCallback onOpenAthletes;
   final String tileUrl;
@@ -324,6 +326,13 @@ class ClubScreen extends ConsumerWidget {
                             icon: const Icon(Icons.group_add),
                             label: Text(l10n.joinTitle),
                           ),
+                          if (clubState.canStartClub)
+                            OutlinedButton.icon(
+                              key: const Key('go-start-club'),
+                              onPressed: onStartClub,
+                              icon: const Icon(Icons.add_circle_outline),
+                              label: Text(l10n.startClubButton),
+                            ),
                         ],
                       ),
                     ],
@@ -379,6 +388,7 @@ class ClubScreen extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
+                if (club.plan case final plan?) _planCard(context, plan),
                 if (owner)
                   _requestsCard(
                     context,
@@ -544,6 +554,64 @@ class ClubScreen extends ConsumerWidget {
     );
   }
 
+  /// What the club's owner needs to know about the plan: room used, the paid-until day, and what to do when
+  /// the club is full or the plan has ended. Ordinary members never get a plan from the server.
+  Widget _planCard(BuildContext context, ClubPlanResponse plan) {
+    final l10n = context.l10n;
+    final limit = plan.memberLimit;
+    final notice = switch (plan.blocked) {
+      'ended' => l10n.clubPlanEndedNotice(dateOnly(plan.paidUntil)),
+      'full' => l10n.clubPlanFullNotice,
+      _ => null,
+    };
+    return Card(
+      key: const Key('club-plan-card'),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Text(
+              l10n.clubPlanTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text(
+              limit == null
+                  ? l10n.clubMemberCount(plan.memberCount)
+                  : l10n.clubPlanMembers(plan.memberCount, limit),
+              key: const Key('club-plan-members'),
+            ),
+            if (limit != null)
+              Semantics(
+                label: l10n.clubPlanMembers(plan.memberCount, limit),
+                excludeSemantics: true,
+                child: LinearProgressIndicator(
+                  key: const Key('club-plan-bar'),
+                  value: (plan.memberCount / limit).clamp(0.0, 1.0),
+                  minHeight: 8,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            if (plan.paidUntil != null)
+              Text(
+                l10n.clubPlanPaidUntil(dateOnly(plan.paidUntil)),
+                key: const Key('club-plan-paid-until'),
+              ),
+            if (notice != null)
+              Text(
+                notice,
+                key: const Key('club-plan-notice'),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _requestsCard(
     BuildContext context,
     WidgetRef ref,
@@ -552,6 +620,7 @@ class ClubScreen extends ConsumerWidget {
     required void Function(JoinRequestResponse request) onDecline,
   }) {
     final l10n = context.l10n;
+    final blocked = requests.admissionBlocked;
     return Card(
       key: const Key('join-requests-card'),
       child: Padding(
@@ -598,7 +667,17 @@ class ClubScreen extends ConsumerWidget {
                 l10n.joinRequestsEmpty,
                 key: const Key('join-requests-empty'),
               )
-            else
+            else ...[
+              if (blocked != null)
+                Text(
+                  blocked == 'ended'
+                      ? l10n.joinRequestsBlockedEnded
+                      : l10n.joinRequestsBlockedFull,
+                  key: const Key('join-requests-blocked'),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               for (final request in requests.requests) ...[
                 const Divider(),
                 Text(
@@ -620,7 +699,7 @@ class ClubScreen extends ConsumerWidget {
                       ),
                       FilledButton.tonal(
                         key: Key('approve-${request.id}'),
-                        onPressed: requests.action.running
+                        onPressed: requests.action.running || blocked != null
                             ? null
                             : () => onApprove(request),
                         child: Text(l10n.joinRequestApprove),
@@ -629,6 +708,7 @@ class ClubScreen extends ConsumerWidget {
                   ),
                 ),
               ],
+            ],
           ],
         ),
       ),

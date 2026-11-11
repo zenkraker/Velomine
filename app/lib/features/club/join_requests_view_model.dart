@@ -36,6 +36,8 @@ class JoinRequestsViewModel extends _$JoinRequestsViewModel {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(result),
         requests: value?.requests ?? const [],
+        admissionBlocked: value?.admissionBlocked,
+        clearAdmissionBlocked: value?.admissionBlocked == null,
       ),
       Failed() => state.copyWith(load: state.load.finish(result)),
     };

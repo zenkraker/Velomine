@@ -22,6 +22,7 @@ class ClubResponse {
     required this.longitude,
     required this.isDiscoverable,
     this.members = const [],
+    required this.plan,
   });
 
   final String id;
@@ -42,6 +43,8 @@ class ClubResponse {
 
   final List<ClubMemberResponse> members;
 
+  final ClubPlanResponse? plan;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ClubResponse &&
     other.id == id &&
@@ -52,7 +55,8 @@ class ClubResponse {
     other.latitude == latitude &&
     other.longitude == longitude &&
     other.isDiscoverable == isDiscoverable &&
-    _deepEquality.equals(other.members, members);
+    _deepEquality.equals(other.members, members) &&
+    other.plan == plan;
 
   @override
   int get hashCode =>
@@ -65,10 +69,11 @@ class ClubResponse {
     (latitude == null ? 0 : latitude!.hashCode) +
     (longitude == null ? 0 : longitude!.hashCode) +
     (isDiscoverable.hashCode) +
-    (members.hashCode);
+    (members.hashCode) +
+    (plan == null ? 0 : plan!.hashCode);
 
   @override
-  String toString() => 'ClubResponse[id=$id, name=$name, isActive=$isActive, myRole=$myRole, joinCode=$joinCode, latitude=$latitude, longitude=$longitude, isDiscoverable=$isDiscoverable, members=$members]';
+  String toString() => 'ClubResponse[id=$id, name=$name, isActive=$isActive, myRole=$myRole, joinCode=$joinCode, latitude=$latitude, longitude=$longitude, isDiscoverable=$isDiscoverable, members=$members, plan=$plan]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -93,6 +98,11 @@ class ClubResponse {
     }
       json[r'isDiscoverable'] = this.isDiscoverable;
       json[r'members'] = this.members;
+    if (this.plan != null) {
+      json[r'plan'] = this.plan;
+    } else {
+      json[r'plan'] = null;
+    }
     return json;
   }
 
@@ -111,6 +121,8 @@ class ClubResponse {
     bool longitudeSetToNull = false,
     bool? isDiscoverable,
     List<ClubMemberResponse>? members,
+    ClubPlanResponse? plan,
+    bool planSetToNull = false,
   }) => ClubResponse(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -121,6 +133,7 @@ class ClubResponse {
     longitude: longitudeSetToNull ? null : longitude ?? this.longitude,
     isDiscoverable: isDiscoverable ?? this.isDiscoverable,
     members: members ?? this.members,
+    plan: planSetToNull ? null : plan ?? this.plan,
   );
 
   /// Returns a new [ClubResponse] instance and imports its values from
@@ -149,6 +162,7 @@ class ClubResponse {
         assert(json[r'isDiscoverable'] != null, 'Required key "ClubResponse[isDiscoverable]" has a null value in JSON.');
         assert(json.containsKey(r'members'), 'Required key "ClubResponse[members]" is missing from JSON.');
         assert(json[r'members'] != null, 'Required key "ClubResponse[members]" has a null value in JSON.');
+        assert(json.containsKey(r'plan'), 'Required key "ClubResponse[plan]" is missing from JSON.');
         return true;
       }());
 
@@ -162,6 +176,7 @@ class ClubResponse {
         longitude: mapValueOfType<double>(json, r'longitude'),
         isDiscoverable: mapValueOfType<bool>(json, r'isDiscoverable')!,
         members: ClubMemberResponse.listFromJson(json[r'members']),
+        plan: ClubPlanResponse.fromJson(json[r'plan']),
       );
     }
     return null;
@@ -218,6 +233,7 @@ class ClubResponse {
     'longitude',
     'isDiscoverable',
     'members',
+    'plan',
   };
 }
 

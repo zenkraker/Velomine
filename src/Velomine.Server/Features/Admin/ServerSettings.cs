@@ -17,6 +17,9 @@ public sealed class ServerSettings
 
     public bool? RequireAdminApproval { get; set; }
 
+    /// <summary>Whether a rider without a club may start one. Off by default: only the operator creates clubs.</summary>
+    public bool? ClubCreationEnabled { get; set; }
+
     // No longer read or written: maps are always on (see MapOptions). Kept for one release before the
     // columns are dropped, as the migration rule asks.
 

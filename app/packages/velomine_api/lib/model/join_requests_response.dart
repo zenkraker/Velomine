@@ -14,25 +14,35 @@ class JoinRequestsResponse {
   /// Returns a new [JoinRequestsResponse] instance.
   JoinRequestsResponse({
     this.requests = const [],
+    required this.admissionBlocked,
   });
 
   final List<JoinRequestResponse> requests;
 
+  final String? admissionBlocked;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is JoinRequestsResponse &&
-    _deepEquality.equals(other.requests, requests);
+    _deepEquality.equals(other.requests, requests) &&
+    other.admissionBlocked == admissionBlocked;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (requests.hashCode);
+    (requests.hashCode) +
+    (admissionBlocked == null ? 0 : admissionBlocked!.hashCode);
 
   @override
-  String toString() => 'JoinRequestsResponse[requests=$requests]';
+  String toString() => 'JoinRequestsResponse[requests=$requests, admissionBlocked=$admissionBlocked]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'requests'] = this.requests;
+    if (this.admissionBlocked != null) {
+      json[r'admissionBlocked'] = this.admissionBlocked;
+    } else {
+      json[r'admissionBlocked'] = null;
+    }
     return json;
   }
 
@@ -40,8 +50,11 @@ class JoinRequestsResponse {
   /// properties have changed.
   JoinRequestsResponse copyWith({
     List<JoinRequestResponse>? requests,
+    String? admissionBlocked,
+    bool admissionBlockedSetToNull = false,
   }) => JoinRequestsResponse(
     requests: requests ?? this.requests,
+    admissionBlocked: admissionBlockedSetToNull ? null : admissionBlocked ?? this.admissionBlocked,
   );
 
   /// Returns a new [JoinRequestsResponse] instance and imports its values from
@@ -57,11 +70,13 @@ class JoinRequestsResponse {
       assert(() {
         assert(json.containsKey(r'requests'), 'Required key "JoinRequestsResponse[requests]" is missing from JSON.');
         assert(json[r'requests'] != null, 'Required key "JoinRequestsResponse[requests]" has a null value in JSON.');
+        assert(json.containsKey(r'admissionBlocked'), 'Required key "JoinRequestsResponse[admissionBlocked]" is missing from JSON.');
         return true;
       }());
 
       return JoinRequestsResponse(
         requests: JoinRequestResponse.listFromJson(json[r'requests']),
+        admissionBlocked: mapValueOfType<String>(json, r'admissionBlocked'),
       );
     }
     return null;
@@ -110,6 +125,7 @@ class JoinRequestsResponse {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'requests',
+    'admissionBlocked',
   };
 }
 

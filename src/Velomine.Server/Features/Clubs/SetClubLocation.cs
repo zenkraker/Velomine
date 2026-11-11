@@ -33,7 +33,7 @@ public sealed class SetClubLocationValidator : Validator<SetClubLocationRequest>
 }
 
 /// <summary>The owner sets where the club is and whether riders nearby may find it.</summary>
-public sealed class SetClubLocation(VelomineDbContext db) : Endpoint<SetClubLocationRequest, MyClubResponse>
+public sealed class SetClubLocation(VelomineDbContext db, TimeProvider time) : Endpoint<SetClubLocationRequest, MyClubResponse>
 {
     public override void Configure()
     {
@@ -63,6 +63,6 @@ public sealed class SetClubLocation(VelomineDbContext db) : Endpoint<SetClubLoca
         membership.Club.IsDiscoverable = req.IsDiscoverable;
         await db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(new MyClubResponse(await ClubQueries.MyClubAsync(db, userId, ct)), ct);
+        await Send.OkAsync(new MyClubResponse(await ClubQueries.MyClubAsync(db, time, userId, ct), false), ct);
     }
 }

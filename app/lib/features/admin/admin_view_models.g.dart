@@ -167,7 +167,7 @@ final class AdminClubsViewModelProvider
 }
 
 String _$adminClubsViewModelHash() =>
-    r'1628bfd5d848c1a6645abd0073f04e6220cdf772';
+    r'076c96cd1e096d26ccd1f7ec905a41bd4f727324';
 
 /// Every club on the server: create one, turn it on or off, move its owner.
 
@@ -229,7 +229,7 @@ final class AdminSettingsViewModelProvider
 }
 
 String _$adminSettingsViewModelHash() =>
-    r'afe679d98c55468a108f481dcf848af6b386357e';
+    r'0a3c1604c2a063caf4f6ac91ac3765bf1a263b7d';
 
 /// The server settings the admin may change. The form is held here, not in the
 /// widget, so switching tabs does not lose an edit.

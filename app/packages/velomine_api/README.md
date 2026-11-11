@@ -100,6 +100,7 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
 *AdminApi* | [**clubsListAdminClubs**](doc//AdminApi.md#clubslistadminclubs) | **GET** /api/v1/admin/clubs | 
 *AdminApi* | [**clubsSetClubOwner**](doc//AdminApi.md#clubssetclubowner) | **PUT** /api/v1/admin/clubs/{id}/owner | 
+*AdminApi* | [**clubsSetClubPlan**](doc//AdminApi.md#clubssetclubplan) | **PUT** /api/v1/admin/clubs/{id}/plan | 
 *AdminApi* | [**clubsUpdateClub**](doc//AdminApi.md#clubsupdateclub) | **PUT** /api/v1/admin/clubs/{id} | 
 *AdminApi* | [**createPasswordResetLink**](doc//AdminApi.md#createpasswordresetlink) | **POST** /api/v1/admin/users/{id}/password-reset-link | 
 *AdminApi* | [**deleteUser**](doc//AdminApi.md#deleteuser) | **DELETE** /api/v1/admin/users/{id} | 
@@ -150,6 +151,7 @@ Class | Method | HTTP request | Description
 *ClubApi* | [**rotateJoinCode**](doc//ClubApi.md#rotatejoincode) | **POST** /api/v1/club/join-code | 
 *ClubApi* | [**setClubLocation**](doc//ClubApi.md#setclublocation) | **PUT** /api/v1/club/location | 
 *ClubApi* | [**setClubMemberRole**](doc//ClubApi.md#setclubmemberrole) | **PUT** /api/v1/club/members/{userId}/role | 
+*ClubApi* | [**startClub**](doc//ClubApi.md#startclub) | **POST** /api/v1/club | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
 *ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
 *ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
@@ -207,6 +209,7 @@ Class | Method | HTTP request | Description
  - [CheckInResponse](doc//CheckInResponse.md)
  - [CheckInsResponse](doc//CheckInsResponse.md)
  - [ClubMemberResponse](doc//ClubMemberResponse.md)
+ - [ClubPlanResponse](doc//ClubPlanResponse.md)
  - [ClubResponse](doc//ClubResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
@@ -283,6 +286,7 @@ Class | Method | HTTP request | Description
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
+ - [SetClubPlanRequest](doc//SetClubPlanRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
@@ -297,6 +301,7 @@ Class | Method | HTTP request | Description
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
+ - [StartClubRequest](doc//StartClubRequest.md)
  - [StartRideImportResponse](doc//StartRideImportResponse.md)
  - [TelemetryResponse](doc//TelemetryResponse.md)
  - [TemplatePartRequest](doc//TemplatePartRequest.md)

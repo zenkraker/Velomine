@@ -15,30 +15,45 @@ class UpdateSettingsRequest {
   UpdateSettingsRequest({
     required this.signUpEnabled,
     required this.requireAdminApproval,
+    this.clubCreationEnabled = const Optional.absent(),
   });
 
   final bool signUpEnabled;
 
   final bool requireAdminApproval;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> clubCreationEnabled;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateSettingsRequest &&
     other.signUpEnabled == signUpEnabled &&
-    other.requireAdminApproval == requireAdminApproval;
+    other.requireAdminApproval == requireAdminApproval &&
+    other.clubCreationEnabled == clubCreationEnabled;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (signUpEnabled.hashCode) +
-    (requireAdminApproval.hashCode);
+    (requireAdminApproval.hashCode) +
+    (clubCreationEnabled == null ? 0 : clubCreationEnabled!.hashCode);
 
   @override
-  String toString() => 'UpdateSettingsRequest[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval]';
+  String toString() => 'UpdateSettingsRequest[signUpEnabled=$signUpEnabled, requireAdminApproval=$requireAdminApproval, clubCreationEnabled=$clubCreationEnabled]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'signUpEnabled'] = this.signUpEnabled;
       json[r'requireAdminApproval'] = this.requireAdminApproval;
+    if (this.clubCreationEnabled.isPresent) {
+      final value = this.clubCreationEnabled.value;
+      json[r'clubCreationEnabled'] = value;
+    }
     return json;
   }
 
@@ -47,9 +62,11 @@ class UpdateSettingsRequest {
   UpdateSettingsRequest copyWith({
     bool? signUpEnabled,
     bool? requireAdminApproval,
+    Optional<bool?>? clubCreationEnabled,
   }) => UpdateSettingsRequest(
     signUpEnabled: signUpEnabled ?? this.signUpEnabled,
     requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
+    clubCreationEnabled: clubCreationEnabled ?? this.clubCreationEnabled,
   );
 
   /// Returns a new [UpdateSettingsRequest] instance and imports its values from
@@ -73,6 +90,7 @@ class UpdateSettingsRequest {
       return UpdateSettingsRequest(
         signUpEnabled: mapValueOfType<bool>(json, r'signUpEnabled')!,
         requireAdminApproval: mapValueOfType<bool>(json, r'requireAdminApproval')!,
+        clubCreationEnabled: json.containsKey(r'clubCreationEnabled') ? Optional.present(mapValueOfType<bool>(json, r'clubCreationEnabled')) : const Optional.absent(),
       );
     }
     return null;

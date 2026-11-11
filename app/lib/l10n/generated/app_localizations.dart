@@ -5594,6 +5594,162 @@ abstract class AppLocalizations {
   /// **'Your import of {subject} has finished.'**
   String notificationRideImport(String subject);
 
+  /// No description provided for @actionStartClub.
+  ///
+  /// In en, this message translates to:
+  /// **'start the club'**
+  String get actionStartClub;
+
+  /// No description provided for @actionSetClubPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'save the club\'s plan'**
+  String get actionSetClubPlan;
+
+  /// No description provided for @startClubButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a club'**
+  String get startClubButton;
+
+  /// No description provided for @startClubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a club'**
+  String get startClubTitle;
+
+  /// No description provided for @startClubIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a club for the people you ride with. You will be its owner and can invite people with a code. You get a month to try it.'**
+  String get startClubIntro;
+
+  /// No description provided for @startClubName.
+  ///
+  /// In en, this message translates to:
+  /// **'Club name'**
+  String get startClubName;
+
+  /// No description provided for @startClubNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the club a name.'**
+  String get startClubNameRequired;
+
+  /// No description provided for @startClubAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the club'**
+  String get startClubAction;
+
+  /// No description provided for @clubPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get clubPlanTitle;
+
+  /// No description provided for @clubPlanMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {limit} members'**
+  String clubPlanMembers(int count, int limit);
+
+  /// No description provided for @clubPlanPaidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid until {date}'**
+  String clubPlanPaidUntil(String date);
+
+  /// No description provided for @clubPlanFullNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'The club is full. To take more members, get in touch to move up to a larger size.'**
+  String get clubPlanFullNotice;
+
+  /// No description provided for @clubPlanEndedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'The club\'s plan ended on {date}. Everything keeps working, but new members cannot join until it is renewed. Get in touch to renew it.'**
+  String clubPlanEndedNotice(String date);
+
+  /// No description provided for @joinRequestsBlockedFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The club is full, so requests cannot be approved yet. Get in touch to move up to a larger size.'**
+  String get joinRequestsBlockedFull;
+
+  /// No description provided for @joinRequestsBlockedEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'The club\'s plan has ended, so requests cannot be approved until it is renewed.'**
+  String get joinRequestsBlockedEnded;
+
+  /// No description provided for @notificationClubPlanEnding.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club\'s plan ends on {date}. Get in touch to renew it.'**
+  String notificationClubPlanEnding(String date);
+
+  /// No description provided for @notificationClubPlanEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club\'s plan ended after {date}. Members keep everything, but new members cannot join until it is renewed.'**
+  String notificationClubPlanEnded(String date);
+
+  /// No description provided for @adminClubCreation.
+  ///
+  /// In en, this message translates to:
+  /// **'Riders can start clubs'**
+  String get adminClubCreation;
+
+  /// No description provided for @adminClubCreationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A signed-in rider without a club can start one. It begins with room for 25 members and a month to try it.'**
+  String get adminClubCreationHelp;
+
+  /// No description provided for @adminClubEditPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit plan'**
+  String get adminClubEditPlan;
+
+  /// No description provided for @adminClubLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Room for'**
+  String get adminClubLimit;
+
+  /// No description provided for @adminClubLimitNone.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 150 members (no limit)'**
+  String get adminClubLimitNone;
+
+  /// No description provided for @adminClubLimitOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {count} members'**
+  String adminClubLimitOption(int count);
+
+  /// No description provided for @adminClubPaidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid until'**
+  String get adminClubPaidUntil;
+
+  /// No description provided for @adminClubNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No end date'**
+  String get adminClubNoDate;
+
+  /// No description provided for @adminClubChooseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date'**
+  String get adminClubChooseDate;
+
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:

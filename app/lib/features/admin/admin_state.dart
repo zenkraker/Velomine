@@ -78,6 +78,7 @@ class AdminSettingsState {
     this.catalogue,
     this.signUpEnabled = true,
     this.requireAdminApproval = true,
+    this.clubCreationEnabled = false,
     this.filled = false,
     this.load = const CommandState.idle(),
     this.save = const CommandState.idle(),
@@ -92,6 +93,7 @@ class AdminSettingsState {
   /// until they save.
   final bool signUpEnabled;
   final bool requireAdminApproval;
+  final bool clubCreationEnabled;
   final bool filled;
 
   final CommandState<AdminSettingsBundle> load;
@@ -104,6 +106,7 @@ class AdminSettingsState {
     CatalogueAdminResponse? catalogue,
     bool? signUpEnabled,
     bool? requireAdminApproval,
+    bool? clubCreationEnabled,
     bool? filled,
     CommandState<AdminSettingsBundle>? load,
     VoidCommand? save,
@@ -114,6 +117,7 @@ class AdminSettingsState {
     catalogue: catalogue ?? this.catalogue,
     signUpEnabled: signUpEnabled ?? this.signUpEnabled,
     requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
+    clubCreationEnabled: clubCreationEnabled ?? this.clubCreationEnabled,
     filled: filled ?? this.filled,
     load: load ?? this.load,
     save: save ?? this.save,

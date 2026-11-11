@@ -37,8 +37,9 @@ String stopwatch(double? seconds) {
 String dateTime(DateTime? value) =>
     value == null ? '–' : DateFormat.yMMMd().add_Hm().format(value.toLocal());
 
-/// A calendar date without a time: "Nov 3, 2026".
-String dateOnly(DateTime value) => DateFormat.yMMMd().format(value);
+/// A calendar day, as the server sent it: it is a date, not an instant, so it is not moved to the local zone.
+String dateOnly(DateTime? value) =>
+    value == null ? '–' : DateFormat.yMMMd().format(value);
 
 /// A moment with its weekday, for a log of when something happened: "Tue, Nov 3 14:10".
 String weekdayTime(DateTime? value) =>

@@ -13,6 +13,7 @@ using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Bikes;
+using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Server;
 using Velomine.Server.Features.Sharing;
@@ -38,6 +39,7 @@ builder.Services.AddAdmin(builder.Configuration);
 builder.Services.AddRides(builder.Configuration);
 builder.Services.AddSharing(builder.Configuration);
 builder.Services.AddBikes(builder.Configuration);
+builder.Services.AddClubs(builder.Configuration);
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
 builder.Services.OpenApiDocument(o =>
@@ -100,6 +102,16 @@ builder.Services.AddRateLimiter(options =>
         {
             PermitLimit = uploadsPerHour,
             Window = TimeSpan.FromHours(1),
+        }));
+
+    // Starting a club is for a signed-in rider with no club, so the key is the member; a handful a day is plenty.
+    var clubsPerDay = builder.Configuration.GetValue("Velomine:RateLimits:ClubCreationsPerDay", 5);
+    options.AddPolicy("club-creation", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = clubsPerDay,
+            Window = TimeSpan.FromDays(1),
         }));
 
     // An archive can be a gigabyte, so a member gets a handful a day.

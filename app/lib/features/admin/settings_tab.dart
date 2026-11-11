@@ -67,6 +67,15 @@ class SettingsTab extends ConsumerWidget {
                       .read(adminSettingsViewModelProvider.notifier)
                       .setRequireAdminApproval(v),
                 ),
+                SwitchListTile(
+                  key: const Key('setting-club-creation'),
+                  value: s.clubCreationEnabled,
+                  title: Text(l10n.adminClubCreation),
+                  subtitle: Text(l10n.adminClubCreationHelp),
+                  onChanged: (v) => ref
+                      .read(adminSettingsViewModelProvider.notifier)
+                      .setClubCreationEnabled(v),
+                ),
                 if (s.load.failure case final failure?)
                   Text(
                     failureText(l10n, failure),

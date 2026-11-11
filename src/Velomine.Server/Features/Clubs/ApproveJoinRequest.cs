@@ -64,25 +64,21 @@ public sealed class ApproveJoinRequest(VelomineDbContext db, TimeProvider time)
             return;
         }
 
-        db.ClubMemberships.Add(new ClubMembership
+        var result = await ClubAdmission.AdmitAsync(db, time, request.ClubId, request.UserId, () =>
         {
-            Id = Guid.NewGuid(),
-            ClubId = request.ClubId,
-            UserId = request.UserId,
-            Role = ClubRoles.Member,
-            JoinedAt = time.GetUtcNow(),
-        });
-        db.ClubJoinRequests.Remove(request);
-        Notify.Add(db, time, request.UserId, NotificationTypes.ClubJoinApproved, request.Club.Name);
-
-        try
+            db.ClubJoinRequests.Remove(request);
+            Notify.Add(db, time, request.UserId, NotificationTypes.ClubJoinApproved, request.Club.Name);
+        }, ct);
+        if (result == AdmissionResult.ClubNotFound)
         {
-            await db.SaveChangesAsync(ct);
+            await Send.NotFoundAsync(ct);
+            return;
         }
-        catch (DbUpdateException)
+
+        if (result != AdmissionResult.Admitted)
         {
-            // The unique index on user_id is the final guard when two owners approve at once.
-            AddError("That person is already in a club.");
+            // Full or ended: the request stays, so the owner can approve it after moving up a band or renewing.
+            AddError(ClubAdmission.Refusal(result)!);
             await Send.ErrorsAsync(409, ct);
             return;
         }

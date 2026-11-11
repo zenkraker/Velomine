@@ -33,6 +33,7 @@ import 'features/club/club_view_model.dart';
 import 'features/club/club_screen.dart';
 import 'features/club/join_club_screen.dart';
 import 'features/club/nearby_clubs_screen.dart';
+import 'features/club/start_club_screen.dart';
 import 'features/coach/coach_athlete_screen.dart';
 import 'features/coach/coach_athletes_screen.dart';
 import 'features/coach/coach_ride_screen.dart';
@@ -163,6 +164,9 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       if (path == '/clubs' && club.loaded && club.club != null) {
         return '/club';
       }
+      if (path == '/club/start' && club.loaded && club.club != null) {
+        return '/club';
+      }
       if (path == '/join' && club.club != null) {
         session.pendingJoinCode = null;
         return '/rides';
@@ -285,8 +289,21 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             builder: (context, _) => ClubScreen(
               serverUrl: ref.read(sessionProvider).serverUrl,
               onJoin: () => context.push('/join'),
+              onStartClub: () => context.push('/club/start'),
               onOpenClubs: () => context.push('/clubs'),
               onOpenAthletes: () => context.push('/club/athletes'),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
+            ),
+          ),
+          GoRoute(
+            path: '/club/start',
+            builder: (context, _) => StartClubScreen(
+              onStarted: () => context.go('/club'),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,

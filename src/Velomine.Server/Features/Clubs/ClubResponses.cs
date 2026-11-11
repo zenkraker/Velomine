@@ -5,7 +5,13 @@ namespace Velomine.Server.Features.Clubs;
 
 public sealed record ClubMemberResponse(Guid UserId, string DisplayName, string Role, DateTimeOffset JoinedAt);
 
-/// <summary>A club as its members see it. The join code is only for the owner.</summary>
+/// <summary>
+/// The club's plan, for its owner only. <c>Blocked</c> is "full" or "ended" when the club cannot admit another member,
+/// otherwise null. The server holds no prices.
+/// </summary>
+public sealed record ClubPlanResponse(int MemberCount, int? MemberLimit, DateOnly? PaidUntil, string? Blocked);
+
+/// <summary>A club as its members see it. The join code and the plan are only for the owner.</summary>
 public sealed record ClubResponse(
     Guid Id,
     string Name,
@@ -15,10 +21,14 @@ public sealed record ClubResponse(
     double? Latitude,
     double? Longitude,
     bool IsDiscoverable,
-    ClubMemberResponse[] Members);
+    ClubMemberResponse[] Members,
+    ClubPlanResponse? Plan);
 
-/// <summary>Null when the signed-in account is not in a club yet.</summary>
-public sealed record MyClubResponse(ClubResponse? Club);
+/// <summary>
+/// Null club when the signed-in account is not in a club yet. <c>CanStartClub</c> is true only for such a rider on a
+/// server where the operator lets riders start clubs.
+/// </summary>
+public sealed record MyClubResponse(ClubResponse? Club, bool CanStartClub);
 
 /// <summary>A club as the instance admin sees it.</summary>
 public sealed record AdminClubResponse(
@@ -31,6 +41,8 @@ public sealed record AdminClubResponse(
     bool IsDiscoverable,
     DateTimeOffset CreatedAt,
     int MemberCount,
+    int? MemberLimit,
+    DateOnly? PaidUntil,
     Guid? OwnerId,
     string? OwnerName,
     string? OwnerEmail,
@@ -43,16 +55,17 @@ public sealed record JoinCodeResponse(string JoinCode);
 
 public static class ClubQueries
 {
-    public static async Task<ClubResponse?> MyClubAsync(VelomineDbContext db, Guid userId, CancellationToken ct)
+    public static async Task<ClubResponse?> MyClubAsync(VelomineDbContext db, TimeProvider time, Guid userId, CancellationToken ct)
     {
         var membership = await db.ClubMemberships.AsNoTracking()
             .Include(m => m.Club)
             .FirstOrDefaultAsync(m => m.UserId == userId, ct);
-        return membership is null ? null : await DetailAsync(db, membership.Club, membership.Role, ct);
+        return membership is null ? null : await DetailAsync(db, time, membership.Club, membership.Role, ct);
     }
 
     public static async Task<ClubResponse> DetailAsync(
         VelomineDbContext db,
+        TimeProvider time,
         Club club,
         string myRole,
         CancellationToken ct)
@@ -77,7 +90,14 @@ public static class ClubQueries
             club.Latitude,
             club.Longitude,
             club.IsDiscoverable,
-            roster);
+            roster,
+            myRole == ClubRoles.Owner && (club.MemberLimit is not null || club.PaidUntil is not null)
+                ? new ClubPlanResponse(
+                    roster.Length,
+                    club.MemberLimit,
+                    club.PaidUntil,
+                    ClubPlan.BlockedReason(club.MemberLimit, club.PaidUntil, roster.Length, ClubPlan.Today(time)))
+                : null);
     }
 
     public static async Task<AdminClubResponse> AdminAsync(VelomineDbContext db, Club club, CancellationToken ct)
@@ -103,6 +123,8 @@ public static class ClubQueries
             club.IsDiscoverable,
             club.CreatedAt,
             members.Count,
+            club.MemberLimit,
+            club.PaidUntil,
             owner?.UserId,
             owner?.User.DisplayName,
             owner?.User.Email,

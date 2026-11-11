@@ -48,7 +48,7 @@ final class JoinRequestsViewModelProvider
 }
 
 String _$joinRequestsViewModelHash() =>
-    r'b8db01ff8ae2bb661dbeffb80ef9328e803e35f8';
+    r'00d22b4a8de70e1ec76f82540dfab2a8f9ded50b';
 
 /// The owner's inbox. Loaded only for the owner of a known club; emptied on sign
 /// out, on leaving and when the role changes.

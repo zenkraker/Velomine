@@ -22,6 +22,8 @@ class AdminClubResponse {
     required this.isDiscoverable,
     required this.createdAt,
     required this.memberCount,
+    required this.memberLimit,
+    required this.paidUntil,
     required this.ownerId,
     required this.ownerName,
     required this.ownerEmail,
@@ -47,6 +49,10 @@ class AdminClubResponse {
 
   final int memberCount;
 
+  final int? memberLimit;
+
+  final DateTime? paidUntil;
+
   final String? ownerId;
 
   final String? ownerName;
@@ -68,6 +74,8 @@ class AdminClubResponse {
     other.isDiscoverable == isDiscoverable &&
     other.createdAt == createdAt &&
     other.memberCount == memberCount &&
+    other.memberLimit == memberLimit &&
+    other.paidUntil == paidUntil &&
     other.ownerId == ownerId &&
     other.ownerName == ownerName &&
     other.ownerEmail == ownerEmail &&
@@ -86,6 +94,8 @@ class AdminClubResponse {
     (isDiscoverable.hashCode) +
     (createdAt.hashCode) +
     (memberCount.hashCode) +
+    (memberLimit == null ? 0 : memberLimit!.hashCode) +
+    (paidUntil == null ? 0 : paidUntil!.hashCode) +
     (ownerId == null ? 0 : ownerId!.hashCode) +
     (ownerName == null ? 0 : ownerName!.hashCode) +
     (ownerEmail == null ? 0 : ownerEmail!.hashCode) +
@@ -93,7 +103,7 @@ class AdminClubResponse {
     (members.hashCode);
 
   @override
-  String toString() => 'AdminClubResponse[id=$id, name=$name, joinCode=$joinCode, isActive=$isActive, latitude=$latitude, longitude=$longitude, isDiscoverable=$isDiscoverable, createdAt=$createdAt, memberCount=$memberCount, ownerId=$ownerId, ownerName=$ownerName, ownerEmail=$ownerEmail, ownerRole=$ownerRole, members=$members]';
+  String toString() => 'AdminClubResponse[id=$id, name=$name, joinCode=$joinCode, isActive=$isActive, latitude=$latitude, longitude=$longitude, isDiscoverable=$isDiscoverable, createdAt=$createdAt, memberCount=$memberCount, memberLimit=$memberLimit, paidUntil=$paidUntil, ownerId=$ownerId, ownerName=$ownerName, ownerEmail=$ownerEmail, ownerRole=$ownerRole, members=$members]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -114,6 +124,16 @@ class AdminClubResponse {
       json[r'isDiscoverable'] = this.isDiscoverable;
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
       json[r'memberCount'] = this.memberCount;
+    if (this.memberLimit != null) {
+      json[r'memberLimit'] = this.memberLimit;
+    } else {
+      json[r'memberLimit'] = null;
+    }
+    if (this.paidUntil != null) {
+      json[r'paidUntil'] = _dateFormatter.format(this.paidUntil!);
+    } else {
+      json[r'paidUntil'] = null;
+    }
     if (this.ownerId != null) {
       json[r'ownerId'] = this.ownerId;
     } else {
@@ -152,6 +172,10 @@ class AdminClubResponse {
     bool? isDiscoverable,
     DateTime? createdAt,
     int? memberCount,
+    int? memberLimit,
+    bool memberLimitSetToNull = false,
+    DateTime? paidUntil,
+    bool paidUntilSetToNull = false,
     String? ownerId,
     bool ownerIdSetToNull = false,
     String? ownerName,
@@ -171,6 +195,8 @@ class AdminClubResponse {
     isDiscoverable: isDiscoverable ?? this.isDiscoverable,
     createdAt: createdAt ?? this.createdAt,
     memberCount: memberCount ?? this.memberCount,
+    memberLimit: memberLimitSetToNull ? null : memberLimit ?? this.memberLimit,
+    paidUntil: paidUntilSetToNull ? null : paidUntil ?? this.paidUntil,
     ownerId: ownerIdSetToNull ? null : ownerId ?? this.ownerId,
     ownerName: ownerNameSetToNull ? null : ownerName ?? this.ownerName,
     ownerEmail: ownerEmailSetToNull ? null : ownerEmail ?? this.ownerEmail,
@@ -205,6 +231,8 @@ class AdminClubResponse {
         assert(json[r'createdAt'] != null, 'Required key "AdminClubResponse[createdAt]" has a null value in JSON.');
         assert(json.containsKey(r'memberCount'), 'Required key "AdminClubResponse[memberCount]" is missing from JSON.');
         assert(json[r'memberCount'] != null, 'Required key "AdminClubResponse[memberCount]" has a null value in JSON.');
+        assert(json.containsKey(r'memberLimit'), 'Required key "AdminClubResponse[memberLimit]" is missing from JSON.');
+        assert(json.containsKey(r'paidUntil'), 'Required key "AdminClubResponse[paidUntil]" is missing from JSON.');
         assert(json.containsKey(r'ownerId'), 'Required key "AdminClubResponse[ownerId]" is missing from JSON.');
         assert(json.containsKey(r'ownerName'), 'Required key "AdminClubResponse[ownerName]" is missing from JSON.');
         assert(json.containsKey(r'ownerEmail'), 'Required key "AdminClubResponse[ownerEmail]" is missing from JSON.');
@@ -224,6 +252,8 @@ class AdminClubResponse {
         isDiscoverable: mapValueOfType<bool>(json, r'isDiscoverable')!,
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         memberCount: mapValueOfType<int>(json, r'memberCount')!,
+        memberLimit: mapValueOfType<int>(json, r'memberLimit'),
+        paidUntil: mapDateTime(json, r'paidUntil', r''),
         ownerId: mapValueOfType<String>(json, r'ownerId'),
         ownerName: mapValueOfType<String>(json, r'ownerName'),
         ownerEmail: mapValueOfType<String>(json, r'ownerEmail'),
@@ -285,6 +315,8 @@ class AdminClubResponse {
     'isDiscoverable',
     'createdAt',
     'memberCount',
+    'memberLimit',
+    'paidUntil',
     'ownerId',
     'ownerName',
     'ownerEmail',

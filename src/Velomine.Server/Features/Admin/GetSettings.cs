@@ -14,6 +14,7 @@ public sealed record SsoStatus(bool Enabled, string? DisplayName, string? Author
 public sealed record SettingsResponse(
     bool SignUpEnabled,
     bool RequireAdminApproval,
+    bool ClubCreationEnabled,
     SmtpStatus Smtp,
     SsoStatus Sso);
 
@@ -36,6 +37,7 @@ public sealed class GetSettings(SettingsReader settings, IOptions<SmtpOptions> s
         return new SettingsResponse(
             s.SignUpEnabled,
             s.RequireAdminApproval,
+            s.ClubCreationEnabled,
             smtp.Configured ? new SmtpStatus(true, smtp.Host, smtp.Port, smtp.Security, smtp.From) : new SmtpStatus(false, null, null, null, null),
             sso.Enabled ? new SsoStatus(true, sso.DisplayName, sso.Authority) : new SsoStatus(false, null, null));
     }

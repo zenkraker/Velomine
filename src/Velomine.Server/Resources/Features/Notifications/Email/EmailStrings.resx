@@ -79,4 +79,10 @@
   <data name="ClubJoinDeclined" xml:space="preserve">
     <value>{0} declined your request to join.</value>
   </data>
+  <data name="ClubPlanEnding" xml:space="preserve">
+    <value>Your club's plan ends on {0}. Get in touch to renew it, so the club can keep taking new members.</value>
+  </data>
+  <data name="ClubPlanEnded" xml:space="preserve">
+    <value>Your club's plan ended after {0}. Everything keeps working, but the club cannot take new members until the plan is renewed. Get in touch to renew it.</value>
+  </data>
 </root>
