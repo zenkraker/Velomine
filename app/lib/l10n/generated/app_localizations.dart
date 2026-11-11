@@ -3362,6 +3362,24 @@ abstract class AppLocalizations {
   /// **'Server version'**
   String get serverVersion;
 
+  /// No description provided for @rideReaderVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride reader version'**
+  String get rideReaderVersion;
+
+  /// No description provided for @ridesToReread.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides waiting to be read again'**
+  String get ridesToReread;
+
+  /// No description provided for @ridesNotReread.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides that could not be read again'**
+  String get ridesNotReread;
+
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:

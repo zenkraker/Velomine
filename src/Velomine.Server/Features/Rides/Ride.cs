@@ -57,6 +57,24 @@ public sealed class Ride
     /// <summary>When the startup backfill finished with this ride; null only for old rides it has not reached yet.</summary>
     public DateTimeOffset? PowerBestsBackfilledAt { get; set; }
 
+    /// <summary>
+    /// The <see cref="Ingestion.RideParserVersion.Current"/> this ride was last read with. A ride below the current
+    /// version is read again from its original file in the background (see RideReparseService).
+    /// </summary>
+    public int ParserVersion { get; set; } = Ingestion.RideParserVersion.Current;
+
+    /// <summary>The parser version at which reading this ride again failed, so it is not tried again until the version changes.</summary>
+    public int? ReparseFailedVersion { get; set; }
+
+    /// <summary>
+    /// The FTP the training load was worked out from when the ride was first read; 0 means the member had none, null
+    /// means it was not recorded (rides read before this existed). A re-read uses it, never today's FTP.
+    /// </summary>
+    public int? LoadFtpW { get; set; }
+
+    /// <summary>The maximum heart rate behind the heart-rate load, recorded like <see cref="LoadFtpW"/>.</summary>
+    public int? LoadMaxHeartRate { get; set; }
+
     /// <summary>Always UTC.</summary>
     public DateTimeOffset? StartTime { get; set; }
 

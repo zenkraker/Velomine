@@ -9,6 +9,14 @@ public static class PowerBests
     /// <summary>1 s, 5 s, 15 s, 30 s, 1 m, 2 m, 5 m, 10 m, 20 m, 30 m and 60 m.</summary>
     public static readonly int[] Durations = [1, 5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600];
 
+    /// <summary>The rows to store for a ride's bests: one per duration with a positive value.</summary>
+    public static IEnumerable<RidePowerBest> Rows(Guid rideId, int[]? bests)
+    {
+        bests ??= [];
+        for (var i = 0; i < bests.Length && i < Durations.Length; i++)
+            if (bests[i] > 0) yield return new RidePowerBest { RideId = rideId, DurationS = Durations[i], Watts = bests[i] };
+    }
+
     /// <summary>One value per <see cref="Durations"/> entry; zero when a stretch is shorter than that duration.</summary>
     public static int[] Compute(IReadOnlyList<double> power1Hz) => Compute([power1Hz]);
 

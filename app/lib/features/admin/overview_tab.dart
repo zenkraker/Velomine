@@ -56,6 +56,21 @@ class OverviewTab extends ConsumerWidget {
                   bytes(o.rideFilesBytes),
                 ),
                 tile('overview-version', l10n.serverVersion, o.version),
+                tile(
+                  'overview-parser-version',
+                  l10n.rideReaderVersion,
+                  '${o.parserVersion}',
+                ),
+                tile(
+                  'overview-reread',
+                  l10n.ridesToReread,
+                  '${o.ridesToReread}',
+                ),
+                tile(
+                  'overview-not-reread',
+                  l10n.ridesNotReread,
+                  '${o.ridesNotReread}',
+                ),
               ],
             ),
           ),

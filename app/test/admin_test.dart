@@ -237,6 +237,9 @@ void main() {
     expect(value('overview-waiting'), '1');
     expect(value('overview-storage'), '1.2 MB');
     expect(value('overview-version'), '0.1.0');
+    expect(value('overview-parser-version'), '3');
+    expect(value('overview-reread'), '12');
+    expect(value('overview-not-reread'), '2');
   });
 
   testWidgets('AdminScreen_ShouldBeHidden_WhenNotAdmin', (tester) async {
