@@ -196,6 +196,21 @@ public sealed class CalendarTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task JoinClubRide_ShouldCountOnePlace_WhenTheSameRiderClicksTwice()
+    {
+        await using var api = await CalendarTestKit.StartAsync(postgres);
+        var world = await NewWorldAsync(api);
+        var ride = await CalendarTestKit.PlanAsync(world.Coach.Client);
+
+        var answers = await Task.WhenAll(
+            world.Rider.Client.PostAsync($"/api/v1/club/rides/{ride.Ride.Id}/participation", null, Ct),
+            world.Rider.Client.PostAsync($"/api/v1/club/rides/{ride.Ride.Id}/participation", null, Ct));
+
+        Assert.All(answers, r => Assert.Equal(HttpStatusCode.OK, r.StatusCode));
+        Assert.Equal(1, (await CalendarTestKit.RideAsync(world.Coach.Client, ride.Ride.Id))!.Ride.SignUpCount);
+    }
+
+    [Fact]
     public async Task UpdateClubRide_ShouldTellOnlyTheRidersWhoAreIn_WhenTheTimeOrMeetingPointChanges()
     {
         await using var api = await CalendarTestKit.StartAsync(postgres);

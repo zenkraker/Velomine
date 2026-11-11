@@ -2345,7 +2345,11 @@ extension LibraryApi on FakeServer {
         return http.Response('', 204);
       }
       if (oneRoute.group(2) == 'share') {
-        if (route['ownerId'] != caller!.id) return http.Response('', 403);
+        // Only the owner puts it back; the club's owner may take anyone's out of the library.
+        if (route['ownerId'] != caller!.id &&
+            (request.method == 'POST' || role != 'owner')) {
+          return http.Response('', 403);
+        }
         route['shared'] = request.method == 'POST';
         if (request.method == 'DELETE') return http.Response('', 204);
         return json(_routeSummary(route, caller));

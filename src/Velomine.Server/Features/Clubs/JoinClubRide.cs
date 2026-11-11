@@ -55,21 +55,28 @@ public sealed class JoinClubRide(VelomineDbContext db, TimeProvider time)
             await using var transaction = await db.Database.BeginTransactionAsync(ct);
             await db.Database.ExecuteSqlAsync(
                 $"SELECT 1 FROM calendar.planned_rides WHERE id = {ride.Id} FOR UPDATE", ct);
-            var taken = await db.RideSignUps.CountAsync(s => s.PlannedRideId == ride.Id, ct);
-            if (ride.MaxRiders is { } max && taken >= max)
+            // The same rider may have clicked twice: the first request is already committed when this one has the lock.
+            var alreadyIn = await db.RideSignUps.AnyAsync(
+                s => s.PlannedRideId == ride.Id && s.UserId == userId, ct);
+            if (!alreadyIn)
             {
-                AddError("This ride is full.");
-                await Send.ErrorsAsync(409, ct);
-                return;
+                var taken = await db.RideSignUps.CountAsync(s => s.PlannedRideId == ride.Id, ct);
+                if (ride.MaxRiders is { } max && taken >= max)
+                {
+                    AddError("This ride is full.");
+                    await Send.ErrorsAsync(409, ct);
+                    return;
+                }
+
+                db.RideSignUps.Add(new RideSignUp
+                {
+                    PlannedRideId = ride.Id,
+                    UserId = userId,
+                    CreatedAt = time.GetUtcNow(),
+                });
+                await db.SaveChangesAsync(ct);
             }
 
-            db.RideSignUps.Add(new RideSignUp
-            {
-                PlannedRideId = ride.Id,
-                UserId = userId,
-                CreatedAt = time.GetUtcNow(),
-            });
-            await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             await db.Entry(ride).Collection(r => r.SignUps).LoadAsync(ct);
         }

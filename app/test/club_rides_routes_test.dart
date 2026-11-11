@@ -102,6 +102,37 @@ void main() {
     expect(find.byKey(const Key('open-club-routes')), findsOneWidget);
   });
 
+  testWidgets(
+    'RouteDetailScreen_ShouldOfferRemovalToTheClubOwner_WhenTheRouteIsSomeoneElses',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com');
+      final owner = server.add('owner@example.com', clubRole: 'owner');
+      server.routeLibrary.add(
+        routeSeed(
+          id: 'route-1',
+          name: 'Lake loop',
+          ownerId: rider.id,
+          ownerName: rider.name,
+        ),
+      );
+      server.signInBrowser(owner);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-routes'));
+      await tapVisible(tester, const Key('route-route-1'));
+
+      expect(find.byKey(const Key('edit-route')), findsNothing);
+      expect(find.byKey(const Key('remove-route-as-owner')), findsOneWidget);
+      await tapVisible(tester, const Key('remove-route-as-owner'));
+      await tester.tap(find.byKey(const Key('confirm-withdraw-route')));
+      await tester.pumpAndSettle();
+
+      expect(server.routeLibrary.single['shared'], isFalse);
+    },
+  );
+
   testWidgets('RoutesScreen_ShouldExplainTheSectionAndOfferAdding_WhenEmpty', (
     tester,
   ) async {

@@ -8,6 +8,7 @@ import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
+import '../club/club_view_model.dart';
 import 'route_widgets.dart';
 import 'routes_view_model.dart';
 
@@ -73,6 +74,8 @@ class RouteDetailScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final s = ref.watch(routeDetailViewModelProvider(id));
     final notifier = ref.read(routeDetailViewModelProvider(id).notifier);
+    final isClubOwner =
+        ref.watch(clubViewModelProvider).club?.myRole == 'owner';
 
     listenUserMessages(
       ref,
@@ -222,9 +225,32 @@ class RouteDetailScreen extends ConsumerWidget {
                           foregroundColor: Theme.of(context).colorScheme.error,
                         ),
                       ),
+                    // The club's owner moderates the library without editing anybody's words.
+                    if (!route.isMine && isClubOwner)
+                      OutlinedButton.icon(
+                        key: const Key('remove-route-as-owner'),
+                        onPressed: s.action.running
+                            ? null
+                            : () async {
+                                if (await _confirm(
+                                  context,
+                                  title: l10n.routeWithdrawConfirmTitle,
+                                  body: l10n.routeWithdrawConfirmBody,
+                                  action: l10n.routeWithdraw,
+                                  key: const Key('confirm-withdraw-route'),
+                                )) {
+                                  if (await notifier.withdraw() &&
+                                      context.mounted) {
+                                    onDeleted();
+                                  }
+                                }
+                              },
+                        icon: const Icon(Icons.link_off),
+                        label: Text(l10n.routeWithdraw),
+                      ),
                   ],
                 ),
-                if (!route.isMine)
+                if (!route.isMine && !isClubOwner)
                   Text(
                     l10n.routeOwnerOnly,
                     style: Theme.of(context).textTheme.bodySmall,
