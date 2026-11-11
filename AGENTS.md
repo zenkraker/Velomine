@@ -15,7 +15,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `docs/dependencies/` | Background evaluations of community libraries |
 | `README.md` | What Velomine is, how to run it, and every setting an operator can change |
 | `infra/README.md`, `deploy/host/README.md` | The hosted environments: infrastructure, releases, backups and runbooks |
-| `src/Velomine.Server/site/` | The presentation site: the public claims, pricing and the status page of what works |
+| `site/` | The presentation site: the public claims, pricing and the status page of what works |
 
 **Precedence.** For code, this file wins over the skills, and the skills win over any general or official skill. For architecture and product, `docs/architecture.md` and `values.md` win. This file holds no progress, roadmap or open questions; when a rule changes, edit it in place. A rule here describes the code as it must be now: anything not built yet stays out until it is built.
 
@@ -26,6 +26,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Endpoints use FastEndpoints**, one endpoint class per slice, validated by the endpoint's validator.
 - **Server errors are HTTP.** Expected failures use status codes and ProblemDetails (`400`, `401`, `403`, `404`, `409`, `423`, `429`, `502`, and `503` for a feature the operator has not configured, such as email). Exceptions are for bugs only. Never wrap a response in a custom `Result` envelope: HTTP is the result, and the generated client depends on it.
 - **One PostgreSQL schema per feature area.** A feature's tables live in its own schema; slices may read another area's tables when they need to.
+- **The server image is API-only** (`Dockerfile`): the API, health, the OpenAPI document and background work. It never serves front-end files; the web image does, and reaches it as `server:8080`.
 - **Background work runs in the server** as hosted services: a `Channel<T>` read by a `BackgroundService` for queues, `PeriodicTimer` for schedules. No message broker, no job framework, and no FastEndpoints job queues or messaging. A timed task recomputes what it needs from the data, so a missed run is caught up next time.
 - **Background work on one instance.** Ingestion, email, catalogue sync and contributions run only where `VELOMINE__BACKGROUND__ENABLED` is `true`. Migrations run on every instance under EF Core's migration lock.
 - **Migrate forward.** Migrations are additive and backward-compatible for one release: expand, backfill, contract. Never drop a column in the release that stops using it. Never edit an applied migration.
@@ -94,8 +95,8 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Layout:** `lib/core/` for session, theme, formatting, language, charts and maps; `lib/features/<area>/` per feature, each with one data source `<area>_data.dart` that wraps the generated client.
 - **Shared widgets** live in `lib/core/widgets/`. A view assembles them instead of building its own card, field, switch row or section heading; a widget moves there once a second feature needs it. Layout numbers come from `lib/core/tokens.dart`.
 - **Navigation** is `go_router` with real URLs on the web. `redirect` is pure: it reads state and returns a location, and the app calls `GoRouter.refresh()` from `ref.listen` when the session or club changes.
-- **The web app** is built into the server's `wwwroot` and served at the same address as the API, so the cookie and single sign-on work without cross-origin setup. A path that is not an API path falls back to `index.html`. The web build bundles its own rendering engine.
-- **The presentation site** is plain HTML and CSS in `src/Velomine.Server/site/`, served before `wwwroot`: no JavaScript, no external assets, no cookies, no analytics and no third-party scripts. Share pages, when built, are server-rendered HTML too.
+- **The web app** is built into the web image (`app/Dockerfile`, the official nginx image) and served at the same address as the API, so the cookie and single sign-on work without cross-origin setup. `app/nginx.conf` forwards `/api`, `/health`, `/openapi` and the single sign-on callbacks (`/signin-oidc`, `/signout-callback-oidc`) to the server; any other path without a file extension falls back to `index.html`. The web build bundles its own rendering engine.
+- **The presentation site** is plain HTML and CSS in `site/`, served by the web image before the web app: no JavaScript, no external assets, no cookies, no analytics and no third-party scripts. Share pages, when built, are server-rendered HTML too.
 - **Languages:** English and Italian through `gen-l10n` (`lib/l10n/app_en.arb`, `app_it.arb`). Every user-facing string goes in both files. The language is an account setting (`PUT /accounts/me/language`); before sign-in the app follows the device.
 - **Tokens:** the web app uses the HttpOnly cookie. The phone keeps the refresh token in Android Keystore (AES-GCM, `noBackupFilesDir`) or the iOS Keychain (`AfterFirstUnlockThisDeviceOnly`) through a small native channel, and the access token in memory only. The refresh token is never written to preferences, backups or logs. Refresh is single-flight; a refused refresh clears the token, an unreachable server keeps it. One HTTP-client wrapper turns any 401 into "the session ended".
 - **Maps and charts** are drawn with Flutter's own canvas and plain tile images (`features/rides/detail/geo.dart`, `series_chart.dart`). The tile address comes from `GET /api/v1/server`; OpenStreetMap is the default and the map cannot be turned off.
@@ -147,7 +148,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 - **`flake.nix` is the toolchain.** A tool needed to develop, build or test goes into the flake; no install scripts or host requirements. Adding a tool is a dependency and follows the dependency rule.
 - **Running needs Docker only.** `docker compose up --build` works without Nix; the `Dockerfile` and compose stack do not use Nix.
-- **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and the `Dockerfile` change in the same commit. The Android SDK, NDK and CMake versions are the ones the pinned Flutter's Gradle plugin asks for.
+- **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and `app/Dockerfile` change in the same commit. The Android SDK, NDK and CMake versions are the ones the pinned Flutter's Gradle plugin asks for.
 - **Commit `flake.lock`**, and update nixpkgs in a commit of its own.
 - **Machine-local state stays in `.dev/`** (git-ignored). Never commit it or send a tool's cache elsewhere.
 - **The `justfile` is the entry point** for everyday commands.

@@ -2,7 +2,7 @@
 bin/
 obj/
 
-# Built into the image or exported by tools/generate-api-client.sh
+# Written by tools/generate-api-client.sh (the exported OpenAPI document)
 src/Velomine.Server/wwwroot/
 
 # Nix dev environment (docs/development.md): direnv cache and machine-local caches, SDKs and data

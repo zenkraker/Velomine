@@ -1,5 +1,6 @@
 # Runs the whole stack for local testing:  docker compose up --build
-# Server: http://localhost:8080   (health: /health, API: /api/v1/server)
+# http://localhost:8080: the web image serves the web app and the presentation site and forwards /api, /health and
+# /openapi (and the single sign-on callbacks) to the server (health: /health, API: /api/v1/server). The server itself is not published.
 # Development defaults only (including the Dex single sign-on test provider); set real values in a .env file for anything shared.
 services:
   postgres:
@@ -37,7 +38,8 @@ services:
       timeout: 3s
       retries: 10
 
-  velomine:
+  # The API and background services (Dockerfile). The web service below reaches it as `server`.
+  server:
     build: .
     # Optional, git-ignored: VELOMINE__TELEMETRY__* settings to send this instance's logs, traces and errors
     # to Sentry during development (see docs/development.md). Without the file, telemetry stays off.
@@ -69,13 +71,26 @@ services:
       # Background work (ride ingestion, email, catalogue sync) runs on one instance only. On every other API
       # instance of a cloud deployment set VELOMINE__BACKGROUND__ENABLED=false; keep it true on exactly one.
       # VELOMINE__BACKGROUND__ENABLED: "false"
-    ports:
-      - "${VELOMINE_PORT:-8080}:8080"
     volumes:
       - velomine-files:/data/files
       # Shared by every API instance: the Data Protection key ring signs the cookies, so a restart or another
       # instance must read the same keys. Do not give each instance its own volume.
       - velomine-keys:/data/keys
+
+  # The web app and the presentation site (app/Dockerfile), the one published port.
+  web:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    depends_on:
+      - server
+    ports:
+      - "${VELOMINE_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
 
 volumes:
   postgres-data:

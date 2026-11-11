@@ -14,11 +14,11 @@ setup:
 
 # build and start the whole stack in Docker on http://localhost:8080; run it again after any change
 up:
-    docker compose up --build -d --wait
+    docker compose up --build -d --wait --remove-orphans
 
 # follow the server's log
 logs:
-    docker compose logs -f velomine
+    docker compose logs -f server web
 
 # stop containers (data is kept)
 down:

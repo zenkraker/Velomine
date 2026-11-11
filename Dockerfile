@@ -1,44 +1,21 @@
 # syntax=docker/dockerfile:1.7
-# check=skip=FromPlatformFlagConstDisallowed
-# (The web stage below is pinned to linux/amd64 on purpose; see the comment there.)
-# Web app: Flutter's official release, pinned by version and checksum, on the same Microsoft image as the server build.
-# The Flutter release only exists for Linux x64. Its output is plain web files, so on an Apple Silicon host this one
-# stage runs emulated and the server image is still built and run natively.
-FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS web
-ARG FLUTTER_VERSION=3.47.9
-ARG FLUTTER_SHA256=25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a
-RUN apt-get update && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -o /tmp/flutter.tar.xz "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
-    && echo "${FLUTTER_SHA256}  /tmp/flutter.tar.xz" | sha256sum -c - \
-    && tar -xJf /tmp/flutter.tar.xz -C /opt && rm /tmp/flutter.tar.xz \
-    && git config --global --add safe.directory /opt/flutter
-ENV PATH="/opt/flutter/bin:${PATH}" FLUTTER_SUPPRESS_ANALYTICS=true CI=true
-RUN flutter config --no-analytics && flutter precache --web
-WORKDIR /src/app
-COPY app/pubspec.yaml app/pubspec.lock ./
-COPY app/packages packages
-RUN --mount=type=cache,target=/root/.pub-cache flutter pub get --enforce-lockfile
-COPY app/lib lib
-COPY app/assets assets
-COPY app/web web
-# The cache mount below is not a layer: .dart_tool/package_config.json points into
-# /root/.pub-cache, so the build step must mount the same cache or imports fail.
-RUN --mount=type=cache,target=/root/.pub-cache flutter build web --release --no-web-resources-cdn \
-    && find build/web -name '*.map' -delete
+# The server image: the .NET API and the background services, and no front-end. The web app and the presentation site
+# are in the web image (app/Dockerfile), which forwards /api, /health and /openapi here.
 
 # Build stage: restore from lock files first so the layer is cached until packages change.
 FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props ./
 COPY src/Velomine.Server/Velomine.Server.csproj src/Velomine.Server/packages.lock.json src/Velomine.Server/
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore src/Velomine.Server/Velomine.Server.csproj --locked-mode
+# Packages stay in the layer, not in a cache mount: CI restores layers from its cache but not cache mounts, so a cached
+# restore with an empty mount would leave the publish below without its packages.
+RUN dotnet restore src/Velomine.Server/Velomine.Server.csproj --locked-mode
 COPY src/Velomine.Server src/Velomine.Server
 # VERSION and REVISION reach the assembly, so GET /api/v1/server, logs and Sentry report the running build (BuildInfo.cs).
 # Declared here, after the restore, so a new commit does not invalidate the restored packages.
 ARG VERSION=0.0.0
 ARG REVISION=
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish src/Velomine.Server/Velomine.Server.csproj \
+RUN dotnet publish src/Velomine.Server/Velomine.Server.csproj \
     -c Release -p:ContinuousIntegrationBuild=true -p:UseAppHost=false \
     -p:Version="${VERSION}" -p:SourceRevisionId="${REVISION}" -o /app --no-restore
 
@@ -49,11 +26,10 @@ ARG VERSION=0.0.0
 ARG REVISION=unknown
 WORKDIR /app
 COPY --from=build /app .
-COPY --from=web /src/app/build/web ./wwwroot
 RUN apk add --no-cache icu-libs icu-data-full tzdata ca-certificates \
     && mkdir -p /data/files /data/keys \
     && chown app:app /data/files /data/keys
-LABEL org.opencontainers.image.title="Velomine" \
+LABEL org.opencontainers.image.title="Velomine server" \
       org.opencontainers.image.description="Cycling club training platform" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${REVISION}" \

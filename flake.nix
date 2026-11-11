@@ -14,7 +14,7 @@
         };
       };
 
-      # Same Flutter release and checksum as the Dockerfile. nixpkgs' flutter347 is 3.47.4
+      # Same Flutter release and checksum as app/Dockerfile. nixpkgs' flutter347 is 3.47.4
       # (Dart 3.13.3), but app/pubspec.yaml needs Dart ^3.13.7. Bump both files together.
       flutterVersion = "3.47.9";
       flutterTarball = pkgs.fetchurl {

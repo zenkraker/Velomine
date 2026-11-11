@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
-    <Content Include="site/**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Features/Bikes/parts-seed.json" LogicalName="Velomine.Server.Features.Bikes.parts-seed.json" />
   </ItemGroup>
   <ItemGroup>

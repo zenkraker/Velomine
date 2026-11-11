@@ -1,22 +1,22 @@
 name: Set up Flutter
 description: >
-  Installs the Flutter SDK pinned in the Dockerfile (FLUTTER_VERSION and
+  Installs the Flutter SDK pinned in app/Dockerfile (FLUTTER_VERSION and
   FLUTTER_SHA256) from Flutter's own release bucket, verified by checksum the
   same way the Dockerfile installs it, and restores the SDK and pub caches. The
-  Dockerfile is the one place CI reads the version from; tools/check-versions.sh
+  app/Dockerfile is the one place CI reads the version from; tools/check-versions.sh
   keeps flake.nix in step with it. No community action in the chain.
 
 runs:
   using: composite
   steps:
-    - name: Read the Flutter pin from the Dockerfile
+    - name: Read the Flutter pin from app/Dockerfile
       id: pin
       shell: bash
       run: |
         set -euo pipefail
-        version="$(sed -n 's/^ARG FLUTTER_VERSION=//p' Dockerfile)"
-        sha256="$(sed -n 's/^ARG FLUTTER_SHA256=//p' Dockerfile)"
-        [[ -n "$version" && -n "$sha256" ]] || { echo "::error::FLUTTER_VERSION or FLUTTER_SHA256 missing from the Dockerfile"; exit 1; }
+        version="$(sed -n 's/^ARG FLUTTER_VERSION=//p' app/Dockerfile)"
+        sha256="$(sed -n 's/^ARG FLUTTER_SHA256=//p' app/Dockerfile)"
+        [[ -n "$version" && -n "$sha256" ]] || { echo "::error::FLUTTER_VERSION or FLUTTER_SHA256 missing from app/Dockerfile"; exit 1; }
         echo "version=$version" >> "$GITHUB_OUTPUT"
         echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
 

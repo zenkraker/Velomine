@@ -241,7 +241,7 @@ Nix also runs on other Linux distributions, macOS and WSL 2. Install it with the
 ## Telemetry in development
 
 Telemetry is off by default. To send it locally, put the values in the git-ignored `.dev/telemetry.env`; the
-`velomine` service in `docker-compose.yml` reads that file when it exists. Run `just up` after changing it:
+`server` service in `docker-compose.yml` reads that file when it exists. Run `just up` after changing it:
 
 ```
 VELOMINE__TELEMETRY__ENABLED=true

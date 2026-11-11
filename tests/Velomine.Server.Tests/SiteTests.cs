@@ -1,21 +1,15 @@
-using System.Net;
-using Microsoft.AspNetCore.Hosting;
-
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
-public sealed class SiteTests(PostgresFixture postgres)
+/// <summary>
+/// The presentation site's content, read from site/ at the repository root. Which request reaches which file is the
+/// web image's job (app/nginx.conf) and is checked by tools/smoke-test-image.sh.
+/// </summary>
+public sealed class SiteTests
 {
     [Fact]
     public async Task Website_ShouldServeTheHomePage_WhenRootIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/");
         Assert.Contains("<title>Velomine", html);
         Assert.Contains("href=\"/sign-in\"", html);
         Assert.Contains("href=\"/status/\"", html);
@@ -26,12 +20,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeTheStatusPage_WhenStatusIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/status/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/status/");
         Assert.Contains("What works today", html);
         Assert.Contains("The v1 goal", html);
         Assert.Contains("What is still missing", html);
@@ -40,12 +29,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeThePricingPage_WhenPricingIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/pricing/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/pricing/");
         Assert.Contains("One plan for clubs. One price for solo riders.", html);
         Assert.Contains("Guided setup", html);
         Assert.Contains("No feature paywall", html);
@@ -54,12 +38,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeTheContactPage_WhenContactIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/contact/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/contact/");
         Assert.Contains("mailto:", html);
         Assert.Contains("Tell me how your club rides", html);
     }
@@ -67,12 +46,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeThePrivacyPage_WhenPrivacyIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/privacy/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/privacy/");
         Assert.Contains("Your data, in plain language.", html);
         Assert.Contains("Sub-processors and the DPA", html);
         Assert.Contains("Backups: up to 90 days", html);
@@ -81,12 +55,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeTheTermsPage_WhenTermsIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/terms/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/terms/");
         Assert.Contains("The agreement, in plain language.", html);
         Assert.Contains("one yearly fee per club", html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("no feature paywall", html, StringComparison.OrdinalIgnoreCase);
@@ -95,12 +64,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeTheSecurityPage_WhenSecurityIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/security/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/security/");
         Assert.Contains("Tell us before it becomes a problem.", html);
         Assert.Contains("/.well-known/security.txt", html);
     }
@@ -108,12 +72,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeThePrinciplesPage_WhenPrinciplesIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/principles/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/principles/");
         Assert.Contains("Principles, not slogans.", html);
         Assert.Contains("No feature paywall", html);
         Assert.Contains("id=\"licence\"", html);
@@ -122,12 +81,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeSecurityTxt_WhenTheWellKnownPathIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/.well-known/security.txt", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var text = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var text = await ReadSiteAsync("/.well-known/security.txt");
         Assert.Contains("Contact: mailto:", text);
         Assert.Contains("Preferred-Languages:", text);
     }
@@ -135,24 +89,14 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task SiteStylesheet_ShouldNotUseGravelForText_WhenServed()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/static/site.css", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var css = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var css = await ReadSiteAsync("/static/site.css");
         Assert.DoesNotContain("color: var(--gravel)", css);
     }
 
     [Fact]
     public async Task SiteStylesheet_ShouldNotDefineACustomPropertyAsItself_WhenServed()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/static/site.css", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var css = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var css = await ReadSiteAsync("/static/site.css");
         foreach (var declaration in System.Text.RegularExpressions.Regex
                      .Matches(css, @"--([a-z-]+)\s*:\s*([^;}]+)")
                      .Cast<System.Text.RegularExpressions.Match>())
@@ -165,12 +109,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldNotListBuiltFeaturesAsNotYet_WhenStatusIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/status/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/status/");
         var start = html.IndexOf("Promised for v1, still missing", StringComparison.Ordinal);
         var end = html.IndexOf("After v1", start, StringComparison.Ordinal);
         Assert.True(start >= 0 && end > start, "The status page should have a v1 gap list.");
@@ -184,90 +123,9 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task Website_ShouldServeTheDemoPage_WhenDemoIsRequested()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/demo/", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var html = await ReadSiteAsync("/demo/");
         Assert.Contains("Try a real club", html);
         Assert.Contains("Resets every night", html);
-    }
-
-    private const string AppMarker = "<!-- velomine web app -->";
-
-    /// <summary>
-    /// Starts the server with a stand-in web app, so the fallback routing is tested without a Flutter build. What the
-    /// real index.html contains is Flutter's business; which requests reach it is the server's.
-    /// </summary>
-    private async Task<(TestApi Api, string WebRoot)> StartWithWebAppAsync()
-    {
-        var webRoot = Directory.CreateTempSubdirectory("velomine-webroot-").FullName;
-        await File.WriteAllTextAsync(Path.Combine(webRoot, "index.html"), AppMarker, TestContext.Current.CancellationToken);
-        var api = await TestApi.StartAsync(postgres, b => b.UseWebRoot(webRoot));
-        return (api, webRoot);
-    }
-
-    [Theory]
-    [InlineData("/sign-in")]
-    [InlineData("/rides/0190a5b2-7c3e-7000-8000-000000000000")]
-    [InlineData("/settings/profile")]
-    public async Task Website_ShouldServeTheWebApp_WhenAnAppRouteIsRequested(string path)
-    {
-        var (api, webRoot) = await StartWithWebAppAsync();
-        await using var _ = api;
-        try
-        {
-            using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
-
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
-            Assert.Equal(AppMarker, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-        }
-        finally
-        {
-            Directory.Delete(webRoot, recursive: true);
-        }
-    }
-
-    [Theory]
-    [InlineData("/api/v1/does-not-exist")]
-    [InlineData("/api")]
-    [InlineData("/main.dart.js")]
-    [InlineData("/assets/missing.png")]
-    public async Task Website_ShouldNotServeTheWebApp_WhenAnApiPathOrFileIsMissing(string path)
-    {
-        var (api, webRoot) = await StartWithWebAppAsync();
-        await using var _ = api;
-        try
-        {
-            using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
-
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        }
-        finally
-        {
-            Directory.Delete(webRoot, recursive: true);
-        }
-    }
-
-    [Theory]
-    [InlineData("/status")]
-    [InlineData("/pricing")]
-    [InlineData("/demo")]
-    [InlineData("/contact")]
-    [InlineData("/principles")]
-    [InlineData("/privacy")]
-    [InlineData("/terms")]
-    [InlineData("/security")]
-    public async Task SitePages_ShouldRedirectToTrailingSlash_WhenSlashIsMissing(string path)
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
-        Assert.Equal(path + "/", response.Headers.Location?.ToString());
     }
 
     [Theory]
@@ -282,9 +140,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [InlineData("/security/")]
     public async Task SitePages_ShouldOfferTheMenuDisclosure_WhenServed(string path)
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var html = await FetchPageAsync(api, path);
+        var html = await ReadSiteAsync(path);
 
         Assert.Contains("<details class=\"nav-menu\">", html);
         Assert.Contains("<summary aria-label=\"Menu\">", html);
@@ -302,9 +158,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [InlineData("/security/")]
     public async Task SitePages_ShouldNotUseNumberedMarkers_WhenServed(string path)
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var html = await FetchPageAsync(api, path);
+        var html = await ReadSiteAsync(path);
 
         Assert.DoesNotContain("class=\"num\"", html);
     }
@@ -321,9 +175,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [InlineData("/security/")]
     public async Task SitePages_ShouldDeclareACanonicalLink_WhenServed(string path)
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var html = await FetchPageAsync(api, path);
+        var html = await ReadSiteAsync(path);
 
         Assert.Contains($"<link rel=\"canonical\" href=\"{path}\">", html);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "rel=\"canonical\""));
@@ -341,9 +193,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [InlineData("/security/")]
     public async Task SitePages_ShouldNotTranslateTheBrand_WhenServed(string path)
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var html = await FetchPageAsync(api, path);
+        var html = await ReadSiteAsync(path);
 
         Assert.Contains("class=\"wordmark\" translate=\"no\"", html);
     }
@@ -351,9 +201,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task SiteStylesheet_ShouldSetScrollPadding_WhenServed()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var css = await FetchPageAsync(api, "/static/site.css");
+        var css = await ReadSiteAsync("/static/site.css");
 
         Assert.Contains("scroll-padding-top", css);
     }
@@ -361,9 +209,7 @@ public sealed class SiteTests(PostgresFixture postgres)
     [Fact]
     public async Task SiteStylesheet_ShouldNotAnimateBoxShadow_WhenServed()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var css = await FetchPageAsync(api, "/static/site.css");
+        var css = await ReadSiteAsync("/static/site.css");
 
         Assert.DoesNotMatch(@"transition:\s*[^;]*box-shadow", css);
         foreach (var keyframes in System.Text.RegularExpressions.Regex
@@ -374,22 +220,25 @@ public sealed class SiteTests(PostgresFixture postgres)
         }
     }
 
-    [Fact]
-    public async Task ItalianPath_ShouldNotRedirectToAMissingFolder_WhenTheItalianSiteIsNotBuilt()
+    /// <summary>The file the web image serves for <paramref name="path"/>: a directory path is its index.html.</summary>
+    private static async Task<string> ReadSiteAsync(string path)
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        using var response = await api.CreateClient().GetAsync("/it", TestContext.Current.CancellationToken);
-
-        Assert.NotEqual(HttpStatusCode.MovedPermanently, response.StatusCode);
-        Assert.NotEqual("/it/", response.Headers.Location?.ToString());
+        var relative = path.TrimStart('/');
+        if (relative.Length == 0 || relative.EndsWith('/')) relative += "index.html";
+        var file = Path.Combine(SiteRoot, relative);
+        Assert.True(File.Exists(file), $"site/{relative} is missing.");
+        return await File.ReadAllTextAsync(file, TestContext.Current.CancellationToken);
     }
 
-    private static async Task<string> FetchPageAsync(TestApi api, string path)
-    {
-        using var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
+    private static readonly string SiteRoot = FindSiteRoot();
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        return await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+    private static string FindSiteRoot()
+    {
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Velomine.slnx"))) return Path.Combine(dir.FullName, "site");
+        }
+
+        throw new InvalidOperationException("The repository root (Velomine.slnx) was not found above the test binaries.");
     }
 }

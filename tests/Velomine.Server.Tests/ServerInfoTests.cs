@@ -97,6 +97,21 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         Assert.Equal(MapOptions.DefaultAttribution, info.MapAttribution);
     }
 
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/sign-in")]
+    [InlineData("/status/")]
+    [InlineData("/static/site.css")]
+    [InlineData("/index.html")]
+    public async Task Server_ShouldNotServeFrontEndPaths_WhenTheWebImageOwnsThem(string path)
+    {
+        await using var api = await TestApi.StartAsync(postgres);
+
+        var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     [Fact]
     public async Task Health_ShouldReturnOk_WhenProbed()
     {
