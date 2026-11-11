@@ -37,6 +37,10 @@ String stopwatch(double? seconds) {
 String dateTime(DateTime? value) =>
     value == null ? '–' : DateFormat.yMMMd().add_Hm().format(value.toLocal());
 
+/// A calendar day, as the server sent it: it is a date, not an instant, so it is not moved to the local zone.
+String dateOnly(DateTime? value) =>
+    value == null ? '–' : DateFormat.yMMMd().format(value);
+
 /// A size on disk: "0 B", "12 KB", "3.4 MB", "1.2 GB".
 String bytes(num size) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];

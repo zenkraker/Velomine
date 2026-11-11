@@ -89,6 +89,21 @@ class AdminData {
       )
       .guard(FailureAction.updateClub);
 
+  /// Records the club's size band and paid-until day (a bank transfer today). Null limit means no limit.
+  Future<Result<AdminClubResponse?>> setClubPlan(
+    AdminClubResponse club,
+    int? memberLimit,
+    DateTime? paidUntil,
+  ) => _api
+      .clubsSetClubPlan(
+        club.id,
+        SetClubPlanRequest(
+          memberLimit: Optional.present(memberLimit),
+          paidUntil: Optional.present(paidUntil),
+        ),
+      )
+      .guard(FailureAction.setClubPlan);
+
   Future<Result<AdminClubResponse?>> setClubOwner(
     AdminClubResponse club,
     String userId,

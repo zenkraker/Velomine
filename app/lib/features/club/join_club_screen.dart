@@ -54,7 +54,8 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
         ? null
         : switch (failure.kind) {
             FailureKind.missing => l10n.joinInvalid,
-            FailureKind.conflict => l10n.joinAlready,
+            // This page is only shown to someone without a club, so a conflict is the club's plan: the server says which.
+            FailureKind.conflict => failure.detail ?? l10n.joinAlready,
             _ => failureText(l10n, failure),
           };
     return Center(

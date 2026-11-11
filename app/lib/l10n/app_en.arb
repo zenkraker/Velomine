@@ -1611,5 +1611,77 @@
       }
     }
   },
+  "actionStartClub": "start the club",
+  "actionSetClubPlan": "save the club's plan",
+  "startClubButton": "Start a club",
+  "startClubTitle": "Start a club",
+  "startClubIntro": "Start a club for the people you ride with. You will be its owner and can invite people with a code. You get a month to try it.",
+  "startClubName": "Club name",
+  "startClubNameRequired": "Give the club a name.",
+  "startClubAction": "Start the club",
+  "clubPlanTitle": "Plan",
+  "clubPlanMembers": "{count} of {limit} members",
+  "@clubPlanMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "clubPlanPaidUntil": "Paid until {date}",
+  "@clubPlanPaidUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "clubPlanFullNotice": "The club is full. To take more members, get in touch to move up to a larger size.",
+  "clubPlanEndedNotice": "The club's plan ended on {date}. Everything keeps working, but new members cannot join until it is renewed. Get in touch to renew it.",
+  "@clubPlanEndedNotice": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "joinRequestsBlockedFull": "The club is full, so requests cannot be approved yet. Get in touch to move up to a larger size.",
+  "joinRequestsBlockedEnded": "The club's plan has ended, so requests cannot be approved until it is renewed.",
+  "notificationClubPlanEnding": "Your club's plan ends on {date}. Get in touch to renew it.",
+  "@notificationClubPlanEnding": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationClubPlanEnded": "Your club's plan ended after {date}. Members keep everything, but new members cannot join until it is renewed.",
+  "@notificationClubPlanEnded": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adminClubCreation": "Riders can start clubs",
+  "adminClubCreationHelp": "A signed-in rider without a club can start one. It begins with room for 25 members and a month to try it.",
+  "adminClubEditPlan": "Edit plan",
+  "adminClubLimit": "Room for",
+  "adminClubLimitNone": "More than 150 members (no limit)",
+  "adminClubLimitOption": "Up to {count} members",
+  "@adminClubLimitOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminClubPaidUntil": "Paid until",
+  "adminClubNoDate": "No end date",
+  "adminClubChooseDate": "Choose a date",
+  "adminClubPlanSaved": "Plan saved.",
   "loading": "Loading"
 }

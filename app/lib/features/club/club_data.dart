@@ -19,6 +19,22 @@ class ClubData {
   Future<Result<MyClubResponse?>> join(String code) =>
       _api.joinClub(JoinClubRequest(code: code)).guard(FailureAction.joinClub);
 
+  Future<Result<MyClubResponse?>> start(
+    String name,
+    double? latitude,
+    double? longitude, {
+    required bool isDiscoverable,
+  }) => _api
+      .startClub(
+        StartClubRequest(
+          name: name,
+          latitude: Optional.present(latitude),
+          longitude: Optional.present(longitude),
+          isDiscoverable: isDiscoverable,
+        ),
+      )
+      .guard(FailureAction.startClub);
+
   Future<Result<void>> leave() =>
       _api.leaveClub().guard(FailureAction.leaveClub);
 

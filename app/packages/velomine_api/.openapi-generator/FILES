@@ -39,6 +39,7 @@ lib/model/change_password_request.dart
 lib/model/check_in_response.dart
 lib/model/check_ins_response.dart
 lib/model/club_member_response.dart
+lib/model/club_plan_response.dart
 lib/model/club_response.dart
 lib/model/coach_athlete_response.dart
 lib/model/coach_athletes_response.dart
@@ -115,6 +116,7 @@ lib/model/session_response.dart
 lib/model/set_club_location_request.dart
 lib/model/set_club_member_role_request.dart
 lib/model/set_club_owner_request.dart
+lib/model/set_club_plan_request.dart
 lib/model/set_ftp_request.dart
 lib/model/set_my_language_request.dart
 lib/model/set_ride_bike_request.dart
@@ -128,6 +130,7 @@ lib/model/sharing_response.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart
+lib/model/start_club_request.dart
 lib/model/start_ride_import_response.dart
 lib/model/telemetry_response.dart
 lib/model/template_part_request.dart

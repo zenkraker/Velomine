@@ -105,6 +105,13 @@ class FakeServer {
   double? clubLongitude;
   bool clubDiscoverable = false;
 
+  /// The plan the fake club is on: null means no limit, and a null day means it never ends.
+  int? clubMemberLimit;
+  String? clubPaidUntil;
+
+  /// The last plan the admin screen sent, for a test to read.
+  Map<String, Object?>? lastPlanBody;
+
   /// Pending asks to join, with the same shape the real server sends.
   final joinRequests = <Map<String, Object?>>[];
 
@@ -142,6 +149,7 @@ class FakeServer {
   final adminSettings = <String, Object?>{
     'signUpEnabled': true,
     'requireAdminApproval': true,
+    'clubCreationEnabled': false,
   };
   bool smtpConfigured = false;
 
@@ -961,6 +969,8 @@ extension on FakeServer {
       'isDiscoverable': clubDiscoverable,
       'createdAt': '2026-11-02T08:00:00Z',
       'memberCount': clubRoles.length,
+      'memberLimit': clubMemberLimit,
+      'paidUntil': clubPaidUntil,
       'ownerId': owner?.id,
       'ownerName': owner?.name,
       'ownerEmail': owner?.email,
@@ -1012,6 +1022,36 @@ extension on FakeServer {
             'joinedAt': '2026-11-02T08:00:00Z',
           },
       ],
+      'plan':
+          role == 'owner' && (clubMemberLimit != null || clubPaidUntil != null)
+          ? {
+              'memberCount': members.length,
+              'memberLimit': clubMemberLimit,
+              'paidUntil': clubPaidUntil,
+              'blocked': clubBlocked,
+            }
+          : null,
+    };
+  }
+
+  /// Why the fake club cannot take another member: "ended", "full" or null. The server decides this in real life.
+  String? get clubBlocked {
+    final until = clubPaidUntil;
+    if (until != null && DateTime.parse(until).isBefore(DateTime.now())) {
+      return 'ended';
+    }
+    final limit = clubMemberLimit;
+    if (limit != null && clubRoles.length >= limit) return 'full';
+    return null;
+  }
+
+  /// The answer to "my club": the club, and whether this rider may start one.
+  Map<String, Object?> _myClubResponse(FakeAccount me) {
+    final club = _myClubJson(me);
+    return {
+      'club': club,
+      'canStartClub':
+          club == null && adminSettings['clubCreationEnabled'] == true,
     };
   }
 
@@ -1025,8 +1065,24 @@ extension on FakeServer {
         ? <String, Object?>{}
         : jsonDecode(request.body) as Map<String, Object?>;
 
+    if (path == '/api/v1/club' && request.method == 'POST') {
+      if (adminSettings['clubCreationEnabled'] != true) {
+        return http.Response('{"detail":"Riders cannot start clubs."}', 403);
+      }
+      if (clubRoles.containsKey(caller.email)) {
+        return http.Response('{"detail":"already in a club"}', 409);
+      }
+      clubName = body['name']! as String;
+      clubRoles[caller.email] = 'owner';
+      clubMemberLimit = 25;
+      clubPaidUntil = '2099-01-01';
+      clubLatitude = (body['latitude'] as num?)?.toDouble();
+      clubLongitude = (body['longitude'] as num?)?.toDouble();
+      clubDiscoverable = body['isDiscoverable'] == true;
+      return json(_myClubResponse(caller));
+    }
     if (path == '/api/v1/club') {
-      return json({'club': _myClubJson(caller)});
+      return json(_myClubResponse(caller));
     }
     if (path == '/api/v1/club/join') {
       if (clubRoles.containsKey(caller.email)) {
@@ -1035,8 +1091,14 @@ extension on FakeServer {
       if (!clubActive || body['code'] != joinCode) {
         return http.Response('', 404);
       }
+      if (clubBlocked case final reason?) {
+        return http.Response(
+          '{"detail":"This club is ${reason == 'full' ? 'full' : 'closed'}."}',
+          409,
+        );
+      }
       clubRoles[caller.email] = 'member';
-      return json({'club': _myClubJson(caller)});
+      return json(_myClubResponse(caller));
     }
     if (path == '/api/v1/club/leave') {
       if (!clubRoles.containsKey(caller.email)) return http.Response('', 404);
@@ -1079,7 +1141,7 @@ extension on FakeServer {
       clubLatitude = (body['latitude'] as num?)?.toDouble();
       clubLongitude = (body['longitude'] as num?)?.toDouble();
       clubDiscoverable = body['isDiscoverable'] == true;
-      return json({'club': _myClubJson(caller)});
+      return json(_myClubResponse(caller));
     }
 
     if (path == '/api/v1/club/nearby' && request.method == 'POST') {
@@ -1151,6 +1213,7 @@ extension on FakeServer {
               'createdAt': r['createdAt'],
             },
         ],
+        'admissionBlocked': clubBlocked,
       });
     }
 
@@ -1163,6 +1226,9 @@ extension on FakeServer {
         (r) => r['id'] == decision.group(1),
       );
       if (index < 0) return http.Response('', 404);
+      if (decision.group(2) == 'approve' && clubBlocked != null) {
+        return http.Response('{"detail":"This club is full."}', 409);
+      }
       final ask = joinRequests.removeAt(index);
       if (decision.group(2) == 'approve') {
         final user = accounts.values
@@ -1529,6 +1595,14 @@ extension on FakeServer {
       return json({
         'clubs': [_adminClubJson()],
       });
+    }
+    final plan = RegExp(r'^/api/v1/admin/clubs/([^/]+)/plan$').firstMatch(path);
+    if (plan != null) {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      clubMemberLimit = (body['memberLimit'] as num?)?.toInt();
+      clubPaidUntil = body['paidUntil'] as String?;
+      lastPlanBody = body;
+      return json(_adminClubJson());
     }
     final owner = RegExp(r'^/api/v1/admin/clubs/([^/]+)/owner$')
         .firstMatch(path);

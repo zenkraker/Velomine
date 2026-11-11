@@ -21,6 +21,18 @@ public sealed class Club
     /// <summary>Whether riders without a club may find this club by distance and ask to join.</summary>
     public bool IsDiscoverable { get; set; }
 
+    /// <summary>
+    /// How many members the club may have; null means no limit. A club at its limit takes no new members until the
+    /// operator raises it. Existing members are never affected.
+    /// </summary>
+    public int? MemberLimit { get; set; }
+
+    /// <summary>
+    /// The last day the club's plan is paid for; null means it never ends. After this day the club keeps everything
+    /// and works as before, but takes no new members until the operator extends the date.
+    /// </summary>
+    public DateOnly? PaidUntil { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>The instance admin who created it. The day-to-day owner is the owner membership.</summary>

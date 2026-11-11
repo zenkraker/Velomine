@@ -7,10 +7,11 @@ using Velomine.Server.Features.Accounts;
 namespace Velomine.Server.Features.Admin;
 
 /// <summary>
-/// Saving overrides the environment values for the two settings. Only these can be changed here; SMTP and
+/// Saving overrides the environment values for the settings. Only these can be changed here; SMTP and
 /// single sign-on are set with environment variables. Maps are always on, so there is nothing to switch off.
 /// </summary>
-public sealed record UpdateSettingsRequest(bool SignUpEnabled, bool RequireAdminApproval);
+/// <remarks>ClubCreationEnabled left out keeps the saved value, so an older admin screen never switches it off by mistake.</remarks>
+public sealed record UpdateSettingsRequest(bool SignUpEnabled, bool RequireAdminApproval, bool? ClubCreationEnabled = null);
 
 public sealed class UpdateSettings(VelomineDbContext db, SettingsReader settings, IOptions<SmtpOptions> smtp, IOptions<SsoOptions> sso)
     : Endpoint<UpdateSettingsRequest, SettingsResponse>
@@ -29,6 +30,7 @@ public sealed class UpdateSettings(VelomineDbContext db, SettingsReader settings
 
         row.SignUpEnabled = req.SignUpEnabled;
         row.RequireAdminApproval = req.RequireAdminApproval;
+        if (req.ClubCreationEnabled is { } clubCreation) row.ClubCreationEnabled = clubCreation;
         await db.SaveChangesAsync(ct);
 
         await Send.OkAsync(await GetSettings.StatusAsync(settings, smtp.Value, sso.Value, ct), ct);

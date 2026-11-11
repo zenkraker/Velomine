@@ -79,7 +79,9 @@ String? backParentOf(String location) {
       path == '/reset-password') {
     return '/sign-in';
   }
-  if (path == '/join' || path == '/clubs') return '/club';
+  if (path == '/join' || path == '/clubs' || path == '/club/start') {
+    return '/club';
+  }
   if (path == '/club/athletes') return '/club';
   final coachedRide = RegExp(r'^/club/athletes/([^/]+)/rides/[^/]+$')
       .firstMatch(path);

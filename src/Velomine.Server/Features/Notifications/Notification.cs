@@ -38,6 +38,12 @@ public static class NotificationTypes
 
     /// <summary>The club's owner said no. The subject is the club's name.</summary>
     public const string ClubJoinDeclined = "club_join_declined";
+
+    /// <summary>For a club owner: the club's plan ends in two weeks. The subject is the last paid day, as yyyy-MM-dd.</summary>
+    public const string ClubPlanEnding = "club_plan_ending";
+
+    /// <summary>For a club owner: the club's plan has ended. The subject is the last paid day, as yyyy-MM-dd.</summary>
+    public const string ClubPlanEnded = "club_plan_ended";
 }
 
 /// <summary>
@@ -55,6 +61,8 @@ public static class NotificationKinds
         NotificationTypes.ClubJoinRequest,
         NotificationTypes.ClubJoinApproved,
         NotificationTypes.ClubJoinDeclined,
+        NotificationTypes.ClubPlanEnding,
+        NotificationTypes.ClubPlanEnded,
         NotificationTypes.SignUpWaiting,
     ];
 

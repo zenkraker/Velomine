@@ -6,7 +6,7 @@ using Velomine.Server.Features.Accounts;
 namespace Velomine.Server.Features.Clubs;
 
 /// <summary>The owner's inbox: riders who asked to join this club, oldest first.</summary>
-public sealed class ListJoinRequests(VelomineDbContext db) : EndpointWithoutRequest<JoinRequestsResponse>
+public sealed class ListJoinRequests(VelomineDbContext db, TimeProvider time) : EndpointWithoutRequest<JoinRequestsResponse>
 {
     public override void Configure()
     {
@@ -36,6 +36,12 @@ public sealed class ListJoinRequests(VelomineDbContext db) : EndpointWithoutRequ
             .Select(r => new JoinRequestResponse(r.Id, r.UserId, r.User.DisplayName, r.Note, r.CreatedAt))
             .ToListAsync(ct);
 
-        await Send.OkAsync(new JoinRequestsResponse([.. requests]), ct);
+        var plan = await db.Clubs.AsNoTracking()
+            .Where(c => c.Id == mine.ClubId)
+            .Select(c => new { c.MemberLimit, c.PaidUntil, Members = c.Memberships.Count })
+            .FirstAsync(ct);
+        var blocked = ClubPlan.BlockedReason(plan.MemberLimit, plan.PaidUntil, plan.Members, ClubPlan.Today(time));
+
+        await Send.OkAsync(new JoinRequestsResponse([.. requests], blocked), ct);
     }
 }

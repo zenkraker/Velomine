@@ -34,11 +34,19 @@ class ClubViewModel extends _$ClubViewModel {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(result),
         club: value?.club,
+        canStartClub: value?.canStartClub ?? false,
         loaded: true,
       ),
       Failed() => state.copyWith(load: state.load.finish(result)),
     };
   }
+
+  /// Takes the club a screen has just created, so every other screen shows it without asking again.
+  void adopt(MyClubResponse response) => state = state.copyWith(
+    club: response.club,
+    canStartClub: response.canStartClub,
+    loaded: true,
+  );
 
   /// Returns whether the code was accepted; the join screen shows the reason
   /// inline from [ClubState.action].

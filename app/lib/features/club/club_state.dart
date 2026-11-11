@@ -8,6 +8,7 @@ import '../../core/user_message.dart';
 class ClubState {
   const ClubState({
     this.club,
+    this.canStartClub = false,
     this.loaded = false,
     this.load = const CommandState.idle(),
     this.action = const CommandState.idle(),
@@ -15,6 +16,9 @@ class ClubState {
   });
 
   final ClubResponse? club;
+
+  /// True for a rider without a club on a server that lets riders start one.
+  final bool canStartClub;
 
   /// True once the server has answered: only then can the app tell "no club"
   /// from "not asked yet".
@@ -30,12 +34,14 @@ class ClubState {
 
   ClubState copyWith({
     ClubResponse? club,
+    bool? canStartClub,
     bool? loaded,
     CommandState<MyClubResponse?>? load,
     VoidCommand? action,
     List<UserMessage>? messages,
   }) => ClubState(
     club: club ?? this.club,
+    canStartClub: canStartClub ?? this.canStartClub,
     loaded: loaded ?? this.loaded,
     load: load ?? this.load,
     action: action ?? this.action,

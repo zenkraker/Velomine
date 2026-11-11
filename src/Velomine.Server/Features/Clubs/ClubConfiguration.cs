@@ -10,6 +10,7 @@ public sealed class ClubConfiguration : IEntityTypeConfiguration<Club>, IEntityT
     {
         club.ToTable("clubs", "clubs", t =>
         {
+            t.HasCheckConstraint("ck_clubs_member_limit", "member_limit IS NULL OR member_limit > 0");
             t.HasCheckConstraint("ck_clubs_join_code", "char_length(join_code) >= 6");
             t.HasCheckConstraint("ck_clubs_location", "(latitude IS NULL) = (longitude IS NULL)");
             t.HasCheckConstraint("ck_clubs_latitude", "latitude IS NULL OR (latitude BETWEEN -90 AND 90)");

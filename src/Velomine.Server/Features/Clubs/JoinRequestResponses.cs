@@ -21,7 +21,11 @@ public sealed record JoinRequestResponse(
     string? Note,
     DateTimeOffset CreatedAt);
 
-public sealed record JoinRequestsResponse(JoinRequestResponse[] Requests);
+/// <summary>
+/// <c>AdmissionBlocked</c> is "full" or "ended" when the club cannot take another member right now, so the screen can
+/// say why Approve is unavailable; null when it can.
+/// </summary>
+public sealed record JoinRequestsResponse(JoinRequestResponse[] Requests, string? AdmissionBlocked);
 
 public static class JoinRequestQueries
 {

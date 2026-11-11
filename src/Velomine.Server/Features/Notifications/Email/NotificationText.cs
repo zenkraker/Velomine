@@ -15,8 +15,16 @@ public static class NotificationText
         NotificationTypes.ClubJoinRequest => EmailStrings.Format("ClubJoinRequest", n.Subject),
         NotificationTypes.ClubJoinApproved => EmailStrings.Format("ClubJoinApproved", n.Subject),
         NotificationTypes.ClubJoinDeclined => EmailStrings.Format("ClubJoinDeclined", n.Subject),
+        NotificationTypes.ClubPlanEnding => EmailStrings.Format("ClubPlanEnding", PlanDate(n.Subject)),
+        NotificationTypes.ClubPlanEnded => EmailStrings.Format("ClubPlanEnded", PlanDate(n.Subject)),
         _ => n.Subject,
     };
+
+    /// <summary>The subject of a plan notification is an ISO day; the email writes it in the member's language.</summary>
+    private static string PlanDate(string subject) =>
+        DateOnly.TryParseExact(subject, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var day)
+            ? day.ToString("d MMMM yyyy", System.Globalization.CultureInfo.CurrentUICulture)
+            : subject;
 
     public static string Subject(Notification n) => "Velomine: " + Sentence(n);
 

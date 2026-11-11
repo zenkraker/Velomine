@@ -47,29 +47,25 @@ public sealed class JoinClub(VelomineDbContext db, TimeProvider time) : Endpoint
 
         // A code join answers any ask the rider had open elsewhere.
         var pending = await db.ClubJoinRequests.FirstOrDefaultAsync(r => r.UserId == userId, ct);
-        if (pending is not null) db.ClubJoinRequests.Remove(pending);
-
-        db.ClubMemberships.Add(new ClubMembership
+        var result = await ClubAdmission.AdmitAsync(db, time, club.Id, userId, () =>
         {
-            Id = Guid.NewGuid(),
-            ClubId = club.Id,
-            UserId = userId,
-            Role = ClubRoles.Member,
-            JoinedAt = time.GetUtcNow(),
-        });
-
-        try
+            if (pending is not null) db.ClubJoinRequests.Remove(pending);
+        }, ct);
+        if (result == AdmissionResult.ClubNotFound)
         {
-            await db.SaveChangesAsync(ct);
+            await Send.NotFoundAsync(ct);
+            return;
         }
-        catch (DbUpdateException)
+
+        if (result != AdmissionResult.Admitted)
         {
-            // The unique index on user_id is the guard when two requests race.
-            AddError("You are already in a club. One account belongs to one club.");
+            AddError(result == AdmissionResult.AlreadyInClub
+                ? "You are already in a club. One account belongs to one club."
+                : ClubAdmission.Refusal(result)!);
             await Send.ErrorsAsync(409, ct);
             return;
         }
 
-        await Send.OkAsync(new MyClubResponse(await ClubQueries.MyClubAsync(db, userId, ct)), ct);
+        await Send.OkAsync(new MyClubResponse(await ClubQueries.MyClubAsync(db, time, userId, ct), false), ct);
     }
 }

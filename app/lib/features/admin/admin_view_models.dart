@@ -158,6 +158,15 @@ class AdminClubsViewModel extends _$AdminClubsViewModel {
   Future<bool> setActive(AdminClubResponse club, bool active) =>
       _change(() => ref.read(adminDataProvider).setClubActive(club, active));
 
+  /// Sets the club's size band (25, 75, 150 or null for none) and the day its plan is paid until.
+  Future<bool> setPlan(
+    AdminClubResponse club,
+    int? memberLimit,
+    DateTime? paidUntil,
+  ) => _change(
+    () => ref.read(adminDataProvider).setClubPlan(club, memberLimit, paidUntil),
+  );
+
   /// Moves ownership to another member, so the old owner can leave.
   Future<bool> setOwner(AdminClubResponse club, String userId) =>
       _change(() => ref.read(adminDataProvider).setClubOwner(club, userId));
@@ -221,6 +230,10 @@ class AdminSettingsViewModel extends _$AdminSettingsViewModel {
             ? state.requireAdminApproval
             : (value.settings?.requireAdminApproval ??
                   state.requireAdminApproval),
+        clubCreationEnabled: state.filled
+            ? state.clubCreationEnabled
+            : (value.settings?.clubCreationEnabled ??
+                  state.clubCreationEnabled),
       ),
       Failed() => state.copyWith(load: state.load.finish(result)),
     };
@@ -236,6 +249,11 @@ class AdminSettingsViewModel extends _$AdminSettingsViewModel {
     save: const CommandState.idle(),
   );
 
+  void setClubCreationEnabled(bool value) => state = state.copyWith(
+    clubCreationEnabled: value,
+    save: const CommandState.idle(),
+  );
+
   Future<bool> saveSettings() async {
     if (state.save.running) return false;
     state = state.copyWith(save: state.save.start());
@@ -245,6 +263,7 @@ class AdminSettingsViewModel extends _$AdminSettingsViewModel {
           UpdateSettingsRequest(
             signUpEnabled: state.signUpEnabled,
             requireAdminApproval: state.requireAdminApproval,
+            clubCreationEnabled: Optional.present(state.clubCreationEnabled),
           ),
         );
     if (!ref.mounted) return false;

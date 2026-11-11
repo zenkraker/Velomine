@@ -1,5 +1,6 @@
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// The sentence for a notification. The server sends its type and subject; wording lives in the app.
@@ -15,8 +16,13 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'club_join_request' => l10n.notificationClubJoinRequest(n.subject),
       'club_join_approved' => l10n.notificationClubJoinApproved(n.subject),
       'club_join_declined' => l10n.notificationClubJoinDeclined(n.subject),
+      'club_plan_ending' => l10n.notificationClubPlanEnding(_day(n.subject)),
+      'club_plan_ended' => l10n.notificationClubPlanEnded(_day(n.subject)),
       _ => n.subject,
     };
+
+/// A plan notice's subject is the last paid day as yyyy-MM-dd; the sentence names it in the language on screen.
+String _day(String subject) => dateOnly(DateTime.tryParse(subject));
 
 /// Where tapping a notification goes, or null when there is nowhere to go.
 String? notificationTarget(NotificationResponse n) => switch (n.type) {
@@ -27,6 +33,8 @@ String? notificationTarget(NotificationResponse n) => switch (n.type) {
   'signup_waiting' => '/admin',
   'club_join_request' ||
   'club_join_approved' ||
-  'club_join_declined' => '/club',
+  'club_join_declined' ||
+  'club_plan_ending' ||
+  'club_plan_ended' => '/club',
   _ => null,
 };

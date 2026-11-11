@@ -157,6 +157,7 @@ void main() {
     expect(server.adminSettings, {
       'signUpEnabled': true,
       'requireAdminApproval': false,
+      'clubCreationEnabled': false,
     });
     expect(find.byKey(const Key('settings-saved')), findsOneWidget);
   });

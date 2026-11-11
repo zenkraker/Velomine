@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
@@ -38,6 +39,21 @@ class ClubsTab extends ConsumerWidget {
           .read(adminClubsViewModelProvider.notifier)
           .setOwner(club, userId);
     }
+  }
+
+  Future<void> _editPlan(
+    BuildContext context,
+    WidgetRef ref,
+    AdminClubResponse club,
+  ) async {
+    final plan = await showDialog<_Plan>(
+      context: context,
+      builder: (_) => _PlanDialog(club: club),
+    );
+    if (plan == null) return;
+    await ref
+        .read(adminClubsViewModelProvider.notifier)
+        .setPlan(club, plan.memberLimit, plan.paidUntil);
   }
 
   @override
@@ -99,17 +115,30 @@ class ClubsTab extends ConsumerWidget {
                       children: [
                         ListTile(
                           title: Text(club.name),
-                          trailing:
-                              club.members.any((m) => m.userId != club.ownerId)
-                              ? IconButton(
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                key: Key('edit-plan-${club.id}'),
+                                tooltip: l10n.adminClubEditPlan,
+                                icon: const Icon(Icons.event_available),
+                                onPressed: s.action.running
+                                    ? null
+                                    : () => _editPlan(context, ref, club),
+                              ),
+                              if (club.members.any(
+                                (m) => m.userId != club.ownerId,
+                              ))
+                                IconButton(
                                   key: Key('change-owner-${club.id}'),
                                   tooltip: l10n.changeOwner,
                                   icon: const Icon(Icons.person_pin_outlined),
                                   onPressed: s.action.running
                                       ? null
                                       : () => _changeOwner(context, ref, club),
-                                )
-                              : null,
+                                ),
+                            ],
+                          ),
                         ),
                         // The facts sit under the tile with the card's whole width: beside the
                         // trailing switch an email had a third of it and broke mid-word.
@@ -125,9 +154,23 @@ class ClubsTab extends ConsumerWidget {
                             spacing: AppSpacing.xs,
                             children: [
                               Text(
-                                l10n.clubMemberCount(club.memberCount),
+                                club.memberLimit == null
+                                    ? l10n.clubMemberCount(club.memberCount)
+                                    : l10n.clubPlanMembers(
+                                        club.memberCount,
+                                        club.memberLimit!,
+                                      ),
+                                key: Key('club-members-${club.id}'),
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
+                              if (club.paidUntil != null)
+                                Text(
+                                  l10n.clubPlanPaidUntil(
+                                    dateOnly(club.paidUntil),
+                                  ),
+                                  key: Key('club-paid-until-${club.id}'),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
                               if (club.ownerName != null)
                                 Text(
                                   club.ownerName!,
@@ -308,6 +351,114 @@ class _OwnerDialogState extends State<_OwnerDialog> {
           onPressed: _chosen == null
               ? null
               : () => Navigator.pop(context, _chosen),
+          child: Text(l10n.save),
+        ),
+      ],
+    );
+  }
+}
+
+/// The two values an operator records for a club.
+typedef _Plan = ({int? memberLimit, DateTime? paidUntil});
+
+class _PlanDialog extends StatefulWidget {
+  const _PlanDialog({required this.club});
+
+  final AdminClubResponse club;
+
+  @override
+  State<_PlanDialog> createState() => _PlanDialogState();
+}
+
+class _PlanDialogState extends State<_PlanDialog> {
+  static const _bands = [25, 75, 150];
+
+  late int? _limit = widget.club.memberLimit;
+  late DateTime? _until = widget.club.paidUntil;
+
+  Future<void> _chooseDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _until ?? now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 10),
+    );
+    if (picked != null) {
+      // A day, not an instant: keep it as the calendar date that was picked.
+      setState(
+        () => _until = DateTime.utc(picked.year, picked.month, picked.day),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.adminClubEditPlan),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.md,
+          children: [
+            DropdownButtonFormField<int?>(
+              key: const Key('plan-limit'),
+              initialValue: _limit,
+              decoration: InputDecoration(labelText: l10n.adminClubLimit),
+              items: [
+                for (final band in _bands)
+                  DropdownMenuItem<int?>(
+                    value: band,
+                    child: Text(l10n.adminClubLimitOption(band)),
+                  ),
+                DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text(l10n.adminClubLimitNone),
+                ),
+              ],
+              onChanged: (value) => setState(() => _limit = value),
+            ),
+            Text(
+              l10n.adminClubPaidUntil,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            Text(
+              _until == null ? l10n.adminClubNoDate : dateOnly(_until),
+              key: const Key('plan-date'),
+            ),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                OutlinedButton.icon(
+                  key: const Key('plan-choose-date'),
+                  onPressed: _chooseDate,
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(l10n.adminClubChooseDate),
+                ),
+                TextButton(
+                  key: const Key('plan-clear-date'),
+                  onPressed: _until == null
+                      ? null
+                      : () => setState(() => _until = null),
+                  child: Text(l10n.adminClubNoDate),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('save-plan'),
+          onPressed: () =>
+              Navigator.pop(context, (memberLimit: _limit, paidUntil: _until)),
           child: Text(l10n.save),
         ),
       ],

@@ -3043,5 +3043,103 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get actionStartClub => 'start the club';
+
+  @override
+  String get actionSetClubPlan => 'save the club\'s plan';
+
+  @override
+  String get startClubButton => 'Start a club';
+
+  @override
+  String get startClubTitle => 'Start a club';
+
+  @override
+  String get startClubIntro =>
+      'Start a club for the people you ride with. You will be its owner and can invite people with a code. You get a month to try it.';
+
+  @override
+  String get startClubName => 'Club name';
+
+  @override
+  String get startClubNameRequired => 'Give the club a name.';
+
+  @override
+  String get startClubAction => 'Start the club';
+
+  @override
+  String get clubPlanTitle => 'Plan';
+
+  @override
+  String clubPlanMembers(int count, int limit) {
+    return '$count of $limit members';
+  }
+
+  @override
+  String clubPlanPaidUntil(String date) {
+    return 'Paid until $date';
+  }
+
+  @override
+  String get clubPlanFullNotice =>
+      'The club is full. To take more members, get in touch to move up to a larger size.';
+
+  @override
+  String clubPlanEndedNotice(String date) {
+    return 'The club\'s plan ended on $date. Everything keeps working, but new members cannot join until it is renewed. Get in touch to renew it.';
+  }
+
+  @override
+  String get joinRequestsBlockedFull =>
+      'The club is full, so requests cannot be approved yet. Get in touch to move up to a larger size.';
+
+  @override
+  String get joinRequestsBlockedEnded =>
+      'The club\'s plan has ended, so requests cannot be approved until it is renewed.';
+
+  @override
+  String notificationClubPlanEnding(String date) {
+    return 'Your club\'s plan ends on $date. Get in touch to renew it.';
+  }
+
+  @override
+  String notificationClubPlanEnded(String date) {
+    return 'Your club\'s plan ended after $date. Members keep everything, but new members cannot join until it is renewed.';
+  }
+
+  @override
+  String get adminClubCreation => 'Riders can start clubs';
+
+  @override
+  String get adminClubCreationHelp =>
+      'A signed-in rider without a club can start one. It begins with room for 25 members and a month to try it.';
+
+  @override
+  String get adminClubEditPlan => 'Edit plan';
+
+  @override
+  String get adminClubLimit => 'Room for';
+
+  @override
+  String get adminClubLimitNone => 'More than 150 members (no limit)';
+
+  @override
+  String adminClubLimitOption(int count) {
+    return 'Up to $count members';
+  }
+
+  @override
+  String get adminClubPaidUntil => 'Paid until';
+
+  @override
+  String get adminClubNoDate => 'No end date';
+
+  @override
+  String get adminClubChooseDate => 'Choose a date';
+
+  @override
+  String get adminClubPlanSaved => 'Plan saved.';
+
+  @override
   String get loading => 'Loading';
 }

@@ -211,6 +211,8 @@ class ApiClient {
           return CheckInsResponse.fromJson(value);
         case 'ClubMemberResponse':
           return ClubMemberResponse.fromJson(value);
+        case 'ClubPlanResponse':
+          return ClubPlanResponse.fromJson(value);
         case 'ClubResponse':
           return ClubResponse.fromJson(value);
         case 'CoachAthleteResponse':
@@ -363,6 +365,8 @@ class ApiClient {
           return SetClubMemberRoleRequest.fromJson(value);
         case 'SetClubOwnerRequest':
           return SetClubOwnerRequest.fromJson(value);
+        case 'SetClubPlanRequest':
+          return SetClubPlanRequest.fromJson(value);
         case 'SetFtpRequest':
           return SetFtpRequest.fromJson(value);
         case 'SetMyLanguageRequest':
@@ -389,6 +393,8 @@ class ApiClient {
           return SsoInfoResponse.fromJson(value);
         case 'SsoStatus':
           return SsoStatus.fromJson(value);
+        case 'StartClubRequest':
+          return StartClubRequest.fromJson(value);
         case 'StartRideImportResponse':
           return StartRideImportResponse.fromJson(value);
         case 'TelemetryResponse':
