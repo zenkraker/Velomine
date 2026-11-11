@@ -48,4 +48,4 @@ final class BikesDataProvider
   }
 }
 
-String _$bikesDataHash() => r'c3cca6b630a010cd5a67415e46be6d214199a590';
+String _$bikesDataHash() => r'3907ccf757c9fdaa1abab9927dcdae0b59095c07';

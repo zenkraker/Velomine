@@ -47,7 +47,6 @@ RideUploadQueue? uploadQueue(Ref ref) {
     telemetry: ref.watch(telemetryRuntimeProvider),
     serverUrl: session.serverUrl,
     pollInterval: ref.watch(ridePollIntervalProvider),
-    onUnauthorized: session.sessionExpired,
     // A ride that just arrived belongs in the list, with its filters, without a pull.
     onRideUploaded: (_) =>
         unawaited(ref.read(ridesViewModelProvider.notifier).refresh()),

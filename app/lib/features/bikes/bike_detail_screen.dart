@@ -14,6 +14,7 @@ import 'bikes_state.dart';
 import 'bikes_view_models.dart';
 import 'component_names.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/stat_tile.dart';
 
 DateTime _today() {
   final now = DateTime.now();
@@ -272,9 +273,9 @@ class BikeDetailScreen extends ConsumerWidget {
         spacing: AppSpacing.xl,
         runSpacing: 8,
         children: [
-          _Stat(l10n.statDistance, km(bike.distanceM)),
-          _Stat(l10n.statRides, '${bike.rideCount}'),
-          _Stat(l10n.statMovingTime, duration(bike.movingS)),
+          StatTile(label: l10n.statDistance, value: km(bike.distanceM)),
+          StatTile(label: l10n.statRides, value: '${bike.rideCount}'),
+          StatTile(label: l10n.statMovingTime, value: duration(bike.movingS)),
         ],
       ),
       Wrap(
@@ -362,22 +363,6 @@ class BikeDetailScreen extends ConsumerWidget {
       ],
     ];
   }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat(this.label, this.value);
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: Theme.of(context).textTheme.labelSmall),
-      Text(value, style: Theme.of(context).textTheme.titleMedium),
-    ],
-  );
 }
 
 Color wearColor(BuildContext context, String status) => switch (status) {

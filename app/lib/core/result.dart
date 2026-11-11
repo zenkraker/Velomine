@@ -47,19 +47,10 @@ final class Failed<T> extends Result<T> {
 /// This is the only place an API exception becomes a [Failure]; ViewModels and
 /// views never catch one.
 extension GuardFuture<T> on Future<T> {
-  Future<Result<T>> guard(
-    FailureAction doing, {
-    void Function()? onUnauthorized,
-  }) async {
+  Future<Result<T>> guard(FailureAction doing) async {
     try {
       return Ok(await this);
     } on ApiException catch (e) {
-      if (e.code == 401) {
-        onUnauthorized?.call();
-        return Failed(
-          Failure(FailureKind.sessionEnded, code: 401, action: doing),
-        );
-      }
       return Failed(
         Failure(
           failureKindFor(e.code),

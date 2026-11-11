@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Rides;
@@ -87,6 +88,24 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         await UploadAsync(me.Client, original);
         await UploadAsync(other.Client, Fit(new FitSession(Start.AddHours(6), 120)), "grace-ride.fit");
         await me.Client.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada", 265, 61.5, 1995, "Europe/Rome", "sunday"), Ct);
+        await me.Client.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest
+        {
+            HidePower = true,
+            HideHeartRate = false,
+            HideCadence = false,
+            HideSpeed = false,
+            HideElevation = false,
+            HideTemperature = false,
+            TrimStartM = 500,
+            TrimEndM = 0,
+        }, Ct);
+        await me.Client.PostAsJsonAsync("/api/v1/privacy/zones", new CreatePrivacyZoneRequest
+        {
+            Name = "Home",
+            Latitude = 45.4,
+            Longitude = 9.1,
+            RadiusM = 500,
+        }, Ct);
         var bike = await (await me.Client.PostAsJsonAsync("/api/v1/bikes", new CreateBikeRequest { Name = "Road", Kind = "road", WheelCircumferenceMm = 2105, InitialDistanceM = 1000 }, Ct)).Content.ReadFromJsonAsync<BikeDetailResponse>(Ct);
         await me.Client.PostAsJsonAsync($"/api/v1/bikes/{bike!.Bike.Id}/components", new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 10, 1), ExpectedDistanceM = 4_000_000 }, Ct);
         await me.Client.PostAsJsonAsync("/api/v1/analytics/goals", new CreateGoalRequest { Period = "week", Metric = "distance", Target = 100_000 }, Ct);
@@ -111,6 +130,12 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         Assert.Equal("chain", bikes[0].GetProperty("components")[0].GetProperty("type").GetString());
         Assert.Equal("distance", JsonDocument.Parse(Text("goals.json")).RootElement[0].GetProperty("metric").GetString());
         Assert.True(JsonDocument.Parse(Text("notifications.json")).RootElement.GetArrayLength() >= 1);
+
+        var privacy = JsonDocument.Parse(Text("privacy.json")).RootElement;
+        Assert.True(privacy.GetProperty("hidePower").GetBoolean());
+        Assert.Equal(500, privacy.GetProperty("trimStartM").GetInt32());
+        Assert.Equal("Home", privacy.GetProperty("zones")[0].GetProperty("name").GetString());
+        Assert.Equal(0, JsonDocument.Parse(Text("sharing.json")).RootElement.GetArrayLength());
 
         // One ride, and its original file is in the ZIP byte for byte.
         var rides = JsonDocument.Parse(Text("rides.json")).RootElement;

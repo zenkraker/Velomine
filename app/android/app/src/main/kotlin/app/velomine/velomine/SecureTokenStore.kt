@@ -24,6 +24,15 @@ import javax.crypto.spec.GCMParameterSpec
  */
 class SecureTokenStore(context: Context) {
     private val file = File(context.noBackupFilesDir, "velomine-token")
+    private val tokenLock = TokenLock(File(context.noBackupFilesDir, "velomine-token.lock"))
+
+    /** Waits for the other writer (the app or the upload worker) to finish rotating the token. Worker threads only. */
+    fun lock(): Boolean = tokenLock.acquire()
+
+    /** One attempt, for the method channel: it must not block the main thread. */
+    fun tryLock(): Boolean = tokenLock.tryAcquire()
+
+    fun unlock() = tokenLock.release()
 
     @Synchronized
     fun read(): String? {

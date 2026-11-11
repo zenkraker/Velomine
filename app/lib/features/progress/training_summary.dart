@@ -8,6 +8,7 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/stat_tile.dart';
 
 /// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
 class TrainingSummary extends StatelessWidget {
@@ -58,22 +59,22 @@ class TrainingSummary extends StatelessWidget {
               spacing: AppSpacing.xl,
               runSpacing: 8,
               children: [
-                _Value(
+                StatTile(
                   label: 'TSS',
                   value: training.tss.round().toString(),
                   valueKey: const Key('training-tss'),
                 ),
-                _Value(
+                StatTile(
                   label: 'TRIMP',
                   value: training.trimp.round().toString(),
                   valueKey: const Key('training-trimp'),
                 ),
-                _Value(
+                StatTile(
                   label: l10n.statRides,
                   value: training.rides.toString(),
                   valueKey: const Key('training-rides'),
                 ),
-                _Value(
+                StatTile(
                   label: l10n.statDistance,
                   value: km(training.distanceM),
                   valueKey: const Key('training-distance'),
@@ -163,29 +164,6 @@ class TrainingSummary extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Value extends StatelessWidget {
-  const _Value({required this.label, required this.value, this.valueKey});
-
-  final String label;
-  final String value;
-  final Key? valueKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.labelMedium),
-        Text(
-          value,
-          key: valueKey,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      ],
     );
   }
 }

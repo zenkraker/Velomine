@@ -103,6 +103,7 @@ public sealed class EnableTwoFactorValidator : Validator<EnableTwoFactorRequest>
 /// </summary>
 public sealed class EnableTwoFactor(
     UserManager<User> users,
+    SignInManager<User> signIn,
     UserSessions sessions) : Endpoint<EnableTwoFactorRequest, RecoveryCodesResponse>
 {
     public override void Configure()
@@ -115,6 +116,7 @@ public sealed class EnableTwoFactor(
                 .ProducesProblem(400)
                 .Produces(401)
                 .ProducesProblem(409)
+                .ProducesProblem(423)
                 .ProducesProblem(429),
             clearDefaults: true);
     }
@@ -127,11 +129,16 @@ public sealed class EnableTwoFactor(
             return;
         }
 
-        if (!await users.HasPasswordAsync(user) || !await users.CheckPasswordAsync(user, req.Password))
+        switch (await PasswordCheck.RunAsync(signIn, user, req.Password))
         {
-            AddError("The password is not right.", "wrong_password");
-            await Send.ErrorsAsync(400, ct);
-            return;
+            case PasswordCheck.Result.LockedOut:
+                AddError("Too many wrong passwords. Try again later.", "locked_out");
+                await Send.ErrorsAsync(423, ct);
+                return;
+            case PasswordCheck.Result.Wrong:
+                AddError("The password is not right.", "wrong_password");
+                await Send.ErrorsAsync(400, ct);
+                return;
         }
 
         if (!await users.VerifyTwoFactorTokenAsync(user, users.Options.Tokens.AuthenticatorTokenProvider, req.Code))
@@ -158,12 +165,13 @@ public sealed class PasswordConfirmationValidator : Validator<PasswordConfirmati
 /// <summary>Turns the second factor off. The password is the confirmation; every other device is signed out.</summary>
 public sealed class DisableTwoFactor(
     UserManager<User> users,
+    SignInManager<User> signIn,
     UserSessions sessions) : Endpoint<PasswordConfirmation>
 {
     public override void Configure()
     {
         Post("accounts/me/two-factor/disable");
-        Description(d => d.Accepts<PasswordConfirmation>("application/json").Produces(204).ProducesProblem(400).Produces(401), clearDefaults: true);
+        Description(d => d.Accepts<PasswordConfirmation>("application/json").Produces(204).ProducesProblem(400).Produces(401).Produces(423), clearDefaults: true);
     }
 
     public override async Task HandleAsync(PasswordConfirmation req, CancellationToken ct)
@@ -174,11 +182,16 @@ public sealed class DisableTwoFactor(
             return;
         }
 
-        if (!await users.HasPasswordAsync(user) || !await users.CheckPasswordAsync(user, req.Password))
+        switch (await PasswordCheck.RunAsync(signIn, user, req.Password))
         {
-            AddError("The password is not right.", "wrong_password");
-            await Send.ErrorsAsync(400, ct);
-            return;
+            case PasswordCheck.Result.LockedOut:
+                AddError("Too many wrong passwords. Try again later.", "locked_out");
+                await Send.ErrorsAsync(423, ct);
+                return;
+            case PasswordCheck.Result.Wrong:
+                AddError("The password is not right.", "wrong_password");
+                await Send.ErrorsAsync(400, ct);
+                return;
         }
 
         await users.SetTwoFactorEnabledAsync(user, false);
@@ -190,7 +203,8 @@ public sealed class DisableTwoFactor(
 
 /// <summary>Replaces the recovery codes after the password is confirmed. The old ones stop working immediately.</summary>
 public sealed class RegenerateRecoveryCodes(
-    UserManager<User> users) : Endpoint<PasswordConfirmation, RecoveryCodesResponse>
+    UserManager<User> users,
+    SignInManager<User> signIn) : Endpoint<PasswordConfirmation, RecoveryCodesResponse>
 {
     public override void Configure()
     {
@@ -200,7 +214,8 @@ public sealed class RegenerateRecoveryCodes(
                 .Produces<RecoveryCodesResponse>(200, "application/json")
                 .ProducesProblem(400)
                 .Produces(401)
-                .ProducesProblem(409),
+                .ProducesProblem(409)
+                .ProducesProblem(423),
             clearDefaults: true);
     }
 
@@ -212,11 +227,16 @@ public sealed class RegenerateRecoveryCodes(
             return;
         }
 
-        if (!await users.HasPasswordAsync(user) || !await users.CheckPasswordAsync(user, req.Password))
+        switch (await PasswordCheck.RunAsync(signIn, user, req.Password))
         {
-            AddError("The password is not right.", "wrong_password");
-            await Send.ErrorsAsync(400, ct);
-            return;
+            case PasswordCheck.Result.LockedOut:
+                AddError("Too many wrong passwords. Try again later.", "locked_out");
+                await Send.ErrorsAsync(423, ct);
+                return;
+            case PasswordCheck.Result.Wrong:
+                AddError("The password is not right.", "wrong_password");
+                await Send.ErrorsAsync(400, ct);
+                return;
         }
 
         if (!user.TwoFactorEnabled)

@@ -57,6 +57,13 @@ class MainActivity : FlutterActivity() {
                     store.clear()
                     result.success(null)
                 }
+                // The app refreshes the same single-use token the upload worker does; one waits for the other.
+                // One non-blocking attempt per call: the app retries, so the main thread never sleeps.
+                "lockRefresh" -> result.success(store.tryLock())
+                "unlockRefresh" -> {
+                    store.unlock()
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }

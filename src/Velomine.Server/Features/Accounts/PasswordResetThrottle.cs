@@ -13,7 +13,7 @@ public sealed class PasswordResetThrottle(IMemoryCache cache, TimeProvider clock
 
     private sealed record Counter(DateTimeOffset Start, int Count);
 
-    public bool Allowed(string action, HttpContext context, string? email = null)
+    public bool Allowed(string action, HttpContext context)
     {
         // The address is deliberately not part of the key: one entry per address would let an attacker grow the cache
         // without bound by trying a new email each time. The whole address gets the same small budget.

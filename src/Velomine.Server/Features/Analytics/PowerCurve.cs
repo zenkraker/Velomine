@@ -82,10 +82,15 @@ public static class FitnessQueries
         var to = clock.Today;
         var from = to.AddDays(-(days - 1));
 
+        // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
+        var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var toUtc = new DateTimeOffset(to.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+
         var bestRows = await (
                 from b in db.RidePowerBests.AsNoTracking()
                 join r in db.Rides.AsNoTracking() on b.RideId equals r.Id
                 where r.UserId == userId && r.Status == RideStatus.Ready
+                    && r.StartTime >= fromUtc && r.StartTime < toUtc
                 select new { b.RideId, b.DurationS, b.Watts, r.StartTime, r.UtcOffsetMinutes })
             .ToListAsync(ct);
 

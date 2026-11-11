@@ -10,12 +10,13 @@ namespace Velomine.Server.Features.Accounts;
 /// </summary>
 public sealed record DeleteMyAccountRequest(string? Password, string? ConfirmEmail);
 
-public sealed class DeleteMyAccount(UserManager<User> users, AccountDeletion deletion) : Endpoint<DeleteMyAccountRequest>
+public sealed class DeleteMyAccount(UserManager<User> users, SignInManager<User> signIn, AccountDeletion deletion)
+    : Endpoint<DeleteMyAccountRequest>
 {
     public override void Configure()
     {
         Post("accounts/me/delete");
-        Description(d => d.Accepts<DeleteMyAccountRequest>("application/json").Produces(204).ProducesProblem(403).Produces(401).ProducesProblem(409), clearDefaults: true);
+        Description(d => d.Accepts<DeleteMyAccountRequest>("application/json").Produces(204).ProducesProblem(403).Produces(401).ProducesProblem(409).Produces(423), clearDefaults: true);
     }
 
     public override async Task HandleAsync(DeleteMyAccountRequest req, CancellationToken ct)
@@ -26,9 +27,23 @@ public sealed class DeleteMyAccount(UserManager<User> users, AccountDeletion del
             return;
         }
 
-        var confirmed = await users.HasPasswordAsync(user)
-            ? !string.IsNullOrEmpty(req.Password) && await users.CheckPasswordAsync(user, req.Password)
-            : string.Equals(req.ConfirmEmail?.Trim(), user.Email, StringComparison.OrdinalIgnoreCase);
+        var confirmed = false;
+        if (await users.HasPasswordAsync(user))
+        {
+            switch (await PasswordCheck.RunAsync(signIn, user, req.Password))
+            {
+                case PasswordCheck.Result.LockedOut:
+                    await Send.ResponseAsync(new { error = "locked_out" }, 423, ct);
+                    return;
+                case PasswordCheck.Result.Ok:
+                    confirmed = true;
+                    break;
+            }
+        }
+        else
+        {
+            confirmed = string.Equals(req.ConfirmEmail?.Trim(), user.Email, StringComparison.OrdinalIgnoreCase);
+        }
         if (!confirmed)
         {
             AddError("That does not match. Nothing was deleted.");

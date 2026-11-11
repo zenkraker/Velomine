@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using FastEndpoints;
 using FastEndpoints.OpenApi;
 using Microsoft.AspNetCore.DataProtection;
@@ -7,7 +9,6 @@ using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Threading.RateLimiting;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
@@ -89,6 +90,26 @@ builder.Services.AddRateLimiter(options =>
         {
             PermitLimit = permitLimit,
             Window = TimeSpan.FromMinutes(1),
+        }));
+
+    // Uploads are signed in, so the key is the member: a whole club behind one address must not share a budget.
+    var uploadsPerHour = builder.Configuration.GetValue("Velomine:RateLimits:UploadsPerHour", 60);
+    options.AddPolicy("uploads", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = uploadsPerHour,
+            Window = TimeSpan.FromHours(1),
+        }));
+
+    // An archive can be a gigabyte, so a member gets a handful a day.
+    var importsPerDay = builder.Configuration.GetValue("Velomine:RateLimits:ImportsPerDay", 10);
+    options.AddPolicy("imports", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = importsPerDay,
+            Window = TimeSpan.FromDays(1),
         }));
 });
 

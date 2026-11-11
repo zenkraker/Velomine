@@ -239,22 +239,19 @@ void main() {
     expect(uploader.keys, ['r1']);
   });
 
-  test('UploadQueue_ShouldAskToSignInAgain_WhenSessionExpired', () async {
-    var signedOut = false;
+  test('UploadQueue_ShouldMarkTheRideFailed_WhenTheSessionEnded', () async {
     queue = RideUploadQueue(
       recorder: recorder,
       uploader: uploader..unauthorized = true,
       store: store,
       accountId: 'id-rider',
       pollInterval: Duration.zero,
-      onUnauthorized: () => signedOut = true,
       telemetry: FakeTelemetryRuntime(),
     );
     await queue.init();
     await queue.enqueue('r1');
     await settle(queue, 'r1');
 
-    expect(signedOut, isTrue);
     expect(queue.stateFor('r1')?.error, 'sign_in');
   });
 

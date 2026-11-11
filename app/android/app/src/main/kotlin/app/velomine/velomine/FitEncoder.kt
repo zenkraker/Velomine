@@ -8,8 +8,8 @@ import kotlin.math.roundToLong
 /**
  * Writes the small FIT subset a phone ride needs: file id, timer events, records, one session and one activity.
  *
- * Deliberately no speed or distance fields: the server works speed out from the positions and records the source as
- * GPS. Power, cadence and heart rate are added by later recorder slices.
+ * No speed or distance fields: the server works both out from the positions, so the ride's speed source is recorded
+ * as GPS, which is what it is. Power and cadence come with later recorder slices.
  */
 object FitEncoder {
     private const val FIT_EPOCH_OFFSET_S = 631_065_600L
@@ -68,7 +68,6 @@ object FitEncoder {
             Field(0, 4, SINT32), // position lat
             Field(1, 4, SINT32), // position long
             Field(2, 2, UINT16), // altitude, 5 m offset 500
-            Field(6, 2, UINT16), // speed, 1000 scale
             Field(3, 1, UINT8), // heart rate
         ),
     )
@@ -129,7 +128,6 @@ object FitEncoder {
             out.i32(semicircles(sample.latitude))
             out.i32(semicircles(sample.longitude))
             out.u16(altitude(sample.altitude))
-            out.u16(speed(sample.speed))
             out.writeByte(sample.heartRate?.coerceIn(1, INVALID_U8 - 1) ?: INVALID_U8)
         }
 
@@ -222,11 +220,6 @@ object FitEncoder {
     private fun altitude(metres: Double?): Int {
         if (metres == null || metres.isNaN()) return INVALID_U16
         return ((metres + 500.0) * 5.0).roundToInt().coerceIn(0, INVALID_U16 - 1)
-    }
-
-    private fun speed(metresPerSecond: Double?): Int {
-        if (metresPerSecond == null || metresPerSecond.isNaN() || metresPerSecond < 0) return INVALID_U16
-        return (metresPerSecond * 1000.0).roundToInt().coerceIn(0, INVALID_U16 - 1)
     }
 
     private fun DataOutputStream.u16(value: Int) {

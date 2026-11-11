@@ -7,6 +7,10 @@ abstract interface class TokenStore {
   Future<void> writeRefreshToken(String token);
 
   Future<void> clear();
+
+  /// Runs [body] while no other writer rotates the token. The background upload worker takes the same lock, so two
+  /// refreshes of the single-use token never overlap. A store with no shared writer just runs [body].
+  Future<T> locked<T>(Future<T> Function() body);
 }
 
 /// The web build (and tests that do not exercise storage) keep nothing.
@@ -21,4 +25,7 @@ class NoopTokenStore implements TokenStore {
 
   @override
   Future<void> clear() async {}
+
+  @override
+  Future<T> locked<T>(Future<T> Function() body) => body();
 }

@@ -8,11 +8,21 @@ import 'telemetry.dart';
 ///
 /// The URL is never sent: only the first route segment after `/api/v1` and the
 /// HTTP method, so ride ids and share tokens cannot leak into a metric.
+///
+/// Every request goes through here, so this is the one place that turns a 401
+/// into "the session ended", whatever the call was.
 class TelemetryHttpClient extends http.BaseClient {
-  TelemetryHttpClient({required this.inner, required this.telemetry});
+  TelemetryHttpClient({
+    required this.inner,
+    required this.telemetry,
+    this.onUnauthorized,
+  });
 
   final http.Client inner;
   final TelemetryRuntime telemetry;
+
+  /// Called when the server answers 401. The session sets it once it exists; it ignores the call unless signed in.
+  void Function()? onUnauthorized;
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
@@ -21,6 +31,7 @@ class TelemetryHttpClient extends http.BaseClient {
     try {
       final response = await inner.send(request);
       started.stop();
+      if (response.statusCode == 401) onUnauthorized?.call();
       _record(
         route: route,
         method: request.method,

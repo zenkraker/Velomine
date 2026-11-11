@@ -39,6 +39,20 @@ void main() {
     expect(store.token, 'r-rider@example.com');
   });
 
+  test('SessionAuth_ShouldRotateTheTokenInsideTheLock_WhenRestoring', () async {
+    final guarded = LockedMemoryTokenStore()..token = 'r-rider@example.com';
+    final session = SessionAuth(
+      baseUrl: 'http://server',
+      store: guarded,
+      useCookies: false,
+      refreshClient: server.client,
+    );
+
+    await session.restore();
+
+    expect(guarded.wroteWhileHeld, isTrue);
+  });
+
   test('SessionAuth_ShouldStoreTheRefreshToken_WhenPersisting', () async {
     final session = auth();
 
@@ -130,4 +144,26 @@ void main() {
       expect(server.refreshCount, 1);
     },
   );
+}
+
+/// Records whether the rotation happened inside [locked], which is what keeps the upload worker out.
+class LockedMemoryTokenStore extends MemoryTokenStore {
+  bool _held = false;
+  bool wroteWhileHeld = false;
+
+  @override
+  Future<T> locked<T>(Future<T> Function() body) async {
+    _held = true;
+    try {
+      return await body();
+    } finally {
+      _held = false;
+    }
+  }
+
+  @override
+  Future<void> writeRefreshToken(String value) async {
+    wroteWhileHeld = _held;
+    await super.writeRefreshToken(value);
+  }
 }

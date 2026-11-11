@@ -43,10 +43,11 @@ public sealed class UploadRide(VelomineDbContext db, RideFileStore files, Ingest
     public override void Configure()
     {
         Post("rides/uploads");
+        Options(b => b.RequireRateLimiting("uploads"));
         // The generated Dart client sends a text field named "file" next to the file part. Automatic form binding
         // would refuse that, so the file is read from Files instead.
         AllowFileUploads(dontAutoBindFormData: true);
-        Description(d => d.Accepts<UploadRideRequest>("multipart/form-data").Produces<UploadRideResponse>(202).ProducesProblem(400).Produces(401).ProducesProblem(409).ProducesProblem(413), clearDefaults: true);
+        Description(d => d.Accepts<UploadRideRequest>("multipart/form-data").Produces<UploadRideResponse>(202).ProducesProblem(400).Produces(401).ProducesProblem(409).ProducesProblem(413).ProducesProblem(429), clearDefaults: true);
     }
 
     /// <summary>One ride file, not an archive: anything bigger than this is refused.</summary>

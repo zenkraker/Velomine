@@ -41,8 +41,6 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<CatalogueMeta> CatalogueMeta => Set<CatalogueMeta>();
 
-    public DbSet<CatalogueSettings> CatalogueSettings => Set<CatalogueSettings>();
-
     public DbSet<PartContribution> PartContributions => Set<PartContribution>();
 
     public DbSet<CatalogueConflict> CatalogueConflicts => Set<CatalogueConflict>();

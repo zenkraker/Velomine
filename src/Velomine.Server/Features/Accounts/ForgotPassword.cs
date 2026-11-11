@@ -40,7 +40,7 @@ public sealed class ForgotPassword(
 
     public override async Task HandleAsync(ForgotPasswordRequest req, CancellationToken ct)
     {
-        if (!throttle.Allowed("forgot", HttpContext, req.Email))
+        if (!throttle.Allowed("forgot", HttpContext))
         {
             await Send.ResponseAsync(new { error = "too_many_requests" }, 429, ct);
             return;

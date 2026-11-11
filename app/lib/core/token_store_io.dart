@@ -34,6 +34,33 @@ class NativeTokenStore implements TokenStore {
       // Nothing more we can do; a missing token simply means signed out.
     }
   }
+
+  @override
+  Future<T> locked<T>(Future<T> Function() body) async {
+    // The native side only tries once, so the waiting happens here as short pauses instead of a frozen UI.
+    var held = false;
+    for (var attempt = 0; attempt < 50 && !held; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      try {
+        held = await _channel.invokeMethod<bool>('lockRefresh') ?? false;
+      } on Object {
+        break; // storage unavailable: carry on unlocked rather than block the sign-in
+      }
+    }
+    try {
+      return await body();
+    } finally {
+      if (held) {
+        try {
+          await _channel.invokeMethod<void>('unlockRefresh');
+        } on Object {
+          // The lock is stale after a minute and the next writer clears it.
+        }
+      }
+    }
+  }
 }
 
 TokenStore createTokenStore() => NativeTokenStore();

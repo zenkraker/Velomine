@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Velomine.Server.Features.Bikes;
 
 public sealed class BikeConfiguration : IEntityTypeConfiguration<Bike>, IEntityTypeConfiguration<BikeComponent>, IEntityTypeConfiguration<Part>,
-    IEntityTypeConfiguration<CatalogueMeta>, IEntityTypeConfiguration<CatalogueSettings>, IEntityTypeConfiguration<PartContribution>,
+    IEntityTypeConfiguration<CatalogueMeta>, IEntityTypeConfiguration<PartContribution>,
     IEntityTypeConfiguration<CatalogueConflict>, IEntityTypeConfiguration<BikeTemplate>, IEntityTypeConfiguration<BikeTemplatePart>
 {
     public void Configure(EntityTypeBuilder<Bike> bike)
@@ -66,13 +66,6 @@ public sealed class BikeConfiguration : IEntityTypeConfiguration<Bike>, IEntityT
         meta.HasKey(m => m.Id);
         meta.Property(m => m.Id).ValueGeneratedNever();
         meta.Property(m => m.SourceUrl).HasMaxLength(500);
-    }
-
-    public void Configure(EntityTypeBuilder<CatalogueSettings> settings)
-    {
-        settings.ToTable("catalogue_settings", "bikes", t => t.HasCheckConstraint("ck_catalogue_settings_one_row", "id = 1"));
-        settings.HasKey(s => s.Id);
-        settings.Property(s => s.Id).ValueGeneratedNever();
     }
 
     public void Configure(EntityTypeBuilder<PartContribution> contribution)

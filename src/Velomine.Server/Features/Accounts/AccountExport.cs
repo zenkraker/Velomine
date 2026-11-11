@@ -37,6 +37,9 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 orderby r.StartTime
                 select new { f.RideId, f.Rpe, f.Notes, f.UpdatedAt })
             .ToListAsync(ct);
+        var privacy = await db.PrivacySettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == userId, ct);
+        var zones = await db.PrivacyZones.AsNoTracking().Where(z => z.UserId == userId).OrderBy(z => z.CreatedAt).ToListAsync(ct);
+        var grants = await db.ShareGrants.AsNoTracking().Where(g => g.MemberId == userId).OrderBy(g => g.DataType).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -139,6 +142,19 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             }),
             RideFeel = feels.Select(f => new { f.RideId, f.Rpe, f.Notes, f.UpdatedAt }),
         }, ct);
+        await AddJsonAsync(zip, "privacy.json", new
+        {
+            HideHeartRate = privacy?.HideHeartRate ?? false,
+            HidePower = privacy?.HidePower ?? false,
+            HideCadence = privacy?.HideCadence ?? false,
+            HideSpeed = privacy?.HideSpeed ?? false,
+            HideElevation = privacy?.HideElevation ?? false,
+            HideTemperature = privacy?.HideTemperature ?? false,
+            TrimStartM = privacy?.TrimStartM ?? 0,
+            TrimEndM = privacy?.TrimEndM ?? 0,
+            Zones = zones.Select(z => new { z.Name, z.Latitude, z.Longitude, z.RadiusM, z.CreatedAt }),
+        }, ct);
+        await AddJsonAsync(zip, "sharing.json", grants.Select(g => new { g.ClubId, g.DataType, g.Audience }), ct);
         await AddTextAsync(zip, "README.txt", ReadMe, ct);
     }
 
@@ -170,6 +186,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         sessions.json       where you are signed in: the device label and the times, never an address
         imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
+        privacy.json        your privacy switches, start and end trimming, and your saved zones
+        sharing.json        what you share with your club, and with whom
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.
 

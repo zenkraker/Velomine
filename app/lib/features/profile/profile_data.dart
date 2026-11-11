@@ -9,37 +9,29 @@ part 'profile_data.g.dart';
 
 /// The profile endpoints as values: the ViewModel never sees an exception.
 class ProfileData {
-  ProfileData(this._api, {required this.onUnauthorized});
+  ProfileData(this._api);
 
   final AccountsApi _api;
-  final void Function() onUnauthorized;
 
-  Future<Result<ProfileResponse?>> profile() => _api.getProfile().guard(
-    FailureAction.loadProfile,
-    onUnauthorized: onUnauthorized,
-  );
+  Future<Result<ProfileResponse?>> profile() =>
+      _api.getProfile().guard(FailureAction.loadProfile);
 
-  Future<Result<TelemetryResponse?>> telemetry() => _api.getTelemetry().guard(
-    FailureAction.loadProfile,
-    onUnauthorized: onUnauthorized,
-  );
+  Future<Result<TelemetryResponse?>> telemetry() =>
+      _api.getTelemetry().guard(FailureAction.loadProfile);
 
   Future<Result<TelemetryResponse?>> setTelemetry({
     required bool crash,
     required bool usage,
   }) => _api
       .setTelemetry(SetTelemetryRequest(crash: crash, usage: usage))
-      .guard(FailureAction.saveProfile, onUnauthorized: onUnauthorized);
+      .guard(FailureAction.saveProfile);
 
-  Future<Result<ProfileResponse?>> save(UpdateProfileRequest request) => _api
-      .updateProfile(request)
-      .guard(FailureAction.saveProfile, onUnauthorized: onUnauthorized);
+  Future<Result<ProfileResponse?>> save(UpdateProfileRequest request) =>
+      _api.updateProfile(request).guard(FailureAction.saveProfile);
 
   Future<Result<String?>> exportLink() async =>
-      (await _api.createExportLink().guard(
-        FailureAction.prepareData,
-        onUnauthorized: onUnauthorized,
-      )).map((link) => link?.path);
+      (await _api.createExportLink().guard(FailureAction.prepareData))
+          .map((link) => link?.path);
 
   Future<Result<Failure?>> changePassword(
     String current,
@@ -52,7 +44,7 @@ class ProfileData {
             newPassword: newPassword.trim(),
           ),
         )
-        .guard(FailureAction.changePassword, onUnauthorized: onUnauthorized);
+        .guard(FailureAction.changePassword);
     return result.map((_) => null);
   }
 
@@ -71,7 +63,6 @@ class ProfileData {
       );
       return const Ok(null);
     } on ApiException catch (e) {
-      if (e.code == 401) onUnauthorized();
       return Failed(
         Failure(
           switch (e.code) {
@@ -94,7 +85,5 @@ class ProfileData {
 }
 
 @Riverpod(keepAlive: true)
-ProfileData profileData(Ref ref) {
-  final session = ref.watch(sessionProvider);
-  return ProfileData(session.accounts, onUnauthorized: session.sessionExpired);
-}
+ProfileData profileData(Ref ref) =>
+    ProfileData(ref.watch(sessionProvider).accounts);

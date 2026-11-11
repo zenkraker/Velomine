@@ -29,12 +29,14 @@ public sealed class StartRideImport(VelomineDbContext db, ImportStore store, Imp
     public override void Configure()
     {
         Post("rides/imports");
+        Options(b => b.RequireRateLimiting("imports"));
         AllowFileUploads(dontAutoBindFormData: true);
         Description(d => d.Accepts<StartRideImportRequest>("multipart/form-data")
             .Produces<StartRideImportResponse>(202)
             .ProducesProblem(400)
             .Produces(401)
-            .ProducesProblem(413), clearDefaults: true);
+            .ProducesProblem(413)
+            .ProducesProblem(429), clearDefaults: true);
     }
 
     public override async Task HandleAsync(StartRideImportRequest req, CancellationToken ct)

@@ -4,7 +4,8 @@ using Velomine.Server.Data;
 namespace Velomine.Server.Features.Accounts;
 
 /// <summary>Drops revoked and expired session rows after a week, so the list never keeps stale device labels.</summary>
-public sealed class SessionCleanup(IServiceScopeFactory scopes, ILogger<SessionCleanup> logger) : BackgroundService
+public sealed class SessionCleanup(IServiceScopeFactory scopes, TimeProvider time, ILogger<SessionCleanup> logger)
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -15,7 +16,7 @@ public sealed class SessionCleanup(IServiceScopeFactory scopes, ILogger<SessionC
             {
                 await using var scope = scopes.CreateAsyncScope();
                 var sessions = scope.ServiceProvider.GetRequiredService<UserSessions>();
-                await sessions.DeleteStaleAsync(DateTimeOffset.UtcNow, stoppingToken);
+                await sessions.DeleteStaleAsync(time.GetUtcNow(), stoppingToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

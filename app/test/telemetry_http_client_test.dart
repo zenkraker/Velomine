@@ -49,6 +49,22 @@ void main() {
   );
 
   test(
+    'TelemetryHttpClient_ShouldEndTheSession_WhenTheServerAnswers401',
+    () async {
+      var ended = false;
+      final client = TelemetryHttpClient(
+        inner: MockClient((_) async => http.Response('unauthorized', 401)),
+        telemetry: FakeTelemetryRuntime(),
+        onUnauthorized: () => ended = true,
+      );
+
+      await client.get(Uri.parse('https://example.test/api/v1/rides'));
+
+      expect(ended, isTrue);
+    },
+  );
+
+  test(
     'TelemetryHttpClient_ShouldReportNetworkFailure_WhenTheRequestThrows',
     () async {
       final telemetry = FakeTelemetryRuntime();

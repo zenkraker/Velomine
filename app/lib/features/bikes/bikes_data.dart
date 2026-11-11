@@ -9,10 +9,9 @@ part 'bikes_data.g.dart';
 
 /// The bike endpoints as values: the ViewModels never see an exception.
 class BikesData {
-  BikesData(this._api, this._onUnauthorized);
+  BikesData(this._api);
 
   final BikesApi _api;
-  final void Function() _onUnauthorized;
 
   Future<Result<List<BikeResponse>>> list() async =>
       (await _api.listBikes().guard(FailureAction.loadBikes))
@@ -80,20 +79,18 @@ class BikesData {
       )
       .guard(FailureAction.applyTemplate);
 
-  /// The parts this club has used before. A failed lookup offers nothing, but
-  /// a 401 still ends the session like every other call.
+  /// The parts this club has used before. A failed lookup offers nothing.
   Future<Result<List<PartResponse>>> searchParts(
     String query,
     String? type,
   ) async =>
       (await _api
               .searchParts(q: query, type: type, limit: 8)
-              .guard(FailureAction.loadBike, onUnauthorized: _onUnauthorized))
+              .guard(FailureAction.loadBike))
           .map((response) => response?.parts ?? const <PartResponse>[]);
 }
 
 @Riverpod(keepAlive: true)
 BikesData bikesData(Ref ref) {
-  final session = ref.watch(sessionProvider);
-  return BikesData(session.bikes, session.sessionExpired);
+  return BikesData(ref.watch(sessionProvider).bikes);
 }

@@ -184,6 +184,8 @@ public sealed class UpdateComponent(VelomineDbContext db, TimeProvider time) : E
             return;
         }
 
+        // A pending copy of the previous values must not reach the publisher after an edit, or after "custom" is ticked.
+        await ContributionOutbox.DiscardPendingAsync(db, component, ct);
         CreateComponent.Apply(component, req);
         var part = req.Custom ? null : await PartCatalogue.FindAsync(db, component, ct);
         component.PartId = part?.Id;

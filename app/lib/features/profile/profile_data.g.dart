@@ -48,4 +48,4 @@ final class ProfileDataProvider
   }
 }
 
-String _$profileDataHash() => r'816a20b48fed32a7421237d69368a4c64bbb017b';
+String _$profileDataHash() => r'faa12466e5a271662984e645129186f6dca72be4';

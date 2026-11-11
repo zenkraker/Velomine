@@ -79,7 +79,29 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public void PasswordResetThrottle_ShouldKeepOneCacheEntry_WhenEmailsChange()
+    public async Task Uploads_ShouldReturn429_WhenOneMemberUploadsTooManyRides()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b
+            .UseSetting("Velomine:Accounts:RequireAdminApproval", "false")
+            .UseSetting("Velomine:RateLimits:UploadsPerHour", "2"));
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+
+        for (var attempt = 0; attempt < 2; attempt++)
+            Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> UploadAsync(HttpClient client) =>
+        client.PostAsync(
+            "/api/v1/rides/uploads",
+            new MultipartFormDataContent { { new ByteArrayContent([1, 2, 3]), "file", "ride.gpx" } },
+            TestContext.Current.CancellationToken);
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldKeepOneCacheEntry_WhenTheSameAddressRepeats()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var throttle = new PasswordResetThrottle(cache, TimeProvider.System);
@@ -87,7 +109,7 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         context.Connection.RemoteIpAddress = IPAddress.Loopback;
 
         for (var attempt = 0; attempt < 50; attempt++)
-            throttle.Allowed("forgot", context, $"rider{attempt}@example.com");
+            throttle.Allowed("forgot", context);
 
         Assert.Equal(1, cache.Count);
     }

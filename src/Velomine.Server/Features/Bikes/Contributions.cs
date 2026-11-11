@@ -8,16 +8,6 @@ using Velomine.Server.Data;
 
 namespace Velomine.Server.Features.Bikes;
 
-/// <summary>No longer read or written: contributions are on whenever a publisher is configured. Kept for one release, then dropped.</summary>
-public sealed class CatalogueSettings
-{
-    public const int OnlyRow = 1;
-
-    public int Id { get; set; } = OnlyRow;
-
-    public bool ContributionsEnabled { get; set; }
-}
-
 /// <summary>
 /// One part waiting to go to the shared catalogue. It carries only the part's identity and name: no member, bike,
 /// club or address is stored with it, and the publisher sees no such field. Rows stay after sending as a record of
@@ -86,13 +76,35 @@ public sealed record ContributionReceipt(string[]? Accepted, ContributionRejecti
 /// <summary>Queues a non-custom part that is not in the shared catalogue, so the publisher can list it.</summary>
 public static class ContributionOutbox
 {
+    /// <summary>The catalogue key of the part as it is now, or null when it has none.</summary>
+    public static string? KeyOf(BikeComponent component) =>
+        PartIdentity.Key(component.Type, component.Brand, component.Model, component.Mpn, component.Gtin);
+
+    /// <summary>
+    /// Drops a copy that has not been sent yet. An edit or a switch to "custom" must not let the old values reach the
+    /// publisher.
+    /// </summary>
+    public static async Task DiscardPendingAsync(VelomineDbContext db, BikeComponent component, CancellationToken ct)
+    {
+        if (KeyOf(component) is not { } key) return;
+        var pending = await db.PartContributions
+            .Where(c => c.Key == key && c.Status == "pending")
+            .ToListAsync(ct);
+        if (pending.Count == 0) return;
+        // Saved here so the row is really gone before the new values are queued, even when nothing changed.
+        db.PartContributions.RemoveRange(pending);
+        await db.SaveChangesAsync(ct);
+    }
+
     public static async Task EnqueueAsync(VelomineDbContext db, BikeComponent component, TimeProvider clock, CancellationToken ct)
     {
-        if (PartIdentity.Key(component.Type, component.Brand, component.Model, component.Mpn, component.Gtin) is null) return;
+        if (KeyOf(component) is null) return;
 
         var entry = ContributionEntry.From(component);
         var hash = entry.Hash();
-        if (db.PartContributions.Local.Any(c => c.Key == entry.Key && c.PayloadHash == hash)) return;
+        // A removed row is still visible here; it must not count as already queued.
+        if (db.ChangeTracker.Entries<PartContribution>().Any(e => e.State != EntityState.Deleted
+            && e.Entity.Key == entry.Key && e.Entity.PayloadHash == hash)) return;
         if (await db.PartContributions.AnyAsync(c => c.Key == entry.Key && c.PayloadHash == hash, ct)) return;
 
         var now = clock.GetUtcNow();

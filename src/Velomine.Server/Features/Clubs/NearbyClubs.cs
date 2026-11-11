@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Clubs;
 
@@ -71,7 +72,7 @@ public sealed class NearbyClubs(VelomineDbContext db) : Endpoint<NearbyClubsRequ
                 c.Name,
                 c.MemberCount,
                 // Whole kilometres: enough to choose, too coarse to pin the club down by triangulating.
-                Math.Round(DistanceKm(req.Latitude, req.Longitude, c.Latitude!.Value, c.Longitude!.Value))))
+                Math.Round(Geo.Kilometres(req.Latitude, req.Longitude, c.Latitude!.Value, c.Longitude!.Value))))
             .Where(c => c.DistanceKm <= req.RadiusKm)
             .OrderBy(c => c.DistanceKm)
             .ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
@@ -79,19 +80,5 @@ public sealed class NearbyClubs(VelomineDbContext db) : Endpoint<NearbyClubsRequ
             .ToArray();
 
         await Send.OkAsync(new NearbyClubsResponse(nearby), ct);
-    }
-
-    /// <summary>The great-circle distance in kilometres. A handful of clubs fit well in memory.</summary>
-    private static double DistanceKm(double latitude, double longitude, double otherLatitude, double otherLongitude)
-    {
-        const double earthKm = 6371.0;
-        static double Radians(double degrees) => degrees * Math.PI / 180;
-
-        var dLat = Radians(otherLatitude - latitude);
-        var dLon = Radians(otherLongitude - longitude);
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(Radians(latitude)) * Math.Cos(Radians(otherLatitude)) *
-                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-        return earthKm * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     }
 }

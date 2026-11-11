@@ -14,5 +14,5 @@ public sealed class CreateExportLink(ExportTokens tokens, TimeProvider time) : E
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.OkAsync(new ExportLinkResponse("/api/v1/accounts/export/" + Uri.EscapeDataString(tokens.Issue(User.UserId())), time.GetUtcNow().Add(ExportTokens.Lifetime)), ct);
+        await Send.OkAsync(new ExportLinkResponse("/api/v1/accounts/export/" + Uri.EscapeDataString(tokens.Issue(User.UserId())), time.GetUtcNow().Add(tokens.Lifetime)), ct);
 }

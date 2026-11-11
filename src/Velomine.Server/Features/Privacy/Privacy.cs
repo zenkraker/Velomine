@@ -93,8 +93,6 @@ public sealed record PrivacyProfile(
 /// </summary>
 public static class PrivacyRules
 {
-    private const double EarthRadiusM = 6_371_000;
-
     public static async Task<PrivacyProfile> LoadAsync(VelomineDbContext db, Guid userId, CancellationToken ct)
     {
         var settings = await db.PrivacySettings.AsNoTracking()
@@ -187,7 +185,7 @@ public static class PrivacyRules
             if (la is null || lo is null) continue;
             if (privacy.TrimStartM > 0 && distance[i] < privacy.TrimStartM) continue;
             if (privacy.TrimEndM > 0 && distance[i] > total - privacy.TrimEndM) continue;
-            if (privacy.Zones.Any(zone => Metres(la.Value, lo.Value, zone.Latitude, zone.Longitude) <= zone.RadiusM)) continue;
+            if (privacy.Zones.Any(zone => Geo.Metres(la.Value, lo.Value, zone.Latitude, zone.Longitude) <= zone.RadiusM)) continue;
             latitude[i] = la;
             longitude[i] = lo;
         }
@@ -215,20 +213,10 @@ public static class PrivacyRules
             if (i > 0 && latitude[i] is { } la && longitude[i] is { } lo
                 && latitude[i - 1] is { } previousLatitude && longitude[i - 1] is { } previousLongitude)
             {
-                travelled += Metres(previousLatitude, previousLongitude, la, lo);
+                travelled += Geo.Metres(previousLatitude, previousLongitude, la, lo);
             }
             result[i] = travelled;
         }
         return result;
-    }
-
-    private static double Metres(double latitude1, double longitude1, double latitude2, double longitude2)
-    {
-        var dLatitude = (latitude2 - latitude1) * Math.PI / 180;
-        var dLongitude = (longitude2 - longitude1) * Math.PI / 180;
-        var a = Math.Sin(dLatitude / 2) * Math.Sin(dLatitude / 2)
-            + Math.Cos(latitude1 * Math.PI / 180) * Math.Cos(latitude2 * Math.PI / 180)
-            * Math.Sin(dLongitude / 2) * Math.Sin(dLongitude / 2);
-        return EarthRadiusM * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     }
 }

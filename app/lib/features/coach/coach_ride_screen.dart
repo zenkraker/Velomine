@@ -11,6 +11,7 @@ import '../rides/detail/series_chart.dart';
 import '../rides/ride_type_chips.dart';
 import 'coach_ride_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/stat_tile.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
 class CoachRideScreen extends ConsumerWidget {
@@ -67,25 +68,43 @@ class CoachRideScreen extends ConsumerWidget {
                     spacing: AppSpacing.xl,
                     runSpacing: 12,
                     children: [
-                      _Value(l10n.statDistance, km(ride.distanceM)),
-                      _Value(l10n.statMovingTime, duration(ride.movingS)),
-                      _Value(l10n.statAverageSpeed, kmh(ride.avgSpeedMs)),
+                      StatTile(
+                        label: l10n.statDistance,
+                        value: km(ride.distanceM),
+                      ),
+                      StatTile(
+                        label: l10n.statMovingTime,
+                        value: duration(ride.movingS),
+                      ),
+                      StatTile(
+                        label: l10n.statAverageSpeed,
+                        value: kmh(ride.avgSpeedMs),
+                      ),
                       if (ride.avgPowerW != null)
-                        _Value(l10n.statAveragePower, '${ride.avgPowerW} W'),
+                        StatTile(
+                          label: l10n.statAveragePower,
+                          value: '${ride.avgPowerW} W',
+                        ),
                       if (ride.normalizedPowerW != null)
-                        _Value(
-                          l10n.statNormalizedPower,
-                          '${ride.normalizedPowerW} W',
+                        StatTile(
+                          label: l10n.statNormalizedPower,
+                          value: '${ride.normalizedPowerW} W',
                         ),
                       if (ride.avgHeartRate != null)
-                        _Value(
-                          l10n.statAverageHeartRate,
-                          '${ride.avgHeartRate} bpm',
+                        StatTile(
+                          label: l10n.statAverageHeartRate,
+                          value: '${ride.avgHeartRate} bpm',
                         ),
                       if (ride.tss != null)
-                        _Value(l10n.statTss, ride.tss!.round().toString()),
+                        StatTile(
+                          label: l10n.statTss,
+                          value: ride.tss!.round().toString(),
+                        ),
                       if (ride.trimp != null)
-                        _Value(l10n.statTrimp, ride.trimp!.round().toString()),
+                        StatTile(
+                          label: l10n.statTrimp,
+                          value: ride.trimp!.round().toString(),
+                        ),
                     ],
                   ),
                   if (c.load.failure case final failure?)
@@ -129,20 +148,4 @@ class CoachRideScreen extends ConsumerWidget {
       ],
     );
   }
-}
-
-class _Value extends StatelessWidget {
-  const _Value(this.label, this.value);
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: Theme.of(context).textTheme.labelSmall),
-      Text(value, style: Theme.of(context).textTheme.titleMedium),
-    ],
-  );
 }

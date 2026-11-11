@@ -21,6 +21,7 @@ import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
 import '../../../core/tokens.dart';
+import '../../../core/widgets/stat_tile.dart';
 
 class RideDetailScreen extends ConsumerWidget {
   const RideDetailScreen({
@@ -386,22 +387,11 @@ class _Stats extends StatelessWidget {
       runSpacing: 12,
       children: [
         for (final (id, label, value) in tiles)
-          Container(
+          StatTile(
             key: Key('stat-$id'),
-            width: 150,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: text.labelMedium),
-                const SizedBox(height: 2),
-                Text(value, style: text.titleMedium),
-              ],
-            ),
+            label: label,
+            value: value,
+            boxed: true,
           ),
         if (ride.speedSource == 'gps')
           Text(l10n.speedFromGps, style: text.bodySmall),

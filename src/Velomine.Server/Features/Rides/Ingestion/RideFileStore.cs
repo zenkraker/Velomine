@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
@@ -8,63 +6,20 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// Keeps every uploaded file exactly as received, named by its SHA-256, so a ride can be read again when a parser
 /// improves and the same file uploaded twice takes space once.
 /// </summary>
-public sealed partial class RideFileStore(IOptions<RidesOptions> options)
+public sealed class RideFileStore(IOptions<RidesOptions> options)
 {
     private string Root => Path.GetFullPath(options.Value.FilesPath);
 
-    /// <summary>
-    /// Writes the content and returns its SHA-256 as 64 lowercase hex characters. <paramref name="maxBytes"/> caps what
-    /// the stream may really hold, which is not the same as the size a container claims.
-    /// </summary>
-    public async Task<string> SaveAsync(Stream content, CancellationToken ct, long? maxBytes = null)
-    {
-        Directory.CreateDirectory(Path.Combine(Root, "tmp"));
-        var temp = Path.Combine(Root, "tmp", Guid.NewGuid().ToString("N"));
-        try
-        {
-            string sha;
-            long total = 0;
-            await using (var output = File.Create(temp))
-            {
-                using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                var buffer = new byte[81920];
-                int read;
-                while ((read = await content.ReadAsync(buffer, ct)) > 0)
-                {
-                    total += read;
-                    if (maxBytes is { } max && total > max)
-                        throw new InvalidDataException("The file is larger than it is allowed to be.");
-                    hash.AppendData(buffer, 0, read);
-                    await output.WriteAsync(buffer.AsMemory(0, read), ct);
-                }
+    private string Originals => Path.Combine(Root, "originals");
 
-                sha = Convert.ToHexStringLower(hash.GetHashAndReset());
-            }
-
-            var target = PathFor(sha);
-            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            if (File.Exists(target)) File.Delete(temp);
-            else
-            {
-                try
-                {
-                    File.Move(temp, target);
-                }
-                catch (IOException) when (File.Exists(target))
-                {
-                    // Another upload of the same file won the race; the bytes are identical, so keep one copy.
-                    File.Delete(temp);
-                }
-            }
-            return sha;
-        }
-        catch
-        {
-            // A cancelled or oversized upload must not leave its bytes behind.
-            if (File.Exists(temp)) File.Delete(temp);
-            throw;
-        }
-    }
+    /// <summary>Writes the content and returns its SHA-256 as 64 lowercase hex characters.</summary>
+    public Task<string> SaveAsync(Stream content, CancellationToken ct, long? maxBytes = null) =>
+        HashedFile.SaveAsync(
+            Path.Combine(Root, "tmp"),
+            sha => Path.Combine(Originals, sha[..2], sha),
+            content,
+            maxBytes,
+            ct);
 
     public Task<byte[]> ReadAsync(string sha, CancellationToken ct) => File.ReadAllBytesAsync(PathFor(sha), ct);
 
@@ -81,20 +36,21 @@ public sealed partial class RideFileStore(IOptions<RidesOptions> options)
         if (File.Exists(path)) File.Delete(path);
     }
 
-    /// <summary>The size of all stored original files, in bytes.</summary>
+    /// <summary>The size of all stored original files, in bytes. Cached: the admin page must not walk the tree each time.</summary>
     public long TotalBytes()
     {
-        var originals = Path.Combine(Root, "originals");
-        return Directory.Exists(originals)
-            ? new DirectoryInfo(originals).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length)
+        var now = Environment.TickCount64;
+        if (_measuredAt is { } measured && now - measured < TotalBytesCacheMs) return _totalBytes;
+        _totalBytes = Directory.Exists(Originals)
+            ? new DirectoryInfo(Originals).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length)
             : 0;
+        _measuredAt = now;
+        return _totalBytes;
     }
 
-    // Only a hash we made ourselves can name a file, so a stored value can never point outside the folder.
-    private string PathFor(string sha) => HexSha256().IsMatch(sha)
-        ? Path.Combine(Root, "originals", sha[..2], sha)
-        : throw new ArgumentException("Not a SHA-256.", nameof(sha));
+    private const long TotalBytesCacheMs = 5 * 60 * 1000;
+    private long _totalBytes;
+    private long? _measuredAt;
 
-    [GeneratedRegex("^[0-9a-f]{64}$")]
-    private static partial Regex HexSha256();
+    private string PathFor(string sha) => HashedFile.PathFor(Path.Combine(Originals, sha[..2]), sha);
 }

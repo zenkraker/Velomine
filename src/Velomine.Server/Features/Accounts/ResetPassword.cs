@@ -37,7 +37,7 @@ public sealed class ResetPassword(
 
     public override async Task HandleAsync(ResetPasswordRequest req, CancellationToken ct)
     {
-        if (!throttle.Allowed("reset", HttpContext, req.Email))
+        if (!throttle.Allowed("reset", HttpContext))
         {
             await Send.ResponseAsync(new { error = "too_many_requests" }, 429, ct);
             return;

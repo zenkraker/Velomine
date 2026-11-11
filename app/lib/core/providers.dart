@@ -44,10 +44,11 @@ Session session(Ref ref) {
     ),
   );
   final client = ApiClient(basePath: baseUrl, authentication: auth);
-  client.client = TelemetryHttpClient(
+  final httpClient = TelemetryHttpClient(
     inner: client.client,
     telemetry: telemetry,
   );
+  client.client = httpClient;
   final session = Session(
     client: client,
     auth: auth,
@@ -57,6 +58,8 @@ Session session(Ref ref) {
     ssoError: Uri.base.queryParameters['sso_error'],
     telemetry: telemetry,
   );
+  // One place ends the session on a 401, whichever call it was.
+  httpClient.onUnauthorized = session.sessionExpired;
   unawaited(session.restore());
   ref.onDispose(session.dispose);
   return session;

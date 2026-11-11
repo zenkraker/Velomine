@@ -124,6 +124,31 @@ public sealed class ContributionsTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task CatalogueContributions_ShouldDropThePendingPart_WhenItBecomesCustom()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var bikeId = await AddBikeAsync(member);
+        await AddChainAsync(member, bikeId);
+
+        var bike = await member.GetFromJsonAsync<BikeDetailResponse>($"/api/v1/bikes/{bikeId}", Ct);
+        var component = Assert.Single(bike!.Components);
+        var update = new UpdateComponentRequest
+        {
+            Type = "chain",
+            Brand = "Shimano",
+            Model = "Ultegra CN-M8100",
+            Mpn = "CN-M8100",
+            Custom = true,
+            InstalledOn = new DateOnly(2026, 1, 1),
+        };
+        (await member.PutAsJsonAsync($"/api/v1/bikes/{bikeId}/components/{component.Id}", update, Ct))
+            .EnsureSuccessStatusCode();
+
+        Assert.Equal(0, await WithDbAsync(api, (db, _) => db.PartContributions.CountAsync(Ct)));
+    }
+
+    [Fact]
     public async Task CatalogueContributions_ShouldNotQueue_WhenThePublisherAlreadyListsThePart()
     {
         await using var api = await StartAsync();

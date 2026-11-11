@@ -2164,6 +2164,9 @@ class MemoryTokenStore implements TokenStore {
 
   @override
   Future<void> clear() async => token = null;
+
+  @override
+  Future<T> locked<T>(Future<T> Function() body) => body();
 }
 
 /// Keeps the theme choice in memory instead of the device's preferences.

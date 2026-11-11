@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velomine_api/api.dart';
 
@@ -115,7 +114,6 @@ class RideUploadQueue {
     required this.telemetry,
     this.serverUrl,
     this.pollInterval = const Duration(seconds: 1),
-    this.onUnauthorized,
     this.onRideUploaded,
   });
 
@@ -128,7 +126,6 @@ class RideUploadQueue {
   final String accountId;
   final String? serverUrl;
   final Duration pollInterval;
-  final VoidCallback? onUnauthorized;
 
   /// Called with the server id once a ride is uploaded, so the rides list can read again.
   final void Function(String serverRideId)? onRideUploaded;
@@ -182,7 +179,8 @@ class RideUploadQueue {
       }
       final state = _states[ride.id];
       if (state == null || state.state == UploadState.queued) {
-        await enqueue(ride.id);
+        // The list is already in hand: do not read every ride's file again for each one queued.
+        await enqueue(ride.id, known: ids);
       }
     }
     await _scheduleBackground();
@@ -204,11 +202,15 @@ class RideUploadQueue {
     return false;
   }
 
-  Future<void> enqueue(String rideId, {bool retry = false}) async {
+  Future<void> enqueue(
+    String rideId, {
+    bool retry = false,
+    Set<String>? known,
+  }) async {
     final existing = _states[rideId];
     if (!retry && existing?.isUploaded == true) return;
     if (_running.contains(rideId)) return;
-    if (!await _owns(rideId)) {
+    if (!await _owns(rideId, known)) {
       recorderLog('upload: $rideId belongs to another member; refused');
       return;
     }
@@ -227,7 +229,8 @@ class RideUploadQueue {
 
   Future<void> retry(String rideId) => enqueue(rideId, retry: true);
 
-  Future<bool> _owns(String rideId) async {
+  Future<bool> _owns(String rideId, Set<String>? known) async {
+    if (known != null) return known.contains(rideId);
     try {
       final rides = await recorder.listRides(accountId: accountId);
       return rides.any((ride) => ride.id == rideId);
@@ -327,12 +330,7 @@ class RideUploadQueue {
 
       _fail(rideId, 'timeout', attempts);
     } on ApiException catch (e) {
-      if (e.code == 401) {
-        onUnauthorized?.call();
-        _fail(rideId, 'sign_in', attempts);
-      } else {
-        _fail(rideId, 'http_${e.code}', attempts);
-      }
+      _fail(rideId, e.code == 401 ? 'sign_in' : 'http_${e.code}', attempts);
     } on RideUploadException catch (e) {
       _fail(rideId, e.code, attempts);
     } on Object catch (e) {

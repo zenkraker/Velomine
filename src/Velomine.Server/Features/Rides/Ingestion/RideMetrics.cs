@@ -1,3 +1,5 @@
+using Velomine.Server.Features.Rides;
+
 namespace Velomine.Server.Features.Rides.Ingestion;
 
 public sealed record RideMetricValues(
@@ -203,16 +205,9 @@ public static class RideMetrics
             ? Haversine(la, lo, lb, lp)
             : null;
 
-    public static double Haversine(double lat1, double lon1, double lat2, double lon2)
-    {
-        const double EarthRadiusM = 6_371_000;
-        static double Rad(double deg) => deg * Math.PI / 180;
-        var dLat = Rad(lat2 - lat1);
-        var dLon = Rad(lon2 - lon1);
-        var h = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
-            + Math.Cos(Rad(lat1)) * Math.Cos(Rad(lat2)) * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-        return 2 * EarthRadiusM * Math.Asin(Math.Sqrt(h));
-    }
+    /// <summary>The distance between two points. Kept here for the rides code; see <see cref="Geo"/>.</summary>
+    public static double Haversine(double lat1, double lon1, double lat2, double lon2) =>
+        Geo.Metres(lat1, lon1, lat2, lon2);
 
     /// <summary>The largest of the sliding-window medians, so one GPS glitch never becomes the maximum speed.</summary>
     public static double RobustMax(IReadOnlyList<float> values)

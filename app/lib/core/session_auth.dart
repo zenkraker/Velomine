@@ -144,7 +144,13 @@ class SessionAuth implements Authentication {
     return future;
   }
 
-  Future<bool> _doRefresh() async {
+  Future<bool> _doRefresh() => store.locked(_refreshNow);
+
+  Future<bool> _refreshNow() async {
+    // The background upload worker rotates the same token file; use whatever is stored now, so a token it just
+    // renewed is not presented again as stolen.
+    final saved = await store.readRefreshToken();
+    if (saved != null && saved.isNotEmpty) _refreshToken = saved;
     final refreshToken = _refreshToken;
     if (refreshToken == null) return false;
 

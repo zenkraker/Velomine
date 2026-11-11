@@ -16,26 +16,27 @@ public static class StreamSampling
 
         var edges = Enumerable.Range(0, maxPoints + 1).Select(i => (int)((long)i * n / maxPoints)).ToArray();
 
-        double[] Mean(double[] values) => [.. Slices().Select(s => values[s.From..s.To].Average())];
-        double?[]? Mean2(double?[]? values) => values is null ? null : [.. Slices().Select(s => Average(values[s.From..s.To]))];
-        float?[]? MeanF(float?[]? values) => values is null ? null : [.. Slices().Select(s => Average(values[s.From..s.To].Select(v => (double?)v)) is { } m ? (float?)m : null)];
-        short?[]? MeanS(short?[]? values) => values is null ? null : [.. Slices().Select(s => Average(values[s.From..s.To].Select(v => (double?)v)) is { } m ? (short?)Math.Round(m) : null)];
-
         IEnumerable<(int From, int To)> Slices() => Enumerable.Range(0, maxPoints).Select(i => (edges[i], edges[i + 1]));
+
+        // One slice's mean, converted back to the signal's own type; null when the slice has no value.
+        T?[]? Mean<T>(T?[]? values, Func<double, T> convert) where T : struct =>
+            values is null
+                ? null
+                : [.. Slices().Select(s => Average(values[s.From..s.To].Select(v => v is { } value ? (double?)Convert.ToDouble(value) : null)) is { } m ? (T?)convert(m) : null)];
 
         return new RideStreams
         {
             RideId = streams.RideId,
-            Time = Mean(streams.Time),
-            Latitude = Mean2(streams.Latitude),
-            Longitude = Mean2(streams.Longitude),
-            Altitude = MeanF(streams.Altitude),
-            Speed = MeanF(streams.Speed),
+            Time = [.. Slices().Select(s => streams.Time[s.From..s.To].Average())],
+            Latitude = Mean(streams.Latitude, d => d),
+            Longitude = Mean(streams.Longitude, d => d),
+            Altitude = Mean(streams.Altitude, d => (float)d),
+            Speed = Mean(streams.Speed, d => (float)d),
             Distance = streams.Distance is null ? null : [.. Slices().Select(s => LastValue(streams.Distance[s.From..s.To]))],
-            HeartRate = MeanS(streams.HeartRate),
-            Power = MeanS(streams.Power),
-            Cadence = MeanS(streams.Cadence),
-            Temperature = MeanS(streams.Temperature),
+            HeartRate = Mean(streams.HeartRate, d => (short)Math.Round(d)),
+            Power = Mean(streams.Power, d => (short)Math.Round(d)),
+            Cadence = Mean(streams.Cadence, d => (short)Math.Round(d)),
+            Temperature = Mean(streams.Temperature, d => (short)Math.Round(d)),
         };
     }
 

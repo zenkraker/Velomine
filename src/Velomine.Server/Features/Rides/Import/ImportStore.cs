@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 
 namespace Velomine.Server.Features.Rides.Import;
@@ -8,56 +6,17 @@ namespace Velomine.Server.Features.Rides.Import;
 /// Holds an import archive while it is being read, under the member's id and named by its SHA-256 so the same archive
 /// uploaded twice takes space once. Unlike a ride file, an archive is deleted as soon as the import finishes.
 /// </summary>
-public sealed partial class ImportStore(IOptions<RidesOptions> options)
+public sealed class ImportStore(IOptions<RidesOptions> options)
 {
     private string Root => Path.GetFullPath(Path.Combine(options.Value.FilesPath, "imports"));
 
     private string Folder(Guid userId) => Path.Combine(Root, userId.ToString("N"));
 
     /// <summary>Writes the content and returns its SHA-256 as 64 lowercase hex characters.</summary>
-    public async Task<string> SaveAsync(Guid userId, Stream content, CancellationToken ct)
+    public Task<string> SaveAsync(Guid userId, Stream content, CancellationToken ct)
     {
         var folder = Folder(userId);
-        Directory.CreateDirectory(folder);
-        var temp = Path.Combine(folder, Guid.NewGuid().ToString("N") + ".tmp");
-        try
-        {
-            string sha;
-            await using (var output = File.Create(temp))
-            {
-                using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                var buffer = new byte[81920];
-                int read;
-                while ((read = await content.ReadAsync(buffer, ct)) > 0)
-                {
-                    hash.AppendData(buffer, 0, read);
-                    await output.WriteAsync(buffer.AsMemory(0, read), ct);
-                }
-
-                sha = Convert.ToHexStringLower(hash.GetHashAndReset());
-            }
-
-            var target = Path.Combine(folder, sha);
-            if (File.Exists(target)) File.Delete(temp);
-            else
-            {
-                try
-                {
-                    File.Move(temp, target);
-                }
-                catch (IOException) when (File.Exists(target))
-                {
-                    File.Delete(temp);
-                }
-            }
-            return sha;
-        }
-        catch
-        {
-            // A dropped upload must not leave its archive behind, possibly a gigabyte of it.
-            if (File.Exists(temp)) File.Delete(temp);
-            throw;
-        }
+        return HashedFile.SaveAsync(folder, sha => Path.Combine(folder, sha), content, maxBytes: null, ct);
     }
 
     /// <summary>Opens a stored archive for reading, or null when it is not there.</summary>
@@ -95,11 +54,5 @@ public sealed partial class ImportStore(IOptions<RidesOptions> options)
     /// <summary>How new an archive may be before the sweep leaves it alone, in case its import row is not written yet.</summary>
     private static readonly TimeSpan RecentUpload = TimeSpan.FromMinutes(10);
 
-    // Only a hash we made ourselves can name a file, so a stored value can never point outside the folder.
-    private string PathFor(Guid userId, string sha) => HexSha256().IsMatch(sha)
-        ? Path.Combine(Folder(userId), sha)
-        : throw new ArgumentException("Not a SHA-256.", nameof(sha));
-
-    [GeneratedRegex("^[0-9a-f]{64}$")]
-    private static partial Regex HexSha256();
+    private string PathFor(Guid userId, string sha) => HashedFile.PathFor(Folder(userId), sha);
 }

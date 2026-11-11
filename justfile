@@ -70,6 +70,10 @@ api-client:
 codegen:
     cd app && dart run build_runner build
 
+# run the Kotlin tests: the FIT encoder and the recorder models
+android-test:
+    cd app/android && ./gradlew :app:testDebugUnitTest
+
 # count the duplicated UI patterns the shared-widget rule keeps down; lower is better
 ui-dupes:
     #!/usr/bin/env bash
@@ -93,3 +97,4 @@ check:
     dotnet format Velomine.slnx --verify-no-changes
     dotnet test --solution Velomine.slnx
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
+    cd app/android && ./gradlew :app:testDebugUnitTest

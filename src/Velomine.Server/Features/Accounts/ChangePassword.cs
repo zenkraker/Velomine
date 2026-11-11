@@ -19,13 +19,14 @@ public sealed class ChangePasswordValidator : Validator<ChangePasswordRequest>
 /// Changes the password of a signed-in account. The current password is the confirmation; a single sign-on account has
 /// none and is refused. The security stamp changes, so the app signs out on every device.
 /// </summary>
-public sealed class ChangePassword(UserManager<User> users, UserSessions sessions) : Endpoint<ChangePasswordRequest>
+public sealed class ChangePassword(UserManager<User> users, SignInManager<User> signIn, UserSessions sessions)
+    : Endpoint<ChangePasswordRequest>
 {
     public override void Configure()
     {
         Put("accounts/me/password");
         Description(d => d.Accepts<ChangePasswordRequest>("application/json").Produces(204).ProducesProblem(400)
-            .Produces(401).ProducesProblem(409), clearDefaults: true);
+            .Produces(401).ProducesProblem(409).Produces(423), clearDefaults: true);
     }
 
     public override async Task HandleAsync(ChangePasswordRequest req, CancellationToken ct)
@@ -43,18 +44,21 @@ public sealed class ChangePassword(UserManager<User> users, UserSessions session
             return;
         }
 
+        switch (await PasswordCheck.RunAsync(signIn, user, req.CurrentPassword))
+        {
+            case PasswordCheck.Result.LockedOut:
+                await Send.ResponseAsync(new { error = "locked_out" }, 423, ct);
+                return;
+            case PasswordCheck.Result.Wrong:
+                AddError("The current password is not right.", "wrong_password");
+                await Send.ErrorsAsync(400, ct);
+                return;
+        }
+
         var result = await users.ChangePasswordAsync(user, req.CurrentPassword, req.NewPassword);
         if (!result.Succeeded)
         {
-            if (result.Errors.Any(e => e.Code is "PasswordMismatch"))
-            {
-                AddError("The current password is not right.", "wrong_password");
-            }
-            else
-            {
-                foreach (var error in result.Errors) AddError(error.Description, error.Code);
-            }
-
+            foreach (var error in result.Errors) AddError(error.Description, error.Code);
             await Send.ErrorsAsync(400, ct);
             return;
         }

@@ -881,25 +881,6 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("catalogue_meta", "bikes");
                 });
 
-            modelBuilder.Entity("Velomine.Server.Features.Bikes.CatalogueSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("ContributionsEnabled")
-                        .HasColumnType("boolean")
-                        .HasColumnName("contributions_enabled");
-
-                    b.HasKey("Id")
-                        .HasName("pk_catalogue_settings");
-
-                    b.ToTable("catalogue_settings", "bikes", t =>
-                        {
-                            t.HasCheckConstraint("ck_catalogue_settings_one_row", "id = 1");
-                        });
-                });
-
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Part", b =>
                 {
                     b.Property<Guid>("Id")

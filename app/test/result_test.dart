@@ -23,11 +23,9 @@ void main() {
   });
 
   test('Result_ShouldReportTheSessionEnded_WhenTheServerAnswers401', () async {
-    var expired = false;
     final result = await Future<int>.error(ApiException(401, 'unauthorized'))
-        .guard(FailureAction.general, onUnauthorized: () => expired = true);
+        .guard(FailureAction.general);
 
-    expect(expired, isTrue);
     expect(result.failureOrNull?.kind, FailureKind.sessionEnded);
   });
 

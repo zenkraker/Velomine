@@ -13,6 +13,7 @@ import 'recording_providers.dart';
 import 'recording_view_model.dart';
 import 'upload_queue.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/stat_tile.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
   'permission' => l10n.recorderPermission,
@@ -477,17 +478,20 @@ class _LiveCard extends StatelessWidget {
               spacing: AppSpacing.xl,
               runSpacing: 8,
               children: [
-                _Value(label: l10n.moving, value: stopwatch(state.movingS)),
-                _Value(label: l10n.statDistance, value: km(state.distanceM)),
-                _Value(label: l10n.statAverageSpeed, value: kmh(state.speedMs)),
-                _Value(
+                StatTile(label: l10n.moving, value: stopwatch(state.movingS)),
+                StatTile(label: l10n.statDistance, value: km(state.distanceM)),
+                StatTile(
+                  label: l10n.statAverageSpeed,
+                  value: kmh(state.speedMs),
+                ),
+                StatTile(
                   label: l10n.gps,
                   value: state.accuracyM == null
                       ? '–'
                       : '±${state.accuracyM!.round()} m',
                 ),
                 if (state.sensorName != null)
-                  _Value(
+                  StatTile(
                     label: l10n.heartRate,
                     value: state.heartRateBpm == null
                         ? '–'
@@ -544,29 +548,6 @@ class _LiveCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Value extends StatelessWidget {
-  const _Value({required this.label, required this.value, this.valueKey});
-
-  final String label;
-  final String value;
-  final Key? valueKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.labelMedium),
-        Text(
-          value,
-          key: valueKey,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      ],
     );
   }
 }
