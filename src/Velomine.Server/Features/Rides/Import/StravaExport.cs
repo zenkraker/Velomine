@@ -2,8 +2,11 @@ using System.Text;
 
 namespace Velomine.Server.Features.Rides.Import;
 
-/// <summary>One row of a Strava export's activities.csv: which original file belongs to which activity.</summary>
-public sealed record StravaActivity(string? SourceId, string File, bool? Commute);
+/// <summary>
+/// One row of a Strava export's activities.csv: which original file belongs to which activity, and the name and
+/// description the member wrote for it (already cleaned and cut to fit a ride; null when empty).
+/// </summary>
+public sealed record StravaActivity(string? SourceId, string File, bool? Commute, string? Name = null, string? Description = null);
 
 /// <summary>
 /// Reads the activities.csv of a Strava bulk export. The export is written in the member's Strava language, so the
@@ -33,22 +36,29 @@ public static class StravaExport
         var header = rows[0];
         var file = FileColumn(header, rows);
         var commute = Column(header, "commut") ?? Column(header, "pendolar");
+        var name = Column(header, "activity name", "nome attività", "nome attivit", "nome dell'attività")
+            // Strava has always written id, date, name, type, description first; use that for a language not listed.
+            ?? (header.Length > 4 ? 2 : null);
+        var description = Column(header, "activity description", "descrizione attività", "descrizione attivit", "descrizione dell'attività")
+            ?? (header.Length > 4 ? 4 : null);
         var activities = new List<StravaActivity>(rows.Count - 1);
         foreach (var row in rows.Skip(1))
         {
             if (row.Length == 0) continue;
-            var name = file >= 0 && file < row.Length ? row[file].Trim() : "";
-            if (name.Length == 0 || !name.StartsWith("activities/", StringComparison.Ordinal)) name = "";
+            var path = file >= 0 && file < row.Length ? row[file].Trim() : "";
+            if (path.Length == 0 || !path.StartsWith("activities/", StringComparison.Ordinal)) path = "";
             var id = row[0].Trim();
             activities.Add(new StravaActivity(
-                id.Length > 0 && id.All(char.IsAsciiDigit) ? id : IdFromFile(name),
-                name,
+                id.Length > 0 && id.All(char.IsAsciiDigit) ? id : IdFromFile(path),
+                path,
                 commute is { } c && c < row.Length ? row[c].Trim().ToLowerInvariant() switch
                 {
                     "true" => true,
                     "false" => false,
                     _ => null,
-                } : null));
+                } : null,
+                Text(row, name, RideText.MaxTitle),
+                Text(row, description, RideText.MaxDescription)));
         }
         return activities;
     }
@@ -69,6 +79,17 @@ public static class StravaExport
             if (header[i].Contains(name, StringComparison.OrdinalIgnoreCase)) return i;
         return null;
     }
+
+    /// <summary>The first column whose header contains any of the names, tried in order.</summary>
+    private static int? Column(string[] header, params string[] names)
+    {
+        foreach (var name in names)
+            if (Column(header, name) is { } found) return found;
+        return null;
+    }
+
+    private static string? Text(string[] row, int? column, int max) =>
+        column is { } c && c < row.Length ? RideText.Imported(row[c], max) : null;
 
     /// <summary>The id an export names its file after, when the first column is not the id.</summary>
     private static string? IdFromFile(string file)

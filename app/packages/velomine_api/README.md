@@ -173,6 +173,7 @@ Class | Method | HTTP request | Description
 *RidesApi* | [**getRideStreams**](doc//RidesApi.md#getridestreams) | **GET** /api/v1/rides/{id}/streams | 
 *RidesApi* | [**listRides**](doc//RidesApi.md#listrides) | **GET** /api/v1/rides | 
 *RidesApi* | [**setRideBike**](doc//RidesApi.md#setridebike) | **PUT** /api/v1/rides/{id}/bike | 
+*RidesApi* | [**setRideDetails**](doc//RidesApi.md#setridedetails) | **PUT** /api/v1/rides/{id}/details | 
 *RidesApi* | [**setRideType**](doc//RidesApi.md#setridetype) | **PUT** /api/v1/rides/{id}/type | 
 *RidesApi* | [**startRideImport**](doc//RidesApi.md#startrideimport) | **POST** /api/v1/rides/imports | 
 *RidesApi* | [**uploadRide**](doc//RidesApi.md#uploadride) | **POST** /api/v1/rides/uploads | 
@@ -285,6 +286,7 @@ Class | Method | HTTP request | Description
  - [SetFtpRequest](doc//SetFtpRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
+ - [SetRideDetailsRequest](doc//SetRideDetailsRequest.md)
  - [SetRideTypeRequest](doc//SetRideTypeRequest.md)
  - [SetTelemetryRequest](doc//SetTelemetryRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)

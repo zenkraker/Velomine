@@ -11,6 +11,8 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/stat_tile.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'ride_filters.dart';
+import 'ride_title.dart';
 import 'ride_type_chips.dart';
 import 'rides_view_model.dart';
 import '../../core/tokens.dart';
@@ -195,6 +197,18 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
                 ),
               ),
             Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: RideFilters(
+                query: s.query,
+                dateRange: s.dateRange,
+                onQuery: (value) =>
+                    ref.read(ridesViewModelProvider.notifier).setQuery(value),
+                onDateRange: (value) => ref
+                    .read(ridesViewModelProvider.notifier)
+                    .setDateRange(value),
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -228,11 +242,29 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
               ),
             ),
             if (s.rides.isEmpty && !s.load.running)
-              EmptyState(
-                key: const Key('no-rides'),
-                message: l10n.noRides,
-                icon: Icons.directions_bike,
-              ),
+              if (s.filtered)
+                Column(
+                  key: const Key('no-rides-match'),
+                  children: [
+                    EmptyState(
+                      message: l10n.noRidesMatch,
+                      icon: Icons.search_off,
+                    ),
+                    TextButton(
+                      key: const Key('clear-filters'),
+                      onPressed: () => ref
+                          .read(ridesViewModelProvider.notifier)
+                          .clearFilters(),
+                      child: Text(l10n.rideFilterClear),
+                    ),
+                  ],
+                )
+              else
+                EmptyState(
+                  key: const Key('no-rides'),
+                  message: l10n.noRides,
+                  icon: Icons.directions_bike,
+                ),
             for (final ride in s.rides)
               RideCard(ride: ride, onTap: () => onOpen(ride.id)),
             if (s.next != null)
@@ -318,10 +350,16 @@ class RideCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                dateTime(ride.startTime ?? ride.uploadedAt),
+                rideTitle(l10n, ride),
+                key: const Key('ride-title'),
                 style: text.titleMedium,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              Text(ride.fileName, style: text.bodySmall),
+              Text(
+                dateTime(ride.startTime ?? ride.uploadedAt),
+                style: text.bodySmall,
+              ),
               if (ready && rideTypeIsSet(ride)) ...[
                 const SizedBox(height: 6),
                 RideTypeChips(ride: ride),

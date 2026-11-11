@@ -44,6 +44,9 @@ class RideResponse {
     required this.maxHeartRate,
     required this.avgCadence,
     required this.bikeId,
+    required this.title,
+    required this.description,
+    required this.version,
     this.heartRateZones = const Optional.present(const []),
     this.powerZones = const Optional.present(const []),
   });
@@ -110,6 +113,12 @@ class RideResponse {
 
   final String? bikeId;
 
+  final String? title;
+
+  final String? description;
+
+  final int version;
+
   final Optional<List<ZoneTime>?> heartRateZones;
 
   final Optional<List<ZoneTime>?> powerZones;
@@ -147,6 +156,9 @@ class RideResponse {
     other.maxHeartRate == maxHeartRate &&
     other.avgCadence == avgCadence &&
     other.bikeId == bikeId &&
+    other.title == title &&
+    other.description == description &&
+    other.version == version &&
     _deepEquality.equals(other.heartRateZones, heartRateZones) &&
     _deepEquality.equals(other.powerZones, powerZones);
 
@@ -184,11 +196,14 @@ class RideResponse {
     (maxHeartRate == null ? 0 : maxHeartRate!.hashCode) +
     (avgCadence == null ? 0 : avgCadence!.hashCode) +
     (bikeId == null ? 0 : bikeId!.hashCode) +
+    (title == null ? 0 : title!.hashCode) +
+    (description == null ? 0 : description!.hashCode) +
+    (version.hashCode) +
     (heartRateZones.hashCode) +
     (powerZones.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, heartRateZones=$heartRateZones, powerZones=$powerZones]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -331,6 +346,17 @@ class RideResponse {
     } else {
       json[r'bikeId'] = null;
     }
+    if (this.title != null) {
+      json[r'title'] = this.title;
+    } else {
+      json[r'title'] = null;
+    }
+    if (this.description != null) {
+      json[r'description'] = this.description;
+    } else {
+      json[r'description'] = null;
+    }
+      json[r'version'] = this.version;
     if (this.heartRateZones.isPresent) {
       final value = this.heartRateZones.value;
       json[r'heartRateZones'] = value;
@@ -403,6 +429,11 @@ class RideResponse {
     bool avgCadenceSetToNull = false,
     String? bikeId,
     bool bikeIdSetToNull = false,
+    String? title,
+    bool titleSetToNull = false,
+    String? description,
+    bool descriptionSetToNull = false,
+    int? version,
     Optional<List<ZoneTime>?>? heartRateZones,
     Optional<List<ZoneTime>?>? powerZones,
   }) => RideResponse(
@@ -437,6 +468,9 @@ class RideResponse {
     maxHeartRate: maxHeartRateSetToNull ? null : maxHeartRate ?? this.maxHeartRate,
     avgCadence: avgCadenceSetToNull ? null : avgCadence ?? this.avgCadence,
     bikeId: bikeIdSetToNull ? null : bikeId ?? this.bikeId,
+    title: titleSetToNull ? null : title ?? this.title,
+    description: descriptionSetToNull ? null : description ?? this.description,
+    version: version ?? this.version,
     heartRateZones: heartRateZones ?? this.heartRateZones,
     powerZones: powerZones ?? this.powerZones,
   );
@@ -487,6 +521,10 @@ class RideResponse {
         assert(json.containsKey(r'maxHeartRate'), 'Required key "RideResponse[maxHeartRate]" is missing from JSON.');
         assert(json.containsKey(r'avgCadence'), 'Required key "RideResponse[avgCadence]" is missing from JSON.');
         assert(json.containsKey(r'bikeId'), 'Required key "RideResponse[bikeId]" is missing from JSON.');
+        assert(json.containsKey(r'title'), 'Required key "RideResponse[title]" is missing from JSON.');
+        assert(json.containsKey(r'description'), 'Required key "RideResponse[description]" is missing from JSON.');
+        assert(json.containsKey(r'version'), 'Required key "RideResponse[version]" is missing from JSON.');
+        assert(json[r'version'] != null, 'Required key "RideResponse[version]" has a null value in JSON.');
         return true;
       }());
 
@@ -522,6 +560,9 @@ class RideResponse {
         maxHeartRate: mapValueOfType<int>(json, r'maxHeartRate'),
         avgCadence: mapValueOfType<int>(json, r'avgCadence'),
         bikeId: mapValueOfType<String>(json, r'bikeId'),
+        title: mapValueOfType<String>(json, r'title'),
+        description: mapValueOfType<String>(json, r'description'),
+        version: mapValueOfType<int>(json, r'version')!,
         heartRateZones: json.containsKey(r'heartRateZones') ? Optional.present(ZoneTime.listFromJson(json[r'heartRateZones'])) : const Optional.absent(),
         powerZones: json.containsKey(r'powerZones') ? Optional.present(ZoneTime.listFromJson(json[r'powerZones'])) : const Optional.absent(),
       );
@@ -602,6 +643,9 @@ class RideResponse {
     'maxHeartRate',
     'avgCadence',
     'bikeId',
+    'title',
+    'description',
+    'version',
   };
 }
 

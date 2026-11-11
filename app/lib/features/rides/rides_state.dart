@@ -4,12 +4,17 @@ import '../../core/command.dart';
 import '../../core/user_message.dart';
 import 'rides_data.dart';
 
-/// The member's rides, the page cursor and the surface on show.
+/// A first and a last day, both included.
+typedef DateSpan = ({DateTime from, DateTime to});
+
+/// The member's rides, the page cursor and the filters on show.
 class RidesState {
   const RidesState({
     this.rides = const [],
     this.next,
     this.disciplineFilter,
+    this.query = '',
+    this.dateRange,
     this.load = const CommandState.idle(),
     this.upload = const CommandState.idle(),
     this.import = const CommandState.idle(),
@@ -24,6 +29,16 @@ class RidesState {
   /// The surface on show, or null for every ride.
   final String? disciplineFilter;
 
+  /// Words the title or description must contain; empty for every ride.
+  final String query;
+
+  /// The days to show, or null for every day.
+  final DateSpan? dateRange;
+
+  /// Whether any filter narrows the list.
+  bool get filtered =>
+      disciplineFilter != null || query.trim().isNotEmpty || dateRange != null;
+
   final CommandState<RidesPage> load;
   final VoidCommand upload;
   final CommandState<String?> import;
@@ -37,6 +52,9 @@ class RidesState {
     bool clearNext = false,
     String? disciplineFilter,
     bool clearDisciplineFilter = false,
+    String? query,
+    DateSpan? dateRange,
+    bool clearDateRange = false,
     CommandState<RidesPage>? load,
     VoidCommand? upload,
     CommandState<String?>? import,
@@ -47,6 +65,8 @@ class RidesState {
     disciplineFilter: clearDisciplineFilter
         ? null
         : (disciplineFilter ?? this.disciplineFilter),
+    query: query ?? this.query,
+    dateRange: clearDateRange ? null : (dateRange ?? this.dateRange),
     load: load ?? this.load,
     upload: upload ?? this.upload,
     import: import ?? this.import,

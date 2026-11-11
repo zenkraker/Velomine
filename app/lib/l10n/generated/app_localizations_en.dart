@@ -2396,6 +2396,91 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideFilterAll => 'All';
 
   @override
+  String get rideFilterSearch => 'Search rides';
+
+  @override
+  String get rideFilterSearchHint => 'Search titles and descriptions';
+
+  @override
+  String get rideFilterClearSearch => 'Clear search';
+
+  @override
+  String get rideFilterDates => 'Dates';
+
+  @override
+  String get rideFilterDatesTooltip => 'Choose dates';
+
+  @override
+  String get rideFilterRemoveDates => 'Remove the date filter';
+
+  @override
+  String get rideFilterClear => 'Clear filters';
+
+  @override
+  String get noRidesMatch => 'No rides match.';
+
+  @override
+  String rideDateRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String rideDefaultTitle(String period, String kind) {
+    String _temp0 = intl.Intl.selectLogic(period, {
+      'morning': 'Morning',
+      'afternoon': 'Afternoon',
+      'evening': 'Evening',
+      'other': 'Night',
+    });
+    String _temp1 = intl.Intl.selectLogic(kind, {
+      'commute': 'commute',
+      'virtual': 'virtual ride',
+      'indoor': 'indoor ride',
+      'road': 'road ride',
+      'gravel': 'gravel ride',
+      'mountain': 'mountain bike ride',
+      'track': 'track ride',
+      'ebike': 'e-bike ride',
+      'other': 'ride',
+    });
+    return '$_temp0 $_temp1';
+  }
+
+  @override
+  String get rideTextEdit => 'Edit title and description';
+
+  @override
+  String get rideTextSheetTitle => 'Name this ride';
+
+  @override
+  String get rideTextHelp =>
+      'Your own words. Coaches you share rides with can read them.';
+
+  @override
+  String get rideTextTitle => 'Title';
+
+  @override
+  String get rideTextTitleHelper =>
+      'Leave empty for a name made from the time and type of ride.';
+
+  @override
+  String get rideTextDescription => 'Description';
+
+  @override
+  String get rideTextAdd => 'Add a description';
+
+  @override
+  String get actionSaveRideDetails => 'save the title and description';
+
+  @override
+  String rideViewedBy(String name, String when) {
+    return 'Seen by $name · $when';
+  }
+
+  @override
+  String get rideViewsEmpty => 'Nobody else has looked at this ride.';
+
+  @override
   String get rideTypeTitle => 'Ride details';
 
   @override

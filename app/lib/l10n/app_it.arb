@@ -776,6 +776,56 @@
   "coachPowerCurve": "Curva di potenza",
 
   "rideFilterAll": "Tutte",
+  "rideFilterSearch": "Cerca uscite",
+  "rideFilterSearchHint": "Cerca nei titoli e nelle descrizioni",
+  "rideFilterClearSearch": "Cancella la ricerca",
+  "rideFilterDates": "Date",
+  "rideFilterDatesTooltip": "Scegli le date",
+  "rideFilterRemoveDates": "Togli il filtro delle date",
+  "rideFilterClear": "Azzera i filtri",
+  "noRidesMatch": "Nessuna uscita corrisponde.",
+  "rideDateRange": "{from} – {to}",
+  "@rideDateRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "rideDefaultTitle": "{kind, select, commute{Tragitto pendolare} virtual{Uscita virtuale} indoor{Uscita indoor} road{Uscita su strada} gravel{Uscita gravel} mountain{Uscita in mountain bike} track{Uscita in pista} ebike{Uscita in e-bike} other{Uscita in bici}} {period, select, morning{del mattino} afternoon{del pomeriggio} evening{della sera} other{della notte}}",
+  "@rideDefaultTitle": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "rideTextEdit": "Modifica titolo e descrizione",
+  "rideTextSheetTitle": "Dai un nome all'uscita",
+  "rideTextHelp": "Parole tue. Gli allenatori con cui condividi le uscite possono leggerle.",
+  "rideTextTitle": "Titolo",
+  "rideTextTitleHelper": "Lascia vuoto per un nome ricavato da orario e tipo di uscita.",
+  "rideTextDescription": "Descrizione",
+  "rideTextAdd": "Aggiungi una descrizione",
+  "actionSaveRideDetails": "salvare titolo e descrizione",
+  "rideViewedBy": "Visto da {name} · {when}",
+  "@rideViewedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "rideViewsEmpty": "Nessun altro ha guardato questa uscita.",
   "rideTypeTitle": "Dettagli uscita",
   "rideTypeHelp": "Che tipo di uscita era? Tutto è facoltativo.",
   "rideTypeDiscipline": "Superficie",

@@ -148,6 +148,8 @@ public sealed class RideIngestionService(
                 // time-zone change does not move the ride to another day.
                 ?? (int)TimeZoneInfo.ConvertTime(file.StartTime, MemberClock.ZoneOf(profile.TimeZone)).Offset.TotalMinutes;
             target.Device = file.Device;
+            // A name the member or an import already gave the ride is theirs; the file's only fills a gap.
+            target.Title ??= file.Title;
             target.Discipline = file.Discipline;
             target.Assist = file.Assist;
             target.Environment = file.Environment;

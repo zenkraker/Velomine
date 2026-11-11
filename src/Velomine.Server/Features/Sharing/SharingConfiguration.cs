@@ -28,7 +28,10 @@ public sealed class SharingConfiguration : IEntityTypeConfiguration<ShareGrant>,
         view.Property(v => v.ViewerName).HasMaxLength(100);
         view.Property(v => v.What).HasMaxLength(24);
         view.HasOne<Accounts.User>().WithMany().HasForeignKey(v => v.MemberId).OnDelete(DeleteBehavior.Cascade);
+        view.HasOne<Rides.Ride>().WithMany().HasForeignKey(v => v.RideId).OnDelete(DeleteBehavior.SetNull);
         view.HasIndex(v => new { v.MemberId, v.At });
+        // "Who looked at this ride" reads one ride's views, newest first.
+        view.HasIndex(v => new { v.RideId, v.At }).HasFilter("ride_id IS NOT NULL");
         // The retention job deletes by time across every member, which the member-first index cannot serve.
         view.HasIndex(v => v.At);
     }

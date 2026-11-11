@@ -12,6 +12,7 @@ class RideDetailState {
     this.bikes = const [],
     this.series,
     this.feel,
+    this.views,
     this.notFound = false,
     this.load = const CommandState.idle(),
     this.action = const CommandState.idle(),
@@ -33,6 +34,9 @@ class RideDetailState {
   /// How the ride felt, owned by this member.
   final RideFeelResponse? feel;
 
+  /// Who looked at this ride, most recent first; null when it could not be loaded.
+  final List<ShareViewResponse>? views;
+
   final bool notFound;
   final CommandState<RideResponse?> load;
 
@@ -50,6 +54,7 @@ class RideDetailState {
     List<BikeResponse>? bikes,
     RideSeries? series,
     RideFeelResponse? feel,
+    List<ShareViewResponse>? views,
     bool? notFound,
     CommandState<RideResponse?>? load,
     VoidCommand? action,
@@ -61,6 +66,7 @@ class RideDetailState {
     bikes: bikes ?? this.bikes,
     series: series ?? this.series,
     feel: feel ?? this.feel,
+    views: views ?? this.views,
     notFound: notFound ?? this.notFound,
     load: load ?? this.load,
     action: action ?? this.action,

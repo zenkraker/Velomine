@@ -65,5 +65,8 @@ public sealed class ShareView
     /// <summary>summary, training, ride, rides or route.</summary>
     public string What { get; set; } = "summary";
 
+    /// <summary>The ride that was looked at, when the look was at one ride; null for a list, a summary or other data. Cleared when the ride is deleted.</summary>
+    public Guid? RideId { get; set; }
+
     public DateTimeOffset At { get; set; }
 }

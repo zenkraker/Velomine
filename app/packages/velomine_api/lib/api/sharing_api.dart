@@ -17,7 +17,10 @@ class SharingApi {
   final ApiClient apiClient;
 
   /// Performs an HTTP 'GET /api/v1/sharing/views' operation and returns the [Response].
-  Future<Response> getShareViewsWithHttpInfo({ Future<void>? abortTrigger, }) async {
+  /// Parameters:
+  ///
+  /// * [String] rideId:
+  Future<Response> getShareViewsWithHttpInfo({ String? rideId, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/sharing/views';
 
@@ -27,6 +30,10 @@ class SharingApi {
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
+
+    if (rideId != null) {
+      queryParams.addAll(_queryParams('', 'rideId', rideId));
+    }
 
     const contentTypes = <String>[];
 
@@ -43,8 +50,11 @@ class SharingApi {
     );
   }
 
-  Future<ShareViewsResponse?> getShareViews({ Future<void>? abortTrigger, }) async {
-    final response = await getShareViewsWithHttpInfo(abortTrigger: abortTrigger,);
+  /// Parameters:
+  ///
+  /// * [String] rideId:
+  Future<ShareViewsResponse?> getShareViews({ String? rideId, Future<void>? abortTrigger, }) async {
+    final response = await getShareViewsWithHttpInfo(rideId: rideId, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

@@ -4400,6 +4400,126 @@ abstract class AppLocalizations {
   /// **'All'**
   String get rideFilterAll;
 
+  /// No description provided for @rideFilterSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search rides'**
+  String get rideFilterSearch;
+
+  /// No description provided for @rideFilterSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search titles and descriptions'**
+  String get rideFilterSearchHint;
+
+  /// No description provided for @rideFilterClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get rideFilterClearSearch;
+
+  /// No description provided for @rideFilterDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates'**
+  String get rideFilterDates;
+
+  /// No description provided for @rideFilterDatesTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose dates'**
+  String get rideFilterDatesTooltip;
+
+  /// No description provided for @rideFilterRemoveDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the date filter'**
+  String get rideFilterRemoveDates;
+
+  /// No description provided for @rideFilterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get rideFilterClear;
+
+  /// No description provided for @noRidesMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides match.'**
+  String get noRidesMatch;
+
+  /// No description provided for @rideDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String rideDateRange(String from, String to);
+
+  /// No description provided for @rideDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{period, select, morning{Morning} afternoon{Afternoon} evening{Evening} other{Night}} {kind, select, commute{commute} virtual{virtual ride} indoor{indoor ride} road{road ride} gravel{gravel ride} mountain{mountain bike ride} track{track ride} ebike{e-bike ride} other{ride}}'**
+  String rideDefaultTitle(String period, String kind);
+
+  /// No description provided for @rideTextEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit title and description'**
+  String get rideTextEdit;
+
+  /// No description provided for @rideTextSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name this ride'**
+  String get rideTextSheetTitle;
+
+  /// No description provided for @rideTextHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own words. Coaches you share rides with can read them.'**
+  String get rideTextHelp;
+
+  /// No description provided for @rideTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get rideTextTitle;
+
+  /// No description provided for @rideTextTitleHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for a name made from the time and type of ride.'**
+  String get rideTextTitleHelper;
+
+  /// No description provided for @rideTextDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get rideTextDescription;
+
+  /// No description provided for @rideTextAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a description'**
+  String get rideTextAdd;
+
+  /// No description provided for @actionSaveRideDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'save the title and description'**
+  String get actionSaveRideDetails;
+
+  /// No description provided for @rideViewedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen by {name} · {when}'**
+  String rideViewedBy(String name, String when);
+
+  /// No description provided for @rideViewsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody else has looked at this ride.'**
+  String get rideViewsEmpty;
+
   /// No description provided for @rideTypeTitle.
   ///
   /// In en, this message translates to:

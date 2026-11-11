@@ -55,7 +55,9 @@ public static class TcxParser
                 points[0].Item1,
                 points,
                 dimensions: hasPositions ? new RideDimensions(null, null, Environments.Outdoor, null) : RideDimensions.Unset,
-                laps: parsedLaps));
+                laps: parsedLaps,
+                // TCX has no title field; the activity's note is the only text a rider writes there.
+                title: activity.ChildText("Notes")?.Split('\n', 2)[0]));
         }
 
         if (rides.Count == 0)

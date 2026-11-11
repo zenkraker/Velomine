@@ -8,7 +8,11 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
 {
     public void Configure(EntityTypeBuilder<Ride> ride)
     {
-        ride.ToTable("rides", "rides");
+        ride.ToTable("rides", "rides", t =>
+        {
+            t.HasCheckConstraint("ck_rides_title_length", "char_length(title) BETWEEN 1 AND 120");
+            t.HasCheckConstraint("ck_rides_description_length", "char_length(description) BETWEEN 1 AND 2000");
+        });
         ride.HasKey(r => r.Id);
         ride.Property(r => r.Status).HasConversion<string>().HasMaxLength(16);
         ride.Property(r => r.SpeedSource).HasConversion<string>().HasMaxLength(16);

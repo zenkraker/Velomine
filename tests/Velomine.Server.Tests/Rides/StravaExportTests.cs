@@ -22,6 +22,31 @@ public sealed class StravaExportTests
     }
 
     [Fact]
+    public void StravaExport_ShouldReadNameAndDescription_WhenTheHeadersAreEnglish()
+    {
+        var activities = Parse(
+            "Activity ID,Activity Date,Activity Name,Activity Type,Activity Description,Filename\n" +
+            "111,\"Oct 3, 2026\",\"Dawn, patrol\",Ride,\"Cold\nstart\",activities/111.gpx\n" +
+            "112,\"Oct 4, 2026\",   ,Ride,,activities/112.gpx\n");
+
+        Assert.Equal("Dawn, patrol", activities[0].Name);
+        Assert.Equal("Cold\nstart", activities[0].Description);
+        Assert.Null(activities[1].Name);
+        Assert.Null(activities[1].Description);
+    }
+
+    [Fact]
+    public void StravaExport_ShouldReadNameAndDescription_WhenTheHeadersAreItalian()
+    {
+        var activities = Parse(
+            "ID attività,Data dell’attività,Nome attività,Tipo attività,Descrizione attività,Nome del file\n" +
+            "111,\"3 ott 2026\",Giro del mattino,Ciclismo,Freddo,activities/111.gpx\n");
+
+        Assert.Equal("Giro del mattino", Assert.Single(activities).Name);
+        Assert.Equal("Freddo", activities[0].Description);
+    }
+
+    [Fact]
     public void StravaExport_ShouldFindTheFileColumnByItsValues_WhenTheHeadersAreInAnotherLanguage()
     {
         var activities = Parse(

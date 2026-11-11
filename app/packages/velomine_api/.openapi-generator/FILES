@@ -118,6 +118,7 @@ lib/model/set_club_owner_request.dart
 lib/model/set_ftp_request.dart
 lib/model/set_my_language_request.dart
 lib/model/set_ride_bike_request.dart
+lib/model/set_ride_details_request.dart
 lib/model/set_ride_type_request.dart
 lib/model/set_telemetry_request.dart
 lib/model/set_user_roles_request.dart

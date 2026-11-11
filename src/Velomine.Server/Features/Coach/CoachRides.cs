@@ -136,7 +136,7 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
 
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
-            await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct);
+            await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct, req.RideId);
         var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
         await Send.OkAsync(
             PrivacyRules.ForViewer(
@@ -201,7 +201,7 @@ public sealed class GetCoachRideStreams(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct),
-            showRoute ? ViewKinds.Route : ViewKinds.Ride, ct);
+            showRoute ? ViewKinds.Route : ViewKinds.Ride, ct, req.RideId);
         await Send.OkAsync(PrivacyRules.ForViewer(response, privacy, showRoute), ct);
     }
 }

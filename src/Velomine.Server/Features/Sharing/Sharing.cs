@@ -55,8 +55,9 @@ public static class SharingRules
         Guid viewerId,
         string viewerName,
         string what,
-        CancellationToken ct) =>
-        RecordViewsAsync(db, time, [memberId], clubId, viewerId, viewerName, what, ct);
+        CancellationToken ct,
+        Guid? rideId = null) =>
+        RecordViewsAsync(db, time, [memberId], clubId, viewerId, viewerName, what, ct, rideId);
 
     /// <summary>The same, for a roster that shows several athletes at once: one round trip, one timestamp.</summary>
     public static async Task RecordViewsAsync(
@@ -67,7 +68,8 @@ public static class SharingRules
         Guid viewerId,
         string viewerName,
         string what,
-        CancellationToken ct)
+        CancellationToken ct,
+        Guid? rideId = null)
     {
         var at = time.GetUtcNow();
         var added = false;
@@ -81,6 +83,7 @@ public static class SharingRules
                 ViewerId = viewerId,
                 ViewerName = viewerName,
                 What = what,
+                RideId = rideId,
                 At = at,
             });
             added = true;
