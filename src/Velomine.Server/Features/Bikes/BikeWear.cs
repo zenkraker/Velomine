@@ -16,26 +16,37 @@ public static class BikeWear
 
     public static ComponentWear Compute(BikeComponent component, IEnumerable<RideUse> bikeRides, DateOnly today)
     {
+        var wear = Measure(component.InstalledOn, component.RemovedOn, component.ExpectedDistanceM, component.ExpectedHours, component.ExpectedMonths, bikeRides, today);
+        return component.RemovedOn is not null ? wear with { Status = "retired" } : wear;
+    }
+
+    /// <summary>
+    /// How much of the limits the rides from <paramref name="from"/> to <paramref name="to"/> (or today) have used. Parts
+    /// and maintenance reminders both count this way, so they always agree. The status is ok, soon or worn.
+    /// </summary>
+    public static ComponentWear Measure(DateOnly from, DateOnly? to, double? limitDistanceM, double? limitHours, int? limitMonths,
+        IEnumerable<RideUse> bikeRides, DateOnly today)
+    {
         double distance = 0, seconds = 0;
         foreach (var ride in bikeRides)
         {
-            if (ride.LocalDate < component.InstalledOn || (component.RemovedOn is { } removed && ride.LocalDate > removed)) continue;
+            if (ride.LocalDate < from || (to is { } last && ride.LocalDate > last)) continue;
             distance += ride.DistanceM;
             seconds += ride.MovingS;
         }
 
         var hours = seconds / 3600;
-        var end = component.RemovedOn ?? today;
-        var months = end < component.InstalledOn ? 0 : (end.DayNumber - component.InstalledOn.DayNumber) / DaysPerMonth;
+        var end = to ?? today;
+        var months = end < from ? 0 : (end.DayNumber - from.DayNumber) / DaysPerMonth;
 
         var fractions = new List<double>();
-        if (component.ExpectedDistanceM is > 0) fractions.Add(distance / component.ExpectedDistanceM.Value);
-        if (component.ExpectedHours is > 0) fractions.Add(hours / component.ExpectedHours.Value);
-        if (component.ExpectedMonths is > 0) fractions.Add(months / component.ExpectedMonths.Value);
+        if (limitDistanceM is > 0) fractions.Add(distance / limitDistanceM.Value);
+        if (limitHours is > 0) fractions.Add(hours / limitHours.Value);
+        if (limitMonths is > 0) fractions.Add(months / limitMonths.Value);
 
         // Rounded down, so a part at 99.9 % never reads as worn.
         int? percent = fractions.Count == 0 ? null : (int)Math.Floor(fractions.Max() * 100);
-        var status = component.RemovedOn is not null ? "retired" : percent switch
+        var status = percent switch
         {
             >= 100 => "worn",
             >= SoonPercent => "soon",

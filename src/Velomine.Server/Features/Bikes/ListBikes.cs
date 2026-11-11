@@ -8,7 +8,7 @@ namespace Velomine.Server.Features.Bikes;
 public sealed record ListBikesResponse(BikeResponse[] Bikes);
 
 /// <summary>The member's bikes, default first, then active ones, then archived.</summary>
-public sealed class ListBikes(VelomineDbContext db) : EndpointWithoutRequest<ListBikesResponse>
+public sealed class ListBikes(VelomineDbContext db, TimeProvider time) : EndpointWithoutRequest<ListBikesResponse>
 {
     public override void Configure()
     {
@@ -21,6 +21,6 @@ public sealed class ListBikes(VelomineDbContext db) : EndpointWithoutRequest<Lis
         var userId = User.UserId();
         var bikes = await db.Bikes.AsNoTracking().Where(b => b.UserId == userId)
             .OrderByDescending(b => b.IsDefault).ThenByDescending(b => b.IsActive).ThenBy(b => b.Name).ToListAsync(ct);
-        await Send.OkAsync(new ListBikesResponse(await BikeQueries.SummariesAsync(db, bikes, ct)), ct);
+        await Send.OkAsync(new ListBikesResponse(await BikeQueries.SummariesAsync(db, bikes, await MemberClock.ForAsync(db, userId, time, ct), ct)), ct);
     }
 }

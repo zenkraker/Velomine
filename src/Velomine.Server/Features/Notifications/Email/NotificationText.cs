@@ -12,6 +12,8 @@ public static class NotificationText
         NotificationTypes.SignUpWaiting => EmailStrings.Format("SignUpWaiting", n.Subject),
         NotificationTypes.PartSoon => EmailStrings.Format("PartSoon", n.Subject),
         NotificationTypes.PartWorn => EmailStrings.Format("PartWorn", n.Subject),
+        NotificationTypes.ReminderSoon => EmailStrings.Format("ReminderSoon", n.Subject),
+        NotificationTypes.ReminderDue => EmailStrings.Format("ReminderDue", n.Subject),
         NotificationTypes.ClubJoinRequest => EmailStrings.Format("ClubJoinRequest", n.Subject),
         NotificationTypes.ClubJoinApproved => EmailStrings.Format("ClubJoinApproved", n.Subject),
         NotificationTypes.ClubJoinDeclined => EmailStrings.Format("ClubJoinDeclined", n.Subject),

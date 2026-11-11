@@ -3254,4 +3254,236 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get loading => 'Caricamento';
+
+  @override
+  String get actionLoadServiceLog => 'caricare il registro degli interventi';
+
+  @override
+  String get actionSaveReminder => 'salvare il promemoria';
+
+  @override
+  String get actionRemoveReminder => 'eliminare il promemoria';
+
+  @override
+  String get actionCompleteReminder => 'segnare l\'intervento come fatto';
+
+  @override
+  String get actionSaveServiceEntry => 'salvare la voce';
+
+  @override
+  String get actionRemoveServiceEntry => 'eliminare la voce';
+
+  @override
+  String get service => 'Manutenzione';
+
+  @override
+  String get serviceRemindersIntro =>
+      'I promemoria ti avvisano quando torna il momento di un intervento su questa bici, come lubrificare la catena o rabboccare il lattice. Scegline uno comune per iniziare.';
+
+  @override
+  String get serviceAddReminder => 'Aggiungi promemoria';
+
+  @override
+  String get serviceCommonJobs => 'Interventi comuni';
+
+  @override
+  String get reminderStatusOk => 'A posto';
+
+  @override
+  String get reminderStatusSoon => 'Presto da fare';
+
+  @override
+  String get reminderStatusDue => 'Da fare';
+
+  @override
+  String get reminderStatusPaused => 'In pausa';
+
+  @override
+  String reminderLastDone(String date) {
+    return 'Ultimo intervento $date';
+  }
+
+  @override
+  String get reminderDone => 'Fatto';
+
+  @override
+  String get reminderDoneSaved => 'Fatto. Lo trovi nel registro interventi.';
+
+  @override
+  String get reminderDoneBody =>
+      'Il conteggio riparte dal giorno scelto e l\'intervento finisce nel registro.';
+
+  @override
+  String doneOnDate(String date) {
+    return 'Fatto il $date';
+  }
+
+  @override
+  String get reminderPause => 'Metti in pausa';
+
+  @override
+  String get reminderResume => 'Riprendi';
+
+  @override
+  String get reminderFormAddTitle => 'Aggiungi un promemoria';
+
+  @override
+  String get reminderFormEditTitle => 'Modifica promemoria';
+
+  @override
+  String get reminderName => 'Cosa c\'è da fare?';
+
+  @override
+  String get reminderIntervalHelp =>
+      'Scatta al primo di questi limiti. Lascia vuoto quello che non ti serve.';
+
+  @override
+  String get reminderErrorName => 'Dai un nome all\'intervento.';
+
+  @override
+  String get reminderErrorInterval =>
+      'Indica una distanza, delle ore o dei mesi.';
+
+  @override
+  String get reminderRemoveTitle => 'Eliminare questo promemoria?';
+
+  @override
+  String get reminderRemoveBody =>
+      'Nel registro restano gli interventi già fatti.';
+
+  @override
+  String get jobChainLube => 'Lubrifica la catena';
+
+  @override
+  String get jobChainWearCheck => 'Controlla l\'usura della catena';
+
+  @override
+  String get jobSealantTopUp => 'Rabbocca il lattice tubeless';
+
+  @override
+  String get jobBrakeBleed => 'Spurga i freni';
+
+  @override
+  String get jobForkService => 'Revisione dei foderi della forcella';
+
+  @override
+  String get jobShockService => 'Revisione dell\'ammortizzatore posteriore';
+
+  @override
+  String get jobBoltCheck => 'Controlla la coppia di serraggio delle viti';
+
+  @override
+  String get jobShiftingBattery => 'Ricarica il cambio elettronico';
+
+  @override
+  String get serviceLog => 'Registro interventi';
+
+  @override
+  String get serviceLogIntro =>
+      'Qui trovi tutto quello che è stato fatto a questa bici, con i chilometri che aveva allora.';
+
+  @override
+  String get serviceAddEntry => 'Aggiungi voce';
+
+  @override
+  String entryAtDistance(String distance) {
+    return 'a $distance';
+  }
+
+  @override
+  String get entryAtHome => 'A casa';
+
+  @override
+  String get entryFormAddTitle => 'Aggiungi al registro';
+
+  @override
+  String get entryFormEditTitle => 'Modifica voce';
+
+  @override
+  String get entryTitleField => 'Cosa è stato fatto?';
+
+  @override
+  String get entryNotes => 'Note';
+
+  @override
+  String get entryPlace => 'Dove';
+
+  @override
+  String get entryPlaceHelp =>
+      'Il nome del negozio. Lascia vuoto se l\'hai fatto a casa.';
+
+  @override
+  String get entryCost => 'Costo';
+
+  @override
+  String get entryCurrency => 'Valuta';
+
+  @override
+  String get entryPart => 'Su quale componente?';
+
+  @override
+  String get entryNoPart => 'Nessun componente in particolare';
+
+  @override
+  String get entryReminder => 'Su quale promemoria?';
+
+  @override
+  String get entryNoReminder => 'Nessun promemoria in particolare';
+
+  @override
+  String get entryErrorTitle => 'Scrivi cosa è stato fatto.';
+
+  @override
+  String get entryErrorCost =>
+      'Inserisci il costo come numero, con una valuta di tre lettere come EUR.';
+
+  @override
+  String get entryRemoveTitle => 'Eliminare questa voce?';
+
+  @override
+  String get entryRemoveBody =>
+      'Viene tolta dal registro. Non si può annullare.';
+
+  @override
+  String get entryRemoveDoneBody =>
+      'Viene tolta dal registro. Il promemoria continua a contare dal giorno in cui è stato fatto.';
+
+  @override
+  String get logFilterLabel => 'Mostra';
+
+  @override
+  String get logFilterAll => 'Tutto';
+
+  @override
+  String get logFilterEmpty =>
+      'Ancora niente nel registro per questo componente.';
+
+  @override
+  String get logShowMore => 'Mostra altro';
+
+  @override
+  String logReplacedPart(String part) {
+    return 'Sostituzione: $part';
+  }
+
+  @override
+  String logReplacedPartWith(String part, String make) {
+    return 'Sostituzione $part: $make';
+  }
+
+  @override
+  String get bikeServiceDue => 'Manutenzione da fare';
+
+  @override
+  String get bikeServiceSoon => 'Manutenzione in arrivo';
+
+  @override
+  String notificationReminderSoon(String subject) {
+    return 'Manutenzione in scadenza: $subject.';
+  }
+
+  @override
+  String notificationReminderDue(String subject) {
+    return 'Manutenzione da fare: $subject.';
+  }
 }

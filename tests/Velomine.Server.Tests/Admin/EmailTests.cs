@@ -339,6 +339,8 @@ public sealed class EmailTests(PostgresFixture postgres)
     [InlineData(NotificationTypes.SignUpWaiting, "morning.fit signed up and is waiting for approval.")]
     [InlineData(NotificationTypes.PartSoon, "morning.fit is nearly worn.")]
     [InlineData(NotificationTypes.PartWorn, "morning.fit is worn out. Time to replace it.")]
+    [InlineData(NotificationTypes.ReminderSoon, "Maintenance nearly due: morning.fit.")]
+    [InlineData(NotificationTypes.ReminderDue, "Maintenance due: morning.fit.")]
     public void NotificationText_ShouldReturnTheSentence_WhenNotificationTypeIsKnown(string type, string sentence)
     {
         using var _ = EmailLanguage.Use("en");

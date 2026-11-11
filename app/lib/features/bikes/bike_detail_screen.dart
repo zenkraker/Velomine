@@ -13,6 +13,7 @@ import 'bike_forms.dart';
 import 'bikes_state.dart';
 import 'bikes_view_models.dart';
 import 'component_names.dart';
+import 'service_section.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/stat_tile.dart';
 
@@ -143,10 +144,23 @@ class BikeDetailScreen extends ConsumerWidget {
       search: ref.read(bikeDetailViewModelProvider(id).notifier).searchParts,
       replacing: part,
     );
-    if (data != null) {
+    if (data != null && context.mounted) {
+      final l10n = context.l10n;
+      final name = componentTypeName(
+        l10n,
+        part.type,
+        part.typeName,
+      ).toLowerCase();
+      final make = [data.brand, data.model].whereType<String>().join(' ');
       await ref
           .read(bikeDetailViewModelProvider(id).notifier)
-          .replacePart(part, data.toCreate());
+          .replacePart(
+            part,
+            data.toCreate(),
+            logTitle: make.isEmpty
+                ? l10n.logReplacedPart(name)
+                : l10n.logReplacedPartWith(name, make),
+          );
     }
   }
 
@@ -332,6 +346,7 @@ class BikeDetailScreen extends ConsumerWidget {
           key: const Key('bike-error'),
           style: errorStyle,
         ),
+      ServiceSection(id: id),
       Row(
         children: [
           Text(l10n.parts, style: text.titleLarge),

@@ -74,6 +74,64 @@ class BikesApi {
     return null;
   }
 
+  /// Performs an HTTP 'POST /api/v1/bikes/{bikeId}/reminders/{id}/done' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [MarkReminderDoneRequest] markReminderDoneRequest (required):
+  Future<Response> completeReminderWithHttpInfo(String bikeId, String id, MarkReminderDoneRequest markReminderDoneRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/reminders/{id}/done'
+      .replaceAll('{bikeId}', bikeId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = markReminderDoneRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [MarkReminderDoneRequest] markReminderDoneRequest (required):
+  Future<BikeDetailResponse?> completeReminder(String bikeId, String id, MarkReminderDoneRequest markReminderDoneRequest, { Future<void>? abortTrigger, }) async {
+    final response = await completeReminderWithHttpInfo(bikeId, id, markReminderDoneRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/bikes' operation and returns the [Response].
   /// Parameters:
   ///
@@ -170,6 +228,112 @@ class BikesApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/bikes/{bikeId}/reminders' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [CreateReminderRequest] createReminderRequest (required):
+  Future<Response> createReminderWithHttpInfo(String bikeId, CreateReminderRequest createReminderRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/reminders'
+      .replaceAll('{bikeId}', bikeId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = createReminderRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [CreateReminderRequest] createReminderRequest (required):
+  Future<BikeDetailResponse?> createReminder(String bikeId, CreateReminderRequest createReminderRequest, { Future<void>? abortTrigger, }) async {
+    final response = await createReminderWithHttpInfo(bikeId, createReminderRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/bikes/{bikeId}/service' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [CreateServiceEntryRequest] createServiceEntryRequest (required):
+  Future<Response> createServiceEntryWithHttpInfo(String bikeId, CreateServiceEntryRequest createServiceEntryRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/service'
+      .replaceAll('{bikeId}', bikeId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = createServiceEntryRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [CreateServiceEntryRequest] createServiceEntryRequest (required):
+  Future<ServiceEntryResponse?> createServiceEntry(String bikeId, CreateServiceEntryRequest createServiceEntryRequest, { Future<void>? abortTrigger, }) async {
+    final response = await createServiceEntryWithHttpInfo(bikeId, createServiceEntryRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ServiceEntryResponse',) as ServiceEntryResponse;
     
     }
     return null;
@@ -305,6 +469,98 @@ class BikesApi {
   /// * [String] id (required):
   Future<void> deleteComponent(String bikeId, String id, { Future<void>? abortTrigger, }) async {
     final response = await deleteComponentWithHttpInfo(bikeId, id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'DELETE /api/v1/bikes/{bikeId}/reminders/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteReminderWithHttpInfo(String bikeId, String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/reminders/{id}'
+      .replaceAll('{bikeId}', bikeId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  Future<void> deleteReminder(String bikeId, String id, { Future<void>? abortTrigger, }) async {
+    final response = await deleteReminderWithHttpInfo(bikeId, id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'DELETE /api/v1/bikes/{bikeId}/service/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteServiceEntryWithHttpInfo(String bikeId, String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/service/{id}'
+      .replaceAll('{bikeId}', bikeId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  Future<void> deleteServiceEntry(String bikeId, String id, { Future<void>? abortTrigger, }) async {
+    final response = await deleteServiceEntryWithHttpInfo(bikeId, id, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -479,6 +735,133 @@ class BikesApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListComponentTypesResponse',) as ListComponentTypesResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/bikes/{bikeId}/service' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] componentId:
+  ///
+  /// * [int] limit:
+  ///
+  /// * [DateTime] beforeDate:
+  ///
+  /// * [String] beforeId:
+  Future<Response> listServiceEntriesWithHttpInfo(String bikeId, { String? componentId, int? limit, DateTime? beforeDate, String? beforeId, Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/service'
+      .replaceAll('{bikeId}', bikeId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (componentId != null) {
+      queryParams.addAll(_queryParams('', 'componentId', componentId));
+    }
+    if (limit != null) {
+      queryParams.addAll(_queryParams('', 'limit', limit));
+    }
+    if (beforeDate != null) {
+      queryParams.addAll(_queryParams('', 'beforeDate', beforeDate));
+    }
+    if (beforeId != null) {
+      queryParams.addAll(_queryParams('', 'beforeId', beforeId));
+    }
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] componentId:
+  ///
+  /// * [int] limit:
+  ///
+  /// * [DateTime] beforeDate:
+  ///
+  /// * [String] beforeId:
+  Future<ListServiceEntriesResponse?> listServiceEntries(String bikeId, { String? componentId, int? limit, DateTime? beforeDate, String? beforeId, Future<void>? abortTrigger, }) async {
+    final response = await listServiceEntriesWithHttpInfo(bikeId, componentId: componentId, limit: limit, beforeDate: beforeDate, beforeId: beforeId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListServiceEntriesResponse',) as ListServiceEntriesResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/bikes/{id}/service/jobs' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> listServiceJobsWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{id}/service/jobs'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<ListServiceJobsResponse?> listServiceJobs(String id, { Future<void>? abortTrigger, }) async {
+    final response = await listServiceJobsWithHttpInfo(id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListServiceJobsResponse',) as ListServiceJobsResponse;
     
     }
     return null;
@@ -799,6 +1182,122 @@ class BikesApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/bikes/{bikeId}/reminders/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateReminderRequest] updateReminderRequest (required):
+  Future<Response> updateReminderWithHttpInfo(String bikeId, String id, UpdateReminderRequest updateReminderRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/reminders/{id}'
+      .replaceAll('{bikeId}', bikeId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = updateReminderRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateReminderRequest] updateReminderRequest (required):
+  Future<BikeDetailResponse?> updateReminder(String bikeId, String id, UpdateReminderRequest updateReminderRequest, { Future<void>? abortTrigger, }) async {
+    final response = await updateReminderWithHttpInfo(bikeId, id, updateReminderRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'BikeDetailResponse',) as BikeDetailResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/bikes/{bikeId}/service/{id}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateServiceEntryRequest] updateServiceEntryRequest (required):
+  Future<Response> updateServiceEntryWithHttpInfo(String bikeId, String id, UpdateServiceEntryRequest updateServiceEntryRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/bikes/{bikeId}/service/{id}'
+      .replaceAll('{bikeId}', bikeId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = updateServiceEntryRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] bikeId (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [UpdateServiceEntryRequest] updateServiceEntryRequest (required):
+  Future<ServiceEntryResponse?> updateServiceEntry(String bikeId, String id, UpdateServiceEntryRequest updateServiceEntryRequest, { Future<void>? abortTrigger, }) async {
+    final response = await updateServiceEntryWithHttpInfo(bikeId, id, updateServiceEntryRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ServiceEntryResponse',) as ServiceEntryResponse;
     
     }
     return null;

@@ -63,6 +63,26 @@ class FakeServer {
   final bikes = <Map<String, Object?>>[];
   final parts =
       <String, List<Map<String, Object?>>>{}; // a bike's parts, by bike id
+  /// A bike's maintenance reminders, by bike id (each as the server would return it), and its service log.
+  final reminders = <String, List<Map<String, Object?>>>{};
+  final serviceLog = <String, List<Map<String, Object?>>>{};
+
+  /// The common jobs the server offers every bike.
+  final serviceJobs = <Map<String, Object?>>[
+    {
+      'id': 'chain_lube',
+      'intervalDistanceM': 300000.0,
+      'intervalHours': null,
+      'intervalMonths': null,
+    },
+    {
+      'id': 'sealant_top_up',
+      'intervalDistanceM': null,
+      'intervalHours': null,
+      'intervalMonths': 3,
+    },
+  ];
+
   /// What the "find a known part" field offers, as the server would return it.
   final partCatalogue = <Map<String, Object?>>[];
 
@@ -1794,6 +1814,8 @@ extension on FakeServer {
       'buildSpec': null,
       'frameSize': null,
       'purchasedOn': null,
+      'serviceDueCount': 0,
+      'serviceSoonCount': 0,
       ...b,
     };
     Map<String, Object?> partJson(Map<String, Object?> p) => {
@@ -1814,11 +1836,39 @@ extension on FakeServer {
       'status': 'ok',
       ...p,
     };
+    Map<String, Object?> reminderJson(Map<String, Object?> r) => {
+      'intervalDistanceM': null,
+      'intervalHours': null,
+      'intervalMonths': null,
+      'lastDoneOn': '2026-11-01',
+      'isPaused': false,
+      'usedDistanceM': 0.0,
+      'usedHours': 0.0,
+      'usedMonths': 0.0,
+      'percent': 0,
+      'status': 'ok',
+      ...r,
+    };
+    Map<String, Object?> entryJson(Map<String, Object?> e) => {
+      'notes': null,
+      'place': null,
+      'costAmount': null,
+      'costCurrency': null,
+      'componentId': null,
+      'reminderId': null,
+      'origin': 'manual',
+      'bikeDistanceM': 0.0,
+      ...e,
+    };
     Map<String, Object?> detail(String id) => {
       'bike': bikeJson(bikes.firstWhere((b) => b['id'] == id)),
       'components': [
         for (final p in parts[id] ?? const <Map<String, Object?>>[])
           partJson(p),
+      ],
+      'reminders': [
+        for (final r in reminders[id] ?? const <Map<String, Object?>>[])
+          reminderJson(r),
       ],
     };
 
@@ -1988,11 +2038,104 @@ extension on FakeServer {
       bikes.add(b);
       return json(detail(b['id']! as String), 201);
     }
+    final service = RegExp(
+      r'^/api/v1/bikes/([^/]+)/(service/jobs|service|reminders)(?:/([^/]+))?(/done)?$',
+    ).firstMatch(path);
+    if (service != null) {
+      final bikeId = service.group(1)!;
+      if (!bikes.any((b) => b['id'] == bikeId)) {
+        return http.Response('', 404);
+      }
+      final what = service.group(2)!;
+      final itemId = service.group(3);
+      if (what == 'service/jobs') return json({'jobs': serviceJobs});
+      if (what == 'service') {
+        final log = serviceLog.putIfAbsent(bikeId, () => []);
+        if (itemId == null && request.method == 'GET') {
+          final only = request.url.queryParameters['componentId'];
+          return json({
+            'entries': [
+              for (final e in log)
+                if (only == null || e['componentId'] == only) entryJson(e),
+            ],
+            'hasMore': false,
+          });
+        }
+        if (itemId == null) {
+          final entry = {'id': 'entry-${log.length + 1}', ...body};
+          log.insert(0, entry);
+          return json(entryJson(entry), 201);
+        }
+        final index = log.indexWhere((e) => e['id'] == itemId);
+        if (index < 0) return http.Response('', 404);
+        if (request.method == 'DELETE') {
+          log.removeAt(index);
+          return http.Response('', 204);
+        }
+        log[index] = {...log[index], ...body};
+        return json(entryJson(log[index]));
+      }
+      final list = reminders.putIfAbsent(bikeId, () => []);
+      if (itemId == null) {
+        list.add({'id': 'reminder-${list.length + 1}', ...body});
+        return json(detail(bikeId), 201);
+      }
+      final index = list.indexWhere((r) => r['id'] == itemId);
+      if (index < 0) return http.Response('', 404);
+      if (request.method == 'DELETE') {
+        list.removeAt(index);
+        return http.Response('', 204);
+      }
+      if (service.group(4) != null) {
+        list[index] = {
+          ...list[index],
+          'lastDoneOn': body['doneOn'] ?? '2026-11-11',
+          'usedDistanceM': 0.0,
+          'percent': 0,
+          'status': 'ok',
+        };
+        final log = serviceLog.putIfAbsent(bikeId, () => []);
+        log.insert(0, {
+          'id': 'entry-${log.length + 1}',
+          'date': body['doneOn'] ?? '2026-11-11',
+          'title': list[index]['name'],
+          'reminderId': itemId,
+          'origin': 'reminder',
+          'bikeDistanceM': 1200000.0,
+        });
+      } else {
+        list[index] = {
+          ...list[index],
+          ...body,
+          if (body['isPaused'] == true) 'status': 'paused',
+          if (body['isPaused'] == false) 'status': 'ok',
+        };
+      }
+      return json(detail(bikeId));
+    }
     final part = RegExp(r'^/api/v1/bikes/([^/]+)/components(?:/([^/]+))?$')
         .firstMatch(path);
     if (part != null) {
       final list = parts.putIfAbsent(part.group(1)!, () => []);
       if (request.method == 'POST') {
+        final replaces = body['replacesId'];
+        if (replaces != null) {
+          final old = list.indexWhere((p) => p['id'] == replaces);
+          list[old] = {
+            ...list[old],
+            'removedOn': body['installedOn'],
+            'status': 'retired',
+          };
+          final log = serviceLog.putIfAbsent(part.group(1)!, () => []);
+          log.insert(0, {
+            'id': 'entry-${log.length + 1}',
+            'date': body['installedOn'],
+            'title': body['logTitle'] ?? 'Replaced',
+            'componentId': 'part-${list.length + 1}',
+            'origin': 'part',
+            'bikeDistanceM': 1200000.0,
+          });
+        }
         list.add({
           'id': 'part-${list.length + 1}',
           'typeName': body['type'] == 'chain' ? 'Chain' : 'Tubeless sealant',

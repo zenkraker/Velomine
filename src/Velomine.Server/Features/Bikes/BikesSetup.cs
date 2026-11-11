@@ -15,6 +15,7 @@ public static class BikesSetup
             services.AddHostedService<CatalogueBootstrap>();
             services.AddHostedService<CatalogueSyncService>();
             services.AddHostedService<ContributionService>();
+            services.AddHostedService<MaintenanceReminderService>();
         }
         return services;
     }

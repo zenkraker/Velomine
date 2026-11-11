@@ -70,6 +70,12 @@
   <data name="PartWorn" xml:space="preserve">
     <value>{0} is worn out. Time to replace it.</value>
   </data>
+  <data name="ReminderSoon" xml:space="preserve">
+    <value>Maintenance nearly due: {0}.</value>
+  </data>
+  <data name="ReminderDue" xml:space="preserve">
+    <value>Maintenance due: {0}.</value>
+  </data>
   <data name="ClubJoinRequest" xml:space="preserve">
     <value>{0} asked to join your club.</value>
   </data>

@@ -60,6 +60,74 @@ class BikesData {
   Future<Result<void>> removePart(String bikeId, String partId) =>
       _api.deleteComponent(bikeId, partId).guard(FailureAction.removePart);
 
+  /// The common jobs that fit this bike. A failure only means no suggestions.
+  Future<Result<List<MaintenanceJob>>> serviceJobs(String bikeId) async =>
+      (await _api.listServiceJobs(bikeId).guard(FailureAction.loadServiceLog))
+          .map((jobs) => jobs?.jobs ?? const <MaintenanceJob>[]);
+
+  Future<Result<ListServiceEntriesResponse?>> serviceEntries(
+    String bikeId, {
+    String? componentId,
+    int limit = 50,
+    ServiceEntryResponse? after,
+  }) => _api
+      .listServiceEntries(
+        bikeId,
+        componentId: componentId,
+        limit: limit,
+        beforeDate: after?.date,
+        beforeId: after?.id,
+      )
+      .guard(FailureAction.loadServiceLog);
+
+  Future<Result<BikeDetailResponse?>> addReminder(
+    String bikeId,
+    CreateReminderRequest reminder,
+  ) => _api.createReminder(bikeId, reminder).guard(FailureAction.saveReminder);
+
+  Future<Result<BikeDetailResponse?>> editReminder(
+    String bikeId,
+    String reminderId,
+    UpdateReminderRequest reminder,
+  ) => _api
+      .updateReminder(bikeId, reminderId, reminder)
+      .guard(FailureAction.saveReminder);
+
+  Future<Result<void>> removeReminder(String bikeId, String reminderId) => _api
+      .deleteReminder(bikeId, reminderId)
+      .guard(FailureAction.removeReminder);
+
+  Future<Result<BikeDetailResponse?>> completeReminder(
+    String bikeId,
+    String reminderId,
+    DateTime doneOn,
+  ) => _api
+      .completeReminder(
+        bikeId,
+        reminderId,
+        MarkReminderDoneRequest(doneOn: Optional.present(doneOn)),
+      )
+      .guard(FailureAction.completeReminder);
+
+  Future<Result<ServiceEntryResponse?>> addServiceEntry(
+    String bikeId,
+    CreateServiceEntryRequest entry,
+  ) => _api
+      .createServiceEntry(bikeId, entry)
+      .guard(FailureAction.saveServiceEntry);
+
+  Future<Result<ServiceEntryResponse?>> editServiceEntry(
+    String bikeId,
+    String entryId,
+    UpdateServiceEntryRequest entry,
+  ) => _api
+      .updateServiceEntry(bikeId, entryId, entry)
+      .guard(FailureAction.saveServiceEntry);
+
+  Future<Result<void>> removeServiceEntry(String bikeId, String entryId) => _api
+      .deleteServiceEntry(bikeId, entryId)
+      .guard(FailureAction.removeServiceEntry);
+
   Future<Result<BikeTemplateResponse?>> saveTemplate(
     String bikeId,
     String name,

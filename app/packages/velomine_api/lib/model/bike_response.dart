@@ -29,6 +29,8 @@ class BikeResponse {
     required this.rideCount,
     required this.distanceM,
     required this.movingS,
+    required this.serviceDueCount,
+    required this.serviceSoonCount,
   });
 
   final String id;
@@ -63,6 +65,10 @@ class BikeResponse {
 
   final double movingS;
 
+  final int serviceDueCount;
+
+  final int serviceSoonCount;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is BikeResponse &&
     other.id == id &&
@@ -80,7 +86,9 @@ class BikeResponse {
     other.isActive == isActive &&
     other.rideCount == rideCount &&
     other.distanceM == distanceM &&
-    other.movingS == movingS;
+    other.movingS == movingS &&
+    other.serviceDueCount == serviceDueCount &&
+    other.serviceSoonCount == serviceSoonCount;
 
   @override
   int get hashCode =>
@@ -100,10 +108,12 @@ class BikeResponse {
     (isActive.hashCode) +
     (rideCount.hashCode) +
     (distanceM.hashCode) +
-    (movingS.hashCode);
+    (movingS.hashCode) +
+    (serviceDueCount.hashCode) +
+    (serviceSoonCount.hashCode);
 
   @override
-  String toString() => 'BikeResponse[id=$id, name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isDefault=$isDefault, isActive=$isActive, rideCount=$rideCount, distanceM=$distanceM, movingS=$movingS]';
+  String toString() => 'BikeResponse[id=$id, name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isDefault=$isDefault, isActive=$isActive, rideCount=$rideCount, distanceM=$distanceM, movingS=$movingS, serviceDueCount=$serviceDueCount, serviceSoonCount=$serviceSoonCount]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -147,6 +157,8 @@ class BikeResponse {
       json[r'rideCount'] = this.rideCount;
       json[r'distanceM'] = this.distanceM;
       json[r'movingS'] = this.movingS;
+      json[r'serviceDueCount'] = this.serviceDueCount;
+      json[r'serviceSoonCount'] = this.serviceSoonCount;
     return json;
   }
 
@@ -175,6 +187,8 @@ class BikeResponse {
     int? rideCount,
     double? distanceM,
     double? movingS,
+    int? serviceDueCount,
+    int? serviceSoonCount,
   }) => BikeResponse(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -192,6 +206,8 @@ class BikeResponse {
     rideCount: rideCount ?? this.rideCount,
     distanceM: distanceM ?? this.distanceM,
     movingS: movingS ?? this.movingS,
+    serviceDueCount: serviceDueCount ?? this.serviceDueCount,
+    serviceSoonCount: serviceSoonCount ?? this.serviceSoonCount,
   );
 
   /// Returns a new [BikeResponse] instance and imports its values from
@@ -231,6 +247,10 @@ class BikeResponse {
         assert(json[r'distanceM'] != null, 'Required key "BikeResponse[distanceM]" has a null value in JSON.');
         assert(json.containsKey(r'movingS'), 'Required key "BikeResponse[movingS]" is missing from JSON.');
         assert(json[r'movingS'] != null, 'Required key "BikeResponse[movingS]" has a null value in JSON.');
+        assert(json.containsKey(r'serviceDueCount'), 'Required key "BikeResponse[serviceDueCount]" is missing from JSON.');
+        assert(json[r'serviceDueCount'] != null, 'Required key "BikeResponse[serviceDueCount]" has a null value in JSON.');
+        assert(json.containsKey(r'serviceSoonCount'), 'Required key "BikeResponse[serviceSoonCount]" is missing from JSON.');
+        assert(json[r'serviceSoonCount'] != null, 'Required key "BikeResponse[serviceSoonCount]" has a null value in JSON.');
         return true;
       }());
 
@@ -251,6 +271,8 @@ class BikeResponse {
         rideCount: mapValueOfType<int>(json, r'rideCount')!,
         distanceM: mapValueOfType<double>(json, r'distanceM')!,
         movingS: mapValueOfType<double>(json, r'movingS')!,
+        serviceDueCount: mapValueOfType<int>(json, r'serviceDueCount')!,
+        serviceSoonCount: mapValueOfType<int>(json, r'serviceSoonCount')!,
       );
     }
     return null;
@@ -314,6 +336,8 @@ class BikeResponse {
     'rideCount',
     'distanceM',
     'movingS',
+    'serviceDueCount',
+    'serviceSoonCount',
   };
 }
 

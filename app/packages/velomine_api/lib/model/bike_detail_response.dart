@@ -15,30 +15,36 @@ class BikeDetailResponse {
   BikeDetailResponse({
     required this.bike,
     this.components = const [],
+    this.reminders = const [],
   });
 
   final BikeResponse bike;
 
   final List<ComponentResponse> components;
 
+  final List<MaintenanceReminderResponse> reminders;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is BikeDetailResponse &&
     other.bike == bike &&
-    _deepEquality.equals(other.components, components);
+    _deepEquality.equals(other.components, components) &&
+    _deepEquality.equals(other.reminders, reminders);
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (bike.hashCode) +
-    (components.hashCode);
+    (components.hashCode) +
+    (reminders.hashCode);
 
   @override
-  String toString() => 'BikeDetailResponse[bike=$bike, components=$components]';
+  String toString() => 'BikeDetailResponse[bike=$bike, components=$components, reminders=$reminders]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'bike'] = this.bike;
       json[r'components'] = this.components;
+      json[r'reminders'] = this.reminders;
     return json;
   }
 
@@ -47,9 +53,11 @@ class BikeDetailResponse {
   BikeDetailResponse copyWith({
     BikeResponse? bike,
     List<ComponentResponse>? components,
+    List<MaintenanceReminderResponse>? reminders,
   }) => BikeDetailResponse(
     bike: bike ?? this.bike,
     components: components ?? this.components,
+    reminders: reminders ?? this.reminders,
   );
 
   /// Returns a new [BikeDetailResponse] instance and imports its values from
@@ -67,12 +75,15 @@ class BikeDetailResponse {
         assert(json[r'bike'] != null, 'Required key "BikeDetailResponse[bike]" has a null value in JSON.');
         assert(json.containsKey(r'components'), 'Required key "BikeDetailResponse[components]" is missing from JSON.');
         assert(json[r'components'] != null, 'Required key "BikeDetailResponse[components]" has a null value in JSON.');
+        assert(json.containsKey(r'reminders'), 'Required key "BikeDetailResponse[reminders]" is missing from JSON.');
+        assert(json[r'reminders'] != null, 'Required key "BikeDetailResponse[reminders]" has a null value in JSON.');
         return true;
       }());
 
       return BikeDetailResponse(
         bike: BikeResponse.fromJson(json[r'bike'])!,
         components: ComponentResponse.listFromJson(json[r'components']),
+        reminders: MaintenanceReminderResponse.listFromJson(json[r'reminders']),
       );
     }
     return null;
@@ -122,6 +133,7 @@ class BikeDetailResponse {
   static const requiredKeys = <String>{
     'bike',
     'components',
+    'reminders',
   };
 }
 

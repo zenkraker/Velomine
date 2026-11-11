@@ -1734,5 +1734,126 @@
   "adminClubPaidUntil": "Paid until",
   "adminClubNoDate": "No end date",
   "adminClubChooseDate": "Choose a date",
-  "loading": "Loading"
+  "loading": "Loading",
+  "actionLoadServiceLog": "load the service log",
+  "actionSaveReminder": "save the reminder",
+  "actionRemoveReminder": "delete the reminder",
+  "actionCompleteReminder": "mark the job as done",
+  "actionSaveServiceEntry": "save the entry",
+  "actionRemoveServiceEntry": "delete the entry",
+  "service": "Service",
+  "serviceRemindersIntro": "Reminders tell you when a job on this bike comes round again, like lubing the chain or topping up sealant. Pick a common one to start.",
+  "serviceAddReminder": "Add reminder",
+  "serviceCommonJobs": "Common jobs",
+  "reminderStatusOk": "Fine",
+  "reminderStatusSoon": "Due soon",
+  "reminderStatusDue": "Due",
+  "reminderStatusPaused": "Paused",
+  "reminderLastDone": "Last done {date}",
+  "@reminderLastDone": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderDone": "Done",
+  "reminderDoneSaved": "Done. It is in the service log.",
+  "reminderDoneBody": "Counting starts again from the day you pick, and the job goes in the service log.",
+  "doneOnDate": "Done on {date}",
+  "@doneOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderPause": "Pause",
+  "reminderResume": "Resume",
+  "reminderFormAddTitle": "Add a reminder",
+  "reminderFormEditTitle": "Edit reminder",
+  "reminderName": "What needs doing?",
+  "reminderIntervalHelp": "It is due at the first of these. Leave empty what you do not need.",
+  "reminderErrorName": "Give the job a name.",
+  "reminderErrorInterval": "Set a distance, hours or months.",
+  "reminderRemoveTitle": "Delete this reminder?",
+  "reminderRemoveBody": "The service log keeps what you already did.",
+  "jobChainLube": "Lube the chain",
+  "jobChainWearCheck": "Check chain wear",
+  "jobSealantTopUp": "Top up tyre sealant",
+  "jobBrakeBleed": "Bleed the brakes",
+  "jobForkService": "Service the fork lowers",
+  "jobShockService": "Service the rear shock",
+  "jobBoltCheck": "Check bolt torque",
+  "jobShiftingBattery": "Charge the electronic shifting",
+  "serviceLog": "Service log",
+  "serviceLogIntro": "Everything done to this bike goes here, with the distance it had at the time.",
+  "serviceAddEntry": "Add entry",
+  "entryAtDistance": "at {distance}",
+  "@entryAtDistance": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "entryAtHome": "At home",
+  "entryFormAddTitle": "Add to the service log",
+  "entryFormEditTitle": "Edit entry",
+  "entryTitleField": "What was done?",
+  "entryNotes": "Notes",
+  "entryPlace": "Where",
+  "entryPlaceHelp": "A shop's name. Leave empty if you did it at home.",
+  "entryCost": "Cost",
+  "entryCurrency": "Currency",
+  "entryPart": "About which part?",
+  "entryNoPart": "No particular part",
+  "entryReminder": "About which reminder?",
+  "entryNoReminder": "No particular reminder",
+  "entryErrorTitle": "Say what was done.",
+  "entryErrorCost": "Enter the cost as a number, with a three-letter currency like EUR.",
+  "entryRemoveTitle": "Delete this entry?",
+  "entryRemoveBody": "It is removed from the log. This cannot be undone.",
+  "entryRemoveDoneBody": "It is removed from the log. The reminder keeps counting from the day it was done.",
+  "logFilterLabel": "Show",
+  "logFilterAll": "Everything",
+  "logFilterEmpty": "Nothing in the log for this part yet.",
+  "logShowMore": "Show more",
+  "logReplacedPart": "Replaced {part}",
+  "@logReplacedPart": {
+    "placeholders": {
+      "part": {
+        "type": "String"
+      }
+    }
+  },
+  "logReplacedPartWith": "Replaced {part}: {make}",
+  "@logReplacedPartWith": {
+    "placeholders": {
+      "part": {
+        "type": "String"
+      },
+      "make": {
+        "type": "String"
+      }
+    }
+  },
+  "bikeServiceDue": "Service due",
+  "bikeServiceSoon": "Service due soon",
+  "notificationReminderSoon": "Maintenance nearly due: {subject}.",
+  "@notificationReminderSoon": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationReminderDue": "Maintenance due: {subject}.",
+  "@notificationReminderDue": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -24,6 +24,8 @@ class CreateComponentRequest {
     this.expectedDistanceM = const Optional.absent(),
     this.expectedHours = const Optional.absent(),
     this.expectedMonths = const Optional.absent(),
+    this.replacesId = const Optional.absent(),
+    this.logTitle = const Optional.absent(),
   });
 
   final String type;
@@ -105,6 +107,22 @@ class CreateComponentRequest {
   ///
   final Optional<int?> expectedMonths;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> replacesId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> logTitle;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is CreateComponentRequest &&
     other.type == type &&
@@ -117,7 +135,9 @@ class CreateComponentRequest {
     other.removedOn == removedOn &&
     other.expectedDistanceM == expectedDistanceM &&
     other.expectedHours == expectedHours &&
-    other.expectedMonths == expectedMonths;
+    other.expectedMonths == expectedMonths &&
+    other.replacesId == replacesId &&
+    other.logTitle == logTitle;
 
   @override
   int get hashCode =>
@@ -132,10 +152,12 @@ class CreateComponentRequest {
     (removedOn == null ? 0 : removedOn!.hashCode) +
     (expectedDistanceM == null ? 0 : expectedDistanceM!.hashCode) +
     (expectedHours == null ? 0 : expectedHours!.hashCode) +
-    (expectedMonths == null ? 0 : expectedMonths!.hashCode);
+    (expectedMonths == null ? 0 : expectedMonths!.hashCode) +
+    (replacesId == null ? 0 : replacesId!.hashCode) +
+    (logTitle == null ? 0 : logTitle!.hashCode);
 
   @override
-  String toString() => 'CreateComponentRequest[type=$type, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, custom=$custom, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths]';
+  String toString() => 'CreateComponentRequest[type=$type, brand=$brand, model=$model, mpn=$mpn, gtin=$gtin, custom=$custom, installedOn=$installedOn, removedOn=$removedOn, expectedDistanceM=$expectedDistanceM, expectedHours=$expectedHours, expectedMonths=$expectedMonths, replacesId=$replacesId, logTitle=$logTitle]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -177,6 +199,14 @@ class CreateComponentRequest {
       final value = this.expectedMonths.value;
       json[r'expectedMonths'] = value;
     }
+    if (this.replacesId.isPresent) {
+      final value = this.replacesId.value;
+      json[r'replacesId'] = value;
+    }
+    if (this.logTitle.isPresent) {
+      final value = this.logTitle.value;
+      json[r'logTitle'] = value;
+    }
     return json;
   }
 
@@ -194,6 +224,8 @@ class CreateComponentRequest {
     Optional<double?>? expectedDistanceM,
     Optional<double?>? expectedHours,
     Optional<int?>? expectedMonths,
+    Optional<String?>? replacesId,
+    Optional<String?>? logTitle,
   }) => CreateComponentRequest(
     type: type ?? this.type,
     brand: brand ?? this.brand,
@@ -206,6 +238,8 @@ class CreateComponentRequest {
     expectedDistanceM: expectedDistanceM ?? this.expectedDistanceM,
     expectedHours: expectedHours ?? this.expectedHours,
     expectedMonths: expectedMonths ?? this.expectedMonths,
+    replacesId: replacesId ?? this.replacesId,
+    logTitle: logTitle ?? this.logTitle,
   );
 
   /// Returns a new [CreateComponentRequest] instance and imports its values from
@@ -238,6 +272,8 @@ class CreateComponentRequest {
         expectedDistanceM: json.containsKey(r'expectedDistanceM') ? Optional.present(mapValueOfType<double>(json, r'expectedDistanceM')) : const Optional.absent(),
         expectedHours: json.containsKey(r'expectedHours') ? Optional.present(mapValueOfType<double>(json, r'expectedHours')) : const Optional.absent(),
         expectedMonths: json.containsKey(r'expectedMonths') ? Optional.present(json[r'expectedMonths'] == null ? null : int.parse('${json[r'expectedMonths']}')) : const Optional.absent(),
+        replacesId: json.containsKey(r'replacesId') ? Optional.present(mapValueOfType<String>(json, r'replacesId')) : const Optional.absent(),
+        logTitle: json.containsKey(r'logTitle') ? Optional.present(mapValueOfType<String>(json, r'logTitle')) : const Optional.absent(),
       );
     }
     return null;

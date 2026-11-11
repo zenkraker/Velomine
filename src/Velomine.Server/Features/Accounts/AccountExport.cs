@@ -25,6 +25,9 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
     {
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
         var bikes = await db.Bikes.AsNoTracking().Include(b => b.Components).Where(b => b.UserId == userId).OrderBy(b => b.CreatedAt).ToListAsync(ct);
+        var bikeIds = bikes.Select(b => b.Id).ToList();
+        var reminders = await db.MaintenanceReminders.AsNoTracking().Where(r => bikeIds.Contains(r.BikeId)).OrderBy(r => r.CreatedAt).ToListAsync(ct);
+        var serviceEntries = await db.ServiceEntries.AsNoTracking().Where(e => bikeIds.Contains(e.BikeId)).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync(ct);
         var rides = await db.Rides.AsNoTracking().Where(r => r.UserId == userId).OrderBy(r => r.StartTime).ThenBy(r => r.UploadedAt).ToListAsync(ct);
         var goals = await db.Set<Goal>().AsNoTracking().Where(g => g.UserId == userId).OrderBy(g => g.CreatedAt).ToListAsync(ct);
         var notifications = await db.Notifications.AsNoTracking().Where(n => n.UserId == userId).OrderBy(n => n.CreatedAt).ToListAsync(ct);
@@ -110,6 +113,30 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 c.ExpectedDistanceM,
                 c.ExpectedHours,
                 c.ExpectedMonths,
+            }),
+            MaintenanceReminders = reminders.Where(r => r.BikeId == b.Id).Select(r => new
+            {
+                r.Id,
+                r.Name,
+                r.IntervalDistanceM,
+                r.IntervalHours,
+                r.IntervalMonths,
+                r.LastDoneOn,
+                r.IsPaused,
+                r.CreatedAt,
+            }),
+            ServiceLog = serviceEntries.Where(e => e.BikeId == b.Id).Select(e => new
+            {
+                e.Id,
+                e.Date,
+                e.Title,
+                e.Notes,
+                e.Place,
+                e.CostAmount,
+                e.CostCurrency,
+                e.ComponentId,
+                e.ReminderId,
+                e.Origin,
             }),
         }), ct);
         await AddJsonAsync(zip, "rides.json", rides.Select(r => new
@@ -214,7 +241,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         ==================
 
         profile.json        your account details and training settings
-        bikes.json          your bikes and their parts
+        bikes.json          your bikes, their parts, maintenance reminders and service log
         rides.json          every ride: its numbers, its status, and where its original file is in this ZIP
         goals.json          your goals
         notifications.json  your notifications

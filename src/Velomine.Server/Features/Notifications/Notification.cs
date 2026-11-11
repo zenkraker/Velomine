@@ -30,6 +30,12 @@ public static class NotificationTypes
     /// <summary>A part has reached one of its limits. Refers to the bike and the part.</summary>
     public const string PartWorn = "part_worn";
 
+    /// <summary>A maintenance reminder has used 80 % of one of its intervals. Refers to the bike; the subject names the job.</summary>
+    public const string ReminderSoon = "reminder_soon";
+
+    /// <summary>A maintenance reminder has reached one of its intervals. Refers to the bike; the subject names the job.</summary>
+    public const string ReminderDue = "reminder_due";
+
     /// <summary>For a club owner: a rider asked to join. The subject is the rider's display name.</summary>
     public const string ClubJoinRequest = "club_join_request";
 
@@ -75,6 +81,8 @@ public static class NotificationKinds
         NotificationTypes.RideImport,
         NotificationTypes.PartSoon,
         NotificationTypes.PartWorn,
+        NotificationTypes.ReminderSoon,
+        NotificationTypes.ReminderDue,
     ];
 
     /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>

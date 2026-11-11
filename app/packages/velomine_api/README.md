@@ -122,21 +122,30 @@ Class | Method | HTTP request | Description
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
 *BikesApi* | [**applyTemplate**](doc//BikesApi.md#applytemplate) | **POST** /api/v1/bikes/{bikeId}/templates/{id} | 
+*BikesApi* | [**completeReminder**](doc//BikesApi.md#completereminder) | **POST** /api/v1/bikes/{bikeId}/reminders/{id}/done | 
 *BikesApi* | [**createBike**](doc//BikesApi.md#createbike) | **POST** /api/v1/bikes | 
 *BikesApi* | [**createComponent**](doc//BikesApi.md#createcomponent) | **POST** /api/v1/bikes/{bikeId}/components | 
+*BikesApi* | [**createReminder**](doc//BikesApi.md#createreminder) | **POST** /api/v1/bikes/{bikeId}/reminders | 
+*BikesApi* | [**createServiceEntry**](doc//BikesApi.md#createserviceentry) | **POST** /api/v1/bikes/{bikeId}/service | 
 *BikesApi* | [**createTemplate**](doc//BikesApi.md#createtemplate) | **POST** /api/v1/bikes/templates | 
 *BikesApi* | [**deleteBike**](doc//BikesApi.md#deletebike) | **DELETE** /api/v1/bikes/{id} | 
 *BikesApi* | [**deleteComponent**](doc//BikesApi.md#deletecomponent) | **DELETE** /api/v1/bikes/{bikeId}/components/{id} | 
+*BikesApi* | [**deleteReminder**](doc//BikesApi.md#deletereminder) | **DELETE** /api/v1/bikes/{bikeId}/reminders/{id} | 
+*BikesApi* | [**deleteServiceEntry**](doc//BikesApi.md#deleteserviceentry) | **DELETE** /api/v1/bikes/{bikeId}/service/{id} | 
 *BikesApi* | [**deleteTemplate**](doc//BikesApi.md#deletetemplate) | **DELETE** /api/v1/bikes/templates/{id} | 
 *BikesApi* | [**getBike**](doc//BikesApi.md#getbike) | **GET** /api/v1/bikes/{id} | 
 *BikesApi* | [**listBikes**](doc//BikesApi.md#listbikes) | **GET** /api/v1/bikes | 
 *BikesApi* | [**listComponentTypes**](doc//BikesApi.md#listcomponenttypes) | **GET** /api/v1/bikes/component-types | 
+*BikesApi* | [**listServiceEntries**](doc//BikesApi.md#listserviceentries) | **GET** /api/v1/bikes/{bikeId}/service | 
+*BikesApi* | [**listServiceJobs**](doc//BikesApi.md#listservicejobs) | **GET** /api/v1/bikes/{id}/service/jobs | 
 *BikesApi* | [**listTemplates**](doc//BikesApi.md#listtemplates) | **GET** /api/v1/bikes/templates | 
 *BikesApi* | [**saveBikeAsTemplate**](doc//BikesApi.md#savebikeastemplate) | **POST** /api/v1/bikes/{bikeId}/templates | 
 *BikesApi* | [**searchParts**](doc//BikesApi.md#searchparts) | **GET** /api/v1/bikes/parts | 
 *BikesApi* | [**setDefaultBike**](doc//BikesApi.md#setdefaultbike) | **POST** /api/v1/bikes/{id}/default | 
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
+*BikesApi* | [**updateReminder**](doc//BikesApi.md#updatereminder) | **PUT** /api/v1/bikes/{bikeId}/reminders/{id} | 
+*BikesApi* | [**updateServiceEntry**](doc//BikesApi.md#updateserviceentry) | **PUT** /api/v1/bikes/{bikeId}/service/{id} | 
 *BikesApi* | [**updateTemplate**](doc//BikesApi.md#updatetemplate) | **PUT** /api/v1/bikes/templates/{id} | 
 *ClubApi* | [**approveJoinRequest**](doc//ClubApi.md#approvejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/approve | 
 *ClubApi* | [**cancelJoinRequest**](doc//ClubApi.md#canceljoinrequest) | **DELETE** /api/v1/club/join-request | 
@@ -222,6 +231,8 @@ Class | Method | HTTP request | Description
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [CreatePrivacyZoneRequest](doc//CreatePrivacyZoneRequest.md)
+ - [CreateReminderRequest](doc//CreateReminderRequest.md)
+ - [CreateServiceEntryRequest](doc//CreateServiceEntryRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
@@ -241,9 +252,14 @@ Class | Method | HTTP request | Description
  - [ListGoalsResponse](doc//ListGoalsResponse.md)
  - [ListNotificationsResponse](doc//ListNotificationsResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
+ - [ListServiceEntriesResponse](doc//ListServiceEntriesResponse.md)
+ - [ListServiceJobsResponse](doc//ListServiceJobsResponse.md)
  - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [LoginTwoFactorRequest](doc//LoginTwoFactorRequest.md)
+ - [MaintenanceJob](doc//MaintenanceJob.md)
+ - [MaintenanceReminderResponse](doc//MaintenanceReminderResponse.md)
+ - [MarkReminderDoneRequest](doc//MarkReminderDoneRequest.md)
  - [MeResponse](doc//MeResponse.md)
  - [MyClubResponse](doc//MyClubResponse.md)
  - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
@@ -282,6 +298,7 @@ Class | Method | HTTP request | Description
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
+ - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
  - [SessionResponse](doc//SessionResponse.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
@@ -319,6 +336,8 @@ Class | Method | HTTP request | Description
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdatePrivacyRequest](doc//UpdatePrivacyRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
+ - [UpdateReminderRequest](doc//UpdateReminderRequest.md)
+ - [UpdateServiceEntryRequest](doc//UpdateServiceEntryRequest.md)
  - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
  - [UpdateSharingRequest](doc//UpdateSharingRequest.md)
  - [UpdateTemplateRequest](doc//UpdateTemplateRequest.md)

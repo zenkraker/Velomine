@@ -237,6 +237,10 @@ class ApiClient {
           return CreateGoalRequest.fromJson(value);
         case 'CreatePrivacyZoneRequest':
           return CreatePrivacyZoneRequest.fromJson(value);
+        case 'CreateReminderRequest':
+          return CreateReminderRequest.fromJson(value);
+        case 'CreateServiceEntryRequest':
+          return CreateServiceEntryRequest.fromJson(value);
         case 'CreateTemplateRequest':
           return CreateTemplateRequest.fromJson(value);
         case 'DeleteMyAccountRequest':
@@ -275,12 +279,22 @@ class ApiClient {
           return ListNotificationsResponse.fromJson(value);
         case 'ListRidesResponse':
           return ListRidesResponse.fromJson(value);
+        case 'ListServiceEntriesResponse':
+          return ListServiceEntriesResponse.fromJson(value);
+        case 'ListServiceJobsResponse':
+          return ListServiceJobsResponse.fromJson(value);
         case 'ListTemplatesResponse':
           return ListTemplatesResponse.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
         case 'LoginTwoFactorRequest':
           return LoginTwoFactorRequest.fromJson(value);
+        case 'MaintenanceJob':
+          return MaintenanceJob.fromJson(value);
+        case 'MaintenanceReminderResponse':
+          return MaintenanceReminderResponse.fromJson(value);
+        case 'MarkReminderDoneRequest':
+          return MarkReminderDoneRequest.fromJson(value);
         case 'MeResponse':
           return MeResponse.fromJson(value);
         case 'MyClubResponse':
@@ -357,6 +371,8 @@ class ApiClient {
           return SearchPartsResponse.fromJson(value);
         case 'ServerInfoResponse':
           return ServerInfoResponse.fromJson(value);
+        case 'ServiceEntryResponse':
+          return ServiceEntryResponse.fromJson(value);
         case 'SessionResponse':
           return SessionResponse.fromJson(value);
         case 'SetClubLocationRequest':
@@ -431,6 +447,10 @@ class ApiClient {
           return UpdatePrivacyRequest.fromJson(value);
         case 'UpdateProfileRequest':
           return UpdateProfileRequest.fromJson(value);
+        case 'UpdateReminderRequest':
+          return UpdateReminderRequest.fromJson(value);
+        case 'UpdateServiceEntryRequest':
+          return UpdateServiceEntryRequest.fromJson(value);
         case 'UpdateSettingsRequest':
           return UpdateSettingsRequest.fromJson(value);
         case 'UpdateSharingRequest':

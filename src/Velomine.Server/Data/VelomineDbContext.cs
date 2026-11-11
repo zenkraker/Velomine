@@ -37,6 +37,10 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<BikeComponent> BikeComponents => Set<BikeComponent>();
 
+    public DbSet<MaintenanceReminder> MaintenanceReminders => Set<MaintenanceReminder>();
+
+    public DbSet<ServiceEntry> ServiceEntries => Set<ServiceEntry>();
+
     public DbSet<Part> Parts => Set<Part>();
 
     public DbSet<CatalogueMeta> CatalogueMeta => Set<CatalogueMeta>();
