@@ -407,6 +407,8 @@ class _PlanDialogState extends State<_PlanDialog> {
             DropdownButtonFormField<int?>(
               key: const Key('plan-limit'),
               initialValue: _limit,
+              // The longest band's label does not fit beside the arrow on a phone.
+              isExpanded: true,
               decoration: InputDecoration(labelText: l10n.adminClubLimit),
               items: [
                 for (final band in _bands)

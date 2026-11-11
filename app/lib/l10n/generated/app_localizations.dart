@@ -5618,12 +5618,6 @@ abstract class AppLocalizations {
   /// **'Choose a date'**
   String get adminClubChooseDate;
 
-  /// No description provided for @adminClubPlanSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Plan saved.'**
-  String get adminClubPlanSaved;
-
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:

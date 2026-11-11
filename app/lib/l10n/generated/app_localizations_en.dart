@@ -3138,8 +3138,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminClubChooseDate => 'Choose a date';
 
   @override
-  String get adminClubPlanSaved => 'Plan saved.';
-
-  @override
   String get loading => 'Loading';
 }

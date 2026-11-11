@@ -3162,8 +3162,5 @@ class AppLocalizationsIt extends AppLocalizations {
   String get adminClubChooseDate => 'Scegli una data';
 
   @override
-  String get adminClubPlanSaved => 'Piano salvato.';
-
-  @override
   String get loading => 'Caricamento';
 }
