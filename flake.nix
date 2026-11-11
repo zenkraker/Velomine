@@ -91,6 +91,20 @@
         '';
       };
 
+      # Scaleway's own MCP server (built into the Scaleway CLI), read-only by
+      # design: only get/list commands, and only the hosting namespaces. It uses
+      # the CLI profile named by SCW_PROFILE (default velomine-readonly), which
+      # the developer creates with `scw init -p velomine-readonly` from a
+      # least-privilege IAM application. Never the account key; never committed.
+      scalewayMcp = pkgs.writeShellApplication {
+        name = "scw-mcp";
+        runtimeInputs = [ pkgs.scaleway-cli ];
+        text = ''
+          exec scw -p "''${SCW_PROFILE:-velomine-readonly}" mcp server serve \
+            read-only=true namespaces=instance,rdb,dns,object,iam,registry,vpc "$@"
+        '';
+      };
+
       # OpenCode V2 is not in nixpkgs' extension set yet.
       opencodeV2Extension = pkgs.vscode-utils.extensionsFromVscodeMarketplace [
         {
@@ -123,6 +137,7 @@
           opencode
           vscode
           sentryMcp
+          scalewayMcp
           claudeCode
           ;
       };
@@ -148,6 +163,8 @@
           pkgs.codegraph
           pkgs.sentry-cli # releases and debug-symbol uploads
           sentryMcp # local stdio Sentry MCP (hosted OAuth is broken in OpenCode 2)
+          pkgs.scaleway-cli # scw, for the read-only profile and `scw init`
+          scalewayMcp # read-only Scaleway MCP (see above)
           opencode # local override (see above); alternative to Claude Code
 
           # Flutter's own command-line needs, plus helpers

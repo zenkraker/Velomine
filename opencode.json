@@ -23,6 +23,12 @@
       "command": [
         "sentry-mcp"
       ]
+    },
+    "scaleway": {
+      "type": "local",
+      "command": [
+        "scw-mcp"
+      ]
     }
   }
 }

@@ -173,6 +173,21 @@ local server's AI-powered search tools are unavailable, but project/DSN discover
 If you need `project-management` for a setup task, run it explicitly with
 `MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
 
+#### Scaleway MCP
+
+Scaleway's own MCP server is built into the Scaleway CLI (`scw mcp server serve`). The `scw-mcp` wrapper in the dev shell
+starts it read-only (`read-only=true`), so only get and list commands exist, and limits it to the namespaces `instance`, `rdb`, `dns`,
+`object`, `iam`, `registry` and `vpc`. Both agents register it as `scaleway`.
+
+It runs under the CLI profile named by `SCW_PROFILE`, `velomine-readonly` by default. Create the key for it once:
+
+1. In the Scaleway console, create an IAM application for agents, with a policy scoped to the Velomine project.
+2. Give the policy read-only permission sets only: `InstancesReadOnly`, `RelationalDatabasesReadOnly`,
+   `DomainsDNSReadOnly`, `ObjectStorageReadOnly`, `IAMReadOnly`, `ContainerRegistryReadOnly` and `VPCReadOnly`.
+3. Generate an API key for the application and store it as a profile: `scw init -p velomine-readonly`.
+
+Never use the account key, and never commit a key. Changes to the infrastructure go through OpenTofu in `infra/`, never through the MCP.
+
 The dev shell points the NuGet, pub, Gradle and Android caches, and the unpacked Flutter SDK into `.dev/`. Ride files, the database and the Data Protection keys live in Docker volumes.
 
 ### 6. Enter the dev shell for the first time
