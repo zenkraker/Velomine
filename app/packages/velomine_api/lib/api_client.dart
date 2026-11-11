@@ -235,6 +235,8 @@ class ApiClient {
           return CreateGoalRequest.fromJson(value);
         case 'CreatePrivacyZoneRequest':
           return CreatePrivacyZoneRequest.fromJson(value);
+        case 'CreateRouteRequest':
+          return CreateRouteRequest.fromJson(value);
         case 'CreateTemplateRequest':
           return CreateTemplateRequest.fromJson(value);
         case 'DeleteMyAccountRequest':
@@ -345,6 +347,16 @@ class ApiClient {
           return RideResponse.fromJson(value);
         case 'RideStreamsResponse':
           return RideStreamsResponse.fromJson(value);
+        case 'RouteDetailResponse':
+          return RouteDetailResponse.fromJson(value);
+        case 'RouteDownloadLinkResponse':
+          return RouteDownloadLinkResponse.fromJson(value);
+        case 'RouteDraftResponse':
+          return RouteDraftResponse.fromJson(value);
+        case 'RouteListResponse':
+          return RouteListResponse.fromJson(value);
+        case 'RouteSummaryResponse':
+          return RouteSummaryResponse.fromJson(value);
         case 'SaveBikeAsTemplateRequest':
           return SaveBikeAsTemplateRequest.fromJson(value);
         case 'SaveCheckInRequest':
@@ -423,6 +435,8 @@ class ApiClient {
           return UpdatePrivacyRequest.fromJson(value);
         case 'UpdateProfileRequest':
           return UpdateProfileRequest.fromJson(value);
+        case 'UpdateRouteRequest':
+          return UpdateRouteRequest.fromJson(value);
         case 'UpdateSettingsRequest':
           return UpdateSettingsRequest.fromJson(value);
         case 'UpdateSharingRequest':

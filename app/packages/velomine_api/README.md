@@ -172,6 +172,7 @@ Class | Method | HTTP request | Description
 *RidesApi* | [**getRideLaps**](doc//RidesApi.md#getridelaps) | **GET** /api/v1/rides/{id}/laps | 
 *RidesApi* | [**getRideStreams**](doc//RidesApi.md#getridestreams) | **GET** /api/v1/rides/{id}/streams | 
 *RidesApi* | [**listRides**](doc//RidesApi.md#listrides) | **GET** /api/v1/rides | 
+*RidesApi* | [**routesGetRideRouteDraft**](doc//RidesApi.md#routesgetrideroutedraft) | **GET** /api/v1/rides/{id}/route-draft | 
 *RidesApi* | [**setRideBike**](doc//RidesApi.md#setridebike) | **PUT** /api/v1/rides/{id}/bike | 
 *RidesApi* | [**setRideType**](doc//RidesApi.md#setridetype) | **PUT** /api/v1/rides/{id}/type | 
 *RidesApi* | [**startRideImport**](doc//RidesApi.md#startrideimport) | **POST** /api/v1/rides/imports | 
@@ -179,6 +180,17 @@ Class | Method | HTTP request | Description
 *RidesApi* | [**wellbeingDeleteRideFeel**](doc//RidesApi.md#wellbeingdeleteridefeel) | **DELETE** /api/v1/rides/{id}/feel | 
 *RidesApi* | [**wellbeingGetRideFeel**](doc//RidesApi.md#wellbeinggetridefeel) | **GET** /api/v1/rides/{id}/feel | 
 *RidesApi* | [**wellbeingSaveRideFeel**](doc//RidesApi.md#wellbeingsaveridefeel) | **PUT** /api/v1/rides/{id}/feel | 
+*RoutesApi* | [**createRoute**](doc//RoutesApi.md#createroute) | **POST** /api/v1/routes | 
+*RoutesApi* | [**createRouteDownloadLink**](doc//RoutesApi.md#createroutedownloadlink) | **POST** /api/v1/routes/{id}/gpx-link | 
+*RoutesApi* | [**deleteRoute**](doc//RoutesApi.md#deleteroute) | **DELETE** /api/v1/routes/{id} | 
+*RoutesApi* | [**downloadRoute**](doc//RoutesApi.md#downloadroute) | **GET** /api/v1/routes/downloads/{token} | 
+*RoutesApi* | [**getRoute**](doc//RoutesApi.md#getroute) | **GET** /api/v1/routes/{id} | 
+*RoutesApi* | [**listMyRoutes**](doc//RoutesApi.md#listmyroutes) | **GET** /api/v1/routes/mine | 
+*RoutesApi* | [**listRoutes**](doc//RoutesApi.md#listroutes) | **GET** /api/v1/routes | 
+*RoutesApi* | [**readGpxRouteDraft**](doc//RoutesApi.md#readgpxroutedraft) | **POST** /api/v1/routes/gpx-draft | 
+*RoutesApi* | [**shareRoute**](doc//RoutesApi.md#shareroute) | **POST** /api/v1/routes/{id}/share | 
+*RoutesApi* | [**unshareRoute**](doc//RoutesApi.md#unshareroute) | **DELETE** /api/v1/routes/{id}/share | 
+*RoutesApi* | [**updateRoute**](doc//RoutesApi.md#updateroute) | **PUT** /api/v1/routes/{id} | 
 *ServerApi* | [**getServerInfo**](doc//ServerApi.md#getserverinfo) | **GET** /api/v1/server | 
 *SharingApi* | [**getShareViews**](doc//SharingApi.md#getshareviews) | **GET** /api/v1/sharing/views | 
 *SharingApi* | [**getSharing**](doc//SharingApi.md#getsharing) | **GET** /api/v1/sharing | 
@@ -218,6 +230,7 @@ Class | Method | HTTP request | Description
  - [CreateComponentRequest](doc//CreateComponentRequest.md)
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [CreatePrivacyZoneRequest](doc//CreatePrivacyZoneRequest.md)
+ - [CreateRouteRequest](doc//CreateRouteRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
@@ -273,6 +286,11 @@ Class | Method | HTTP request | Description
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
+ - [RouteDetailResponse](doc//RouteDetailResponse.md)
+ - [RouteDownloadLinkResponse](doc//RouteDownloadLinkResponse.md)
+ - [RouteDraftResponse](doc//RouteDraftResponse.md)
+ - [RouteListResponse](doc//RouteListResponse.md)
+ - [RouteSummaryResponse](doc//RouteSummaryResponse.md)
  - [SaveBikeAsTemplateRequest](doc//SaveBikeAsTemplateRequest.md)
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
@@ -312,6 +330,7 @@ Class | Method | HTTP request | Description
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdatePrivacyRequest](doc//UpdatePrivacyRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)
+ - [UpdateRouteRequest](doc//UpdateRouteRequest.md)
  - [UpdateSettingsRequest](doc//UpdateSettingsRequest.md)
  - [UpdateSharingRequest](doc//UpdateSharingRequest.md)
  - [UpdateTemplateRequest](doc//UpdateTemplateRequest.md)

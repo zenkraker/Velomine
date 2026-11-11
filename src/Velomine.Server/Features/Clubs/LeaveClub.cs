@@ -35,6 +35,9 @@ public sealed class LeaveClub(VelomineDbContext db) : EndpointWithoutRequest
         db.ClubMemberships.Remove(membership);
         // Leaving revokes everything the member shared with that club.
         db.ShareGrants.RemoveRange(db.ShareGrants.Where(g => g.MemberId == userId));
+        // The routes stay the member's own; only the share with this club ends.
+        foreach (var route in await db.Routes.Where(r => r.UserId == userId && r.ClubId != null).ToListAsync(ct))
+            route.ClubId = null;
         await db.SaveChangesAsync(ct);
         await Send.NoContentAsync(ct);
     }

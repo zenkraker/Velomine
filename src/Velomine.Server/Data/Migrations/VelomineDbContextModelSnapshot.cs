@@ -1790,6 +1790,100 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("ride_streams", "rides");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Routes.CyclingRoute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<double?>("ClimbingM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("climbing_m");
+
+                    b.Property<Guid?>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<double>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Surface")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("surface");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_routes");
+
+                    b.HasIndex("ClubId", "CreatedAt")
+                        .HasDatabaseName("ix_routes_club_id_created_at");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_routes_user_id_created_at");
+
+                    b.ToTable("routes", "routes", t =>
+                        {
+                            t.HasCheckConstraint("ck_routes_distance_m", "distance_m >= 0");
+
+                            t.HasCheckConstraint("ck_routes_name", "char_length(btrim(name)) > 0");
+
+                            t.HasCheckConstraint("ck_routes_surface", "surface IN ('road', 'gravel', 'mountain', 'mixed')");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Routes.RouteLine", b =>
+                {
+                    b.Property<Guid>("RouteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("route_id");
+
+                    b.PrimitiveCollection<float[]>("Elevation")
+                        .HasColumnType("real[]")
+                        .HasColumnName("elevation");
+
+                    b.PrimitiveCollection<double[]>("Latitude")
+                        .IsRequired()
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("latitude");
+
+                    b.PrimitiveCollection<double[]>("Longitude")
+                        .IsRequired()
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("longitude");
+
+                    b.HasKey("RouteId")
+                        .HasName("pk_route_lines");
+
+                    b.ToTable("route_lines", "routes", t =>
+                        {
+                            t.HasCheckConstraint("ck_route_lines_aligned", "cardinality(latitude) = cardinality(longitude) AND (elevation IS NULL OR cardinality(elevation) = cardinality(latitude))");
+
+                            t.HasCheckConstraint("ck_route_lines_points", "cardinality(latitude) >= 2");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareGrant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2271,6 +2365,34 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_ride_streams_rides_ride_id");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Routes.CyclingRoute", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_routes_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_routes_users_user_id");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Routes.RouteLine", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Routes.CyclingRoute", null)
+                        .WithOne("Line")
+                        .HasForeignKey("Velomine.Server.Features.Routes.RouteLine", "RouteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_route_lines_routes_route_id");
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Sharing.ShareGrant", b =>
                 {
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
@@ -2333,6 +2455,11 @@ namespace Velomine.Server.Data.Migrations
                     b.Navigation("PowerBests");
 
                     b.Navigation("Streams");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Routes.CyclingRoute", b =>
+                {
+                    b.Navigation("Line");
                 });
 #pragma warning restore 612, 618
         }
