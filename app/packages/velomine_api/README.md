@@ -137,19 +137,30 @@ Class | Method | HTTP request | Description
 *BikesApi* | [**updateBike**](doc//BikesApi.md#updatebike) | **PUT** /api/v1/bikes/{id} | 
 *BikesApi* | [**updateComponent**](doc//BikesApi.md#updatecomponent) | **PUT** /api/v1/bikes/{bikeId}/components/{id} | 
 *BikesApi* | [**updateTemplate**](doc//BikesApi.md#updatetemplate) | **PUT** /api/v1/bikes/templates/{id} | 
+*CalendarApi* | [**clubsReadCalendarFeed**](doc//CalendarApi.md#clubsreadcalendarfeed) | **GET** /api/v1/calendar/{token}.ics | 
 *ClubApi* | [**approveJoinRequest**](doc//ClubApi.md#approvejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/approve | 
+*ClubApi* | [**cancelClubRide**](doc//ClubApi.md#cancelclubride) | **POST** /api/v1/club/rides/{id}/cancel | 
 *ClubApi* | [**cancelJoinRequest**](doc//ClubApi.md#canceljoinrequest) | **DELETE** /api/v1/club/join-request | 
+*ClubApi* | [**createCalendarFeed**](doc//ClubApi.md#createcalendarfeed) | **POST** /api/v1/club/calendar-feed | 
 *ClubApi* | [**declineJoinRequest**](doc//ClubApi.md#declinejoinrequest) | **POST** /api/v1/club/join-requests/{joinRequestId}/decline | 
+*ClubApi* | [**deleteCalendarFeed**](doc//ClubApi.md#deletecalendarfeed) | **DELETE** /api/v1/club/calendar-feed | 
+*ClubApi* | [**getCalendarFeed**](doc//ClubApi.md#getcalendarfeed) | **GET** /api/v1/club/calendar-feed | 
+*ClubApi* | [**getClubRide**](doc//ClubApi.md#getclubride) | **GET** /api/v1/club/rides/{id} | 
 *ClubApi* | [**getMyClub**](doc//ClubApi.md#getmyclub) | **GET** /api/v1/club | 
 *ClubApi* | [**getMyJoinRequest**](doc//ClubApi.md#getmyjoinrequest) | **GET** /api/v1/club/join-request | 
 *ClubApi* | [**joinClub**](doc//ClubApi.md#joinclub) | **POST** /api/v1/club/join | 
+*ClubApi* | [**joinClubRide**](doc//ClubApi.md#joinclubride) | **POST** /api/v1/club/rides/{id}/participation | 
 *ClubApi* | [**leaveClub**](doc//ClubApi.md#leaveclub) | **POST** /api/v1/club/leave | 
+*ClubApi* | [**leaveClubRide**](doc//ClubApi.md#leaveclubride) | **DELETE** /api/v1/club/rides/{id}/participation | 
+*ClubApi* | [**listClubRides**](doc//ClubApi.md#listclubrides) | **GET** /api/v1/club/rides | 
 *ClubApi* | [**listJoinRequests**](doc//ClubApi.md#listjoinrequests) | **GET** /api/v1/club/join-requests | 
 *ClubApi* | [**nearbyClubs**](doc//ClubApi.md#nearbyclubs) | **POST** /api/v1/club/nearby | 
+*ClubApi* | [**planClubRide**](doc//ClubApi.md#planclubride) | **POST** /api/v1/club/rides | 
 *ClubApi* | [**requestToJoin**](doc//ClubApi.md#requesttojoin) | **POST** /api/v1/club/join-request | 
 *ClubApi* | [**rotateJoinCode**](doc//ClubApi.md#rotatejoincode) | **POST** /api/v1/club/join-code | 
 *ClubApi* | [**setClubLocation**](doc//ClubApi.md#setclublocation) | **PUT** /api/v1/club/location | 
 *ClubApi* | [**setClubMemberRole**](doc//ClubApi.md#setclubmemberrole) | **PUT** /api/v1/club/members/{userId}/role | 
+*ClubApi* | [**updateClubRide**](doc//ClubApi.md#updateclubride) | **PUT** /api/v1/club/rides/{id} | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
 *ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
 *ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
@@ -211,6 +222,8 @@ Class | Method | HTTP request | Description
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
  - [BikeTemplateResponse](doc//BikeTemplateResponse.md)
+ - [CalendarFeedAddressResponse](doc//CalendarFeedAddressResponse.md)
+ - [CalendarFeedStatusResponse](doc//CalendarFeedStatusResponse.md)
  - [CatalogueAdminResponse](doc//CatalogueAdminResponse.md)
  - [CatalogueContributionResponse](doc//CatalogueContributionResponse.md)
  - [CatalogueCountsResponse](doc//CatalogueCountsResponse.md)
@@ -219,6 +232,10 @@ Class | Method | HTTP request | Description
  - [CheckInsResponse](doc//CheckInsResponse.md)
  - [ClubMemberResponse](doc//ClubMemberResponse.md)
  - [ClubResponse](doc//ClubResponse.md)
+ - [ClubRideDetailResponse](doc//ClubRideDetailResponse.md)
+ - [ClubRideListResponse](doc//ClubRideListResponse.md)
+ - [ClubRideParticipantResponse](doc//ClubRideParticipantResponse.md)
+ - [ClubRideSummaryResponse](doc//ClubRideSummaryResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
  - [CoachRpeResponse](doc//CoachRpeResponse.md)
@@ -266,6 +283,7 @@ Class | Method | HTTP request | Description
  - [PasswordResetLinkResponse](doc//PasswordResetLinkResponse.md)
  - [PendingJoinRequestResponse](doc//PendingJoinRequestResponse.md)
  - [PeriodTotals](doc//PeriodTotals.md)
+ - [PlanClubRideRequest](doc//PlanClubRideRequest.md)
  - [PowerCurvePoint](doc//PowerCurvePoint.md)
  - [PowerCurveResponse](doc//PowerCurveResponse.md)
  - [PrivacyResponse](doc//PrivacyResponse.md)
@@ -326,6 +344,7 @@ Class | Method | HTTP request | Description
  - [TwoFactorState](doc//TwoFactorState.md)
  - [UpdateBikeRequest](doc//UpdateBikeRequest.md)
  - [UpdateClubRequest](doc//UpdateClubRequest.md)
+ - [UpdateClubRideRequest](doc//UpdateClubRideRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdatePrivacyRequest](doc//UpdatePrivacyRequest.md)

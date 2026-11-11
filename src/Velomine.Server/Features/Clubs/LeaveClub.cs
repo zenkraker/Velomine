@@ -38,6 +38,9 @@ public sealed class LeaveClub(VelomineDbContext db) : EndpointWithoutRequest
         // The routes stay the member's own; only the share with this club ends.
         foreach (var route in await db.Routes.Where(r => r.UserId == userId && r.ClubId != null).ToListAsync(ct))
             route.ClubId = null;
+        // The calendar address belonged to the club they are leaving.
+        if (await db.CalendarFeeds.FirstOrDefaultAsync(f => f.UserId == userId, ct) is { } feed)
+            db.CalendarFeeds.Remove(feed);
         await db.SaveChangesAsync(ct);
         await Send.NoContentAsync(ct);
     }

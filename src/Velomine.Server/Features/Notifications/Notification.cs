@@ -38,6 +38,15 @@ public static class NotificationTypes
 
     /// <summary>The club's owner said no. The subject is the club's name.</summary>
     public const string ClubJoinDeclined = "club_join_declined";
+
+    /// <summary>A coach planned a club ride. Refers to the ride; the subject is its title.</summary>
+    public const string ClubRidePlanned = "club_ride_planned";
+
+    /// <summary>A ride's time or meeting point changed. Refers to the ride; the subject is its title.</summary>
+    public const string ClubRideChanged = "club_ride_changed";
+
+    /// <summary>A club ride was cancelled. Refers to the ride; the subject is its title.</summary>
+    public const string ClubRideCancelled = "club_ride_cancelled";
 }
 
 /// <summary>
@@ -55,6 +64,9 @@ public static class NotificationKinds
         NotificationTypes.ClubJoinRequest,
         NotificationTypes.ClubJoinApproved,
         NotificationTypes.ClubJoinDeclined,
+        NotificationTypes.ClubRidePlanned,
+        NotificationTypes.ClubRideChanged,
+        NotificationTypes.ClubRideCancelled,
         NotificationTypes.SignUpWaiting,
     ];
 
@@ -97,6 +109,9 @@ public sealed class Notification
     /// <summary>The account it is about (sign-ups).</summary>
     public Guid? AboutUserId { get; set; }
 
+    /// <summary>A club ride it is about; its title is the subject.</summary>
+    public Guid? PlannedRideId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? ReadAt { get; set; }
@@ -120,11 +135,14 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         n.HasOne<Ride>().WithMany().HasForeignKey(x => x.RideId).OnDelete(DeleteBehavior.Cascade);
         n.HasOne<Bike>().WithMany().HasForeignKey(x => x.BikeId).OnDelete(DeleteBehavior.Cascade);
         n.HasOne<BikeComponent>().WithMany().HasForeignKey(x => x.ComponentId).OnDelete(DeleteBehavior.Cascade);
+        n.HasOne<Velomine.Server.Features.Clubs.PlannedRide>().WithMany().HasForeignKey(x => x.PlannedRideId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         n.HasIndex(x => new { x.UserId, x.CreatedAt });
         n.HasIndex(x => x.RideId);
         n.HasIndex(x => x.BikeId);
         n.HasIndex(x => x.ComponentId);
         n.HasIndex(x => x.AboutUserId);
+        n.HasIndex(x => x.PlannedRideId);
     }
 }

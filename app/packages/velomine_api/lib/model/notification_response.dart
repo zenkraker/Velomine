@@ -20,6 +20,7 @@ class NotificationResponse {
     required this.bikeId,
     required this.componentId,
     required this.aboutUserId,
+    required this.plannedRideId,
     required this.createdAt,
     required this.isRead,
   });
@@ -38,6 +39,8 @@ class NotificationResponse {
 
   final String? aboutUserId;
 
+  final String? plannedRideId;
+
   final DateTime createdAt;
 
   final bool isRead;
@@ -51,6 +54,7 @@ class NotificationResponse {
     other.bikeId == bikeId &&
     other.componentId == componentId &&
     other.aboutUserId == aboutUserId &&
+    other.plannedRideId == plannedRideId &&
     other.createdAt == createdAt &&
     other.isRead == isRead;
 
@@ -64,11 +68,12 @@ class NotificationResponse {
     (bikeId == null ? 0 : bikeId!.hashCode) +
     (componentId == null ? 0 : componentId!.hashCode) +
     (aboutUserId == null ? 0 : aboutUserId!.hashCode) +
+    (plannedRideId == null ? 0 : plannedRideId!.hashCode) +
     (createdAt.hashCode) +
     (isRead.hashCode);
 
   @override
-  String toString() => 'NotificationResponse[id=$id, type=$type, subject=$subject, rideId=$rideId, bikeId=$bikeId, componentId=$componentId, aboutUserId=$aboutUserId, createdAt=$createdAt, isRead=$isRead]';
+  String toString() => 'NotificationResponse[id=$id, type=$type, subject=$subject, rideId=$rideId, bikeId=$bikeId, componentId=$componentId, aboutUserId=$aboutUserId, plannedRideId=$plannedRideId, createdAt=$createdAt, isRead=$isRead]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -95,6 +100,11 @@ class NotificationResponse {
     } else {
       json[r'aboutUserId'] = null;
     }
+    if (this.plannedRideId != null) {
+      json[r'plannedRideId'] = this.plannedRideId;
+    } else {
+      json[r'plannedRideId'] = null;
+    }
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
       json[r'isRead'] = this.isRead;
     return json;
@@ -114,6 +124,8 @@ class NotificationResponse {
     bool componentIdSetToNull = false,
     String? aboutUserId,
     bool aboutUserIdSetToNull = false,
+    String? plannedRideId,
+    bool plannedRideIdSetToNull = false,
     DateTime? createdAt,
     bool? isRead,
   }) => NotificationResponse(
@@ -124,6 +136,7 @@ class NotificationResponse {
     bikeId: bikeIdSetToNull ? null : bikeId ?? this.bikeId,
     componentId: componentIdSetToNull ? null : componentId ?? this.componentId,
     aboutUserId: aboutUserIdSetToNull ? null : aboutUserId ?? this.aboutUserId,
+    plannedRideId: plannedRideIdSetToNull ? null : plannedRideId ?? this.plannedRideId,
     createdAt: createdAt ?? this.createdAt,
     isRead: isRead ?? this.isRead,
   );
@@ -149,6 +162,7 @@ class NotificationResponse {
         assert(json.containsKey(r'bikeId'), 'Required key "NotificationResponse[bikeId]" is missing from JSON.');
         assert(json.containsKey(r'componentId'), 'Required key "NotificationResponse[componentId]" is missing from JSON.');
         assert(json.containsKey(r'aboutUserId'), 'Required key "NotificationResponse[aboutUserId]" is missing from JSON.');
+        assert(json.containsKey(r'plannedRideId'), 'Required key "NotificationResponse[plannedRideId]" is missing from JSON.');
         assert(json.containsKey(r'createdAt'), 'Required key "NotificationResponse[createdAt]" is missing from JSON.');
         assert(json[r'createdAt'] != null, 'Required key "NotificationResponse[createdAt]" has a null value in JSON.');
         assert(json.containsKey(r'isRead'), 'Required key "NotificationResponse[isRead]" is missing from JSON.');
@@ -164,6 +178,7 @@ class NotificationResponse {
         bikeId: mapValueOfType<String>(json, r'bikeId'),
         componentId: mapValueOfType<String>(json, r'componentId'),
         aboutUserId: mapValueOfType<String>(json, r'aboutUserId'),
+        plannedRideId: mapValueOfType<String>(json, r'plannedRideId'),
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         isRead: mapValueOfType<bool>(json, r'isRead')!,
       );
@@ -220,6 +235,7 @@ class NotificationResponse {
     'bikeId',
     'componentId',
     'aboutUserId',
+    'plannedRideId',
     'createdAt',
     'isRead',
   };

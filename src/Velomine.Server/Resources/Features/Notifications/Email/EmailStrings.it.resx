@@ -79,4 +79,13 @@
   <data name="ClubJoinDeclined" xml:space="preserve">
     <value>{0} ha rifiutato la tua richiesta.</value>
   </data>
+  <data name="ClubRidePlanned" xml:space="preserve">
+    <value>{0}: il club ha programmato un'uscita.</value>
+  </data>
+  <data name="ClubRideChanged" xml:space="preserve">
+    <value>{0}: sono cambiati l'orario o il punto di ritrovo.</value>
+  </data>
+  <data name="ClubRideCancelled" xml:space="preserve">
+    <value>{0}: l'uscita è annullata.</value>
+  </data>
 </root>

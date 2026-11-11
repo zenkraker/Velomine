@@ -9,6 +9,7 @@ lib/api/accounts_api.dart
 lib/api/admin_api.dart
 lib/api/analytics_api.dart
 lib/api/bikes_api.dart
+lib/api/calendar_api.dart
 lib/api/club_api.dart
 lib/api/clubs_api.dart
 lib/api/notifications_api.dart
@@ -33,6 +34,8 @@ lib/model/apply_template_request.dart
 lib/model/bike_detail_response.dart
 lib/model/bike_response.dart
 lib/model/bike_template_response.dart
+lib/model/calendar_feed_address_response.dart
+lib/model/calendar_feed_status_response.dart
 lib/model/catalogue_admin_response.dart
 lib/model/catalogue_contribution_response.dart
 lib/model/catalogue_counts_response.dart
@@ -41,6 +44,10 @@ lib/model/check_in_response.dart
 lib/model/check_ins_response.dart
 lib/model/club_member_response.dart
 lib/model/club_response.dart
+lib/model/club_ride_detail_response.dart
+lib/model/club_ride_list_response.dart
+lib/model/club_ride_participant_response.dart
+lib/model/club_ride_summary_response.dart
 lib/model/coach_athlete_response.dart
 lib/model/coach_athletes_response.dart
 lib/model/coach_rpe_response.dart
@@ -88,6 +95,7 @@ lib/model/password_confirmation.dart
 lib/model/password_reset_link_response.dart
 lib/model/pending_join_request_response.dart
 lib/model/period_totals.dart
+lib/model/plan_club_ride_request.dart
 lib/model/power_curve_point.dart
 lib/model/power_curve_response.dart
 lib/model/privacy_response.dart
@@ -148,6 +156,7 @@ lib/model/two_factor_setup.dart
 lib/model/two_factor_state.dart
 lib/model/update_bike_request.dart
 lib/model/update_club_request.dart
+lib/model/update_club_ride_request.dart
 lib/model/update_component_request.dart
 lib/model/update_goal_request.dart
 lib/model/update_privacy_request.dart

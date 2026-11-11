@@ -197,6 +197,10 @@ class ApiClient {
           return BikeResponse.fromJson(value);
         case 'BikeTemplateResponse':
           return BikeTemplateResponse.fromJson(value);
+        case 'CalendarFeedAddressResponse':
+          return CalendarFeedAddressResponse.fromJson(value);
+        case 'CalendarFeedStatusResponse':
+          return CalendarFeedStatusResponse.fromJson(value);
         case 'CatalogueAdminResponse':
           return CatalogueAdminResponse.fromJson(value);
         case 'CatalogueContributionResponse':
@@ -213,6 +217,14 @@ class ApiClient {
           return ClubMemberResponse.fromJson(value);
         case 'ClubResponse':
           return ClubResponse.fromJson(value);
+        case 'ClubRideDetailResponse':
+          return ClubRideDetailResponse.fromJson(value);
+        case 'ClubRideListResponse':
+          return ClubRideListResponse.fromJson(value);
+        case 'ClubRideParticipantResponse':
+          return ClubRideParticipantResponse.fromJson(value);
+        case 'ClubRideSummaryResponse':
+          return ClubRideSummaryResponse.fromJson(value);
         case 'CoachAthleteResponse':
           return CoachAthleteResponse.fromJson(value);
         case 'CoachAthletesResponse':
@@ -307,6 +319,8 @@ class ApiClient {
           return PendingJoinRequestResponse.fromJson(value);
         case 'PeriodTotals':
           return PeriodTotals.fromJson(value);
+        case 'PlanClubRideRequest':
+          return PlanClubRideRequest.fromJson(value);
         case 'PowerCurvePoint':
           return PowerCurvePoint.fromJson(value);
         case 'PowerCurveResponse':
@@ -427,6 +441,8 @@ class ApiClient {
           return UpdateBikeRequest.fromJson(value);
         case 'UpdateClubRequest':
           return UpdateClubRequest.fromJson(value);
+        case 'UpdateClubRideRequest':
+          return UpdateClubRideRequest.fromJson(value);
         case 'UpdateComponentRequest':
           return UpdateComponentRequest.fromJson(value);
         case 'UpdateGoalRequest':
