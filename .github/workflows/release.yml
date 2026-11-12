@@ -7,7 +7,7 @@ name: Release
 #
 # Tags and OCI labels come from docker/metadata-action, and both images always get the same ones. Nothing is pushed
 # unless CI and the smoke test pass, and `latest` is never published. Deploying is manual and GitHub has no access to the
-# hosts: the operator sets the version on the host and runs docker compose (deploy/host/README.md, "Releasing").
+# hosts: the operator sets the version on the host and runs docker compose.
 
 on:
   push:

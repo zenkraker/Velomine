@@ -13,9 +13,8 @@ updates:
       actions:
         patterns: ["*"]
 
-  # The base images of both Dockerfiles (server, and the web image's nginx) and
-  # the host's Traefik are pinned by digest, so without this they would never
-  # get security patches.
+  # The base images of both Dockerfiles (server, and the web image's nginx) are
+  # pinned by digest, so without this they would never get security patches.
   - package-ecosystem: docker
     directories:
       - /
@@ -26,8 +25,9 @@ updates:
       images:
         patterns: ["*"]
 
+  # The images the compose files run besides our own: PostgreSQL, Dex and the demo's Traefik.
   - package-ecosystem: docker-compose
     directories:
-      - /deploy/host/traefik
+      - /
     schedule:
       interval: weekly

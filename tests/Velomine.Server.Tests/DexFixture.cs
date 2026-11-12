@@ -11,7 +11,7 @@ namespace Velomine.Server.Tests;
 
 /// <summary>
 /// The real OpenID Connect provider (Dex) for the single sign-on tests, started from the same
-/// <c>deploy/dex/config.yaml</c> as <c>docker compose</c>: the same users, clients and secrets. Only the issuer
+/// <c>deploy/dex/config.yaml</c> as <c>compose.development.yaml</c>: the same users, clients and secrets. Only the issuer
 /// changes, to a port that does not clash with a running development stack. Starts on first use.
 /// </summary>
 public sealed partial class DexFixture : IAsyncLifetime

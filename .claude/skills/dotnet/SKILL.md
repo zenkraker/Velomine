@@ -18,7 +18,7 @@ Practical guidance for the server. The rules are in `AGENTS.md` (*Server*, *Club
 
 ## Tests
 
-- xUnit v3 with `Microsoft.AspNetCore.Mvc.Testing` for HTTP and `PostgresFixture` (Testcontainers) for a real database; single sign-on tests use Dex with the same configuration as `docker-compose.yml`.
+- xUnit v3 with `Microsoft.AspNetCore.Mvc.Testing` for HTTP and `PostgresFixture` (Testcontainers) for a real database; single sign-on tests use Dex with the same configuration as `compose.development.yaml`.
 - Bogus is approved for fake data when needed: a fixed seed, and no assertions on exact generated values.
 - A slice that touches club data gets a second-club test.
 
