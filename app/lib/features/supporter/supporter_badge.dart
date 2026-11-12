@@ -140,11 +140,12 @@ class _SupporterBadgeState extends State<SupporterBadge> {
 
 /// The profile's supporter section: "become a supporter" while there is no
 /// licence, then the badge, its replay and the switch that hides it.
-class SupporterSection extends ConsumerWidget {
+class SupporterSection extends ConsumerStatefulWidget {
   const SupporterSection({
     super.key,
     required this.onReplay,
     required this.onBecomeSupporter,
+    required this.onOpen,
   });
 
   /// Opens the celebration again, for the badge's triple tap and the replay button.
@@ -153,8 +154,23 @@ class SupporterSection extends ConsumerWidget {
   /// Opens the activation screen, while the member has no licence yet.
   final VoidCallback onBecomeSupporter;
 
+  /// Asks the server again when the profile is opened: the licence is kept alive with
+  /// the session, so a second device's activation would not show otherwise.
+  final VoidCallback onOpen;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SupporterSection> createState() => _SupporterSectionState();
+}
+
+class _SupporterSectionState extends ConsumerState<SupporterSection> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onOpen();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final s = ref.watch(supporterViewModelProvider);
     final notifier = ref.read(supporterViewModelProvider.notifier);
@@ -178,13 +194,13 @@ class SupporterSection extends ConsumerWidget {
         ],
       );
     }
-    if (s.load.running) return const LinearProgressIndicator();
+    if (s.load.running) return const SizedBox(height: 48);
     if (s.becomeSupporter) {
       return Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.tonal(
           key: const Key('supporter-become'),
-          onPressed: onBecomeSupporter,
+          onPressed: widget.onBecomeSupporter,
           child: Text(l10n.supporterBecome),
         ),
       );
@@ -204,7 +220,7 @@ class SupporterSection extends ConsumerWidget {
                   key: const Key('supporter-badge'),
                   label: l10n.supporter,
                   hint: l10n.supporterBadgeReplayHint,
-                  onReplay: onReplay,
+                  onReplay: widget.onReplay,
                 ),
               ),
             // Above the badge itself, a pointer is not a touch, so the badge's three quick taps still count.
@@ -215,7 +231,7 @@ class SupporterSection extends ConsumerWidget {
                 minimumSize: const Size.square(48),
               ),
               tooltip: l10n.supporterReplay,
-              onPressed: onReplay,
+              onPressed: widget.onReplay,
               icon: const Icon(Icons.replay),
             ),
           ],

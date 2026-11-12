@@ -15,6 +15,7 @@ import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
 import '../supporter/supporter_badge.dart';
+import '../supporter/supporter_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
@@ -498,6 +499,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           SupporterSection(
                             onBecomeSupporter: widget.onBecomeSupporter,
                             onReplay: widget.onReplaySupporter,
+                            onOpen: () => Future.microtask(
+                              ref
+                                  .read(supporterViewModelProvider.notifier)
+                                  .load,
+                            ),
                           ),
                         ],
                       ),

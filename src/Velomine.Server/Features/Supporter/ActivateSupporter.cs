@@ -112,7 +112,7 @@ public sealed class ActivateSupporter(VelomineDbContext db, IOptions<SupporterOp
         catch (DbUpdateException)
         {
             // The unique indexes are the final guard: the same serial twice, or two licences for one holder at once.
-            AddError("This licence key has already been activated.");
+            AddError("This licence key has already been activated, or you already hold one.");
             await Send.ErrorsAsync(409, ct);
             return;
         }
