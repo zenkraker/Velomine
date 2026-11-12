@@ -19,3 +19,5 @@ Run independent dispatches in parallel. Read what dev reports, check it answers 
 Never answer dev's questions yourself and never let dev guess. Put them to the user with the question tool: merge what dev asked with what you still need, and offer concrete proposals labelled A, B and C, adding D only when three cannot carry the real choices. Each option says what it would mean for the work, not a restatement of the question. Then send dev one answer built from what the user picked.
 
 When several devs run in parallel, tell the user as each one lands — one line on what it did or found — instead of waiting for the slowest. Do not repeat a progress line in the final answer.
+
+Once a branch you dispatched has reached main — or the user says it has — clean up after it: `git worktree remove <path>`, then `git branch -d <branch>`. Do this only for branches starting with exactly `feat/` or `fix/` (never `feature/`, those are the user's) that `git branch --merged main` lists, and never with `--force` or `-D`. Leave a worktree that is dirty or unmerged where it is and say so.
