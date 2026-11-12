@@ -23,6 +23,7 @@ import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
 import '../../../core/tokens.dart';
+import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/stat_tile.dart';
 
@@ -331,7 +332,14 @@ class RideDetailScreen extends ConsumerWidget {
           ValueListenableBuilder<int?>(
             valueListenable: selection.selected,
             builder: (_, index, _) => Text(
-              index == null ? l10n.momentHint : _moment(l10n, s, index),
+              index == null
+                  ? l10n.momentHint
+                  : _moment(
+                      l10n,
+                      s,
+                      index,
+                      ref.watch(unitsChoiceViewModelProvider),
+                    ),
               key: const Key('moment'),
               style: text.bodyMedium?.copyWith(
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -353,12 +361,17 @@ class RideDetailScreen extends ConsumerWidget {
     ];
   }
 
-  String _moment(AppLocalizations l10n, RideDetailState s, int index) {
+  String _moment(
+    AppLocalizations l10n,
+    RideDetailState s,
+    int index,
+    Units units,
+  ) {
     final data = s.series!;
     final distance = data.distance == null ? null : data.distance![index];
     return l10n.momentAt(
       clock(data.time[index]),
-      distance == null ? '' : ' · ${km(distance)}',
+      distance == null ? '' : ' · ${km(units, distance)}',
     );
   }
 }
@@ -394,32 +407,33 @@ class _ViewsCard extends StatelessWidget {
 }
 
 /// The ride's numbers as small tiles: only the ones the ride has.
-class _Stats extends StatelessWidget {
+class _Stats extends ConsumerWidget {
   const _Stats({required this.ride});
 
   final RideResponse ride;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final tiles = <(String, String, String)>[
-      ('distance', l10n.statDistance, km(ride.distanceM)),
+      ('distance', l10n.statDistance, km(units, ride.distanceM)),
       ('moving-time', l10n.statMovingTime, duration(ride.movingS)),
       if (ride.elapsedS != null &&
           ride.movingS != null &&
           ride.elapsedS! - ride.movingS! > 60)
         ('elapsed-time', l10n.statElapsedTime, duration(ride.elapsedS)),
       if (ride.elevationGainM != null)
-        ('climbing', l10n.statClimbing, '${ride.elevationGainM!.round()} m'),
+        ('climbing', l10n.statClimbing, elevation(units, ride.elevationGainM)),
       if (ride.elevationLossM != null)
         (
           'descending',
           l10n.statDescending,
-          '${ride.elevationLossM!.round()} m',
+          elevation(units, ride.elevationLossM),
         ),
-      ('average-speed', l10n.statAverageSpeed, kmh(ride.avgSpeedMs)),
+      ('average-speed', l10n.statAverageSpeed, kmh(units, ride.avgSpeedMs)),
       if (ride.maxSpeedMs != null)
-        ('top-speed', l10n.statTopSpeed, kmh(ride.maxSpeedMs)),
+        ('top-speed', l10n.statTopSpeed, kmh(units, ride.maxSpeedMs)),
       if (ride.avgPowerW != null)
         ('average-power', l10n.statAveragePower, '${ride.avgPowerW} W'),
       if (ride.normalizedPowerW != null)

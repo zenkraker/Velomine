@@ -13,6 +13,7 @@ import 'recording_providers.dart';
 import 'recording_view_model.dart';
 import 'upload_queue.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 import '../../core/widgets/stat_tile.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
@@ -415,7 +416,7 @@ String sensorStatusText(AppLocalizations l10n, String status) =>
       _ => l10n.sensorConnectsOnStart,
     };
 
-class _LiveCard extends StatelessWidget {
+class _LiveCard extends ConsumerWidget {
   const _LiveCard({
     required this.state,
     required this.sensorsSupported,
@@ -433,8 +434,9 @@ class _LiveCard extends StatelessWidget {
   final Future<void> Function() onStop;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final paused = state.isPaused;
     final autoPaused = paused && state.autoPaused;
     return Card(
@@ -479,10 +481,13 @@ class _LiveCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 StatTile(label: l10n.moving, value: stopwatch(state.movingS)),
-                StatTile(label: l10n.statDistance, value: km(state.distanceM)),
+                StatTile(
+                  label: l10n.statDistance,
+                  value: km(units, state.distanceM),
+                ),
                 StatTile(
                   label: l10n.statAverageSpeed,
-                  value: kmh(state.speedMs),
+                  value: kmh(units, state.speedMs),
                 ),
                 StatTile(
                   label: l10n.gps,
@@ -552,7 +557,7 @@ class _LiveCard extends StatelessWidget {
   }
 }
 
-class _LocalRideCard extends StatelessWidget {
+class _LocalRideCard extends ConsumerWidget {
   const _LocalRideCard({
     required this.ride,
     required this.upload,
@@ -613,8 +618,9 @@ class _LocalRideCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final error = _errorText(l10n);
     final uploading =
         ride.uploadState == UploadState.uploading ||
@@ -629,7 +635,7 @@ class _LocalRideCard extends StatelessWidget {
           ListTile(
             title: Text(dateTime(ride.startedAt)),
             subtitle: Text(
-              '${_stateText(l10n)} · ${km(ride.distanceM)} · ${stopwatch(ride.movingS)}'
+              '${_stateText(l10n)} · ${km(units, ride.distanceM)} · ${stopwatch(ride.movingS)}'
               '${error == null ? '' : '\n$error'}',
             ),
             isThreeLine: error != null,

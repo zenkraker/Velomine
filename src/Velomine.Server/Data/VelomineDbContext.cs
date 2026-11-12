@@ -105,9 +105,11 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
             t.HasCheckConstraint("ck_users_weight_kg", "weight_kg BETWEEN 20 AND 300");
             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
             t.HasCheckConstraint("ck_users_birth_year", "birth_year IS NULL OR birth_year BETWEEN 1900 AND 2200");
+            t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
         });
         builder.Entity<User>().Property(u => u.TimeZone).HasMaxLength(64);
         builder.Entity<User>().Property(u => u.Language).HasMaxLength(8);
+        builder.Entity<User>().Property(u => u.Units).HasMaxLength(8).HasDefaultValue("metric");
         builder.Entity<IdentityRole<Guid>>().ToTable("roles");
         builder.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
         builder.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");

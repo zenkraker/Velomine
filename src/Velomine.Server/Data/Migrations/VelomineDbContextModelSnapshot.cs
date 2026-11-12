@@ -315,6 +315,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("two_factor_enabled");
 
+                    b.Property<string>("Units")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasDefaultValue("metric")
+                        .HasColumnName("units");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)")
@@ -351,6 +359,8 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
 
                             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
+
+                            t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
 
                             t.HasCheckConstraint("ck_users_weight_kg", "weight_kg BETWEEN 20 AND 300");
                         });

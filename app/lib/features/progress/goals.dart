@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 
 const goalPeriodIds = ['week', 'month', 'year'];
 
-/// What a goal can count, with the factor to the server's SI value.
-const goalMetrics = {
-  'distance': 1000.0,
-  'elevation': 1.0,
-  'time': 3600.0,
-  'rides': 1.0,
+/// The metrics a goal can count, in the order the form lists them.
+const goalMetricIds = ['distance', 'elevation', 'time', 'rides'];
+
+const _metresPerMile = 1609.344;
+const _metresPerFoot = 0.3048;
+
+/// What a goal can count, with the factor between what the member types and the
+/// server's SI value. A goal target is stored in metres, seconds or a count.
+double goalFactor(Units units, String metric) => switch (metric) {
+  'distance' => units == Units.imperial ? _metresPerMile : 1000.0,
+  'elevation' => units == Units.imperial ? _metresPerFoot : 1.0,
+  'time' => 3600.0,
+  'rides' => 1.0,
+  _ => 1.0,
 };
 
 String goalPeriodName(AppLocalizations l10n, String period) => switch (period) {
@@ -31,23 +41,36 @@ String goalMetricName(AppLocalizations l10n, String metric) => switch (metric) {
   _ => metric,
 };
 
-String goalUnit(AppLocalizations l10n, String metric) => switch (metric) {
-  'distance' => 'km',
-  'elevation' => 'm',
-  'time' => 'h',
-  'rides' => l10n.goalUnitRides,
-  _ => '',
-};
+String goalUnit(AppLocalizations l10n, Units units, String metric) =>
+    switch (metric) {
+      'distance' => units == Units.imperial ? 'mi' : 'km',
+      'elevation' => units == Units.imperial ? 'ft' : 'm',
+      'time' => 'h',
+      'rides' => l10n.goalUnitRides,
+      _ => '',
+    };
 
 /// A goal value (metres, seconds or a count) as the member reads it.
-String goalValue(AppLocalizations l10n, String metric, double value) =>
-    switch (metric) {
-      'distance' => km(value),
-      'elevation' => '${value.round()} m',
-      'time' => duration(value),
-      'rides' => l10n.goalRideCount(value.round()),
-      _ => value.toString(),
-    };
+String goalValue(
+  AppLocalizations l10n,
+  Units units,
+  String metric,
+  double value,
+) => switch (metric) {
+  'distance' => km(units, value),
+  'elevation' => elevation(units, value),
+  'time' => duration(value),
+  'rides' => l10n.goalRideCount(value.round()),
+  _ => value.toString(),
+};
+
+/// [value] in the server's SI unit, for the number the member typed in [metric].
+double _toMetric(Units units, String metric, double typed) =>
+    typed * goalFactor(units, metric);
+
+/// [value] in the member's unit, for the number a goal form starts from.
+double _fromMetric(Units units, String metric, double value) =>
+    value / goalFactor(units, metric);
 
 String _plain(double v) =>
     v == v.roundToDouble() ? v.toInt().toString() : v.toString();
@@ -62,22 +85,28 @@ Future<({String period, String metric, double target})?> showGoalForm(
   builder: (_) => _GoalForm(goal: goal),
 );
 
-class _GoalForm extends StatefulWidget {
+class _GoalForm extends ConsumerStatefulWidget {
   const _GoalForm({this.goal});
 
   final GoalResponse? goal;
 
   @override
-  State<_GoalForm> createState() => _GoalFormState();
+  ConsumerState<_GoalForm> createState() => _GoalFormState();
 }
 
-class _GoalFormState extends State<_GoalForm> {
+class _GoalFormState extends ConsumerState<_GoalForm> {
   late String _period = widget.goal?.period ?? 'week';
   late String _metric = widget.goal?.metric ?? 'distance';
   late final _target = TextEditingController(
     text: widget.goal == null
         ? ''
-        : _plain(widget.goal!.target / goalMetrics[_metric]!),
+        : _plain(
+            _fromMetric(
+              ref.read(unitsChoiceViewModelProvider),
+              _metric,
+              widget.goal!.target,
+            ),
+          ),
   );
   bool _badTarget = false;
 
@@ -87,7 +116,7 @@ class _GoalFormState extends State<_GoalForm> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submit(Units units) {
     final value = double.tryParse(_target.text.trim().replaceAll(',', '.'));
     if (value == null || value <= 0) {
       setState(() => _badTarget = true);
@@ -96,13 +125,14 @@ class _GoalFormState extends State<_GoalForm> {
     Navigator.pop(context, (
       period: _period,
       metric: _metric,
-      target: value * goalMetrics[_metric]!,
+      target: _toMetric(units, _metric, value),
     ));
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final editing = widget.goal != null;
     return AlertDialog(
       title: Text(editing ? l10n.goalChange : l10n.goalAdd),
@@ -136,7 +166,7 @@ class _GoalFormState extends State<_GoalForm> {
               initialValue: _metric,
               decoration: InputDecoration(labelText: l10n.goalCount),
               items: [
-                for (final metric in goalMetrics.keys)
+                for (final metric in goalMetricIds)
                   DropdownMenuItem(
                     value: metric,
                     child: Text(goalMetricName(l10n, metric)),
@@ -158,10 +188,10 @@ class _GoalFormState extends State<_GoalForm> {
               ],
               decoration: InputDecoration(
                 labelText: l10n.goalTarget,
-                suffixText: goalUnit(l10n, _metric),
+                suffixText: goalUnit(l10n, units, _metric),
                 errorText: _badTarget ? l10n.errorGoalTarget : null,
               ),
-              onSubmitted: (_) => _submit(),
+              onSubmitted: (_) => _submit(units),
             ),
           ],
         ),
@@ -173,7 +203,7 @@ class _GoalFormState extends State<_GoalForm> {
         ),
         FilledButton(
           key: const Key('goal-save'),
-          onPressed: _submit,
+          onPressed: () => _submit(units),
           child: Text(l10n.save),
         ),
       ],
@@ -182,7 +212,7 @@ class _GoalFormState extends State<_GoalForm> {
 }
 
 /// One goal with a progress bar: "Weekly distance · 40 km of 100 km".
-class GoalCard extends StatelessWidget {
+class GoalCard extends ConsumerWidget {
   const GoalCard({
     super.key,
     required this.goal,
@@ -195,10 +225,11 @@ class GoalCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final metric = goalMetricName(l10n, goal.metric);
     final title = l10n.goalTitle(
       goalPeriodName(l10n, goal.period),
@@ -252,8 +283,8 @@ class GoalCard extends StatelessWidget {
             ),
             Text(
               l10n.goalProgress(
-                goalValue(l10n, goal.metric, goal.current),
-                goalValue(l10n, goal.metric, goal.target),
+                goalValue(l10n, units, goal.metric, goal.current),
+                goalValue(l10n, units, goal.metric, goal.target),
                 goal.percent,
               ),
               key: Key('goal-progress-${goal.id}'),

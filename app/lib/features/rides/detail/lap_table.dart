@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/format.dart';
 import '../../../core/l10n.dart';
 import 'lap_range.dart';
 import '../../../core/tokens.dart';
+import '../../../core/units.dart';
 
 /// The ride's laps as a compact table. Tapping a lap highlights its range on every chart and the map.
-class LapTable extends StatelessWidget {
+class LapTable extends ConsumerWidget {
   const LapTable({super.key, required this.laps, required this.selectedLap});
 
   final List<LapResponse> laps;
   final ValueNotifier<LapRange?> selectedLap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final text = Theme.of(context).textTheme;
     Widget cell(String value, {double? width}) => width == null
         ? Expanded(child: Text(value, style: text.bodySmall))
@@ -65,8 +68,8 @@ class LapTable extends StatelessWidget {
                           children: [
                             cell('${l10n.lap} ${lap.index}', width: 64),
                             cell(duration(lap.movingS)),
-                            cell(km(lap.distanceM)),
-                            cell(kmh(lap.avgSpeedMs)),
+                            cell(km(units, lap.distanceM)),
+                            cell(kmh(units, lap.avgSpeedMs)),
                             cell(
                               lap.avgPowerW == null
                                   ? '–'

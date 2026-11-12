@@ -12,7 +12,8 @@ public sealed record MeResponse(
     string? Language,
     bool TelemetryConsentRequired,
     bool TelemetryCrash,
-    bool TelemetryUsage)
+    bool TelemetryUsage,
+    string Units)
 {
     public static MeResponse From(User user, IEnumerable<string> roles)
     {
@@ -25,7 +26,8 @@ public sealed record MeResponse(
             user.Language,
             required,
             !required && user.TelemetryCrash,
-            !required && user.TelemetryUsage);
+            !required && user.TelemetryUsage,
+            user.Units);
     }
 }
 

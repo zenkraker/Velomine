@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
@@ -133,16 +134,17 @@ class RoutesScreen extends ConsumerWidget {
   }
 }
 
-class _RouteCard extends StatelessWidget {
+class _RouteCard extends ConsumerWidget {
   const _RouteCard({required this.route, required this.onOpen});
 
   final RouteSummaryResponse route;
   final void Function(String id) onOpen;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     return Card(
       key: Key('route-${route.id}'),
       child: ListTile(
@@ -151,7 +153,7 @@ class _RouteCard extends StatelessWidget {
         title: Text(route.name, style: text.titleMedium),
         subtitle: Text(
           [
-            routeLineOf(route.distanceM, route.climbingM),
+            routeLineOf(units, route.distanceM, route.climbingM),
             routeSurfaceName(l10n, route.surface),
             l10n.routeAddedBy(route.ownerName),
             if (route.isMine && !route.isShared) l10n.routeNotShared,

@@ -10,6 +10,7 @@ import '../progress/power_summary.dart';
 import '../progress/training_summary.dart';
 import 'coach_athlete_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 
 /// One athlete as their coach sees them: shared summary, training load and recent rides.
 class CoachAthleteScreen extends ConsumerWidget {
@@ -29,6 +30,7 @@ class CoachAthleteScreen extends ConsumerWidget {
     final c = ref.watch(coachAthleteViewModelProvider(clubId, userId));
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final summary = c.summary;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -126,7 +128,7 @@ class CoachAthleteScreen extends ConsumerWidget {
                                   dateTime(ride.startTime ?? ride.uploadedAt),
                                 ),
                                 subtitle: Text(
-                                  '${km(ride.distanceM)} · '
+                                  '${km(units, ride.distanceM)} · '
                                   '${duration(ride.movingS)}',
                                 ),
                                 trailing: const Icon(Icons.chevron_right),

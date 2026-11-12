@@ -419,6 +419,8 @@ class ApiClient {
           return SetFtpRequest.fromJson(value);
         case 'SetMyLanguageRequest':
           return SetMyLanguageRequest.fromJson(value);
+        case 'SetMyUnitsRequest':
+          return SetMyUnitsRequest.fromJson(value);
         case 'SetRideBikeRequest':
           return SetRideBikeRequest.fromJson(value);
         case 'SetRideDetailsRequest':

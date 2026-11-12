@@ -165,6 +165,32 @@ void main() {
     expect(find.text('40.0 km of 100 km · 40 %'), findsOneWidget);
   });
 
+  testWidgets('ProgressScreen_ShouldStoreMilesAsMetres_WhenUnitsAreImperial', (
+    tester,
+  ) async {
+    server.accounts['rider@example.com']!.units = 'imperial';
+    server.goalCurrent['distance'] = 40000;
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('add-goal')));
+    await tester.tap(find.byKey(const Key('add-goal')));
+    await tester.pumpAndSettle();
+    // The field is labelled in miles: 100 mi is 160934.4 m.
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('goal-target')))
+          .decoration!
+          .suffixText,
+      'mi',
+    );
+    await tester.enterText(find.byKey(const Key('goal-target')), '100');
+    await tester.tap(find.byKey(const Key('goal-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.goals.single['target'], closeTo(160934.4, 0.1));
+    expect(find.text('24.9 mi of 100 mi · 24 %'), findsOneWidget);
+  });
+
   testWidgets('ProgressScreen_ShouldUpdateAndDeleteGoal_WhenEditingGoal', (
     tester,
   ) async {

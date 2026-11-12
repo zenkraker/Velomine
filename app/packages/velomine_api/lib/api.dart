@@ -163,6 +163,7 @@ part 'model/set_club_owner_request.dart';
 part 'model/set_club_plan_request.dart';
 part 'model/set_ftp_request.dart';
 part 'model/set_my_language_request.dart';
+part 'model/set_my_units_request.dart';
 part 'model/set_ride_bike_request.dart';
 part 'model/set_ride_details_request.dart';
 part 'model/set_ride_type_request.dart';

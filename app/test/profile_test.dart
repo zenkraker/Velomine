@@ -48,6 +48,75 @@ void main() {
     expect(find.text('Sunday'), findsOneWidget);
   });
 
+  testWidgets(
+    'ProfileScreen_ShouldSaveImperialUnits_WhenTheMemberChoosesThem',
+    (tester) async {
+      await openProfile(tester);
+
+      await tester.tap(find.byKey(const Key('profile-units')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Imperial (miles, lb)').last);
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('PUT /api/v1/accounts/me/units'));
+      expect(server.accounts['rider@example.com']!.units, 'imperial');
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldShowAndSendPounds_WhenUnitsAreImperial', (
+    tester,
+  ) async {
+    server.accounts['rider@example.com']!.units = 'imperial';
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': 250,
+      'weightKg': 64.5,
+      'birthYear': 1990,
+      'timeZone': 'Europe/Rome',
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+    };
+    await openProfile(tester);
+
+    // 64.5 kg reads as 142.2 lb, and is sent back to the server in kilograms.
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('profile-weight')))
+          .controller!
+          .text,
+      '142.2',
+    );
+    await tester.tap(find.byKey(const Key('profile-save')));
+    await tester.pumpAndSettle();
+
+    expect(
+      server.profiles['rider@example.com']!['weightKg'],
+      closeTo(64.5, 0.05),
+    );
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldAcceptTheLightestWeight_WhenUnitsAreImperial',
+    (tester) async {
+      server.accounts['rider@example.com']!.units = 'imperial';
+      await openProfile(tester);
+
+      // 44 lb is exactly 20 kg, the lightest the server takes. It must not be refused here.
+      await tester.enterText(find.byKey(const Key('profile-weight')), '44');
+      await tester.tap(find.byKey(const Key('profile-save')));
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+      expect(
+        server.profiles['rider@example.com']!['weightKg'],
+        closeTo(19.96, 0.01),
+      );
+    },
+  );
+
   testWidgets('ProfileScreen_ShouldSaveTelemetryChoice_WhenSwitched', (
     tester,
   ) async {

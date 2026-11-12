@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:velomine_api/api.dart';
 
+import '../../../core/units.dart';
 import 'geo.dart';
 
 /// One signal of a ride, ready to draw: a value per sample, null where the file had none.
@@ -45,7 +46,8 @@ class RideSeries {
     this.series,
   );
 
-  factory RideSeries.from(RideStreamsResponse s) {
+  factory RideSeries.from(RideStreamsResponse s, Units units) {
+    final imperial = units == Units.imperial;
     final time = s.time;
     List<double?>? present(List<double?>? v) =>
         v == null || v.isEmpty || v.every((e) => e == null) ? null : v;
@@ -87,7 +89,14 @@ class RideSeries {
     final speed =
         present(s.speed)?.map((v) => v == null ? null : v * 3.6).toList() ??
         present(deriveSpeedKmh(time, lat, lon));
+    // Speed is in km/h here; imperial reads mph. Elevation is in metres; imperial reads feet.
+    final speedShown = imperial
+        ? speed?.map((v) => v == null ? null : v * 1000 / 1609.344).toList()
+        : speed;
     final altitude = present(s.altitude);
+    final altitudeShown = imperial
+        ? altitude?.map((v) => v == null ? null : v * 3.280839895).toList()
+        : altitude;
     final power = present(s.power?.map((v) => v?.toDouble()).toList());
     final heartRate = present(s.heartRate?.map((v) => v?.toDouble()).toList());
     final cadence = present(s.cadence?.map((v) => v?.toDouble()).toList());
@@ -105,15 +114,15 @@ class RideSeries {
           Series(
             id: 'elevation',
             name: 'Elevation',
-            unit: 'm',
-            values: altitude,
+            unit: imperial ? 'ft' : 'm',
+            values: altitudeShown!,
           ),
         if (speed != null)
           Series(
             id: 'speed',
             name: 'Speed',
-            unit: 'km/h',
-            values: speed,
+            unit: imperial ? 'mph' : 'km/h',
+            values: speedShown!,
             decimals: 1,
           ),
         if (heartRate != null)

@@ -11,6 +11,7 @@ import '../rides/detail/series_chart.dart';
 import '../rides/ride_type_chips.dart';
 import 'coach_ride_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 import '../../core/widgets/stat_tile.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
@@ -38,6 +39,7 @@ class CoachRideScreen extends ConsumerWidget {
     );
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final ride = c.ride;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -70,7 +72,7 @@ class CoachRideScreen extends ConsumerWidget {
                     children: [
                       StatTile(
                         label: l10n.statDistance,
-                        value: km(ride.distanceM),
+                        value: km(units, ride.distanceM),
                       ),
                       StatTile(
                         label: l10n.statMovingTime,
@@ -78,7 +80,7 @@ class CoachRideScreen extends ConsumerWidget {
                       ),
                       StatTile(
                         label: l10n.statAverageSpeed,
-                        value: kmh(ride.avgSpeedMs),
+                        value: kmh(units, ride.avgSpeedMs),
                       ),
                       if (ride.avgPowerW != null)
                         StatTile(

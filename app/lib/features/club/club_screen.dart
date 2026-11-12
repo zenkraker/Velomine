@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
@@ -723,7 +724,7 @@ class ClubScreen extends ConsumerWidget {
               leading: const Icon(Icons.route),
               title: Text(route.name),
               subtitle: Text(
-                '${routeLineOf(route.distanceM, route.climbingM)} · '
+                '${routeLineOf(ref.watch(unitsChoiceViewModelProvider), route.distanceM, route.climbingM)} · '
                 '${routeSurfaceName(l10n, route.surface)}',
               ),
               onTap: () => onOpenRoute(route.id),

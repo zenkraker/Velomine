@@ -35,6 +35,7 @@ class FakeAccount {
     this.approved = true,
     List<String> roles = const ['member'],
     this.language,
+    this.units = 'metric',
   }) : id = 'id-${email.hashCode.abs()}',
        roles = [...roles];
 
@@ -47,6 +48,7 @@ class FakeAccount {
   bool twoFactorEnabled = false;
   List<String> roles;
   String? language;
+  String units;
   bool telemetryCrash = false;
   bool telemetryUsage = false;
 }
@@ -261,6 +263,7 @@ class FakeServer {
     String name = 'Test Rider',
     String? clubRole = 'member',
     String? language,
+    String units = 'metric',
   }) {
     final account = FakeAccount(
       email,
@@ -269,6 +272,7 @@ class FakeServer {
       roles: roles,
       name: name,
       language: language,
+      units: units,
     );
     accounts[email] = account;
     if (clubRole != null) clubRoles[email] = clubRole;
@@ -575,6 +579,7 @@ class FakeServer {
         'displayName': caller.name,
         'roles': caller.roles,
         'language': caller.language,
+        'units': caller.units,
         'telemetryConsentRequired': false,
         'telemetryCrash': caller.telemetryCrash,
         'telemetryUsage': caller.telemetryUsage,
@@ -831,6 +836,7 @@ extension on FakeServer {
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/accounts/me/ftp') &&
         !path.startsWith('/api/v1/accounts/me/language') &&
+        !path.startsWith('/api/v1/accounts/me/units') &&
         !path.startsWith('/api/v1/accounts/me/telemetry') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
@@ -869,6 +875,25 @@ extension on FakeServer {
         ? <String, Object?>{}
         : jsonDecode(request.body) as Map<String, Object?>;
 
+    if (path == '/api/v1/accounts/me/units' && request.method == 'PUT') {
+      final units = body['units'] as String?;
+      if (units != 'metric' && units != 'imperial') {
+        return http.Response('{"detail":"use metric or imperial"}', 400);
+      }
+      caller.units = units!;
+      return json({
+        'id': caller.id,
+        'email': caller.email,
+        'displayName': caller.name,
+        'roles': caller.roles,
+        'language': caller.language,
+        'units': caller.units,
+        'telemetryConsentRequired': false,
+        'telemetryCrash': caller.telemetryCrash,
+        'telemetryUsage': caller.telemetryUsage,
+      });
+    }
+
     if (path == '/api/v1/accounts/me/language' && request.method == 'PUT') {
       caller.language = body['language'] as String?;
       return json({
@@ -877,6 +902,7 @@ extension on FakeServer {
         'displayName': caller.name,
         'roles': caller.roles,
         'language': caller.language,
+        'units': caller.units,
         'telemetryConsentRequired': false,
         'telemetryCrash': caller.telemetryCrash,
         'telemetryUsage': caller.telemetryUsage,

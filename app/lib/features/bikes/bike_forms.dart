@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'component_names.dart';
@@ -45,6 +48,9 @@ const wheelPresets = {
 
 String? _text(String value) => value.trim().isEmpty ? null : value.trim();
 
+/// Metres in one of the member's distance units.
+double _metresPerUnit(Units units) => units == Units.imperial ? 1609.344 : 1000;
+
 double? _number(String value) =>
     double.tryParse(value.trim().replaceAll(',', '.'));
 
@@ -67,6 +73,7 @@ class BikeFormData {
     required this.wheelMm,
     required this.initialKm,
     this.purchasedOn,
+    this.units = Units.metric,
   });
 
   final String name;
@@ -77,8 +84,14 @@ class BikeFormData {
   final String? frameSize;
   final String kind;
   final int wheelMm;
+
+  /// The distance the member typed, in [units].
   final double initialKm;
   final DateTime? purchasedOn;
+  final Units units;
+
+  /// The typed distance in metres, which is what the server stores.
+  double get initialDistanceM => initialKm * _metresPerUnit(units);
 
   CreateBikeRequest toCreate() => CreateBikeRequest(
     name: name,
@@ -89,7 +102,7 @@ class BikeFormData {
     frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
-    initialDistanceM: initialKm * 1000,
+    initialDistanceM: initialDistanceM,
     purchasedOn: Optional.present(purchasedOn),
   );
 
@@ -102,7 +115,7 @@ class BikeFormData {
     frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
-    initialDistanceM: initialKm * 1000,
+    initialDistanceM: initialDistanceM,
     purchasedOn: Optional.present(purchasedOn),
     isActive: Optional.present(isActive),
   );
@@ -132,16 +145,16 @@ Future<BikeFormData?> showBikeForm(
   builder: (_) => _BikeForm(bike: bike),
 );
 
-class _BikeForm extends StatefulWidget {
+class _BikeForm extends ConsumerStatefulWidget {
   const _BikeForm({this.bike});
 
   final BikeResponse? bike;
 
   @override
-  State<_BikeForm> createState() => _BikeFormState();
+  ConsumerState<_BikeForm> createState() => _BikeFormState();
 }
 
-class _BikeFormState extends State<_BikeForm> {
+class _BikeFormState extends ConsumerState<_BikeForm> {
   late final _name = TextEditingController(text: widget.bike?.name);
   late final _brand = TextEditingController(text: widget.bike?.brand);
   late final _model = TextEditingController(text: widget.bike?.model);
@@ -156,8 +169,11 @@ class _BikeFormState extends State<_BikeForm> {
   late final _initial = TextEditingController(
     text: widget.bike == null || widget.bike!.initialDistanceM == 0
         ? ''
-        : (widget.bike!.initialDistanceM / 1000).toStringAsFixed(0),
+        : (widget.bike!.initialDistanceM /
+                  _metresPerUnit(ref.read(unitsChoiceViewModelProvider)))
+              .toStringAsFixed(0),
   );
+  Units get _units => ref.read(unitsChoiceViewModelProvider);
   late String _kind = widget.bike?.kind ?? 'road';
   late DateTime? _purchased = widget.bike?.purchasedOn;
   _BikeProblem? _problem;
@@ -204,6 +220,7 @@ class _BikeFormState extends State<_BikeForm> {
           wheelMm: wheel,
           initialKm: initial,
           purchasedOn: _purchased,
+          units: _units,
         ),
       );
     }
@@ -336,6 +353,7 @@ class _BikeFormState extends State<_BikeForm> {
                     decimal: true,
                   ),
                   label: l10n.initialDistance,
+                  suffix: distanceUnit(ref.watch(unitsChoiceViewModelProvider)),
                   helper: l10n.initialHelper,
                 ),
                 Align(
@@ -406,6 +424,7 @@ class PartFormData {
     this.expectedKm,
     this.expectedHours,
     this.expectedMonths,
+    this.units = Units.metric,
   });
 
   final String type;
@@ -416,9 +435,16 @@ class PartFormData {
   final bool custom;
   final DateTime installedOn;
   final DateTime? removedOn;
+
+  /// The limit the member typed, in [units].
   final double? expectedKm;
   final double? expectedHours;
   final int? expectedMonths;
+  final Units units;
+
+  /// The typed limit in metres, which is what the server stores.
+  double? get expectedDistanceM =>
+      expectedKm == null ? null : expectedKm! * _metresPerUnit(units);
 
   CreateComponentRequest toCreate() => CreateComponentRequest(
     type: type,
@@ -429,9 +455,7 @@ class PartFormData {
     custom: Optional.present(custom),
     installedOn: installedOn,
     removedOn: Optional.present(removedOn),
-    expectedDistanceM: Optional.present(
-      expectedKm == null ? null : expectedKm! * 1000,
-    ),
+    expectedDistanceM: Optional.present(expectedDistanceM),
     expectedHours: Optional.present(expectedHours),
     expectedMonths: Optional.present(expectedMonths),
   );
@@ -445,9 +469,7 @@ class PartFormData {
     custom: Optional.present(custom),
     installedOn: installedOn,
     removedOn: Optional.present(removedOn),
-    expectedDistanceM: Optional.present(
-      expectedKm == null ? null : expectedKm! * 1000,
-    ),
+    expectedDistanceM: Optional.present(expectedDistanceM),
     expectedHours: Optional.present(expectedHours),
     expectedMonths: Optional.present(expectedMonths),
   );
@@ -481,7 +503,7 @@ Future<PartFormData?> showPartForm(
   ),
 );
 
-class _PartForm extends StatefulWidget {
+class _PartForm extends ConsumerStatefulWidget {
   const _PartForm({
     required this.types,
     required this.today,
@@ -497,7 +519,7 @@ class _PartForm extends StatefulWidget {
   final ComponentResponse? replacing;
 
   @override
-  State<_PartForm> createState() => _PartFormState();
+  ConsumerState<_PartForm> createState() => _PartFormState();
 }
 
 String _fmt(num? v) => v == null
@@ -627,7 +649,7 @@ Future<BikeTemplateResponse?> showApplyTemplateDialog(
   },
 );
 
-class _PartFormState extends State<_PartForm> {
+class _PartFormState extends ConsumerState<_PartForm> {
   late final ComponentResponse? _from = widget.part ?? widget.replacing;
   late String? _type = _from?.type;
   late final _brand = TextEditingController(text: widget.part?.brand);
@@ -640,9 +662,12 @@ class _PartFormState extends State<_PartForm> {
     text: _fmt(
       _from?.expectedDistanceM == null
           ? null
-          : _from!.expectedDistanceM! / 1000,
+          : _from!.expectedDistanceM! /
+                _metresPerUnit(ref.read(unitsChoiceViewModelProvider)),
     ),
   );
+
+  Units get _units => ref.read(unitsChoiceViewModelProvider);
   late final _hours = TextEditingController(text: _fmt(_from?.expectedHours));
   late final _months = TextEditingController(text: _fmt(_from?.expectedMonths));
   late DateTime _installed = widget.part?.installedOn ?? dateOnly(widget.today);
@@ -670,7 +695,9 @@ class _PartFormState extends State<_PartForm> {
           final t = widget.types.where((t) => t.id == part.type).firstOrNull;
           if (t != null) {
             _km.text = _fmt(
-              t.typicalDistanceM == null ? null : t.typicalDistanceM! / 1000,
+              t.typicalDistanceM == null
+                  ? null
+                  : t.typicalDistanceM! / _metresPerUnit(_units),
             );
             _hours.text = _fmt(t.typicalHours);
             _months.text = _fmt(t.typicalMonths);
@@ -691,7 +718,9 @@ class _PartFormState extends State<_PartForm> {
       final t = widget.types.where((t) => t.id == id).firstOrNull;
       if (t == null || widget.part != null || widget.replacing != null) return;
       _km.text = _fmt(
-        t.typicalDistanceM == null ? null : t.typicalDistanceM! / 1000,
+        t.typicalDistanceM == null
+            ? null
+            : t.typicalDistanceM! / _metresPerUnit(_units),
       );
       _hours.text = _fmt(t.typicalHours);
       _months.text = _fmt(t.typicalMonths);
@@ -731,6 +760,7 @@ class _PartFormState extends State<_PartForm> {
           expectedKm: km,
           expectedHours: hours,
           expectedMonths: months?.round(),
+          units: _units,
         ),
       );
     }
@@ -928,7 +958,11 @@ class _PartFormState extends State<_PartForm> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: const InputDecoration(labelText: 'km'),
+                        decoration: InputDecoration(
+                          labelText: distanceUnit(
+                            ref.watch(unitsChoiceViewModelProvider),
+                          ),
+                        ),
                       ),
                     ),
                     Expanded(

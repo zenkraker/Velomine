@@ -5,6 +5,7 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
@@ -127,7 +128,11 @@ class RouteDetailScreen extends ConsumerWidget {
                 ),
                 Text(
                   [
-                    routeLineOf(route.distanceM, route.climbingM),
+                    routeLineOf(
+                      ref.watch(unitsChoiceViewModelProvider),
+                      route.distanceM,
+                      route.climbingM,
+                    ),
                     l10n.routeAddedBy(route.ownerName),
                     dateTime(route.createdAt),
                   ].join(' · '),

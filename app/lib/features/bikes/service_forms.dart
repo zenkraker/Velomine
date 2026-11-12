@@ -1,10 +1,13 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart' show distanceUnit;
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/form_sheet.dart';
@@ -36,17 +39,25 @@ class ReminderFormData {
     this.hours,
     this.months,
     required this.lastDoneOn,
+    this.units = Units.metric,
   });
 
   final String name;
+
+  /// The interval the member typed, in [units].
   final double? km;
   final double? hours;
   final int? months;
   final DateTime lastDoneOn;
+  final Units units;
+
+  /// The typed interval in metres, which is what the server stores.
+  double? get intervalDistanceM =>
+      km == null ? null : km! * (units == Units.imperial ? 1609.344 : 1000);
 
   CreateReminderRequest toCreate() => CreateReminderRequest(
     name: name,
-    intervalDistanceM: Optional.present(km == null ? null : km! * 1000),
+    intervalDistanceM: Optional.present(intervalDistanceM),
     intervalHours: Optional.present(hours),
     intervalMonths: Optional.present(months),
     lastDoneOn: Optional.present(lastDoneOn),
@@ -55,7 +66,7 @@ class ReminderFormData {
   UpdateReminderRequest toUpdate({required bool paused}) =>
       UpdateReminderRequest(
         name: name,
-        intervalDistanceM: Optional.present(km == null ? null : km! * 1000),
+        intervalDistanceM: Optional.present(intervalDistanceM),
         intervalHours: Optional.present(hours),
         intervalMonths: Optional.present(months),
         isPaused: Optional.present(paused),
@@ -85,7 +96,7 @@ Future<ReminderFormData?> showReminderForm(
   ),
 );
 
-class _ReminderForm extends StatefulWidget {
+class _ReminderForm extends ConsumerStatefulWidget {
   const _ReminderForm({
     required this.jobs,
     required this.today,
@@ -101,20 +112,26 @@ class _ReminderForm extends StatefulWidget {
   final String? startName;
 
   @override
-  State<_ReminderForm> createState() => _ReminderFormState();
+  ConsumerState<_ReminderForm> createState() => _ReminderFormState();
 }
 
 enum _ReminderProblem { name, interval, limits }
 
-class _ReminderFormState extends State<_ReminderForm> {
+class _ReminderFormState extends ConsumerState<_ReminderForm> {
   late final _name = TextEditingController(text: widget.reminder?.name);
   late final _km = TextEditingController(
     text: _fmt(
       widget.reminder?.intervalDistanceM == null
           ? null
-          : widget.reminder!.intervalDistanceM! / 1000,
+          : widget.reminder!.intervalDistanceM! / _metresPerUnit,
     ),
   );
+
+  /// Metres in one of the member's distance units.
+  double get _metresPerUnit =>
+      ref.read(unitsChoiceViewModelProvider) == Units.imperial
+      ? 1609.344
+      : 1000;
   late final _hours = TextEditingController(
     text: _fmt(widget.reminder?.intervalHours),
   );
@@ -142,7 +159,9 @@ class _ReminderFormState extends State<_ReminderForm> {
 
   void _useJob(MaintenanceJob job, {required String? name}) {
     _km.text = _fmt(
-      job.intervalDistanceM == null ? null : job.intervalDistanceM! / 1000,
+      job.intervalDistanceM == null
+          ? null
+          : job.intervalDistanceM! / _metresPerUnit,
     );
     _hours.text = _fmt(job.intervalHours);
     _months.text = _fmt(job.intervalMonths);
@@ -171,6 +190,7 @@ class _ReminderFormState extends State<_ReminderForm> {
           hours: hours,
           months: months?.round(),
           lastDoneOn: _lastDone,
+          units: ref.read(unitsChoiceViewModelProvider),
         ),
       );
     }
@@ -227,7 +247,7 @@ class _ReminderFormState extends State<_ReminderForm> {
               child: AppTextField(
                 fieldKey: const Key('reminder-km'),
                 controller: _km,
-                label: 'km',
+                label: distanceUnit(ref.watch(unitsChoiceViewModelProvider)),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),

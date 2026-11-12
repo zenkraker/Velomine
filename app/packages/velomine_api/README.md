@@ -92,6 +92,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
+*AccountsApi* | [**setMyUnits**](doc//AccountsApi.md#setmyunits) | **PUT** /api/v1/accounts/me/units | 
 *AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**startTwoFactorEnrollment**](doc//AccountsApi.md#starttwofactorenrollment) | **POST** /api/v1/accounts/me/two-factor/start | 
@@ -348,6 +349,7 @@ Class | Method | HTTP request | Description
  - [SetClubPlanRequest](doc//SetClubPlanRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
+ - [SetMyUnitsRequest](doc//SetMyUnitsRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetRideDetailsRequest](doc//SetRideDetailsRequest.md)
  - [SetRideTypeRequest](doc//SetRideTypeRequest.md)

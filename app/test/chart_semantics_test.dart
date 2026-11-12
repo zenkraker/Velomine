@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/progress/power_summary.dart';
 import 'package:velomine/features/rides/detail/full_route_map.dart';
@@ -6,6 +7,7 @@ import 'package:velomine/features/rides/detail/lap_range.dart';
 import 'package:velomine/features/rides/detail/ride_series.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
+import 'package:velomine/core/units.dart';
 
 Widget powered(Widget child, {Locale locale = const Locale('en')}) =>
     MaterialApp(
@@ -97,6 +99,7 @@ void main() {
         cadence: const [],
         temperature: const [],
       ),
+      Units.metric,
     );
     final selected = ValueNotifier<int?>(null);
     final selectedLap = ValueNotifier<LapRange?>(null);
@@ -104,14 +107,16 @@ void main() {
     addTearDown(selectedLap.dispose);
 
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: FullRouteMapScreen(
-          data: data,
-          selected: selected,
-          selectedLap: selectedLap,
-          elevationGainM: 420,
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: FullRouteMapScreen(
+            data: data,
+            selected: selected,
+            selectedLap: selectedLap,
+            elevationGainM: 420,
+          ),
         ),
       ),
     );

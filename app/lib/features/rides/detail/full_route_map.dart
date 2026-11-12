@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format.dart';
+import '../../../core/units.dart';
 import '../../../core/l10n.dart';
 import '../../../core/map_defaults.dart';
 import '../../../core/widgets/chart_chrome.dart';
@@ -13,7 +15,7 @@ import 'route_painter.dart';
 
 /// The ride's route on a map that fills the screen, so the member can pan and
 /// zoom into it. Opened by tapping the small map.
-class FullRouteMapScreen extends StatefulWidget {
+class FullRouteMapScreen extends ConsumerStatefulWidget {
   const FullRouteMapScreen({
     super.key,
     required this.data,
@@ -34,10 +36,10 @@ class FullRouteMapScreen extends StatefulWidget {
   final double? elevationGainM;
 
   @override
-  State<FullRouteMapScreen> createState() => _FullRouteMapScreenState();
+  ConsumerState<FullRouteMapScreen> createState() => _FullRouteMapScreenState();
 }
 
-class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
+class _FullRouteMapScreenState extends ConsumerState<FullRouteMapScreen> {
   static const _minZoom = 3;
   static const _maxZoom = 18;
 
@@ -75,14 +77,15 @@ class _FullRouteMapScreenState extends State<FullRouteMapScreen> {
   Widget build(BuildContext context) {
     final colors = VelomineColors.of(context);
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final distances =
         widget.data.distance?.whereType<double>() ?? const <double>[];
     final distanceM = distances.isEmpty ? null : distances.last;
     final summary = widget.elevationGainM == null
-        ? l10n.routeMapDistanceSummary(km(distanceM))
+        ? l10n.routeMapDistanceSummary(km(units, distanceM))
         : l10n.routeMapSummary(
-            km(distanceM),
-            '${widget.elevationGainM!.round()} m',
+            km(units, distanceM),
+            elevation(units, widget.elevationGainM),
           );
     return Scaffold(
       backgroundColor: Colors.black,

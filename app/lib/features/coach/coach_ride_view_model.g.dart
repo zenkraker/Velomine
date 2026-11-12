@@ -65,7 +65,7 @@ final class CoachRideViewModelProvider
 }
 
 String _$coachRideViewModelHash() =>
-    r'69cbfd4729b9c5970c27f35e8a38dd2d251d06d0';
+    r'6fa031a18d1dbe78204846c7e1e9538e59668a76';
 
 /// One athlete's ride, read-only: the numbers, the samples and, only when
 /// shared, the route.

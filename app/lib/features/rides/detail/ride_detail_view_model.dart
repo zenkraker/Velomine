@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../../core/failure.dart';
 import '../../../core/providers.dart';
 import '../../../core/result.dart';
+import '../../../core/units.dart';
 import '../../../core/user_message.dart';
 import 'ride_detail_data.dart';
 import 'ride_detail_state.dart';
@@ -70,7 +71,10 @@ class RideDetailViewModel extends _$RideDetailViewModel {
 
     // A missing piece leaves the ride usable: laps, bikes and the feel are the
     // extras, not the job.
-    final series = (await data.series(id)).valueOrNull;
+    final series = (await data.series(
+      id,
+      ref.read(unitsChoiceViewModelProvider),
+    )).valueOrNull;
     final laps = (await data.laps(id)).valueOrNull ?? const [];
     final bikes = (await data.bikes()).valueOrNull ?? const [];
     final feel = (await data.feel(id)).valueOrNull;

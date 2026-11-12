@@ -133,6 +133,48 @@ public sealed class ProfileTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Units_ShouldBeKeptOnTheAccount_WhenSetFromAnotherDevice()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
+
+        var first = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        var put = await first.PutAsJsonAsync("/api/v1/accounts/me/units", new SetMyUnitsRequest("imperial"), Ct);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        // A second device signs in with the same account and sees the same choice.
+        var second = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        Assert.Equal("imperial", (await second.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Units);
+
+        Assert.Equal(
+            HttpStatusCode.BadRequest,
+            (await second.PutAsJsonAsync("/api/v1/accounts/me/units", new SetMyUnitsRequest("furlongs"), Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Units_ShouldBeMetric_WhenTheMemberNeverChose()
+    {
+        var (api, member) = await StartAsync();
+        await using var _ = api;
+
+        var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
+
+        Assert.Equal("metric", me!.Units);
+    }
+
+    [Fact]
+    public async Task Units_ShouldBeUnauthorized_WhenNotSignedIn()
+    {
+        var (api, _) = await StartAsync();
+        await using var __ = api;
+
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            (await api.CreateClient().PutAsJsonAsync("/api/v1/accounts/me/units", new SetMyUnitsRequest("imperial"), Ct)).StatusCode);
+    }
+
+    [Fact]
     public async Task Profile_ShouldBeUnauthorized_WhenNotSignedIn()
     {
         var (api, _) = await StartAsync();

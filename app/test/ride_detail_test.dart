@@ -142,6 +142,27 @@ void main() {
     expect(find.textContaining('TSS uses your FTP'), findsOneWidget);
   });
 
+  testWidgets('RideDetailScreen_ShouldShowMilesAndFeet_WhenUnitsAreImperial', (
+    tester,
+  ) async {
+    server.accounts['rider@example.com']!.units = 'imperial';
+    await open(tester);
+
+    // Power, heart rate and cadence are not converted; distance, speed and climb are.
+    for (final text in [
+      '26.3 mi',
+      '2009 ft',
+      '17.4 mph',
+      '190 W',
+      '148 bpm',
+      '87 rpm',
+    ]) {
+      expect(find.text(text), findsOneWidget, reason: text);
+    }
+    expect(find.text('42.3 km'), findsNothing);
+    expect(find.text('28.1 km/h'), findsNothing);
+  });
+
   testWidgets(
     'RideDetailScreen_ShouldShowMomentValuesOnEachChart_WhenAChartIsTouched',
     (tester) async {

@@ -21,6 +21,7 @@ class MeResponse {
     required this.telemetryConsentRequired,
     required this.telemetryCrash,
     required this.telemetryUsage,
+    required this.units,
   });
 
   final String id;
@@ -39,6 +40,8 @@ class MeResponse {
 
   final bool telemetryUsage;
 
+  final String units;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is MeResponse &&
     other.id == id &&
@@ -48,7 +51,8 @@ class MeResponse {
     other.language == language &&
     other.telemetryConsentRequired == telemetryConsentRequired &&
     other.telemetryCrash == telemetryCrash &&
-    other.telemetryUsage == telemetryUsage;
+    other.telemetryUsage == telemetryUsage &&
+    other.units == units;
 
   @override
   int get hashCode =>
@@ -60,10 +64,11 @@ class MeResponse {
     (language == null ? 0 : language!.hashCode) +
     (telemetryConsentRequired.hashCode) +
     (telemetryCrash.hashCode) +
-    (telemetryUsage.hashCode);
+    (telemetryUsage.hashCode) +
+    (units.hashCode);
 
   @override
-  String toString() => 'MeResponse[id=$id, email=$email, displayName=$displayName, roles=$roles, language=$language, telemetryConsentRequired=$telemetryConsentRequired, telemetryCrash=$telemetryCrash, telemetryUsage=$telemetryUsage]';
+  String toString() => 'MeResponse[id=$id, email=$email, displayName=$displayName, roles=$roles, language=$language, telemetryConsentRequired=$telemetryConsentRequired, telemetryCrash=$telemetryCrash, telemetryUsage=$telemetryUsage, units=$units]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -79,6 +84,7 @@ class MeResponse {
       json[r'telemetryConsentRequired'] = this.telemetryConsentRequired;
       json[r'telemetryCrash'] = this.telemetryCrash;
       json[r'telemetryUsage'] = this.telemetryUsage;
+      json[r'units'] = this.units;
     return json;
   }
 
@@ -94,6 +100,7 @@ class MeResponse {
     bool? telemetryConsentRequired,
     bool? telemetryCrash,
     bool? telemetryUsage,
+    String? units,
   }) => MeResponse(
     id: id ?? this.id,
     email: email ?? this.email,
@@ -103,6 +110,7 @@ class MeResponse {
     telemetryConsentRequired: telemetryConsentRequired ?? this.telemetryConsentRequired,
     telemetryCrash: telemetryCrash ?? this.telemetryCrash,
     telemetryUsage: telemetryUsage ?? this.telemetryUsage,
+    units: units ?? this.units,
   );
 
   /// Returns a new [MeResponse] instance and imports its values from
@@ -131,6 +139,8 @@ class MeResponse {
         assert(json[r'telemetryCrash'] != null, 'Required key "MeResponse[telemetryCrash]" has a null value in JSON.');
         assert(json.containsKey(r'telemetryUsage'), 'Required key "MeResponse[telemetryUsage]" is missing from JSON.');
         assert(json[r'telemetryUsage'] != null, 'Required key "MeResponse[telemetryUsage]" has a null value in JSON.');
+        assert(json.containsKey(r'units'), 'Required key "MeResponse[units]" is missing from JSON.');
+        assert(json[r'units'] != null, 'Required key "MeResponse[units]" has a null value in JSON.');
         return true;
       }());
 
@@ -145,6 +155,7 @@ class MeResponse {
         telemetryConsentRequired: mapValueOfType<bool>(json, r'telemetryConsentRequired')!,
         telemetryCrash: mapValueOfType<bool>(json, r'telemetryCrash')!,
         telemetryUsage: mapValueOfType<bool>(json, r'telemetryUsage')!,
+        units: mapValueOfType<String>(json, r'units')!,
       );
     }
     return null;
@@ -200,6 +211,7 @@ class MeResponse {
     'telemetryConsentRequired',
     'telemetryCrash',
     'telemetryUsage',
+    'units',
   };
 }
 

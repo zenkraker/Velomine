@@ -103,7 +103,7 @@ void main() {
     for (final text in [
       '42.3 km',
       '1 h 30 min',
-      '612 m up',
+      '612 m',
       '28.1 km/h',
       '190 W (NP 205)',
       '148 bpm',
@@ -111,6 +111,32 @@ void main() {
     ]) {
       expect(find.text(text), findsOneWidget, reason: text);
     }
+  });
+
+  testWidgets('RidesScreen_ShouldShowMiles_WhenUnitsAreImperial', (
+    tester,
+  ) async {
+    server.accounts['rider@example.com']!.units = 'imperial';
+    server.rides.add(
+      rideJson(
+        'r1',
+        'ready',
+        distanceM: 42300,
+        movingS: 5400,
+        elevationGainM: 612.4,
+        avgSpeedMs: 7.8,
+        avgPowerW: 190,
+        normalizedPowerW: 205,
+        avgHeartRate: 148,
+        avgCadence: 87,
+      ),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    for (final text in ['26.3 mi', '2009 ft', '17.4 mph', '190 W (NP 205)']) {
+      expect(find.text(text), findsOneWidget, reason: text);
+    }
+    expect(find.text('42.3 km'), findsNothing);
   });
 
   testWidgets('RidesScreen_ShouldSayNoData_WhenTheFileHasNoSamples', (

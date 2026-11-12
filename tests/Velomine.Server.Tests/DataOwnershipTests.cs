@@ -134,6 +134,7 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         Assert.Equal(me.Email, profile.GetProperty("email").GetString());
         Assert.Equal(265, profile.GetProperty("ftpW").GetInt32());
         Assert.Equal("Europe/Rome", profile.GetProperty("timeZone").GetString());
+        Assert.Equal("metric", profile.GetProperty("units").GetString());
 
         var bikes = JsonDocument.Parse(Text("bikes.json")).RootElement;
         Assert.Equal("Road", bikes[0].GetProperty("name").GetString());

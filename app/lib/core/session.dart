@@ -375,6 +375,16 @@ class Session {
     }
   }
 
+  /// Saves the chosen units on the account so every device follows them.
+  Future<void> setUnits(String units) async {
+    try {
+      me = await accounts.setMyUnits(SetMyUnitsRequest(units: units)) ?? me;
+      _notify();
+    } on Object {
+      // The local choice still applies; the next sign-in or change tries again.
+    }
+  }
+
   /// Reads the signed-in member again, after they changed something shown elsewhere (their name).
   Future<void> refreshMe() async {
     try {

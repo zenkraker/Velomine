@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../rides/detail/lap_range.dart';
 import '../rides/detail/ride_series.dart';
@@ -30,6 +32,7 @@ RideSeries? routeSeries(
   List<double> latitude,
   List<double> longitude,
   List<double>? elevation,
+  Units units,
 ) {
   if (latitude.length < 2 || longitude.length != latitude.length) return null;
   return RideSeries.from(
@@ -39,11 +42,12 @@ RideSeries? routeSeries(
       longitude: longitude,
       altitude: elevation,
     ),
+    units,
   );
 }
 
 /// The route on the project's own map, with an elevation profile under it when the line has one.
-class RoutePreview extends StatefulWidget {
+class RoutePreview extends ConsumerStatefulWidget {
   const RoutePreview({
     super.key,
     required this.latitude,
@@ -62,10 +66,10 @@ class RoutePreview extends StatefulWidget {
   final bool showElevation;
 
   @override
-  State<RoutePreview> createState() => _RoutePreviewState();
+  ConsumerState<RoutePreview> createState() => _RoutePreviewState();
 }
 
-class _RoutePreviewState extends State<RoutePreview> {
+class _RoutePreviewState extends ConsumerState<RoutePreview> {
   final _selected = ValueNotifier<int?>(null);
   final _selectedLap = ValueNotifier<LapRange?>(null);
 
@@ -82,6 +86,7 @@ class _RoutePreviewState extends State<RoutePreview> {
       widget.latitude,
       widget.longitude,
       widget.elevation,
+      ref.watch(unitsChoiceViewModelProvider),
     );
     if (series == null) return const SizedBox.shrink();
     Series? elevation;
@@ -117,5 +122,5 @@ class _RoutePreviewState extends State<RoutePreview> {
 }
 
 /// "48.2 km · 620 m climbing", the line every route list shows.
-String routeLineOf(double distanceM, double? climbingM) =>
-    '${km(distanceM)} · ${climbingM == null ? '–' : '${climbingM.round()} m ↑'}';
+String routeLineOf(Units units, double distanceM, double? climbingM) =>
+    '${km(units, distanceM)} · ${climbingM == null ? '–' : elevation(units, climbingM, up: true)}';

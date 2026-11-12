@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/format.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
 import '../../core/language_choice.dart';
+import '../../core/units.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -107,12 +109,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }, fireImmediately: true);
   }
 
+  /// The weight the member types, in the units on screen.
+  Units get _units => ref.read(unitsChoiceViewModelProvider);
+
+  String _weightText(double? kg) => kg == null
+      ? ''
+      : _units == Units.imperial
+      ? (kg * poundsPerKg).toStringAsFixed(1)
+      : kg.toString();
+
+  double? _weightKg(double? typed) =>
+      typed == null || _units == Units.metric ? typed : typed / poundsPerKg;
+
   void _fill(ProfileResponse p) {
     if (!mounted) return;
     setState(() {
       _name.text = p.displayName;
       _ftp.text = p.ftpW?.toString() ?? '';
-      _weight.text = p.weightKg?.toString() ?? '';
+      _weight.text = _weightText(p.weightKg);
       _birthYear.text = p.birthYear?.toString() ?? '';
       _estimatedMaxHr = p.maxHeartRate;
       _zone.text = p.timeZone ?? '';
@@ -182,7 +196,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _save() async {
     final ftp = _read(_ftp.text, 30, 1000);
-    final weight = _read(_weight.text, 20, 300, whole: false);
+    // The range is the server's, in kilograms, whichever unit was typed. Round to
+    // the grams the field holds, so 44 lb is exactly the 20 kg the server accepts.
+    final typedWeight = double.tryParse(
+      _weight.text.trim().replaceAll(',', '.'),
+    );
+    final weightKg = typedWeight == null ? null : _weightKg(typedWeight);
+    final weight = (
+      weightKg == null || (weightKg.round() >= 20 && weightKg.round() <= 300),
+      typedWeight,
+    );
     final birthYear = _read(_birthYear.text, 1900, DateTime.now().year - 10);
     final problem = _name.text.trim().isEmpty
         ? _ProfileProblem.name
@@ -203,7 +226,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           UpdateProfileRequest(
             displayName: _name.text.trim(),
             ftpW: ftp.$2?.toInt(),
-            weightKg: weight.$2?.toDouble(),
+            weightKg: _weightKg(weight.$2?.toDouble()),
             birthYear: birthYear.$2?.toInt(),
             timeZone: zone.isEmpty ? null : zone,
             firstDayOfWeek: _firstDay,
@@ -299,7 +322,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             'profile-weight',
                             _weight,
                             l10n.weight,
-                            'kg',
+                            _units == Units.imperial ? 'lb' : 'kg',
                             decimals: true,
                           ),
                           _number(
@@ -376,6 +399,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   }
                                 },
                               );
+                            },
+                          ),
+                          DropdownButtonFormField<Units>(
+                            key: const Key('profile-units'),
+                            isExpanded: true,
+                            initialValue: ref.watch(
+                              unitsChoiceViewModelProvider,
+                            ),
+                            decoration: InputDecoration(labelText: l10n.units),
+                            items: [
+                              DropdownMenuItem(
+                                value: Units.metric,
+                                child: Text(l10n.unitsMetric),
+                              ),
+                              DropdownMenuItem(
+                                value: Units.imperial,
+                                child: Text(l10n.unitsImperial),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value == null) return;
+                              ref
+                                  .read(unitsChoiceViewModelProvider.notifier)
+                                  .choose(value);
+                              // The weight is now shown in the other unit.
+                              final profile = ref
+                                  .read(profileViewModelProvider)
+                                  .profile;
+                              if (profile != null) _fill(profile);
                             },
                           ),
                           if ((problem ??

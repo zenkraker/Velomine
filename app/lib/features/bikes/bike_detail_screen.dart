@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/theme.dart';
 import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -228,6 +229,7 @@ class BikeDetailScreen extends ConsumerWidget {
   }
 
   List<Widget> _body(BuildContext context, WidgetRef ref, BikeDetailState s) {
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final errorStyle = TextStyle(color: Theme.of(context).colorScheme.error);
@@ -287,7 +289,7 @@ class BikeDetailScreen extends ConsumerWidget {
         spacing: AppSpacing.xl,
         runSpacing: 8,
         children: [
-          StatTile(label: l10n.statDistance, value: km(bike.distanceM)),
+          StatTile(label: l10n.statDistance, value: km(units, bike.distanceM)),
           StatTile(label: l10n.statRides, value: '${bike.rideCount}'),
           StatTile(label: l10n.statMovingTime, value: duration(bike.movingS)),
         ],
@@ -394,13 +396,15 @@ String wearLabel(AppLocalizations l10n, String status) => switch (status) {
   _ => l10n.wearGood,
 };
 
+/// A wear distance in whole kilometres or whole miles, whichever the member reads.
+String _wearNumber(Units units, double metres) => units == Units.imperial
+    ? (metres / 1609.344).toStringAsFixed(0)
+    : (metres / 1000).toStringAsFixed(0);
+
 /// "820 of 4000 km · 31 of 100 h · 5.2 of 12 months", only the limits the part has.
-String wearText(AppLocalizations l10n, ComponentResponse p) => [
+String wearText(AppLocalizations l10n, Units units, ComponentResponse p) => [
   if (p.expectedDistanceM != null)
-    l10n.wearDistance(
-      (p.usedDistanceM / 1000).toStringAsFixed(0),
-      (p.expectedDistanceM! / 1000).toStringAsFixed(0),
-    ),
+    '${l10n.wearDistance(_wearNumber(units, p.usedDistanceM), _wearNumber(units, p.expectedDistanceM!))} ${distanceUnit(units)}',
   if (p.expectedHours != null)
     l10n.wearHours(
       p.usedHours.toStringAsFixed(0),
@@ -414,10 +418,13 @@ String wearText(AppLocalizations l10n, ComponentResponse p) => [
   if (p.expectedDistanceM == null &&
       p.expectedHours == null &&
       p.expectedMonths == null)
-    l10n.wearNoLimit(km(p.usedDistanceM), p.usedHours.toStringAsFixed(0)),
+    l10n.wearNoLimit(
+      km(units, p.usedDistanceM),
+      p.usedHours.toStringAsFixed(0),
+    ),
 ].join(' · ');
 
-class _PartCard extends StatelessWidget {
+class _PartCard extends ConsumerWidget {
   const _PartCard({
     required this.part,
     required this.onEdit,
@@ -431,7 +438,7 @@ class _PartCard extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final color = wearColor(context, part.status);
@@ -471,7 +478,10 @@ class _PartCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-            Text(wearText(l10n, part), key: Key('wear-text-${part.id}')),
+            Text(
+              wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
+              key: Key('wear-text-${part.id}'),
+            ),
             Text(
               part.removedOn == null
                   ? l10n.installedOn(isoDate(part.installedOn))

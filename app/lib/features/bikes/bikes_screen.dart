@@ -5,6 +5,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/theme.dart';
 import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
@@ -84,16 +85,17 @@ class BikesScreen extends ConsumerWidget {
   }
 }
 
-class _BikeCard extends StatelessWidget {
+class _BikeCard extends ConsumerWidget {
   const _BikeCard({required this.bike, required this.onOpen});
 
   final BikeResponse bike;
   final void Function(String id) onOpen;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final make = [bike.brand, bike.model].whereType<String>().join(' ');
     return Card(
       key: Key('bike-${bike.id}'),
@@ -117,7 +119,7 @@ class _BikeCard extends StatelessWidget {
           [
             bikeKindName(l10n, bike.kind),
             if (make.isNotEmpty) make,
-            '${km(bike.distanceM)} · ${l10n.bikeRides(bike.rideCount)} · ${duration(bike.movingS)}',
+            '${km(units, bike.distanceM)} · ${l10n.bikeRides(bike.rideCount)} · ${duration(bike.movingS)}',
           ].join(' · '),
         ),
         trailing: const Icon(Icons.chevron_right),

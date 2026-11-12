@@ -230,6 +230,24 @@ abstract class AppLocalizations {
   /// **'Italiano'**
   String get languageItalian;
 
+  /// No description provided for @units.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get units;
+
+  /// No description provided for @unitsMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric (km, kg)'**
+  String get unitsMetric;
+
+  /// No description provided for @unitsImperial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial (miles, lb)'**
+  String get unitsImperial;
+
   /// No description provided for @email.
   ///
   /// In en, this message translates to:
@@ -1391,13 +1409,13 @@ abstract class AppLocalizations {
   /// No description provided for @privacyZoneRadius.
   ///
   /// In en, this message translates to:
-  /// **'Radius (m)'**
+  /// **'Radius'**
   String get privacyZoneRadius;
 
   /// No description provided for @privacyZoneRadiusHelp.
   ///
   /// In en, this message translates to:
-  /// **'200 to 1609 metres.'**
+  /// **'200 to 1609 metres, that is 0.1 to 1.0 miles.'**
   String get privacyZoneRadiusHelp;
 
   /// No description provided for @privacyZoneDelete.
@@ -1409,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyErrorRadius.
   ///
   /// In en, this message translates to:
-  /// **'Choose a radius from 200 to 1609 metres.'**
+  /// **'Choose a radius from 200 to 1609 metres (0.1 to 1.0 miles).'**
   String get privacyErrorRadius;
 
   /// No description provided for @privacyErrorName.
@@ -1421,7 +1439,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyErrorTrim.
   ///
   /// In en, this message translates to:
-  /// **'Choose 0 to 5000 metres for each end.'**
+  /// **'Choose 0 to 5000 metres for each end (0 to 3.1 miles).'**
   String get privacyErrorTrim;
 
   /// No description provided for @privacyRidePrivacy.
@@ -1910,12 +1928,6 @@ abstract class AppLocalizations {
   /// **'Reading the file…'**
   String get readingFile;
 
-  /// No description provided for @metresUp.
-  ///
-  /// In en, this message translates to:
-  /// **'{metres} m up'**
-  String metresUp(int metres);
-
   /// No description provided for @delete.
   ///
   /// In en, this message translates to:
@@ -2339,7 +2351,7 @@ abstract class AppLocalizations {
   /// No description provided for @wearDistance.
   ///
   /// In en, this message translates to:
-  /// **'{used} of {expected} km'**
+  /// **'{used} of {expected}'**
   String wearDistance(String used, String expected);
 
   /// No description provided for @wearHours.
@@ -3011,8 +3023,8 @@ abstract class AppLocalizations {
   /// No description provided for @periodTotals.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}} · {duration} · {elevation} m climbing'**
-  String periodTotals(int count, String duration, int elevation);
+  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}} · {duration} · {elevation} climbing'**
+  String periodTotals(int count, String duration, String elevation);
 
   /// No description provided for @goals.
   ///
@@ -3689,7 +3701,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorWeight.
   ///
   /// In en, this message translates to:
-  /// **'Weight is 20 to 300 kg.'**
+  /// **'Enter a weight the server accepts: 20 to 300 kg (44 to 661 lb).'**
   String get errorWeight;
 
   /// No description provided for @errorBirthYear.

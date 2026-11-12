@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/widgets/chart_chrome.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -35,21 +37,22 @@ String periodTitle(
 };
 
 /// Distance per period as bars, oldest on the left; the current period is the last bar.
-class TotalsChart extends StatelessWidget {
+class TotalsChart extends ConsumerWidget {
   const TotalsChart({super.key, required this.period, required this.totals});
 
   final String period;
   final List<PeriodTotals> totals;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final current = totals.isEmpty ? null : totals.last;
     return Semantics(
       label: l10n.totalsSemantics(
         _periodWord(l10n, period),
-        km(current?.distanceM ?? 0),
+        km(units, current?.distanceM ?? 0),
       ),
       child: SizedBox(
         height: 180,
@@ -61,6 +64,7 @@ class TotalsChart extends StatelessWidget {
             bar: scheme.primary.withValues(alpha: 0.55),
             currentBar: scheme.primary,
             labelStyle: chartLabelStyle(context),
+            units: units,
           ),
         ),
       ),
@@ -75,6 +79,7 @@ class _BarsPainter extends CustomPainter {
     required this.bar,
     required this.currentBar,
     required this.labelStyle,
+    required this.units,
   });
 
   final List<double> values;
@@ -82,6 +87,7 @@ class _BarsPainter extends CustomPainter {
   final Color bar;
   final Color currentBar;
   final TextStyle labelStyle;
+  final Units units;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -121,7 +127,7 @@ class _BarsPainter extends CustomPainter {
       if (last || values[i] == top) {
         _text(
           canvas,
-          km(values[i]),
+          km(units, values[i]),
           Offset(i * slot + slot / 2, rect.top - valueHeight),
         );
       }
@@ -138,5 +144,8 @@ class _BarsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarsPainter old) =>
-      old.values != values || old.labels != labels || old.bar != bar;
+      old.values != values ||
+      old.labels != labels ||
+      old.bar != bar ||
+      old.units != units;
 }
