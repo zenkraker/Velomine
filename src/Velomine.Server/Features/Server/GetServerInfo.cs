@@ -38,7 +38,7 @@ public sealed class GetServerInfo(
             map.Value.EffectiveAttribution,
             smtp.Value.Configured,
             options.IsAppActive,
-            options.IsAppActive ? options.EffectiveAppDsn : null,
+            options.IsAppActive ? options.AppDsn : null,
             TelemetryTerms.Version), ct);
     }
 }

@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +32,7 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         await using var api = await TestApi.StartAsync(postgres, b =>
         {
             b.UseSetting("Velomine:Telemetry:Enabled", "true");
-            b.UseSetting("Velomine:Telemetry:Sentry:Dsn", "https://key@example.invalid/1");
+            b.UseSetting("Velomine:Telemetry:Errors:Dsn", "https://key@example.invalid/1");
         });
 
         var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
@@ -45,14 +47,93 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         await using var api = await TestApi.StartAsync(postgres, b =>
         {
             b.UseSetting("Velomine:Telemetry:Enabled", "true");
-            b.UseSetting("Velomine:Telemetry:Sentry:Dsn", "https://server@example.invalid/1");
-            b.UseSetting("Velomine:Telemetry:Sentry:AppDsn", "https://app@example.invalid/2");
+            b.UseSetting("Velomine:Telemetry:Errors:Dsn", "https://server@example.invalid/1");
+            b.UseSetting("Velomine:Telemetry:App:Dsn", "https://app@example.invalid/2");
         });
 
         var info = await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", TestContext.Current.CancellationToken);
 
         Assert.True(info!.TelemetryEnabled);
         Assert.Equal("https://app@example.invalid/2", info.SentryDsn);
+    }
+
+    [Fact]
+    public async Task Server_ShouldExportLogsTracesAndMetrics_WhenTelemetryExportsOverOtlp()
+    {
+        using var collector = new OtlpCollector();
+        var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Telemetry:Enabled", "true");
+            b.UseSetting("Velomine:Telemetry:TraceSampleRatio", "1");
+            b.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", collector.Address);
+            b.UseSetting("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf");
+        });
+
+        var response = await api.CreateClient().GetAsync("/api/v1/server", TestContext.Current.CancellationToken);
+        var info = await response.Content.ReadFromJsonAsync<ServerInfoResponse>(TestContext.Current.CancellationToken);
+        await api.DisposeAsync(); // shutting down flushes every exporter
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False(info!.TelemetryEnabled); // OTLP alone gives the app no crash-report destination
+        Assert.Contains("/v1/logs", collector.Paths);
+        Assert.Contains("/v1/traces", collector.Paths);
+        Assert.Contains("/v1/metrics", collector.Paths);
+    }
+
+    [Fact]
+    public async Task Server_ShouldStillAnswer_WhenTheOtlpCollectorIsUnreachable()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Telemetry:Enabled", "true");
+            b.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:9");
+            b.UseSetting("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf");
+        });
+
+        var response = await api.CreateClient().GetAsync("/api/v1/server", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    /// <summary>Accepts any OTLP/HTTP export and records which signal it was.</summary>
+    private sealed class OtlpCollector : IDisposable
+    {
+        private readonly HttpListener _listener = new();
+        private readonly ConcurrentBag<string> _paths = [];
+
+        public OtlpCollector()
+        {
+            var probe = new TcpListener(IPAddress.Loopback, 0);
+            probe.Start();
+            var port = ((IPEndPoint)probe.LocalEndpoint).Port;
+            probe.Stop();
+            Address = $"http://127.0.0.1:{port}";
+            _listener.Prefixes.Add(Address + "/");
+            _listener.Start();
+            _ = Task.Run(async () =>
+            {
+                while (_listener.IsListening)
+                {
+                    try
+                    {
+                        var context = await _listener.GetContextAsync();
+                        _paths.Add(context.Request.Url!.AbsolutePath);
+                        context.Response.StatusCode = 200;
+                        context.Response.Close();
+                    }
+                    catch (Exception e) when (e is HttpListenerException or ObjectDisposedException)
+                    {
+                        return;
+                    }
+                }
+            });
+        }
+
+        public string Address { get; }
+
+        public IReadOnlyCollection<string> Paths => [.. _paths];
+
+        public void Dispose() => _listener.Close();
     }
 
     [Fact]

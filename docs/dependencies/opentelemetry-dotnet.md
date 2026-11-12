@@ -44,3 +44,7 @@ remove the exporter and enable Sentry's `TracesSampleRate` instead.
 Approve with conditions: traces only through OTLP (Sentry does not accept OTLP metrics); metrics go
 through `MeterListener` to Sentry; 5–10 % sampling; the redaction processor is mandatory; no raw path,
 query string, header, IP, user or ride identifier in any attribute.
+
+## Update 2026-11-12
+
+The OTLP exporter now carries traces, metrics and logs to the operator's endpoint, set with OpenTelemetry's standard `OTEL_EXPORTER_OTLP_*` variables, instead of traces only through Sentry. Metrics use the SDK's meter provider instead of a `MeterListener` bridge, and logs reach the OpenTelemetry logger provider from Serilog, through a log redaction processor. No new package. The binding terms are in `AGENTS.md`.

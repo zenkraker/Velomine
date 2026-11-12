@@ -53,3 +53,7 @@ Approve with conditions: member contribution is opt-in and off by default; `Send
 session replay; request bodies, headers, cookies, query strings, raw paths, ride data and health data are
 never sent; the server sets a fixed name; self-host has no DSN. Read-only Sentry MCP access is allowed,
 never project writes without the owner's approval.
+
+## Update 2026-11-12
+
+Server telemetry became vendor-neutral. `Sentry.OpenTelemetry.Exporter` was removed, and on the server Sentry now carries error reports only, to any Sentry-protocol DSN (Sentry, GlitchTip, Bugsink). Logs, traces and metrics go over OTLP (see `opentelemetry-dotnet.md`). `sentry_flutter` is unchanged. The binding terms are in `AGENTS.md`.

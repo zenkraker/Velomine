@@ -4,8 +4,8 @@ using OpenTelemetry;
 namespace Velomine.Server.Observability;
 
 /// <summary>
-/// Removes values that must never leave the process, before Sentry's OTLP exporter sees the span.
-/// Sentry's BeforeSend hooks do not apply to OTLP traces, so this is the only guard for them.
+/// Removes values that must never leave the process, before the OTLP exporter sees the span.
+/// It is the only guard for traces, whichever backend receives them.
 /// </summary>
 public sealed class RedactingActivityProcessor : BaseProcessor<Activity>
 {
@@ -50,7 +50,7 @@ public sealed class RedactingActivityProcessor : BaseProcessor<Activity>
         }
 
         // The ASP.NET Core server span name is "GET /raw/path". Use the route template when there is one,
-        // so a share token in the path never becomes a Sentry trace name. Leave client/db span names alone.
+        // so a share token in the path never becomes a trace name. Leave client/db span names alone.
         if (activity.Kind == ActivityKind.Server)
         {
             var route = activity.GetTagItem("http.route") as string;

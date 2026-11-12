@@ -23,7 +23,6 @@ public sealed class RequestContextEnricher(IHttpContextAccessor accessor) : ILog
 
         if (accessor.HttpContext is not { } context) return;
 
-        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("Tenant", context.Request.Host.Host));
         logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
             "Route",
             context.GetEndpoint() is RouteEndpoint { RoutePattern.RawText: { } route } ? route : "unmatched"));

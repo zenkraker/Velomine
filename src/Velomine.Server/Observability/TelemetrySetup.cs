@@ -1,4 +1,6 @@
-using Microsoft.Extensions.Options;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Npgsql;
@@ -11,8 +13,11 @@ using Serilog.Formatting.Compact;
 namespace Velomine.Server.Observability;
 
 /// <summary>
-/// The composition root for logs, traces, metrics and errors. Application code only ever sees
-/// ILogger, ActivitySource and Meter; Serilog, OpenTelemetry and Sentry stay in this folder.
+/// The composition root for logs, traces, metrics and errors. Application code only ever sees ILogger, ActivitySource
+/// and Meter; Serilog, OpenTelemetry and the error-reporting SDK stay in this folder.
+///
+/// Logs always go to the console. With telemetry on, traces, metrics and logs also go over OTLP to the address in the
+/// standard OpenTelemetry variables (any OTLP backend), and errors go to an error-tracking DSN. Each destination is optional; a self-hosted server with neither sends nothing.
 /// </summary>
 public static class TelemetrySetup
 {
@@ -24,11 +29,16 @@ public static class TelemetrySetup
             .ValidateOnStart();
 
         var telemetry = builder.Configuration.GetSection("Velomine:Telemetry").Get<TelemetryOptions>() ?? new();
+        // The OTLP exporter reads its address, headers and protocol from the standard variables itself; this only
+        // decides whether to export at all, so a stray OTEL_* variable never turns telemetry on.
+        var otlp = telemetry.Enabled && !string.IsNullOrWhiteSpace(builder.Configuration[TelemetryOptions.OtlpEndpointKey]);
+        var errors = telemetry.IsErrorsActive;
         var version = BuildInfo.Version;
-        var environment = builder.Environment.EnvironmentName;
+        var environment = telemetry.EffectiveEnvironment ?? builder.Environment.EnvironmentName;
 
         builder.Services.AddHttpContextAccessor();
         builder.Logging.ClearProviders();
+        // writeToProviders hands Serilog's events, after the enrichers below, to the OpenTelemetry logger provider.
         builder.Services.AddSerilog((services, configuration) =>
         {
             configuration
@@ -46,27 +56,26 @@ public static class TelemetrySetup
             else
                 configuration.WriteTo.Console(new CompactJsonFormatter());
 
-            if (telemetry.IsActive)
+            if (errors)
                 configuration.WriteTo.Sentry(o =>
                 {
-                    // UseSentry below owns the SDK; this sink only forwards Serilog events.
+                    // UseSentry below owns the SDK; this sink only turns error logs into error reports, with the
+                    // warnings before them as breadcrumbs. Logs themselves go over OTLP, not here.
                     o.InitializeSdk = false;
-                    o.EnableLogs = true;
                     o.MinimumBreadcrumbLevel = LogEventLevel.Warning;
                     o.MinimumEventLevel = LogEventLevel.Error;
-                    o.RestrictedToMinimumLevel = LogEventLevel.Information;
                 });
-        });
+        }, writeToProviders: otlp);
 
+        // Error reports to the error-tracking DSN. An empty DSN leaves the SDK off.
         builder.WebHost.UseSentry(o =>
         {
-            o.Dsn = telemetry.IsActive ? telemetry.Sentry.Dsn : string.Empty;
-            o.Environment = string.IsNullOrWhiteSpace(telemetry.Sentry.Environment) ? environment : telemetry.Sentry.Environment;
-            o.Release = string.IsNullOrWhiteSpace(telemetry.Sentry.Release) ? version : telemetry.Sentry.Release;
+            o.Dsn = errors ? telemetry.ErrorsDsn : string.Empty;
+            o.Environment = environment;
+            o.Release = version;
             o.SendDefaultPii = false;
-            o.EnableLogs = true;
-            // Serilog's Sentry sink owns log forwarding. Keep Sentry's own ILogger provider quiet,
-            // so a request is not logged twice.
+            // Serilog's sink above owns error reports from logs. Keep the SDK's own ILogger provider quiet, so an error
+            // is not reported twice.
             o.MinimumBreadcrumbLevel = Microsoft.Extensions.Logging.LogLevel.None;
             o.MinimumEventLevel = Microsoft.Extensions.Logging.LogLevel.None;
             o.MaxRequestBodySize = RequestSize.None;
@@ -79,16 +88,14 @@ public static class TelemetrySetup
                 @event.User = null!;
                 return @event;
             });
-            o.SetBeforeSendLog(ScrubLog);
-            o.SetBeforeSendMetric(ScrubMetric);
-            if (telemetry.IsActive) o.UseOtlp();
         });
 
         var openTelemetry = builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
                 .AddService("velomine-server", serviceVersion: version)
-                .AddAttributes([new KeyValuePair<string, object>("deployment.environment", environment)]));
+                .AddAttributes([new KeyValuePair<string, object>("deployment.environment.name", environment)]));
 
+        // Traces are always collected, so log lines carry trace ids; they leave the process only with OTLP on.
         openTelemetry.WithTracing(tracing =>
         {
             tracing
@@ -103,14 +110,28 @@ public static class TelemetrySetup
                 .AddNpgsql()
                 .AddProcessor(new RedactingActivityProcessor());
 
-            if (telemetry.IsActive)
-                tracing.AddSentryOtlpExporter(
-                    telemetry.Sentry.Dsn!,
-                    telemetry.Otlp.Enabled ? new Uri(telemetry.Otlp.Endpoint!) : null);
+            if (otlp) tracing.AddOtlpExporter();
         });
 
-        if (telemetry.IsActive)
-            builder.Services.AddHostedService<SentryMetricsListener>();
+        if (otlp)
+        {
+            openTelemetry.WithMetrics(metrics => metrics
+                .AddMeter(VelomineMetrics.Meter.Name)
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddOtlpExporter());
+
+            openTelemetry.WithLogging(
+                logging => logging
+                    .AddProcessor(new RedactingLogProcessor())
+                    .AddOtlpExporter(),
+                options =>
+                {
+                    options.IncludeFormattedMessage = true;
+                    options.IncludeScopes = false;
+                });
+        }
 
         return builder;
     }
@@ -129,34 +150,13 @@ public static class TelemetrySetup
                             ? LogEventLevel.Warning
                             : LogEventLevel.Information;
             options.EnrichDiagnosticContext = (diagnosticContext, context) =>
-            {
-                diagnosticContext.Set("Tenant", context.Request.Host.Host);
                 diagnosticContext.Set(
                     "Route",
                     context.GetEndpoint() is Microsoft.AspNetCore.Routing.RouteEndpoint { RoutePattern.RawText: { } route }
                         ? route
                         : "unmatched");
-            };
         });
 
         return app;
-    }
-
-    private static SentryLog? ScrubLog(SentryLog log)
-    {
-        if (log.TryGetAttribute("user.id", out _) ||
-            log.TryGetAttribute("user.name", out _) ||
-            log.TryGetAttribute("user.email", out _)) return null;
-        log.SetAttribute("server.address", "velomine");
-        return log;
-    }
-
-    private static SentryMetric? ScrubMetric(SentryMetric metric)
-    {
-        if (metric.TryGetAttribute<object>("user.id", out _) ||
-            metric.TryGetAttribute<object>("user.name", out _) ||
-            metric.TryGetAttribute<object>("user.email", out _)) return null;
-        metric.SetAttribute("server.address", "velomine");
-        return metric;
     }
 }
