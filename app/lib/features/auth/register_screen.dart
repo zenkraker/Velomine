@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,9 +30,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _register() => ref
-      .read(registerViewModelProvider.notifier)
-      .register(_email.text.trim(), _name.text.trim(), _password.text);
+  Future<void> _register() {
+    // The manager is told the form is done before this screen swaps to the "created" view, so the
+    // password it just saw is the one it offers to save.
+    TextInput.finishAutofillContext();
+    return ref
+        .read(registerViewModelProvider.notifier)
+        .register(_email.text.trim(), _name.text.trim(), _password.text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,27 +60,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ]
           : [
-              TextField(
-                key: const Key('email'),
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(labelText: l10n.email),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                key: const Key('name'),
-                controller: _name,
-                decoration: InputDecoration(labelText: l10n.name),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PasswordField(
-                fieldKey: const Key('password'),
-                visibilityKey: const Key('password-visibility'),
-                controller: _password,
-                label: l10n.password,
-                helperText: l10n.passwordHint,
-                helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
-                autofillHints: const [AutofillHints.newPassword],
+              // One group, so the manager sees an address, a name and a new password that belong together
+              // and offers to generate the password and to save it once the form is sent.
+              AutofillGroup(
+                onDisposeAction: AutofillContextAction.cancel,
+                child: Column(
+                  children: [
+                    TextField(
+                      key: const Key('email'),
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [
+                        AutofillHints.email,
+                        AutofillHints.username,
+                      ],
+                      decoration: InputDecoration(labelText: l10n.email),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      key: const Key('name'),
+                      controller: _name,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.name],
+                      decoration: InputDecoration(labelText: l10n.name),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    PasswordField(
+                      fieldKey: const Key('password'),
+                      visibilityKey: const Key('password-visibility'),
+                      controller: _password,
+                      label: l10n.password,
+                      helperText: l10n.passwordHint,
+                      helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
+                      // A new password, so the manager offers to generate a strong one.
+                      autofillHints: const [AutofillHints.newPassword],
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _register(),
+                    ),
+                  ],
+                ),
               ),
               if (s.problem != null) ...[
                 const SizedBox(height: AppSpacing.md),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -57,12 +58,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn() => ref
-      .read(signInViewModelProvider.notifier)
-      .signIn(_email.text.trim(), _password.text, rememberMe: _staySignedIn);
+  Future<void> _signIn() async {
+    // The browser only offers to save what was submitted while its login form was still there, so the
+    // context is finished before this screen leaves the tree. On the phone it asks to save too.
+    TextInput.finishAutofillContext();
+    await ref
+        .read(signInViewModelProvider.notifier)
+        .signIn(_email.text.trim(), _password.text, rememberMe: _staySignedIn);
+  }
 
-  Future<void> _verifyCode() =>
-      ref.read(signInViewModelProvider.notifier).verifyCode(_code.text);
+  Future<void> _verifyCode() async {
+    await ref.read(signInViewModelProvider.notifier).verifyCode(_code.text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +92,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: AutofillGroup(
+                onDisposeAction: AutofillContextAction.cancel,
                 child: ListView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.all(AppSpacing.xl),
@@ -124,15 +132,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Text(l10n.twoFactorHelp),
                       const SizedBox(height: AppSpacing.lg),
-                      TextField(
-                        key: const Key('two-factor-code'),
-                        controller: _code,
-                        keyboardType: TextInputType.number,
-                        autofillHints: const [AutofillHints.oneTimeCode],
-                        decoration: InputDecoration(
-                          labelText: l10n.twoFactorCode,
+                      AutofillGroup(
+                        child: TextField(
+                          key: const Key('two-factor-code'),
+                          controller: _code,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.oneTimeCode],
+                          decoration: InputDecoration(
+                            labelText: l10n.twoFactorCode,
+                          ),
+                          onSubmitted: (_) => _verifyCode(),
                         ),
-                        onSubmitted: (_) => _verifyCode(),
                       ),
                       if (message != null) ...[
                         const SizedBox(height: AppSpacing.md),
@@ -164,7 +175,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         key: const Key('email'),
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.email],
+                        textInputAction: TextInputAction.next,
+                        // An address, not a typed-named login: the browser pairs it with the password below
+                        // and every password manager recognises the pair.
+                        autofillHints: const [
+                          AutofillHints.email,
+                          AutofillHints.username,
+                        ],
                         decoration: InputDecoration(labelText: l10n.email),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -173,7 +190,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         visibilityKey: const Key('password-visibility'),
                         controller: _password,
                         label: l10n.password,
-                        autofillHints: const [AutofillHints.password],
+                        autofillHints: const [
+                          AutofillHints.password,
+                          AutofillHints.newPassword,
+                        ],
                         onSubmitted: (_) => _signIn(),
                       ),
                       CheckboxListTile(
