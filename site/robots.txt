@@ -1,16 +1,9 @@
+# The web app's pages are not blocked here: its index.html carries <meta name="robots" content="noindex">, and a
+# crawler blocked by robots.txt would never see it (a blocked URL can still be listed). Only machine endpoints are blocked.
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /openapi/
 Disallow: /health
-Disallow: /sign-in
-Disallow: /register
-Disallow: /sso-callback
-Disallow: /rides
-Disallow: /progress
-Disallow: /bikes
-Disallow: /club
-Disallow: /admin
-Disallow: /notifications
-Disallow: /profile
-Disallow: /join
+
+Sitemap: https://velomine.eu/sitemap.xml

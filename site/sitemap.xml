@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The presentation site's indexable pages. /demo/ is noindex and left out. No lastmod: Google uses it only when
+     it is accurate, and a hand-kept date goes stale; changefreq and priority are ignored by Google and Bing. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://velomine.eu/</loc></url>
+  <url><loc>https://velomine.eu/contact/</loc></url>
+  <url><loc>https://velomine.eu/pricing/</loc></url>
+  <url><loc>https://velomine.eu/principles/</loc></url>
+  <url><loc>https://velomine.eu/privacy/</loc></url>
+  <url><loc>https://velomine.eu/security/</loc></url>
+  <url><loc>https://velomine.eu/status/</loc></url>
+  <url><loc>https://velomine.eu/terms/</loc></url>
+</urlset>
