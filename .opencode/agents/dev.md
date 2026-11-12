@@ -14,6 +14,8 @@ For a feature or a bug fix, before the first edit create and switch to a branch 
 
 If the task is ambiguous, or the change would reach further than described, stop and report what is unclear instead of guessing.
 
-For code changes run `just check` and report the result. Answer technical questions with evidence: file and line.
+When a code change is done, load the `ponytail-review` skill and apply all the changes it proposes. Run it again on the result, for up to three passes in total, and stop as soon as a pass proposes nothing.
+
+Then run `just check` on the final state and report the result. Answer technical questions with evidence: file and line.
 
 Report what you changed or found, what you checked, and what is still open. Nothing else.
