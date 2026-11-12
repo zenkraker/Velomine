@@ -129,6 +129,23 @@ CodeGraph indexes the code into a local symbol graph and gives the agent one MCP
 
 OpenCode reads `AGENTS.md` directly and takes its MCP servers and plugins from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. OpenCode needs no install command for ponytail: the `plugins` entry loads `@dietrichgebert/ponytail` from npm on first start and keeps it active in every session of this repository. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
 
+#### OpenCode desktop
+
+The OpenCode desktop app is optional and is installed on the host, not from the flake. It connects to the background service of the flake's CLI, which gets a fixed port and password once:
+
+```bash
+opencode service set port 4096
+opencode service set password '<a password of your own>'
+```
+
+Both are stored in `~/.config/opencode/service-prod.json`, outside the repository, and survive restarts. Each day, start the service from the repository with the dev shell loaded, so the MCP servers it spawns find `dart`, `sentry-mcp` and `scw-mcp`:
+
+```bash
+opencode service start    # http://127.0.0.1:4096
+```
+
+In the desktop app, add that address under the server settings with the user `opencode` and your password. The `opencode` command in the dev shell uses the same service, so the terminal and the desktop share sessions. Keep the desktop on the same release as the CLI pinned in `flake.nix`.
+
 #### Agent MCP servers
 
 The Dart MCP server is the one bundled with the pinned SDK. Do not install a separate global copy:
@@ -300,7 +317,7 @@ There is one way to run Velomine, in development and for a self-hoster alike: `d
 | The emulator window stays black | Start it with software rendering: `emulator -avd velomine -gpu swiftshader_indirect`. |
 | Gradle wants an SDK component or NDK version that is not installed | The SDK in `/nix/store` is read-only, so Gradle cannot install anything into it. Add the exact version it names to the `android` block in `flake.nix` (`platformVersions`, `buildToolsVersions` or `ndkVersions`) and run `direnv reload`. |
 | `flutter run -d chrome` finds no browser | Install Chromium or Chrome on the host. The shell sets `CHROME_EXECUTABLE` to the first one it finds. |
-| The Dart MCP server is missing in OpenCode, or `opencode mcp list` says `NotFound` | OpenCode's background service was started outside the dev shell and is spawning the server without `dart` on PATH. Run `direnv reload`, then `opencode service restart` from the repository, and start a new session. If the desktop app starts the service itself, quit it fully first and relaunch it from the dev shell. |
+| The Dart MCP server is missing in OpenCode, or `opencode mcp list` says `NotFound` | OpenCode's background service was started outside the dev shell and is spawning the server without `dart` on PATH. Run `direnv reload`, then `opencode service restart` from the repository, and start a new session. The desktop app must connect to that service (see *OpenCode desktop*), not to the local server it starts itself. |
 | Single sign-on through Dex fails | Dex only accepts `http://localhost:8080/signin-oidc`: keep `VELOMINE_PORT` at 8080, or change the redirect address in `deploy/dex/config.yaml` too. |
 | `port is already allocated` on 8080 | Another program uses the port. Stop it, or set `VELOMINE_PORT` in `.env`. |
 | Something in the shell is broken or stale | `rm -rf .dev .direnv`, then `direnv allow`. Caches download again, and nothing in git is affected. |

@@ -1,9 +1,17 @@
 {
   description = "Velomine dev environment (CachyOS + Nix)";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  # OpenCode's own flake: nixpkgs lags a version. Pinned to a commit, so
+  # `nix flake update` never moves it: upgrade by changing the commit here. It
+  # follows our nixpkgs because its own lock lags the bun its package.json asks for
+  # (1.4.4); built with an older bun the server dies on start with "Export named
+  # 'extension' not found in module 'ws'". When upgrading, check that nixpkgs' bun is
+  # at least the `packageManager` version in OpenCode's package.json.
+  inputs.opencode.url = "github:anomalyco/opencode/a3d6e54b3dff0975d01a7307464ef7be9fa6b1ee";
+  inputs.opencode.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs =
-    { nixpkgs, ... }:
+    { nixpkgs, opencode, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -42,13 +50,30 @@
       androidSdk = "${android.androidsdk}/libexec/android-sdk";
       dotnet = pkgs.dotnetCorePackages.sdk_10_0;
 
-      # nixpkgs' opencode 2.2.5 pins a stale node_modules hash, so override it until
-      # nixpkgs catches up. Remove this once `nix shell nixpkgs#opencode` builds.
-      opencode = pkgs.opencode.overrideAttrs (old: {
-        node_modules = old.node_modules.overrideAttrs (_: {
-          outputHash = "sha256-prx9dX7kUvs/E3zopkaPk5LXh3xJAy5sZeum/W8L7cA=";
-        });
-      });
+      # The OpenCode desktop app is installed on the host, not here. It connects to
+      # this CLI's background service, which gets a fixed port and password once:
+      #
+      #   opencode service set port 4096
+      #   opencode service set password '<a password of your own>'
+      #
+      # Both are kept in ~/.config/opencode/service-prod.json, outside the repository,
+      # and survive restarts. Each day, from the repository with the dev shell loaded
+      # (so the MCP servers the service spawns find `dart`, `sentry-mcp` and `scw-mcp`):
+      #
+      #   opencode service start    # http://127.0.0.1:4096
+      #
+      # In the desktop, add that address with the user `opencode` and the password.
+      # `opencode` in the terminal uses the same service. Keep the desktop on the same
+      # release as the commit pinned above. More in docs/development.md.
+      #
+      # nix/hashes.json at this commit does not match what bun 1.4.4 installs on
+      # x86_64-linux; the value below is what the sandboxed install produced. Try
+      # dropping this override on every OpenCode upgrade.
+      opencodeCli = opencode.packages.${system}.opencode.override {
+        node_modules = opencode.packages.${system}.opencode.node_modules.override {
+          hash = "sha256-TeuJv1JURfx1s7PqUmf0uK76eKiae8ieukrqQ3AIZ1Q=";
+        };
+      };
 
       # Claude Code from Anthropic's release manifest, ahead of nixpkgs. To update, take the
       # version from https://downloads.claude.ai/claude-code-releases/latest and the
@@ -134,12 +159,12 @@
 
       packages.${system} = {
         inherit
-          opencode
           vscode
           sentryMcp
           scalewayMcp
           claudeCode
           ;
+        opencode = opencodeCli;
       };
 
       devShells.${system}.default = pkgs.mkShell {
@@ -165,7 +190,7 @@
           sentryMcp # local stdio Sentry MCP (hosted OAuth is broken in OpenCode 2)
           pkgs.scaleway-cli # scw, for the read-only profile and `scw init`
           scalewayMcp # read-only Scaleway MCP (see above)
-          opencode # local override (see above); alternative to Claude Code
+          opencodeCli # alternative to Claude Code
 
           # Flutter's own command-line needs, plus helpers
           pkgs.git
