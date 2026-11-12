@@ -18,6 +18,7 @@ import 'ride_title.dart';
 import 'ride_type_chips.dart';
 import 'rides_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 
 String rideErrorText(AppLocalizations l10n, String? code) => switch (code) {
@@ -327,14 +328,15 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
   }
 }
 
-class RideCard extends StatelessWidget {
+class RideCard extends ConsumerWidget {
   const RideCard({super.key, required this.ride, this.onTap});
 
   final RideResponse ride;
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final ready = ride.status == 'ready';
@@ -344,11 +346,11 @@ class RideCard extends StatelessWidget {
     // Each number carries its name: a row of unlabelled values is a puzzle on a phone.
     final facts = <(String, String)>[
       if (ready) ...[
-        (l10n.statDistance, km(ride.distanceM)),
+        (l10n.statDistance, km(units, ride.distanceM)),
         (l10n.statMovingTime, duration(ride.movingS)),
         if (ride.elevationGainM != null)
-          (l10n.statClimbing, l10n.metresUp(ride.elevationGainM!.round())),
-        (l10n.statAverageSpeed, kmh(ride.avgSpeedMs)),
+          (l10n.statClimbing, elevation(units, ride.elevationGainM)),
+        (l10n.statAverageSpeed, kmh(units, ride.avgSpeedMs)),
         if (ride.avgPowerW != null)
           (
             l10n.statAveragePower,

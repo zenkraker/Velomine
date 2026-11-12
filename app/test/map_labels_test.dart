@@ -5,6 +5,7 @@ import 'package:velomine/features/rides/detail/ride_series.dart';
 import 'package:velomine/features/rides/detail/route_map.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
+import 'package:velomine/core/units.dart';
 
 void main() {
   testWidgets('RouteMap_ShouldScaleItsLabels_WhenTheSystemTextIsLarger', (
@@ -24,6 +25,7 @@ void main() {
         cadence: const [],
         temperature: const [],
       ),
+      Units.metric,
     );
     final selected = ValueNotifier<int?>(null);
     final selectedLap = ValueNotifier<LapRange?>(null);

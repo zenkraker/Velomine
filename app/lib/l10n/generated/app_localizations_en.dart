@@ -81,6 +81,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageItalian => 'Italiano';
 
   @override
+  String get units => 'Units';
+
+  @override
+  String get unitsMetric => 'Metric (km, kg)';
+
+  @override
+  String get unitsImperial => 'Imperial (miles, lb)';
+
+  @override
   String get email => 'Email';
 
   @override
@@ -710,10 +719,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyZoneName => 'Name';
 
   @override
-  String get privacyZoneRadius => 'Radius (m)';
+  String get privacyZoneRadius => 'Radius';
 
   @override
-  String get privacyZoneRadiusHelp => '200 to 1609 metres.';
+  String get privacyZoneRadiusHelp =>
+      '200 to 1609 metres, that is 0.1 to 1.0 miles.';
 
   @override
   String privacyZoneDelete(String name) {
@@ -721,13 +731,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get privacyErrorRadius => 'Choose a radius from 200 to 1609 metres.';
+  String get privacyErrorRadius =>
+      'Choose a radius from 200 to 1609 metres (0.1 to 1.0 miles).';
 
   @override
   String get privacyErrorName => 'Give the place a name.';
 
   @override
-  String get privacyErrorTrim => 'Choose 0 to 5000 metres for each end.';
+  String get privacyErrorTrim =>
+      'Choose 0 to 5000 metres for each end (0 to 3.1 miles).';
 
   @override
   String get privacyRidePrivacy => 'Ride privacy';
@@ -1071,11 +1083,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readingFile => 'Reading the file…';
 
   @override
-  String metresUp(int metres) {
-    return '$metres m up';
-  }
-
-  @override
   String get delete => 'Delete';
 
   @override
@@ -1322,7 +1329,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String wearDistance(String used, String expected) {
-    return '$used of $expected km';
+    return '$used of $expected';
   }
 
   @override
@@ -1684,7 +1691,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get periodWordYear => 'year';
 
   @override
-  String periodTotals(int count, String duration, int elevation) {
+  String periodTotals(int count, String duration, String elevation) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -1692,7 +1699,7 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 ride',
       zero: 'No rides',
     );
-    return '$_temp0 · $duration · $elevation m climbing';
+    return '$_temp0 · $duration · $elevation climbing';
   }
 
   @override
@@ -2089,7 +2096,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorFtp => 'FTP is 30 to 1000 watts.';
 
   @override
-  String get errorWeight => 'Weight is 20 to 300 kg.';
+  String get errorWeight =>
+      'Enter a weight the server accepts: 20 to 300 kg (44 to 661 lb).';
 
   @override
   String get errorBirthYear =>

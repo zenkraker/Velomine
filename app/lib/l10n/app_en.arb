@@ -40,6 +40,9 @@
   "language": "Language",
   "languageEnglish": "English",
   "languageItalian": "Italiano",
+  "units": "Units",
+  "unitsMetric": "Metric (km, kg)",
+  "unitsImperial": "Imperial (miles, lb)",
 
   "email": "Email",
   "password": "Password",
@@ -270,8 +273,8 @@
   "privacyZonesEmpty": "No saved places yet.",
   "privacyAddZone": "Add a place",
   "privacyZoneName": "Name",
-  "privacyZoneRadius": "Radius (m)",
-  "privacyZoneRadiusHelp": "200 to 1609 metres.",
+  "privacyZoneRadius": "Radius",
+  "privacyZoneRadiusHelp": "200 to 1609 metres, that is 0.1 to 1.0 miles.",
   "privacyZoneDelete": "Remove {name}",
   "@privacyZoneDelete": {
     "placeholders": {
@@ -280,9 +283,9 @@
       }
     }
   },
-  "privacyErrorRadius": "Choose a radius from 200 to 1609 metres.",
+  "privacyErrorRadius": "Choose a radius from 200 to 1609 metres (0.1 to 1.0 miles).",
   "privacyErrorName": "Give the place a name.",
-  "privacyErrorTrim": "Choose 0 to 5000 metres for each end.",
+  "privacyErrorTrim": "Choose 0 to 5000 metres for each end (0 to 3.1 miles).",
   "privacyRidePrivacy": "Ride privacy",
   "privacyRidePrivacyHelp": "What your coach and shared links see.",
   "viewsTitle": "Who looked",
@@ -505,14 +508,6 @@
   "noRides": "No rides yet. Upload a FIT, GPX or TCX file.",
   "loadMore": "Load more",
   "readingFile": "Reading the file…",
-  "metresUp": "{metres} m up",
-  "@metresUp": {
-    "placeholders": {
-      "metres": {
-        "type": "int"
-      }
-    }
-  },
   "delete": "Delete",
   "rideActions": "Ride actions",
   "deleteRideTitle": "Delete this ride?",
@@ -687,7 +682,7 @@
   "wearSoon": "Getting worn",
   "wearReplaced": "Replaced",
   "wearGood": "Good",
-  "wearDistance": "{used} of {expected} km",
+  "wearDistance": "{used} of {expected}",
   "@wearDistance": {
     "placeholders": {
       "used": {
@@ -889,7 +884,7 @@
   "periodWordWeek": "week",
   "periodWordMonth": "month",
   "periodWordYear": "year",
-  "periodTotals": "{count, plural, =0{No rides} =1{1 ride} other{{count} rides}} · {duration} · {elevation} m climbing",
+  "periodTotals": "{count, plural, =0{No rides} =1{1 ride} other{{count} rides}} · {duration} · {elevation} climbing",
   "@periodTotals": {
     "placeholders": {
       "count": {
@@ -899,7 +894,7 @@
         "type": "String"
       },
       "elevation": {
-        "type": "int"
+        "type": "String"
       }
     }
   },
@@ -1158,7 +1153,7 @@
   "deleteMyAccount": "Delete my account",
   "errorEnterName": "Enter your name.",
   "errorFtp": "FTP is 30 to 1000 watts.",
-  "errorWeight": "Weight is 20 to 300 kg.",
+  "errorWeight": "Enter a weight the server accepts: 20 to 300 kg (44 to 661 lb).",
   "errorBirthYear": "Enter a year of birth between 1900 and ten years ago.",
   "deleteAccountTitle": "Delete your account?",
   "deleteAccountBody": "This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.",

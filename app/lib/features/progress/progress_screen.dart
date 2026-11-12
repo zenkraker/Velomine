@@ -16,6 +16,7 @@ import 'totals_chart.dart';
 import 'training_summary.dart';
 import 'wellbeing_card.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 
 /// Totals per week, month or year, goals, readiness, training, power and the
 /// daily check-in. Each source is its own ViewModel, so one failing endpoint
@@ -248,14 +249,15 @@ class ProgressScreen extends ConsumerWidget {
 }
 
 /// The same totals as the chart, newest first, with every number.
-class _TotalsTable extends StatelessWidget {
+class _TotalsTable extends ConsumerWidget {
   const _TotalsTable({required this.totals});
 
   final TotalsResponse totals;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final rows = totals.totals.reversed.toList();
     return Card(
       child: Column(
@@ -277,11 +279,11 @@ class _TotalsTable extends StatelessWidget {
                 l10n.periodTotals(
                   t.rides,
                   duration(t.movingS),
-                  t.elevationGainM.round(),
+                  elevation(units, t.elevationGainM),
                 ),
               ),
               trailing: Text(
-                km(t.distanceM),
+                km(units, t.distanceM),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),

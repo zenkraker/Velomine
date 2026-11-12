@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/format.dart' show distanceUnit;
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
+import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'bike_forms.dart' show dateOnly, isoDate;
@@ -34,13 +36,11 @@ String reminderStatusLabel(AppLocalizations l10n, String status) =>
 /// "210 of 300 km · 7 of 10 h · 2.1 of 3 months", only the intervals the reminder has.
 String reminderProgressText(
   AppLocalizations l10n,
+  Units units,
   MaintenanceReminderResponse r,
 ) => [
   if (r.intervalDistanceM != null)
-    l10n.wearDistance(
-      (r.usedDistanceM / 1000).toStringAsFixed(0),
-      (r.intervalDistanceM! / 1000).toStringAsFixed(0),
-    ),
+    '${l10n.wearDistance(units == Units.imperial ? (r.usedDistanceM / 1609.344).toStringAsFixed(0) : (r.usedDistanceM / 1000).toStringAsFixed(0), units == Units.imperial ? (r.intervalDistanceM! / 1609.344).toStringAsFixed(0) : (r.intervalDistanceM! / 1000).toStringAsFixed(0))} ${distanceUnit(units)}',
   if (r.intervalHours != null)
     l10n.wearHours(
       r.usedHours.toStringAsFixed(0),
@@ -356,7 +356,7 @@ class ServiceSection extends ConsumerWidget {
   }
 }
 
-class _ReminderCard extends StatelessWidget {
+class _ReminderCard extends ConsumerWidget {
   const _ReminderCard({
     required this.reminder,
     required this.onDone,
@@ -372,7 +372,7 @@ class _ReminderCard extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final color = reminderColor(context, reminder.status);
@@ -406,7 +406,11 @@ class _ReminderCard extends StatelessWidget {
                 ),
               ),
             Text(
-              reminderProgressText(l10n, reminder),
+              reminderProgressText(
+                l10n,
+                ref.watch(unitsChoiceViewModelProvider),
+                reminder,
+              ),
               key: Key('reminder-text-${reminder.id}'),
             ),
             Text(
@@ -449,7 +453,7 @@ class _ReminderCard extends StatelessWidget {
   }
 }
 
-class _EntryCard extends StatelessWidget {
+class _EntryCard extends ConsumerWidget {
   const _EntryCard({
     required this.entry,
     required this.onEdit,
@@ -475,12 +479,13 @@ class _EntryCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
+    final units = ref.watch(unitsChoiceViewModelProvider);
     final locale = Localizations.localeOf(context).toString();
     final distance =
-        '${NumberFormat.decimalPattern(locale).format((entry.bikeDistanceM / 1000).round())} km';
+        '${NumberFormat.decimalPattern(locale).format(units == Units.imperial ? (entry.bikeDistanceM / 1609.344).round() : (entry.bikeDistanceM / 1000).round())} ${distanceUnit(units)}';
     return Card(
       key: Key('entry-${entry.id}'),
       child: Padding(

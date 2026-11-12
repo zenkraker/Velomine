@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
@@ -61,8 +63,8 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       _showSpeed = !privacy.streams.hideSpeed;
       _showElevation = !privacy.streams.hideElevation;
       _showTemperature = !privacy.streams.hideTemperature;
-      _trimStart.text = privacy.trimStartM == 0 ? '' : '${privacy.trimStartM}';
-      _trimEnd.text = privacy.trimEndM == 0 ? '' : '${privacy.trimEndM}';
+      _trimStart.text = _trimText(privacy.trimStartM);
+      _trimEnd.text = _trimText(privacy.trimEndM);
     });
   }
 
@@ -74,11 +76,27 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     super.dispose();
   }
 
+  Units get _units => ref.read(unitsChoiceViewModelProvider);
+
+  /// A trim in the unit on screen. It is stored in metres, so imperial reads miles.
+  String _trimText(int metres) {
+    if (metres == 0) return '';
+    return _units == Units.imperial
+        ? (metres / metresPerMile).toStringAsFixed(1)
+        : '$metres';
+  }
+
+  /// The typed trim in metres, never outside 0..5000 m. A value that would
+  /// round to nothing in the other unit stays where it is.
   int? _metres(TextEditingController controller) {
     final text = controller.text.trim();
     if (text.isEmpty) return 0;
-    final value = int.tryParse(text);
-    return value == null || value < 0 || value > 5000 ? null : value;
+    final typed = double.tryParse(text.replaceAll(',', '.'));
+    if (typed == null || typed < 0) return null;
+    final metres = _units == Units.imperial
+        ? (typed * metresPerMile).round()
+        : typed.round();
+    return metres < 0 || metres > 5000 ? null : metres;
   }
 
   Future<void> _save(AppLocalizations l10n) async {
@@ -118,7 +136,10 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     if (point == null || !mounted) return;
     final answer = await showDialog<(String, int)>(
       context: context,
-      builder: (_) => _ZoneDialog(l10n: l10n),
+      builder: (_) => _ZoneDialog(
+        l10n: l10n,
+        units: ref.read(unitsChoiceViewModelProvider),
+      ),
     );
     if (answer == null) return;
     await ref
@@ -289,7 +310,12 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                             key: Key('privacy-zone-${zone.id}'),
                             contentPadding: EdgeInsets.zero,
                             title: Text(zone.name),
-                            subtitle: Text('${zone.radiusM} m'),
+                            subtitle: Text(
+                              length(
+                                ref.watch(unitsChoiceViewModelProvider),
+                                zone.radiusM.toDouble(),
+                              ),
+                            ),
                             trailing: IconButton(
                               key: Key('privacy-zone-delete-${zone.id}'),
                               tooltip: l10n.privacyZoneDelete(zone.name),
@@ -338,9 +364,12 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   ) => TextField(
     key: Key(key),
     controller: controller,
-    keyboardType: TextInputType.number,
-    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-    decoration: InputDecoration(labelText: label, suffixText: 'm'),
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+    decoration: InputDecoration(
+      labelText: label,
+      suffixText: _units == Units.imperial ? 'mi' : 'm',
+    ),
   );
 }
 
@@ -372,9 +401,10 @@ class _LoadFailed extends StatelessWidget {
 }
 
 class _ZoneDialog extends StatefulWidget {
-  const _ZoneDialog({required this.l10n});
+  const _ZoneDialog({required this.l10n, required this.units});
 
   final AppLocalizations l10n;
+  final Units units;
 
   @override
   State<_ZoneDialog> createState() => _ZoneDialogState();
@@ -382,7 +412,9 @@ class _ZoneDialog extends StatefulWidget {
 
 class _ZoneDialogState extends State<_ZoneDialog> {
   final _name = TextEditingController();
-  final _radius = TextEditingController(text: '500');
+  late final _radius = TextEditingController(
+    text: widget.units == Units.imperial ? '0.3' : '500',
+  );
   String? _problem;
 
   @override
@@ -394,16 +426,22 @@ class _ZoneDialogState extends State<_ZoneDialog> {
 
   void _save() {
     final name = _name.text.trim();
-    final radius = int.tryParse(_radius.text.trim()) ?? 0;
     if (name.isEmpty) {
       setState(() => _problem = widget.l10n.privacyErrorName);
       return;
     }
-    if (radius < 200 || radius > 1609) {
+    // What the member typed becomes metres; the legal range is checked on that.
+    final typed = double.tryParse(_radius.text.trim().replaceAll(',', '.'));
+    final metres = typed == null
+        ? null
+        : widget.units == Units.imperial
+        ? (typed * metresPerMile).round()
+        : typed.round();
+    if (metres == null || metres < 200 || metres > 1609) {
       setState(() => _problem = widget.l10n.privacyErrorRadius);
       return;
     }
-    Navigator.of(context).pop((name, radius));
+    Navigator.of(context).pop((name, metres));
   }
 
   @override
@@ -424,10 +462,13 @@ class _ZoneDialogState extends State<_ZoneDialog> {
           TextField(
             key: const Key('privacy-zone-radius'),
             controller: _radius,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+            ],
             decoration: InputDecoration(
               labelText: l10n.privacyZoneRadius,
+              suffixText: widget.units == Units.imperial ? 'mi' : 'm',
               helperText: l10n.privacyZoneRadiusHelp,
             ),
           ),

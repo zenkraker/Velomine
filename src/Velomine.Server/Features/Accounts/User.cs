@@ -39,6 +39,8 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>The language chosen for this account, or null to follow the device. Applies on every device.</summary>
     public string? Language { get; set; }
 
+    /// <summary>"metric" or "imperial". Display only: every value is stored in SI units.</summary>
+    public string Units { get; set; } = "metric";
     /// <summary>An IANA time zone such as "Europe/Rome". Null means UTC. Decides what "today" and "this week" are.</summary>
     public string? TimeZone { get; set; }
 

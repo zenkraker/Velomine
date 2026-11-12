@@ -3,6 +3,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/result.dart';
+import '../../core/units.dart';
 import '../rides/detail/ride_series.dart';
 import 'coach_data.dart';
 import 'coach_state.dart';
@@ -42,7 +43,10 @@ class CoachRideViewModel extends _$CoachRideViewModel {
     if (ride != null && ride.status == 'ready') {
       // No samples or laps leaves the numbers usable; the file simply has none.
       series = switch (await data.rideStreams(clubId, userId, rideId)) {
-        Ok(:final value) when value != null => RideSeries.from(value),
+        Ok(:final value) when value != null => RideSeries.from(
+          value,
+          ref.read(unitsChoiceViewModelProvider),
+        ),
         _ => null,
       };
       laps =

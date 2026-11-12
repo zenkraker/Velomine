@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../../core/failure.dart';
 import '../../../core/providers.dart';
 import '../../../core/result.dart';
+import '../../../core/units.dart';
 import 'ride_series.dart';
 
 part 'ride_detail_data.g.dart';
@@ -19,11 +20,14 @@ class RideDetailData {
   Future<Result<RideResponse?>> ride(String id) =>
       _rides.getRide(id).guard(FailureAction.loadRide);
 
-  Future<Result<RideSeries?>> series(String id) async =>
+  Future<Result<RideSeries?>> series(String id, Units units) async =>
       (await _rides
               .getRideStreams(id, maxPoints: 1200)
               .guard(FailureAction.loadRide))
-          .map((streams) => streams == null ? null : RideSeries.from(streams));
+          .map(
+            (streams) =>
+                streams == null ? null : RideSeries.from(streams, units),
+          );
 
   Future<Result<List<LapResponse>>> laps(String id) async =>
       (await _rides.getRideLaps(id).guard(FailureAction.loadRide))

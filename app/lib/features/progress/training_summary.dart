@@ -1,17 +1,19 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/stat_tile.dart';
 
 /// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
-class TrainingSummary extends StatelessWidget {
+class TrainingSummary extends ConsumerWidget {
   const TrainingSummary({
     super.key,
     required this.training,
@@ -24,7 +26,7 @@ class TrainingSummary extends StatelessWidget {
   final Future<void> Function(int days) onDays;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -76,7 +78,10 @@ class TrainingSummary extends StatelessWidget {
                 ),
                 StatTile(
                   label: l10n.statDistance,
-                  value: km(training.distanceM),
+                  value: km(
+                    ref.watch(unitsChoiceViewModelProvider),
+                    training.distanceM,
+                  ),
                   valueKey: const Key('training-distance'),
                 ),
               ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
@@ -268,7 +269,7 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
                           DropdownMenuItem(
                             value: route.id,
                             child: Text(
-                              '${route.name} · ${km(route.distanceM)}',
+                              '${route.name} · ${km(ref.watch(unitsChoiceViewModelProvider), route.distanceM)}',
                             ),
                           ),
                       ],

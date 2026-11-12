@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
@@ -153,7 +154,7 @@ class ClubRideDetailScreen extends ConsumerWidget {
                   SectionCard(
                     title: l10n.rideRoute,
                     description:
-                        '${ride.routeName} · ${routeLineOf(route.distanceM, route.climbingM)}',
+                        '${ride.routeName} · ${routeLineOf(ref.watch(unitsChoiceViewModelProvider), route.distanceM, route.climbingM)}',
                     children: [
                       RoutePreview(
                         latitude: route.latitude,

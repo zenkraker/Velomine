@@ -20,6 +20,7 @@ import 'core/solo_hint.dart';
 import 'core/telemetry.dart';
 import 'core/theme.dart';
 import 'core/theme_choice.dart';
+import 'core/units.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/admin/admin_screen.dart';
 import 'features/auth/register_screen.dart';
@@ -113,7 +114,8 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
     _router = _createRouter();
   }
 
-  /// Applies the account's language on sign-in. With no account choice the app follows the device.
+  /// Applies the account's language and units on sign-in. With no account choice
+  /// the app follows the device for language, and shows metric for units.
   void _applyAccountLanguage() {
     if (_languageSynced) return;
     final me = ref.read(sessionProvider).me;
@@ -122,6 +124,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
     if (me.language != null) {
       ref.read(languageChoiceViewModelProvider.notifier).adopt(me.language);
     }
+    ref.read(unitsChoiceViewModelProvider.notifier).adopt(me.units);
   }
 
   /// The account's language follows the session; member data is scoped by the
@@ -132,6 +135,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       _applyAccountLanguage();
     } else if (session.status == SessionStatus.signedOut) {
       ref.read(languageChoiceViewModelProvider.notifier).forget();
+      ref.read(unitsChoiceViewModelProvider.notifier).forget();
       _languageSynced = false;
       // Never carry one member's telemetry choice into the next sign-in.
       unawaited(ref.read(telemetryStoreProvider).clear());

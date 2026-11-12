@@ -86,6 +86,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.BirthYear,
             user.MaxHeartRate,
             user.Language,
+            user.Units,
             user.TimeZone,
             FirstDayOfWeek = WeekDays.Name(user.FirstDayOfWeek),
             user.EmailNotifications,

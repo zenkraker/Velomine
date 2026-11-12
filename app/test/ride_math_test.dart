@@ -8,6 +8,7 @@ import 'package:velomine/features/rides/detail/ride_series.dart';
 import 'package:velomine/features/rides/detail/route_painter.dart';
 import 'package:velomine/features/rides/detail/scale.dart';
 import 'package:velomine_api/api.dart';
+import 'package:velomine/core/units.dart';
 
 void main() {
   group('map projection', () {
@@ -187,7 +188,7 @@ void main() {
     }
 
     test('RideSeries_ShouldChartOnlyPresentSignals_WhenBuiltFromStreams', () {
-      final series = RideSeries.from(streams());
+      final series = RideSeries.from(streams(), Units.metric);
 
       expect(series.series.map((s) => s.id), [
         'elevation',
@@ -198,7 +199,10 @@ void main() {
     });
 
     test('RideSeries_ShouldUseFileSpeedInKmh_WhenSpeedIsPresent', () {
-      final series = RideSeries.from(streams(speed: List.filled(60, 8.0)));
+      final series = RideSeries.from(
+        streams(speed: List.filled(60, 8.0)),
+        Units.metric,
+      );
 
       expect(
         series.series.firstWhere((s) => s.id == 'speed').values.first,
@@ -207,15 +211,20 @@ void main() {
     });
 
     test('RideSeries_ShouldDeriveSpeedFromPositionsAtTenMetresPerSecond_WhenNoSpeed', () {
-      final speed = RideSeries.from(streams()).series
-          .firstWhere((s) => s.id == 'speed');
+      final speed = RideSeries.from(
+        streams(),
+        Units.metric,
+      ).series.firstWhere((s) => s.id == 'speed');
 
       expect(speed.average, closeTo(36, 0.2));
       expect(speed.max, closeTo(36, 0.5));
     });
 
     test('RideSeries_ShouldOmitAllGapSignals_WhenEveryValueIsNull', () {
-      final series = RideSeries.from(streams(cadence: List.filled(60, null)));
+      final series = RideSeries.from(
+        streams(cadence: List.filled(60, null)),
+        Units.metric,
+      );
 
       expect(series.series.any((s) => s.id == 'cadence'), isFalse);
     });
@@ -235,6 +244,7 @@ void main() {
           cadence: const [],
           temperature: const [],
         ),
+        Units.metric,
       );
 
       expect(series.route.length, 3);
@@ -261,6 +271,7 @@ void main() {
             cadence: const [],
             temperature: const [],
           ),
+          Units.metric,
         );
 
         expect(series.series.any((s) => s.id == 'speed'), isFalse);
@@ -292,6 +303,7 @@ void main() {
             latitude: const [46.0, 46.00001, null, null, 46.00005],
             longitude: const [11.0, 11.0, null, null, 11.0],
           ),
+          Units.metric,
         );
 
         expect(series.route, hasLength(3));
@@ -310,6 +322,7 @@ void main() {
             latitude: const [null, 46.0, 46.00001],
             longitude: const [null, 11.0, 11.0],
           ),
+          Units.metric,
         );
 
         expect(series.route, hasLength(2));

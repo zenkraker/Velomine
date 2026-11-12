@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/units.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
@@ -141,7 +142,10 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                             subtitle: Text(
                               [
                                 dateTime(ride.startTime),
-                                km(ride.distanceM),
+                                km(
+                                  ref.watch(unitsChoiceViewModelProvider),
+                                  ride.distanceM,
+                                ),
                               ].join(' · '),
                             ),
                             enabled: !s.draftLoad.running,
@@ -169,7 +173,13 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                         tileUrl: widget.tileUrl,
                         attribution: widget.attribution,
                       ),
-                      Text(routeLineOf(draft.distanceM, draft.climbingM)),
+                      Text(
+                        routeLineOf(
+                          ref.watch(unitsChoiceViewModelProvider),
+                          draft.distanceM,
+                          draft.climbingM,
+                        ),
+                      ),
                     ],
                   ),
                   SectionCard(
