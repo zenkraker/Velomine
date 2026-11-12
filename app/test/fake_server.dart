@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -177,6 +178,14 @@ class FakeServer {
 
   /// The member's RPE and note per ride id.
   final rideFeels = <String, Map<String, Object?>>{};
+
+  /// Whether the fake server can take a supporter key, and the keys it accepts.
+  /// Any other key is refused as invalid.
+  bool supporterAvailable = true;
+  final supporterKeys = <String>{'SUPPORTER-1-ADA'};
+
+  /// The supporter licence by the account's email, as the server keeps it.
+  final supporterLicences = <String, Map<String, Object?>>{};
 
   /// What the admin settings screen is told, and the read-only status of what only the environment sets.
   final adminSettings = <String, Object?>{
@@ -830,11 +839,15 @@ extension on FakeServer {
         !path.startsWith('/api/v1/sharing') &&
         !path.startsWith('/api/v1/privacy') &&
         !path.startsWith('/api/v1/wellbeing') &&
+        !path.startsWith('/api/v1/supporter') &&
         !path.startsWith('/api/v1/admin')) {
       return null;
     }
     if (path.startsWith('/api/v1/wellbeing')) {
       return _wellbeing(request, path, json);
+    }
+    if (path.startsWith('/api/v1/supporter')) {
+      return _supporter(request, path, caller, json);
     }
     if (path.startsWith('/api/v1/clubs')) {
       return _coach(request, path, caller, json);
@@ -1428,6 +1441,71 @@ extension on FakeServer {
       return json({'checkIns': checkIns});
     }
 
+    return http.Response('', 404);
+  }
+
+  /// The supporter licence status the server answers, with the club's when the
+  /// caller is in a club whose owner activated one.
+  http.Response _supporter(
+    http.Request request,
+    String path,
+    FakeAccount caller,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    Map<String, Object?>? rider() {
+      final licence = supporterLicences[caller.email];
+      if (licence == null) return null;
+      return {...licence, 'activatedAt': '2026-11-12T09:30:00Z'};
+    }
+
+    Map<String, Object?> status() => {
+      'available': supporterAvailable,
+      'rider': rider(),
+      'club': null,
+    };
+
+    if (path == '/api/v1/supporter' && request.method == 'GET') {
+      return json(status());
+    }
+    if (path == '/api/v1/supporter/activate' && request.method == 'POST') {
+      if (!supporterAvailable) {
+        return http.Response(
+          '{"errors":{"generalErrors":["Supporter licences are not available on this server."]}}',
+          503,
+        );
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      if (!supporterKeys.contains(body['key'])) {
+        return http.Response(
+          '{"errors":{"generalErrors":["That licence key is not valid. Check that you copied all of it."]}}',
+          400,
+        );
+      }
+      if (rider() != null) {
+        return http.Response(
+          '{"errors":{"generalErrors":["You already have a supporter licence."]}}',
+          409,
+        );
+      }
+      supporterLicences[caller.email] = {
+        'holder': caller.name,
+        'serial': 42,
+        'hidden': false,
+      };
+      return json(status());
+    }
+    if (path == '/api/v1/supporter/hidden' && request.method == 'PUT') {
+      final licence = supporterLicences[caller.email];
+      if (licence == null) {
+        return http.Response(
+          '{"errors":{"generalErrors":["You do not have a supporter licence."]}}',
+          404,
+        );
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      licence['hidden'] = body['hidden'] as bool? ?? false;
+      return json({...licence, 'activatedAt': '2026-11-12T09:30:00Z'});
+    }
     return http.Response('', 404);
   }
 
@@ -2361,6 +2439,7 @@ Future<void> startApp(
   HomeLocationStore? homeLocationStore,
   SoloHintStore? soloHintStore,
   List<Override> overrides = const [],
+  ValueChanged<GoRouter>? onRouter,
 }) async {
   await tester.runAsync(session.restore);
   await tester.pumpWidget(
@@ -2394,7 +2473,7 @@ Future<void> startApp(
         changeServerProvider.overrideWithValue(onChangeServer),
         ...overrides,
       ],
-      child: const VelomineApp(),
+      child: VelomineApp(onRouter: onRouter),
     ),
   );
   await tester.pumpAndSettle();

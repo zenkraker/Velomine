@@ -77,6 +77,7 @@ class HomeShell extends ConsumerWidget {
     if (path.startsWith('/join')) return l10n.joinTitle;
     if (path.startsWith('/profile/two-factor')) return l10n.twoFactorNavTitle;
     if (path.startsWith('/profile/sessions')) return l10n.sessionsNavTitle;
+    if (path.startsWith('/profile/supporter')) return l10n.supporterSignInTitle;
     if (path.startsWith('/profile')) return l10n.profileTitle;
     if (path.startsWith('/privacy')) return l10n.privacyTitle;
     if (path.startsWith('/notifications')) return l10n.notifications;

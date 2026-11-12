@@ -218,6 +218,9 @@ Class | Method | HTTP request | Description
 *SharingApi* | [**getShareViews**](doc//SharingApi.md#getshareviews) | **GET** /api/v1/sharing/views | 
 *SharingApi* | [**getSharing**](doc//SharingApi.md#getsharing) | **GET** /api/v1/sharing | 
 *SharingApi* | [**updateSharing**](doc//SharingApi.md#updatesharing) | **PUT** /api/v1/sharing | 
+*SupporterApi* | [**activateSupporter**](doc//SupporterApi.md#activatesupporter) | **POST** /api/v1/supporter/activate | 
+*SupporterApi* | [**getSupporterStatus**](doc//SupporterApi.md#getsupporterstatus) | **GET** /api/v1/supporter | 
+*SupporterApi* | [**setSupporterHidden**](doc//SupporterApi.md#setsupporterhidden) | **PUT** /api/v1/supporter/hidden | 
 *WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
 *WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
 *WellbeingApi* | [**listCheckIns**](doc//WellbeingApi.md#listcheckins) | **GET** /api/v1/wellbeing/check-ins | 
@@ -227,6 +230,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [ActivateSupporterRequest](doc//ActivateSupporterRequest.md)
  - [AdminClubListResponse](doc//AdminClubListResponse.md)
  - [AdminClubResponse](doc//AdminClubResponse.md)
  - [AdminUserSummary](doc//AdminUserSummary.md)
@@ -249,6 +253,7 @@ Class | Method | HTTP request | Description
  - [ClubRideListResponse](doc//ClubRideListResponse.md)
  - [ClubRideParticipantResponse](doc//ClubRideParticipantResponse.md)
  - [ClubRideSummaryResponse](doc//ClubRideSummaryResponse.md)
+ - [ClubSupporterResponse](doc//ClubSupporterResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
  - [CoachRpeResponse](doc//CoachRpeResponse.md)
@@ -324,6 +329,7 @@ Class | Method | HTTP request | Description
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
+ - [RiderLicenceResponse](doc//RiderLicenceResponse.md)
  - [RouteDetailResponse](doc//RouteDetailResponse.md)
  - [RouteDownloadLinkResponse](doc//RouteDownloadLinkResponse.md)
  - [RouteDraftResponse](doc//RouteDraftResponse.md)
@@ -345,6 +351,7 @@ Class | Method | HTTP request | Description
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetRideDetailsRequest](doc//SetRideDetailsRequest.md)
  - [SetRideTypeRequest](doc//SetRideTypeRequest.md)
+ - [SetSupporterHiddenRequest](doc//SetSupporterHiddenRequest.md)
  - [SetTelemetryRequest](doc//SetTelemetryRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
@@ -356,6 +363,7 @@ Class | Method | HTTP request | Description
  - [SsoStatus](doc//SsoStatus.md)
  - [StartClubRequest](doc//StartClubRequest.md)
  - [StartRideImportResponse](doc//StartRideImportResponse.md)
+ - [SupporterStatusResponse](doc//SupporterStatusResponse.md)
  - [TelemetryResponse](doc//TelemetryResponse.md)
  - [TemplatePartRequest](doc//TemplatePartRequest.md)
  - [TemplatePartResponse](doc//TemplatePartResponse.md)

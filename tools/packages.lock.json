@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "Microsoft.DotNet.ILCompiler": {
+        "type": "Direct",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "XhVxi/2jmpLFKliWqsuX/ibWxaSyJ0hb+IDhyQd/GrkQf8GJPJ9AVW5jlbtGtv+a1PXYa8re+zqdFg5mn1cuTg=="
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "gGRO76tg88RCExNUJO6ZkOnZY0IxB1qUZT3zxu9X8JwWXubvVhyV9IS5Qh0C4qYSSgZDClRLtJroe4fgEJXKdA=="
+      }
+    },
+    "net10.0/linux-x64": {}
+  }
+}

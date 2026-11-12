@@ -2138,5 +2138,47 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "supporterSignInTitle": "Supporter",
+  "supporterBecome": "Become a supporter",
+  "supporterKey": "Licence key",
+  "supporterKeyHelp": "Paste the key you were sent. It is checked offline, so nobody sees who you are.",
+  "supporterActivate": "Activate",
+  "supporterKeyInvalid": "That key is not valid. Check that you pasted all of it.",
+  "supporterAlreadyActivated": "You already have a supporter licence, or this key was already activated.",
+  "supporterClubOwnerOnly": "Only the owner of the club can activate a club licence.",
+  "supporterUnavailable": "This server does not accept supporter licences.",
+  "supporterActivated": "Licence activated",
+  "supporterThanksName": "Thank you, {name}.",
+  "@supporterThanksName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "supporterBody": "You just made Velomine a little freer. Nothing changes: everything stays everyone's, and your data stays yours.",
+  "supporterSerialNumber": "Supporter no. {serial} · {date}",
+  "@supporterSerialNumber": {
+    "placeholders": {
+      "serial": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "supporterKeyVerified": "Key verified",
+  "supporterReplay": "Replay",
+  "supporterBadgeReplayHint": "Plays the licence moment again. Three quick taps.",
+  "supporterContinue": "Continue",
+  "supporter": "Supporter",
+  "supporterAppearsOnProfile": "appears on your profile",
+  "supporterHideBadge": "Hide supporter badge",
+  "supporterHideBadgeHelp": "The licence still counts. The badge is yours to show or hide.",
+  "actionLoadSupporter": "load your supporter licence",
+  "actionActivateSupporter": "activate the licence",
+  "actionSaveSupporter": "save your supporter badge"
 }

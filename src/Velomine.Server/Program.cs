@@ -18,6 +18,7 @@ using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Server;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Supporter;
 using Velomine.Server.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +43,7 @@ builder.Services.AddSharing(builder.Configuration);
 builder.Services.AddRoutes();
 builder.Services.AddBikes(builder.Configuration);
 builder.Services.AddClubs(builder.Configuration);
+builder.Services.AddSupporter(builder.Configuration);
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
 builder.Services.OpenApiDocument(o =>

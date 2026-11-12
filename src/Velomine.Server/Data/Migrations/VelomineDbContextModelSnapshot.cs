@@ -2360,6 +2360,62 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("view_log", "sharing");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Supporter.Licence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("activated_at");
+
+                    b.Property<Guid?>("ClubId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("club_id");
+
+                    b.Property<bool>("Hidden")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hidden");
+
+                    b.Property<string>("Holder")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("holder");
+
+                    b.Property<int>("Serial")
+                        .HasColumnType("integer")
+                        .HasColumnName("serial");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_licences");
+
+                    b.HasIndex("ClubId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_licences_club_id");
+
+                    b.HasIndex("Serial")
+                        .IsUnique()
+                        .HasDatabaseName("ix_licences_serial");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_licences_user_id");
+
+                    b.ToTable("licences", "supporter", t =>
+                        {
+                            t.HasCheckConstraint("ck_supporter_licences_holder", "(user_id IS NULL) <> (club_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_supporter_licences_serial", "serial > 0");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2895,6 +2951,21 @@ namespace Velomine.Server.Data.Migrations
                         .HasForeignKey("RideId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_view_log_rides_ride_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Supporter.Licence", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_licences_clubs_club_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_licences_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>

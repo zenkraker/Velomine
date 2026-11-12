@@ -68,7 +68,7 @@ member owns the data, and nobody pays again to see their own history.
   guided setup. No per-seat pricing, no feature tiers, no paid add-ons, and accepting a
   member inside a band never changes the bill. A rider on their own pays one solo fee a year.
 - Self-hosting is free under AGPL-3.0, for riders and clubs alike. An optional supporter
-  licence (a one-time rider fee or a yearly club fee) funds the project: it unlocks
+  licence (a one-time rider fee or a one-time club fee) funds the project: it unlocks
   nothing, never limits seats and never blocks member data.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.

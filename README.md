@@ -59,6 +59,7 @@ Set them in a file named `.env` next to `docker-compose.yml` (for example `VELOM
 | `VELOMINE__SSO__AUTHORITY`, `VELOMINE__SSO__CLIENTID`, `VELOMINE__SSO__CLIENTSECRET` | empty | Single sign-on is on when all three are set. In the provider, allow the redirect address `https://your-club-host/signin-oidc`. `VELOMINE__SSO__DISPLAYNAME` is the button text; `VELOMINE__SSO__AUTOCREATEUSERS=false` limits sign-in to existing accounts. |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | `false` | Set to `true` behind a reverse proxy that ends TLS, so Velomine builds `https` addresses. |
 | `VELOMINE__SMTP__USER`, `VELOMINE__SMTP__PASSWORD` | empty | The SMTP login, if the server needs one. **Environment only, by design:** they are never stored in the database or shown in the app, and neither are the single sign-on secrets. The admin Settings page shows email and single sign-on read-only, with a *Send a test email* button. |
+| `VELOMINE__SUPPORTER__PUBLICKEY` | empty | The issuer's ECDSA P-256 public key, base64 of the SPKI DER form (`tools/supporter-key.cs gen` prints it). The optional supporter licence is off until it is set; with it off, activation answers `503` and the server works exactly the same. Set it only on the instance that should accept licences: a licence unlocks no feature. |
 
 The defaults are for trying it out on your own machine only. Do not expose this setup to the internet as it is.
 

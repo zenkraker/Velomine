@@ -59,6 +59,10 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .OrderBy(s => s.CreatedAt)
             .Select(s => new { s.PlannedRide.Title, s.PlannedRide.StartsAt, s.CreatedAt })
             .ToListAsync(ct);
+        var licences = await db.SupporterLicences.AsNoTracking()
+            .Where(l => l.UserId == userId || db.ClubMemberships.Any(m => m.UserId == userId && m.ClubId == l.ClubId))
+            .OrderBy(l => l.ActivatedAt)
+            .ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -242,6 +246,17 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             await target.WriteAsync(RouteGeometry.ToGpx(route.Name, route.Description, RouteGeometry.PointsOf(route.Line!)), ct);
         }
         await AddJsonAsync(zip, "club-rides.json", signUps, ct);
+        await AddJsonAsync(zip, "supporter.json", licences.Select(l => new
+        {
+            l.Holder,
+            l.Serial,
+            IsClubLicence = l.ClubId != null,
+            ClubName = l.ClubId == null
+                ? null
+                : memberships.FirstOrDefault(m => m.ClubId == l.ClubId)?.Club.Name,
+            l.ActivatedAt,
+            l.Hidden,
+        }), ct);
         await AddTextAsync(zip, "README.txt", ReadMe, ct);
     }
 
@@ -280,6 +295,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         clubs.json          the club you belong to, your role, and any open join request
         routes.json         the routes you added to the club library, and routes/ holds each one as a GPX file
         club-rides.json     the club rides you said you were in
+        supporter.json      your supporter licence, and your club's when you are in a club that has one
         files/              every ride file exactly as you uploaded it (FIT, GPX or TCX). They hold all the recorded
                             samples (position, speed, power, heart rate, cadence), so any other tool can read them.
 
