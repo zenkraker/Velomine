@@ -71,7 +71,7 @@ Set them in a file named `.env` next to `docker-compose.yml`. [`.env.example`](.
 | `VELOMINE_VERSION` | `dev` | The published images to run, for example `0.1.0`. Unset, `docker compose up --build` builds them from source. |
 | `VELOMINE_PORT` | `8080` | The port of the app on this machine. Not published with `compose.demo.yaml`. With Dex, also change the redirect address in `deploy/dex/config.yaml`. Set `VELOMINE__PUBLICURL` to match. |
 | `VELOMINE_DOMAIN`, `VELOMINE_ACME_EMAIL` | none | `compose.demo.yaml` only, and required there: the app's host name, and Let's Encrypt's contact for expiry notices. |
-| `VELOMINE_SITE_DOMAIN` | `VELOMINE_DOMAIN` | `compose.demo.yaml` only: a second host name that serves only the presentation site and redirects everything else (sign-in, the app, the API) to `VELOMINE_DOMAIN`. Its DNS points at the same server. |
+| `VELOMINE_SITE_DOMAIN` | `VELOMINE_DOMAIN` | `compose.demo.yaml` only: a second host name for the presentation site. Each name then serves only its own part and redirects the other's paths to the other name, and `/` on `VELOMINE_DOMAIN` opens the app. Its DNS points at the same server. |
 | `POSTGRES_PASSWORD` | `velomine-dev` | The database password. Set it before the first start; the database keeps the old one afterwards. |
 | `CONNECTIONSTRINGS__VELOMINE` | the `postgres` container | An existing PostgreSQL server instead, for example `Host=db.example;Database=velomine;Username=velomine;Password=...`. |
 

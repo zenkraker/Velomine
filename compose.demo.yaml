@@ -6,8 +6,8 @@
 #   COMPOSE_FILE=docker-compose.yml:compose.demo.yaml   so plain `docker compose` commands use both files
 #   VELOMINE_VERSION=0.3.1                              the released images to run (never `latest`)
 #   VELOMINE_DOMAIN=demo.velomine.eu                    the host name of the app; its DNS points at this server
-#   VELOMINE_SITE_DOMAIN=velomine.eu                    optional: a second name that serves only the presentation
-#                                                       site and sends every other path to VELOMINE_DOMAIN
+#   VELOMINE_SITE_DOMAIN=velomine.eu                    optional: a second name for the presentation site only;
+#                                                       each name then redirects the other's paths to it
 #   VELOMINE_ACME_EMAIL=ops@example.org                 Let's Encrypt's contact for expiry notices
 #   VELOMINE__PUBLICURL=https://demo.velomine.eu         the app's address, not the site's
 #   POSTGRES_PASSWORD, VELOMINE__ADMIN__EMAIL, VELOMINE__ADMIN__PASSWORD

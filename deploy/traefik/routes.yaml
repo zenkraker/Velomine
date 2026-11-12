@@ -1,12 +1,25 @@
 # Traefik's routes for compose.demo.yaml, read through its file provider. Traefik renders this file as a Go template
 # first (so template braces must not appear in comments either) and fills in the host names from the environment
-# compose.demo.yaml gives it: VELOMINE_DOMAIN and VELOMINE_SITE_DOMAIN.
+# compose.demo.yaml gives it: VELOMINE_DOMAIN (the app) and VELOMINE_SITE_DOMAIN (the presentation site).
 #
-# Three routers, by priority. The app's name serves everything. The site's name serves the presentation site's paths
-# (the same list as app/nginx.conf) and redirects anything else, such as /sign-in, to the same path on the app's name.
-# With one name for both (VELOMINE_SITE_DOMAIN unset), the app router outranks the redirect, so it never matches.
+# One name for both (VELOMINE_SITE_DOMAIN unset): one router, and the web image serves everything as it would anywhere.
+# Two names: each serves only its own part and redirects the rest to the other, keeping the path:
+#   site name: the site's pages (the same list as app/nginx.conf); anything else, such as /sign-in, goes to the app.
+#   app name:  the app and the API; the site's pages go to the site, and / opens the app (/rides; it signs in first).
+# robots.txt and /.well-known/ answer on both names, since crawlers and security.txt are per host.
+# Redirects are temporary (302), so browsers do not remember them if prod later answers elsewhere.
 http:
   routers:
+    velomine-app:
+      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`)
+      priority: 100
+      entryPoints: [websecure]
+      service: velomine
+      middlewares: [hsts]
+      tls:
+        certResolver: letsencrypt
+{{- if ne (env "VELOMINE_SITE_DOMAIN") (env "VELOMINE_DOMAIN") }}
+
     velomine-site:
       rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`) && (Path(`/`) || PathRegexp(`^/(status|pricing|demo|contact|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || PathPrefix(`/.well-known/`) || Path(`/robots.txt`) || Path(`/sitemap.xml`))
       priority: 300
@@ -15,34 +28,54 @@ http:
       middlewares: [hsts]
       tls:
         certResolver: letsencrypt
-    velomine-app:
-      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`)
-      priority: 200
-      entryPoints: [websecure]
-      service: velomine
-      middlewares: [hsts]
-      tls:
-        certResolver: letsencrypt
     velomine-site-to-app:
       rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`)
-      priority: 100
+      priority: 200
       entryPoints: [websecure]
       service: velomine
       middlewares: [hsts, to-app]
       tls:
         certResolver: letsencrypt
+    velomine-app-to-site:
+      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`) && (PathRegexp(`^/(status|pricing|demo|contact|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || Path(`/sitemap.xml`))
+      priority: 300
+      entryPoints: [websecure]
+      service: velomine
+      middlewares: [hsts, to-site]
+      tls:
+        certResolver: letsencrypt
+    velomine-app-root:
+      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`) && Path(`/`)
+      priority: 300
+      entryPoints: [websecure]
+      service: velomine
+      middlewares: [hsts, app-root]
+      tls:
+        certResolver: letsencrypt
+{{- end }}
 
   middlewares:
     # HTTPS only for a year. nginx in the web image sets the other security headers.
     hsts:
       headers:
         stsSeconds: 31536000
-    # Temporary, so browsers do not remember it if the app moves (prod will answer elsewhere).
+{{- if ne (env "VELOMINE_SITE_DOMAIN") (env "VELOMINE_DOMAIN") }}
     to-app:
       redirectRegex:
-        regex: "^https://[^/]+(.*)"
+        regex: '^https://[^/]+(.*)'
         replacement: 'https://{{ env "VELOMINE_DOMAIN" }}${1}'
         permanent: false
+    to-site:
+      redirectRegex:
+        regex: '^https://[^/]+(.*)'
+        replacement: 'https://{{ env "VELOMINE_SITE_DOMAIN" }}${1}'
+        permanent: false
+    app-root:
+      redirectRegex:
+        regex: '^https://[^/]+/?(\?.*)?$'
+        replacement: 'https://{{ env "VELOMINE_DOMAIN" }}/rides${1}'
+        permanent: false
+{{- end }}
 
   services:
     velomine:
