@@ -80,7 +80,7 @@ Set them in a file named `.env` next to `docker-compose.yml`. [`.env.example`](.
 | Setting | Default | What it does |
 |---------|---------|--------------|
 | `VELOMINE__PUBLICURL` | `http://localhost:8080` | The address members open, used in password reset emails and each member's calendar feed address. Set it to the public address, for example `https://club.example`; the incoming Host header is never used. |
-| `VELOMINE__ADMIN__EMAIL`, `VELOMINE__ADMIN__PASSWORD` | `admin@velomine.local`, `Velomine-dev-1` | The first admin. Only used while the server has no admin. |
+| `VELOMINE__ADMIN__EMAIL`, `VELOMINE__ADMIN__PASSWORD` | `admin@velomine.local`, `Velomine-dev-1` | The first admin. Only used while the server has no admin. The password needs 10 characters or more with an upper-case letter, a lower-case letter and a digit; otherwise the server stops on start with `Could not create the admin`. |
 | `VELOMINE__ACCOUNTS__SIGNUPENABLED` | `true` | Whether new people can create an account. |
 | `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `true` | New accounts wait for an admin to approve them. |
 | `VELOMINE__ACCOUNTS__CLUBCREATIONENABLED` | `false` | Lets a rider without a club start one. Off, only the operator creates clubs. |
@@ -150,6 +150,7 @@ The defaults are for trying it out on your own machine only. Do not expose them 
 | The sign-in provider says the redirect address is wrong | You changed `VELOMINE_PORT` without editing `deploy/dex/config.yaml`. |
 | `required variable VELOMINE_DOMAIN is missing a value` | You use `compose.demo.yaml`: set `VELOMINE_DOMAIN` and `VELOMINE_ACME_EMAIL` in `.env`. |
 | You still see the old app after pulling new code | Run `docker compose up --build` again. |
+| The web container is unhealthy, or every page answers 502 | The server is not running. `docker compose logs server` says why; `Could not create the admin: Passwords must ...` means `VELOMINE__ADMIN__PASSWORD` breaks the rules above. |
 | You forgot the admin password | The setting only applies while no admin exists. Run `docker compose down -v` to start over (this deletes the data). |
 | Something else | `docker compose logs -f server` shows the server's log; add `web`, `postgres` or `dex` for those. |
 
