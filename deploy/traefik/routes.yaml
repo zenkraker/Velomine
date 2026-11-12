@@ -1,0 +1,51 @@
+# Traefik's routes for compose.demo.yaml, read through its file provider. Traefik renders this file as a Go template
+# first (so template braces must not appear in comments either) and fills in the host names from the environment
+# compose.demo.yaml gives it: VELOMINE_DOMAIN and VELOMINE_SITE_DOMAIN.
+#
+# Three routers, by priority. The app's name serves everything. The site's name serves the presentation site's paths
+# (the same list as app/nginx.conf) and redirects anything else, such as /sign-in, to the same path on the app's name.
+# With one name for both (VELOMINE_SITE_DOMAIN unset), the app router outranks the redirect, so it never matches.
+http:
+  routers:
+    velomine-site:
+      rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`) && (Path(`/`) || PathRegexp(`^/(status|pricing|demo|contact|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || PathPrefix(`/.well-known/`) || Path(`/robots.txt`) || Path(`/sitemap.xml`))
+      priority: 300
+      entryPoints: [websecure]
+      service: velomine
+      middlewares: [hsts]
+      tls:
+        certResolver: letsencrypt
+    velomine-app:
+      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`)
+      priority: 200
+      entryPoints: [websecure]
+      service: velomine
+      middlewares: [hsts]
+      tls:
+        certResolver: letsencrypt
+    velomine-site-to-app:
+      rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`)
+      priority: 100
+      entryPoints: [websecure]
+      service: velomine
+      middlewares: [hsts, to-app]
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    # HTTPS only for a year. nginx in the web image sets the other security headers.
+    hsts:
+      headers:
+        stsSeconds: 31536000
+    # Temporary, so browsers do not remember it if the app moves (prod will answer elsewhere).
+    to-app:
+      redirectRegex:
+        regex: "^https://[^/]+(.*)"
+        replacement: 'https://{{ env "VELOMINE_DOMAIN" }}${1}'
+        permanent: false
+
+  services:
+    velomine:
+      loadBalancer:
+        servers:
+          - url: http://web:8080

@@ -5,16 +5,18 @@
 #
 #   COMPOSE_FILE=docker-compose.yml:compose.demo.yaml   so plain `docker compose` commands use both files
 #   VELOMINE_VERSION=0.3.1                              the released images to run (never `latest`)
-#   VELOMINE_DOMAIN=demo.velomine.eu                    the host name members open; its DNS points at this server
+#   VELOMINE_DOMAIN=demo.velomine.eu                    the host name of the app; its DNS points at this server
+#   VELOMINE_SITE_DOMAIN=velomine.eu                    optional: a second name that serves only the presentation
+#                                                       site and sends every other path to VELOMINE_DOMAIN
 #   VELOMINE_ACME_EMAIL=ops@example.org                 Let's Encrypt's contact for expiry notices
-#   VELOMINE__PUBLICURL=https://demo.velomine.eu
+#   VELOMINE__PUBLICURL=https://demo.velomine.eu         the app's address, not the site's
 #   POSTGRES_PASSWORD, VELOMINE__ADMIN__EMAIL, VELOMINE__ADMIN__PASSWORD
 #
 # Release or roll back by changing VELOMINE_VERSION, then:  docker compose pull && docker compose up -d --wait
 # `--wait` fails unless the web image reports healthy, and its health check goes through nginx to the server.
 #
-# Traefik reads its one route from the file below, not from the Docker socket, so it has no access to the host's
-# Docker. Needs Docker Compose 2.24 or newer (`configs.content` and `!reset`).
+# Traefik reads its routes from deploy/traefik/routes.yaml, not from the Docker socket, so it has no access to the
+# host's Docker; keep that file next to this one. Needs Docker Compose 2.24 or newer (`!reset`).
 
 services:
   traefik:
@@ -42,14 +44,16 @@ services:
       - --global.sendAnonymousUsage=false
       - --global.checkNewVersion=false
       - --log.level=WARN
-    configs:
-      - source: traefik-routes
-        target: /etc/traefik/routes.yaml
+    environment:
+      # Read by deploy/traefik/routes.yaml. Without a site name, the app's name serves the site too.
+      VELOMINE_DOMAIN: ${VELOMINE_DOMAIN:?set VELOMINE_DOMAIN in .env}
+      VELOMINE_SITE_DOMAIN: ${VELOMINE_SITE_DOMAIN:-${VELOMINE_DOMAIN}}
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     volumes:
+      - ./deploy/traefik/routes.yaml:/etc/traefik/routes.yaml:ro
       - letsencrypt:/letsencrypt
     read_only: true
     security_opt:
@@ -74,29 +78,6 @@ services:
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
-
-configs:
-  traefik-routes:
-    content: |
-      http:
-        routers:
-          velomine:
-            rule: Host(`${VELOMINE_DOMAIN:?set VELOMINE_DOMAIN in .env}`)
-            entryPoints: [websecure]
-            service: velomine
-            middlewares: [hsts]
-            tls:
-              certResolver: letsencrypt
-        middlewares:
-          # HTTPS only for a year. nginx in the web image sets the other security headers.
-          hsts:
-            headers:
-              stsSeconds: 31536000
-        services:
-          velomine:
-            loadBalancer:
-              servers:
-                - url: http://web:8080
 
 volumes:
   letsencrypt:

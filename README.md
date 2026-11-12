@@ -1,5 +1,7 @@
 # Velomine
 
+**Website: [velomine.eu](https://velomine.eu)** · **Try it: [demo.velomine.eu](https://demo.velomine.eu)**
+
 Cycling-only training platform for clubs and teams. Cloud is the default: one shared deployment and database for many clubs. Self-hosting runs the same image and schema for one club. No feature paywall; every member owns their data. Self-hosting is free for riders and clubs; an optional supporter licence funds the project and unlocks nothing.
 
 ## Licence
@@ -48,7 +50,7 @@ Sign in with *Dex (local test)* as `rider@sso.test` / `password`. It also needs 
 
 A server runs the same `docker-compose.yml`, from the images CI publishes instead of a build, behind HTTPS.
 
-1. Put `docker-compose.yml` (and `compose.demo.yaml`, if you want Traefik) in a folder on the server, or clone the repository there.
+1. Clone the repository on the server, or copy `docker-compose.yml` there (plus `compose.demo.yaml` and `deploy/traefik/routes.yaml`, if you want Traefik).
 2. Copy `.env.example` to `.env` next to them and set at least `VELOMINE_VERSION`, `POSTGRES_PASSWORD`, `VELOMINE__PUBLICURL` and the first admin. See *Settings you can change*.
 3. Put HTTPS in front. Either:
    - **Traefik from `compose.demo.yaml`**, which gets Let's Encrypt certificates itself: point the domain's DNS at the server, open ports 80 and 443, and set `COMPOSE_FILE=docker-compose.yml:compose.demo.yaml`, `VELOMINE_DOMAIN` and `VELOMINE_ACME_EMAIL` in `.env`. The public demo runs exactly this.
@@ -68,7 +70,8 @@ Set them in a file named `.env` next to `docker-compose.yml`. [`.env.example`](.
 | `COMPOSE_FILE` | `docker-compose.yml` | The compose files plain `docker compose` commands use. `docker-compose.yml:compose.demo.yaml` adds Traefik. |
 | `VELOMINE_VERSION` | `dev` | The published images to run, for example `0.1.0`. Unset, `docker compose up --build` builds them from source. |
 | `VELOMINE_PORT` | `8080` | The port of the app on this machine. Not published with `compose.demo.yaml`. With Dex, also change the redirect address in `deploy/dex/config.yaml`. Set `VELOMINE__PUBLICURL` to match. |
-| `VELOMINE_DOMAIN`, `VELOMINE_ACME_EMAIL` | none | `compose.demo.yaml` only, and required there: the host name members open, and Let's Encrypt's contact for expiry notices. |
+| `VELOMINE_DOMAIN`, `VELOMINE_ACME_EMAIL` | none | `compose.demo.yaml` only, and required there: the app's host name, and Let's Encrypt's contact for expiry notices. |
+| `VELOMINE_SITE_DOMAIN` | `VELOMINE_DOMAIN` | `compose.demo.yaml` only: a second host name that serves only the presentation site and redirects everything else (sign-in, the app, the API) to `VELOMINE_DOMAIN`. Its DNS points at the same server. |
 | `POSTGRES_PASSWORD` | `velomine-dev` | The database password. Set it before the first start; the database keeps the old one afterwards. |
 | `CONNECTIONSTRINGS__VELOMINE` | the `postgres` container | An existing PostgreSQL server instead, for example `Host=db.example;Database=velomine;Username=velomine;Password=...`. |
 
