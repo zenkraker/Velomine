@@ -85,6 +85,41 @@ void main() {
     expect(changed, isTrue);
   });
 
+  testWidgets(
+    'SignInScreen_ShouldOfferCredentialsToPasswordManagers_WhenTheFormOpens',
+    (tester) async {
+      await startApp(tester, server.session(useCookies: false));
+      TextField field(String key) =>
+          tester.widget<TextField>(find.byKey(Key(key)));
+
+      expect(
+        field('email').autofillHints,
+        containsAll([AutofillHints.email, AutofillHints.username]),
+      );
+      expect(field('email').textInputAction, TextInputAction.next);
+      expect(field('password').autofillHints!.first, AutofillHints.password);
+      expect(field('password').textInputAction, TextInputAction.done);
+    },
+  );
+
+  testWidgets(
+    'SignInScreen_ShouldSubmitTheSaveToPasswordManagers_WhenSigningIn',
+    (tester) async {
+      server.add('rider@example.com');
+      await startApp(tester, server.session(useCookies: false));
+      final textInput = tester.testTextInput..log.clear();
+
+      await signIn(tester, 'rider@example.com', 'Rider-pass-123');
+
+      // Before the screen leaves, so the browser still sees the form it just saved.
+      final saves = textInput.log.where(
+        (call) => call.method == 'TextInput.finishAutofillContext',
+      );
+      expect(saves, isNotEmpty);
+      expect(saves.first.arguments, isTrue);
+    },
+  );
+
   testWidgets('SignInScreen_ShouldExplainWrongPassword_WhenPasswordIsWrong', (
     tester,
   ) async {

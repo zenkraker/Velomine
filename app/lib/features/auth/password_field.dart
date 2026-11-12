@@ -13,6 +13,7 @@ class PasswordField extends StatefulWidget {
     this.helperText,
     this.helperMaxLines,
     this.autofillHints,
+    this.textInputAction,
     this.onSubmitted,
   });
 
@@ -25,6 +26,7 @@ class PasswordField extends StatefulWidget {
   final String? helperText;
   final int? helperMaxLines;
   final Iterable<String>? autofillHints;
+  final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
 
   @override
@@ -44,6 +46,10 @@ class _PasswordFieldState extends State<PasswordField> {
       autocorrect: false,
       enableSuggestions: false,
       autofillHints: widget.autofillHints,
+      // The password is the last box on every form that uses this field, so the key that sends goes to the form.
+      textInputAction:
+          widget.textInputAction ??
+          (widget.onSubmitted == null ? null : TextInputAction.done),
       onSubmitted: widget.onSubmitted,
       decoration: InputDecoration(
         labelText: widget.label,
