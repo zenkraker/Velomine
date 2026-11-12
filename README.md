@@ -173,6 +173,7 @@ Not needed for the steps above.
 ## Documents
 
 - [Development environment](docs/development.md)
+- [Running the demo](docs/demo.md)
 - [Architecture](docs/architecture.md)
 - [Code, API and app rules](AGENTS.md)
 - [Product values and scope](docs/design/values.md)

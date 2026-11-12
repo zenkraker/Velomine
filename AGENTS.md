@@ -12,6 +12,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `docs/design/values.md` | Product values, scope, non-goals and decision tests |
 | `docs/design/v2.md` | Inter-club ideas, not committed |
 | `docs/development.md` | How to set up and use the development environment |
+| `docs/demo.md` | How the public demo is deployed, checked and backed up |
 | `docs/dependencies/` | Background evaluations of community libraries |
 | `README.md` | What Velomine is, how to run it, and every setting an operator can change |
 | `site/` | The presentation site: the public claims, pricing and the status page of what works |
