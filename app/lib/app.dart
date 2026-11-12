@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:velomine_api/api.dart';
 
 import 'core/back_guard.dart';
 import 'core/hooks.dart';
@@ -43,6 +44,9 @@ import 'features/routes/route_detail_screen.dart';
 import 'features/routes/route_forms.dart';
 import 'features/routes/routes_screen.dart';
 import 'features/routes/routes_view_model.dart';
+import 'features/supporter/supporter_activation_screen.dart';
+import 'features/supporter/supporter_celebration_screen.dart';
+import 'features/supporter/supporter_view_model.dart';
 import 'features/coach/coach_athlete_screen.dart';
 import 'features/coach/coach_athletes_screen.dart';
 import 'features/coach/coach_ride_screen.dart';
@@ -96,7 +100,10 @@ final changeServerProvider = Provider<Future<void> Function()?>((ref) {
 });
 
 class VelomineApp extends ConsumerStatefulWidget {
-  const VelomineApp({super.key});
+  const VelomineApp({super.key, @visibleForTesting this.onRouter});
+
+  /// Hands the app's router to a test, so it can open an address as a returning member would.
+  final ValueChanged<GoRouter>? onRouter;
 
   @override
   ConsumerState<VelomineApp> createState() => _VelomineAppState();
@@ -111,6 +118,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
     // Not inside initState: it may set the language provider.
     Future.microtask(_followSession);
     _router = _createRouter();
+    widget.onRouter?.call(_router);
   }
 
   /// Applies the account's language on sign-in. With no account choice the app follows the device.
@@ -517,6 +525,36 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
               onAccountDeleted: ref.read(sessionProvider).signOut,
               onPasswordChanged: ref.read(sessionProvider).signOut,
               onOpenPrivacy: () => context.push('/privacy'),
+              onBecomeSupporter: () => context.push('/profile/supporter'),
+              onReplaySupporter: () {
+                final licence = ref
+                    .read(supporterViewModelProvider)
+                    .riderLicence;
+                if (licence != null) {
+                  context.push('/profile/supporter/activated', extra: licence);
+                }
+              },
+            ),
+          ),
+          GoRoute(
+            path: '/profile/supporter',
+            builder: (context, _) => SupporterActivationScreen(
+              onCelebrated: ref.read(supporterViewModelProvider.notifier).load,
+              onDone: () => _backOrGo(context, '/profile'),
+            ),
+          ),
+          GoRoute(
+            path: '/profile/supporter/activated',
+            redirect: (context, state) =>
+                state.extra is RiderLicenceResponse ||
+                    ref.read(supporterViewModelProvider).riderLicence != null
+                ? null
+                : '/profile',
+            builder: (context, state) => SupporterCelebrationScreen(
+              licence:
+                  state.extra as RiderLicenceResponse? ??
+                  ref.read(supporterViewModelProvider).riderLicence!,
+              onContinue: () => _backOrGo(context, '/profile'),
             ),
           ),
           GoRoute(

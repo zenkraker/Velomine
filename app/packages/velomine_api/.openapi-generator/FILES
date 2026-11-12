@@ -18,6 +18,7 @@ lib/api/rides_api.dart
 lib/api/routes_api.dart
 lib/api/server_api.dart
 lib/api/sharing_api.dart
+lib/api/supporter_api.dart
 lib/api/wellbeing_api.dart
 lib/api_client.dart
 lib/api_exception.dart
@@ -27,6 +28,7 @@ lib/auth/authentication.dart
 lib/auth/http_basic_auth.dart
 lib/auth/http_bearer_auth.dart
 lib/auth/oauth.dart
+lib/model/activate_supporter_request.dart
 lib/model/admin_club_list_response.dart
 lib/model/admin_club_response.dart
 lib/model/admin_user_summary.dart
@@ -49,6 +51,7 @@ lib/model/club_ride_detail_response.dart
 lib/model/club_ride_list_response.dart
 lib/model/club_ride_participant_response.dart
 lib/model/club_ride_summary_response.dart
+lib/model/club_supporter_response.dart
 lib/model/coach_athlete_response.dart
 lib/model/coach_athletes_response.dart
 lib/model/coach_rpe_response.dart
@@ -124,6 +127,7 @@ lib/model/ride_import_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
+lib/model/rider_licence_response.dart
 lib/model/route_detail_response.dart
 lib/model/route_download_link_response.dart
 lib/model/route_draft_response.dart
@@ -145,6 +149,7 @@ lib/model/set_my_language_request.dart
 lib/model/set_ride_bike_request.dart
 lib/model/set_ride_details_request.dart
 lib/model/set_ride_type_request.dart
+lib/model/set_supporter_hidden_request.dart
 lib/model/set_telemetry_request.dart
 lib/model/set_user_roles_request.dart
 lib/model/settings_response.dart
@@ -156,6 +161,7 @@ lib/model/sso_info_response.dart
 lib/model/sso_status.dart
 lib/model/start_club_request.dart
 lib/model/start_ride_import_response.dart
+lib/model/supporter_status_response.dart
 lib/model/telemetry_response.dart
 lib/model/template_part_request.dart
 lib/model/template_part_response.dart

@@ -163,7 +163,7 @@ class ApiClient {
   Future<String> serializeAsync(Object? value) async => serialize(value);
 
   @Deprecated('Scheduled for removal in OpenAPI Generator 6.x. Use serializeAsync() instead.')
-  String serialize(Object? value) => value == null ? '' : json.encode(value);
+  String serialize(Object? value) => value == null ? '' : json.encode(value is Map || value is List ? value : (value as dynamic).toJson());
 
   /// Returns a native instance of an OpenAPI class matching the [specified type][targetType].
   static dynamic fromJson(dynamic value, String targetType, {bool growable = false,}) {
@@ -183,6 +183,8 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'ActivateSupporterRequest':
+          return ActivateSupporterRequest.fromJson(value);
         case 'AdminClubListResponse':
           return AdminClubListResponse.fromJson(value);
         case 'AdminClubResponse':
@@ -227,6 +229,8 @@ class ApiClient {
           return ClubRideParticipantResponse.fromJson(value);
         case 'ClubRideSummaryResponse':
           return ClubRideSummaryResponse.fromJson(value);
+        case 'ClubSupporterResponse':
+          return ClubSupporterResponse.fromJson(value);
         case 'CoachAthleteResponse':
           return CoachAthleteResponse.fromJson(value);
         case 'CoachAthletesResponse':
@@ -377,6 +381,8 @@ class ApiClient {
           return RideResponse.fromJson(value);
         case 'RideStreamsResponse':
           return RideStreamsResponse.fromJson(value);
+        case 'RiderLicenceResponse':
+          return RiderLicenceResponse.fromJson(value);
         case 'RouteDetailResponse':
           return RouteDetailResponse.fromJson(value);
         case 'RouteDownloadLinkResponse':
@@ -419,6 +425,8 @@ class ApiClient {
           return SetRideDetailsRequest.fromJson(value);
         case 'SetRideTypeRequest':
           return SetRideTypeRequest.fromJson(value);
+        case 'SetSupporterHiddenRequest':
+          return SetSupporterHiddenRequest.fromJson(value);
         case 'SetTelemetryRequest':
           return SetTelemetryRequest.fromJson(value);
         case 'SetUserRolesRequest':
@@ -441,6 +449,8 @@ class ApiClient {
           return StartClubRequest.fromJson(value);
         case 'StartRideImportResponse':
           return StartRideImportResponse.fromJson(value);
+        case 'SupporterStatusResponse':
+          return SupporterStatusResponse.fromJson(value);
         case 'TelemetryResponse':
           return TelemetryResponse.fromJson(value);
         case 'TemplatePartRequest':

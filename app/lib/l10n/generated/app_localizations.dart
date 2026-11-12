@@ -7033,6 +7033,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{ride}: the ride is cancelled.'**
   String notificationClubRideCancelled(String ride);
+
+  /// No description provided for @supporterSignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporter'**
+  String get supporterSignInTitle;
+
+  /// No description provided for @supporterBecome.
+  ///
+  /// In en, this message translates to:
+  /// **'Become a supporter'**
+  String get supporterBecome;
+
+  /// No description provided for @supporterKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Licence key'**
+  String get supporterKey;
+
+  /// No description provided for @supporterKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the key you were sent. It is checked offline, so nobody sees who you are.'**
+  String get supporterKeyHelp;
+
+  /// No description provided for @supporterActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get supporterActivate;
+
+  /// No description provided for @supporterKeyInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That key is not valid. Check that you pasted all of it.'**
+  String get supporterKeyInvalid;
+
+  /// No description provided for @supporterAlreadyActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a supporter licence, or this key was already activated.'**
+  String get supporterAlreadyActivated;
+
+  /// No description provided for @supporterClubOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the owner of the club can activate a club licence.'**
+  String get supporterClubOwnerOnly;
+
+  /// No description provided for @supporterUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not accept supporter licences.'**
+  String get supporterUnavailable;
+
+  /// No description provided for @supporterActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Licence activated'**
+  String get supporterActivated;
+
+  /// No description provided for @supporterThanksName.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you, {name}.'**
+  String supporterThanksName(String name);
+
+  /// No description provided for @supporterBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You just made Velomine a little freer. Nothing changes: everything stays everyone\'s, and your data stays yours.'**
+  String get supporterBody;
+
+  /// No description provided for @supporterSerialNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporter no. {serial} · {date}'**
+  String supporterSerialNumber(int serial, String date);
+
+  /// No description provided for @supporterKeyVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Key verified'**
+  String get supporterKeyVerified;
+
+  /// No description provided for @supporterReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get supporterReplay;
+
+  /// No description provided for @supporterBadgeReplayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays the licence moment again. Three quick taps.'**
+  String get supporterBadgeReplayHint;
+
+  /// No description provided for @supporterContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get supporterContinue;
+
+  /// No description provided for @supporter.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporter'**
+  String get supporter;
+
+  /// No description provided for @supporterAppearsOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'appears on your profile'**
+  String get supporterAppearsOnProfile;
+
+  /// No description provided for @supporterHideBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide supporter badge'**
+  String get supporterHideBadge;
+
+  /// No description provided for @supporterHideBadgeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The licence still counts. The badge is yours to show or hide.'**
+  String get supporterHideBadgeHelp;
+
+  /// No description provided for @actionLoadSupporter.
+  ///
+  /// In en, this message translates to:
+  /// **'load your supporter licence'**
+  String get actionLoadSupporter;
+
+  /// No description provided for @actionActivateSupporter.
+  ///
+  /// In en, this message translates to:
+  /// **'activate the licence'**
+  String get actionActivateSupporter;
+
+  /// No description provided for @actionSaveSupporter.
+  ///
+  /// In en, this message translates to:
+  /// **'save your supporter badge'**
+  String get actionSaveSupporter;
 }
 
 class _AppLocalizationsDelegate

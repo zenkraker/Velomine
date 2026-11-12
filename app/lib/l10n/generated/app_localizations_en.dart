@@ -4003,4 +4003,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String notificationClubRideCancelled(String ride) {
     return '$ride: the ride is cancelled.';
   }
+
+  @override
+  String get supporterSignInTitle => 'Supporter';
+
+  @override
+  String get supporterBecome => 'Become a supporter';
+
+  @override
+  String get supporterKey => 'Licence key';
+
+  @override
+  String get supporterKeyHelp =>
+      'Paste the key you were sent. It is checked offline, so nobody sees who you are.';
+
+  @override
+  String get supporterActivate => 'Activate';
+
+  @override
+  String get supporterKeyInvalid =>
+      'That key is not valid. Check that you pasted all of it.';
+
+  @override
+  String get supporterAlreadyActivated =>
+      'You already have a supporter licence, or this key was already activated.';
+
+  @override
+  String get supporterClubOwnerOnly =>
+      'Only the owner of the club can activate a club licence.';
+
+  @override
+  String get supporterUnavailable =>
+      'This server does not accept supporter licences.';
+
+  @override
+  String get supporterActivated => 'Licence activated';
+
+  @override
+  String supporterThanksName(String name) {
+    return 'Thank you, $name.';
+  }
+
+  @override
+  String get supporterBody =>
+      'You just made Velomine a little freer. Nothing changes: everything stays everyone\'s, and your data stays yours.';
+
+  @override
+  String supporterSerialNumber(int serial, String date) {
+    return 'Supporter no. $serial · $date';
+  }
+
+  @override
+  String get supporterKeyVerified => 'Key verified';
+
+  @override
+  String get supporterReplay => 'Replay';
+
+  @override
+  String get supporterBadgeReplayHint =>
+      'Plays the licence moment again. Three quick taps.';
+
+  @override
+  String get supporterContinue => 'Continue';
+
+  @override
+  String get supporter => 'Supporter';
+
+  @override
+  String get supporterAppearsOnProfile => 'appears on your profile';
+
+  @override
+  String get supporterHideBadge => 'Hide supporter badge';
+
+  @override
+  String get supporterHideBadgeHelp =>
+      'The licence still counts. The badge is yours to show or hide.';
+
+  @override
+  String get actionLoadSupporter => 'load your supporter licence';
+
+  @override
+  String get actionActivateSupporter => 'activate the licence';
+
+  @override
+  String get actionSaveSupporter => 'save your supporter badge';
 }

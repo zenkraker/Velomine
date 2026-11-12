@@ -13,6 +13,7 @@ using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Import;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Supporter;
 using Velomine.Server.Features.Wellbeing;
 
 namespace Velomine.Server.Data;
@@ -89,6 +90,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<RideSignUp> RideSignUps => Set<RideSignUp>();
 
     public DbSet<CalendarFeed> CalendarFeeds => Set<CalendarFeed>();
+
+    public DbSet<Licence> SupporterLicences => Set<Licence>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

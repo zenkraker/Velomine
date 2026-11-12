@@ -148,6 +148,9 @@ enum FailureAction {
   leaveClubRide,
   loadCalendarFeed,
   saveCalendarFeed,
+  loadSupporter,
+  activateSupporter,
+  saveSupporter,
 }
 
 class Failure {
@@ -304,6 +307,9 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.leaveClubRide => l10n.actionLeaveClubRide,
       FailureAction.loadCalendarFeed => l10n.actionLoadCalendarFeed,
       FailureAction.saveCalendarFeed => l10n.actionSaveCalendarFeed,
+      FailureAction.loadSupporter => l10n.actionLoadSupporter,
+      FailureAction.activateSupporter => l10n.actionActivateSupporter,
+      FailureAction.saveSupporter => l10n.actionSaveSupporter,
     };
 
 /// The sentence for a failure in the language on screen.

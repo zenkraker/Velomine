@@ -14,6 +14,8 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
+import '../supporter/supporter_badge.dart';
+import '../supporter/supporter_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
@@ -49,6 +51,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
     required this.onAccountDeleted,
     required this.onPasswordChanged,
     required this.onOpenPrivacy,
+    required this.onBecomeSupporter,
+    required this.onReplaySupporter,
     required this.serverUrl,
   });
 
@@ -69,6 +73,12 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
   /// Opens the member's ride privacy: stream switches, trimming and saved zones.
   final VoidCallback onOpenPrivacy;
+
+  /// Opens the supporter activation, while the server offers it and the member has no licence.
+  final VoidCallback onBecomeSupporter;
+
+  /// Plays the licence moment again, for the badge's triple tap and its replay button.
+  final VoidCallback onReplaySupporter;
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -481,6 +491,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 key: const Key('telemetry-saved'),
                               ),
                           ],
+                        ],
+                      ),
+                      SectionCard(
+                        title: l10n.supporterSignInTitle,
+                        children: [
+                          SupporterSection(
+                            onBecomeSupporter: widget.onBecomeSupporter,
+                            onReplay: widget.onReplaySupporter,
+                            onOpen: () => Future.microtask(
+                              ref
+                                  .read(supporterViewModelProvider.notifier)
+                                  .load,
+                            ),
+                          ),
                         ],
                       ),
                       SectionCard(

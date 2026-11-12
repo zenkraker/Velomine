@@ -75,6 +75,7 @@ class Session {
        sharing = SharingApi(client),
        privacy = PrivacyApi(client),
        wellbeing = WellbeingApi(client),
+       supporter = SupporterApi(client),
        notifications = NotificationsApi(client),
        routes = RoutesApi(client),
        server = ServerApi(client) {
@@ -97,6 +98,9 @@ class Session {
 
   /// Check-ins, ride RPE and notes.
   final WellbeingApi wellbeing;
+
+  /// The member's optional supporter licence, and its badge.
+  final SupporterApi supporter;
   final NotificationsApi notifications;
 
   /// The club's route library and the draft of a ride's line.

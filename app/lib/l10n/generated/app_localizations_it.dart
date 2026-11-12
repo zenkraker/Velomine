@@ -4032,4 +4032,88 @@ class AppLocalizationsIt extends AppLocalizations {
   String notificationClubRideCancelled(String ride) {
     return '$ride: l\'uscita è annullata.';
   }
+
+  @override
+  String get supporterSignInTitle => 'Sostenitore';
+
+  @override
+  String get supporterBecome => 'Diventa sostenitore';
+
+  @override
+  String get supporterKey => 'Chiave di licenza';
+
+  @override
+  String get supporterKeyHelp =>
+      'Incolla la chiave che hai ricevuto. Viene verificata offline: nessuno vede chi sei.';
+
+  @override
+  String get supporterActivate => 'Attiva';
+
+  @override
+  String get supporterKeyInvalid =>
+      'Questa chiave non è valida. Controlla di averla incollata tutta.';
+
+  @override
+  String get supporterAlreadyActivated =>
+      'Hai già una licenza da sostenitore, oppure questa chiave è già stata attivata.';
+
+  @override
+  String get supporterClubOwnerOnly =>
+      'Solo il titolare del club può attivare una licenza del club.';
+
+  @override
+  String get supporterUnavailable =>
+      'Questo server non accetta licenze da sostenitore.';
+
+  @override
+  String get supporterActivated => 'Licenza attivata';
+
+  @override
+  String supporterThanksName(String name) {
+    return 'Grazie, $name.';
+  }
+
+  @override
+  String get supporterBody =>
+      'Hai appena reso Velomine un po\' più libera. Non cambia nessuna funzione: tutto resta di tutti, e i tuoi dati restano tuoi.';
+
+  @override
+  String supporterSerialNumber(int serial, String date) {
+    return 'Sostenitore n. $serial · $date';
+  }
+
+  @override
+  String get supporterKeyVerified => 'Chiave verificata';
+
+  @override
+  String get supporterReplay => 'Rivedi';
+
+  @override
+  String get supporterBadgeReplayHint =>
+      'Ripete il momento della licenza. Tre tocchi rapidi.';
+
+  @override
+  String get supporterContinue => 'Continua';
+
+  @override
+  String get supporter => 'Sostenitore';
+
+  @override
+  String get supporterAppearsOnProfile => 'compare sul tuo profilo';
+
+  @override
+  String get supporterHideBadge => 'Nascondi badge sostenitore';
+
+  @override
+  String get supporterHideBadgeHelp =>
+      'La licenza vale lo stesso. Il badge lo mostri o lo nascondi tu.';
+
+  @override
+  String get actionLoadSupporter => 'caricare la tua licenza sostenitore';
+
+  @override
+  String get actionActivateSupporter => 'attivare la licenza';
+
+  @override
+  String get actionSaveSupporter => 'salvare il badge sostenitore';
 }
