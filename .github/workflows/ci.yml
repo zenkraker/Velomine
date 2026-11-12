@@ -117,7 +117,10 @@ jobs:
 
       # `flutter test` never compiles the Kotlin side. The FIT encoder and the recorder models are tested here.
       - name: Android unit tests
-        run: cd android && ./gradlew :app:testDebugUnitTest --no-daemon
+        # Flutter's Android .gitignore leaves out gradlew and local.properties; --config-only writes them without a build.
+        run: |
+          flutter build apk --config-only
+          cd android && ./gradlew :app:testDebugUnitTest --no-daemon
 
       # Catches web-only compile errors minutes before the image build would.
       # The image compiles the web app again from source, so
