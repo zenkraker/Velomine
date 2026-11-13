@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Notifications;
@@ -49,6 +51,12 @@ public sealed class TestApi : IAsyncDisposable
             builder.UseSetting("Velomine:Admin:Password", AdminPassword);
             // Tests start with an empty catalogue unless they ask for the bundled seed.
             builder.UseSetting("Velomine:Catalogue:Seed", "false");
+            // The database is a clone of the migrated template, so the migration history is already current and
+            // re-running it on every server only costs time: the fixture migrated the template once.
+            // Background work stays registered, because the server's own startup needs it (the roles and admin, the
+            // upload reader, the import worker, the catalogue bootstrap all hang off the same flag). Only the jobs
+            // that repeat on a timer are dropped, plus the migration; a test drives a job with its RunOnceAsync.
+            builder.ConfigureTestServices(services => TestHost.RemoveJobs(services));
             configure?.Invoke(builder);
         });
         return new TestApi(factory, connection, filesPath);

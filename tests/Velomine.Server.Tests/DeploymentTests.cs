@@ -23,18 +23,21 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task BackgroundJobs_ShouldNotRun_WhenBackgroundIsDisabled()
+    public async Task BackgroundJobs_ShouldNotRepeatOnATimer_WhenTheTestHostStartsTheServer()
     {
-        await using var api = await TestApi.StartAsync(postgres,
-            b => b.UseSetting("Velomine:Background:Enabled", "false"));
+        await using var api = await TestApi.StartAsync(postgres);
 
         var hosted = api.Services.GetServices<IHostedService>().Select(s => s.GetType()).ToList();
 
-        // Only the migration of Velomine's own services runs on every instance; every job that reads or sends
-        // something waits for its owner. The framework's hosted services (telemetry, keys, health) are not jobs.
-        Assert.Equal(
-            [typeof(DatabaseMigrator)],
-            hosted.Where(t => t.Assembly == typeof(DatabaseMigrator).Assembly));
+        // The test host drops the loops that only repeat on a timer; a test drives them with RunOnceAsync instead.
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Notifier", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Cleanup", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Reparse", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Backfill", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Retention", StringComparison.Ordinal));
+        // What a server must do before it answers is still there: the roles and admin, and the upload reader.
+        Assert.Contains(hosted, t => t.Name.Contains("RideIngestion", StringComparison.Ordinal));
+        Assert.Contains(hosted, t => t.Name.Contains("AccountsStartup", StringComparison.Ordinal));
     }
 
     [Fact]
