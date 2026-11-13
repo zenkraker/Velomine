@@ -49,9 +49,58 @@ public sealed class RideMetricsTests
     [Fact]
     public void RobustMax_ShouldKeepTheMaximum_WhenTheSurgeIsSustained()
     {
-        var speeds = Enumerable.Repeat(8f, 40).Select((v, i) => i is >= 20 and < 26 ? 15f : v).ToArray();
+        // 32 -> 54 km/h in 1.5 s: a sprint, then held.
+        float[] speeds = [.. Enumerable.Repeat(8.9f, 20), .. Enumerable.Range(1, 6).Select(i => 8.9f + 1.5f * i), .. Enumerable.Repeat(15f, 14)];
 
-        Assert.Equal(15, RideMetrics.RobustMax(speeds));
+        Assert.Equal(15, RideMetrics.RobustMax(speeds), 1);
+    }
+
+    private const double DegreesPerMeter = 1 / 111_195.0;
+
+    /// <summary>One sample a second moving north at the given speeds; the first speed is where it starts.</summary>
+    private static Sample[] Shuttle(params double[] speedsMs)
+    {
+        var north = 0.0;
+        return Series(speedsMs.Length, i =>
+        {
+            if (i > 0) north += speedsMs[i - 1];
+            return new Sample(i, Latitude: north * DegreesPerMeter, Longitude: 0);
+        });
+    }
+
+    [Fact]
+    public void MaxSpeed_ShouldIgnoreTheGlitch_WhenFiveConsecutiveSamplesSpike()
+    {
+        // A tunnel: 4.5 m/s, then five positions that jump up to 39 m/s and back, then 4.5 m/s again.
+        var samples = Shuttle([4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 39.3, 34.4, 26.6, 26.6, 40, 34.7, 24.7, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5]);
+
+        var m = RideMetrics.Compute(samples);
+
+        Assert.InRange(m.MaxSpeedMs!.Value, 4.4, 4.6);
+    }
+
+    [Fact]
+    public void MaxSpeed_ShouldKeepTheMaximum_WhenTheRiderSprints()
+    {
+        // 30 -> 40 km/h over three seconds, held, then a hard stop from 40 to 30 km/h in one second.
+        var samples = Shuttle([8.3, 8.3, 8.3, 9.2, 10.1, 11.1, 11.1, 11.1, 11.1, 11.1, 8.3, 8.3, 8.3, 8.3]);
+
+        var m = RideMetrics.Compute(samples);
+
+        Assert.InRange(m.MaxSpeedMs!.Value, 10.9, 11.2);
+    }
+
+    [Fact]
+    public void SpeedSeries_ShouldKeepASpeedAfterAnUnknownSample_WhenTheFileLeavesThatSampleBlank()
+    {
+        Sample[] samples =
+        [
+            new(0, Speed: 5), new(1, Speed: 5), new(2), new(3), new(4, Speed: 0.2f), new(5, Speed: 5), new(6, Speed: 5),
+        ];
+
+        var speeds = RideMetrics.SpeedSeries(samples, out _);
+
+        Assert.Equal([5f, 5f, null, null, 0.2f, 5f, 5f], speeds);
     }
 
     [Fact]

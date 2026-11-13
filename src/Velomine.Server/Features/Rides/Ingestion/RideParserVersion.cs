@@ -8,7 +8,7 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// </summary>
 public static class RideParserVersion
 {
-    public const int Current = 1;
+    public const int Current = 2;
 
     /// <summary>Marks a ride as just read with the current parser and records the profile its training load came from.</summary>
     public static void StampRead(this Ride ride, int? ftpW, int? maxHeartRate)

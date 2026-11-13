@@ -30,6 +30,8 @@ public static class RideMetrics
 {
     private const double StoppedSpeedMs = 0.5;
     private const int SpeedMedianWindow = 5;
+    /// <summary>The most a bicycle can change speed in one second: about 36 km/h from hard braking alone.</summary>
+    private const double MaxAccelerationMs2 = 10;
     private const int ElevationSmoothingWindow = 5;
     private const double ElevationThresholdM = 2;
     private const int NormalizedPowerWindowS = 30;
@@ -76,7 +78,7 @@ public static class RideMetrics
             gain,
             loss,
             moving > 0 ? distance / moving : null,
-            speeds.Any(s => s.HasValue) ? RobustMax(speeds.Select(s => s ?? 0).ToArray()) : null,
+            speeds.Any(s => s.HasValue) ? RobustMax([.. speeds.OfType<float>()]) : null,
             source,
             power.Length > 0 ? (int)Math.Round(power.Average()) : null,
             samples.Max(s => s.Power) is { } maxPower ? maxPower : null,
@@ -133,7 +135,9 @@ public static class RideMetrics
 
     /// <summary>
     /// Speed per sample: the file's own speed where it has one for most samples, otherwise worked out from positions
-    /// (and the cumulative distance when there are no positions). A pair that spans a timer pause is left unknown.
+    /// (and the cumulative distance when there are no positions). A pair that spans a timer pause is left unknown, and
+    /// so is a speed that would need more than <see cref="MaxAccelerationMs2"/> to reach, which is how a burst of
+    /// poor positions after a tunnel disappears. The first sample has no place of its own, so it repeats the second.
     /// </summary>
     public static float?[] SpeedSeries(
         IReadOnlyList<Sample> samples,
@@ -146,7 +150,7 @@ public static class RideMetrics
             var device = samples.Select(s => s.Speed).ToArray();
             for (var i = 1; i < samples.Count; i++)
                 if (CrossesPause(pauses, samples[i - 1].T, samples[i].T)) device[i] = null;
-            return device;
+            return ImplausibleRemoved(device);
         }
 
         source = SpeedSource.Gps;
@@ -159,7 +163,21 @@ public static class RideMetrics
             if (dt > 0 && meters.HasValue) speeds[i] = (float)(meters.Value / dt);
         }
 
+        speeds = ImplausibleRemoved(speeds);
         if (samples.Count > 1) speeds[0] = speeds[1];
+        return speeds;
+    }
+
+    private static float?[] ImplausibleRemoved(float?[] speeds)
+    {
+        var last = speeds[0];
+        for (var i = 1; i < speeds.Length; i++)
+        {
+            if (speeds[i] is not { } speed) continue;
+            if (last is not { } previous || Math.Abs(speed - previous) <= MaxAccelerationMs2) last = speed;
+            else speeds[i] = null;
+        }
+
         return speeds;
     }
 
@@ -209,7 +227,7 @@ public static class RideMetrics
     public static double Haversine(double lat1, double lon1, double lat2, double lon2) =>
         Geo.Metres(lat1, lon1, lat2, lon2);
 
-    /// <summary>The largest of the sliding-window medians, so one GPS glitch never becomes the maximum speed.</summary>
+    /// <summary>The largest of the sliding-window medians, so a short run of GPS glitches never becomes the maximum speed.</summary>
     public static double RobustMax(IReadOnlyList<float> values)
     {
         if (values.Count == 0) return 0;
