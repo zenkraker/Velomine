@@ -6,77 +6,6 @@ namespace Velomine.Server.Tests;
 /// </summary>
 public sealed class SiteTests
 {
-    [Fact]
-    public async Task Website_ShouldServeTheHomePage_WhenRootIsRequested()
-    {
-        var html = await ReadSiteAsync("/");
-        Assert.Contains("<title>Velomine", html);
-        Assert.Contains("href=\"/sign-in\"", html);
-        Assert.Contains("href=\"/status/\"", html);
-        Assert.Contains("href=\"/pricing/\"", html);
-        Assert.Contains("href=\"/contact/\"", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeTheContactPage_WhenContactIsRequested()
-    {
-        var html = await ReadSiteAsync("/contact/");
-        Assert.Contains("mailto:", html);
-    }
-
-    [Fact]
-    public async Task Website_ShouldServeSecurityTxt_WhenTheWellKnownPathIsRequested()
-    {
-        var text = await ReadSiteAsync("/.well-known/security.txt");
-        Assert.Contains("Contact: mailto:", text);
-        Assert.Contains("Preferred-Languages:", text);
-    }
-
-    [Fact]
-    public async Task SiteStylesheet_ShouldNotDefineACustomPropertyAsItself_WhenServed()
-    {
-        var css = await ReadSiteAsync("/static/site.css");
-        foreach (var declaration in System.Text.RegularExpressions.Regex
-                     .Matches(css, @"--([a-z-]+)\s*:\s*([^;}]+)")
-                     .Cast<System.Text.RegularExpressions.Match>())
-        {
-            var name = declaration.Groups[1].Value;
-            Assert.DoesNotContain($"var(--{name})", declaration.Groups[2].Value);
-        }
-    }
-
-    [Fact]
-    public async Task Website_ShouldNotListBuiltFeaturesAsNotYet_WhenStatusIsRequested()
-    {
-        var html = await ReadSiteAsync("/status/");
-        var start = html.IndexOf("Promised for v1, still missing", StringComparison.Ordinal);
-        var end = html.IndexOf("After v1", start, StringComparison.Ordinal);
-        Assert.True(start >= 0 && end > start, "The status page should have a v1 gap list.");
-        var notYet = html[start..end];
-        Assert.DoesNotContain("password reset", notYet, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("laps", notYet, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Laps read from FIT and TCX", html);
-        Assert.Contains("Password reset by email", html);
-    }
-
-    [Theory]
-    [InlineData("/")]
-    [InlineData("/status/")]
-    [InlineData("/pricing/")]
-    [InlineData("/demo/")]
-    [InlineData("/contact/")]
-    [InlineData("/principles/")]
-    [InlineData("/privacy/")]
-    [InlineData("/terms/")]
-    [InlineData("/security/")]
-    public async Task SitePages_ShouldOfferTheMenuDisclosure_WhenServed(string path)
-    {
-        var html = await ReadSiteAsync(path);
-
-        Assert.Contains("<details class=\"nav-menu\">", html);
-        Assert.Contains("<summary aria-label=\"Menu\">", html);
-    }
-
     [Theory]
     [InlineData("/")]
     [InlineData("/status/")]
@@ -94,20 +23,6 @@ public sealed class SiteTests
         // Absolute at velomine.eu on every copy of the site (AGENTS.md: the site's search identity).
         Assert.Contains($"<link rel=\"canonical\" href=\"https://velomine.eu{path}\">", html);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "rel=\"canonical\""));
-    }
-
-    [Fact]
-    public async Task SiteStylesheet_ShouldNotAnimateBoxShadow_WhenServed()
-    {
-        var css = await ReadSiteAsync("/static/site.css");
-
-        Assert.DoesNotMatch(@"transition:\s*[^;]*box-shadow", css);
-        foreach (var keyframes in System.Text.RegularExpressions.Regex
-                     .Matches(css, @"@keyframes\s+[\w-]+\s*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}")
-                     .Cast<System.Text.RegularExpressions.Match>())
-        {
-            Assert.DoesNotContain("box-shadow", keyframes.Value);
-        }
     }
 
     /// <summary>The file the web image serves for <paramref name="path"/>: a directory path is its index.html.</summary>

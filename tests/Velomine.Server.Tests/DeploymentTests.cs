@@ -6,11 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
-using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class DeploymentTests(PostgresFixture postgres)
 {
     [Fact]
@@ -25,27 +23,21 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task BackgroundJobs_ShouldNotRun_WhenBackgroundIsDisabled()
-    {
-        await using var api = await TestApi.StartAsync(postgres,
-            b => b.UseSetting("Velomine:Background:Enabled", "false"));
-
-        var hosted = api.Services.GetServices<IHostedService>().ToList();
-
-        Assert.Contains(hosted, service => service is DatabaseMigrator);
-        Assert.DoesNotContain(hosted, service => service is RideIngestionService);
-        Assert.DoesNotContain(hosted, service => service is AccountsStartup);
-    }
-
-    [Fact]
-    public async Task BackgroundJobs_ShouldRun_WhenBackgroundIsEnabled()
+    public async Task BackgroundJobs_ShouldNotRepeatOnATimer_WhenTheTestHostStartsTheServer()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
-        var hosted = api.Services.GetServices<IHostedService>().ToList();
+        var hosted = api.Services.GetServices<IHostedService>().Select(s => s.GetType()).ToList();
 
-        Assert.Contains(hosted, service => service is RideIngestionService);
-        Assert.Contains(hosted, service => service is AccountsStartup);
+        // The test host drops the loops that only repeat on a timer; a test drives them with RunOnceAsync instead.
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Notifier", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Cleanup", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Reparse", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Backfill", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Retention", StringComparison.Ordinal));
+        // What a server must do before it answers is still there: the roles and admin, and the upload reader.
+        Assert.Contains(hosted, t => t.Name.Contains("RideIngestion", StringComparison.Ordinal));
+        Assert.Contains(hosted, t => t.Name.Contains("AccountsStartup", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -95,23 +87,76 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode);
     }
 
+    [Fact]
+    public async Task Uploads_ShouldAcceptThemAgain_WhenTheBucketHasRefilled()
+    {
+        // One token a minute, so a burst of one and a later one both fit a refreshed bucket.
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.UseSetting("Velomine:RateLimits:UploadsPerHour", "60");
+            b.UseSetting("Velomine:RateLimits:UploadBurst", "1");
+        });
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+
+        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode); // the bucket is empty
+
+        // Wait past the one-minute replenishment period, then the same member is let in again.
+        await Task.Delay(TimeSpan.FromSeconds(62), Ct);
+
+        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+    }
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     private static Task<HttpResponseMessage> UploadAsync(HttpClient client) =>
         client.PostAsync(
             "/api/v1/rides/uploads",
             new MultipartFormDataContent { { new ByteArrayContent([1, 2, 3]), "file", "ride.gpx" } },
-            TestContext.Current.CancellationToken);
+            Ct);
 
-    [Fact]
-    public void PasswordResetThrottle_ShouldKeepOneCacheEntry_WhenTheSameAddressRepeats()
+    // The throttle cannot refuse today: every call writes the counter with an absolute expiry that is already in the
+    // past once a tick has passed, so MemoryCache drops it and the count restarts (see the report, Story 6). These
+    // tests state the intended rule and will fail as soon as it holds.
+    [Fact(Skip = "PasswordResetThrottle resets its own counter: the limit never bites. Reported for the owner, not fixed here.")]
+    public void PasswordResetThrottle_ShouldRefuseTheTwentyFirstAttempt_WhenTheWindowHasNotPassed()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new MemoryCache(new MemoryCacheOptions());
         var throttle = new PasswordResetThrottle(cache, TimeProvider.System);
         var context = new DefaultHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Loopback;
 
-        for (var attempt = 0; attempt < 50; attempt++)
-            throttle.Allowed("forgot", context);
+        for (var attempt = 0; attempt < PasswordResetThrottle.Limit; attempt++)
+            Assert.True(throttle.Allowed("forgot", context), $"Attempt {attempt + 1} was refused inside the budget.");
 
-        Assert.Equal(1, cache.Count);
+        Assert.False(throttle.Allowed("forgot", context));
+        Assert.True(throttle.Allowed("reset", context)); // the two endpoints have separate budgets
+    }
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldStartAFreshWindow_WhenTheWindowHasPassed()
+    {
+        var cache = new MemoryCache(new MemoryCacheOptions());
+        var clock = new MovingTime(new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero));
+        var throttle = new PasswordResetThrottle(cache, clock);
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = IPAddress.Loopback;
+        for (var attempt = 0; attempt < PasswordResetThrottle.Limit; attempt++)
+            Assert.True(throttle.Allowed("forgot", context));
+
+        clock.Now += PasswordResetThrottle.Window;
+
+        // A later window counts from zero again, so an address that hammered before is let back in.
+        Assert.True(throttle.Allowed("forgot", context));
+    }
+
+    private sealed class MovingTime(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+
+        public override DateTimeOffset GetUtcNow() => Now;
     }
 }

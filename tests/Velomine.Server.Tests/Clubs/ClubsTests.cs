@@ -8,7 +8,6 @@ using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Clubs;
 
-[Collection("postgres")]
 public sealed class ClubsTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

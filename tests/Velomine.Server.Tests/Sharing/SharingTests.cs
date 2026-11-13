@@ -16,7 +16,6 @@ using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Sharing;
 
-[Collection("postgres")]
 public sealed class SharingTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -25,17 +24,6 @@ public sealed class SharingTests(PostgresFixture postgres)
 
 
     private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
-
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = owner.Email },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
 
     private static async Task JoinAsync(Member member, AdminClubResponse club)
     {
@@ -92,7 +80,7 @@ public sealed class SharingTests(PostgresFixture postgres)
             b.ConfigureTestServices(services => services.AddSingleton<IInterceptor>(counter));
         });
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var first = await NewMemberAsync(api);
         await JoinAsync(first, club);
         await UploadAndWaitAsync(first.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
@@ -121,7 +109,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var start = new DateTime(2026, 10, 3, 8, 0, 0, DateTimeKind.Utc);
@@ -153,7 +141,7 @@ public sealed class SharingTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Conflict, (await rider.Client.GetAsync("/api/v1/sharing", Ct)).StatusCode);
 
-        var club = await CreateClubAsync(api, rider);
+        var club = await TestClubs.CreateAsync(api, rider);
         var sharing = await rider.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
         Assert.Equal(new SharingResponse("none", "none", "none", "none"), sharing);
 
@@ -172,7 +160,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         await UploadAndWaitAsync(
@@ -212,7 +200,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var ridesOnly = await NewMemberAsync(api);
         var trainingOnly = await NewMemberAsync(api);
         await JoinAsync(ridesOnly, club);
@@ -255,7 +243,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await UploadAndWaitAsync(
@@ -303,7 +291,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         (await athlete.Client.PutAsJsonAsync(
@@ -333,8 +321,15 @@ public sealed class SharingTests(PostgresFixture postgres)
         Assert.NotNull(shown!.IntensityFactor);
         Assert.NotNull(shown.Tss);
         Assert.NotNull(shown.Trimp);
-        Assert.NotNull(shown.HeartRateZones);
-        Assert.NotNull(shown.PowerZones);
+        // The ride is 600 s at a steady 150 bpm and 200 W: 599 counted intervals. Against a maximum of 183 (Tanaka for
+        // 1990) that is 82 %, heart-rate zone 4 (index 3); against a 250 W FTP it is 80 %, power zone 3 (index 2,
+        // because 80 % is above the 75 % bound).
+        var heartRateZones = shown.HeartRateZones!;
+        Assert.Equal(599, heartRateZones[3].Seconds);
+        Assert.All(heartRateZones.Where((_, i) => i != 3), zone => Assert.Equal(0, zone.Seconds));
+        var powerZones = shown.PowerZones!;
+        Assert.Equal(599, powerZones[2].Seconds);
+        Assert.All(powerZones.Where((_, i) => i != 2), zone => Assert.Equal(0, zone.Seconds));
     }
 
     [Fact]
@@ -342,7 +337,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await UploadAndWaitAsync(athlete.Client, Fit(new FitSession(Start, 60)));
@@ -362,9 +357,9 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var ownerA = await NewMemberAsync(api);
-        var clubA = await CreateClubAsync(api, ownerA);
+        var clubA = await TestClubs.CreateAsync(api, ownerA);
         var ownerB = await NewMemberAsync(api);
-        _ = await CreateClubAsync(api, ownerB);
+        _ = await TestClubs.CreateAsync(api, ownerB);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, clubA);
         await ShareAsync(athlete, "coaches", "coaches", "coaches");
@@ -388,7 +383,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         (await ShareAsync(athlete, "coaches", "coaches")).EnsureSuccessStatusCode();
@@ -412,7 +407,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         (await ShareAsync(athlete, "coaches")).EnsureSuccessStatusCode();

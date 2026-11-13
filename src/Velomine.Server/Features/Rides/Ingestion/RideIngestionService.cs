@@ -97,7 +97,7 @@ public sealed class RideIngestionService(
             .Where(u => u.Id == ride.UserId)
             .Select(u => new { u.FtpW, u.BirthYear, u.TimeZone })
             .FirstAsync(ct);
-        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear);
+        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear, time);
         var memberBikes = await db.Bikes.AsNoTracking()
             .Where(b => b.UserId == ride.UserId && b.IsActive)
             .OrderBy(b => b.CreatedAt)

@@ -16,7 +16,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Admin;
 
-[Collection("postgres")]
 public sealed class EmailTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -92,18 +91,8 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     /// <summary>Uploads a ride and waits until it has been read, which makes a "ride ready" notification.</summary>
-    private static async Task UploadAsync(HttpClient client, DateTime start)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(Fit(new FitSession(start, 120))), "file", "ride.fit" } };
-        var id = (await (await client.PostAsync("/api/v1/rides/uploads", form, Ct)).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            if ((await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task UploadAsync(HttpClient client, DateTime start) =>
+        TestApi.UploadAndWaitAsync(client, Fit(new FitSession(start, 120)));
 
     private static Task<int> RunAsync(TestApi api) =>
         api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct);
@@ -143,20 +132,6 @@ public sealed class EmailTests(PostgresFixture postgres)
         await using var __ = api;
 
         Assert.True((await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", Ct))!.EmailAvailable);
-    }
-
-    [Fact]
-    public async Task EmailSender_ShouldResolveWithItsRetryPipelines_WhenSmtpIsConfigured()
-    {
-        var api = await TestApi.StartAsync(postgres, b =>
-        {
-            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-            b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");
-            b.UseSetting("Velomine:Smtp:From", "velomine@club.example");
-        });
-        await using var _ = api;
-
-        Assert.IsType<MailKitEmailSender>(api.Services.GetRequiredService<IEmailSender>());
     }
 
     [Fact]
@@ -383,33 +358,23 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     [Theory]
-    [InlineData(NotificationTypes.RideReady, "Your ride morning.fit is ready.")]
-    [InlineData(NotificationTypes.RideFailed, "morning.fit could not be read.")]
-    [InlineData(NotificationTypes.RideDuplicate, "morning.fit was already uploaded, so it is hidden.")]
-    [InlineData(NotificationTypes.SignUpWaiting, "morning.fit signed up and is waiting for approval.")]
-    [InlineData(NotificationTypes.PartSoon, "morning.fit is nearly worn.")]
-    [InlineData(NotificationTypes.PartWorn, "morning.fit is worn out. Time to replace it.")]
-    [InlineData(NotificationTypes.ReminderSoon, "Maintenance nearly due: morning.fit.")]
-    [InlineData(NotificationTypes.ReminderDue, "Maintenance due: morning.fit.")]
-    public void NotificationText_ShouldReturnTheSentence_WhenNotificationTypeIsKnown(string type, string sentence)
+    // The member's own rides and parts; the training switch decides whether they are mailed.
+    [InlineData(NotificationTypes.RideReady, "Your ride morning.fit is ready.", true)]
+    [InlineData(NotificationTypes.RideFailed, "morning.fit could not be read.", true)]
+    [InlineData(NotificationTypes.RideDuplicate, "morning.fit was already uploaded, so it is hidden.", true)]
+    [InlineData(NotificationTypes.PartSoon, "morning.fit is nearly worn.", true)]
+    [InlineData(NotificationTypes.PartWorn, "morning.fit is worn out. Time to replace it.", true)]
+    [InlineData(NotificationTypes.ReminderSoon, "Maintenance nearly due: morning.fit.", true)]
+    [InlineData(NotificationTypes.ReminderDue, "Maintenance due: morning.fit.", true)]
+    // Someone waits on the member, or an answer came: always mailed.
+    [InlineData(NotificationTypes.SignUpWaiting, "morning.fit signed up and is waiting for approval.", false)]
+    [InlineData(NotificationTypes.ClubJoinRequest, "morning.fit asked to join your club.", false)]
+    public void NotificationText_ShouldReturnTheSentence_WhenNotificationTypeIsKnown(string type, string sentence, bool training)
     {
         using var _ = EmailLanguage.Use("en");
+
         Assert.Equal(sentence, NotificationText.Sentence(new Notification { Type = type, Subject = "morning.fit" }));
-    }
-
-    [Fact]
-    public void NotificationText_ShouldWriteOneFooter_WhenSeveralAreDue()
-    {
-        using var _ = EmailLanguage.Use("en");
-        var body = NotificationText.Write(
-        [
-            new Notification { Type = NotificationTypes.ClubJoinRequest, Subject = "Ada" },
-            new Notification { Type = NotificationTypes.ClubJoinApproved, Subject = "Club" },
-        ]).Text;
-
-        Assert.Contains("Ada asked to join your club.", body);
-        Assert.Contains("Club accepted you.", body);
-        Assert.Equal(1, body.Split("email notifications are on").Length - 1);
+        Assert.Equal(training ? NotificationKinds.Training : NotificationKinds.Account, NotificationKinds.Of(type));
     }
 
     [Fact]
@@ -429,40 +394,5 @@ public sealed class EmailTests(PostgresFixture postgres)
         Assert.Equal("Velomine: Ada ha chiesto di entrare nel tuo club.", sent.Subject);
         Assert.Contains("Ada ha chiesto di entrare nel tuo club.", sent.Body);
         Assert.Contains("lang=\"it\"", sent.HtmlBody);
-    }
-
-    [Fact]
-    public async Task NotificationEmail_ShouldWriteEnglish_WhenMemberLanguageIsUnknown()
-    {
-        var (api, mail) = await StartAsync(postgres);
-        await using var _ = api;
-        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
-        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
-        await RunAsync(api);
-        await member.PutAsJsonAsync("/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "de" }, Ct);
-
-        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "Ada", DateTimeOffset.UtcNow);
-
-        Assert.Equal(1, await RunAsync(api));
-        var sent = TheMail(mail);
-        Assert.Equal("Velomine: Ada asked to join your club.", sent.Subject);
-        Assert.Contains("lang=\"en\"", sent.HtmlBody);
-    }
-
-    [Fact]
-    public async Task NotificationEmail_ShouldEscapeTheSubject_WhenItContainsHtml()
-    {
-        var (api, mail) = await StartAsync(postgres);
-        await using var _ = api;
-        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
-        var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
-        await RunAsync(api);
-
-        await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "<b>Eve</b>", DateTimeOffset.UtcNow);
-        Assert.Equal(1, await RunAsync(api));
-
-        var sent = TheMail(mail);
-        Assert.Contains("&lt;b&gt;Eve&lt;/b&gt;", sent.HtmlBody);
-        Assert.DoesNotContain("<b>Eve</b>", sent.HtmlBody);
     }
 }

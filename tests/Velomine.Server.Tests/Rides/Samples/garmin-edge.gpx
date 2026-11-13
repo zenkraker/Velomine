@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Garmin Connect" xmlns="http://www.topografix.com/GPX/1/1"
+     xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
+  <metadata><time>2026-10-03T08:00:00Z</time></metadata>
+  <trk>
+    <name>Morning commute</name>
+    <type>cycling</type>
+    <trkseg>
+      <trkpt lat="46.000000" lon="11.000000"><ele>300.0</ele><time>2026-10-03T08:00:00Z</time><extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>132</gpxtpx:hr><gpxtpx:cad>78</gpxtpx:cad><gpxtpx:atemp>11.0</gpxtpx:atemp></gpxtpx:TrackPointExtension></extensions></trkpt>
+      <trkpt lat="46.000500" lon="11.000000"><ele>303.0</ele><time>2026-10-03T08:00:10Z</time><extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>138</gpxtpx:hr><gpxtpx:cad>80</gpxtpx:cad><gpxtpx:atemp>11.5</gpxtpx:atemp></gpxtpx:TrackPointExtension></extensions></trkpt>
+      <trkpt lat="46.001000" lon="11.000000"><ele>306.0</ele><time>2026-10-03T08:00:20Z</time><extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>144</gpxtpx:hr><gpxtpx:cad>82</gpxtpx:cad><gpxtpx:atemp>12.0</gpxtpx:atemp></gpxtpx:TrackPointExtension></extensions></trkpt>
+      <trkpt lat="46.001500" lon="11.000000"><ele>309.0</ele><time>2026-10-03T08:00:30Z</time><extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>150</gpxtpx:hr><gpxtpx:cad>84</gpxtpx:cad><gpxtpx:atemp>12.5</gpxtpx:atemp></gpxtpx:TrackPointExtension></extensions></trkpt>
+      <trkpt lat="46.002000" lon="11.000000"><ele>312.0</ele><time>2026-10-03T08:00:40Z</time><extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>156</gpxtpx:hr><gpxtpx:cad>86</gpxtpx:cad><gpxtpx:atemp>13.0</gpxtpx:atemp></gpxtpx:TrackPointExtension></extensions></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -8,7 +8,6 @@ using Velomine.Server.Features.Bikes;
 
 namespace Velomine.Server.Tests.Bikes;
 
-[Collection("postgres")]
 public sealed class CatalogueTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -81,7 +80,7 @@ public sealed class CatalogueTests(PostgresFixture postgres)
         var count = await WithDbAsync(api, (db, _) => db.Parts.CountAsync(Ct));
 
         Assert.False(second);
-        Assert.True(count > 40);
+        Assert.Equal(44, count); // the whole bundled list, and not a part of it twice
     }
 
     [Fact]
@@ -151,19 +150,6 @@ public sealed class CatalogueTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CatalogueSync_ShouldKeepItsParts_WhenTheSourceFails()
-    {
-        await using var api = await StartAsync();
-        await ApplyAsync(api, Feed(Chain()));
-
-        await Assert.ThrowsAsync<HttpRequestException>(() =>
-            WithDbAsync(api, (db, clock) => CatalogueSync.RunAsync(db, new FailingSource(), clock, "https://catalogue.test", Ct)));
-
-        var member = await NewMemberAsync(api);
-        Assert.Single(await SearchAsync(member, "CN-M8100"));
-    }
-
-    [Fact]
     public async Task HttpCatalogueSource_ShouldReadTheFeed_WhenTheServerSendsOne()
     {
         const string json = """
@@ -179,6 +165,29 @@ public sealed class CatalogueTests(PostgresFixture postgres)
         Assert.NotNull(feed);
         Assert.Equal("CN-M8100", Assert.Single(feed.Parts).Mpn);
         Assert.Equal("https://catalogue.test/v1/parts?club=acme", handler.LastRequest!.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task CatalogueSync_ShouldApplyTheNextFetch_WhenOneFailsAndTheNextSucceeds()
+    {
+        await using var api = await StartAsync();
+        var source = new SwitchSource(new FailingSource(), new StubSource(Feed(Chain())));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            WithDbAsync(api, (db, clock) => CatalogueSync.RunAsync(db, source, clock, "https://catalogue.test", Ct)));
+        var applied = await WithDbAsync(api, (db, clock) =>
+            CatalogueSync.RunAsync(db, source, clock, "https://catalogue.test", Ct));
+
+        Assert.True(applied);
+        var member = await NewMemberAsync(api);
+        Assert.Single(await SearchAsync(member, "CN-M8100"));
+    }
+
+    private sealed class SwitchSource(params ICatalogueSource[] sources) : ICatalogueSource
+    {
+        private int next;
+
+        public Task<CatalogueFeed?> FetchAsync(CancellationToken ct) => sources[next++].FetchAsync(ct);
     }
 
     private sealed class StubSource(CatalogueFeed feed) : ICatalogueSource

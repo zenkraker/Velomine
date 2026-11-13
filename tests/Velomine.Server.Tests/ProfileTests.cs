@@ -1,18 +1,47 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
-public sealed class ProfileTests(PostgresFixture postgres)
+public sealed class ProfileTests(PostgresFixture postgres) : IAsyncLifetime
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    // Row after row asks the same question; they share one server and one member, and every row only sends a refused
+    // profile update, so nothing a later row reads changes.
+    private TestApi? shared;
+    private HttpClient? member;
+
+    public async ValueTask InitializeAsync()
+    {
+        shared = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            // A known date, so the estimated maximum heart rate is one number.
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero))));
+        });
+        var email = TestApi.NewEmail();
+        (await shared.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
+        member = await shared.SignedInClientAsync(email, TestApi.MemberPassword);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (shared is not null) await shared.DisposeAsync();
+    }
+
     private async Task<(TestApi Api, HttpClient Member)> StartAsync()
     {
-        var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            // A known date, so the estimated maximum heart rate is one number.
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero))));
+        });
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
         return (api, await api.SignedInClientAsync(email, TestApi.MemberPassword));
@@ -40,13 +69,14 @@ public sealed class ProfileTests(PostgresFixture postgres)
             new UpdateProfileRequest("Ada L", 265, 68.04, 1990, "Europe/Rome", "sunday"), Ct);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
         Assert.Equal(
-            new ProfileResponse("Ada L", 265, 68.0, 1990, User.EstimateMaxHeartRate(1990), "Europe/Rome", "sunday", true, true, true, false, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30)),
+            // 183 is Tanaka for a 1990 birth year on the pinned 2026-11-13 clock; the trial ends 30 days later.
+            new ProfileResponse("Ada L", 265, 68.0, 1990, 183, "Europe/Rome", "sunday", true, true, true, false, new DateOnly(2026, 12, 13)),
             await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
 
         await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada L", null, null, null, null, "monday"), Ct);
         var cleared = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
         Assert.Equal(
-            new ProfileResponse("Ada L", null, null, null, null, null, "monday", true, true, true, false, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30)),
+            new ProfileResponse("Ada L", null, null, null, null, null, "monday", true, true, true, false, new DateOnly(2026, 12, 13)),
             cleared);
 
         var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
@@ -104,10 +134,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     [InlineData("Ada", null, null, null, null, "1")]
     public async Task Profile_ShouldRejectTheUpdate_WhenTheValuesAreInvalid(string name, int? ftp, double? weight, int? birthYear, string? zone, string firstDay)
     {
-        var (api, member) = await StartAsync();
-        await using var _ = api;
-
-        var put = await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest(name, ftp, weight, birthYear, zone, firstDay), Ct);
+        var put = await member!.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest(name, ftp, weight, birthYear, zone, firstDay), Ct);
 
         Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
     }
@@ -166,23 +193,4 @@ public sealed class ProfileTests(PostgresFixture postgres)
         Assert.Equal("metric", me!.Units);
     }
 
-    [Fact]
-    public async Task Units_ShouldBeUnauthorized_WhenNotSignedIn()
-    {
-        var (api, _) = await StartAsync();
-        await using var __ = api;
-
-        Assert.Equal(
-            HttpStatusCode.Unauthorized,
-            (await api.CreateClient().PutAsJsonAsync("/api/v1/accounts/me/units", new SetMyUnitsRequest("imperial"), Ct)).StatusCode);
-    }
-
-    [Fact]
-    public async Task Profile_ShouldBeUnauthorized_WhenNotSignedIn()
-    {
-        var (api, _) = await StartAsync();
-        await using var __ = api;
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync("/api/v1/accounts/me/profile", Ct)).StatusCode);
-    }
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">
+  <Activities>
+    <Activity Sport="Biking">
+      <Id>2026-10-03T08:00:00Z</Id>
+      <Lap StartTime="2026-10-03T08:00:00Z">
+        <TotalTimeSeconds>40</TotalTimeSeconds>
+        <DistanceMeters>222.0</DistanceMeters>
+        <Calories>11</Calories>
+        <Track>
+          <Trackpoint><Time>2026-10-03T08:00:00Z</Time><Position><LatitudeDegrees>46.000000</LatitudeDegrees><LongitudeDegrees>11.000000</LongitudeDegrees></Position><AltitudeMeters>300.0</AltitudeMeters><HeartRateBpm><Value>120</Value></HeartRateBpm></Trackpoint>
+          <Trackpoint><Time>2026-10-03T08:00:10Z</Time><Position><LatitudeDegrees>46.000500</LatitudeDegrees><LongitudeDegrees>11.000000</LongitudeDegrees></Position><AltitudeMeters>302.0</AltitudeMeters><HeartRateBpm><Value>126</Value></HeartRateBpm><Extensions><TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2"><Watts>180</Watts><Speed>5.0</Speed></TPX></Extensions></Trackpoint>
+          <Trackpoint><Time>2026-10-03T08:00:20Z</Time><Position><LatitudeDegrees>46.001000</LatitudeDegrees><LongitudeDegrees>11.000000</LongitudeDegrees></Position><AltitudeMeters>304.0</AltitudeMeters><HeartRateBpm><Value>132</Value></HeartRateBpm><Extensions><TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2"><Watts>200</Watts><Speed>5.1</Speed></TPX></Extensions></Trackpoint>
+          <Trackpoint><Time>2026-10-03T08:00:30Z</Time><Position><LatitudeDegrees>46.001500</LatitudeDegrees><LongitudeDegrees>11.000000</LongitudeDegrees></Position><AltitudeMeters>306.0</AltitudeMeters><HeartRateBpm><Value>138</Value></HeartRateBpm><Extensions><TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2"><Watts>240</Watts><Speed>5.2</Speed></TPX></Extensions></Trackpoint>
+          <Trackpoint><Time>2026-10-03T08:00:40Z</Time><Position><LatitudeDegrees>46.002000</LatitudeDegrees><LongitudeDegrees>11.000000</LongitudeDegrees></Position><AltitudeMeters>308.0</AltitudeMeters><HeartRateBpm><Value>144</Value></HeartRateBpm><Extensions><TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2"><Watts>260</Watts><Speed>5.3</Speed></TPX></Extensions></Trackpoint>
+        </Track>
+      </Lap>
+    </Activity>
+  </Activities>
+</TrainingCenterDatabase>

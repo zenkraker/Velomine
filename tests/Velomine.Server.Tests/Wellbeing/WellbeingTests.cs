@@ -17,7 +17,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Wellbeing;
 
-[Collection("postgres")]
 public sealed class WellbeingTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -42,32 +41,8 @@ public sealed class WellbeingTests(PostgresFixture postgres)
             new SaveCheckInRequest { Fatigue = fatigue, Soreness = 2, Mood = 4, Stress = 2, Motivation = 5 },
             Ct);
 
-    private static async Task<RideResponse> UploadAsync(HttpClient client)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 1300))), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
-
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, string ownerEmail)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = ownerEmail },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
+    private static Task<RideResponse> UploadAsync(HttpClient client) =>
+        TestApi.UploadAndWaitAsync(client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 1300)));
 
     private static async Task ShareAsync(HttpClient client, string rides, string analytics, string wellbeing) =>
         (await client.PutAsJsonAsync(
@@ -115,7 +90,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var (coach, _, coachEmail) = await NewMemberAsync(api, "Coach Rina");
-        var club = await CreateClubAsync(api, coachEmail);
+        var club = await TestClubs.CreateAsync(api, coachEmail);
         var (athlete, athleteId, athleteEmail) = await NewMemberAsync(api, "Athlete Luca");
         (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();
 
@@ -155,8 +130,6 @@ public sealed class WellbeingTests(PostgresFixture postgres)
         Assert.Equal(
             HttpStatusCode.NotFound,
             (await other.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{athleteId}/wellbeing", Ct)).StatusCode);
-
-        _ = athleteEmail;
     }
 
     [Fact]
@@ -201,7 +174,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var (coach, _, coachEmail) = await NewMemberAsync(api, "Coach Rina");
-        var club = await CreateClubAsync(api, coachEmail);
+        var club = await TestClubs.CreateAsync(api, coachEmail);
         var (athlete, athleteId, _) = await NewMemberAsync(api, "Athlete Luca");
         (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();
         await ConsentAsync(athlete);
@@ -231,19 +204,24 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task GetWellbeing_ShouldAskForConsentAgain_WhenConsentWasWithdrawn()
+    public async Task Wellbeing_ShouldAskAgain_WhenTheConsentVersionHasChanged()
     {
         await using var api = await StartAsync();
         var (client, _, _) = await NewMemberAsync(api);
-        await ConsentAsync(client);
-        await CheckInAsync(client, fatigue: 4);
+        (await ConsentAsync(client)).EnsureSuccessStatusCode();
+        (await CheckInAsync(client, fatigue: 3)).EnsureSuccessStatusCode();
+        Assert.False((await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct))!.ConsentRequired);
 
-        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync("/api/v1/wellbeing/consent", Ct)).StatusCode);
+        // The wording changed: the stored consent is for the old version, so the member is asked again and saves stop.
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        await db.Users.Where(u => u.WellbeingConsentVersion == WellbeingTerms.Version)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.WellbeingConsentVersion, WellbeingTerms.Version - 1), Ct);
 
-        var wellbeing = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
-        Assert.True(wellbeing!.ConsentRequired);
-        Assert.False(wellbeing.Consented);
-        Assert.Equal(4, wellbeing.Today!.Fatigue);
+        var after = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
+        Assert.True(after!.ConsentRequired);
+        Assert.False(after.Consented);
+        Assert.Equal(HttpStatusCode.Conflict, (await CheckInAsync(client, fatigue: 4)).StatusCode);
     }
 
     [Fact]

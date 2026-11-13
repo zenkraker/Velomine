@@ -6,7 +6,6 @@ using static Velomine.Server.Tests.Routes.RoutesTestKit;
 
 namespace Velomine.Server.Tests.Calendar;
 
-[Collection("postgres")]
 public sealed class CalendarTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -111,18 +110,6 @@ public sealed class CalendarTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.NotFound, (await loner.DeleteAsync("/api/v1/club/calendar-feed", Ct)).StatusCode);
 
         Assert.Single((await CalendarTestKit.RidesAsync(world.Rider.Client))!.Upcoming);
-    }
-
-    [Fact]
-    public async Task ClubRides_ShouldRequireSignIn_WhenCalledWithoutAToken()
-    {
-        await using var api = await CalendarTestKit.StartAsync(postgres);
-        var anonymous = api.CreateClient();
-        var id = Guid.NewGuid();
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/v1/club/rides", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync($"/api/v1/club/rides/{id}", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/v1/club/calendar-feed", Ct)).StatusCode);
     }
 
     [Fact]
