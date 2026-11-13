@@ -12,6 +12,9 @@ import '../rides/ride_type_chips.dart';
 import 'coach_ride_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/stat_tile.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
@@ -41,112 +44,97 @@ class CoachRideScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final units = ref.watch(unitsChoiceViewModelProvider);
     final ride = c.ride;
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return PageScaffold(
+      eyebrow: l10n.athletesTitle,
+      title: ride == null
+          ? l10n.rideDetailTitle
+          : dateTime(ride.startTime ?? ride.uploadedAt),
+      subtitle: l10n.coachReadOnly,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 920),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                if (c.notFound)
-                  Text(
-                    l10n.coachRideNotFound,
-                    key: const Key('coach-ride-not-found'),
-                    style: text.titleMedium,
-                  )
-                else if (c.load.running && ride == null)
-                  const Center(child: CircularProgressIndicator())
-                else if (ride != null) ...[
-                  Text(
-                    dateTime(ride.startTime ?? ride.uploadedAt),
-                    style: text.headlineSmall,
-                  ),
-                  Text(l10n.coachReadOnly, style: text.bodySmall),
-                  if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
-                  Wrap(
-                    spacing: AppSpacing.xl,
-                    runSpacing: 12,
-                    children: [
-                      StatTile(
-                        label: l10n.statDistance,
-                        value: km(units, ride.distanceM),
-                      ),
-                      StatTile(
-                        label: l10n.statMovingTime,
-                        value: duration(ride.movingS),
-                      ),
-                      StatTile(
-                        label: l10n.statAverageSpeed,
-                        value: kmh(units, ride.avgSpeedMs),
-                      ),
-                      if (ride.avgPowerW != null)
-                        StatTile(
-                          label: l10n.statAveragePower,
-                          value: '${ride.avgPowerW} W',
-                        ),
-                      if (ride.normalizedPowerW != null)
-                        StatTile(
-                          label: l10n.statNormalizedPower,
-                          value: '${ride.normalizedPowerW} W',
-                        ),
-                      if (ride.avgHeartRate != null)
-                        StatTile(
-                          label: l10n.statAverageHeartRate,
-                          value: '${ride.avgHeartRate} bpm',
-                        ),
-                      if (ride.tss != null)
-                        StatTile(
-                          label: l10n.statTss,
-                          value: ride.tss!.round().toString(),
-                        ),
-                      if (ride.trimp != null)
-                        StatTile(
-                          label: l10n.statTrimp,
-                          value: ride.trimp!.round().toString(),
-                        ),
-                    ],
-                  ),
-                  if (c.load.failure case final failure?)
-                    Text(
-                      failureText(l10n, failure),
-                      key: const Key('coach-ride-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  if (c.laps.isNotEmpty)
-                    LapTable(laps: c.laps, selectedLap: selection.selectedLap),
-                  if (c.data != null && c.data!.hasRoute)
-                    RouteMap(
-                      data: c.data!,
-                      selected: selection.selected,
-                      selectedLap: selection.selectedLap,
-                      tileUrl: tileUrl,
-                      attribution: attribution,
-                    )
-                  else if (c.data != null)
-                    Text(
-                      l10n.routeNotShared,
-                      key: const Key('route-not-shared'),
-                      style: text.bodySmall,
-                    ),
-                  if (c.data != null && c.data!.series.isNotEmpty)
-                    for (final series in c.data!.series)
-                      SeriesChart(
-                        series: series,
-                        time: c.data!.time,
-                        selected: selection.selected,
-                        selectedLap: selection.selectedLap,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                ],
-              ],
-            ),
+        if (c.notFound)
+          EmptyState(
+            key: const Key('coach-ride-not-found'),
+            message: l10n.coachRideNotFound,
+            icon: Icons.search_off,
+          )
+        else if (c.load.running && ride == null)
+          const Center(child: CircularProgressIndicator())
+        else if (ride != null) ...[
+          if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
+          Wrap(
+            spacing: AppSpacing.xl,
+            runSpacing: 12,
+            children: [
+              StatTile(
+                label: l10n.statDistance,
+                value: km(units, ride.distanceM),
+              ),
+              StatTile(
+                label: l10n.statMovingTime,
+                value: duration(ride.movingS),
+              ),
+              StatTile(
+                label: l10n.statAverageSpeed,
+                value: kmh(units, ride.avgSpeedMs),
+              ),
+              if (ride.avgPowerW != null)
+                StatTile(
+                  label: l10n.statAveragePower,
+                  value: '${ride.avgPowerW} W',
+                ),
+              if (ride.normalizedPowerW != null)
+                StatTile(
+                  label: l10n.statNormalizedPower,
+                  value: '${ride.normalizedPowerW} W',
+                ),
+              if (ride.avgHeartRate != null)
+                StatTile(
+                  label: l10n.statAverageHeartRate,
+                  value: '${ride.avgHeartRate} bpm',
+                ),
+              if (ride.tss != null)
+                StatTile(
+                  label: l10n.statTss,
+                  value: ride.tss!.round().toString(),
+                ),
+              if (ride.trimp != null)
+                StatTile(
+                  label: l10n.statTrimp,
+                  value: ride.trimp!.round().toString(),
+                ),
+            ],
           ),
-        ),
+          if (c.load.failure case final failure?)
+            ErrorState(
+              message: failureText(l10n, failure),
+              actionKey: const Key('coach-ride-error'),
+            ),
+          if (c.laps.isNotEmpty)
+            LapTable(laps: c.laps, selectedLap: selection.selectedLap),
+          if (c.data != null && c.data!.hasRoute)
+            RouteMap(
+              data: c.data!,
+              selected: selection.selected,
+              selectedLap: selection.selectedLap,
+              tileUrl: tileUrl,
+              attribution: attribution,
+            )
+          else if (c.data != null)
+            Text(
+              l10n.routeNotShared,
+              key: const Key('route-not-shared'),
+              style: text.bodySmall,
+            ),
+          if (c.data != null && c.data!.series.isNotEmpty)
+            for (final series in c.data!.series)
+              SeriesChart(
+                series: series,
+                time: c.data!.time,
+                selected: selection.selected,
+                selectedLap: selection.selectedLap,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+        ],
       ],
     );
   }

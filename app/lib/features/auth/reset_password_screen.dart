@@ -61,7 +61,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final s = ref.watch(resetPasswordViewModelProvider);
     final l10n = context.l10n;
     return AuthPage(
+      eyebrow: l10n.authEyebrowReset,
       title: l10n.resetPasswordTitle,
+      help: s.done ? null : l10n.resetPasswordHelp,
       onBack: () => context.go('/sign-in'),
       children: [
         if (s.done) ...[
@@ -73,8 +75,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             child: Text(l10n.goToSignIn),
           ),
         ] else ...[
-          Text(l10n.resetPasswordHelp),
-          const SizedBox(height: AppSpacing.lg),
           PasswordField(
             fieldKey: const Key('reset-password'),
             visibilityKey: const Key('reset-password-visibility'),
@@ -93,10 +93,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           ),
           if (s.problem != null) ...[
             const SizedBox(height: AppSpacing.md),
-            Text(
-              resetProblemText(l10n, s.problem!),
-              key: const Key('reset-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            AuthFailure(
+              keyName: 'reset-error',
+              message: resetProblemText(l10n, s.problem!),
             ),
           ],
           const SizedBox(height: AppSpacing.lg),

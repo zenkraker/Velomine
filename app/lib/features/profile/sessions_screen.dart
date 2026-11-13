@@ -7,6 +7,9 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'sessions_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 
 class SessionsScreen extends ConsumerWidget {
   const SessionsScreen({super.key});
@@ -24,49 +27,63 @@ class SessionsScreen extends ConsumerWidget {
     );
 
     final sessions = state.load.value;
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return PageScaffold(
+      eyebrow: l10n.profileTitle,
+      title: l10n.sessionsTitle,
+      subtitle: l10n.sessionsIntro,
+      maxWidth: AppLayout.contentNarrow,
       children: [
-        Text(l10n.sessionsIntro),
-        const SizedBox(height: AppSpacing.lg),
         if (state.load.running && sessions == null)
           const Center(child: CircularProgressIndicator())
         else if (state.load.failure case final failure?)
-          Row(
-            children: [
-              Expanded(child: Text(failureText(l10n, failure))),
-              TextButton(onPressed: notifier.load, child: Text(l10n.tryAgain)),
-            ],
+          ErrorState(
+            message: failureText(l10n, failure),
+            onRetry: notifier.load,
           )
         else if (sessions != null && sessions.isEmpty)
-          Text(l10n.sessionsEmpty)
+          EmptyState(
+            key: const Key('sessions-empty'),
+            message: l10n.sessionsEmpty,
+            icon: Icons.devices_other,
+          )
         else
-          for (final session in sessions ?? const [])
-            ListTile(
-              key: Key('session-${session.id}'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(session.label),
-              subtitle: Text(
-                '${l10n.sessionLastUsed}: ${dateTime(session.lastUsedAt)}',
-              ),
-              trailing: session.current
-                  ? Text(l10n.sessionThisDevice)
-                  : TextButton(
-                      key: Key('revoke-${session.id}'),
-                      onPressed: state.revoke.running
-                          ? null
-                          : () => notifier.revoke(session.id),
-                      child: Text(l10n.sessionRevoke),
+          Card(
+            child: Column(
+              children: [
+                for (final session in sessions ?? const [])
+                  ListTile(
+                    key: Key('session-${session.id}'),
+                    title: Text(session.label),
+                    subtitle: Text(
+                      '${l10n.sessionLastUsed}: ${dateTime(session.lastUsedAt)}',
                     ),
+                    trailing: session.current
+                        ? Text(l10n.sessionThisDevice)
+                        : TextButton(
+                            key: Key('revoke-${session.id}'),
+                            onPressed: state.revoke.running
+                                ? null
+                                : () => notifier.revoke(session.id),
+                            child: Text(l10n.sessionRevoke),
+                          ),
+                  ),
+              ],
             ),
-        if (state.revoke.completed) Text(l10n.sessionRevoked),
-        if (state.logoutOthers.completed) Text(l10n.sessionOthersRevoked),
-        const SizedBox(height: AppSpacing.lg),
-        OutlinedButton.icon(
-          key: const Key('logout-others'),
-          onPressed: state.logoutOthers.running ? null : notifier.logoutOthers,
-          icon: const Icon(Icons.devices_other),
-          label: Text(l10n.sessionLogoutOthers),
+          ),
+        if (state.revoke.completed)
+          Text(l10n.sessionRevoked, key: const Key('session-revoked')),
+        if (state.logoutOthers.completed)
+          Text(l10n.sessionOthersRevoked, key: const Key('others-revoked')),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            key: const Key('logout-others'),
+            onPressed: state.logoutOthers.running
+                ? null
+                : notifier.logoutOthers,
+            icon: const Icon(Icons.devices_other),
+            label: Text(l10n.sessionLogoutOthers),
+          ),
         ),
       ],
     );

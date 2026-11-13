@@ -8,6 +8,8 @@ import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../routes/route_widgets.dart';
 import '../routes/routes_view_model.dart';
@@ -78,11 +80,14 @@ class ClubRideDetailScreen extends ConsumerWidget {
     }
     final detail = s.detail;
     if (detail == null) {
-      return Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Text(
-          s.load.failure == null ? '' : failureText(l10n, s.load.failure!),
-        ),
+      return ErrorState(
+        message: s.load.failure == null
+            ? l10n.couldNotLoadRide
+            : failureText(l10n, s.load.failure!),
+        actionKey: const Key('club-ride-error'),
+        onRetry: s.load.running
+            ? null
+            : ref.read(clubRideDetailViewModelProvider(id).notifier).load,
       );
     }
 
@@ -93,142 +98,109 @@ class ClubRideDetailScreen extends ConsumerWidget {
         : ref.watch(routeDetailViewModelProvider(ride.routeId!)).detail;
     final busy = s.action.running;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+    return PageScaffold(
+      eyebrow: l10n.clubRidesEyebrow,
+      title: ride.title,
+      titleKey: const Key('club-ride-title'),
+      subtitle: rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
+      maxWidth: AppLayout.contentNarrow,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        ride.title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          decoration: ride.isCancelled
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                      ),
-                    ),
-                    if (ride.isCancelled)
-                      Chip(
-                        key: const Key('ride-cancelled'),
-                        label: Text(l10n.rideCancelled),
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .errorContainer,
-                      ),
-                  ],
-                ),
-                Text(
-                  rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
-                ),
-                Text(
-                  [
-                    ridePaceName(l10n, ride.pace),
-                    if (ride.noDrop) l10n.rideNoDrop,
-                    ridePlaces(l10n, ride),
-                    if (ride.createdByName != null)
-                      l10n.ridePlannedBy(ride.createdByName!),
-                  ].join(' · '),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (ride.isCancelled)
-                  Text(
-                    l10n.rideCancelledReason,
-                    key: const Key('ride-cancelled-reason'),
-                  ),
-                if (ride.isFull && !ride.isSignedUp && !ride.isCancelled)
-                  Text(l10n.rideFullReason, key: const Key('ride-full-reason')),
-                if (started && !ride.isCancelled)
-                  Text(
-                    l10n.rideStartedReason,
-                    key: const Key('ride-started-reason'),
-                  ),
-                if (ride.routeName != null && route != null)
-                  SectionCard(
-                    title: l10n.rideRoute,
-                    description:
-                        '${ride.routeName} · ${routeLineOf(ref.watch(unitsChoiceViewModelProvider), route.distanceM, route.climbingM)}',
-                    children: [
-                      RoutePreview(
-                        latitude: route.latitude,
-                        longitude: route.longitude,
-                        elevation: route.elevation,
-                        tileUrl: tileUrl,
-                        attribution: attribution,
-                      ),
-                    ],
-                  ),
-                SectionCard(
-                  title: l10n.rideMeeting,
-                  children: [
-                    Text(detail.ride.meetingName),
-                    MeetingMap(
-                      latitude: detail.meetingLatitude,
-                      longitude: detail.meetingLongitude,
-                      tileUrl: tileUrl,
-                      attribution: attribution,
-                    ),
-                  ],
-                ),
-                if (detail.notes != null && detail.notes!.isNotEmpty)
-                  SectionCard(
-                    title: l10n.rideNotes,
-                    children: [Text(detail.notes!)],
-                  ),
-                SectionCard(
-                  title: l10n.rideWhoIsIn,
-                  children: [
-                    if (detail.participants.isEmpty)
-                      Text(l10n.rideNobodyIn, key: const Key('ride-nobody-in'))
-                    else
-                      for (final participant in detail.participants)
-                        ListTile(
-                          key: Key('participant-${participant.userId}'),
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.account_circle_outlined),
-                          title: Text(participant.displayName),
-                        ),
-                  ],
-                ),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    if (!detail.canPlan)
-                      _joinButton(context, ref, detail, started, busy),
-                    if (detail.canPlan) ...[
-                      OutlinedButton.icon(
-                        key: const Key('edit-ride'),
-                        onPressed: onEdit,
-                        icon: const Icon(Icons.edit_outlined),
-                        label: Text(l10n.rideEdit),
-                      ),
-                      if (!ride.isCancelled)
-                        TextButton.icon(
-                          key: const Key('cancel-ride'),
-                          onPressed: busy ? null : () => _cancel(context, ref),
-                          icon: const Icon(Icons.event_busy),
-                          label: Text(l10n.rideCancel),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Theme.of(context)
-                                .colorScheme
-                                .error,
-                          ),
-                        ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
+        if (ride.isCancelled)
+          Chip(
+            key: const Key('ride-cancelled'),
+            label: Text(l10n.rideCancelled),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
           ),
+        Text(rideStartText(context, ride.startsAt, ride.utcOffsetMinutes)),
+        Text(
+          [
+            ridePaceName(l10n, ride.pace),
+            if (ride.noDrop) l10n.rideNoDrop,
+            ridePlaces(l10n, ride),
+            if (ride.createdByName != null)
+              l10n.ridePlannedBy(ride.createdByName!),
+          ].join(' · '),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        if (ride.isCancelled)
+          Text(
+            l10n.rideCancelledReason,
+            key: const Key('ride-cancelled-reason'),
+          ),
+        if (ride.isFull && !ride.isSignedUp && !ride.isCancelled)
+          Text(l10n.rideFullReason, key: const Key('ride-full-reason')),
+        if (started && !ride.isCancelled)
+          Text(l10n.rideStartedReason, key: const Key('ride-started-reason')),
+        if (ride.routeName != null && route != null)
+          SectionCard(
+            title: l10n.rideRoute,
+            description:
+                '${ride.routeName} · ${routeLineOf(ref.watch(unitsChoiceViewModelProvider), route.distanceM, route.climbingM)}',
+            children: [
+              RoutePreview(
+                latitude: route.latitude,
+                longitude: route.longitude,
+                elevation: route.elevation,
+                tileUrl: tileUrl,
+                attribution: attribution,
+              ),
+            ],
+          ),
+        SectionCard(
+          title: l10n.rideMeeting,
+          children: [
+            Text(detail.ride.meetingName),
+            MeetingMap(
+              latitude: detail.meetingLatitude,
+              longitude: detail.meetingLongitude,
+              tileUrl: tileUrl,
+              attribution: attribution,
+            ),
+          ],
+        ),
+        if (detail.notes != null && detail.notes!.isNotEmpty)
+          SectionCard(title: l10n.rideNotes, children: [Text(detail.notes!)]),
+        SectionCard(
+          title: l10n.rideWhoIsIn,
+          children: [
+            if (detail.participants.isEmpty)
+              Text(l10n.rideNobodyIn, key: const Key('ride-nobody-in'))
+            else
+              for (final participant in detail.participants)
+                ListTile(
+                  key: Key('participant-${participant.userId}'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.account_circle_outlined),
+                  title: Text(participant.displayName),
+                ),
+          ],
+        ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            if (!detail.canPlan)
+              _joinButton(context, ref, detail, started, busy),
+            if (detail.canPlan) ...[
+              OutlinedButton.icon(
+                key: const Key('edit-ride'),
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined),
+                label: Text(l10n.rideEdit),
+              ),
+              if (!ride.isCancelled)
+                TextButton.icon(
+                  key: const Key('cancel-ride'),
+                  onPressed: busy ? null : () => _cancel(context, ref),
+                  icon: const Icon(Icons.event_busy),
+                  label: Text(l10n.rideCancel),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+            ],
+          ],
         ),
       ],
     );

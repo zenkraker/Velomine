@@ -63,6 +63,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final created = s.outcome != null;
     final l10n = context.l10n;
     return AuthPage(
+      eyebrow: l10n.authEyebrowRegister,
       title: l10n.createAccount,
       children: created
           ? [
@@ -133,10 +134,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               if (s.problem != null) ...[
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  authProblemText(l10n, s.problem!),
-                  key: const Key('register-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                AuthFailure(
+                  keyName: 'register-error',
+                  message: authProblemText(l10n, s.problem!),
                 ),
               ],
               const SizedBox(height: AppSpacing.lg),

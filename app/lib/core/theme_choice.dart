@@ -63,13 +63,14 @@ class PreferencesThemeChoiceStore implements ThemeChoiceStore {
 class ThemeChoiceButton extends ConsumerWidget {
   const ThemeChoiceButton({super.key});
 
-  static IconData _icon(ThemeMode m) => switch (m) {
+  /// The icon and the name of a theme, shared with any menu that offers the choice.
+  static IconData iconOf(ThemeMode m) => switch (m) {
     ThemeMode.light => Icons.light_mode_outlined,
     ThemeMode.dark => Icons.dark_mode_outlined,
     ThemeMode.system => Icons.brightness_auto_outlined,
   };
 
-  static String _name(BuildContext context, ThemeMode mode) => switch (mode) {
+  static String nameOf(BuildContext context, ThemeMode mode) => switch (mode) {
     ThemeMode.light => context.l10n.themeLight,
     ThemeMode.dark => context.l10n.themeDark,
     ThemeMode.system => context.l10n.themeSystem,
@@ -81,8 +82,8 @@ class ThemeChoiceButton extends ConsumerWidget {
         ref.watch(themeChoiceViewModelProvider).value ?? ThemeMode.system;
     return PopupMenuButton<ThemeMode>(
       key: const Key('theme-choice'),
-      tooltip: context.l10n.themeTooltip(_name(context, mode)),
-      icon: Icon(_icon(mode)),
+      tooltip: context.l10n.themeTooltip(nameOf(context, mode)),
+      icon: Icon(iconOf(mode)),
       initialValue: mode,
       onSelected: ref.read(themeChoiceViewModelProvider.notifier).choose,
       itemBuilder: (_) => [
@@ -91,8 +92,8 @@ class ThemeChoiceButton extends ConsumerWidget {
             key: Key('theme-${m.name}'),
             value: m,
             child: ListTile(
-              leading: Icon(_icon(m)),
-              title: Text(_name(context, m)),
+              leading: Icon(iconOf(m)),
+              title: Text(nameOf(context, m)),
               trailing: m == mode ? const Icon(Icons.check) : null,
               contentPadding: EdgeInsets.zero,
             ),

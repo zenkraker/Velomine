@@ -83,6 +83,87 @@ void main() {
     );
   });
 
+  testWidgets('RidesScreen_ShouldPutUploadOnAButton_WhenTheScreenIsAPhone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byKey(const Key('upload')), findsOneWidget);
+    // No row of buttons over the list: the imports wait in the menu.
+    expect(find.byKey(const Key('import-strava')), findsNothing);
+    expect(find.byKey(const Key('rides-actions')), findsOneWidget);
+  });
+
+  testWidgets('RidesScreen_ShouldOfferEveryImport_WhenAPhoneHasNoRides', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+
+    final empty = find.byKey(const Key('no-rides'));
+    expect(empty, findsOneWidget);
+    for (final key in ['upload', 'import-strava']) {
+      expect(
+        find.descendant(of: empty, matching: find.byKey(Key(key))),
+        findsOneWidget,
+        reason: key,
+      );
+    }
+  });
+
+  testWidgets('RidesScreen_ShouldPutTheImportsInAMenu_WhenAPhoneHasRides', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.tap(find.byKey(const Key('rides-actions')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('import-strava')), findsOneWidget);
+  });
+
+  testWidgets(
+    'RidesScreen_ShouldFilterFromOneSheet_WhenTheFilterButtonIsPressed',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      server.rides.add(
+        rideJson('r1', 'ready', discipline: 'road', title: 'Road loop'),
+      );
+      await startApp(tester, server.session(useCookies: true));
+
+      // The chips and the search are not on the list itself.
+      expect(find.byKey(const Key('filter-gravel')), findsNothing);
+      expect(find.byKey(const Key('ride-search')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('rides-filter')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.byKey(const Key('ride-search')), findsOneWidget);
+      expect(find.byKey(const Key('ride-dates')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('filter-gravel')));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, isEmpty);
+      expect(find.byKey(const Key('ride-r1')), findsNothing);
+    },
+  );
+
   testWidgets('RidesScreen_ShouldShowRideNumbers_WhenReady', (tester) async {
     server.rides.add(
       rideJson(
@@ -156,7 +237,7 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
 
     expect(find.text('This is not a cycling activity.'), findsOneWidget);
-    expect(find.text('run.fit'), findsOneWidget);
+    expect(find.byKey(const Key('ride-r2')), findsOneWidget);
   });
 
   testWidgets('RidesScreen_ShouldShowRideBecomingReady_WhenAFileIsUploaded', (
@@ -217,33 +298,25 @@ void main() {
   testWidgets(
     'RidesScreen_ShouldShowOnlyOneSurface_WhenTheGravelFilterIsChosen',
     (tester) async {
-      server.rides.add(
-        rideJson('r1', 'ready', fileName: 'road.fit', discipline: 'road'),
-      );
-      server.rides.add(
-        rideJson('r2', 'ready', fileName: 'gravel.fit', discipline: 'gravel'),
-      );
+      server.rides.add(rideJson('r1', 'ready', discipline: 'road'));
+      server.rides.add(rideJson('r2', 'ready', discipline: 'gravel'));
       await startApp(tester, server.session(useCookies: true));
-      expect(find.text('road.fit'), findsOneWidget);
-      expect(find.text('gravel.fit'), findsOneWidget);
+      expect(find.byKey(const Key('ride-r1')), findsOneWidget);
+      expect(find.byKey(const Key('ride-r2')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('filter-gravel')));
       await tester.pumpAndSettle();
 
-      expect(find.text('gravel.fit'), findsOneWidget);
-      expect(find.text('road.fit'), findsNothing);
+      expect(find.byKey(const Key('ride-r2')), findsOneWidget);
+      expect(find.byKey(const Key('ride-r1')), findsNothing);
     },
   );
 
   testWidgets(
     'RidesScreen_ShouldShowOnlyTheChosenDiscipline_WhenTheFilterChangesDuringALoad',
     (tester) async {
-      server.rides.add(
-        rideJson('r1', 'ready', fileName: 'road.fit', discipline: 'road'),
-      );
-      server.rides.add(
-        rideJson('r2', 'ready', fileName: 'gravel.fit', discipline: 'gravel'),
-      );
+      server.rides.add(rideJson('r1', 'ready', discipline: 'road'));
+      server.rides.add(rideJson('r2', 'ready', discipline: 'gravel'));
       await startApp(tester, server.session(useCookies: true));
 
       final gate = server.delayNext('/api/v1/rides');
@@ -255,8 +328,8 @@ void main() {
       gate.complete();
       await tester.pumpAndSettle();
 
-      expect(find.text('road.fit'), findsOneWidget);
-      expect(find.text('gravel.fit'), findsNothing);
+      expect(find.byKey(const Key('ride-r1')), findsOneWidget);
+      expect(find.byKey(const Key('ride-r2')), findsNothing);
     },
   );
 
@@ -274,7 +347,6 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
 
     expect(find.text('Gravel with Marco'), findsOneWidget);
-    expect(find.text('sunday.gpx'), findsOneWidget);
   });
 
   testWidgets('RidesScreen_ShouldMakeUpATitle_WhenTheRideHasNone', (
@@ -360,15 +432,15 @@ void main() {
         .setDateRange((from: DateTime(2026, 11, 1), to: DateTime(2026, 11, 1)));
     await tester.pumpAndSettle();
 
-    expect(find.text('a.fit'), findsOneWidget);
-    expect(find.text('b.fit'), findsNothing);
+    expect(find.byKey(const Key('ride-r1')), findsOneWidget);
+    expect(find.byKey(const Key('ride-r2')), findsNothing);
     expect(find.byKey(const Key('ride-dates-chip')), findsOneWidget);
 
     await tester.tap(find.byTooltip('Remove the date filter'));
     await tester.pumpAndSettle();
 
-    expect(find.text('a.fit'), findsOneWidget);
-    expect(find.text('b.fit'), findsOneWidget);
+    expect(find.byKey(const Key('ride-r1')), findsOneWidget);
+    expect(find.byKey(const Key('ride-r2')), findsOneWidget);
     expect(find.byKey(const Key('ride-dates-chip')), findsNothing);
   });
 
