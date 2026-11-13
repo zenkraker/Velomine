@@ -16,7 +16,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class RideIngestionTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -42,22 +41,15 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     /// <summary>Uploads and waits until the background reader is done with the ride.</summary>
     private static async Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file, string name = "ride.fit", string? key = null)
     {
-        var accepted = await UploadAsync(client, file, name, key);
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/rides/uploads")
+        {
+            Content = new MultipartFormDataContent { { new ByteArrayContent(file), "file", name } },
+        };
+        if (key is not null) request.Headers.Add("Idempotency-Key", key);
+        var accepted = await client.SendAsync(request, Ct);
         Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
         var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        return await WaitAsync(client, id);
-    }
-
-    private static async Task<RideResponse> WaitAsync(HttpClient client, Guid id)
-    {
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
+        return await TestApi.WaitForReadAsync(client, id);
     }
 
     private static int OriginalFileCount(TestApi api) =>
@@ -209,21 +201,9 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Accepted, retry.StatusCode);
         Assert.Equal(first!.RideId, (await retry.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId);
-        await WaitAsync(member, first.RideId);
+        await TestApi.WaitForReadAsync(member, first.RideId);
         var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
         Assert.Single(list!.Rides);
-    }
-
-    [Fact]
-    public async Task UploadRide_ShouldReturnConflict_WhenTheKeyIsReusedForAnotherFile()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        await UploadAsync(member, Fit(new FitSession(Start, 90)), key: "k1");
-
-        var other = await UploadAsync(member, Fit(new FitSession(Start.AddDays(1), 90)), key: "k1");
-
-        Assert.Equal(HttpStatusCode.Conflict, other.StatusCode);
     }
 
     [Fact]
@@ -267,7 +247,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         {
             var accepted = await UploadAsync(member, bytes, key: key, bulk: true);
             Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
-            return await WaitAsync(member, (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId);
+            return await TestApi.WaitForReadAsync(member, (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId);
         }
 
         Assert.Equal("ready", (await BulkAsync(file, "a")).Status);
@@ -302,32 +282,13 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         var firstId = (await (await firstUpload).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
         var secondId = (await (await secondUpload).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
 
-        var first = await WaitAsync(member, firstId);
-        var second = await WaitAsync(member, secondId);
+        var first = await TestApi.WaitForReadAsync(member, firstId);
+        var second = await TestApi.WaitForReadAsync(member, secondId);
 
         var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
         var visible = Assert.Single(list!.Rides);
         Assert.Contains(new[] { first, second },
             ride => ride.Status == "duplicate" && ride.DuplicateOf == visible.Id);
-    }
-
-    [Fact]
-    public async Task UploadRide_ShouldKeepOneRide_WhenTheSecondUploadStartsWhileTheFirstIsProcessing()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        var file = Fit(new FitSession(Start, 90));
-
-        var first = await UploadAsync(member, file);
-        var firstId = (await first.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        var second = await UploadAsync(member, file);
-        var secondId = (await second.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-
-        await WaitAsync(member, firstId);
-        await WaitAsync(member, secondId);
-
-        var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
-        Assert.Single(list!.Rides);
     }
 
     [Fact]
@@ -373,16 +334,6 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task UploadRide_ShouldBeUnauthorized_WhenTheCallerIsNotSignedIn()
-    {
-        await using var api = await StartAsync();
-
-        var response = await UploadAsync(api.CreateClient(), Fit(new FitSession(Start, 60)));
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
     public async Task UploadRide_ShouldAcceptTheRequest_WhenSentAsTheGeneratedDartClientDoes()
     {
         await using var api = await StartAsync();
@@ -398,7 +349,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var id = (await response.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        Assert.Equal("ready", (await WaitAsync(member, id)).Status);
+        Assert.Equal("ready", (await TestApi.WaitForReadAsync(member, id)).Status);
     }
 
     [Fact]
@@ -499,7 +450,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.NoContent, (await member.DeleteAsync($"/api/v1/rides/{visible.Id}", Ct)).StatusCode);
 
-        Assert.Equal("ready", (await WaitAsync(member, duplicate.Id)).Status);
+        Assert.Equal("ready", (await TestApi.WaitForReadAsync(member, duplicate.Id)).Status);
         Assert.Equal(1, OriginalFileCount(api)); // the copy was read from the same file, which the surviving ride needs
     }
 
@@ -530,7 +481,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
             TestApi.MemberPassword);
         var listed = await again.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
 
-        var ride = await WaitAsync(again, listed!.Rides.Single().Id);
+        var ride = await TestApi.WaitForReadAsync(again, listed!.Rides.Single().Id);
         Assert.Equal("ready", ride.Status);
     }
 

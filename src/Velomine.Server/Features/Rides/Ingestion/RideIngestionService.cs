@@ -98,7 +98,7 @@ public sealed class RideIngestionService(
             .Where(u => u.Id == ride.UserId)
             .Select(u => new { u.FtpW, u.BirthYear, u.TimeZone })
             .FirstAsync(ct);
-        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear);
+        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear, time);
         // Copied once, onto the ride row made at upload: the activities of a multi-activity file inherit it below, and
         // a re-read from the original file leaves the columns alone because it assigns only what it derives.
         ride.Privacy ??= PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking()

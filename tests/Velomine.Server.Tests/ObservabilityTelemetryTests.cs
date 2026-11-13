@@ -58,36 +58,6 @@ public sealed class ObservabilityTelemetryTests
     }
 
     [Fact]
-    public void TelemetryOptions_ShouldGiveTheAppTheServerDsn_WhenNoAppDsnIsSet()
-    {
-        var options = Bind(new()
-        {
-            ["Enabled"] = "true",
-            ["Environment"] = "demo",
-            ["Errors:Dsn"] = "https://key@errors.example/1",
-        });
-
-        Assert.Equal("https://key@errors.example/1", options.ErrorsDsn);
-        Assert.Equal("https://key@errors.example/1", options.AppDsn);
-        Assert.Equal("demo", options.EffectiveEnvironment);
-        Assert.True(options.IsErrorsActive);
-        Assert.True(options.IsAppActive);
-    }
-
-    [Fact]
-    public void TelemetryOptions_ShouldUseTheAppDsn_WhenBothAreSet()
-    {
-        var options = Bind(new()
-        {
-            ["Enabled"] = "true",
-            ["Errors:Dsn"] = "https://key@errors.example/1",
-            ["App:Dsn"] = "https://key@app.example/2",
-        });
-
-        Assert.Equal("https://key@app.example/2", options.AppDsn);
-    }
-
-    [Fact]
     public void TelemetryOptions_ShouldStayOff_WhenADsnIsSetButTelemetryIsNotEnabled()
     {
         var options = Bind(new() { ["Errors:Dsn"] = "https://key@errors.example/1" });

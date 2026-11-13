@@ -1,18 +1,25 @@
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Velomine.Server.Data;
+using Velomine.Server.Tests;
+
+// Assembly fixtures are handed to every test class's constructor and leave the classes free to run in parallel,
+// which a collection fixture does not: one collection is one thread.
+[assembly: AssemblyFixture(typeof(PostgresFixture))]
+[assembly: AssemblyFixture(typeof(DexFixture))]
 
 namespace Velomine.Server.Tests;
 
 /// <summary>
-/// One PostgreSQL server for the whole test run (see <see cref="PostgresCollection"/>). Starts a postgres:17
-/// container, the image docker-compose uses; set VELOMINE_TEST_POSTGRES to an existing server connection string
-/// to use that instead. Tests ask for a fresh, empty database with <see cref="CreateDatabaseAsync"/>.
+/// One PostgreSQL server for the whole test run, shared as an assembly fixture so test classes run in parallel.
+/// Starts a postgres:17 container, the image docker-compose uses; set VELOMINE_TEST_POSTGRES to an existing server
+/// connection string to use that instead. Tests ask for a fresh, empty database with <see cref="CreateDatabaseAsync"/>.
 /// </summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private readonly List<string> databases = [];
+    private readonly ConcurrentBag<string> databases = [];
     private PostgreSqlContainer? container;
     private string? template;
 
@@ -27,7 +34,13 @@ public sealed class PostgresFixture : IAsyncLifetime
         }
         else
         {
-            container = new PostgreSqlBuilder("postgres:17").Build();
+            // Test classes run in parallel and every server has its own pool, so the default 100 connections are
+            // not enough. The module's own settings (fsync=off and the rest) are added after this command.
+            // The data directory stays in memory: every test clones the migrated template, and a clone is a file copy.
+            container = new PostgreSqlBuilder("postgres:17")
+                .WithCommand("-c", "max_connections=500")
+                .WithTmpfsMount("/var/lib/postgresql/data")
+                .Build();
             await container.StartAsync();
             ServerConnection = container.GetConnectionString();
         }
@@ -50,7 +63,10 @@ public sealed class PostgresFixture : IAsyncLifetime
         var name = "t_" + Guid.NewGuid().ToString("N");
         await ExecuteAsync($"CREATE DATABASE {name} TEMPLATE {template}");
         databases.Add(name);
-        return new NpgsqlConnectionStringBuilder(ServerConnection) { Database = name }.ConnectionString;
+        var connection = new NpgsqlConnectionStringBuilder(ServerConnection) { Database = name };
+        // On an existing server (VELOMINE_TEST_POSTGRES) the connection limit is not ours to raise.
+        if (Environment.GetEnvironmentVariable("VELOMINE_TEST_POSTGRES") is not null) connection.MaxPoolSize = 5;
+        return connection.ConnectionString;
     }
 
     private async Task ExecuteAsync(string sql)
@@ -78,6 +94,3 @@ public sealed class PostgresFixture : IAsyncLifetime
             await new NpgsqlCommand($"DROP DATABASE IF EXISTS {template} WITH (FORCE)", admin).ExecuteNonQueryAsync();
     }
 }
-
-[CollectionDefinition("postgres")]
-public sealed class PostgresCollection : ICollectionFixture<PostgresFixture>, ICollectionFixture<DexFixture>;

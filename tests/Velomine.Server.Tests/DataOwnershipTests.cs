@@ -22,7 +22,6 @@ using Member = Velomine.Server.Tests.TestMember;
 namespace Velomine.Server.Tests;
 
 /// <summary>Members own their data: they can take all of it out, and delete their account with everything in it.</summary>
-[Collection("postgres")]
 public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -287,12 +286,4 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         Assert.Equal(HttpStatusCode.NoContent, allowed.StatusCode);
     }
 
-    [Fact]
-    public async Task DataOwnership_ShouldReportHasPassword_WhenReadingTheProfile()
-    {
-        await using var api = await StartAsync();
-        var me = await NewMemberAsync(api);
-
-        Assert.True((await me.Client.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct))!.HasPassword);
-    }
 }

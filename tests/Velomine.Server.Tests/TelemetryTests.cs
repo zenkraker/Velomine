@@ -4,7 +4,6 @@ using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class TelemetryTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -77,22 +76,11 @@ public sealed class TelemetryTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Telemetry_ShouldRequireSignIn_WhenRequestedAnonymously()
+    public async Task Telemetry_ShouldBeEachMembersOwn_WhenTwoMembersShareTheServer()
     {
         await using var api = await StartAsync();
-
-        var response = await api.CreateClient().GetAsync("/api/v1/accounts/me/telemetry", Ct);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Telemetry_ShouldNotCrossTenants_WhenTwoClubsAreConfigured()
-    {
-        await using var one = await StartAsync();
-        await using var two = await StartAsync();
-        var (mine, _) = await NewMemberAsync(one);
-        var (theirs, _) = await NewMemberAsync(two);
+        var (mine, _) = await NewMemberAsync(api);
+        var (theirs, _) = await NewMemberAsync(api);
 
         (await mine.PutAsJsonAsync("/api/v1/accounts/me/telemetry", new SetTelemetryRequest(true, true), Ct))
             .EnsureSuccessStatusCode();

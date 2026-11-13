@@ -14,33 +14,46 @@ class AdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DefaultTabController(
     length: 4,
-    child: Column(
-      children: [
-        TabBar(
-          // Four labels fit 320 dp only with a tighter label padding; scrolling hid one at rest.
-          labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          tabs: [
-            Tab(
-              key: const Key('tab-accounts'),
-              text: context.l10n.adminAccounts,
+    // The tabs and their content share one measure, so a tab label sits over the table it labels.
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: AppLayout.contentMax),
+        child: Column(
+          children: [
+            TabBar(
+              // Four labels fit 320 dp only with a tighter label padding; scrolling hid one at rest.
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+              ),
+              tabs: [
+                Tab(
+                  key: const Key('tab-accounts'),
+                  text: context.l10n.adminAccounts,
+                ),
+                Tab(key: const Key('tab-clubs'), text: context.l10n.adminClubs),
+                Tab(
+                  key: const Key('tab-settings'),
+                  text: context.l10n.adminSettings,
+                ),
+                Tab(
+                  key: const Key('tab-overview'),
+                  text: context.l10n.adminOverview,
+                ),
+              ],
             ),
-            Tab(key: const Key('tab-clubs'), text: context.l10n.adminClubs),
-            Tab(
-              key: const Key('tab-settings'),
-              text: context.l10n.adminSettings,
-            ),
-            Tab(
-              key: const Key('tab-overview'),
-              text: context.l10n.adminOverview,
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  AccountsTab(),
+                  ClubsTab(),
+                  SettingsTab(),
+                  OverviewTab(),
+                ],
+              ),
             ),
           ],
         ),
-        const Expanded(
-          child: TabBarView(
-            children: [AccountsTab(), ClubsTab(), SettingsTab(), OverviewTab()],
-          ),
-        ),
-      ],
+      ),
     ),
   );
 }

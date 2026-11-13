@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
+import '../auth/auth_page.dart';
 import 'club_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/page_scaffold.dart';
 
 /// Where a signed-in account without a club lands. It joins with the code the owner shared.
 class JoinClubScreen extends ConsumerStatefulWidget {
@@ -58,22 +60,16 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
             FailureKind.conflict => failure.detail ?? l10n.joinAlready,
             _ => failureText(l10n, failure),
           };
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440),
-        child: AutofillGroup(
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(AppSpacing.xl),
+    return PageScaffold(
+      // The title bar already names this screen; the page adds the purpose line under it.
+      eyebrow: l10n.eyebrowClub,
+      subtitle: l10n.joinIntro,
+      maxWidth: AppLayout.contentNarrow,
+      children: [
+        AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Velomine',
-                style: Theme.of(context).textTheme.headlineLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(l10n.joinIntro),
-              const SizedBox(height: AppSpacing.xl),
               TextField(
                 key: const Key('join-code'),
                 controller: _code,
@@ -86,30 +82,30 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
               ),
               if (message != null) ...[
                 const SizedBox(height: AppSpacing.md),
-                Text(
-                  message,
-                  key: const Key('join-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+                AuthFailure(keyName: 'join-error', message: message),
               ],
               const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                key: const Key('join-club'),
-                onPressed: state.action.running ? null : _join,
-                child: Text(l10n.joinAction),
-              ),
-              if (widget.onSkip != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                TextButton(
-                  key: const Key('skip-join'),
-                  onPressed: state.action.running ? null : widget.onSkip,
-                  child: Text(l10n.joinSkip),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton(
+                  key: const Key('join-club'),
+                  onPressed: state.action.running ? null : _join,
+                  child: Text(l10n.joinAction),
                 ),
-              ],
+              ),
+              if (widget.onSkip != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    key: const Key('skip-join'),
+                    onPressed: state.action.running ? null : widget.onSkip,
+                    child: Text(l10n.joinSkip),
+                  ),
+                ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }

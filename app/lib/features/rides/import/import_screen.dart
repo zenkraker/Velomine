@@ -5,6 +5,8 @@ import 'package:velomine_api/api.dart';
 import '../../../core/failure.dart';
 import '../../../core/l10n.dart';
 import '../../../core/tokens.dart';
+import '../../../core/widgets/error_state.dart';
+import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'import_view_model.dart';
@@ -28,23 +30,15 @@ class ImportScreen extends ConsumerWidget {
     final state = ref.watch(importViewModelProvider(id));
     final status = state.load.value;
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return PageScaffold(
+      title: l10n.importTitle,
+      maxWidth: AppLayout.contentNarrow,
       children: [
         if (state.load.failure case final failure?)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                failureText(l10n, failure),
-                key: const Key('import-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-              TextButton(
-                onPressed: ref.read(importViewModelProvider(id).notifier).retry,
-                child: Text(l10n.retry),
-              ),
-            ],
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('import-error'),
+            onRetry: ref.read(importViewModelProvider(id).notifier).retry,
           )
         else if (status == null)
           const Padding(

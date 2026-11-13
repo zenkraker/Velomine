@@ -11,7 +11,6 @@ namespace Velomine.Server.Tests;
 /// The confirmation link without a server round-trip: the link carries a token that confirms its address once, and
 /// only when email is configured. Identity's own expiry is its business, not this branch's.
 /// </summary>
-[Collection("postgres")]
 public sealed class EmailTokenTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

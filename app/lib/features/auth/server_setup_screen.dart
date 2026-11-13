@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import 'auth_page.dart';
 import '../../core/server_config.dart';
 import '../../core/tokens.dart';
 
@@ -114,74 +115,46 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       SetupProblem.unreachable => l10n.setupUnreachable,
       SetupProblem.saveFailed => l10n.setupSaveFailed,
     };
-    return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            children: [
-              Text(
-                'Velomine',
-                style: Theme.of(context).textTheme.headlineLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.setupTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              TextField(
-                key: const Key('server-url'),
-                controller: _url,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                enableSuggestions: false,
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  labelText: l10n.setupServerAddress,
-                  hintText: l10n.setupServerHint,
-                ),
-                onChanged: (_) => setState(() {}),
-                onSubmitted: (_) {
-                  if (!s.busy) _save();
-                },
-              ),
-              if (_url.text.trim().toLowerCase().startsWith('http://')) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.setupInsecure,
-                  key: const Key('server-insecure'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-              if (error != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  error,
-                  key: const Key('server-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                key: const Key('server-save'),
-                onPressed: s.busy ? null : _save,
-                child: Text(s.busy ? l10n.setupChecking : l10n.setupConnect),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                l10n.setupHelp,
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
+    return AuthPage(
+      eyebrow: l10n.authEyebrowServer,
+      title: l10n.setupTitle,
+      help: l10n.setupHelp,
+      children: [
+        TextField(
+          key: const Key('server-url'),
+          controller: _url,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          enableSuggestions: false,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            labelText: l10n.setupServerAddress,
+            hintText: l10n.setupServerHint,
           ),
+          onChanged: (_) => setState(() {}),
+          onSubmitted: (_) {
+            if (!s.busy) _save();
+          },
         ),
-      ),
+        if (_url.text.trim().toLowerCase().startsWith('http://')) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.setupInsecure,
+            key: const Key('server-insecure'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+        if (error != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          AuthFailure(keyName: 'server-error', message: error),
+        ],
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(
+          key: const Key('server-save'),
+          onPressed: s.busy ? null : _save,
+          child: Text(s.busy ? l10n.setupChecking : l10n.setupConnect),
+        ),
+      ],
     );
   }
 }

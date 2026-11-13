@@ -12,7 +12,6 @@ using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Tests.Analytics;
 
-[Collection("postgres")]
 public sealed class AnalyticsTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

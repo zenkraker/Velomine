@@ -16,7 +16,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class RideReparseTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -57,17 +56,8 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         return id;
     }
 
-    private static async Task<string> WaitWhileProcessingAsync(HttpClient client, Guid id)
-    {
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride.Status;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static async Task<string> WaitWhileProcessingAsync(HttpClient client, Guid id) =>
+        (await TestApi.WaitForReadAsync(client, id)).Status;
 
     private static async Task<T> InDbAsync<T>(TestApi api, Func<VelomineDbContext, Task<T>> work)
     {
@@ -159,6 +149,57 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         Assert.Equal(first.IntensityFactor, after.IntensityFactor);
         Assert.Equal(first.Tss, after.Tss);
         Assert.Equal(250, after.LoadFtpW);
+    }
+
+    [Fact]
+    public async Task Reparse_ShouldKeepTheMaximumHeartRateOfTheFirstRead_WhenTheMembersBirthYearChangedSince()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        // A birth year of 1990 gives a maximum of 183 (Tanaka) on the first read.
+        await InDbAsync(api, async db =>
+        {
+            await db.Users.Where(u => u.Id == member.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.BirthYear, 1990), Ct);
+            return 0;
+        });
+        var id = await UploadAsync(member, Fit(new FitSession(Start, 600)));
+        var first = await LoadAsync(api, id);
+        Assert.Equal(183, first.LoadMaxHeartRate);
+        Assert.NotNull(first.Trimp);
+
+        // The member corrects their birth year; a re-read must still use the maximum the ride was read with.
+        await InDbAsync(api, async db =>
+        {
+            await db.Users.Where(u => u.Id == member.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.BirthYear, 1970), Ct);
+            await db.Rides.Where(r => r.Id == id).ExecuteUpdateAsync(s => s.SetProperty(r => r.Trimp, 1.0), Ct);
+            return 0;
+        });
+
+        await ReparseAsync(api);
+
+        var after = await LoadAsync(api, id);
+        Assert.Equal(183, after.LoadMaxHeartRate);
+        Assert.Equal(first.Trimp, after.Trimp);
+    }
+
+    [Fact]
+    public async Task Reparse_ShouldKeepTheMembersTitleAndDescription_WhenTheRideIsReadAgain()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var id = await UploadAsync(member, Fit(new FitSession(Start, 120)));
+        var ride = await LoadAsync(api, id);
+        var named = await member.Client.PutAsJsonAsync($"/api/v1/rides/{id}/details",
+            new SetRideDetailsRequest { Title = "Morning loop", Description = "Frosty but calm", Version = ride.Version }, Ct);
+        named.EnsureSuccessStatusCode();
+        await InDbAsync(api, db => db.Rides.Where(r => r.Id == id).ExecuteUpdateAsync(s => s.SetProperty(r => r.ElevationGainM, 999.0), Ct));
+
+        await ReparseAsync(api);
+
+        var after = await LoadAsync(api, id);
+        Assert.Equal("Morning loop", after.Title);
+        Assert.Equal("Frosty but calm", after.Description);
+        Assert.InRange(after.ElevationGainM!.Value, 10, 13); // the derived numbers were still refreshed
     }
 
     [Fact]
@@ -336,7 +377,8 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         var service = new RideReparseService(api.Services, queue, api.Services.GetRequiredService<RideFileStore>(), TimeProvider.System, NullLogger<RideReparseService>.Instance);
 
         var running = service.RunAsync(Ct, Raised);
-        await Task.Delay(1500, Ct);
+        // The run is waiting on the queued upload; it must not have touched the old ride by now.
+        await Task.Delay(300, Ct);
         Assert.False(running.IsCompleted);
         Assert.Equal(999.0, (await LoadAsync(api, id)).ElevationGainM);
 
@@ -346,23 +388,21 @@ public sealed class RideReparseTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Reparse_ShouldReadOldestFirstInSmallBatches_WhenManyRidesAreWaiting()
+    public async Task Reparse_ShouldReadEveryRideAgain_WhenManyAreWaiting()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
         var file = Fit(new FitSession(Start, 60));
         var id = await UploadAsync(member, file);
         var sha = (await LoadAsync(api, id)).FileSha256;
-        var ids = await InDbAsync(api, async db =>
+        await InDbAsync(api, async db =>
         {
             var ride = await db.Rides.AsNoTracking().SingleAsync(r => r.Id == id, Ct);
-            var made = new List<Guid>();
             for (var i = 0; i < 45; i++)
             {
-                var copyId = Guid.CreateVersion7();
                 db.Rides.Add(new Ride
                 {
-                    Id = copyId,
+                    Id = Guid.CreateVersion7(),
                     UserId = member.Id,
                     Status = RideStatus.Ready,
                     FileSha256 = sha,
@@ -372,10 +412,9 @@ public sealed class RideReparseTests(PostgresFixture postgres)
                     DedupKey = $"test:{Guid.NewGuid():N}:{ride.StartTime!.Value.ToUnixTimeSeconds()}",
                     ElevationGainM = 999,
                 });
-                made.Add(copyId);
             }
             await db.SaveChangesAsync(Ct);
-            return made;
+            return 0;
         });
 
         await ReparseAsync(api);
@@ -383,7 +422,6 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         var remaining = await InDbAsync(api, db => db.Rides.CountAsync(r => r.ParserVersion < Raised, Ct));
         Assert.Equal(0, remaining);
         Assert.Equal(46, await InDbAsync(api, db => db.Rides.CountAsync(r => r.ParserVersion == Raised && r.ElevationGainM < 100, Ct)));
-        Assert.Equal(45, ids.Count);
     }
 
     [Fact]

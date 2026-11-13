@@ -10,7 +10,6 @@ using Velomine.Server.Features.Bikes;
 
 namespace Velomine.Server.Tests.Bikes;
 
-[Collection("postgres")]
 public sealed class ContributionsTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -89,23 +88,19 @@ public sealed class ContributionsTests(PostgresFixture postgres)
         await AddChainAsync(member, await AddBikeAsync(member));
 
         var contribution = await WithDbAsync(api, (db, _) => db.PartContributions.SingleAsync(Ct));
-        var json = JsonSerializer.Serialize(
-            ContributionEntry.From(new BikeComponent
-            {
-                Type = contribution.Type,
-                Brand = contribution.Brand,
-                Model = contribution.Model,
-                Mpn = contribution.Mpn,
-                Gtin = contribution.Gtin,
-            }),
-            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        // Push what is queued; the stub keeps the exact body the publisher would receive.
+        var handler = new StubHandler(HttpStatusCode.OK, """{"accepted":[],"rejected":[]}""");
+        await WithDbAsync(api, (db, clock) =>
+            ContributionPush.RunAsync(db, new HttpClient(handler), Options(), clock, null, Ct));
+        var sent = JsonDocument.Parse(handler.LastBody!).RootElement.GetProperty("parts")[0];
 
         Assert.Equal("pending", contribution.Status);
         Assert.Equal("chain", contribution.Type);
         Assert.Equal("Shimano", contribution.Brand);
-        Assert.DoesNotContain("bike", json, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("user", json, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("club", json, StringComparison.OrdinalIgnoreCase);
+        // The publisher gets the part and nothing about the member, the bike or the club.
+        Assert.Equal(
+            ["brand", "gtin", "key", "model", "mpn", "type"],
+            sent.EnumerateObject().Select(p => p.Name).Order());
     }
 
     [Fact]
@@ -114,17 +109,6 @@ public sealed class ContributionsTests(PostgresFixture postgres)
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
         await AddChainAsync(member, await AddBikeAsync(member), custom: true);
-
-        Assert.Equal(0, await WithDbAsync(api, (db, _) => db.PartContributions.CountAsync(Ct)));
-    }
-
-    [Fact]
-    public async Task CatalogueContributions_ShouldNotQueue_WhenThePublisherAlreadyListsThePart()
-    {
-        await using var api = await StartAsync();
-        await AddToSharedCatalogueAsync(api);
-        var member = await NewMemberAsync(api);
-        await AddChainAsync(member, await AddBikeAsync(member));
 
         Assert.Equal(0, await WithDbAsync(api, (db, _) => db.PartContributions.CountAsync(Ct)));
     }
@@ -251,10 +235,13 @@ public sealed class ContributionsTests(PostgresFixture postgres)
 
         public ContributionEntry[]? LastParts { get; private set; }
 
+        public string? LastBody { get; private set; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             LastAuthorization = request.Headers.Authorization?.ToString();
             var json = await request.Content!.ReadAsStringAsync(ct);
+            LastBody = json;
             LastParts = JsonSerializer.Deserialize<ContributionSubmission>(
                 json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!.Parts;
 

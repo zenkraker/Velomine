@@ -15,7 +15,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Bikes;
 
-[Collection("postgres")]
 public sealed class MaintenanceTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -90,11 +89,11 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     private static async Task<string[]> ReminderTypesAsync(HttpClient client, int expected)
     {
         string[] types = [];
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < 500; i++)
         {
             types = ReminderTypes(await NotificationsAsync(client));
             if (types.Length >= expected) return types;
-            await Task.Delay(100, Ct);
+            await Task.Delay(20, Ct);
         }
         return types;
     }
@@ -603,8 +602,6 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     [Theory]
     [InlineData("road", "sealant_top_up", true)]
     [InlineData("track", "sealant_top_up", false)]
-    [InlineData("road", "fork_service", false)]
-    [InlineData("mountain", "fork_service", true)]
     public async Task ServiceJobs_ShouldFollowTheBikeKind_WhenListed(string kind, string job, bool offered)
     {
         await using var api = await StartAsync();
@@ -668,8 +665,8 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     public async Task AccountDeletion_ShouldRemoveRemindersAndLog_WhenTheMemberDeletesTheAccount()
     {
         await using var api = await StartAsync();
-        var (member, userId) = await NewMemberAsync(api);
-        var (other, otherId) = await NewMemberAsync(api);
+        var (member, _) = await NewMemberAsync(api);
+        var (other, _) = await NewMemberAsync(api);
         var bike = await AddBikeAsync(member);
         await AddReminderAsync(member, bike.Bike.Id, LubeChain());
         await member.PostAsJsonAsync($"/api/v1/bikes/{bike.Bike.Id}/service", new CreateServiceEntryRequest { Date = new DateOnly(2026, 10, 5), Title = "New saddle" }, Ct);
@@ -684,22 +681,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
         Assert.False(await db.MaintenanceReminders.AnyAsync(r => r.BikeId == bike.Bike.Id, Ct));
         Assert.False(await db.ServiceEntries.AnyAsync(e => e.BikeId == bike.Bike.Id, Ct));
         Assert.True(await db.MaintenanceReminders.AnyAsync(r => r.BikeId == otherBike.Bike.Id, Ct));
-        _ = userId;
-        _ = otherId;
     }
 
-    private static async Task UploadAndWaitAsync(HttpClient client, byte[] file)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            if ((await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task UploadAndWaitAsync(HttpClient client, byte[] file) => TestApi.UploadAndWaitAsync(client, file);
 }

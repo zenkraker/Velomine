@@ -422,7 +422,11 @@ void main() {
     (tester) async {
       await open(tester);
 
+      // Both edits live in the ride's one actions menu.
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
       expect(find.byKey(const Key('edit-ride-type')), findsOneWidget);
+      expect(find.byKey(const Key('edit-ride-text')), findsOneWidget);
       expect(find.text('Set ride details'), findsWidgets);
     },
   );
@@ -432,7 +436,11 @@ void main() {
     (tester) async {
       await open(tester);
 
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('edit-ride-type')));
+      // The sheet opens from the menu's callback, after the menu has closed.
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('ride-type-discipline')));
       await tester.pumpAndSettle();
@@ -486,7 +494,11 @@ void main() {
   ) async {
     await open(tester);
 
+    await tester.tap(find.byKey(const Key('ride-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('edit-ride-text')));
+    // The sheet opens from the menu's callback, after the menu has closed.
+    await tester.pumpAndSettle();
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('ride-title-field')),
@@ -503,6 +515,26 @@ void main() {
     expect(find.text('Dawn patrol'), findsOneWidget);
     expect(find.text('Cold start'), findsOneWidget);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldPutTheRideMenuInTheTitleBar_WhenTheScreenIsAPhone',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.byKey(const Key('ride-r1')));
+      await tester.pumpAndSettle();
+
+      // No page header on a phone, so the menu is a title-bar control.
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('edit-ride-text')), findsOneWidget);
+      expect(find.byKey(const Key('edit-ride-type')), findsOneWidget);
+      expect(find.byKey(const Key('delete')), findsOneWidget);
+    },
+  );
 
   testWidgets('RideDetailScreen_ShouldListWhoLooked_WhenACoachOpenedTheRide', (
     tester,

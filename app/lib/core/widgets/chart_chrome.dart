@@ -83,14 +83,17 @@ class ChartHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
         ],
-        Text(title, style: text.titleSmall),
+        Expanded(child: Text(title, style: text.titleSmall)),
         if (readout != null) ...[
-          const Spacer(),
-          Text(
-            readout!,
-            key: readoutKey,
-            style: text.bodySmall?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            child: Text(
+              readout!,
+              key: readoutKey,
+              textAlign: TextAlign.end,
+              style: text.bodySmall?.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ],

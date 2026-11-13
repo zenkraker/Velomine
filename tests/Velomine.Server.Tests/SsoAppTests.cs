@@ -15,7 +15,6 @@ namespace Velomine.Server.Tests;
 /// The phone's direct OpenID Connect flow: an ID token from the real provider (Dex, same configuration as development)
 /// exchanged for Velomine bearer tokens.
 /// </summary>
-[Collection("postgres")]
 public sealed class SsoAppTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

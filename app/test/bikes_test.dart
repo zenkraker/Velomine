@@ -22,6 +22,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Opens the bike's actions menu and picks one of its rare jobs.
+  Future<void> chooseBikeAction(WidgetTester tester, String key) async {
+    await tester.tap(find.byKey(const Key('bike-actions')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key(key)));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> addBike(WidgetTester tester, String name) async {
     await tester.tap(find.byKey(const Key('add-bike')));
     await tester.pumpAndSettle();
@@ -30,6 +38,36 @@ void main() {
     await tester.tap(find.byKey(const Key('bike-save')));
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'BikeDetailScreen_ShouldPutTheBikeJobsInTheTitleBar_WhenTheScreenIsAPhone',
+    (tester) async {
+      server.bikes.add({
+        'id': 'bike-1',
+        'name': 'Climber',
+        'kind': 'road',
+        'wheelCircumferenceMm': 2105,
+        'initialDistanceM': 0.0,
+        'isDefault': true,
+      });
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.text('Bikes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('bike-bike-1')));
+      await tester.pumpAndSettle();
+
+      // No page header on a phone, so the bike's jobs are title-bar controls.
+      expect(find.byKey(const Key('edit-bike')), findsOneWidget);
+      expect(find.byKey(const Key('add-part')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('bike-actions')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('delete-bike')), findsOneWidget);
+    },
+  );
 
   testWidgets('BikesScreen_ShouldExplainBikes_WhenThereAreNone', (
     tester,
@@ -184,20 +222,18 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     await addBike(tester, 'Second');
+    await tester.tap(find.byKey(const Key('bike-actions')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('make-default')), findsOneWidget);
-
     await tester.tap(find.byKey(const Key('make-default')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('make-default')), findsNothing);
     expect(server.bikes.last['isDefault'], isTrue);
 
-    await tester.tap(find.byKey(const Key('toggle-archive')));
-    await tester.pumpAndSettle();
+    await chooseBikeAction(tester, 'toggle-archive');
     expect(find.text('Archived'), findsOneWidget);
     expect(server.bikes.last['isActive'], isFalse);
 
-    await tester.tap(find.byKey(const Key('delete-bike')));
-    await tester.pumpAndSettle();
+    await chooseBikeAction(tester, 'delete-bike');
     await tester.tap(find.byKey(const Key('confirm-delete-bike')));
     await tester.pumpAndSettle();
 
@@ -231,7 +267,7 @@ void main() {
     );
     server.streams['r1'] = streamsJson();
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.byType(Card).first);
+    await tester.tap(find.byKey(const Key('ride-r1')));
     await tester.pumpAndSettle();
 
     expect(
@@ -239,6 +275,13 @@ void main() {
       findsOneWidget,
     ); // the dropdown's current value
 
+    // The map is now above the numbers, so the bike picker sits further down the page.
+    await tester.scrollUntilVisible(
+      find.byType(DropdownButtonFormField<String?>),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String?>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Gravel').last);
@@ -316,7 +359,7 @@ void main() {
     await tester.tap(find.byKey(const Key('part-save')));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('save-template')));
+    await chooseBikeAction(tester, 'save-template');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('template-name')),
@@ -375,7 +418,7 @@ void main() {
       await tester.tap(find.byKey(const Key('part-save')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('apply-template')));
+      await chooseBikeAction(tester, 'apply-template');
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('template-template-1')));
       await tester.pumpAndSettle();
@@ -396,7 +439,7 @@ void main() {
     await openBikes(tester);
     await addBike(tester, 'Climber');
 
-    await tester.tap(find.byKey(const Key('apply-template')));
+    await chooseBikeAction(tester, 'apply-template');
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('no-templates')), findsOneWidget);

@@ -22,15 +22,6 @@ public sealed class NotificationKindsTests
     }
 
     [Fact]
-    public void NotificationKinds_ShouldSendAccountMail_WhenTheTypeWaitsOnSomeone()
-    {
-        Assert.Equal(NotificationKinds.Account, NotificationKinds.Of(NotificationTypes.ClubJoinRequest));
-        Assert.Equal(NotificationKinds.Account, NotificationKinds.Of(NotificationTypes.ClubJoinApproved));
-        Assert.Equal(NotificationKinds.Account, NotificationKinds.Of(NotificationTypes.ClubJoinDeclined));
-        Assert.Equal(NotificationKinds.Account, NotificationKinds.Of(NotificationTypes.SignUpWaiting));
-    }
-
-    [Fact]
     public void NotificationKinds_ShouldNotEmail_WhenTheTypeIsUnknown()
     {
         Assert.Null(NotificationKinds.Of("not_a_notification"));

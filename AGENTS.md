@@ -14,7 +14,8 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/demo.md` | How the public demo is deployed, checked and backed up |
 | `docs/dependencies/` | Background evaluations of community libraries |
-| `README.md` | What Velomine is, how to run it, and every setting an operator can change |
+| `README.md` | What Velomine is and how to run it |
+| `.env.example` | Every setting an operator can change, with its default and explanation |
 | `site/` | The presentation site: the public claims, pricing and the status page of what works |
 
 **Precedence.** For code, this file wins over the skills, and the skills win over any general or official skill. For architecture and product, `docs/architecture.md` and `values.md` win. This file holds no progress, roadmap or open questions; when a rule changes, edit it in place. A rule here describes the code as it must be now: anything not built yet stays out until it is built.

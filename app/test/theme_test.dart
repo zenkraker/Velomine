@@ -17,9 +17,9 @@ void main() {
   ThemeData current(WidgetTester tester) =>
       Theme.of(tester.element(find.byKey(const Key('account-menu'))));
 
+  // The theme is chosen from the account menu: a phone has no room for its own icon.
   Future<void> choose(WidgetTester tester, String key) async {
-    await tester.tap(find.byKey(const Key('theme-choice')));
-    await tester.pumpAndSettle();
+    await openAccountMenu(tester);
     await tester.tap(find.byKey(Key(key)));
     await tester.pumpAndSettle();
   }
@@ -27,6 +27,9 @@ void main() {
   testWidgets('ThemeController_ShouldFollowDeviceTheme_WhenNoneIsChosen', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     await startApp(tester, server.session(useCookies: true));
@@ -37,6 +40,9 @@ void main() {
   testWidgets('ThemeController_ShouldSwitchAndKeepTheme_WhenNightOrDayChosen', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final store = MemoryThemeStore();
     await startApp(
       tester,

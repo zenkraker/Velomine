@@ -15,7 +15,6 @@ namespace Velomine.Server.Tests.Rides;
 /// A ride keeps the privacy defaults it was imported with: changing the member's defaults later changes what a viewer
 /// sees of a new ride only, never of an older one.
 /// </summary>
-[Collection("postgres")]
 public sealed class RidePrivacySnapshotTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

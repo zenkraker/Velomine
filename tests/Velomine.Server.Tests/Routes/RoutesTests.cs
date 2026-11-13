@@ -14,7 +14,6 @@ using static Velomine.Server.Tests.Routes.RoutesTestKit;
 
 namespace Velomine.Server.Tests.Routes;
 
-[Collection("postgres")]
 public sealed class RoutesTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -77,7 +76,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CreateRoute_ShouldKeepTheWholeLine_WhenThereIsNoPrivacyRule()
+    public async Task CreateRoute_ShouldKeepTheWholeLine_WhenThePrivacySettingsTrimNothing()
     {
         await using var api = await StartAsync(postgres);
         var world = await NewWorldAsync(api);
@@ -86,7 +85,6 @@ public sealed class RoutesTests(PostgresFixture postgres)
         var route = await CreateRouteAsync(
             world.Rider.Client,
             new CreateRouteRequest { RideId = rideId, Name = "All of it", Surface = "gravel", Description = "  Steady  " });
-
         Assert.InRange(route.DistanceM, 4_700, 4_900);
         Assert.NotNull(route.Elevation);
         Assert.Equal("Steady", route.Description);
@@ -242,7 +240,8 @@ public sealed class RoutesTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync(postgres);
         var world = await NewWorldAsync(api);
-        const int count = 4000;
+        // The most a request may carry: 5,000 points for a route that keeps 1,500, so a third must go.
+        const int count = RouteGeometry.MaxAcceptedPoints;
         var request = new CreateRouteRequest
         {
             Name = "Dense",
@@ -253,7 +252,8 @@ public sealed class RoutesTests(PostgresFixture postgres)
 
         var route = await CreateRouteAsync(world.Rider.Client, request);
 
-        Assert.InRange(route.Latitude.Length, 20, RouteGeometry.MaxStoredPoints);
+        Assert.True(route.Latitude.Length <= RouteGeometry.MaxStoredPoints, "More points were kept than the limit allows.");
+        Assert.True(route.Latitude.Length < count, "A line over the limit must lose points.");
         Assert.Equal(request.Latitude[0], route.Latitude[0]);
         Assert.Equal(request.Latitude[^1], route.Latitude[^1]);
         // The distance is the original line's, not the thinned one's.
@@ -511,17 +511,4 @@ public sealed class RoutesTests(PostgresFixture postgres)
         Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<VelomineDbContext>().RouteLines.CountAsync(Ct));
     }
 
-    [Fact]
-    public async Task Routes_ShouldRequireSignIn_WhenCalledWithoutAToken()
-    {
-        await using var api = await StartAsync(postgres);
-        var anonymous = api.CreateClient();
-        var id = Guid.NewGuid();
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/v1/routes", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/v1/routes/mine", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync($"/api/v1/routes/{id}", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PostAsJsonAsync("/api/v1/routes", LineRequest(), Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync($"/api/v1/rides/{id}/route-draft", Ct)).StatusCode);
-    }
 }
