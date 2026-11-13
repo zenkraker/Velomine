@@ -7,6 +7,8 @@ import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 import 'location_picker.dart';
 import 'start_club_view_model.dart';
 
@@ -82,89 +84,72 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
     final state = ref.watch(startClubViewModelProvider);
     final point = state.point;
     final failure = state.create.failure;
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          children: [
-            Text(
-              l10n.startClubTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(l10n.startClubIntro),
-            const SizedBox(height: AppSpacing.lg),
-            AppTextField(
-              fieldKey: const Key('start-club-name'),
-              controller: _name,
-              label: l10n.startClubName,
-            ),
-            if (_showProblem && _name.text.trim().isEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.startClubNameRequired,
-                key: const Key('start-club-name-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              l10n.clubLocation,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              l10n.clubLocationHelp,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              point == null
-                  ? l10n.clubLocationNone
-                  : '${point.latitude.toStringAsFixed(5)}, '
-                        '${point.longitude.toStringAsFixed(5)}',
-              key: const Key('start-club-location'),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                key: const Key('start-club-pick-location'),
-                onPressed: state.create.running ? null : _choosePlace,
-                icon: const Icon(Icons.place),
-                label: Text(
-                  point == null
-                      ? l10n.clubLocationSet
-                      : l10n.clubLocationChange,
-                ),
-              ),
-            ),
-            SwitchListTile(
-              key: const Key('start-club-discoverable'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.clubDiscoverable),
-              subtitle: Text(l10n.clubDiscoverableHelp),
-              value: state.isDiscoverable && point != null,
-              onChanged: state.create.running ? null : _toggleDiscoverable,
-            ),
-            if (failure != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                failureText(l10n, failure),
-                key: const Key('start-club-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton(
-              key: const Key('start-club'),
-              onPressed: state.create.running ? null : _start,
-              child: Text(l10n.startClubAction),
-            ),
-          ],
+    return PageScaffold(
+      eyebrow: l10n.eyebrowClub,
+      title: l10n.startClubTitle,
+      subtitle: l10n.startClubIntro,
+      maxWidth: AppLayout.contentNarrow,
+      children: [
+        AppTextField(
+          fieldKey: const Key('start-club-name'),
+          controller: _name,
+          label: l10n.startClubName,
         ),
-      ),
+        if (_showProblem && _name.text.trim().isEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.startClubNameRequired,
+            key: const Key('start-club-name-error'),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.lg),
+        Text(l10n.clubLocation, style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          l10n.clubLocationHelp,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          point == null ? l10n.clubLocationNone : l10n.clubLocationOnMap,
+          key: const Key('start-club-location'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            key: const Key('start-club-pick-location'),
+            onPressed: state.create.running ? null : _choosePlace,
+            icon: const Icon(Icons.place),
+            label: Text(
+              point == null ? l10n.clubLocationSet : l10n.clubLocationChange,
+            ),
+          ),
+        ),
+        SwitchListTile(
+          key: const Key('start-club-discoverable'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.clubDiscoverable),
+          subtitle: Text(l10n.clubDiscoverableHelp),
+          value: state.isDiscoverable && point != null,
+          onChanged: state.create.running ? null : _toggleDiscoverable,
+        ),
+        if (failure != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('start-club-error'),
+          ),
+        ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton(
+            key: const Key('start-club'),
+            onPressed: state.create.running ? null : _start,
+            child: Text(l10n.startClubAction),
+          ),
+        ),
+      ],
     );
   }
 }
