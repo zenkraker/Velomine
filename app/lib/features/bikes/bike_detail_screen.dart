@@ -16,6 +16,10 @@ import 'bikes_view_models.dart';
 import 'component_names.dart';
 import 'service_section.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/stat_tile.dart';
 
 DateTime _today() {
@@ -203,6 +207,7 @@ class BikeDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(bikeDetailViewModelProvider(id));
+    final l10n = context.l10n;
 
     listenUserMessages(
       ref,
@@ -211,20 +216,54 @@ class BikeDetailScreen extends ConsumerWidget {
       ref.read(bikeDetailViewModelProvider(id).notifier).messageShown,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: AppSpacing.lg,
-              children: [..._body(context, ref, s)],
+    final detail = s.detail;
+    return PageScaffold(
+      eyebrow: l10n.eyebrowBikes,
+      title: detail?.bike.name ?? l10n.navBikes,
+      titleKey: const Key('bike-title'),
+      actions: detail == null
+          ? null
+          : Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                OutlinedButton.icon(
+                  key: const Key('edit-bike'),
+                  onPressed: () => _edit(context, ref),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(l10n.edit),
+                ),
+                FilledButton.icon(
+                  key: const Key('add-part'),
+                  onPressed: () => _addPart(context, ref),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addPartAction),
+                ),
+                // The rare jobs on a bike live together, away from the ones done every day.
+                _BikeMenu(
+                  bike: detail.bike,
+                  onPick: (choice) {
+                    switch (choice) {
+                      case 'template':
+                        _saveTemplate(context, ref);
+                      case 'apply':
+                        _applyTemplate(context, ref);
+                      case 'default':
+                        ref
+                            .read(bikeDetailViewModelProvider(id).notifier)
+                            .makeDefault();
+                      case 'archive':
+                        ref
+                            .read(bikeDetailViewModelProvider(id).notifier)
+                            .setActive(!detail.bike.isActive);
+                      case 'delete':
+                        _confirmDelete(context, ref);
+                    }
+                  },
+                ),
+              ],
             ),
-          ),
-        ),
-      ],
+      children: _body(context, ref, s),
     );
   }
 
@@ -232,13 +271,12 @@ class BikeDetailScreen extends ConsumerWidget {
     final units = ref.watch(unitsChoiceViewModelProvider);
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
-    final errorStyle = TextStyle(color: Theme.of(context).colorScheme.error);
     if (s.notFound) {
       return [
-        Text(
-          l10n.bikeNotFound,
+        EmptyState(
           key: const Key('not-found'),
-          style: text.titleMedium,
+          message: l10n.bikeNotFound,
+          icon: Icons.pedal_bike,
         ),
       ];
     }
@@ -247,10 +285,9 @@ class BikeDetailScreen extends ConsumerWidget {
       return [
         if (s.load.running) const Center(child: CircularProgressIndicator()),
         if (s.load.failure case final failure?)
-          Text(
-            failureText(l10n, failure),
-            key: const Key('bike-error'),
-            style: errorStyle,
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('bike-error'),
           ),
       ];
     }
@@ -267,16 +304,15 @@ class BikeDetailScreen extends ConsumerWidget {
     final retired = detail.components
         .where((p) => p.removedOn != null)
         .toList();
-    final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
     return [
-      Row(
-        spacing: AppSpacing.sm,
-        children: [
-          Flexible(child: Text(bike.name, style: text.headlineSmall)),
-          if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
-          if (!bike.isActive) Chip(label: Text(l10n.archived)),
-        ],
-      ),
+      if (bike.isDefault || !bike.isActive)
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
+            if (!bike.isActive) Chip(label: Text(l10n.archived)),
+          ],
+        ),
       Text(
         [
           bikeKindName(l10n, bike.kind),
@@ -294,74 +330,25 @@ class BikeDetailScreen extends ConsumerWidget {
           StatTile(label: l10n.statMovingTime, value: duration(bike.movingS)),
         ],
       ),
-      Wrap(
-        spacing: AppSpacing.sm,
-        runSpacing: 8,
-        children: [
-          OutlinedButton.icon(
-            key: const Key('edit-bike'),
-            onPressed: () => _edit(context, ref),
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(l10n.edit),
-          ),
-          OutlinedButton.icon(
-            key: const Key('save-template'),
-            onPressed: () => _saveTemplate(context, ref),
-            icon: const Icon(Icons.bookmark_add_outlined),
-            label: Text(l10n.saveAsTemplate),
-          ),
-          OutlinedButton.icon(
-            key: const Key('apply-template'),
-            onPressed: () => _applyTemplate(context, ref),
-            icon: const Icon(Icons.playlist_add_check),
-            label: Text(l10n.applyTemplate),
-          ),
-          if (!bike.isDefault && bike.isActive)
-            OutlinedButton.icon(
-              key: const Key('make-default'),
-              onPressed: notifier.makeDefault,
-              icon: const Icon(Icons.star_outline),
-              label: Text(l10n.makeDefault),
-            ),
-          OutlinedButton.icon(
-            key: const Key('toggle-archive'),
-            onPressed: () => notifier.setActive(!bike.isActive),
-            icon: Icon(
-              bike.isActive ? Icons.archive_outlined : Icons.unarchive_outlined,
-            ),
-            label: Text(bike.isActive ? l10n.archive : l10n.restore),
-          ),
-          TextButton.icon(
-            key: const Key('delete-bike'),
-            onPressed: () => _confirmDelete(context, ref),
-            icon: const Icon(Icons.delete_outline),
-            label: Text(l10n.delete),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-          ),
-        ],
-      ),
       if (s.load.failure case final failure?)
-        Text(
-          failureText(l10n, failure),
-          key: const Key('bike-error'),
-          style: errorStyle,
+        ErrorState(
+          message: failureText(l10n, failure),
+          actionKey: const Key('bike-error'),
         ),
       ServiceSection(id: id),
-      Row(
-        children: [
-          Text(l10n.parts, style: text.titleLarge),
-          const Spacer(),
-          FilledButton.icon(
-            key: const Key('add-part'),
+      SectionHeading(title: l10n.parts),
+      if (current.isEmpty)
+        EmptyState(
+          key: const Key('no-parts'),
+          message: l10n.noParts,
+          icon: Icons.build_outlined,
+          action: OutlinedButton.icon(
+            key: const Key('add-part-empty'),
             onPressed: () => _addPart(context, ref),
             icon: const Icon(Icons.add),
             label: Text(l10n.addPartAction),
           ),
-        ],
-      ),
-      if (current.isEmpty) Text(l10n.noParts, key: const Key('no-parts')),
+        ),
       for (final part in current)
         _PartCard(
           part: part,
@@ -395,6 +382,58 @@ String wearLabel(AppLocalizations l10n, String status) => switch (status) {
   'retired' => l10n.wearReplaced,
   _ => l10n.wearGood,
 };
+
+/// The rare jobs on a bike — its build template, making it the default, archiving it and deleting
+/// it — behind one menu, so the parts and their wear stay the page.
+class _BikeMenu extends StatelessWidget {
+  const _BikeMenu({required this.bike, required this.onPick});
+
+  final BikeResponse bike;
+  final void Function(String choice) onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return PopupMenuButton<String>(
+      key: const Key('bike-actions'),
+      tooltip: l10n.rideActions,
+      icon: const Icon(Icons.more_vert),
+      onSelected: onPick,
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          key: const Key('save-template'),
+          value: 'template',
+          child: Text(l10n.saveAsTemplate),
+        ),
+        PopupMenuItem(
+          key: const Key('apply-template'),
+          value: 'apply',
+          child: Text(l10n.applyTemplate),
+        ),
+        if (!bike.isDefault && bike.isActive)
+          PopupMenuItem(
+            key: const Key('make-default'),
+            value: 'default',
+            child: Text(l10n.makeDefault),
+          ),
+        PopupMenuItem(
+          key: const Key('toggle-archive'),
+          value: 'archive',
+          child: Text(bike.isActive ? l10n.archive : l10n.restore),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          key: const Key('delete-bike'),
+          value: 'delete',
+          child: Text(
+            l10n.delete,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 /// A wear distance in whole kilometres or whole miles, whichever the member reads.
 String _wearNumber(Units units, double metres) => units == Units.imperial
