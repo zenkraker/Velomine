@@ -22,6 +22,9 @@ public sealed class ClubCrossClubTests(PostgresFixture postgres)
         var second = await NewMemberAsync(api, "Second Owner");
         var firstClub = await CreateClubAsync(api, first);
         await CreateClubAsync(api, second);
+        // The first club is discoverable, so a stranger may ask to join it.
+        (await first.Client.PutAsJsonAsync("/api/v1/club/location",
+            new SetClubLocationRequest { Latitude = 45.4642, Longitude = 9.19, IsDiscoverable = true }, Ct)).EnsureSuccessStatusCode();
         var asker = await NewMemberAsync(api, "Asker");
         (await asker.Client.PostAsJsonAsync("/api/v1/club/join-request",
             new RequestToJoinRequest { ClubId = firstClub.Id }, Ct)).EnsureSuccessStatusCode();
@@ -63,7 +66,7 @@ public sealed class ClubCrossClubTests(PostgresFixture postgres)
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
         (await world.Rider.Client.PutAsJsonAsync("/api/v1/sharing",
-            new UpdateSharingRequest { Rides = "club", Analytics = "club", Routes = "none", Wellbeing = "club" }, Ct)).EnsureSuccessStatusCode();
+            new UpdateSharingRequest { Rides = "coaches", Analytics = "coaches", Routes = "none", Wellbeing = "coaches" }, Ct)).EnsureSuccessStatusCode();
 
         // A member of the other club, who shares with everyone in their own club.
         var intruder = world.OtherRider.Client;

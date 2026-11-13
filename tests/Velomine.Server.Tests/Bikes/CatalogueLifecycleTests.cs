@@ -65,7 +65,11 @@ public sealed class CatalogueLifecycleTests(PostgresFixture postgres)
             .Content.ReadFromJsonAsync<BikeDetailResponse>(Ct);
         await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bike!.Bike.Id}/components", new CreateComponentRequest
         {
-            Type = "chain", Brand = "Shimano", Model = "Ultegra CN-M8100", Mpn = "CN-M8100", InstalledOn = new DateOnly(2026, 1, 1),
+            Type = "chain",
+            Brand = "Shimano",
+            Model = "Ultegra CN-M8100",
+            Mpn = "CN-M8100",
+            InstalledOn = new DateOnly(2026, 1, 1),
         }, Ct);
 
         var options = new CatalogueOptions { ContributeUrl = "https://catalogue.test/v1/contributions", ContributionKey = "key" };

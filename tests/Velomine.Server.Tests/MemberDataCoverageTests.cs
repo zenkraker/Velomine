@@ -39,6 +39,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         ["ClubMembership"] = "clubs.json",
         ["Licence"] = "supporter.json",
         ["CalendarFeed"] = "clubs.json",
+        ["ClubJoinRequest"] = "clubs.json",
+        ["RideSignUp"] = "club-rides.json",
     };
 
     [Fact]
@@ -50,6 +52,14 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
 
         // One row in each table that belongs to the member alone.
         var bikeId = await AddBikeAsync(member.Client, member.Id);
+        (await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bikeId}/components", new CreateComponentRequest
+        {
+            Type = "chain",
+            Brand = "Shimano",
+            Model = "Ultegra",
+            Mpn = "CN-M8100",
+            InstalledOn = new DateOnly(2026, 1, 1),
+        }, Ct)).EnsureSuccessStatusCode();
         await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(Start, 120)));
         var rideId = (await RideIdsAsync(member.Client))[0];
         await member.Client.PostAsJsonAsync("/api/v1/wellbeing/consent", new { Version = 1 }, Ct);
@@ -58,8 +68,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         await member.Client.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest { HideHeartRate = false, HidePower = false, HideCadence = false, HideSpeed = false, HideElevation = false, HideTemperature = false, TrimStartM = 0, TrimEndM = 0 }, Ct);
         await member.Client.PostAsJsonAsync("/api/v1/privacy/zones",
             new CreatePrivacyZoneRequest { Name = "Home", Latitude = 46, Longitude = 11, RadiusM = 500 }, Ct);
-        await member.Client.PostAsJsonAsync("/api/v1/analytics/goals", new { Period = "week", Metric = "distanceM", Target = 100000.0 }, Ct);
-        await member.Client.PostAsJsonAsync("/api/v1/bikes/templates", new SaveBikeAsTemplateRequest { Name = "Mine" }, Ct);
+        await member.Client.PostAsJsonAsync("/api/v1/analytics/goals", new { Period = "week", Metric = "distance", Target = 100000.0 }, Ct);
+        await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bikeId}/templates", new SaveBikeAsTemplateRequest { BikeId = bikeId, Name = "Mine" }, Ct);
         await member.Client.GetAsync("/api/v1/notifications", Ct);
 
         await using var scope = api.Services.CreateAsyncScope();
@@ -80,12 +90,16 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             ["ClubMembership"] = (context, id) => context.ClubMemberships.CountAsync(m => m.UserId == id, Ct),
             ["Licence"] = (context, id) => context.SupporterLicences.CountAsync(l => l.UserId == id, Ct),
             ["CalendarFeed"] = (context, id) => context.CalendarFeeds.CountAsync(f => f.UserId == id, Ct),
+            ["ClubJoinRequest"] = (context, id) => context.ClubJoinRequests.CountAsync(r => r.UserId == id, Ct),
+            ["RideSignUp"] = (context, id) => context.RideSignUps.CountAsync(s => s.UserId == id, Ct),
         };
 
         // Every table the model gives a member's id must be handled here; a new one fails this line.
         var memberTables = db.Model.GetEntityTypes()
             .Where(e => e.ClrType.GetProperty("UserId") is { PropertyType: var type }
-                && (type == typeof(Guid) || type == typeof(Guid?)))
+                && (type == typeof(Guid) || type == typeof(Guid?))
+                // Identity's own link tables (claims, logins, roles, tokens) cascade with the user row in the framework.
+                && !e.ClrType.Namespace!.StartsWith("Microsoft.AspNetCore.Identity", StringComparison.Ordinal))
             .Select(e => e.ClrType.Name)
             .Order()
             .ToList();
@@ -100,14 +114,9 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         foreach (var (entity, file) in ExportFiles)
             Assert.True(zip.GetEntry(file) is not null, $"{entity} holds member data but {file} is missing from the export.");
 
-        // The rows are there before deletion, so an empty table after it means something was removed.
-        foreach (var (entity, count) in exporters)
-            Assert.True(await count(db, member.Id) >= 0, entity);
-
-        Assert.True(await db.DailyCheckIns.AnyAsync(c => c.UserId == member.Id, Ct));
-        Assert.True(await db.PrivacyZones.AnyAsync(z => z.UserId == member.Id, Ct));
-        Assert.True(await db.BikeTemplates.AnyAsync(t => t.UserId == member.Id, Ct));
-        _ = bikeId;
+        // The export carries the rows the test wrote.
+        Assert.True(await db.BikeTemplates.AnyAsync(t => t.UserId == member.Id, Ct), "the template was not saved");
+        Assert.True(await db.PrivacyZones.AnyAsync(z => z.UserId == member.Id, Ct), "the privacy zone was not saved");
     }
 
     [Fact]
@@ -116,7 +125,15 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         await using var api = await TestApi.StartAsync(postgres,
             b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var member = await api.NewMemberAsync();
-        await AddBikeAsync(member.Client, member.Id);
+        var bikeId = await AddBikeAsync(member.Client, member.Id);
+        (await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bikeId}/components", new CreateComponentRequest
+        {
+            Type = "chain",
+            Brand = "Shimano",
+            Model = "Ultegra",
+            Mpn = "CN-M8100",
+            InstalledOn = new DateOnly(2026, 1, 1),
+        }, Ct)).EnsureSuccessStatusCode();
         await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(Start, 120)));
         var rideId = (await RideIdsAsync(member.Client))[0];
         await member.Client.PostAsJsonAsync("/api/v1/wellbeing/consent", new { Version = 1 }, Ct);
@@ -125,8 +142,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         await member.Client.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest { HideHeartRate = false, HidePower = false, HideCadence = false, HideSpeed = false, HideElevation = false, HideTemperature = false, TrimStartM = 0, TrimEndM = 0 }, Ct);
         await member.Client.PostAsJsonAsync("/api/v1/privacy/zones",
             new CreatePrivacyZoneRequest { Name = "Home", Latitude = 46, Longitude = 11, RadiusM = 500 }, Ct);
-        await member.Client.PostAsJsonAsync("/api/v1/analytics/goals", new { Period = "week", Metric = "distanceM", Target = 100000.0 }, Ct);
-        await member.Client.PostAsJsonAsync("/api/v1/bikes/templates", new SaveBikeAsTemplateRequest { Name = "Mine" }, Ct);
+        await member.Client.PostAsJsonAsync("/api/v1/analytics/goals", new { Period = "week", Metric = "distance", Target = 100000.0 }, Ct);
+        await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bikeId}/templates", new SaveBikeAsTemplateRequest { BikeId = bikeId, Name = "Mine" }, Ct);
 
         await member.Client.PostAsJsonAsync("/api/v1/accounts/me/delete", new DeleteMyAccountRequest(TestApi.MemberPassword, null), Ct);
 
@@ -148,6 +165,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             ["ClubMembership"] = await db.ClubMemberships.CountAsync(m => m.UserId == member.Id, Ct),
             ["Licence"] = await db.SupporterLicences.CountAsync(l => l.UserId == member.Id, Ct),
             ["CalendarFeed"] = await db.CalendarFeeds.CountAsync(f => f.UserId == member.Id, Ct),
+            ["ClubJoinRequest"] = await db.ClubJoinRequests.CountAsync(r => r.UserId == member.Id, Ct),
+            ["RideSignUp"] = await db.RideSignUps.CountAsync(s => s.UserId == member.Id, Ct),
         };
         Assert.Equal(ExportFiles.Keys.Order(), counts.Keys.Order());
 

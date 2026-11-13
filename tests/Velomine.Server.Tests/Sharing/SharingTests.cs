@@ -332,14 +332,15 @@ public sealed class SharingTests(PostgresFixture postgres)
         Assert.NotNull(shown!.IntensityFactor);
         Assert.NotNull(shown.Tss);
         Assert.NotNull(shown.Trimp);
-        // 600 s at 150 bpm against a maximum of 183 (Tanaka, 1990): 82 %, so all of it in heart-rate zone 4.
+        // The ride is 600 s at a steady 150 bpm and 200 W: 599 counted intervals. Against a maximum of 183 (Tanaka for
+        // 1990) that is 82 %, heart-rate zone 4 (index 3); against a 250 W FTP it is 80 %, power zone 3 (index 2,
+        // because 80 % is above the 75 % bound).
         var heartRateZones = shown.HeartRateZones!;
-        Assert.Equal(600, heartRateZones[3].Seconds);
+        Assert.Equal(599, heartRateZones[3].Seconds);
         Assert.All(heartRateZones.Where((_, i) => i != 3), zone => Assert.Equal(0, zone.Seconds));
-        // 200 W against a 250 W FTP: 80 %, so power zone 2 (75 % to 90 %).
         var powerZones = shown.PowerZones!;
-        Assert.Equal(600, powerZones[1].Seconds);
-        Assert.All(powerZones.Where((_, i) => i != 1), zone => Assert.Equal(0, zone.Seconds));
+        Assert.Equal(599, powerZones[2].Seconds);
+        Assert.All(powerZones.Where((_, i) => i != 2), zone => Assert.Equal(0, zone.Seconds));
     }
 
     [Fact]

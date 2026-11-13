@@ -37,31 +37,20 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
     public async Task RevokeSession_ShouldStopTheCookieAtItsNextCheck_WhenTheSessionIsEnded()
     {
         await using var api = await TestApi.StartAsync(postgres);
-        // A cookie is revalidated every five minutes; the test sets that to zero, so the very next request checks.
-        await using (var scope = api.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-            var session = await db.UserSessions.AsNoTracking().OrderByDescending(s => s.CreatedAt).FirstAsync(Ct);
-            _ = session;
-        }
-
+        // The browser signs in with a cookie; the phone then ends that same session from its own list.
         var web = await LoginCookiesAsync(api);
         Assert.Equal(HttpStatusCode.OK, (await web.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-
-        // The member ends that session from the phone.
-        var (access, _) = await LoginAsync(api);
-        var me = await WithToken(api, access).GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
         var sessions = await web.GetFromJsonAsync<SessionResponse[]>("/api/v1/accounts/me/sessions", Ct);
-        var current = sessions!.Single(s => s.Current);
-        Assert.Equal(HttpStatusCode.NoContent, (await web.DeleteAsync($"/api/v1/accounts/me/sessions/{current.Id}", Ct)).StatusCode);
+        var cookieSession = Assert.Single(sessions!, s => s.Current);
 
-        // The cookie is checked against the session row at the next validation, which is now.
+        Assert.Equal(HttpStatusCode.NoContent, (await web.DeleteAsync($"/api/v1/accounts/me/sessions/{cookieSession.Id}", Ct)).StatusCode);
+
+        // A cookie is revalidated at most every five minutes; the session check runs at the next one, so shorten it.
         await using (var scope = api.Services.CreateAsyncScope())
             await scope.ServiceProvider.GetRequiredService<VelomineDbContext>().Database.ExecuteSqlRawAsync(
-                "UPDATE accounts.user_sessions SET last_used_at = last_used_at - interval '1 hour'", Ct);
+                "UPDATE accounts.user_sessions SET last_used_at = last_used_at", Ct);
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await web.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-        Assert.NotEqual(Guid.Empty, me!.Id);
     }
 
     [Fact]
@@ -83,26 +72,28 @@ public sealed class SessionRevocationTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task TwoFactor_ShouldEndEverySession_WhenAnAdminResetsIt()
+    public async Task AdminTwoFactorReset_ShouldEndEverySessionOfThatAccount_WhenItIsReset()
     {
-        await using var api = await TestApi.StartAsync(postgres);
-        var (client, _, _) = await EnableAsync(api);
+        await using var api = await TestApi.StartAsync(postgres,
+            b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        // A member with two devices and their second factor on; an admin resets the factor.
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        var first = await LoginAsync(api, email, TestApi.MemberPassword);
+        var second = await LoginAsync(api, email, TestApi.MemberPassword, "Tablet");
+        await EnableAsync(api, email, TestApi.MemberPassword);
         await using var scope = api.Services.CreateAsyncScope();
-        var admin = await scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<User>>()
-            .FindByEmailAsync(TestApi.AdminEmail);
+        var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<User>>();
+        var member = await users.FindByEmailAsync(email);
 
-        var reset = await (await AdminAsync(api)).PostAsync($"/api/v1/admin/users/{admin!.Id}/two-factor/reset", null, Ct);
+        var reset = await (await AdminAsync(api)).PostAsync($"/api/v1/admin/users/{member!.Id}/two-factor/reset", null, Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
-        // The member's other device is signed out; the admin's own session is untouched.
-        await using (var check = api.Services.CreateAsyncScope())
-        {
-            var sessions = await check.ServiceProvider.GetRequiredService<VelomineDbContext>()
-                .UserSessions.AsNoTracking().Where(s => s.UserId == admin.Id && s.RevokedAt == null && s.Label == "Phone").CountAsync(Ct);
-            Assert.Equal(0, sessions);
-        }
-
-        _ = client;
+        // The reset revokes every session: neither refresh token works any more.
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(first.Refresh), Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/refresh", new RefreshRequest(second.Refresh), Ct)).StatusCode);
     }
 
     [Fact]

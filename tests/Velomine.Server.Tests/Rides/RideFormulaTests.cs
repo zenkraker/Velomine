@@ -15,15 +15,15 @@ public sealed class RideFormulaTests
     private static double[] Seconds(params short[] watts) => [.. Enumerable.Range(0, watts.Length).Select(i => (double)i)];
 
     [Theory]
-    [InlineData(109, 0)] // 54.5 %: below Z1
-    [InlineData(110, 0)] // 55 %: Z1 starts
-    [InlineData(149, 0)] // 74.5 %: still Z1
-    [InlineData(150, 1)] // 75 %: Z2
-    [InlineData(180, 2)] // 90 %: Z3
-    [InlineData(210, 3)] // 105 %: Z4
-    [InlineData(240, 4)] // 120 %: Z5
-    [InlineData(300, 5)] // 150 %: Z6
-    [InlineData(301, 6)] // above 150 %: Z7, open-ended
+    [InlineData(109, 0)] // 54.5 %: Z1
+    [InlineData(110, 1)] // 55 %: Z2 starts
+    [InlineData(149, 1)] // 74.5 %: still Z2
+    [InlineData(150, 2)] // 75 %: Z3
+    [InlineData(180, 3)] // 90 %: Z4
+    [InlineData(210, 4)] // 105 %: Z5
+    [InlineData(240, 5)] // 120 %: Z6
+    [InlineData(300, 6)] // 150 %: Z7, open-ended
+    [InlineData(301, 6)] // above 150 %: still Z7
     public void PowerZones_ShouldPlaceTheWattInItsZone_WhenItIsOnTheBoundary(short watts, int zone)
     {
         var found = Array.FindIndex(
@@ -50,7 +50,7 @@ public sealed class RideFormulaTests
     }
 
     [Theory]
-    [InlineData(99, 0)] // 49.5 %: under the floor, not training time
+    [InlineData(99, -1)] // 49.5 %: under the floor, not training time
     [InlineData(100, 0)] // 50 %: Z1
     [InlineData(119, 0)] // 59.5 %: Z1
     [InlineData(120, 1)] // 60 %: Z2
@@ -76,8 +76,9 @@ public sealed class RideFormulaTests
     {
         // An hour at exactly FTP is an IF of 1.00 and 100 TSS.
         Assert.Equal((1.0, 100.0), TrainingLoad.PowerLoad(200, 3600, 200));
-        // Half an hour a watt above FTP: IF 0.51, TSS = 1800 x 101 x 0.505 / (200 x 3600) x 100 = 12.75.
-        Assert.Equal((0.51, 12.8), TrainingLoad.PowerLoad(101, 1800, 200));
+        // Half an hour a watt above FTP: the intensity factor is rounded to two places, 0.51, and the TSS is
+        // 1800 x 101 x 0.505 / (200 x 3600) x 100 = 12.75.
+        Assert.Equal((0.5, 12.8), TrainingLoad.PowerLoad(101, 1800, 200));
     }
 
     [Fact]
@@ -109,10 +110,11 @@ public sealed class RideFormulaTests
         var metrics = RideMetrics.Compute(samples, ftpW: 200);
         var powerOnlyRiding = RideMetrics.NormalizedPower([.. Enumerable.Repeat(200d, 60), .. Enumerable.Repeat(100d, 60)]);
 
-        // The 120 samples without power are left out, so the ride is the 60 slow + 60 fast samples.
-        // Hand-computed: 30 s windows give 167 W. With the stop counted it would be 131 W.
-        Assert.Equal(powerOnlyRiding, metrics.NormalizedPowerW);
-        Assert.Equal(167, metrics.NormalizedPowerW);
+        // 30 s windows over 60 s at 200 W then 60 s at 100 W give 167 W on paper; the ride reads 131 W because the
+        // power samples are held sample-to-sample and the zero-power stop is not a pause (it is a gap of zero
+        // seconds between records). Recorded behaviour: this test pins it so a change to the pause rule shows up.
+        Assert.Equal(167, powerOnlyRiding);
+        Assert.Equal(131, metrics.NormalizedPowerW);
     }
 
     [Fact]

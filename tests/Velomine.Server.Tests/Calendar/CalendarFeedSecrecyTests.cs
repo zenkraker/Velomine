@@ -57,11 +57,10 @@ public sealed class CalendarFeedSecrecyTests(PostgresFixture postgres)
         await using var api = await CalendarTestKit.StartAsync(postgres);
         var world = await NewWorldAsync(api);
         await CalendarTestKit.PlanAsync(world.Coach.Client, CalendarTestKit.Request(title: "Our club ride"));
+        // The other club's owner schedules their own ride; only the owner may do it without a grant.
         var theirOwner = await NewMemberAsync(api, "Otto Other");
-        var theirClub = await CreateClubAsync(api, theirOwner);
-        var theirCoach = await NewClubMemberAsync(api, theirClub, "Carlo Other");
-        var theirRoute = await CreateRouteAsync(theirCoach.Client, LineRequest("Their loop", "road", 10));
-        await CalendarTestKit.PlanAsync(theirCoach.Client, CalendarTestKit.Request(routeId: theirRoute.Id, title: "Their club ride"));
+        await CreateClubAsync(api, theirOwner);
+        await CalendarTestKit.PlanAsync(theirOwner.Client, CalendarTestKit.Request(title: "Their club ride"));
 
         var address = await (await world.Rider.Client.PostAsync("/api/v1/club/calendar-feed", null, Ct))
             .Content.ReadFromJsonAsync<CalendarFeedAddressResponse>(Ct);

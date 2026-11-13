@@ -48,10 +48,11 @@ public sealed class PrivacyRulesTests
         // 20 points 111 m apart: trimming 300 m at the end leaves every point up to 1.9 km.
         var hidden = PrivacyRules.ForViewer(Line(), Hiding(trimEnd: 300), showRoute: true);
 
-        Assert.NotNull(hidden.Latitude![^1]);
-        Assert.Null(hidden.Latitude[^2]); // 2.0 km
-        Assert.Null(hidden.Latitude[^3]); // 1.9 km, within the last 300 m
-        Assert.All(hidden.Latitude[..16], point => Assert.NotNull(point));
+        // The line is 19 x 111 m = 2.1 km; the last 300 m start at 1.8 km, so points 0-16 stay and 17-19 go.
+        Assert.NotNull(hidden.Latitude![16]);
+        Assert.Null(hidden.Latitude[17]);
+        Assert.Null(hidden.Latitude[18]);
+        Assert.Null(hidden.Latitude[19]);
     }
 
     [Fact]

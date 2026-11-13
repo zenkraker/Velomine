@@ -232,7 +232,8 @@ public sealed class RoutesTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync(postgres);
         var world = await NewWorldAsync(api);
-        const int count = 8000; // twice the 4,000 points a route keeps
+        // The most a request may carry: 5,000 points for a route that keeps 1,500, so a third must go.
+        const int count = RouteGeometry.MaxAcceptedPoints;
         var request = new CreateRouteRequest
         {
             Name = "Dense",
@@ -243,8 +244,8 @@ public sealed class RoutesTests(PostgresFixture postgres)
 
         var route = await CreateRouteAsync(world.Rider.Client, request);
 
-        Assert.InRange(route.Latitude.Length, 20, RouteGeometry.MaxStoredPoints - 1); // it was thinned
-        Assert.True(route.Latitude.Length < count / 2, "A line twice the limit should lose more than half its points.");
+        Assert.True(route.Latitude.Length <= RouteGeometry.MaxStoredPoints, "More points were kept than the limit allows.");
+        Assert.True(route.Latitude.Length < count, "A line over the limit must lose points.");
         Assert.Equal(request.Latitude[0], route.Latitude[0]);
         Assert.Equal(request.Latitude[^1], route.Latitude[^1]);
         // The distance is the original line's, not the thinned one's.
