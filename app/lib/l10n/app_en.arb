@@ -188,6 +188,7 @@
   "failureLastAdmin": "You are the only admin. Make someone else an admin first.",
   "failureSessionEnded": "Your session ended. Sign in again.",
   "failureForbidden": "Your account may not do that.",
+  "failureDemoLocked": "This is switched off in the demo, because everyone shares these accounts.",
   "failureTooMany": "Too many attempts. Try again shortly.",
   "failureUnreachable": "Could not reach the server. Try again.",
   "failureFailed": "Could not {action} ({code}). Try again.",

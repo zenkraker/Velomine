@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
     <EmbeddedResource Include="Features/Bikes/parts-seed.json" LogicalName="Velomine.Server.Features.Bikes.parts-seed.json" />
+    <EmbeddedResource Include="Features/Demo/demo-seed.sql" LogicalName="Velomine.Server.Features.Demo.demo-seed.sql" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FastEndpoints" />

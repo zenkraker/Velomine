@@ -22,6 +22,23 @@ void main() {
     expect(result.valueOrNull, isNull);
   });
 
+  test('Result_ShouldBeDemoLocked_WhenTheServerRefusesInDemoMode', () async {
+    const body =
+        '{"title":"Not available in the demo.","status":403,'
+        '"detail":"This is switched off in the demo.","code":"demo_locked"}';
+    final result = await Future<int>.error(ApiException(403, body))
+        .guard(FailureAction.general);
+
+    expect(result.failureOrNull?.kind, FailureKind.demoLocked);
+  });
+
+  test('Result_ShouldBeForbidden_WhenA403HasNoDemoCode', () async {
+    final result = await Future<int>.error(ApiException(403, '{}'))
+        .guard(FailureAction.general);
+
+    expect(result.failureOrNull?.kind, FailureKind.forbidden);
+  });
+
   test('Result_ShouldReportTheSessionEnded_WhenTheServerAnswers401', () async {
     final result = await Future<int>.error(ApiException(401, 'unauthorized'))
         .guard(FailureAction.general);

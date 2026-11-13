@@ -22,6 +22,9 @@ enum FailureKind {
   /// The account may not do this (403).
   forbidden,
 
+  /// The demo shares its accounts, so this is switched off there (403 with `demo_locked`).
+  demoLocked,
+
   /// Too many attempts (429).
   throttled,
 
@@ -172,9 +175,12 @@ class Failure {
 }
 
 /// The kind a status code maps to when no more specific meaning is known.
-FailureKind failureKindFor(int code) => switch (code) {
+///
+/// [body] is the response body, which tells a demo refusal (403 with `demo_locked`) from any other 403.
+FailureKind failureKindFor(int code, [String? body]) => switch (code) {
   400 => FailureKind.rejected,
   401 => FailureKind.sessionEnded,
+  403 when isDemoLocked(body) => FailureKind.demoLocked,
   403 => FailureKind.forbidden,
   404 => FailureKind.missing,
   409 => FailureKind.conflict,
@@ -183,6 +189,17 @@ FailureKind failureKindFor(int code) => switch (code) {
   502 => FailureKind.mailRejected,
   _ => FailureKind.failed,
 };
+
+/// Whether the server refused the action because this server is the public demo.
+bool isDemoLocked(String? body) {
+  if (body == null || !body.contains('demo_locked')) return false;
+  try {
+    final decoded = jsonDecode(body);
+    return decoded is Map && decoded['code'] == 'demo_locked';
+  } on FormatException {
+    return false;
+  }
+}
 
 /// The sentence the server sent for a validation or conflict error, if it sent one.
 ///
@@ -325,6 +342,7 @@ String failureText(AppLocalizations l10n, Failure failure) =>
       FailureKind.mailRejected => l10n.failureMail,
       FailureKind.sessionEnded => l10n.failureSessionEnded,
       FailureKind.forbidden => l10n.failureForbidden,
+      FailureKind.demoLocked => l10n.failureDemoLocked,
       FailureKind.throttled => l10n.failureTooMany,
       FailureKind.wrongPassword => l10n.authWrongPassword,
       FailureKind.notApproved => l10n.authNotApproved,

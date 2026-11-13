@@ -39,6 +39,7 @@ sudo docker compose logs --tail 50 server     # or web, traefik, postgres
 | `Bind for 0.0.0.0:80 failed: port is already allocated` | Something else holds 80 or 443: `sudo ss -ltnp '( sport = :80 )'` and `sudo docker ps`. |
 | No certificate, or the browser warns | `sudo docker compose logs traefik`. Both names' DNS must point at the VPS, and ports 80 and 443 must be open in the security group. |
 | `manifest unknown` / `not found` on pull | That version was never published. Check the Releases page and the Release workflow's run. |
+| `VELOMINE__DEMO__ENABLED is on, but: ...` at start | Demo mode refuses to delete anything: the database holds other accounts, a demo address is an admin, or an admin is a club member. Use an empty database, or set `VELOMINE__DEMO__ENABLED=false`. |
 
 ## The `.env` on the VPS
 
@@ -48,6 +49,7 @@ It lives in `/opt/velomine/.env`, with `chmod 600`, and is never committed. It h
 - `VELOMINE_VERSION`
 - `VELOMINE_DOMAIN=demo.velomine.eu`, `VELOMINE_SITE_DOMAIN=velomine.eu` and `VELOMINE_ACME_EMAIL`
 - `VELOMINE__PUBLICURL=https://demo.velomine.eu`
+- `VELOMINE__DEMO__ENABLED=true` and `VELOMINE__ACCOUNTS__SIGNUPENABLED=false`
 - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`
 - telemetry: `VELOMINE__TELEMETRY__ENABLED=true` and `VELOMINE__TELEMETRY__ENVIRONMENT=demo`
 - error reports: `VELOMINE__TELEMETRY__ERRORS__DSN` (the project's *Client Keys (DSN)* page)
@@ -69,10 +71,15 @@ done
 
 Copy the files off the VPS. A Scaleway volume snapshot is a cheap second copy.
 
-## Demo data
+## Demo mode
 
-`deploy/seed-demo.sql` adds bikes, rides and the rest to the club with the most members, and does nothing if that club already has data. Create the club and its members in the app first, copy the file to the VPS, and run:
+`VELOMINE__DEMO__ENABLED=true` makes the server the demo. The code is in `src/Velomine.Server/Features/Demo/`, and the example data is `demo-seed.sql` there. In demo mode the server:
 
-```sh
-sudo docker compose exec -T postgres psql -U velomine -d velomine -v ON_ERROR_STOP=1 --single-transaction < seed-demo.sql
-```
+- keeps three accounts, all with the public password the presentation site prints: `demo-admin@velomine.eu` (the club owner), `demo-coach@velomine.eu` and `demo-rider@velomine.eu`. They share the club *Velo Club Demo*, and each has about three months of rides, with the original files, so export works.
+- every night at 03:00 UTC deletes every club and every account except the server admins, then makes the accounts, the club and the rides again. Whatever a visitor changed is undone.
+- catches up after downtime: when the server starts, or within a minute of being up, it makes the demo again if the last 03:00 UTC has passed since the demo was made.
+- answers 403 (`code: demo_locked`) to the actions a visitor could use to lock out the others: registration, changing or resetting the password, deleting the account, two-factor sign-in, signing other sessions out, leaving the club, changing the join code and changing club roles. The list is `DemoLock.Refused`.
+- refuses to start, rather than delete anything, when it finds:
+  - `A demo account is a server admin. Use another address for VELOMINE__ADMIN__EMAIL: the demo accounts are public.`
+  - `This server has accounts that are not demo accounts. Demo mode deletes every account but the admins each night, so it only starts on an empty server or on a demo.`
+  - `A server admin is a member of a club. Demo mode deletes every club each night, so it only starts on an empty server or on a demo.`

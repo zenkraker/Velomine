@@ -468,6 +468,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failureForbidden => 'Your account may not do that.';
 
   @override
+  String get failureDemoLocked =>
+      'This is switched off in the demo, because everyone shares these accounts.';
+
+  @override
   String get failureTooMany => 'Too many attempts. Try again shortly.';
 
   @override

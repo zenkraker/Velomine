@@ -14,6 +14,7 @@ using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Clubs;
+using Velomine.Server.Features.Demo;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Server;
@@ -44,6 +45,7 @@ builder.Services.AddRoutes();
 builder.Services.AddBikes(builder.Configuration);
 builder.Services.AddClubs(builder.Configuration);
 builder.Services.AddSupporter(builder.Configuration);
+builder.Services.AddDemo(builder.Configuration);
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
 builder.Services.OpenApiDocument(o =>
@@ -68,8 +70,15 @@ builder.Services.OpenApiDocument(o =>
         });
 
         // "VelomineServerFeaturesAccountsLogin" becomes "login", so the generated Dart methods read well.
-        openApi.AddOperationTransformer((operation, _, _) =>
+        openApi.AddOperationTransformer((operation, context, _) =>
         {
+            // A demo refuses these (see DemoLock), so the document says so.
+            if (DemoLock.Refuses(context.Description.HttpMethod ?? "", context.Description.RelativePath))
+            {
+                operation.Responses ??= [];
+                operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
+            }
+
             const string prefix = "VelomineServerFeatures";
             if (operation.OperationId is { } id && id.StartsWith(prefix, StringComparison.Ordinal))
             {
@@ -167,6 +176,7 @@ app.UseVelomineTelemetry();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+app.UseDemoLock();
 app.UseFastEndpoints(c =>
 {
     c.Endpoints.RoutePrefix = "api/v1";

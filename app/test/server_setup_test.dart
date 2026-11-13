@@ -17,6 +17,7 @@ ServerInfoResponse info() => ServerInfoResponse(
   telemetryEnabled: false,
   sentryDsn: null,
   telemetryTermsVersion: 1,
+  demo: false,
 );
 
 class _MemoryStore implements ServerConfigStore {

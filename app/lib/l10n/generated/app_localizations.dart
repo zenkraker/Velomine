@@ -932,6 +932,12 @@ abstract class AppLocalizations {
   /// **'Your account may not do that.'**
   String get failureForbidden;
 
+  /// No description provided for @failureDemoLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This is switched off in the demo, because everyone shares these accounts.'**
+  String get failureDemoLocked;
+
   /// No description provided for @failureTooMany.
   ///
   /// In en, this message translates to:

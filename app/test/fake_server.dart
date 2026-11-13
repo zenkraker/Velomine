@@ -368,6 +368,7 @@ class FakeServer {
         'telemetryEnabled': telemetryEnabled,
         'sentryDsn': telemetryEnabled ? sentryDsn : null,
         'telemetryTermsVersion': 1,
+        'demo': false,
       });
     }
 

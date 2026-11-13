@@ -67,9 +67,10 @@ class ProfileData {
         Failure(
           switch (e.code) {
             401 => FailureKind.sessionEnded,
+            403 when isDemoLocked(e.message) => FailureKind.demoLocked,
             403 => FailureKind.wrongConfirmation,
             409 => FailureKind.lastAdmin,
-            _ => failureKindFor(e.code),
+            _ => failureKindFor(e.code, e.message),
           },
           code: e.code,
           action: FailureAction.deleteAccount,

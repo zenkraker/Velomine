@@ -160,6 +160,7 @@
   "failureLastAdmin": "Sei l'unico amministratore. Nomina prima qualcun altro.",
   "failureSessionEnded": "La sessione è terminata. Accedi di nuovo.",
   "failureForbidden": "Il tuo account non può farlo.",
+  "failureDemoLocked": "Nella demo questo è disattivato, perché tutti condividono questi account.",
   "failureTooMany": "Troppi tentativi. Riprova tra poco.",
   "failureUnreachable": "Impossibile raggiungere il server. Riprova.",
   "failureFailed": "Impossibile {action} ({code}). Riprova.",

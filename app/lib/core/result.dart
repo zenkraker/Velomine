@@ -53,7 +53,7 @@ extension GuardFuture<T> on Future<T> {
     } on ApiException catch (e) {
       return Failed(
         Failure(
-          failureKindFor(e.code),
+          failureKindFor(e.code, e.message),
           code: e.code,
           action: doing,
           detail: serverDetail(e.message),
