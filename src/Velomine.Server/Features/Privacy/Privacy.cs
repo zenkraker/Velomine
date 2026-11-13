@@ -71,7 +71,7 @@ public sealed record PrivacyDefaults(
     int TrimStartM,
     int TrimEndM)
 {
-    /// <summary>Everything visible and no trim: what a member with no saved settings imports.</summary>
+    /// <summary>Everything visible and no trim: what a member with no saved settings imports, and the safe base in a test.</summary>
     public static readonly PrivacyDefaults None = new(false, false, false, false, false, false, 0, 0);
 
     public bool HidesPowerOrHeartRate => HidePower || HideHeartRate;
@@ -90,31 +90,25 @@ public sealed record PrivacyDefaults(
 }
 
 /// <summary>The owner's rules for one ride, loaded once per non-owner view. Zones are always the current ones: they are places, not a copy.</summary>
-public sealed record PrivacyProfile(
-    bool HideHeartRate,
-    bool HidePower,
-    bool HideCadence,
-    bool HideSpeed,
-    bool HideElevation,
-    bool HideTemperature,
-    int TrimStartM,
-    int TrimEndM,
-    IReadOnlyList<PrivacyZone> Zones)
+public sealed record PrivacyProfile(PrivacyDefaults Defaults, IReadOnlyList<PrivacyZone> Zones)
 {
-    public static readonly PrivacyProfile None = new(false, false, false, false, false, false, 0, 0, []);
+    public bool HideHeartRate => Defaults.HideHeartRate;
 
-    public bool HidesPowerOrHeartRate => HidePower || HideHeartRate;
+    public bool HidePower => Defaults.HidePower;
 
-    public static PrivacyProfile From(PrivacyDefaults defaults, IReadOnlyList<PrivacyZone> zones) => new(
-        defaults.HideHeartRate,
-        defaults.HidePower,
-        defaults.HideCadence,
-        defaults.HideSpeed,
-        defaults.HideElevation,
-        defaults.HideTemperature,
-        defaults.TrimStartM,
-        defaults.TrimEndM,
-        zones);
+    public bool HideCadence => Defaults.HideCadence;
+
+    public bool HideSpeed => Defaults.HideSpeed;
+
+    public bool HideElevation => Defaults.HideElevation;
+
+    public bool HideTemperature => Defaults.HideTemperature;
+
+    public int TrimStartM => Defaults.TrimStartM;
+
+    public int TrimEndM => Defaults.TrimEndM;
+
+    public bool HidesPowerOrHeartRate => Defaults.HidesPowerOrHeartRate;
 }
 
 /// <summary>
@@ -131,21 +125,21 @@ public static class PrivacyRules
     /// row: <see cref="Ride.Privacy"/> reads the columns.
     /// </summary>
     public static async Task<PrivacyProfile> LoadAsync(VelomineDbContext db, Guid userId, Ride ride, CancellationToken ct) =>
-        PrivacyProfile.From(ride.Privacy ?? await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
+        new(ride.Privacy ?? await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
 
     /// <summary>
     /// One ride's rules for a list that already holds <paramref name="current"/>, so a page of rides costs no extra
     /// query per ride.
     /// </summary>
     public static PrivacyProfile Effective(Ride ride, PrivacyProfile current) =>
-        ride.Privacy is { } snapshot ? PrivacyProfile.From(snapshot, current.Zones) : current;
+        ride.Privacy is { } snapshot ? current with { Defaults = snapshot } : current;
 
     /// <summary>
     /// The member's current choices, with the zones as they are today, for a field that belongs to no single ride
     /// (the roster, the power curve, the training trend): a single ride has its own rules, see <see cref="LoadAsync"/>.
     /// </summary>
     public static async Task<PrivacyProfile> LoadCurrentAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
-        PrivacyProfile.From(await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
+        new(await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
 
     private static async Task<PrivacyDefaults> CurrentDefaultsAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
         PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == userId, ct));
@@ -162,7 +156,7 @@ public static class PrivacyRules
             .Where(s => ids.Contains(s.UserId))
             .ToListAsync(ct);
         var byUser = settings.ToDictionary(s => s.UserId);
-        return ids.ToDictionary(id => id, id => PrivacyProfile.From(PrivacyDefaults.From(byUser.GetValueOrDefault(id)), []));
+        return ids.ToDictionary(id => id, id => new PrivacyProfile(PrivacyDefaults.From(byUser.GetValueOrDefault(id)), []));
     }
 
     private static Task<List<PrivacyZone>> ZonesAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>

@@ -181,6 +181,7 @@ public sealed class Ride
     /// The member's privacy defaults copied onto the ride when it was imported, so changing a default never changes
     /// what a viewer sees of this ride. Null on a ride imported before the copy existed; the view then uses the
     /// member's current choices. Zones are not part of it: they are places, and their current radius always applies.
+    /// A re-read of the ride from its original file keeps it (RideReparseService assigns only what it derives).
     /// </summary>
     public PrivacyDefaults? Privacy
     {
