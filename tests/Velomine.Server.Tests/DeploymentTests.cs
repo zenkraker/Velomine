@@ -30,8 +30,11 @@ public sealed class DeploymentTests(PostgresFixture postgres)
 
         var hosted = api.Services.GetServices<IHostedService>().Select(s => s.GetType()).ToList();
 
-        // Only the migration runs on every instance; every job that reads or sends something waits for its owner.
-        Assert.Equal([typeof(DatabaseMigrator)], hosted);
+        // Only the migration of Velomine's own services runs on every instance; every job that reads or sends
+        // something waits for its owner. The framework's hosted services (telemetry, keys, health) are not jobs.
+        Assert.Equal(
+            [typeof(DatabaseMigrator)],
+            hosted.Where(t => t.Assembly == typeof(DatabaseMigrator).Assembly));
     }
 
     [Fact]
@@ -90,8 +93,7 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     [Fact]
     public void PasswordResetThrottle_ShouldRefuseTheTwentyFirstAttempt_WhenTheWindowHasNotPassed()
     {
-        var clock = new FixedTime(new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero));
-        var throttle = new PasswordResetThrottle(new MemoryCache(new MemoryCacheOptions()), clock);
+        var throttle = new PasswordResetThrottle(new MemoryCache(new MemoryCacheOptions()), TimeProvider.System);
         var context = new DefaultHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Loopback;
 
@@ -106,13 +108,22 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     public void PasswordResetThrottle_ShouldAllowAgain_WhenTheWindowHasPassed()
     {
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var start = new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero);
+        var clock = new MovingTime(new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero));
+        var throttle = new PasswordResetThrottle(cache, clock);
         var context = new DefaultHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Loopback;
         for (var attempt = 0; attempt < PasswordResetThrottle.Limit; attempt++)
-            new PasswordResetThrottle(cache, new FixedTime(start)).Allowed("forgot", context);
+            Assert.True(throttle.Allowed("forgot", context));
 
-        Assert.False(new PasswordResetThrottle(cache, new FixedTime(start)).Allowed("forgot", context));
-        Assert.True(new PasswordResetThrottle(cache, new FixedTime(start + PasswordResetThrottle.Window)).Allowed("forgot", context));
+        Assert.False(throttle.Allowed("forgot", context));
+        clock.Now += PasswordResetThrottle.Window;
+        Assert.True(throttle.Allowed("forgot", context));
+    }
+
+    private sealed class MovingTime(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+
+        public override DateTimeOffset GetUtcNow() => Now;
     }
 }

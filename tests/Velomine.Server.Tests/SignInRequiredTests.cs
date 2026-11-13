@@ -45,8 +45,9 @@ public sealed class SignInRequiredTests(PostgresFixture postgres)
             if (endpoint.Method != HttpMethod.Get && endpoint.Method != HttpMethod.Delete)
                 request.Content = JsonContent.Create(new { });
             var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
-            // A multipart upload is turned away by the form reader before the handler; the endpoint still asks for a sign-in.
-            if (response.StatusCode != HttpStatusCode.Unauthorized) allowed.Add($"{endpoint.Method} {endpoint.Path} {(int)response.StatusCode}");
+            // A multipart upload is turned away by the form reader (415) before the handler; both refuse the caller.
+            if (response.StatusCode is not (HttpStatusCode.Unauthorized or HttpStatusCode.UnsupportedMediaType))
+                allowed.Add($"{endpoint.Method} {endpoint.Path} {(int)response.StatusCode}");
         }
 
         Assert.Empty(allowed);

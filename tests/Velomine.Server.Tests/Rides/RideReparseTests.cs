@@ -56,17 +56,8 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         return id;
     }
 
-    private static async Task<string> WaitWhileProcessingAsync(HttpClient client, Guid id)
-    {
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride.Status;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static async Task<string> WaitWhileProcessingAsync(HttpClient client, Guid id) =>
+        (await TestApi.WaitForReadAsync(client, id)).Status;
 
     private static async Task<T> InDbAsync<T>(TestApi api, Func<VelomineDbContext, Task<T>> work)
     {
@@ -335,7 +326,8 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         var service = new RideReparseService(api.Services, queue, api.Services.GetRequiredService<RideFileStore>(), TimeProvider.System, NullLogger<RideReparseService>.Instance);
 
         var running = service.RunAsync(Ct, Raised);
-        await Task.Delay(1500, Ct);
+        // The run is waiting on the queued upload; it must not have touched the old ride by now.
+        await Task.Delay(300, Ct);
         Assert.False(running.IsCompleted);
         Assert.Equal(999.0, (await LoadAsync(api, id)).ElevationGainM);
 

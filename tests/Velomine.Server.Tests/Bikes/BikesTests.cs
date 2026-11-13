@@ -129,7 +129,11 @@ public sealed class BikesTests(PostgresFixture postgres)
         var types = (await member.GetFromJsonAsync<ListComponentTypesResponse>("/api/v1/bikes/component-types", Ct))!.Types;
 
         var chain = Assert.Single(types, t => t.Id == "chain");
+        var pads = Assert.Single(types, t => t.Id == "front_brake_pads");
         Assert.Equal(4_000_000, chain.TypicalDistanceM);
+        Assert.Equal("Chain", chain.Name);
+        Assert.Equal("Drivetrain", chain.Group);
+        Assert.Equal(2_500_000, pads.TypicalDistanceM); // pads wear sooner than a chain
     }
 
     [Fact]
@@ -175,19 +179,6 @@ public sealed class BikesTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.NotFound, (await other.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/bike", new SetRideBikeRequest { BikeId = theirs.Bike.Id }, Ct)).StatusCode);
     }
 
-    private static async Task<RideResponse> UploadRideAsync(TestApi api, HttpClient client)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(TestRideFiles.Fit(new TestRideFiles.FitSession(TestRideFiles.Start, 120))), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = (await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!;
-            if (ride.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException();
-    }
+    private static Task<RideResponse> UploadRideAsync(TestApi api, HttpClient client) =>
+        TestApi.UploadAndWaitAsync(client, TestRideFiles.Fit(new TestRideFiles.FitSession(TestRideFiles.Start, 120)));
 }

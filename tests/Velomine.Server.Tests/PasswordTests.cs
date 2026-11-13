@@ -268,8 +268,14 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await ForgotAsync(api, email);
         await WaitForMailAsync(mail);
         var (linkEmail, token) = FromEmail(mail);
+        var expiresAt = DateTimeOffset.UtcNow.AddMilliseconds(300);
 
-        await Task.Delay(300, Ct);
+        // The token provider reads the clock: once it is past the 100 ms lifespan the link must be refused.
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var clock = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+            for (var i = 0; i < 50 && clock.GetUtcNow() < expiresAt; i++) await Task.Delay(20, Ct);
+        }
         var response = await ResetAsync(api, linkEmail, token, "New-password-1");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

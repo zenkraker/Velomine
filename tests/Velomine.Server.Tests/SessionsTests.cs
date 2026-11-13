@@ -51,7 +51,8 @@ public sealed class SessionsTests(PostgresFixture postgres)
     [Fact]
     public async Task Sessions_ShouldBelongToTheirMember_WhenAnotherMemberTriesToRevokeThem()
     {
-        await using var api = await TestApi.StartAsync(postgres);
+        await using var api = await TestApi.StartAsync(postgres,
+            b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
         var otherEmail = TestApi.NewEmail();
         (await api.RegisterAsync(otherEmail)).EnsureSuccessStatusCode();
         var mine = await LoginAsync(api);

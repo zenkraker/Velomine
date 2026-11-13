@@ -50,21 +50,10 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     /// <summary>Uploads a ride and gives it a title and a description.</summary>
     private static async Task<RideResponse> NamedRideAsync(Member member, DateTime start, string title, string description)
     {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(Fit(new FitSession(start, 120))), "file", "ride.fit" } };
-        var accepted = await member.Client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        RideResponse? ride = null;
-        for (var i = 0; i < 100; i++)
-        {
-            ride = await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") break;
-            await Task.Delay(100, Ct);
-        }
-
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(start, 120)));
         var named = await member.Client.PutAsJsonAsync(
-            $"/api/v1/rides/{id}/details",
-            new SetRideDetailsRequest { Title = title, Description = description, Version = ride!.Version },
+            $"/api/v1/rides/{ride.Id}/details",
+            new SetRideDetailsRequest { Title = title, Description = description, Version = ride.Version },
             Ct);
         named.EnsureSuccessStatusCode();
         return (await named.Content.ReadFromJsonAsync<RideResponse>(Ct))!;

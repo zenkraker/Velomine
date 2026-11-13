@@ -15,19 +15,13 @@ public static class RoutesTestKit
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    public sealed record Member(string Email, Guid Id, HttpClient Client);
-
     public static Task<TestApi> StartAsync(PostgresFixture postgres) =>
         TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    public static async Task<Member> NewMemberAsync(TestApi api, string name = "Test Rider")
-    {
-        var email = TestApi.NewEmail();
-        var id = (await (await api.RegisterAsync(email, name: name)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!.Id;
-        return new Member(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
-    }
+    /// <summary>The member record every test shares; this kit only adds the club and route helpers around it.</summary>
+    public static Task<TestMember> NewMemberAsync(TestApi api, string name = "Test Rider") => api.NewMemberAsync(name);
 
-    public static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
+    public static async Task<AdminClubResponse> CreateClubAsync(TestApi api, TestMember owner)
     {
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         var response = await admin.PostAsJsonAsync(
@@ -38,11 +32,11 @@ public static class RoutesTestKit
         return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
     }
 
-    public static async Task JoinAsync(Member member, AdminClubResponse club) =>
+    public static async Task JoinAsync(TestMember member, AdminClubResponse club) =>
         (await member.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct))
             .EnsureSuccessStatusCode();
 
-    public static async Task<Member> NewClubMemberAsync(TestApi api, AdminClubResponse club, string name = "Club Rider")
+    public static async Task<TestMember> NewClubMemberAsync(TestApi api, AdminClubResponse club, string name = "Club Rider")
     {
         var member = await NewMemberAsync(api, name);
         await JoinAsync(member, club);
@@ -52,13 +46,13 @@ public static class RoutesTestKit
     /// <summary>Two clubs, each with an owner, a coach and a rider, and one rider with no club.</summary>
     public sealed record World(
         AdminClubResponse Club,
-        Member Owner,
-        Member Coach,
-        Member Rider,
+        TestMember Owner,
+        TestMember Coach,
+        TestMember Rider,
         AdminClubResponse OtherClub,
-        Member OtherOwner,
-        Member OtherRider,
-        Member Loner);
+        TestMember OtherOwner,
+        TestMember OtherRider,
+        TestMember Loner);
 
     public static async Task<World> NewWorldAsync(TestApi api)
     {
@@ -76,21 +70,8 @@ public static class RoutesTestKit
         return new World(club, owner, coach, rider, otherClub, otherOwner, otherRider, loner);
     }
 
-    public static async Task<Guid> UploadAndWaitAsync(HttpClient client, byte[] file)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return id;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    public static async Task<Guid> UploadAndWaitAsync(HttpClient client, byte[] file) =>
+        (await TestApi.UploadAndWaitAsync(client, file)).Id;
 
     /// <summary>A 10 minute ride that starts at 46.0, 11.0 and rides north at 8 m/s: about 4.8 km.</summary>
     public static Task<Guid> UploadRideAsync(HttpClient client) =>

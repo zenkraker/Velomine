@@ -123,11 +123,11 @@ public sealed class NotificationsTests(PostgresFixture postgres)
             new CreateComponentRequest { Type = "chain", InstalledOn = new DateOnly(2026, 10, 1), ExpectedDistanceM = 1000 }, Ct)).EnsureSuccessStatusCode();
 
         await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)));
-        Assert.Equal(["part_soon"], PartTypes(await ListAsync(member)));
+        Assert.Equal(["part_soon"], PartTypes(await TestApi.WaitForNotificationAsync(member, NotificationTypes.PartSoon)));
 
         await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddHours(3), 120)));
         await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddHours(6), 120)));
-        var list = await ListAsync(member);
+        var list = await TestApi.WaitForNotificationAsync(member, NotificationTypes.PartWorn);
         Assert.Equal(["part_worn", "part_soon"], PartTypes(list));
         var worn = list.Notifications.First(n => n.Type == NotificationTypes.PartWorn);
         Assert.Equal("Chain on Road bike", worn.Subject);

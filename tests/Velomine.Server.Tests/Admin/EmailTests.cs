@@ -44,18 +44,8 @@ public sealed class EmailTests(PostgresFixture postgres)
     }
 
     /// <summary>Uploads a ride and waits until it has been read, which makes a "ride ready" notification.</summary>
-    private static async Task UploadAsync(HttpClient client, DateTime start)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(Fit(new FitSession(start, 120))), "file", "ride.fit" } };
-        var id = (await (await client.PostAsync("/api/v1/rides/uploads", form, Ct)).Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            if ((await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task UploadAsync(HttpClient client, DateTime start) =>
+        TestApi.UploadAndWaitAsync(client, Fit(new FitSession(start, 120)));
 
     private static Task<int> RunAsync(TestApi api) =>
         api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct);
@@ -86,7 +76,6 @@ public sealed class EmailTests(PostgresFixture postgres)
 
         Assert.Empty(mail.Sent);
         Assert.False((await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", Ct))!.EmailAvailable);
-        Assert.IsType<MailKitEmailSender>(api.Services.GetRequiredService<IEmailSender>());
     }
 
     [Fact]

@@ -7,9 +7,32 @@ using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-public sealed class ProfileTests(PostgresFixture postgres)
+public sealed class ProfileTests(PostgresFixture postgres) : IAsyncLifetime
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    // Row after row asks the same question; they share one server and one member, and every row only sends a refused
+    // profile update, so nothing a later row reads changes.
+    private TestApi? shared;
+    private HttpClient? member;
+
+    public async ValueTask InitializeAsync()
+    {
+        shared = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            // A known date, so the estimated maximum heart rate is one number.
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero))));
+        });
+        var email = TestApi.NewEmail();
+        (await shared.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
+        member = await shared.SignedInClientAsync(email, TestApi.MemberPassword);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (shared is not null) await shared.DisposeAsync();
+    }
 
     private async Task<(TestApi Api, HttpClient Member)> StartAsync()
     {
@@ -107,10 +130,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
     [InlineData("Ada", null, null, null, null, "1")]
     public async Task Profile_ShouldRejectTheUpdate_WhenTheValuesAreInvalid(string name, int? ftp, double? weight, int? birthYear, string? zone, string firstDay)
     {
-        var (api, member) = await StartAsync();
-        await using var _ = api;
-
-        var put = await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest(name, ftp, weight, birthYear, zone, firstDay), Ct);
+        var put = await member!.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest(name, ftp, weight, birthYear, zone, firstDay), Ct);
 
         Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
     }

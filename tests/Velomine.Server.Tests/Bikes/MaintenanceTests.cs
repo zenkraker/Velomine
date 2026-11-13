@@ -89,11 +89,11 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
     private static async Task<string[]> ReminderTypesAsync(HttpClient client, int expected)
     {
         string[] types = [];
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < 500; i++)
         {
             types = ReminderTypes(await NotificationsAsync(client));
             if (types.Length >= expected) return types;
-            await Task.Delay(100, Ct);
+            await Task.Delay(20, Ct);
         }
         return types;
     }
@@ -683,18 +683,5 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
         Assert.True(await db.MaintenanceReminders.AnyAsync(r => r.BikeId == otherBike.Bike.Id, Ct));
     }
 
-    private static async Task UploadAndWaitAsync(HttpClient client, byte[] file)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            if ((await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct))!.Status != "processing") return;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task UploadAndWaitAsync(HttpClient client, byte[] file) => TestApi.UploadAndWaitAsync(client, file);
 }

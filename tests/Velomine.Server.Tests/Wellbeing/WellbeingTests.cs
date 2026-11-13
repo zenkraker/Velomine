@@ -41,21 +41,8 @@ public sealed class WellbeingTests(PostgresFixture postgres)
             new SaveCheckInRequest { Fatigue = fatigue, Soreness = 2, Mood = 4, Stress = 2, Motivation = 5 },
             Ct);
 
-    private static async Task<RideResponse> UploadAsync(HttpClient client)
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 1300))), "file", "ride.fit" } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task<RideResponse> UploadAsync(HttpClient client) =>
+        TestApi.UploadAndWaitAsync(client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 1300)));
 
     private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, string ownerEmail)
     {

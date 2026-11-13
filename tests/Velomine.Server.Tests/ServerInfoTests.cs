@@ -10,8 +10,18 @@ using Velomine.Server.Features.Server;
 
 namespace Velomine.Server.Tests;
 
-public sealed class ServerInfoTests(PostgresFixture postgres)
+public sealed class ServerInfoTests(PostgresFixture postgres) : IAsyncLifetime
 {
+    // Both rows only ask the default server for a path it does not serve; one server answers them.
+    private TestApi? shared;
+
+    public async ValueTask InitializeAsync() => shared = await TestApi.StartAsync(postgres);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (shared is not null) await shared.DisposeAsync();
+    }
+
     [Fact]
     public async Task ServerInfo_ShouldReturnNameAndVersion_WhenRequested()
     {
@@ -71,6 +81,11 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         var response = await api.CreateClient().GetAsync("/api/v1/server", TestContext.Current.CancellationToken);
         var info = await response.Content.ReadFromJsonAsync<ServerInfoResponse>(TestContext.Current.CancellationToken);
         await api.DisposeAsync(); // shutting down flushes every exporter
+
+        // Logs, traces and metrics are exported in batches on their own schedule, so wait for each signal rather
+        // than reading the collector the moment the server stops.
+        for (var i = 0; i < 250 && !(collector.Paths.Contains("/v1/logs") && collector.Paths.Contains("/v1/metrics")); i++)
+            await Task.Delay(20, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.False(info!.TelemetryEnabled); // OTLP alone gives the app no crash-report destination
@@ -166,9 +181,7 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
     [InlineData("/status/")]
     public async Task Server_ShouldNotServeFrontEndPaths_WhenTheWebImageOwnsThem(string path)
     {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
+        var response = await shared!.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

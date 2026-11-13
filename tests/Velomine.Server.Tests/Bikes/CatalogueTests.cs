@@ -80,7 +80,7 @@ public sealed class CatalogueTests(PostgresFixture postgres)
         var count = await WithDbAsync(api, (db, _) => db.Parts.CountAsync(Ct));
 
         Assert.False(second);
-        Assert.True(count > 40);
+        Assert.Equal(44, count); // the whole bundled list, and not a part of it twice
     }
 
     [Fact]
@@ -173,12 +173,11 @@ public sealed class CatalogueTests(PostgresFixture postgres)
         await using var api = await StartAsync();
         var source = new SwitchSource(new FailingSource(), new StubSource(Feed(Chain())));
 
-        var failed = await WithDbAsync(api, (db, clock) =>
-            CatalogueSync.RunAsync(db, source, clock, "https://catalogue.test", Ct));
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            WithDbAsync(api, (db, clock) => CatalogueSync.RunAsync(db, source, clock, "https://catalogue.test", Ct)));
         var applied = await WithDbAsync(api, (db, clock) =>
             CatalogueSync.RunAsync(db, source, clock, "https://catalogue.test", Ct));
 
-        Assert.IsType<HttpRequestException>(failed);
         Assert.True(applied);
         var member = await NewMemberAsync(api);
         Assert.Single(await SearchAsync(member, "CN-M8100"));
