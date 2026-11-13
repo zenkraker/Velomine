@@ -84,11 +84,36 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode);
     }
 
+    [Fact]
+    public async Task Uploads_ShouldAcceptThemAgain_WhenTheBucketHasRefilled()
+    {
+        // One token a minute, so a burst of one and a later one both fit a refreshed bucket.
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.UseSetting("Velomine:RateLimits:UploadsPerHour", "60");
+            b.UseSetting("Velomine:RateLimits:UploadBurst", "1");
+        });
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+
+        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode); // the bucket is empty
+
+        // Wait past the one-minute replenishment period, then the same member is let in again.
+        await Task.Delay(TimeSpan.FromSeconds(62), Ct);
+
+        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+    }
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     private static Task<HttpResponseMessage> UploadAsync(HttpClient client) =>
         client.PostAsync(
             "/api/v1/rides/uploads",
             new MultipartFormDataContent { { new ByteArrayContent([1, 2, 3]), "file", "ride.gpx" } },
-            TestContext.Current.CancellationToken);
+            Ct);
 
     // The throttle cannot refuse today: every call writes the counter with an absolute expiry that is already in the
     // past once a tick has passed, so MemoryCache drops it and the count restarts (see the report, Story 6). These
