@@ -6,7 +6,6 @@ using Velomine.Server.Features.Accounts;
 namespace Velomine.Server.Tests;
 
 /// <summary>The whole single sign-on flow against a real OpenID Connect provider (Dex), played by a test "browser".</summary>
-[Collection("postgres")]
 public sealed class SsoTests(PostgresFixture postgres, DexFixture dex)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

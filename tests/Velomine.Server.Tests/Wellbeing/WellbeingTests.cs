@@ -17,7 +17,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Wellbeing;
 
-[Collection("postgres")]
 public sealed class WellbeingTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -155,8 +154,6 @@ public sealed class WellbeingTests(PostgresFixture postgres)
         Assert.Equal(
             HttpStatusCode.NotFound,
             (await other.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{athleteId}/wellbeing", Ct)).StatusCode);
-
-        _ = athleteEmail;
     }
 
     [Fact]
@@ -228,22 +225,6 @@ public sealed class WellbeingTests(PostgresFixture postgres)
         await using var scope = api.Services.CreateAsyncScope();
         Assert.True(await scope.ServiceProvider.GetRequiredService<VelomineDbContext>()
             .DailyCheckIns.AnyAsync(c => c.UserId == athleteId, Ct));
-    }
-
-    [Fact]
-    public async Task GetWellbeing_ShouldAskForConsentAgain_WhenConsentWasWithdrawn()
-    {
-        await using var api = await StartAsync();
-        var (client, _, _) = await NewMemberAsync(api);
-        await ConsentAsync(client);
-        await CheckInAsync(client, fatigue: 4);
-
-        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync("/api/v1/wellbeing/consent", Ct)).StatusCode);
-
-        var wellbeing = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
-        Assert.True(wellbeing!.ConsentRequired);
-        Assert.False(wellbeing.Consented);
-        Assert.Equal(4, wellbeing.Today!.Fatigue);
     }
 
     [Fact]

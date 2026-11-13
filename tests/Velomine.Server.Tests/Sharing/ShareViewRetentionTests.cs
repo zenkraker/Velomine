@@ -7,7 +7,6 @@ using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Tests.Sharing;
 
-[Collection("postgres")]
 public sealed class ShareViewRetentionTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

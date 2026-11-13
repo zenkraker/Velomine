@@ -5,7 +5,6 @@ using static Velomine.Server.Tests.Routes.RoutesTestKit;
 
 namespace Velomine.Server.Tests.Calendar;
 
-[Collection("postgres")]
 public sealed class CalendarFeedTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

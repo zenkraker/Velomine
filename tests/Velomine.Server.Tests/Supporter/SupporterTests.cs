@@ -11,7 +11,6 @@ using Velomine.Server.Features.Supporter;
 
 namespace Velomine.Server.Tests.Supporter;
 
-[Collection("postgres")]
 public sealed class SupporterTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

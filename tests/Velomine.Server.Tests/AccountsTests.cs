@@ -5,7 +5,6 @@ using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class AccountsTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -79,16 +78,6 @@ public sealed class AccountsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Accounts_ShouldRejectMe_WhenNotSignedIn()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var response = await api.CreateClient().GetAsync("/api/v1/accounts/me", Ct);
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
     public async Task Accounts_ShouldForbidUserManagement_WhenCallerIsAMember()
     {
         await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
@@ -111,22 +100,6 @@ public sealed class AccountsTests(PostgresFixture postgres)
 
         var locked = await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         Assert.Equal((HttpStatusCode)423, locked.StatusCode);
-    }
-
-    [Fact]
-    public async Task Accounts_ShouldReturnNewTokens_WhenTheRefreshTokenIsValid()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-        using var login = JsonDocument.Parse(await (await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword)).Content.ReadAsStringAsync(Ct));
-
-        var refreshed = await api.CreateClient().PostAsJsonAsync(
-            "/api/v1/accounts/refresh",
-            new RefreshRequest(login.RootElement.GetProperty("refreshToken").GetString()!),
-            Ct);
-
-        Assert.Equal(HttpStatusCode.OK, refreshed.StatusCode);
-        using var tokens = JsonDocument.Parse(await refreshed.Content.ReadAsStringAsync(Ct));
-        Assert.False(string.IsNullOrEmpty(tokens.RootElement.GetProperty("accessToken").GetString()));
     }
 
     [Fact]

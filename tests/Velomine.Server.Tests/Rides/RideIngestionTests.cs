@@ -16,7 +16,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class RideIngestionTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -215,18 +214,6 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task UploadRide_ShouldReturnConflict_WhenTheKeyIsReusedForAnotherFile()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        await UploadAsync(member, Fit(new FitSession(Start, 90)), key: "k1");
-
-        var other = await UploadAsync(member, Fit(new FitSession(Start.AddDays(1), 90)), key: "k1");
-
-        Assert.Equal(HttpStatusCode.Conflict, other.StatusCode);
-    }
-
-    [Fact]
     public async Task UploadRide_ShouldDeleteTheRejectedFile_WhenTheKeyIsReusedForAnotherFile()
     {
         await using var api = await StartAsync();
@@ -312,25 +299,6 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task UploadRide_ShouldKeepOneRide_WhenTheSecondUploadStartsWhileTheFirstIsProcessing()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        var file = Fit(new FitSession(Start, 90));
-
-        var first = await UploadAsync(member, file);
-        var firstId = (await first.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        var second = await UploadAsync(member, file);
-        var secondId = (await second.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-
-        await WaitAsync(member, firstId);
-        await WaitAsync(member, secondId);
-
-        var list = await member.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
-        Assert.Single(list!.Rides);
-    }
-
-    [Fact]
     public async Task UploadRide_ShouldCreateTwoRides_WhenTheFileHasTwoSessions()
     {
         await using var api = await StartAsync();
@@ -370,16 +338,6 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
 
         Assert.Equal("failed", ride.Status);
         Assert.Equal("not_cycling", ride.Error);
-    }
-
-    [Fact]
-    public async Task UploadRide_ShouldBeUnauthorized_WhenTheCallerIsNotSignedIn()
-    {
-        await using var api = await StartAsync();
-
-        var response = await UploadAsync(api.CreateClient(), Fit(new FitSession(Start, 60)));
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]

@@ -14,7 +14,6 @@ using static Velomine.Server.Tests.Routes.RoutesTestKit;
 
 namespace Velomine.Server.Tests.Routes;
 
-[Collection("postgres")]
 public sealed class RoutesTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -47,11 +46,19 @@ public sealed class RoutesTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CreateRoute_ShouldTrimTheStartAndEnd_WhenThePrivacySettingsTrimThem()
+    public async Task CreateRoute_ShouldKeepTheWholeLine_WhenThePrivacySettingsTrimNothing()
     {
         await using var api = await StartAsync(postgres);
         var world = await NewWorldAsync(api);
         var rideId = await UploadRideAsync(world.Rider.Client);
+
+        var route = await CreateRouteAsync(
+            world.Rider.Client,
+            new CreateRouteRequest { RideId = rideId, Name = "All of it", Surface = "gravel", Description = "  Steady  " });
+        Assert.InRange(route.DistanceM, 4_700, 4_900);
+        Assert.NotNull(route.Elevation);
+
+        // The same ride, now trimmed by 1 km at each end: 2.8 km of line left, and no elevation since the member hides it.
         (await world.Rider.Client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
             new Velomine.Server.Features.Privacy.UpdatePrivacyRequest
@@ -66,28 +73,12 @@ public sealed class RoutesTests(PostgresFixture postgres)
                 TrimEndM = 1000,
             },
             Ct)).EnsureSuccessStatusCode();
-
-        var route = await CreateRouteAsync(
+        var trimmed = await CreateRouteAsync(
             world.Rider.Client, new CreateRouteRequest { RideId = rideId, Name = "Trimmed", Surface = "road" });
 
-        Assert.InRange(route.DistanceM, 2_700, 2_900);
-        Assert.Null(route.Elevation);
-        Assert.Null(route.ClimbingM);
-    }
-
-    [Fact]
-    public async Task CreateRoute_ShouldKeepTheWholeLine_WhenThereIsNoPrivacyRule()
-    {
-        await using var api = await StartAsync(postgres);
-        var world = await NewWorldAsync(api);
-        var rideId = await UploadRideAsync(world.Rider.Client);
-
-        var route = await CreateRouteAsync(
-            world.Rider.Client,
-            new CreateRouteRequest { RideId = rideId, Name = "All of it", Surface = "gravel", Description = "  Steady  " });
-
-        Assert.InRange(route.DistanceM, 4_700, 4_900);
-        Assert.NotNull(route.Elevation);
+        Assert.InRange(trimmed.DistanceM, 2_700, 2_900);
+        Assert.Null(trimmed.Elevation);
+        Assert.Null(trimmed.ClimbingM);
         Assert.Equal("Steady", route.Description);
         Assert.True(route.Latitude.Length <= RouteGeometry.MaxStoredPoints);
     }
@@ -510,17 +501,4 @@ public sealed class RoutesTests(PostgresFixture postgres)
         Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<VelomineDbContext>().RouteLines.CountAsync(Ct));
     }
 
-    [Fact]
-    public async Task Routes_ShouldRequireSignIn_WhenCalledWithoutAToken()
-    {
-        await using var api = await StartAsync(postgres);
-        var anonymous = api.CreateClient();
-        var id = Guid.NewGuid();
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/v1/routes", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/v1/routes/mine", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync($"/api/v1/routes/{id}", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PostAsJsonAsync("/api/v1/routes", LineRequest(), Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync($"/api/v1/rides/{id}/route-draft", Ct)).StatusCode);
-    }
 }

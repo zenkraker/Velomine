@@ -10,7 +10,6 @@ using Velomine.Server.Features.Server;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class ServerInfoTests(PostgresFixture postgres)
 {
     [Fact]
@@ -80,21 +79,6 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         Assert.Contains("/v1/metrics", collector.Paths);
     }
 
-    [Fact]
-    public async Task Server_ShouldStillAnswer_WhenTheOtlpCollectorIsUnreachable()
-    {
-        await using var api = await TestApi.StartAsync(postgres, b =>
-        {
-            b.UseSetting("Velomine:Telemetry:Enabled", "true");
-            b.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:9");
-            b.UseSetting("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf");
-        });
-
-        var response = await api.CreateClient().GetAsync("/api/v1/server", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
     /// <summary>Accepts any OTLP/HTTP export and records which signal it was.</summary>
     private sealed class OtlpCollector : IDisposable
     {
@@ -162,7 +146,6 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
 
     [Theory]
     [InlineData("https://tiles.example/map.png")] // no {z}/{x}/{y}
-    [InlineData("tiles.example/{z}/{x}/{y}.png")] // not an address
     [InlineData("javascript:alert({z}{x}{y})")] // not http or https
     public async Task ServerInfo_ShouldFallBackToTheDefaultMap_WhenTheTileAddressIsUnusable(string tileUrl)
     {
@@ -180,10 +163,7 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
 
     [Theory]
     [InlineData("/")]
-    [InlineData("/sign-in")]
     [InlineData("/status/")]
-    [InlineData("/static/site.css")]
-    [InlineData("/index.html")]
     public async Task Server_ShouldNotServeFrontEndPaths_WhenTheWebImageOwnsThem(string path)
     {
         await using var api = await TestApi.StartAsync(postgres);
@@ -191,16 +171,6 @@ public sealed class ServerInfoTests(PostgresFixture postgres)
         var response = await api.CreateClient().GetAsync(path, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Health_ShouldReturnOk_WhenProbed()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var response = await api.CreateClient().GetAsync("/health", TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

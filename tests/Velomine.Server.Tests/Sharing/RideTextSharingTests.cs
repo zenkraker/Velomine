@@ -10,7 +10,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 namespace Velomine.Server.Tests.Sharing;
 
 /// <summary>A ride's title and description, and who looked at a ride, across members and clubs.</summary>
-[Collection("postgres")]
 public sealed class RideTextSharingTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -6,7 +6,6 @@ using Velomine.Server.Features.Admin;
 
 namespace Velomine.Server.Tests.Admin;
 
-[Collection("postgres")]
 public sealed class SettingsTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
