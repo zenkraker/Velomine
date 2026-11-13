@@ -6,6 +6,9 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 import '../../core/units.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
@@ -191,155 +194,154 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       ref.read(privacyViewModelProvider.notifier).messageShown,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return PageScaffold(
+      eyebrow: l10n.profileTitle,
+      title: l10n.privacyTitle,
+      maxWidth: AppLayout.contentNarrow,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: privacy == null && state.load.running
-                ? const Center(child: CircularProgressIndicator())
-                : privacy == null
-                ? _LoadFailed(
-                    failure: state.load.failure,
-                    onRetry: () =>
-                        ref.read(privacyViewModelProvider.notifier).load(),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: AppSpacing.lg,
+        privacy == null && state.load.running
+            ? const Center(child: CircularProgressIndicator())
+            : privacy == null
+            ? _LoadFailed(
+                failure: state.load.failure,
+                onRetry: () =>
+                    ref.read(privacyViewModelProvider.notifier).load(),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpacing.lg,
+                children: [
+                  Text(l10n.privacyHelp),
+                  const Divider(),
+                  Text(
+                    l10n.privacyOthersSee,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  _streamSwitch(
+                    'privacy-hide-heart-rate',
+                    _showHeartRate,
+                    l10n.privacyHideHeartRate,
+                    (v) => setState(() => _showHeartRate = v),
+                  ),
+                  _streamSwitch(
+                    'privacy-hide-power',
+                    _showPower,
+                    l10n.privacyHidePower,
+                    (v) => setState(() => _showPower = v),
+                  ),
+                  _streamSwitch(
+                    'privacy-hide-cadence',
+                    _showCadence,
+                    l10n.privacyHideCadence,
+                    (v) => setState(() => _showCadence = v),
+                  ),
+                  _streamSwitch(
+                    'privacy-hide-speed',
+                    _showSpeed,
+                    l10n.privacyHideSpeed,
+                    (v) => setState(() => _showSpeed = v),
+                  ),
+                  _streamSwitch(
+                    'privacy-hide-elevation',
+                    _showElevation,
+                    l10n.privacyHideElevation,
+                    (v) => setState(() => _showElevation = v),
+                  ),
+                  _streamSwitch(
+                    'privacy-hide-temperature',
+                    _showTemperature,
+                    l10n.privacyHideTemperature,
+                    (v) => setState(() => _showTemperature = v),
+                  ),
+                  const Divider(),
+                  Text(
+                    l10n.privacyTrimTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Row(
+                    spacing: AppSpacing.md,
                     children: [
-                      Text(l10n.privacyHelp),
-                      const Divider(),
-                      Text(
-                        l10n.privacyOthersSee,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      _streamSwitch(
-                        'privacy-hide-heart-rate',
-                        _showHeartRate,
-                        l10n.privacyHideHeartRate,
-                        (v) => setState(() => _showHeartRate = v),
-                      ),
-                      _streamSwitch(
-                        'privacy-hide-power',
-                        _showPower,
-                        l10n.privacyHidePower,
-                        (v) => setState(() => _showPower = v),
-                      ),
-                      _streamSwitch(
-                        'privacy-hide-cadence',
-                        _showCadence,
-                        l10n.privacyHideCadence,
-                        (v) => setState(() => _showCadence = v),
-                      ),
-                      _streamSwitch(
-                        'privacy-hide-speed',
-                        _showSpeed,
-                        l10n.privacyHideSpeed,
-                        (v) => setState(() => _showSpeed = v),
-                      ),
-                      _streamSwitch(
-                        'privacy-hide-elevation',
-                        _showElevation,
-                        l10n.privacyHideElevation,
-                        (v) => setState(() => _showElevation = v),
-                      ),
-                      _streamSwitch(
-                        'privacy-hide-temperature',
-                        _showTemperature,
-                        l10n.privacyHideTemperature,
-                        (v) => setState(() => _showTemperature = v),
-                      ),
-                      const Divider(),
-                      Text(
-                        l10n.privacyTrimTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Row(
-                        spacing: AppSpacing.md,
-                        children: [
-                          Expanded(
-                            child: _trimField(
-                              'privacy-trim-start',
-                              _trimStart,
-                              l10n.privacyTrimStart,
-                            ),
-                          ),
-                          Expanded(
-                            child: _trimField(
-                              'privacy-trim-end',
-                              _trimEnd,
-                              l10n.privacyTrimEnd,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(l10n.privacyTrimHelp),
-                      if (_problem case final problem?)
-                        Text(
-                          problem,
-                          key: const Key('privacy-error'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      if (state.save.completed)
-                        Text(l10n.saved, key: const Key('privacy-saved')),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: FilledButton(
-                          key: const Key('privacy-save'),
-                          onPressed: state.save.running
-                              ? null
-                              : () => _save(l10n),
-                          child: Text(l10n.save),
+                      Expanded(
+                        child: _trimField(
+                          'privacy-trim-start',
+                          _trimStart,
+                          l10n.privacyTrimStart,
                         ),
                       ),
-                      const Divider(),
-                      Text(
-                        l10n.privacyZonesTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(l10n.privacyZonesHelp),
-                      if (privacy.zones.isEmpty)
-                        Text(l10n.privacyZonesEmpty)
-                      else
-                        for (final zone in privacy.zones)
-                          ListTile(
-                            key: Key('privacy-zone-${zone.id}'),
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(zone.name),
-                            subtitle: Text(
-                              length(
-                                ref.watch(unitsChoiceViewModelProvider),
-                                zone.radiusM.toDouble(),
-                              ),
-                            ),
-                            trailing: IconButton(
-                              key: Key('privacy-zone-delete-${zone.id}'),
-                              tooltip: l10n.privacyZoneDelete(zone.name),
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: state.save.running
-                                  ? null
-                                  : () => _deleteZone(zone, l10n),
-                            ),
-                          ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          key: const Key('privacy-add-zone'),
-                          onPressed: state.save.running
-                              ? null
-                              : () => _addZone(l10n),
-                          icon: const Icon(Icons.add_location_alt_outlined),
-                          label: Text(l10n.privacyAddZone),
+                      Expanded(
+                        child: _trimField(
+                          'privacy-trim-end',
+                          _trimEnd,
+                          l10n.privacyTrimEnd,
                         ),
                       ),
                     ],
                   ),
-          ),
-        ),
+                  Text(l10n.privacyTrimHelp),
+                  if (_problem case final problem?)
+                    Text(
+                      problem,
+                      key: const Key('privacy-error'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  if (state.save.completed)
+                    Text(l10n.saved, key: const Key('privacy-saved')),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton(
+                      key: const Key('privacy-save'),
+                      onPressed: state.save.running ? null : () => _save(l10n),
+                      child: Text(l10n.save),
+                    ),
+                  ),
+                  const Divider(),
+                  Text(
+                    l10n.privacyZonesTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(l10n.privacyZonesHelp),
+                  if (privacy.zones.isEmpty)
+                    EmptyState(
+                      key: const Key('privacy-zones-empty'),
+                      message: l10n.privacyZonesEmpty,
+                      icon: Icons.place_outlined,
+                    )
+                  else
+                    for (final zone in privacy.zones)
+                      ListTile(
+                        key: Key('privacy-zone-${zone.id}'),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(zone.name),
+                        subtitle: Text(
+                          length(
+                            ref.watch(unitsChoiceViewModelProvider),
+                            zone.radiusM.toDouble(),
+                          ),
+                        ),
+                        trailing: IconButton(
+                          key: Key('privacy-zone-delete-${zone.id}'),
+                          tooltip: l10n.privacyZoneDelete(zone.name),
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: state.save.running
+                              ? null
+                              : () => _deleteZone(zone, l10n),
+                        ),
+                      ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const Key('privacy-add-zone'),
+                      onPressed: state.save.running
+                          ? null
+                          : () => _addZone(l10n),
+                      icon: const Icon(Icons.add_location_alt_outlined),
+                      label: Text(l10n.privacyAddZone),
+                    ),
+                  ),
+                ],
+              ),
       ],
     );
   }
@@ -382,20 +384,12 @@ class _LoadFailed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.md,
-      children: [
-        Text(
-          failure == null ? l10n.actionGeneral : failureText(l10n, failure!),
-          key: const Key('privacy-error'),
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(onPressed: onRetry, child: Text(l10n.retry)),
-        ),
-      ],
+    return ErrorState(
+      message: failure == null
+          ? l10n.actionGeneral
+          : failureText(l10n, failure!),
+      actionKey: const Key('privacy-error'),
+      onRetry: onRetry,
     );
   }
 }
