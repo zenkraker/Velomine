@@ -9,6 +9,8 @@ import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 import '../club/club_view_model.dart';
 import 'route_widgets.dart';
 import 'routes_view_model.dart';
@@ -97,173 +99,156 @@ class RouteDetailScreen extends ConsumerWidget {
     }
     final route = s.detail;
     if (route == null) {
-      return Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Text(
-          s.load.failure == null ? '' : failureText(l10n, s.load.failure!),
-        ),
+      return ErrorState(
+        message: s.load.failure == null
+            ? l10n.couldNotLoadRide
+            : failureText(l10n, s.load.failure!),
+        actionKey: const Key('route-error'),
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+    return PageScaffold(
+      eyebrow: l10n.routesEyebrow,
+      title: route.name,
+      titleKey: const Key('route-title'),
+      subtitle: routeLineOf(
+        ref.watch(unitsChoiceViewModelProvider),
+        route.distanceM,
+        route.climbingM,
+      ),
+      maxWidth: AppLayout.contentNarrow,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        route.name,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    Chip(label: Text(routeSurfaceName(l10n, route.surface))),
-                  ],
-                ),
-                Text(
-                  [
-                    routeLineOf(
-                      ref.watch(unitsChoiceViewModelProvider),
-                      route.distanceM,
-                      route.climbingM,
-                    ),
-                    l10n.routeAddedBy(route.ownerName),
-                    dateTime(route.createdAt),
-                  ].join(' · '),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (route.description != null && route.description!.isNotEmpty)
-                  Text(route.description!),
-                if (route.isMine && !route.isShared)
-                  Card(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Text(
-                        l10n.routeNotSharedBody,
-                        key: const Key('route-not-shared'),
-                      ),
-                    ),
-                  ),
-                RoutePreview(
-                  latitude: route.latitude,
-                  longitude: route.longitude,
-                  elevation: route.elevation,
-                  tileUrl: tileUrl,
-                  attribution: attribution,
-                ),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    FilledButton.tonalIcon(
-                      key: const Key('download-route'),
-                      onPressed: s.action.running
-                          ? null
-                          : () => _download(context, ref),
-                      icon: const Icon(Icons.download),
-                      label: Text(l10n.routeOpenGpx),
-                    ),
-                    if (route.isMine)
-                      OutlinedButton.icon(
-                        key: const Key('edit-route'),
-                        onPressed: onEdit,
-                        icon: const Icon(Icons.edit_outlined),
-                        label: Text(l10n.routeEdit),
-                      ),
-                    if (route.isMine && route.isShared)
-                      OutlinedButton.icon(
-                        key: const Key('withdraw-route'),
-                        onPressed: s.action.running
-                            ? null
-                            : () async {
-                                if (await _confirm(
-                                  context,
-                                  title: l10n.routeWithdrawConfirmTitle,
-                                  body: l10n.routeWithdrawConfirmBody,
-                                  action: l10n.routeWithdraw,
-                                  key: const Key('confirm-withdraw-route'),
-                                )) {
-                                  await notifier.withdraw();
-                                }
-                              },
-                        icon: const Icon(Icons.link_off),
-                        label: Text(l10n.routeWithdraw),
-                      ),
-                    if (route.isMine && !route.isShared)
-                      OutlinedButton.icon(
-                        key: const Key('share-route'),
-                        onPressed: s.action.running ? null : notifier.share,
-                        icon: const Icon(Icons.link),
-                        label: Text(l10n.routeShare),
-                      ),
-                    if (route.isMine)
-                      TextButton.icon(
-                        key: const Key('delete-route'),
-                        onPressed: s.action.running
-                            ? null
-                            : () async {
-                                if (await _confirm(
-                                  context,
-                                  title: l10n.routeDeleteConfirmTitle,
-                                  body: l10n.routeDeleteConfirmBody,
-                                  action: l10n.routeDelete,
-                                  key: const Key('confirm-delete-route'),
-                                )) {
-                                  if (await notifier.delete() &&
-                                      context.mounted) {
-                                    onDeleted();
-                                  }
-                                }
-                              },
-                        icon: const Icon(Icons.delete_outline),
-                        label: Text(l10n.routeDelete),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    // The club's owner moderates the library without editing anybody's words.
-                    if (!route.isMine && isClubOwner)
-                      OutlinedButton.icon(
-                        key: const Key('remove-route-as-owner'),
-                        onPressed: s.action.running
-                            ? null
-                            : () async {
-                                if (await _confirm(
-                                  context,
-                                  title: l10n.routeWithdrawConfirmTitle,
-                                  body: l10n.routeWithdrawConfirmBody,
-                                  action: l10n.routeWithdraw,
-                                  key: const Key('confirm-withdraw-route'),
-                                )) {
-                                  if (await notifier.withdraw() &&
-                                      context.mounted) {
-                                    onDeleted();
-                                  }
-                                }
-                              },
-                        icon: const Icon(Icons.link_off),
-                        label: Text(l10n.routeWithdraw),
-                      ),
-                  ],
-                ),
-                if (!route.isMine && !isClubOwner)
-                  Text(
-                    l10n.routeOwnerOnly,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-              ],
+        Chip(label: Text(routeSurfaceName(l10n, route.surface))),
+        Text(
+          [
+            routeLineOf(
+              ref.watch(unitsChoiceViewModelProvider),
+              route.distanceM,
+              route.climbingM,
+            ),
+            l10n.routeAddedBy(route.ownerName),
+            dateTime(route.createdAt),
+          ].join(' · '),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        if (route.description != null && route.description!.isNotEmpty)
+          Text(route.description!),
+        if (route.isMine && !route.isShared)
+          Card(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                l10n.routeNotSharedBody,
+                key: const Key('route-not-shared'),
+              ),
             ),
           ),
+        RoutePreview(
+          latitude: route.latitude,
+          longitude: route.longitude,
+          elevation: route.elevation,
+          tileUrl: tileUrl,
+          attribution: attribution,
         ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            FilledButton.tonalIcon(
+              key: const Key('download-route'),
+              onPressed: s.action.running
+                  ? null
+                  : () => _download(context, ref),
+              icon: const Icon(Icons.download),
+              label: Text(l10n.routeOpenGpx),
+            ),
+            if (route.isMine)
+              OutlinedButton.icon(
+                key: const Key('edit-route'),
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined),
+                label: Text(l10n.routeEdit),
+              ),
+            if (route.isMine && route.isShared)
+              OutlinedButton.icon(
+                key: const Key('withdraw-route'),
+                onPressed: s.action.running
+                    ? null
+                    : () async {
+                        if (await _confirm(
+                          context,
+                          title: l10n.routeWithdrawConfirmTitle,
+                          body: l10n.routeWithdrawConfirmBody,
+                          action: l10n.routeWithdraw,
+                          key: const Key('confirm-withdraw-route'),
+                        )) {
+                          await notifier.withdraw();
+                        }
+                      },
+                icon: const Icon(Icons.link_off),
+                label: Text(l10n.routeWithdraw),
+              ),
+            if (route.isMine && !route.isShared)
+              OutlinedButton.icon(
+                key: const Key('share-route'),
+                onPressed: s.action.running ? null : notifier.share,
+                icon: const Icon(Icons.link),
+                label: Text(l10n.routeShare),
+              ),
+            if (route.isMine)
+              TextButton.icon(
+                key: const Key('delete-route'),
+                onPressed: s.action.running
+                    ? null
+                    : () async {
+                        if (await _confirm(
+                          context,
+                          title: l10n.routeDeleteConfirmTitle,
+                          body: l10n.routeDeleteConfirmBody,
+                          action: l10n.routeDelete,
+                          key: const Key('confirm-delete-route'),
+                        )) {
+                          if (await notifier.delete() && context.mounted) {
+                            onDeleted();
+                          }
+                        }
+                      },
+                icon: const Icon(Icons.delete_outline),
+                label: Text(l10n.routeDelete),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            // The club's owner moderates the library without editing anybody's words.
+            if (!route.isMine && isClubOwner)
+              OutlinedButton.icon(
+                key: const Key('remove-route-as-owner'),
+                onPressed: s.action.running
+                    ? null
+                    : () async {
+                        if (await _confirm(
+                          context,
+                          title: l10n.routeWithdrawConfirmTitle,
+                          body: l10n.routeWithdrawConfirmBody,
+                          action: l10n.routeWithdraw,
+                          key: const Key('confirm-withdraw-route'),
+                        )) {
+                          if (await notifier.withdraw() && context.mounted) {
+                            onDeleted();
+                          }
+                        }
+                      },
+                icon: const Icon(Icons.link_off),
+                label: Text(l10n.routeWithdraw),
+              ),
+          ],
+        ),
+        if (!route.isMine && !isClubOwner)
+          Text(
+            l10n.routeOwnerOnly,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
       ],
     );
   }

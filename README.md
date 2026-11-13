@@ -61,82 +61,9 @@ A server runs the same `docker-compose.yml`, from the images CI publishes instea
 
 ### Settings you can change
 
-Set them in a file named `.env` next to `docker-compose.yml`. [`.env.example`](.env.example) lists every one with its default; copy it to `.env` and change what you need. Every variable in `.env` reaches the server. Names are upper case, with `__` for a nested setting (`VELOMINE__SMTP__HOST` is the server's `Velomine:Smtp:Host`).
-
-**Compose**
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `COMPOSE_FILE` | `docker-compose.yml` | The compose files plain `docker compose` commands use. `docker-compose.yml:compose.demo.yaml` adds Traefik. |
-| `VELOMINE_VERSION` | `dev` | The published images to run, for example `0.1.0`. Unset, `docker compose up --build` builds them from source. |
-| `VELOMINE_PORT` | `8080` | The port of the app on this machine. Not published with `compose.demo.yaml`. With Dex, also change the redirect address in `deploy/dex/config.yaml`. Set `VELOMINE__PUBLICURL` to match. |
-| `VELOMINE_DOMAIN`, `VELOMINE_ACME_EMAIL` | none | `compose.demo.yaml` only, and required there: the app's host name, and Let's Encrypt's contact for expiry notices. |
-| `VELOMINE_SITE_DOMAIN` | `VELOMINE_DOMAIN` | `compose.demo.yaml` only: a second host name for the presentation site. Each name then serves only its own part and redirects the other's paths to the other name, and `/` on `VELOMINE_DOMAIN` opens the app. Its DNS points at the same server. |
-| `POSTGRES_PASSWORD` | `velomine-dev` | The database password. Set it before the first start; the database keeps the old one afterwards. |
-| `CONNECTIONSTRINGS__VELOMINE` | the `postgres` container | An existing PostgreSQL server instead, for example `Host=db.example;Database=velomine;Username=velomine;Password=...`. |
-
-**Server**
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `VELOMINE__PUBLICURL` | `http://localhost:8080` | The address members open, used in password reset emails and each member's calendar feed address. Set it to the public address, for example `https://club.example`; the incoming Host header is never used. |
-| `VELOMINE__ADMIN__EMAIL`, `VELOMINE__ADMIN__PASSWORD` | `admin@velomine.local`, `Velomine-dev-1` | The first admin. Only used while the server has no admin. The password needs 10 characters or more with an upper-case letter, a lower-case letter and a digit; otherwise the server stops on start with `Could not create the admin`. |
-| `VELOMINE__ACCOUNTS__SIGNUPENABLED` | `true` | Whether new people can create an account. |
-| `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `true` | New accounts wait for an admin to approve them. |
-| `VELOMINE__ACCOUNTS__CLUBCREATIONENABLED` | `false` | Lets a rider without a club start one. Off, only the operator creates clubs. |
-| `VELOMINE__BACKGROUND__ENABLED` | `true` | Ride processing, imports, email, catalogue sync and the first-admin setup. With several server instances of one deployment, keep it on exactly one. |
-| `VELOMINE__IMPORTS__MAXARCHIVEMB` | `1024` | The largest Strava export accepted, in MB. A large import needs free disk for the archive and one copy of every activity it brings in. |
-| `VELOMINE__RATELIMITS__ANONYMOUSPERMINUTE` | `60` | Requests a minute from one address to sign-in, sign-up, two-factor, password reset and the phone's single sign-on. |
-| `VELOMINE__RATELIMITS__UPLOADSPERHOUR` | `600` | The sustained upload rate for one member, in ride files an hour. A whole club behind one address does not share this budget. |
-| `VELOMINE__RATELIMITS__UPLOADBURST` | `1000` | How many ride files one member may send at once, for example a whole bike computer folder. |
-| `VELOMINE__RATELIMITS__IMPORTSPERDAY` | `10` | How many Strava exports one member may import in a day. |
-| `VELOMINE__RATELIMITS__CLUBCREATIONSPERDAY` | `5` | How many clubs one member may start in a day. |
-| `VELOMINE__MAP__TILEURL`, `VELOMINE__MAP__ATTRIBUTION` | OpenStreetMap | Maps are always on. Set these to use another tile server; an empty or unusable address falls back to OpenStreetMap. OpenStreetMap's public servers are for light use only: read their rules first. |
-| `VELOMINE__SUPPORTER__PUBLICKEY` | empty | The issuer's ECDSA P-256 public key, base64 of the SPKI DER form (`tools/supporter-key.cs gen` prints it). The optional supporter licence is off until it is set, and the server works exactly the same. A licence unlocks no feature. |
+Every setting an operator can change, with its default and what it does, is in [`.env.example`](.env.example). Copy it to `.env` next to `docker-compose.yml` and change what you need; every variable in `.env` reaches the server. Names are upper case, with `__` for a nested setting (`VELOMINE__SMTP__HOST` is the server's `Velomine:Smtp:Host`).
 
 The sign-up, approval and club creation switches can also be changed by an admin in the app (*Admin*, *Settings*); a value saved there wins over the environment.
-
-**Email** — on when `HOST` and `FROM` are both set. **Environment only, by design:** the password is never stored in the database or shown in the app. The admin Settings page shows the email setup read-only, with a *Send a test email* button. Without email, password reset answers that it is not available and an admin can make a one-time reset link.
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `VELOMINE__SMTP__HOST`, `VELOMINE__SMTP__FROM` | empty | The SMTP server and the sender, for example `Velomine <velomine@club.example>`. |
-| `VELOMINE__SMTP__PORT`, `VELOMINE__SMTP__SECURITY` | `587`, `starttls` | `Security` is `starttls` (port 587), `ssl` (port 465) or `none` (a local relay only). |
-| `VELOMINE__SMTP__USER`, `VELOMINE__SMTP__PASSWORD` | empty | The SMTP login, if the server needs one. |
-
-**Single sign-on** — any OpenID Connect provider; on when `AUTHORITY` is set. Environment only, like email. In the provider, register `https://your-club-host/signin-oidc` for the web client and `com.velomine.app:/sso-callback` for the phone.
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `VELOMINE__SSO__AUTHORITY` | empty | The provider's issuer address. |
-| `VELOMINE__SSO__CLIENTID`, `VELOMINE__SSO__CLIENTSECRET` | empty | The web client. The secret only if the provider requires one. |
-| `VELOMINE__SSO__APPCLIENTID` | empty | The phone's public client (PKCE, no secret). Unset, the phone app has no single sign-on. |
-| `VELOMINE__SSO__DISPLAYNAME` | `Single sign-on` | The text of the sign-in button. |
-| `VELOMINE__SSO__AUTOCREATEUSERS` | `true` | `false` limits single sign-on to people who already have an account. |
-| `VELOMINE__SSO__APPSCOPES__0`, `__1`, … | `openid`, `profile`, `email` | The scopes the phone asks for. Rarely needed. |
-| `VELOMINE__SSO__ALLOWINSECUREHTTP` | `false` | Allows an `http://` provider. Development only. |
-
-**Shared parts catalogue** — unset, the server uses the parts list it ships with and sends nothing.
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `VELOMINE__CATALOGUE__URL` | empty | The publisher's full parts list, mirrored every `SYNCMINUTES`. |
-| `VELOMINE__CATALOGUE__SYNCMINUTES` | `60` | How often to fetch it, 5 to 1440. |
-| `VELOMINE__CATALOGUE__CONTRIBUTEURL`, `VELOMINE__CATALOGUE__CONTRIBUTIONKEY` | empty | Where parts members add are sent, and the key the publisher issued (a secret). Nothing is sent unless both are set; a contribution carries no member, bike, club or address. |
-| `VELOMINE__CATALOGUE__CONTRIBUTEMINUTES` | `15` | How often to send waiting contributions, 1 to 1440. |
-
-**Telemetry** — off by default, and a self-hosted server sends nothing. It is vendor-neutral: traces, metrics and logs go over OpenTelemetry's OTLP to any backend, and error reports go to the DSN of any compatible error-tracking service, such as GlitchTip or Bugsink. Each destination is optional, and nothing is sent unless `ENABLED` is `true`. Telemetry carries no member data, and members' apps send data only after they opt in.
-
-| Setting | Default | What it does |
-|---------|---------|--------------|
-| `VELOMINE__TELEMETRY__ENABLED` | `false` | The switch. |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_EXPORTER_OTLP_PROTOCOL` | empty, empty, `grpc` | OpenTelemetry's standard variables: where traces, metrics and logs go, the headers the backend needs (usually its key), and `http/protobuf` or `grpc`. Your backend's OTLP settings give the values. The other standard `OTEL_*` variables work too. |
-| `VELOMINE__TELEMETRY__ERRORS__DSN` | empty | Where the server's error reports go: a DSN from GlitchTip, Bugsink or another compatible error-tracking service. |
-| `VELOMINE__TELEMETRY__APP__DSN` | the server's DSN | Where opted-in apps send crash reports. |
-| `VELOMINE__TELEMETRY__ENVIRONMENT` | `Production` | The deployment name on every signal, for example `demo`. |
-| `VELOMINE__TELEMETRY__TRACESAMPLERATIO` | `0.05` | The share of traces sent, 0 to 1. Errors are always reported. |
-
-**Logs**: `Serilog__MinimumLevel__Default` (default `Information`) sets how much the server logs. Logs never contain ride or health data, names, email or IP addresses.
 
 The defaults are for trying it out on your own machine only. Do not expose them to the internet: set the passwords and the public address first.
 

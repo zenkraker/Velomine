@@ -86,7 +86,7 @@ public sealed class SsoTests(PostgresFixture postgres, DexFixture dex)
     [Fact]
     public async Task Sso_ShouldRefuseSignInUntilApproved_WhenTheAccountIsNew()
     {
-        await using var api = await StartAsync(); // approval is required by default
+        await using var api = await StartAsync(b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "true"));
         var browser = api.CreateClient(handleCookies: true);
 
         var pending = await SignInWithProviderAsync(browser, DexFixture.VerifiedEmail);

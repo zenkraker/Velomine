@@ -55,7 +55,8 @@ public sealed class ProfileTests(PostgresFixture postgres) : IAsyncLifetime
 
         var profile = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
 
-        Assert.Equal(new ProfileResponse("Ada", null, null, null, null, null, "monday", true, true, true, false), profile);
+        Assert.Equal(new ProfileResponse("Ada", null, null, null, null, null, "monday", true, true, true, false, null), profile! with { SoloTrialEndsAt = null });
+        Assert.NotNull(profile.SoloTrialEndsAt); // the trial started at sign-up
     }
 
     [Fact]
@@ -68,12 +69,15 @@ public sealed class ProfileTests(PostgresFixture postgres) : IAsyncLifetime
             new UpdateProfileRequest("Ada L", 265, 68.04, 1990, "Europe/Rome", "sunday"), Ct);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
         Assert.Equal(
-            new ProfileResponse("Ada L", 265, 68.0, 1990, 183, "Europe/Rome", "sunday", true, true, true, false),
+            // 183 is Tanaka for a 1990 birth year on the pinned 2026-11-13 clock; the trial ends 30 days later.
+            new ProfileResponse("Ada L", 265, 68.0, 1990, 183, "Europe/Rome", "sunday", true, true, true, false, new DateOnly(2026, 12, 13)),
             await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
 
         await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada L", null, null, null, null, "monday"), Ct);
         var cleared = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
-        Assert.Equal(new ProfileResponse("Ada L", null, null, null, null, null, "monday", true, true, true, false), cleared);
+        Assert.Equal(
+            new ProfileResponse("Ada L", null, null, null, null, null, "monday", true, true, true, false, new DateOnly(2026, 12, 13)),
+            cleared);
 
         var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
         Assert.Equal("Ada L", me!.DisplayName); // the name is the same everywhere

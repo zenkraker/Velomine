@@ -22,7 +22,11 @@ import 'ride_selection.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
+import '../../../core/page_actions.dart';
 import '../../../core/tokens.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/error_state.dart';
+import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/stat_tile.dart';
@@ -80,42 +84,81 @@ class RideDetailScreen extends ConsumerWidget {
       ref.read(rideDetailViewModelProvider(id).notifier).messageShown,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 920),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: AppSpacing.lg,
-              children: [
-                // One menu for the rare actions: a ride's numbers stay the loudest thing on the screen.
-                if (s.ride != null)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PopupMenuButton<String>(
-                      key: const Key('ride-actions'),
-                      tooltip: l10n.rideActions,
-                      icon: const Icon(Icons.more_vert),
-                      onSelected: (_) => _confirmDelete(context, ref),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          key: const Key('delete'),
-                          value: 'delete',
-                          child: Text(
-                            l10n.delete,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ..._body(context, ref, s, selection),
-              ],
+    final compact =
+        MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth;
+    final ride = s.ride;
+    final actions = ride == null ? null : _actions(context, ref, ride);
+    // A phone has no page header, so the ride's menu goes in the title bar instead.
+    if (compact && actions != null) {
+      publishPhoneActions(context, ref, [actions]);
+    }
+
+    return PageScaffold(
+      eyebrow: l10n.eyebrowRides,
+      // The title is the page's name, so a rename shows here at once.
+      title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
+      titleKey: const Key('ride-title'),
+      actions: actions,
+      children: _body(context, ref, s, selection),
+    );
+  }
+
+  /// One menu for everything rare about a ride: its text, its type and deleting it. The numbers
+  /// stay the loudest thing on the screen, and there is one place to change any of it.
+  Widget _actions(BuildContext context, WidgetRef ref, RideResponse ride) {
+    final l10n = context.l10n;
+    final notifier = ref.read(rideDetailViewModelProvider(id).notifier);
+    return PopupMenuButton<String>(
+      key: const Key('ride-actions'),
+      tooltip: l10n.rideActions,
+      icon: const Icon(Icons.more_vert),
+      onSelected: (choice) {
+        // The sheet opens after the menu has closed, so the two never fight for the tap.
+        switch (choice) {
+          case 'text':
+            showRideTextSheet(context, ride, notifier.saveDetails);
+          case 'type':
+            showRideTypeSheet(
+              context,
+              ride,
+              ({
+                String? discipline,
+                String? assist,
+                String? environment,
+                bool? commute,
+              }) => notifier.setType(
+                discipline: discipline,
+                assist: assist,
+                environment: environment,
+                commute: commute,
+              ),
+            );
+          case 'delete':
+            _confirmDelete(context, ref);
+        }
+      },
+      itemBuilder: (context) => [
+        if (ride.status == 'ready') ...[
+          PopupMenuItem(
+            key: const Key('edit-ride-text'),
+            value: 'text',
+            child: Text(l10n.rideTextEdit),
+          ),
+          PopupMenuItem(
+            key: const Key('edit-ride-type'),
+            value: 'type',
+            child: Text(
+              rideTypeIsSet(ride) ? l10n.rideTypeEdit : l10n.rideTypeNotSet,
             ),
+          ),
+          const PopupMenuDivider(),
+        ],
+        PopupMenuItem(
+          key: const Key('delete'),
+          value: 'delete',
+          child: Text(
+            l10n.delete,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ),
       ],
@@ -133,10 +176,10 @@ class RideDetailScreen extends ConsumerWidget {
     final error = Theme.of(context).colorScheme.error;
     if (s.notFound) {
       return [
-        Text(
-          l10n.rideNotFound,
+        EmptyState(
           key: const Key('not-found'),
-          style: text.titleMedium,
+          message: l10n.rideNotFound,
+          icon: Icons.search_off,
         ),
       ];
     }
@@ -169,12 +212,14 @@ class RideDetailScreen extends ConsumerWidget {
     final ride = s.ride;
     if (ride == null) {
       return [
-        Text(
-          s.load.failure == null
+        ErrorState(
+          message: s.load.failure == null
               ? l10n.couldNotLoadRide
               : failureText(l10n, s.load.failure!),
-          key: const Key('ride-error'),
-          style: TextStyle(color: error),
+          actionKey: const Key('ride-error'),
+          onRetry: s.load.running
+              ? null
+              : ref.read(rideDetailViewModelProvider(id).notifier).load,
         ),
       ];
     }
@@ -184,26 +229,7 @@ class RideDetailScreen extends ConsumerWidget {
     final powerZones = ride.powerZones.orElse(null) ?? const <ZoneTime>[];
 
     return [
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              rideTitle(l10n, ride),
-              key: const Key('ride-title'),
-              style: text.headlineSmall,
-            ),
-          ),
-          if (ride.status == 'ready')
-            IconButton(
-              key: const Key('edit-ride-text'),
-              tooltip: l10n.rideTextEdit,
-              onPressed: () =>
-                  showRideTextSheet(context, ride, notifier.saveDetails),
-              icon: const Icon(Icons.edit_outlined),
-            ),
-        ],
-      ),
+      // The page header already names the ride; the body starts with when it was.
       Text(dateTime(ride.startTime ?? ride.uploadedAt), style: text.bodyMedium),
       Text(
         [ride.fileName, if (ride.device != null) ride.device!].join(' · '),
@@ -217,14 +243,11 @@ class RideDetailScreen extends ConsumerWidget {
           style: text.bodyMedium,
         )
       else if (ride.status == 'ready')
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            key: const Key('add-ride-description'),
-            onPressed: () =>
-                showRideTextSheet(context, ride, notifier.saveDetails),
-            icon: const Icon(Icons.notes, size: 18),
-            label: Text(l10n.rideTextAdd),
+        Text(
+          l10n.rideTextAdd,
+          key: const Key('add-ride-description'),
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       if (s.load.failure case final failure?)
@@ -252,37 +275,16 @@ class RideDetailScreen extends ConsumerWidget {
           style: TextStyle(color: error),
         )
       else ...[
-        Row(
-          children: [
-            Expanded(
-              child: rideTypeIsSet(ride)
-                  ? RideTypeChips(ride: ride)
-                  : const SizedBox.shrink(),
-            ),
-            TextButton.icon(
-              key: const Key('edit-ride-type'),
-              onPressed: () => showRideTypeSheet(
-                context,
-                ride,
-                ({
-                  String? discipline,
-                  String? assist,
-                  String? environment,
-                  bool? commute,
-                }) => notifier.setType(
-                  discipline: discipline,
-                  assist: assist,
-                  environment: environment,
-                  commute: commute,
-                ),
-              ),
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: Text(
-                rideTypeIsSet(ride) ? l10n.rideTypeEdit : l10n.rideTypeNotSet,
-              ),
-            ),
-          ],
-        ),
+        if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
+        if (s.series?.hasRoute ?? false)
+          RouteMap(
+            data: s.series!,
+            selected: selection.selected,
+            selectedLap: selection.selectedLap,
+            tileUrl: tileUrl,
+            attribution: attribution,
+            elevationGainM: ride.elevationGainM,
+          ),
         _Stats(ride: ride),
         if (s.laps.isNotEmpty)
           LapTable(laps: s.laps, selectedLap: selection.selectedLap),
@@ -319,15 +321,6 @@ class RideDetailScreen extends ConsumerWidget {
           onDelete: notifier.deleteFeel,
         ),
         if (s.views case final views?) _ViewsCard(views: views),
-        if (s.series?.hasRoute ?? false)
-          RouteMap(
-            data: s.series!,
-            selected: selection.selected,
-            selectedLap: selection.selectedLap,
-            tileUrl: tileUrl,
-            attribution: attribution,
-            elevationGainM: ride.elevationGainM,
-          ),
         if (s.series != null && s.series!.series.isNotEmpty) ...[
           ValueListenableBuilder<int?>(
             valueListenable: selection.selected,
@@ -517,8 +510,8 @@ class _ZonesCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(title, style: text.titleMedium),
-                const Spacer(),
+                Expanded(child: Text(title, style: text.titleMedium)),
+                const SizedBox(width: AppSpacing.sm),
                 Text(duration(total), style: text.bodySmall),
               ],
             ),

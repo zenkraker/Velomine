@@ -12,6 +12,10 @@ import 'bike_forms.dart';
 import 'bikes_view_models.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/card_grid.dart';
 
 class BikesScreen extends ConsumerWidget {
   const BikesScreen({super.key, required this.onOpen});
@@ -31,53 +35,58 @@ class BikesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(bikesViewModelProvider);
     final l10n = context.l10n;
+    final notifier = ref.read(bikesViewModelProvider.notifier);
+    final add = FilledButton.icon(
+      key: const Key('add-bike'),
+      onPressed: s.action.running ? null : () => _add(context, ref),
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addBike),
+    );
 
     listenUserMessages(
       ref,
       context,
       bikesViewModelProvider.select((s) => s.messages),
-      ref.read(bikesViewModelProvider.notifier).messageShown,
+      notifier.messageShown,
     );
 
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('add-bike'),
-        onPressed: s.action.running ? null : () => _add(context, ref),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addBike),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      // A single action: on the floating button on a phone, in the page header from a tablet up.
+      floatingActionButton: wide ? null : add,
+      body: PageScaffold(
+        eyebrow: l10n.eyebrowBikes,
+        title: l10n.navBikes,
+        subtitle: l10n.bikesSubtitle,
+        actions: wide ? add : null,
         children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: AppSpacing.md,
-                children: [
-                  if (s.load.failure case final failure?)
-                    Text(
-                      failureText(l10n, failure),
-                      key: const Key('bikes-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  if (s.load.running && s.bikes.isEmpty)
-                    const Center(child: CircularProgressIndicator())
-                  else if (s.bikes.isEmpty && s.load.failure == null)
-                    EmptyState(
-                      key: const Key('no-bikes'),
-                      message: l10n.noBikes,
-                      icon: Icons.pedal_bike,
-                    ),
-                  for (final bike in s.bikes)
-                    _BikeCard(bike: bike, onOpen: onOpen),
-                ],
+          if (s.load.failure case final failure?)
+            ErrorState(
+              message: failureText(l10n, failure),
+              actionKey: const Key('bikes-error'),
+              onRetry: s.load.running ? null : notifier.refresh,
+            ),
+          if (s.load.running && s.bikes.isEmpty)
+            const Center(child: CircularProgressIndicator())
+          else if (s.bikes.isEmpty && s.load.failure == null)
+            EmptyState(
+              key: const Key('no-bikes'),
+              message: l10n.noBikes,
+              icon: Icons.pedal_bike,
+              // A different key: the page's own add button may be in the tree already.
+              action: FilledButton.icon(
+                key: const Key('no-bikes-add'),
+                onPressed: s.action.running ? null : () => _add(context, ref),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.addBike),
               ),
             ),
+          CardGrid(
+            columns: 3,
+            children: [
+              for (final bike in s.bikes) _BikeCard(bike: bike, onOpen: onOpen),
+            ],
           ),
         ],
       ),
@@ -85,6 +94,7 @@ class BikesScreen extends ConsumerWidget {
   }
 }
 
+/// One bike as a card: what it is, how far it has gone, and what needs doing.
 class _BikeCard extends ConsumerWidget {
   const _BikeCard({required this.bike, required this.onOpen});
 
@@ -94,35 +104,83 @@ class _BikeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final units = ref.watch(unitsChoiceViewModelProvider);
     final make = [bike.brand, bike.model].whereType<String>().join(' ');
+    final facts = <(String, String)>[
+      (l10n.statDistance, km(units, bike.distanceM)),
+      (l10n.statRides, bike.rideCount.toString()),
+      (l10n.statMovingTime, duration(bike.movingS)),
+    ];
     return Card(
       key: Key('bike-${bike.id}'),
-      child: ListTile(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
         onTap: () => onOpen(bike.id),
-        leading: Icon(
-          Icons.directions_bike,
-          color: bike.isActive ? null : Theme.of(context).disabledColor,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.sm,
+            children: [
+              Row(
+                spacing: AppSpacing.sm,
+                children: [
+                  Icon(
+                    Icons.directions_bike,
+                    color: bike.isActive ? scheme.primary : scheme.outline,
+                  ),
+                  Expanded(
+                    child: Text(
+                      bike.name,
+                      style: text.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
+                    _ServiceMarker(due: bike.serviceDueCount > 0),
+                ],
+              ),
+              Text(
+                [
+                  bikeKindName(l10n, bike.kind),
+                  if (make.isNotEmpty) make,
+                ].join(' · '),
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              if (bike.isDefault || !bike.isActive)
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    if (bike.isDefault)
+                      Chip(
+                        label: Text(l10n.defaultBike),
+                        backgroundColor: scheme.primaryContainer,
+                        side: BorderSide.none,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    if (!bike.isActive)
+                      Chip(
+                        label: Text(l10n.archived),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
+                ),
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.xl,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final (label, value) in facts)
+                    StatTile(label: label, value: value),
+                ],
+              ),
+            ],
+          ),
         ),
-        title: Row(
-          spacing: AppSpacing.sm,
-          children: [
-            Flexible(child: Text(bike.name, style: text.titleMedium)),
-            if (bike.isDefault) Chip(label: Text(l10n.defaultBike)),
-            if (!bike.isActive) Chip(label: Text(l10n.archived)),
-            if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
-              _ServiceMarker(due: bike.serviceDueCount > 0),
-          ],
-        ),
-        subtitle: Text(
-          [
-            bikeKindName(l10n, bike.kind),
-            if (make.isNotEmpty) make,
-            '${km(units, bike.distanceM)} · ${l10n.bikeRides(bike.rideCount)} · ${duration(bike.movingS)}',
-          ].join(' · '),
-        ),
-        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }

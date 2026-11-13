@@ -10,6 +10,10 @@ import '../progress/power_summary.dart';
 import '../progress/training_summary.dart';
 import 'coach_athlete_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 import '../../core/units.dart';
 
 /// One athlete as their coach sees them: shared summary, training load and recent rides.
@@ -29,120 +33,88 @@ class CoachAthleteScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(coachAthleteViewModelProvider(clubId, userId));
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final units = ref.watch(unitsChoiceViewModelProvider);
     final summary = c.summary;
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return PageScaffold(
+      eyebrow: l10n.athletesTitle,
+      title: summary?.displayName ?? l10n.athletesTitle,
+      subtitle: l10n.coachReadOnly,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 920),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                if (c.notFound)
-                  Text(
-                    l10n.coachAthleteNotFound,
-                    key: const Key('coach-athlete-not-found'),
-                    style: text.titleMedium,
-                  )
-                else if (c.load.running && summary == null)
-                  const Center(child: CircularProgressIndicator())
-                else if (summary != null) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          summary.displayName,
-                          style: text.headlineSmall,
+        if (c.notFound)
+          EmptyState(
+            key: const Key('coach-athlete-not-found'),
+            message: l10n.coachAthleteNotFound,
+            icon: Icons.person_off_outlined,
+          )
+        else if (c.load.running && summary == null)
+          const Center(child: CircularProgressIndicator())
+        else if (summary != null) ...[
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              if (summary.sharesRides) Chip(label: Text(l10n.sharesRides)),
+              if (summary.sharesAnalytics)
+                Chip(label: Text(l10n.sharesTraining)),
+              if (summary.sharesRoutes) Chip(label: Text(l10n.sharesRoutes)),
+              if (summary.sharesWellbeing)
+                Chip(label: Text(l10n.sharesWellbeing)),
+            ],
+          ),
+          if (c.load.failure case final failure?)
+            ErrorState(
+              message: failureText(l10n, failure),
+              actionKey: const Key('coach-athlete-error'),
+            ),
+          if (c.training case final training?)
+            TrainingSummary(
+              training: training,
+              days: c.days,
+              onDays: (days) => ref
+                  .read(coachAthleteViewModelProvider(clubId, userId).notifier)
+                  .setDays(days),
+            ),
+          if (c.powerCurve case final curve?)
+            PowerSummary(
+              curve: curve,
+              days: c.days,
+              onDays: (days) => ref
+                  .read(coachAthleteViewModelProvider(clubId, userId).notifier)
+                  .setDays(days),
+              readOnly: true,
+            ),
+          if (c.wellbeing case final wellbeing?)
+            _CoachWellbeingCard(wellbeing: wellbeing),
+          if (summary.sharesRides) ...[
+            SectionHeading(title: l10n.shareRides),
+            if (c.rides.isEmpty)
+              EmptyState(
+                key: const Key('coach-no-rides'),
+                message: l10n.coachNoRides,
+                icon: Icons.directions_bike,
+              )
+            else
+              Card(
+                child: Column(
+                  children: [
+                    for (final ride in c.rides)
+                      ListTile(
+                        key: Key('coach-ride-${ride.id}'),
+                        leading: const Icon(Icons.directions_bike),
+                        title: Text(
+                          dateTime(ride.startTime ?? ride.uploadedAt),
                         ),
-                      ),
-                    ],
-                  ),
-                  Text(l10n.coachReadOnly, style: text.bodySmall),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    children: [
-                      if (summary.sharesRides)
-                        Chip(label: Text(l10n.sharesRides)),
-                      if (summary.sharesAnalytics)
-                        Chip(label: Text(l10n.sharesTraining)),
-                      if (summary.sharesRoutes)
-                        Chip(label: Text(l10n.sharesRoutes)),
-                      if (summary.sharesWellbeing)
-                        Chip(label: Text(l10n.sharesWellbeing)),
-                    ],
-                  ),
-                  if (c.load.failure case final failure?)
-                    Text(
-                      failureText(l10n, failure),
-                      key: const Key('coach-athlete-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  if (c.training case final training?)
-                    TrainingSummary(
-                      training: training,
-                      days: c.days,
-                      onDays: (days) => ref
-                          .read(
-                            coachAthleteViewModelProvider(
-                              clubId,
-                              userId,
-                            ).notifier,
-                          )
-                          .setDays(days),
-                    ),
-                  if (c.powerCurve case final curve?)
-                    PowerSummary(
-                      curve: curve,
-                      days: c.days,
-                      onDays: (days) => ref
-                          .read(
-                            coachAthleteViewModelProvider(
-                              clubId,
-                              userId,
-                            ).notifier,
-                          )
-                          .setDays(days),
-                      readOnly: true,
-                    ),
-                  if (c.wellbeing case final wellbeing?)
-                    _CoachWellbeingCard(wellbeing: wellbeing),
-                  if (summary.sharesRides) ...[
-                    Text(l10n.shareRides, style: text.titleMedium),
-                    if (c.rides.isEmpty)
-                      Text(l10n.coachNoRides)
-                    else
-                      Card(
-                        child: Column(
-                          children: [
-                            for (final ride in c.rides)
-                              ListTile(
-                                key: Key('coach-ride-${ride.id}'),
-                                leading: const Icon(Icons.directions_bike),
-                                title: Text(
-                                  dateTime(ride.startTime ?? ride.uploadedAt),
-                                ),
-                                subtitle: Text(
-                                  '${km(units, ride.distanceM)} · '
-                                  '${duration(ride.movingS)}',
-                                ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => onOpenRide(ride.id),
-                              ),
-                          ],
+                        subtitle: Text(
+                          '${km(units, ride.distanceM)} · '
+                          '${duration(ride.movingS)}',
                         ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => onOpenRide(ride.id),
                       ),
                   ],
-                ],
-              ],
-            ),
-          ),
-        ),
+                ),
+              ),
+          ],
+        ],
       ],
     );
   }

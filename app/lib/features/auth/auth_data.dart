@@ -29,17 +29,26 @@ class AuthData {
     required bool rememberMe,
   }) => _session.completeTwoFactor(challenge, code, rememberMe: rememberMe);
 
-  Future<({AuthProblem? problem, bool approved})> signUp(
-    String email,
-    String displayName,
-    String password,
-  ) => _session.signUp(email, displayName, password);
+  Future<({AuthProblem? problem, bool approved, bool needsConfirmation})>
+  signUp(String email, String displayName, String password) =>
+      _session.signUp(email, displayName, password);
 
   void retryRestore() => _session.retryRestore();
 
   Future<Result<void>> forgotPassword(String email) => _session.accounts
       .forgotPassword(ForgotPasswordRequest(email: email.trim()))
       .guard(FailureAction.resetPassword);
+
+  Future<Result<void>> resendVerification(String email) => _session.accounts
+      .resendVerification(ResendVerificationRequest(email: email.trim()))
+      .guard(FailureAction.resendVerification);
+
+  Future<Result<void>> verifyEmail({
+    required String email,
+    required String token,
+  }) => _session.accounts
+      .verifyEmail(VerifyEmailRequest(email: email.trim(), token: token))
+      .guard(FailureAction.verifyEmail);
 
   Future<Result<void>> resetPassword({
     required String email,

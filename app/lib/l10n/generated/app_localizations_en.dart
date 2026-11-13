@@ -13,6 +13,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRides => 'Rides';
 
   @override
+  String get navGroupPersonal => 'Personal';
+
+  @override
+  String get navGroupClub => 'Club';
+
+  @override
+  String get navNoClub => 'No club';
+
+  @override
+  String get eyebrowRides => 'Your rides';
+
+  @override
+  String get privacyCardTitle => 'Your data is yours.';
+
+  @override
+  String get privacyCardBody => 'Private unless you share it.';
+
+  @override
+  String get ridesSubtitle => 'Your rides and races.';
+
+  @override
+  String get ridesImportMenu => 'Add rides';
+
+  @override
+  String get rideDetailTitle => 'Ride';
+
+  @override
   String get navRecord => 'Record';
 
   @override
@@ -111,6 +138,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pressBackAgain => 'Press back again to exit';
 
   @override
+  String get authEyebrowSignIn => 'Welcome back';
+
+  @override
+  String get authEyebrowRegister => 'New account';
+
+  @override
+  String get authEyebrowForgot => 'Password help';
+
+  @override
+  String get authEyebrowReset => 'New password';
+
+  @override
+  String get authEyebrowServer => 'Server';
+
+  @override
+  String get signInHelp => 'Sign in to see your rides and your form.';
+
+  @override
   String get signIn => 'Sign in';
 
   @override
@@ -151,6 +196,59 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get registeredPending =>
       'Your account was created. An admin has to approve it before you can sign in.';
+
+  @override
+  String registeredCheckEmail(String email) {
+    return 'Your account is ready. Open the link we sent to $email to confirm it, then sign in.';
+  }
+
+  @override
+  String get resendVerification => 'Send the link again';
+
+  @override
+  String get resendVerificationSent => 'Sent. It may take a minute to arrive.';
+
+  @override
+  String get resendVerificationTooMany =>
+      'Too many requests. Try again in a few minutes.';
+
+  @override
+  String get resendVerificationUnavailable =>
+      'This server does not send email, so there is nothing to resend.';
+
+  @override
+  String get verifyEmailTitle => 'Confirm your email';
+
+  @override
+  String get verifyEmailWorking => 'Confirming your address…';
+
+  @override
+  String get verifyEmailDone => 'Your email is confirmed. You can sign in now.';
+
+  @override
+  String get verifyEmailInvalid =>
+      'This link is not valid or has expired. Sign in to ask for a new one.';
+
+  @override
+  String get verifyEmailSendAgain => 'Send a new link';
+
+  @override
+  String get verifyEmailResent => 'A new link is on its way.';
+
+  @override
+  String soloTrialActive(int days) {
+    return 'Solo trial · $days days left';
+  }
+
+  @override
+  String get soloTrialLastDay => 'Solo trial · last day';
+
+  @override
+  String get soloTrialEnded => 'Solo trial · ended';
+
+  @override
+  String get authEmailNotConfirmed =>
+      'Confirm your email address before signing in. Check your inbox for the link.';
 
   @override
   String get authWrongPassword => 'The email or password is not right.';
@@ -570,6 +668,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.';
 
   @override
+  String get clubNoneTitleShort => 'Your club';
+
+  @override
+  String get clubNoneSubtitle => 'Ride on your own, or with a club.';
+
+  @override
+  String get eyebrowClub => 'Your club';
+
+  @override
+  String get clubSubtitle => 'Your club, its rides and the people in it.';
+
+  @override
   String get clubInactive => 'This club is not active. Joining is closed.';
 
   @override
@@ -583,6 +693,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubMembers => 'Members';
+
+  @override
+  String clubMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get clubJoinCode => 'Join code';
@@ -623,17 +744,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubCopied => 'Copied';
-
-  @override
-  String clubMemberCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count members',
-      one: '1 member',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get sharingTitle => 'What you share';
@@ -773,6 +883,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachViewAthletes => 'View athletes';
+
+  @override
+  String get athletesSubtitle =>
+      'The members who share their rides or training with you.';
 
   @override
   String get athletesEmpty =>
@@ -1239,6 +1353,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addBike => 'Add bike';
 
   @override
+  String get eyebrowBikes => 'Your bikes';
+
+  @override
+  String get bikesSubtitle => 'Every bike you ride and what it needs.';
+
+  @override
   String get noBikes =>
       'No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.';
 
@@ -1285,6 +1405,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String wheelLabel(int mm) {
     return 'wheel $mm mm';
+  }
+
+  @override
+  String get metricTrainingLoad => 'Training load';
+
+  @override
+  String get metricPower => 'Power';
+
+  @override
+  String metricThisPeriod(String period) {
+    return 'This $period';
   }
 
   @override
@@ -1805,6 +1936,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get eyebrowProgress => 'Your progress';
+
+  @override
+  String get progressSubtitle => 'Your form over the period you choose.';
+
+  @override
+  String get progressFilterTitle => 'Filter progress';
+
+  @override
+  String get totalsTitleWeekly => 'Distance per week';
+
+  @override
+  String get totalsTitleMonthly => 'Distance per month';
+
+  @override
+  String get totalsTitleYearly => 'Distance per year';
+
+  @override
+  String totalsMore(int count) {
+    return '$count older periods not listed';
+  }
+
+  @override
   String get trainingLoad => 'Training load';
 
   @override
@@ -2139,6 +2293,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunday => 'Sunday';
+
+  @override
+  String get notificationsEyebrow => 'Your inbox';
+
+  @override
+  String get notificationsSubtitle => 'What the server told you, newest first.';
+
+  @override
+  String get notificationGroupRides => 'Rides';
+
+  @override
+  String get notificationGroupClub => 'Club';
+
+  @override
+  String get notificationGroupBikes => 'Bikes';
+
+  @override
+  String get notificationGroupAccount => 'Account';
 
   @override
   String get markAllRead => 'Mark all read';
@@ -2575,6 +2747,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideFilterAll => 'All';
 
   @override
+  String get rideFilterTitle => 'Filter rides';
+
+  @override
   String get rideFilterSearch => 'Search rides';
 
   @override
@@ -2820,6 +2995,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionResetPassword => 'reset this password';
 
   @override
+  String get actionResendVerification => 'send the link again';
+
+  @override
+  String get actionVerifyEmail => 'confirm this email';
+
+  @override
   String get resetPasswordLink => 'Reset password';
 
   @override
@@ -2874,6 +3055,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clubLocationHelp =>
       'Where the club meets. Only used to show the club to riders nearby.';
+
+  @override
+  String get clubLocationOnMap => 'Shown on the map';
 
   @override
   String get clubLocationNone => 'No location yet';
@@ -3701,6 +3885,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routesFilterAll => 'All surfaces';
+
+  @override
+  String get routesEyebrow => 'Club routes';
+
+  @override
+  String get routesSubtitle =>
+      'The lines the club rides, with their distance and climbing.';
+
+  @override
+  String get routesEmptyCta => 'Add the first route';
+
+  @override
+  String get clubRidesEyebrow => 'Club calendar';
+
+  @override
+  String get clubRidesSubtitle =>
+      'The club\'s next rides and the ones just gone.';
 
   @override
   String get routesSortNewest => 'Newest';

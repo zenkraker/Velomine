@@ -2,6 +2,15 @@
   "@@locale": "en",
 
   "navRides": "Rides",
+  "navGroupPersonal": "Personal",
+  "navGroupClub": "Club",
+  "navNoClub": "No club",
+  "eyebrowRides": "Your rides",
+  "privacyCardTitle": "Your data is yours.",
+  "privacyCardBody": "Private unless you share it.",
+  "ridesSubtitle": "Your rides and races.",
+  "ridesImportMenu": "Add rides",
+  "rideDetailTitle": "Ride",
   "navRecord": "Record",
   "navRecording": "Recording",
   "navRecordingPaused": "Paused",
@@ -51,6 +60,12 @@
   "hidePassword": "Hide password",
   "staySignedIn": "Stay logged in",
   "pressBackAgain": "Press back again to exit",
+  "authEyebrowSignIn": "Welcome back",
+  "authEyebrowRegister": "New account",
+  "authEyebrowForgot": "Password help",
+  "authEyebrowReset": "New password",
+  "authEyebrowServer": "Server",
+  "signInHelp": "Sign in to see your rides and your form.",
   "signIn": "Sign in",
   "change": "Change",
   "tryAgain": "Try again",
@@ -77,6 +92,35 @@
   "passwordHint": "At least 10 characters, with a capital letter, a small letter and a digit.",
   "registeredReady": "Your account is ready. You can sign in now.",
   "registeredPending": "Your account was created. An admin has to approve it before you can sign in.",
+  "registeredCheckEmail": "Your account is ready. Open the link we sent to {email} to confirm it, then sign in.",
+  "@registeredCheckEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resendVerification": "Send the link again",
+  "resendVerificationSent": "Sent. It may take a minute to arrive.",
+  "resendVerificationTooMany": "Too many requests. Try again in a few minutes.",
+  "resendVerificationUnavailable": "This server does not send email, so there is nothing to resend.",
+  "verifyEmailTitle": "Confirm your email",
+  "verifyEmailWorking": "Confirming your address…",
+  "verifyEmailDone": "Your email is confirmed. You can sign in now.",
+  "verifyEmailInvalid": "This link is not valid or has expired. Sign in to ask for a new one.",
+  "verifyEmailSendAgain": "Send a new link",
+  "verifyEmailResent": "A new link is on its way.",
+  "soloTrialActive": "Solo trial · {days} days left",
+  "@soloTrialActive": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloTrialLastDay": "Solo trial · last day",
+  "soloTrialEnded": "Solo trial · ended",
+  "authEmailNotConfirmed": "Confirm your email address before signing in. Check your inbox for the link.",
   "authWrongPassword": "The email or password is not right.",
   "authNotApproved": "Your account is waiting for an admin to approve it.",
   "authLockedOut": "Too many wrong attempts. Try again in a few minutes.",
@@ -221,11 +265,16 @@
   "joinAlready": "Your account is already in a club.",
   "clubNoneTitle": "You are not in a club yet",
   "clubNoneBody": "Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.",
+  "clubNoneTitleShort": "Your club",
+  "clubNoneSubtitle": "Ride on your own, or with a club.",
+    "eyebrowClub": "Your club",
+"clubSubtitle": "Your club, its rides and the people in it.",
   "clubInactive": "This club is not active. Joining is closed.",
   "clubOwner": "Owner",
   "clubCoach": "Coach",
   "clubMemberRole": "Rider",
   "clubMembers": "Members",
+  "clubMemberCount": "{count} {count, plural, =1{member} other{members}}",
   "clubJoinCode": "Join code",
   "clubJoinCodeHelp": "Share this code or the link with the people who should join.",
   "clubNewCode": "New code",
@@ -298,6 +347,7 @@
 
   "athletesTitle": "Athletes",
   "coachViewAthletes": "View athletes",
+  "athletesSubtitle": "The members who share their rides or training with you.",
   "athletesEmpty": "No athletes are sharing with you yet. Members turn sharing on in their Club tab.",
   "lastRideOn": "Last ride {date}",
   "@lastRideOn": {
@@ -637,6 +687,8 @@
   },
 
   "addBike": "Add bike",
+    "eyebrowBikes": "Your bikes",
+"bikesSubtitle": "Every bike you ride and what it needs.",
   "noBikes": "No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.",
   "defaultBike": "Default",
   "archived": "Archived",
@@ -666,6 +718,16 @@
     "placeholders": {
       "mm": {
         "type": "int"
+      }
+    }
+  },
+  "metricTrainingLoad": "Training load",
+  "metricPower": "Power",
+  "metricThisPeriod": "This {period}",
+  "@metricThisPeriod": {
+    "placeholders": {
+      "period": {
+        "type": "String"
       }
     }
   },
@@ -963,6 +1025,20 @@
     }
   },
   "totalsSemantics": "Distance per {period}. This {period}: {distance}.",
+    "eyebrowProgress": "Your progress",
+"progressSubtitle": "Your form over the period you choose.",
+  "progressFilterTitle": "Filter progress",
+  "totalsTitleWeekly": "Distance per week",
+  "totalsTitleMonthly": "Distance per month",
+  "totalsTitleYearly": "Distance per year",
+  "totalsMore": "{count} older periods not listed",
+  "@totalsMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@totalsSemantics": {
     "placeholders": {
       "period": {
@@ -1169,6 +1245,12 @@
   "saturday": "Saturday",
   "sunday": "Sunday",
 
+  "notificationsEyebrow": "Your inbox",
+  "notificationsSubtitle": "What the server told you, newest first.",
+  "notificationGroupRides": "Rides",
+  "notificationGroupClub": "Club",
+  "notificationGroupBikes": "Bikes",
+  "notificationGroupAccount": "Account",
   "markAllRead": "Mark all read",
   "noNotifications": "Nothing yet. You will hear here when a ride has been read, or a part on your bike is nearly worn.",
   "unread": "Unread",
@@ -1331,6 +1413,7 @@
   "coachPowerCurve": "Power curve",
 
   "rideFilterAll": "All",
+  "rideFilterTitle": "Filter rides",
   "rideFilterSearch": "Search rides",
   "rideFilterSearchHint": "Search titles and descriptions",
   "rideFilterClearSearch": "Clear search",
@@ -1432,6 +1515,8 @@
   "passwordChangeFailed": "Could not change the password. Try again.",
   "actionChangePassword": "change your password",
   "actionResetPassword": "reset this password",
+  "actionResendVerification": "send the link again",
+  "actionVerifyEmail": "confirm this email",
   "resetPasswordLink": "Reset password",
   "resetPasswordLinkTitle": "Password reset link for {name}",
   "@resetPasswordLinkTitle": {
@@ -1458,6 +1543,7 @@
   "clubSeeNearby": "See clubs near you",
   "clubLocation": "Club location",
   "clubLocationHelp": "Where the club meets. Only used to show the club to riders nearby.",
+  "clubLocationOnMap": "Shown on the map",
   "clubLocationNone": "No location yet",
   "clubLocationSet": "Choose on the map",
   "clubLocationChange": "Change location",
@@ -1988,6 +2074,12 @@
   "clubAddRoute": "Add a route",
   "clubRoutesEmpty": "No routes yet. Add one from one of your rides or from a GPX file.",
   "routesFilterAll": "All surfaces",
+  "routesEyebrow": "Club routes",
+  "routesSubtitle": "The lines the club rides, with their distance and climbing.",
+  "routesEmptyCta": "Add the first route",
+  "clubRidesEyebrow": "Club calendar",
+  "clubRidesSubtitle": "The club's next rides and the ones just gone.",
+
   "routesSortNewest": "Newest",
   "routesSortShortest": "Shortest",
   "routesSortLongest": "Longest",

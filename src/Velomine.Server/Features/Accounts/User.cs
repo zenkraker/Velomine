@@ -73,6 +73,12 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>Share coarse performance and feature-usage data.</summary>
     public bool TelemetryUsage { get; set; }
+
+    /// <summary>
+    /// The last day of the member's free solo trial, set at sign-up. It gates nothing: it is billing state the app
+    /// shows as a badge until payment arrives.
+    /// </summary>
+    public DateOnly? SoloTrialEndsAt { get; set; }
 }
 
 public static class Roles

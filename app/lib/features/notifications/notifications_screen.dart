@@ -5,10 +5,15 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/page_actions.dart';
+import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 import 'notifications_text.dart';
 import 'notifications_view_model.dart';
-import '../../core/tokens.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key, required this.onOpen});
@@ -37,56 +42,77 @@ class NotificationsScreen extends ConsumerWidget {
       ref.read(notificationsViewModelProvider.notifier).messageShown,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    // Grouped by what they are about, so a wear warning is not lost between two ride results.
+    final groups = <String, List<NotificationResponse>>{};
+    for (final n in s.items) {
+      groups.putIfAbsent(_groupOf(n.type), () => []).add(n);
+    }
+    String groupTitle(String group) => switch (group) {
+      'rides' => l10n.notificationGroupRides,
+      'club' => l10n.notificationGroupClub,
+      'bikes' => l10n.notificationGroupBikes,
+      _ => l10n.notificationGroupAccount,
+    };
+
+    final markAll = s.unread > 0
+        ? TextButton(
+            key: const Key('notifications-read-all'),
+            onPressed: s.markAll.running
+                ? null
+                : ref.read(notificationsViewModelProvider.notifier).markAllRead,
+            child: Text(l10n.markAllRead),
+          )
+        : null;
+    // The action sits in the header with the title; a phone has no header, so it goes in the title
+    // bar — and leaves it once everything is read.
+    if (MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth) {
+      publishPhoneActions(context, ref, [?markAll]);
+    }
+
+    return PageScaffold(
+      eyebrow: l10n.notificationsEyebrow,
+      title: l10n.notifications,
+      subtitle: l10n.notificationsSubtitle,
+      actions: markAll,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                if (s.unread > 0)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      key: const Key('notifications-read-all'),
-                      onPressed: s.markAll.running
-                          ? null
-                          : () => ref
-                                .read(notificationsViewModelProvider.notifier)
-                                .markAllRead(),
-                      child: Text(l10n.markAllRead),
-                    ),
-                  ),
-                if (s.load.failure case final failure?)
-                  Text(
-                    failureText(l10n, failure),
-                    key: const Key('notifications-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                if (s.items.isEmpty &&
-                    !s.load.running &&
-                    s.load.failure == null)
-                  Text(
-                    l10n.noNotifications,
-                    key: const Key('no-notifications'),
-                  ),
-                for (final n in s.items)
-                  _NotificationTile(
-                    notification: n,
-                    onTap: () => _open(context, ref, n),
-                  ),
-              ],
-            ),
+        if (s.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('notifications-error'),
+            onRetry: s.load.running
+                ? null
+                : ref.read(notificationsViewModelProvider.notifier).refresh,
           ),
-        ),
+        if (s.items.isEmpty && !s.load.running && s.load.failure == null)
+          EmptyState(
+            key: const Key('no-notifications'),
+            message: l10n.noNotifications,
+            icon: Icons.notifications_none,
+          ),
+        for (final MapEntry(key: group, value: items) in groups.entries) ...[
+          SectionHeading(title: groupTitle(group)),
+          for (final n in items)
+            _NotificationTile(
+              notification: n,
+              onTap: () => _open(context, ref, n),
+            ),
+        ],
       ],
     );
   }
+
+  /// The section a notification belongs to.
+  static String _groupOf(String type) => switch (type) {
+    'ride_ready' ||
+    'ride_failed' ||
+    'ride_duplicate' ||
+    'ride_import' => 'rides',
+    'club_join_request' ||
+    'club_join_approved' ||
+    'club_join_declined' => 'club',
+    'part_soon' || 'part_worn' => 'bikes',
+    _ => 'account',
+  };
 }
 
 class _NotificationTile extends StatelessWidget {

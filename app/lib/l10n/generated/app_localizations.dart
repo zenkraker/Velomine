@@ -104,6 +104,60 @@ abstract class AppLocalizations {
   /// **'Rides'**
   String get navRides;
 
+  /// No description provided for @navGroupPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get navGroupPersonal;
+
+  /// No description provided for @navGroupClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get navGroupClub;
+
+  /// No description provided for @navNoClub.
+  ///
+  /// In en, this message translates to:
+  /// **'No club'**
+  String get navNoClub;
+
+  /// No description provided for @eyebrowRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides'**
+  String get eyebrowRides;
+
+  /// No description provided for @privacyCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is yours.'**
+  String get privacyCardTitle;
+
+  /// No description provided for @privacyCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Private unless you share it.'**
+  String get privacyCardBody;
+
+  /// No description provided for @ridesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides and races.'**
+  String get ridesSubtitle;
+
+  /// No description provided for @ridesImportMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rides'**
+  String get ridesImportMenu;
+
+  /// No description provided for @rideDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride'**
+  String get rideDetailTitle;
+
   /// No description provided for @navRecord.
   ///
   /// In en, this message translates to:
@@ -290,6 +344,42 @@ abstract class AppLocalizations {
   /// **'Press back again to exit'**
   String get pressBackAgain;
 
+  /// No description provided for @authEyebrowSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get authEyebrowSignIn;
+
+  /// No description provided for @authEyebrowRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'New account'**
+  String get authEyebrowRegister;
+
+  /// No description provided for @authEyebrowForgot.
+  ///
+  /// In en, this message translates to:
+  /// **'Password help'**
+  String get authEyebrowForgot;
+
+  /// No description provided for @authEyebrowReset.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get authEyebrowReset;
+
+  /// No description provided for @authEyebrowServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get authEyebrowServer;
+
+  /// No description provided for @signInHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your rides and your form.'**
+  String get signInHelp;
+
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:
@@ -361,6 +451,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account was created. An admin has to approve it before you can sign in.'**
   String get registeredPending;
+
+  /// No description provided for @registeredCheckEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is ready. Open the link we sent to {email} to confirm it, then sign in.'**
+  String registeredCheckEmail(String email);
+
+  /// No description provided for @resendVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the link again'**
+  String get resendVerification;
+
+  /// No description provided for @resendVerificationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent. It may take a minute to arrive.'**
+  String get resendVerificationSent;
+
+  /// No description provided for @resendVerificationTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Try again in a few minutes.'**
+  String get resendVerificationTooMany;
+
+  /// No description provided for @resendVerificationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not send email, so there is nothing to resend.'**
+  String get resendVerificationUnavailable;
+
+  /// No description provided for @verifyEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email'**
+  String get verifyEmailTitle;
+
+  /// No description provided for @verifyEmailWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming your address…'**
+  String get verifyEmailWorking;
+
+  /// No description provided for @verifyEmailDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email is confirmed. You can sign in now.'**
+  String get verifyEmailDone;
+
+  /// No description provided for @verifyEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is not valid or has expired. Sign in to ask for a new one.'**
+  String get verifyEmailInvalid;
+
+  /// No description provided for @verifyEmailSendAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new link'**
+  String get verifyEmailSendAgain;
+
+  /// No description provided for @verifyEmailResent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new link is on its way.'**
+  String get verifyEmailResent;
+
+  /// No description provided for @soloTrialActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo trial · {days} days left'**
+  String soloTrialActive(int days);
+
+  /// No description provided for @soloTrialLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo trial · last day'**
+  String get soloTrialLastDay;
+
+  /// No description provided for @soloTrialEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo trial · ended'**
+  String get soloTrialEnded;
+
+  /// No description provided for @authEmailNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email address before signing in. Check your inbox for the link.'**
+  String get authEmailNotConfirmed;
 
   /// No description provided for @authWrongPassword.
   ///
@@ -1142,6 +1322,30 @@ abstract class AppLocalizations {
   /// **'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.'**
   String get clubNoneBody;
 
+  /// No description provided for @clubNoneTitleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club'**
+  String get clubNoneTitleShort;
+
+  /// No description provided for @clubNoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride on your own, or with a club.'**
+  String get clubNoneSubtitle;
+
+  /// No description provided for @eyebrowClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club'**
+  String get eyebrowClub;
+
+  /// No description provided for @clubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club, its rides and the people in it.'**
+  String get clubSubtitle;
+
   /// No description provided for @clubInactive.
   ///
   /// In en, this message translates to:
@@ -1171,6 +1375,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Members'**
   String get clubMembers;
+
+  /// No description provided for @clubMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String clubMemberCount(int count);
 
   /// No description provided for @clubJoinCode.
   ///
@@ -1243,12 +1453,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied'**
   String get clubCopied;
-
-  /// No description provided for @clubMemberCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 member} other{{count} members}}'**
-  String clubMemberCount(int count);
 
   /// No description provided for @sharingTitle.
   ///
@@ -1507,6 +1711,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View athletes'**
   String get coachViewAthletes;
+
+  /// No description provided for @athletesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The members who share their rides or training with you.'**
+  String get athletesSubtitle;
 
   /// No description provided for @athletesEmpty.
   ///
@@ -2204,6 +2414,18 @@ abstract class AppLocalizations {
   /// **'Add bike'**
   String get addBike;
 
+  /// No description provided for @eyebrowBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bikes'**
+  String get eyebrowBikes;
+
+  /// No description provided for @bikesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every bike you ride and what it needs.'**
+  String get bikesSubtitle;
+
   /// No description provided for @noBikes.
   ///
   /// In en, this message translates to:
@@ -2269,6 +2491,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'wheel {mm} mm'**
   String wheelLabel(int mm);
+
+  /// No description provided for @metricTrainingLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Training load'**
+  String get metricTrainingLoad;
+
+  /// No description provided for @metricPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get metricPower;
+
+  /// No description provided for @metricThisPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'This {period}'**
+  String metricThisPeriod(String period);
 
   /// No description provided for @statRides.
   ///
@@ -3194,6 +3434,48 @@ abstract class AppLocalizations {
   /// **'Distance per {period}. This {period}: {distance}.'**
   String totalsSemantics(String period, String distance);
 
+  /// No description provided for @eyebrowProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Your progress'**
+  String get eyebrowProgress;
+
+  /// No description provided for @progressSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your form over the period you choose.'**
+  String get progressSubtitle;
+
+  /// No description provided for @progressFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter progress'**
+  String get progressFilterTitle;
+
+  /// No description provided for @totalsTitleWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per week'**
+  String get totalsTitleWeekly;
+
+  /// No description provided for @totalsTitleMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per month'**
+  String get totalsTitleMonthly;
+
+  /// No description provided for @totalsTitleYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per year'**
+  String get totalsTitleYearly;
+
+  /// No description provided for @totalsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} older periods not listed'**
+  String totalsMore(int count);
+
   /// No description provided for @trainingLoad.
   ///
   /// In en, this message translates to:
@@ -3781,6 +4063,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sunday'**
   String get sunday;
+
+  /// No description provided for @notificationsEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your inbox'**
+  String get notificationsEyebrow;
+
+  /// No description provided for @notificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the server told you, newest first.'**
+  String get notificationsSubtitle;
+
+  /// No description provided for @notificationGroupRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get notificationGroupRides;
+
+  /// No description provided for @notificationGroupClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get notificationGroupClub;
+
+  /// No description provided for @notificationGroupBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Bikes'**
+  String get notificationGroupBikes;
+
+  /// No description provided for @notificationGroupAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get notificationGroupAccount;
 
   /// No description provided for @markAllRead.
   ///
@@ -4592,6 +4910,12 @@ abstract class AppLocalizations {
   /// **'All'**
   String get rideFilterAll;
 
+  /// No description provided for @rideFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter rides'**
+  String get rideFilterTitle;
+
   /// No description provided for @rideFilterSearch.
   ///
   /// In en, this message translates to:
@@ -5012,6 +5336,18 @@ abstract class AppLocalizations {
   /// **'reset this password'**
   String get actionResetPassword;
 
+  /// No description provided for @actionResendVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'send the link again'**
+  String get actionResendVerification;
+
+  /// No description provided for @actionVerifyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'confirm this email'**
+  String get actionVerifyEmail;
+
   /// No description provided for @resetPasswordLink.
   ///
   /// In en, this message translates to:
@@ -5113,6 +5449,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Where the club meets. Only used to show the club to riders nearby.'**
   String get clubLocationHelp;
+
+  /// No description provided for @clubLocationOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on the map'**
+  String get clubLocationOnMap;
 
   /// No description provided for @clubLocationNone.
   ///
@@ -6481,6 +6823,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All surfaces'**
   String get routesFilterAll;
+
+  /// No description provided for @routesEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Club routes'**
+  String get routesEyebrow;
+
+  /// No description provided for @routesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The lines the club rides, with their distance and climbing.'**
+  String get routesSubtitle;
+
+  /// No description provided for @routesEmptyCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the first route'**
+  String get routesEmptyCta;
+
+  /// No description provided for @clubRidesEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Club calendar'**
+  String get clubRidesEyebrow;
+
+  /// No description provided for @clubRidesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The club\'s next rides and the ones just gone.'**
+  String get clubRidesSubtitle;
 
   /// No description provided for @routesSortNewest.
   ///

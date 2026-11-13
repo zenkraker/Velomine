@@ -65,7 +65,7 @@ public sealed class FinishSso(
         else if (await users.IsLockedOutAsync(user))
             await Fail(returnUrl, "locked_out", ct);
         else if (!await signIn.CanSignInAsync(user))
-            await Fail(returnUrl, "not_approved", ct);
+            await Fail(returnUrl, Login.Refusal(user), ct);
         else
         {
             await sessions.SignInAsync(user, IdentityConstants.ApplicationScheme, isPersistent: false, "Web - single sign-on", ct);
