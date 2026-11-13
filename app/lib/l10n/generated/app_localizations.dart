@@ -104,6 +104,60 @@ abstract class AppLocalizations {
   /// **'Rides'**
   String get navRides;
 
+  /// No description provided for @navGroupPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get navGroupPersonal;
+
+  /// No description provided for @navGroupClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get navGroupClub;
+
+  /// No description provided for @navNoClub.
+  ///
+  /// In en, this message translates to:
+  /// **'No club'**
+  String get navNoClub;
+
+  /// No description provided for @eyebrowRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides'**
+  String get eyebrowRides;
+
+  /// No description provided for @privacyCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is yours.'**
+  String get privacyCardTitle;
+
+  /// No description provided for @privacyCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Private unless you share it.'**
+  String get privacyCardBody;
+
+  /// No description provided for @ridesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides and races.'**
+  String get ridesSubtitle;
+
+  /// No description provided for @ridesImportMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rides'**
+  String get ridesImportMenu;
+
+  /// No description provided for @rideDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride'**
+  String get rideDetailTitle;
+
   /// No description provided for @navRecord.
   ///
   /// In en, this message translates to:
@@ -1142,6 +1196,30 @@ abstract class AppLocalizations {
   /// **'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.'**
   String get clubNoneBody;
 
+  /// No description provided for @clubNoneTitleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club'**
+  String get clubNoneTitleShort;
+
+  /// No description provided for @clubNoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride on your own, or with a club.'**
+  String get clubNoneSubtitle;
+
+  /// No description provided for @eyebrowClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club'**
+  String get eyebrowClub;
+
+  /// No description provided for @clubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your club, its rides and the people in it.'**
+  String get clubSubtitle;
+
   /// No description provided for @clubInactive.
   ///
   /// In en, this message translates to:
@@ -1171,6 +1249,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Members'**
   String get clubMembers;
+
+  /// No description provided for @clubMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String clubMemberCount(int count);
 
   /// No description provided for @clubJoinCode.
   ///
@@ -1243,12 +1327,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied'**
   String get clubCopied;
-
-  /// No description provided for @clubMemberCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 member} other{{count} members}}'**
-  String clubMemberCount(int count);
 
   /// No description provided for @sharingTitle.
   ///
@@ -2204,6 +2282,18 @@ abstract class AppLocalizations {
   /// **'Add bike'**
   String get addBike;
 
+  /// No description provided for @eyebrowBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bikes'**
+  String get eyebrowBikes;
+
+  /// No description provided for @bikesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every bike you ride and what it needs.'**
+  String get bikesSubtitle;
+
   /// No description provided for @noBikes.
   ///
   /// In en, this message translates to:
@@ -2269,6 +2359,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'wheel {mm} mm'**
   String wheelLabel(int mm);
+
+  /// No description provided for @metricTrainingLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Training load'**
+  String get metricTrainingLoad;
+
+  /// No description provided for @metricPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get metricPower;
+
+  /// No description provided for @metricThisPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'This {period}'**
+  String metricThisPeriod(String period);
 
   /// No description provided for @statRides.
   ///
@@ -3193,6 +3301,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Distance per {period}. This {period}: {distance}.'**
   String totalsSemantics(String period, String distance);
+
+  /// No description provided for @eyebrowProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Your progress'**
+  String get eyebrowProgress;
+
+  /// No description provided for @progressSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your form over the period you choose.'**
+  String get progressSubtitle;
+
+  /// No description provided for @progressFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter progress'**
+  String get progressFilterTitle;
+
+  /// No description provided for @totalsTitleWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per week'**
+  String get totalsTitleWeekly;
+
+  /// No description provided for @totalsTitleMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per month'**
+  String get totalsTitleMonthly;
+
+  /// No description provided for @totalsTitleYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance per year'**
+  String get totalsTitleYearly;
+
+  /// No description provided for @totalsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} older periods not listed'**
+  String totalsMore(int count);
 
   /// No description provided for @trainingLoad.
   ///
@@ -4592,6 +4742,12 @@ abstract class AppLocalizations {
   /// **'All'**
   String get rideFilterAll;
 
+  /// No description provided for @rideFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter rides'**
+  String get rideFilterTitle;
+
   /// No description provided for @rideFilterSearch.
   ///
   /// In en, this message translates to:
@@ -5113,6 +5269,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Where the club meets. Only used to show the club to riders nearby.'**
   String get clubLocationHelp;
+
+  /// No description provided for @clubLocationOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on the map'**
+  String get clubLocationOnMap;
 
   /// No description provided for @clubLocationNone.
   ///

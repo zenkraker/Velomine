@@ -204,11 +204,15 @@ class _WellbeingCardState extends State<WellbeingCard> {
             ],
           ),
         ],
-        const SizedBox(height: AppSpacing.sm),
+        // Withdrawing consent is not a second save: it sits apart, below a line, as a quiet text action.
+        const Divider(height: AppSpacing.xxl),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton(
             key: const Key('wellbeing-withdraw'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: widget.saving ? null : widget.onWithdraw,
             child: Text(l10n.wellbeingWithdrawConsent),
           ),

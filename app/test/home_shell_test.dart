@@ -182,6 +182,39 @@ void main() {
     },
   );
 
+  testWidgets(
+    'HomeShell_ShouldShowTheAvatarAndNoThemeButton_WhenTheWindowIsAPhone',
+    (tester) async {
+      await pumpShell(tester, location: '/rides');
+
+      final bar = find.byType(AppBar);
+      expect(
+        find.descendant(
+          of: bar,
+          matching: find.byKey(const Key('theme-choice')),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: bar, matching: find.byType(CircleAvatar)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: bar,
+          matching: find.byKey(const Key('open-notifications')),
+        ),
+        findsOneWidget,
+      );
+
+      // The theme is still reachable, inside the account menu.
+      await tester.tap(find.byKey(const Key('account-menu')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('theme-system')), findsOneWidget);
+      expect(find.byKey(const Key('theme-dark')), findsOneWidget);
+    },
+  );
+
   testWidgets('HomeShell_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
     tester,
   ) async {

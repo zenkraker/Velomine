@@ -340,6 +340,32 @@ void main() {
     expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
   });
 
+  testWidgets(
+    'ProgressScreen_ShouldFilterFromOneSheet_WhenAPhonePressesTheFilterButton',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.text('Progress'));
+      await tester.pumpAndSettle();
+
+      // The filters are not on the page itself on a phone.
+      expect(find.byKey(const Key('progress-period')), findsNothing);
+      expect(find.byKey(const Key('progress-filter-gravel')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('progress-filter')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.byKey(const Key('progress-period')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('progress-filter-gravel')));
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
   testWidgets('ProgressScreen_ShouldAskForOneDiscipline_WhenAFilterIsChosen', (
     tester,
   ) async {

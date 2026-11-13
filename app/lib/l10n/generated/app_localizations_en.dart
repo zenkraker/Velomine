@@ -13,6 +13,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRides => 'Rides';
 
   @override
+  String get navGroupPersonal => 'Personal';
+
+  @override
+  String get navGroupClub => 'Club';
+
+  @override
+  String get navNoClub => 'No club';
+
+  @override
+  String get eyebrowRides => 'Your rides';
+
+  @override
+  String get privacyCardTitle => 'Your data is yours.';
+
+  @override
+  String get privacyCardBody => 'Private unless you share it.';
+
+  @override
+  String get ridesSubtitle => 'Your rides and races.';
+
+  @override
+  String get ridesImportMenu => 'Add rides';
+
+  @override
+  String get rideDetailTitle => 'Ride';
+
+  @override
   String get navRecord => 'Record';
 
   @override
@@ -570,6 +597,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.';
 
   @override
+  String get clubNoneTitleShort => 'Your club';
+
+  @override
+  String get clubNoneSubtitle => 'Ride on your own, or with a club.';
+
+  @override
+  String get eyebrowClub => 'Your club';
+
+  @override
+  String get clubSubtitle => 'Your club, its rides and the people in it.';
+
+  @override
   String get clubInactive => 'This club is not active. Joining is closed.';
 
   @override
@@ -583,6 +622,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubMembers => 'Members';
+
+  @override
+  String clubMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get clubJoinCode => 'Join code';
@@ -623,17 +673,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubCopied => 'Copied';
-
-  @override
-  String clubMemberCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count members',
-      one: '1 member',
-    );
-    return '$_temp0';
-  }
 
   @override
   String get sharingTitle => 'What you share';
@@ -1239,6 +1278,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addBike => 'Add bike';
 
   @override
+  String get eyebrowBikes => 'Your bikes';
+
+  @override
+  String get bikesSubtitle => 'Every bike you ride and what it needs.';
+
+  @override
   String get noBikes =>
       'No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.';
 
@@ -1285,6 +1330,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String wheelLabel(int mm) {
     return 'wheel $mm mm';
+  }
+
+  @override
+  String get metricTrainingLoad => 'Training load';
+
+  @override
+  String get metricPower => 'Power';
+
+  @override
+  String metricThisPeriod(String period) {
+    return 'This $period';
   }
 
   @override
@@ -1802,6 +1858,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String totalsSemantics(String period, String distance) {
     return 'Distance per $period. This $period: $distance.';
+  }
+
+  @override
+  String get eyebrowProgress => 'Your progress';
+
+  @override
+  String get progressSubtitle => 'Your form over the period you choose.';
+
+  @override
+  String get progressFilterTitle => 'Filter progress';
+
+  @override
+  String get totalsTitleWeekly => 'Distance per week';
+
+  @override
+  String get totalsTitleMonthly => 'Distance per month';
+
+  @override
+  String get totalsTitleYearly => 'Distance per year';
+
+  @override
+  String totalsMore(int count) {
+    return '$count older periods not listed';
   }
 
   @override
@@ -2575,6 +2654,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideFilterAll => 'All';
 
   @override
+  String get rideFilterTitle => 'Filter rides';
+
+  @override
   String get rideFilterSearch => 'Search rides';
 
   @override
@@ -2874,6 +2956,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clubLocationHelp =>
       'Where the club meets. Only used to show the club to riders nearby.';
+
+  @override
+  String get clubLocationOnMap => 'Shown on the map';
 
   @override
   String get clubLocationNone => 'No location yet';
