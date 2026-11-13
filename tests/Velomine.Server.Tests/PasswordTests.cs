@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Notifications.Email;
@@ -43,16 +44,42 @@ public sealed class PasswordTests(PostgresFixture postgres)
     {
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        // Email is on when the server sends, so sign-up mails a confirmation link the reset tests must skip.
+        if (api.Services.GetRequiredService<IOptions<SmtpOptions>>().Value.Configured)
+        {
+            await using var scope = api.Services.CreateAsyncScope();
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var token = await users.GenerateEmailConfirmationTokenAsync((await users.FindByEmailAsync(email))!);
+            Assert.Equal(HttpStatusCode.NoContent,
+                (await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/email/verify", new VerifyEmailRequest(email, token), Ct)).StatusCode);
+        }
+
         return (email, await api.SignedInClientAsync(email, TestApi.MemberPassword));
     }
 
     private static async Task<HttpResponseMessage> ForgotAsync(TestApi api, string email) =>
         await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/password/forgot", new ForgotPasswordRequest(email), Ct);
 
-    /// <summary>The reset email is sent after the 202; wait for the background send before reading it.</summary>
+    /// <summary>The verifying test's mail: the reset or instructions message, not a sign-up confirmation still on its way.</summary>
+    private static OutgoingEmail TheMail(FakeEmailSender mail) => Assert.Single(mail.Sent, m => !m.Subject.StartsWith("Confirm your email", StringComparison.Ordinal));
+
+    /// <summary>The reset email is sent after the 202; wait for it, not for the sign-up confirmation already in the fake.</summary>
     private static async Task WaitForMailAsync(FakeEmailSender mail)
     {
-        for (var i = 0; i < 100 && mail.Sent.Count == 0; i++) await Task.Delay(20, Ct);
+        for (var i = 0; i < 100 && mail.Sent.All(m => m.Subject.StartsWith("Confirm", StringComparison.Ordinal)); i++)
+            await Task.Delay(20, Ct);
+    }
+
+    /// <summary>The admin exists from the server's start, before email could confirm it; with the gate on, confirm it.</summary>
+    private static async Task AdmitAsync(TestApi api) => await ConfirmAsync(api, TestApi.AdminEmail);
+
+    /// <summary>Email is on in this suite, so an address is confirmed before it can sign in.</summary>
+    private static async Task ConfirmAsync(TestApi api, string email)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var user = (await users.FindByEmailAsync(email))!;
+        Assert.True((await users.ConfirmEmailAsync(user, await users.GenerateEmailConfirmationTokenAsync(user))).Succeeded);
     }
 
     private static Dictionary<string, string> Fragment(string link) =>
@@ -63,7 +90,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
 
     private static (string Email, string Token) FromEmail(FakeEmailSender mail)
     {
-        var link = Regex.Match(mail.Sent[^1].Body, @"https?://\S+").Value;
+        var link = Regex.Match(TheMail(mail).Body, @"https?://\S+").Value;
         var query = Fragment(link);
         return (query["email"], query["token"]);
     }
@@ -90,6 +117,9 @@ public sealed class PasswordTests(PostgresFixture postgres)
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
         var (email, _) = await NewMemberAsync(api);
+        // The sign-up confirmation is written before the answer, so waiting for it keeps it out of what comes next.
+        for (var i = 0; i < 100 && mail.Sent.Count == 0; i++) await Task.Delay(20, Ct);
+        mail.Sent.Clear();
         var gate = new TaskCompletionSource<bool>();
         mail.Gate = gate;
 
@@ -98,8 +128,8 @@ public sealed class PasswordTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Empty(mail.Sent);
         gate.SetResult(true);
-        for (var i = 0; i < 100 && mail.Sent.Count == 0; i++) await Task.Delay(20, Ct);
-        Assert.Single(mail.Sent);
+        await Task.Delay(200, Ct);
+        Assert.Equal(email, TheMail(mail).To);
     }
 
     [Fact]
@@ -113,7 +143,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await WaitForMailAsync(mail);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal(email, sent.To);
         Assert.Equal("Reset your Velomine password", sent.Subject);
         Assert.NotNull(sent.HtmlBody);
@@ -142,7 +172,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         await WaitForMailAsync(mail);
-        var link = Regex.Match(Assert.Single(mail.Sent).Body, @"https?://\S+").Value;
+        var link = Regex.Match(TheMail(mail).Body, @"https?://\S+").Value;
         Assert.StartsWith("https://club.example/reset-password#", link);
         Assert.DoesNotContain("evil.example", link);
     }
@@ -176,6 +206,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
                 Email = email,
                 DisplayName = "Sso Rider",
                 IsApproved = true,
+                EmailConfirmed = true,
                 CreatedAt = DateTimeOffset.UtcNow,
             };
             Assert.True((await users.CreateAsync(user)).Succeeded);
@@ -185,7 +216,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await WaitForMailAsync(mail);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal("How to sign in to Velomine", sent.Subject);
         Assert.DoesNotContain("reset-password", sent.Body);
         Assert.Contains("no password", sent.Body);
@@ -203,7 +234,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await ForgotAsync(api, email);
         await WaitForMailAsync(mail);
 
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal("Reimposta la password di Velomine", sent.Subject);
         Assert.Contains("Qualcuno ha chiesto di reimpostare la password", sent.Body);
         Assert.Contains("lang=\"it\"", sent.HtmlBody);
@@ -221,7 +252,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await ForgotAsync(api, email);
         await WaitForMailAsync(mail);
 
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal("Reset your Velomine password", sent.Subject);
         Assert.Contains("lang=\"en\"", sent.HtmlBody);
     }
@@ -365,6 +396,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
     {
         var (api, _) = await StartAsync(postgres);
         await using var __ = api;
+        await AdmitAsync(api);
         var email = TestApi.NewEmail();
         var registered = await api.RegisterAsync(email);
         var account = await registered.Content.ReadFromJsonAsync<RegisterResponse>(Ct);
@@ -377,6 +409,9 @@ public sealed class PasswordTests(PostgresFixture postgres)
 
         var reset = await ResetAsync(api, query["email"], query["token"], "New-password-1");
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+        // The link is the admin's way in when email is off; here the address still has to be confirmed to sign in.
+        await ConfirmAsync(api, email);
+
         Assert.Equal(HttpStatusCode.OK, (await api.LoginAsync(email, "New-password-1")).StatusCode);
     }
 
@@ -399,6 +434,8 @@ public sealed class PasswordTests(PostgresFixture postgres)
         await using var __ = api;
         var email = TestApi.NewEmail();
         Guid id;
+        // The admin needs a session; email is on here, so its address is confirmed first.
+        await AdmitAsync(api);
         await using (var scope = api.Services.CreateAsyncScope())
         {
             var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
@@ -408,6 +445,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
                 Email = email,
                 DisplayName = "Sso Rider",
                 IsApproved = true,
+                EmailConfirmed = true,
                 CreatedAt = DateTimeOffset.UtcNow,
             };
             Assert.True((await users.CreateAsync(user)).Succeeded);

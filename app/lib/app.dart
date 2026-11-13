@@ -25,6 +25,7 @@ import 'core/units.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/admin/admin_screen.dart';
 import 'features/auth/register_screen.dart';
+import 'features/auth/verify_email_screen.dart';
 import 'features/auth/forgot_password_screen.dart';
 import 'features/auth/reset_password_screen.dart';
 import 'features/bikes/bike_detail_screen.dart';
@@ -165,6 +166,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
         '/register',
         '/forgot-password',
         '/reset-password',
+        '/verify-email',
       };
       if (session.status == SessionStatus.loading) return null;
       if (session.status == SessionStatus.signedOut) {
@@ -194,8 +196,8 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
         session.pendingJoinCode = null;
         return '/rides';
       }
-      // A reset link works even when the browser still has a session: the stamp changes and signs it out.
-      if (path == '/reset-password') return null;
+      // A reset or confirmation link works even when the browser still has a session: it belongs to the address.
+      if (path == '/reset-password' || path == '/verify-email') return null;
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
       if (path == '/admin' && !session.isAdmin) return '/rides';
@@ -239,6 +241,24 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           location: state.uri.path,
           child: const ForgotPasswordScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) {
+          final fragment = state.uri.fragment.isNotEmpty
+              ? state.uri.fragment
+              : Uri.base.fragment;
+          final params = fragment.isNotEmpty
+              ? Uri.splitQueryString(fragment)
+              : state.uri.queryParameters;
+          return BackGuard(
+            location: state.uri.path,
+            child: VerifyEmailScreen(
+              token: params['token'],
+              email: params['email'],
+            ),
+          );
+        },
       ),
       GoRoute(
         path: '/reset-password',

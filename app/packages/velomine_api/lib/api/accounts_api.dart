@@ -1022,6 +1022,46 @@ class AccountsApi {
     return null;
   }
 
+  /// Performs an HTTP 'POST /api/v1/accounts/email/resend' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [ResendVerificationRequest] resendVerificationRequest (required):
+  Future<Response> resendVerificationWithHttpInfo(ResendVerificationRequest resendVerificationRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/email/resend';
+
+    // ignore: prefer_final_locals
+    Object? postBody = resendVerificationRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [ResendVerificationRequest] resendVerificationRequest (required):
+  Future<void> resendVerification(ResendVerificationRequest resendVerificationRequest, { Future<void>? abortTrigger, }) async {
+    final response = await resendVerificationWithHttpInfo(resendVerificationRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/password/reset' operation and returns the [Response].
   /// Parameters:
   ///
@@ -1461,5 +1501,45 @@ class AccountsApi {
     
     }
     return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/accounts/email/verify' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [VerifyEmailRequest] verifyEmailRequest (required):
+  Future<Response> verifyEmailWithHttpInfo(VerifyEmailRequest verifyEmailRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/email/verify';
+
+    // ignore: prefer_final_locals
+    Object? postBody = verifyEmailRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [VerifyEmailRequest] verifyEmailRequest (required):
+  Future<void> verifyEmail(VerifyEmailRequest verifyEmailRequest, { Future<void>? abortTrigger, }) async {
+    final response = await verifyEmailWithHttpInfo(verifyEmailRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 }

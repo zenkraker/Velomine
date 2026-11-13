@@ -15,30 +15,36 @@ class RegisterResponse {
   RegisterResponse({
     required this.id,
     required this.isApproved,
+    required this.emailConfirmationRequired,
   });
 
   final String id;
 
   final bool isApproved;
 
+  final bool emailConfirmationRequired;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RegisterResponse &&
     other.id == id &&
-    other.isApproved == isApproved;
+    other.isApproved == isApproved &&
+    other.emailConfirmationRequired == emailConfirmationRequired;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (id.hashCode) +
-    (isApproved.hashCode);
+    (isApproved.hashCode) +
+    (emailConfirmationRequired.hashCode);
 
   @override
-  String toString() => 'RegisterResponse[id=$id, isApproved=$isApproved]';
+  String toString() => 'RegisterResponse[id=$id, isApproved=$isApproved, emailConfirmationRequired=$emailConfirmationRequired]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'id'] = this.id;
       json[r'isApproved'] = this.isApproved;
+      json[r'emailConfirmationRequired'] = this.emailConfirmationRequired;
     return json;
   }
 
@@ -47,9 +53,11 @@ class RegisterResponse {
   RegisterResponse copyWith({
     String? id,
     bool? isApproved,
+    bool? emailConfirmationRequired,
   }) => RegisterResponse(
     id: id ?? this.id,
     isApproved: isApproved ?? this.isApproved,
+    emailConfirmationRequired: emailConfirmationRequired ?? this.emailConfirmationRequired,
   );
 
   /// Returns a new [RegisterResponse] instance and imports its values from
@@ -67,12 +75,15 @@ class RegisterResponse {
         assert(json[r'id'] != null, 'Required key "RegisterResponse[id]" has a null value in JSON.');
         assert(json.containsKey(r'isApproved'), 'Required key "RegisterResponse[isApproved]" is missing from JSON.');
         assert(json[r'isApproved'] != null, 'Required key "RegisterResponse[isApproved]" has a null value in JSON.');
+        assert(json.containsKey(r'emailConfirmationRequired'), 'Required key "RegisterResponse[emailConfirmationRequired]" is missing from JSON.');
+        assert(json[r'emailConfirmationRequired'] != null, 'Required key "RegisterResponse[emailConfirmationRequired]" has a null value in JSON.');
         return true;
       }());
 
       return RegisterResponse(
         id: mapValueOfType<String>(json, r'id')!,
         isApproved: mapValueOfType<bool>(json, r'isApproved')!,
+        emailConfirmationRequired: mapValueOfType<bool>(json, r'emailConfirmationRequired')!,
       );
     }
     return null;
@@ -122,6 +133,7 @@ class RegisterResponse {
   static const requiredKeys = <String>{
     'id',
     'isApproved',
+    'emailConfirmationRequired',
   };
 }
 

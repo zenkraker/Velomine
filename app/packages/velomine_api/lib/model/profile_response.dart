@@ -24,6 +24,7 @@ class ProfileResponse {
     required this.hasPassword,
     required this.emailAccountNotifications,
     required this.emailTrainingNotifications,
+    required this.soloTrialEndsAt,
   });
 
   final String displayName;
@@ -48,6 +49,8 @@ class ProfileResponse {
 
   final bool emailTrainingNotifications;
 
+  final DateTime? soloTrialEndsAt;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProfileResponse &&
     other.displayName == displayName &&
@@ -60,7 +63,8 @@ class ProfileResponse {
     other.emailNotifications == emailNotifications &&
     other.hasPassword == hasPassword &&
     other.emailAccountNotifications == emailAccountNotifications &&
-    other.emailTrainingNotifications == emailTrainingNotifications;
+    other.emailTrainingNotifications == emailTrainingNotifications &&
+    other.soloTrialEndsAt == soloTrialEndsAt;
 
   @override
   int get hashCode =>
@@ -75,10 +79,11 @@ class ProfileResponse {
     (emailNotifications.hashCode) +
     (hasPassword.hashCode) +
     (emailAccountNotifications.hashCode) +
-    (emailTrainingNotifications.hashCode);
+    (emailTrainingNotifications.hashCode) +
+    (soloTrialEndsAt == null ? 0 : soloTrialEndsAt!.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -113,6 +118,11 @@ class ProfileResponse {
       json[r'hasPassword'] = this.hasPassword;
       json[r'emailAccountNotifications'] = this.emailAccountNotifications;
       json[r'emailTrainingNotifications'] = this.emailTrainingNotifications;
+    if (this.soloTrialEndsAt != null) {
+      json[r'soloTrialEndsAt'] = _dateFormatter.format(this.soloTrialEndsAt!);
+    } else {
+      json[r'soloTrialEndsAt'] = null;
+    }
     return json;
   }
 
@@ -135,6 +145,8 @@ class ProfileResponse {
     bool? hasPassword,
     bool? emailAccountNotifications,
     bool? emailTrainingNotifications,
+    DateTime? soloTrialEndsAt,
+    bool soloTrialEndsAtSetToNull = false,
   }) => ProfileResponse(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -147,6 +159,7 @@ class ProfileResponse {
     hasPassword: hasPassword ?? this.hasPassword,
     emailAccountNotifications: emailAccountNotifications ?? this.emailAccountNotifications,
     emailTrainingNotifications: emailTrainingNotifications ?? this.emailTrainingNotifications,
+    soloTrialEndsAt: soloTrialEndsAtSetToNull ? null : soloTrialEndsAt ?? this.soloTrialEndsAt,
   );
 
   /// Returns a new [ProfileResponse] instance and imports its values from
@@ -177,6 +190,7 @@ class ProfileResponse {
         assert(json[r'emailAccountNotifications'] != null, 'Required key "ProfileResponse[emailAccountNotifications]" has a null value in JSON.');
         assert(json.containsKey(r'emailTrainingNotifications'), 'Required key "ProfileResponse[emailTrainingNotifications]" is missing from JSON.');
         assert(json[r'emailTrainingNotifications'] != null, 'Required key "ProfileResponse[emailTrainingNotifications]" has a null value in JSON.');
+        assert(json.containsKey(r'soloTrialEndsAt'), 'Required key "ProfileResponse[soloTrialEndsAt]" is missing from JSON.');
         return true;
       }());
 
@@ -192,6 +206,7 @@ class ProfileResponse {
         hasPassword: mapValueOfType<bool>(json, r'hasPassword')!,
         emailAccountNotifications: mapValueOfType<bool>(json, r'emailAccountNotifications')!,
         emailTrainingNotifications: mapValueOfType<bool>(json, r'emailTrainingNotifications')!,
+        soloTrialEndsAt: mapDateTime(json, r'soloTrialEndsAt', r''),
       );
     }
     return null;
@@ -250,6 +265,7 @@ class ProfileResponse {
     'hasPassword',
     'emailAccountNotifications',
     'emailTrainingNotifications',
+    'soloTrialEndsAt',
   };
 }
 

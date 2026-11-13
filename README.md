@@ -36,6 +36,19 @@ The first run takes roughly 5 to 10 minutes (later starts take seconds). It is r
 
 Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your data; `docker compose down -v` also deletes the data (database and uploaded files), for a fresh start.
 
+### Fill a club with demo data
+
+The database starts empty. After you have created a club and a few members in the app, this adds synthetic bikes,
+components, rides with streams, goals, wellbeing, sharing and notifications to that club:
+
+```bash
+docker compose exec -T postgres psql -U velomine -d velomine \
+  -v ON_ERROR_STOP=1 --single-transaction < deploy/host/seed-demo.sql
+```
+
+`just seed-demo` runs the same command. It creates no accounts or club, and it does nothing if the club already has
+bikes or rides. See [docs/demo.md](docs/demo.md).
+
 ### Settings you can change
 
 Set them in a file named `.env` next to `docker-compose.yml` (for example `VELOMINE_PORT=9090`), or as environment variables. Infrastructure environment variables are upper case, with `__` for nested settings (`VELOMINE__SMTP__HOST`); the application's internal configuration keys keep their .NET spelling (`Velomine:Smtp:Host`).
@@ -52,7 +65,7 @@ Set them in a file named `.env` next to `docker-compose.yml` (for example `VELOM
 | `VELOMINE__RATELIMITS__UPLOADBURST` | `1000` | How many ride files one member may send at once, for example a whole bike computer folder. |
 | `VELOMINE__RATELIMITS__IMPORTSPERDAY` | `10` | How many Strava exports one member may import in a day. |
 | `VELOMINE__RATELIMITS__CLUBCREATIONSPERDAY` | `5` | How many clubs one member may start in a day. |
-| `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `true` | Set to `false` to let new accounts in without approval (add it under `environment:` of the `server` service). An admin can also change this, and sign-up on or off, in the app (*Admin*, *Settings*); a saved value overrides the environment. |
+| `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `false` | Off, a rider signs up and starts the solo trial at once. Set to `true` to make new accounts wait for an admin (add it under `environment:` of the `server` service). An admin can also change this, and sign-up on or off, in the app (*Admin*, *Settings*); a saved value overrides the environment. With email on, the address must still be confirmed before signing in. |
 | `VELOMINE__ACCOUNTS__CLUBCREATIONENABLED` | `false` | Set to `true` to let a rider without a club start one in the app. Off, only the operator creates clubs. An admin can also change this in the app (*Admin*, *Settings*); a saved value overrides the environment. |
 | `VELOMINE__SMTP__HOST`, `VELOMINE__SMTP__FROM` | empty | Email is on when both are set. `From` is the sender, for example `Velomine <velomine@club.example>`. |
 | `VELOMINE__SMTP__PORT`, `VELOMINE__SMTP__SECURITY` | `587`, `starttls` | `Security` is `starttls` (port 587), `ssl` (port 465) or `none` (a local relay only). |
@@ -94,6 +107,7 @@ Not needed for the steps above.
 ## Documents
 
 - [Development environment](docs/development.md)
+- [Demo data](docs/demo.md)
 - [Architecture](docs/architecture.md)
 - [Code, API and app rules](AGENTS.md)
 - [Product values and scope](docs/design/values.md)

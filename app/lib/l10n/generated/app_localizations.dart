@@ -362,6 +362,96 @@ abstract class AppLocalizations {
   /// **'Your account was created. An admin has to approve it before you can sign in.'**
   String get registeredPending;
 
+  /// No description provided for @registeredCheckEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is ready. Open the link we sent to {email} to confirm it, then sign in.'**
+  String registeredCheckEmail(String email);
+
+  /// No description provided for @resendVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the link again'**
+  String get resendVerification;
+
+  /// No description provided for @resendVerificationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent. It may take a minute to arrive.'**
+  String get resendVerificationSent;
+
+  /// No description provided for @resendVerificationTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Try again in a few minutes.'**
+  String get resendVerificationTooMany;
+
+  /// No description provided for @resendVerificationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not send email, so there is nothing to resend.'**
+  String get resendVerificationUnavailable;
+
+  /// No description provided for @verifyEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email'**
+  String get verifyEmailTitle;
+
+  /// No description provided for @verifyEmailWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming your address…'**
+  String get verifyEmailWorking;
+
+  /// No description provided for @verifyEmailDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email is confirmed. You can sign in now.'**
+  String get verifyEmailDone;
+
+  /// No description provided for @verifyEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is not valid or has expired. Sign in to ask for a new one.'**
+  String get verifyEmailInvalid;
+
+  /// No description provided for @verifyEmailSendAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new link'**
+  String get verifyEmailSendAgain;
+
+  /// No description provided for @verifyEmailResent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new link is on its way.'**
+  String get verifyEmailResent;
+
+  /// No description provided for @soloTrialActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo trial · {days} days left'**
+  String soloTrialActive(int days);
+
+  /// No description provided for @soloTrialLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo trial · last day'**
+  String get soloTrialLastDay;
+
+  /// No description provided for @soloTrialEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo trial · ended'**
+  String get soloTrialEnded;
+
+  /// No description provided for @authEmailNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email address before signing in. Check your inbox for the link.'**
+  String get authEmailNotConfirmed;
+
   /// No description provided for @authWrongPassword.
   ///
   /// In en, this message translates to:
@@ -5011,6 +5101,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'reset this password'**
   String get actionResetPassword;
+
+  /// No description provided for @actionResendVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'send the link again'**
+  String get actionResendVerification;
+
+  /// No description provided for @actionVerifyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'confirm this email'**
+  String get actionVerifyEmail;
 
   /// No description provided for @resetPasswordLink.
   ///

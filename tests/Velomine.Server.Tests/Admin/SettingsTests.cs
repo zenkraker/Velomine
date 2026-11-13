@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
 
@@ -13,15 +15,24 @@ public sealed class SettingsTests(PostgresFixture postgres)
 
     private Task<TestApi> StartAsync(Action<IWebHostBuilder>? more = null) => TestApi.StartAsync(postgres, b => more?.Invoke(b));
 
-    private static Task<HttpClient> AdminAsync(TestApi api) => api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+    /// <summary>Email is on in these tests, so the admin's address is confirmed before it can sign in.</summary>
+    private static async Task<HttpClient> AdminAsync(TestApi api)
+    {
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var admin = (await users.FindByEmailAsync(TestApi.AdminEmail))!;
+            Assert.True((await users.ConfirmEmailAsync(admin, await users.GenerateEmailConfirmationTokenAsync(admin))).Succeeded);
+        }
 
+        return await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+    }
+
+    /// <summary>Approval is off by default now, so the member is in as soon as it signs up.</summary>
     private static async Task<HttpClient> MemberAsync(TestApi api)
     {
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
-        var admin = await AdminAsync(api);
-        var users = await admin.GetFromJsonAsync<UserSummary[]>("/api/v1/accounts/users?pending=true", Ct);
-        await admin.PostAsync($"/api/v1/accounts/users/{users!.Single(u => u.Email == email).Id}/approve", null, Ct);
         return await api.SignedInClientAsync(email, TestApi.MemberPassword);
     }
 

@@ -49,6 +49,35 @@
   "passwordHint": "Almeno 10 caratteri, con una maiuscola, una minuscola e un numero.",
   "registeredReady": "Il tuo account è pronto. Ora puoi accedere.",
   "registeredPending": "Il tuo account è stato creato. Un amministratore deve approvarlo prima che tu possa accedere.",
+  "registeredCheckEmail": "Il tuo account è pronto. Apri il link che abbiamo inviato a {email} per confermarlo, poi accedi.",
+  "@registeredCheckEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resendVerification": "Invia di nuovo il link",
+  "resendVerificationSent": "Inviato. Potrebbe volerci un minuto.",
+  "resendVerificationTooMany": "Troppe richieste. Riprova tra qualche minuto.",
+  "resendVerificationUnavailable": "Questo server non invia email, quindi non c'è nulla da reinviare.",
+  "verifyEmailTitle": "Conferma la tua email",
+  "verifyEmailWorking": "Sto confermando il tuo indirizzo…",
+  "verifyEmailDone": "La tua email è confermata. Ora puoi accedere.",
+  "verifyEmailInvalid": "Questo link non è valido o è scaduto. Accedi per chiederne uno nuovo.",
+  "verifyEmailSendAgain": "Invia un nuovo link",
+  "verifyEmailResent": "Un nuovo link è in arrivo.",
+  "soloTrialActive": "Prova solo · {days} giorni rimasti",
+  "@soloTrialActive": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloTrialLastDay": "Prova solo · ultimo giorno",
+  "soloTrialEnded": "Prova solo · terminata",
+  "authEmailNotConfirmed": "Conferma il tuo indirizzo email prima di accedere. Controlla la posta per il link.",
   "authWrongPassword": "L'email o la password non sono corretti.",
   "authNotApproved": "Il tuo account è in attesa di approvazione da parte di un amministratore.",
   "authLockedOut": "Troppi tentativi errati. Riprova tra qualche minuto.",
@@ -909,6 +938,8 @@
   "passwordChangeFailed": "Non è stato possibile cambiare la password. Riprova.",
   "actionChangePassword": "cambiare la password",
   "actionResetPassword": "reimpostare questa password",
+  "actionResendVerification": "inviare di nuovo il link",
+  "actionVerifyEmail": "confermare questa email",
   "resetPasswordLink": "Reimposta password",
   "resetPasswordLinkTitle": "Link di reimpostazione per {name}",
   "@resetPasswordLinkTitle": {

@@ -15,6 +15,7 @@ enum AuthProblem {
   wrongPassword,
   wrongCode,
   notApproved,
+  emailNotConfirmed,
   lockedOut,
   signUpClosed,
   weakPassword,
@@ -437,6 +438,7 @@ class Session {
 
     late final int statusCode;
     String? challenge;
+    String? refusal;
     TokenResponse? token;
     try {
       final response = await accounts.loginWithHttpInfo(
@@ -449,6 +451,9 @@ class Session {
         ),
       );
       statusCode = response.statusCode;
+      refusal = response.body.contains('email_not_confirmed')
+          ? 'email_not_confirmed'
+          : null;
       if (statusCode == 202) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         challenge = body['challenge'] as String?;
@@ -472,9 +477,12 @@ class Session {
 
     if (statusCode >= 400) {
       if (statusCode == 401) await auth.clear();
+      // A 403 is the server's word for why: the account waits for approval, or its address is unconfirmed.
+      final refusedForEmail = refusal == 'email_not_confirmed';
       return (
         problem: switch (statusCode) {
           401 => AuthProblem.wrongPassword,
+          403 when refusedForEmail => AuthProblem.emailNotConfirmed,
           403 => AuthProblem.notApproved,
           423 => AuthProblem.lockedOut,
           _ => AuthProblem.unavailable,
@@ -542,6 +550,8 @@ class Session {
         if (response.statusCode == 401) await auth.clear();
         return switch (response.statusCode) {
           401 => AuthProblem.wrongCode,
+          403 when response.body.contains('email_not_confirmed') =>
+            AuthProblem.emailNotConfirmed,
           403 => AuthProblem.notApproved,
           423 => AuthProblem.lockedOut,
           _ => AuthProblem.unavailable,
@@ -594,11 +604,8 @@ class Session {
   }
 
   /// Returns null on success. [approved] says whether the new account can sign in right away.
-  Future<({AuthProblem? problem, bool approved})> signUp(
-    String email,
-    String displayName,
-    String password,
-  ) async {
+  Future<({AuthProblem? problem, bool approved, bool needsConfirmation})>
+  signUp(String email, String displayName, String password) async {
     final result = await _signUp(email, displayName, password);
     final problem = result.problem;
     telemetry.count(
@@ -621,11 +628,8 @@ class Session {
     return result;
   }
 
-  Future<({AuthProblem? problem, bool approved})> _signUp(
-    String email,
-    String displayName,
-    String password,
-  ) async {
+  Future<({AuthProblem? problem, bool approved, bool needsConfirmation})>
+  _signUp(String email, String displayName, String password) async {
     email = email.trim();
     displayName = displayName.trim();
     password = password.trim();
@@ -637,7 +641,11 @@ class Session {
           password: password,
         ),
       );
-      return (problem: null, approved: created?.isApproved ?? false);
+      return (
+        problem: null,
+        approved: created?.isApproved ?? false,
+        needsConfirmation: created?.emailConfirmationRequired ?? false,
+      );
     } on ApiException catch (e) {
       final problem = switch (e.code) {
         403 => AuthProblem.signUpClosed,
@@ -647,9 +655,13 @@ class Session {
               : AuthProblem.weakPassword,
         _ => AuthProblem.unavailable,
       };
-      return (problem: problem, approved: false);
+      return (problem: problem, approved: false, needsConfirmation: false);
     } on Object {
-      return (problem: AuthProblem.unavailable, approved: false);
+      return (
+        problem: AuthProblem.unavailable,
+        approved: false,
+        needsConfirmation: false,
+      );
     }
   }
 
