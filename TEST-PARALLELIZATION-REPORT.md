@@ -3,7 +3,7 @@
 Branch `feat/parallel-tests`, worktree `/tmp/nix-shell.26e4ms/opencode/velomine-parallel`, based on
 `origin/main` @ `8b6a57f`. Not pushed, no PR.
 
-**Result: 715 tests, 0 failures, 1m55s** (was 697 tests in 5m08s; the extra 30 s over the 1m25s below is
+**Result: 750 tests, 0 failures, 1 skipped (the throttle bug), 2m01s** (was 697 tests in 5m08s; the extra 30 s over the 1m25s below is
 one test that waits 62 s for a rate-limit bucket to refill). Five consecutive full runs green; a run
 against an external `VELOMINE_TEST_POSTGRES` server also green, leaving no database behind; `dotnet format
 --verify-no-changes` clean.
