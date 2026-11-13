@@ -136,6 +136,7 @@ erDiagram
 - Wellbeing is health data: explicit, versioned consent; notes never leave the owner.
 - Every coach view of a member's data is logged, and the member can read the log.
 - Sessions are listed and revocable per device; refresh tokens rotate and a reused one ends the session.
+- Email verification: a confirmed address is required to sign in only when email is configured; without SMTP there is no gate and no verification email.
 - Operational logs never contain member data. Member telemetry from the app is opt-in; server telemetry is anonymised and used only to fix bugs and performance problems.
 
 ## 9. Clients
@@ -164,6 +165,8 @@ erDiagram
 | Streams as one row per ride with an array per signal | A long ride is one row fetch. Revisit if queries must filter single samples across rides. |
 | Wear, goals and totals computed on read; load and power bests stored | Always correct for the current profile, except the sums the dashboard needs fast. |
 | Recurring maintenance jobs reuse the part-wear calculation | One set of interval rules for parts and service jobs; the reminder stores only its interval and last-done date, and the rest comes from the rides. |
+| A solo plan: a 30-day trial date on the account, shown as a badge; it gates nothing | No feature sits behind a payment; the trial is billing state that never takes anything away, mirroring the club plan. Payment itself comes later. |
+| A confirmed email is required to sign in only when email is configured | A self-hosted club with no SMTP must still create and sign in to accounts, so the gate is conditional; the admin's one-time reset link remains the no-email recovery path. SSO accounts are already verified. |
 | Optional, offline, signed supporter licence | Funds the project without a paywall: no phone-home, no seats, never a feature or a block on member data. |
 | Member telemetry opt-in; operational logs separate and anonymous | Health and location data never leave through diagnostics. |
 | Vendor-neutral server telemetry: OTLP with the standard `OTEL_*` variables, errors through an error-tracking DSN | An operator picks any backend by changing settings, not code; the DSN protocol is spoken by open-source GlitchTip and Bugsink too. The app follows later: Flutter has no official OpenTelemetry SDK yet, so it keeps its crash-reporting SDK behind its `TelemetryRuntime` interface. |

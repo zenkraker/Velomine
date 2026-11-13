@@ -5,8 +5,8 @@ public sealed class AccountsOptions
 {
     public bool SignUpEnabled { get; set; } = true;
 
-    /// <summary>New accounts wait for an admin to approve them.</summary>
-    public bool RequireAdminApproval { get; set; } = true;
+    /// <summary>New accounts wait for an admin to approve them. Off: a rider signs up and starts the solo trial at once.</summary>
+    public bool RequireAdminApproval { get; set; }
 
     /// <summary>Riders without a club may start one. Off: only the operator creates clubs (VELOMINE__ACCOUNTS__CLUBCREATIONENABLED).</summary>
     public bool ClubCreationEnabled { get; set; }

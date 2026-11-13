@@ -290,6 +290,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
 
+                    b.Property<DateOnly?>("SoloTrialEndsAt")
+                        .HasColumnType("date")
+                        .HasColumnName("solo_trial_ends_at");
+
                     b.Property<DateTimeOffset?>("TelemetryConsentAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("telemetry_consent_at");

@@ -198,6 +198,59 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il tuo account è stato creato. Un amministratore deve approvarlo prima che tu possa accedere.';
 
   @override
+  String registeredCheckEmail(String email) {
+    return 'Il tuo account è pronto. Apri il link che abbiamo inviato a $email per confermarlo, poi accedi.';
+  }
+
+  @override
+  String get resendVerification => 'Invia di nuovo il link';
+
+  @override
+  String get resendVerificationSent => 'Inviato. Potrebbe volerci un minuto.';
+
+  @override
+  String get resendVerificationTooMany =>
+      'Troppe richieste. Riprova tra qualche minuto.';
+
+  @override
+  String get resendVerificationUnavailable =>
+      'Questo server non invia email, quindi non c\'è nulla da reinviare.';
+
+  @override
+  String get verifyEmailTitle => 'Conferma la tua email';
+
+  @override
+  String get verifyEmailWorking => 'Sto confermando il tuo indirizzo…';
+
+  @override
+  String get verifyEmailDone => 'La tua email è confermata. Ora puoi accedere.';
+
+  @override
+  String get verifyEmailInvalid =>
+      'Questo link non è valido o è scaduto. Accedi per chiederne uno nuovo.';
+
+  @override
+  String get verifyEmailSendAgain => 'Invia un nuovo link';
+
+  @override
+  String get verifyEmailResent => 'Un nuovo link è in arrivo.';
+
+  @override
+  String soloTrialActive(int days) {
+    return 'Prova solo · $days giorni rimasti';
+  }
+
+  @override
+  String get soloTrialLastDay => 'Prova solo · ultimo giorno';
+
+  @override
+  String get soloTrialEnded => 'Prova solo · terminata';
+
+  @override
+  String get authEmailNotConfirmed =>
+      'Conferma il tuo indirizzo email prima di accedere. Controlla la posta per il link.';
+
+  @override
   String get authWrongPassword => 'L\'email o la password non sono corretti.';
 
   @override
@@ -2962,6 +3015,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionResetPassword => 'reimpostare questa password';
+
+  @override
+  String get actionResendVerification => 'inviare di nuovo il link';
+
+  @override
+  String get actionVerifyEmail => 'confermare questa email';
 
   @override
   String get resetPasswordLink => 'Reimposta password';

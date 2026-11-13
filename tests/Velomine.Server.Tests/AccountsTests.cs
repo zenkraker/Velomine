@@ -11,9 +11,9 @@ public sealed class AccountsTests(PostgresFixture postgres)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Accounts_ShouldRefuseSignIn_WhenNewAccountIsNotYetApproved()
+    public async Task Accounts_ShouldRefuseSignIn_WhenTheOperatorRequiresApproval()
     {
-        await using var api = await TestApi.StartAsync(postgres);
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "true"));
         var email = TestApi.NewEmail();
 
         var registered = await api.RegisterAsync(email);

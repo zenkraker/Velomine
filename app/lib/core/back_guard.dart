@@ -76,7 +76,8 @@ String? backParentOf(String location) {
   if (path == '/privacy') return '/profile';
   if (path == '/register' ||
       path == '/forgot-password' ||
-      path == '/reset-password') {
+      path == '/reset-password' ||
+      path == '/verify-email') {
     return '/sign-in';
   }
   if (path == '/join' || path == '/clubs' || path == '/club/start') {

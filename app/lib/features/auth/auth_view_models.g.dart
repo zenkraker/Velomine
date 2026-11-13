@@ -102,7 +102,7 @@ final class RegisterViewModelProvider
   }
 }
 
-String _$registerViewModelHash() => r'0daf8f8db467f0ed0c99a3b6de088c87ca04cb93';
+String _$registerViewModelHash() => r'a387ecdaf015a15c1b46e438b4e17fb4a1b275c7';
 
 /// The sign-up form.
 

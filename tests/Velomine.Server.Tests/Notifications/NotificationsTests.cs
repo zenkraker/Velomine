@@ -104,7 +104,7 @@ public sealed class NotificationsTests(PostgresFixture postgres)
     [Fact]
     public async Task Notifications_ShouldStayQuiet_WhenAccountsNeedNoApproval()
     {
-        await using var api = await StartAsync(approval: false);
+        await using var api = await StartAsync();
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         await NewMemberAsync(api);
 

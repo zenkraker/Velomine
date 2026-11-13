@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
+import 'auth_state.dart';
 import 'auth_view_models.dart';
 import 'password_field.dart';
 import 'sign_in_screen.dart';
@@ -39,10 +40,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         .register(_email.text.trim(), _name.text.trim(), _password.text);
   }
 
+  /// Sends the confirmation link again and says so, in place.
+  Future<void> _resend() async {
+    final problem = await ref.read(registerViewModelProvider.notifier).resend();
+    if (!mounted) return;
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(switch (problem) {
+          null => l10n.resendVerificationSent,
+          ResendProblem.emailNotSetUp => l10n.resendVerificationUnavailable,
+          ResendProblem.tooMany => l10n.resendVerificationTooMany,
+          ResendProblem.failed => l10n.authUnavailable,
+        }),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(registerViewModelProvider);
-    final created = s.approved != null;
+    final created = s.outcome != null;
     final l10n = context.l10n;
     return AuthPage(
       eyebrow: l10n.authEyebrowRegister,
@@ -50,10 +68,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: created
           ? [
               Text(
-                s.approved! ? l10n.registeredReady : l10n.registeredPending,
+                s.outcome == RegisterOutcome.needsConfirmation
+                    ? l10n.registeredCheckEmail(s.email!)
+                    : s.outcome == RegisterOutcome.pendingApproval
+                    ? l10n.registeredPending
+                    : l10n.registeredReady,
                 key: const Key('registered'),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              if (s.outcome == RegisterOutcome.needsConfirmation) ...[
+                const SizedBox(height: AppSpacing.md),
+                TextButton(
+                  key: const Key('resend-verification'),
+                  onPressed: s.command.running ? null : _resend,
+                  child: Text(l10n.resendVerification),
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: () => context.go('/sign-in'),

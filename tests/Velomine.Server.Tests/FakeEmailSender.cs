@@ -14,6 +14,9 @@ public sealed class FakeEmailSender : IEmailSender
 
     public HashSet<string> Rejected { get; } = [];
 
+    /// <summary>What was sent after the first <paramref name="after"/> messages, for a test that ignores the sign-up confirmation.</summary>
+    public IReadOnlyList<OutgoingEmail> SentAfter(int after) => Sent.Skip(after).ToList();
+
     public async Task<EmailBatchResult> SendAsync(IReadOnlyList<OutgoingEmail> emails, CancellationToken ct)
     {
         if (Gate is not null) await Gate.Task.ConfigureAwait(false);

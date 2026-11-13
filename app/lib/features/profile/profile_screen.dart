@@ -24,6 +24,7 @@ import '../supporter/supporter_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
+import 'solo_trial_badge.dart';
 import '../../core/tokens.dart';
 
 const weekDayIds = [
@@ -506,6 +507,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ],
       ),
+      // Billing state, shown as a badge: the trial never takes a feature away.
+      if (s.profile?.soloTrialEndsAt != null)
+        SoloTrialBadge(
+          endsAt: s.profile!.soloTrialEndsAt,
+          today: DateTime.now(),
+        ),
       SectionCard(
         title: l10n.supporterSignInTitle,
         children: [
