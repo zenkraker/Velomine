@@ -22,6 +22,7 @@ import 'ride_selection.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
+import '../../../core/page_actions.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -83,12 +84,21 @@ class RideDetailScreen extends ConsumerWidget {
       ref.read(rideDetailViewModelProvider(id).notifier).messageShown,
     );
 
+    final compact =
+        MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth;
+    final ride = s.ride;
+    final actions = ride == null ? null : _actions(context, ref, ride);
+    // A phone has no page header, so the ride's menu goes in the title bar instead.
+    if (compact && actions != null) {
+      publishPhoneActions(context, ref, [actions]);
+    }
+
     return PageScaffold(
       eyebrow: l10n.eyebrowRides,
       // The title is the page's name, so a rename shows here at once.
       title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
       titleKey: const Key('ride-title'),
-      actions: s.ride == null ? null : _actions(context, ref, s.ride!),
+      actions: actions,
       children: _body(context, ref, s, selection),
     );
   }
@@ -500,8 +510,8 @@ class _ZonesCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(title, style: text.titleMedium),
-                const Spacer(),
+                Expanded(child: Text(title, style: text.titleMedium)),
+                const SizedBox(width: AppSpacing.sm),
                 Text(duration(total), style: text.bodySmall),
               ],
             ),

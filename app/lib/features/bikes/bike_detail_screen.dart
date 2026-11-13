@@ -15,6 +15,7 @@ import 'bikes_state.dart';
 import 'bikes_view_models.dart';
 import 'component_names.dart';
 import 'service_section.dart';
+import '../../core/page_actions.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -217,6 +218,27 @@ class BikeDetailScreen extends ConsumerWidget {
     );
 
     final detail = s.detail;
+    final compact =
+        MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth;
+    // A phone has no page header: the bike's jobs go in the title bar, the daily ones as icons and
+    // the rare ones behind the same menu.
+    if (compact && detail != null) {
+      publishPhoneActions(context, ref, [
+        IconButton(
+          key: const Key('edit-bike'),
+          tooltip: l10n.edit,
+          onPressed: () => _edit(context, ref),
+          icon: const Icon(Icons.edit_outlined),
+        ),
+        IconButton(
+          key: const Key('add-part'),
+          tooltip: l10n.addPartAction,
+          onPressed: () => _addPart(context, ref),
+          icon: const Icon(Icons.add),
+        ),
+        _bikeMenu(context, ref, detail.bike),
+      ]);
+    }
     return PageScaffold(
       eyebrow: l10n.eyebrowBikes,
       title: detail?.bike.name ?? l10n.navBikes,
@@ -240,32 +262,34 @@ class BikeDetailScreen extends ConsumerWidget {
                   label: Text(l10n.addPartAction),
                 ),
                 // The rare jobs on a bike live together, away from the ones done every day.
-                _BikeMenu(
-                  bike: detail.bike,
-                  onPick: (choice) {
-                    switch (choice) {
-                      case 'template':
-                        _saveTemplate(context, ref);
-                      case 'apply':
-                        _applyTemplate(context, ref);
-                      case 'default':
-                        ref
-                            .read(bikeDetailViewModelProvider(id).notifier)
-                            .makeDefault();
-                      case 'archive':
-                        ref
-                            .read(bikeDetailViewModelProvider(id).notifier)
-                            .setActive(!detail.bike.isActive);
-                      case 'delete':
-                        _confirmDelete(context, ref);
-                    }
-                  },
-                ),
+                _bikeMenu(context, ref, detail.bike),
               ],
             ),
       children: _body(context, ref, s),
     );
   }
+
+  /// The rare jobs on a bike, behind one menu: the same menu in the page header and in the phone's
+  /// title bar.
+  Widget _bikeMenu(BuildContext context, WidgetRef ref, BikeResponse bike) =>
+      _BikeMenu(
+        bike: bike,
+        onPick: (choice) {
+          final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
+          switch (choice) {
+            case 'template':
+              _saveTemplate(context, ref);
+            case 'apply':
+              _applyTemplate(context, ref);
+            case 'default':
+              notifier.makeDefault();
+            case 'archive':
+              notifier.setActive(!bike.isActive);
+            case 'delete':
+              _confirmDelete(context, ref);
+          }
+        },
+      );
 
   List<Widget> _body(BuildContext context, WidgetRef ref, BikeDetailState s) {
     final units = ref.watch(unitsChoiceViewModelProvider);

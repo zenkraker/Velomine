@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'tokens.dart';
 
@@ -58,6 +59,26 @@ Widget phoneFilterButton({
   onPressed: onPressed,
   icon: const Icon(Icons.tune),
 );
+
+/// Gives a screen's actions to the phone's title bar. A wide window shows them in the page's own
+/// header, so this does nothing there; on a phone the shell draws them instead, which is the only
+/// place they fit. Called after the frame, because a build may not change a provider.
+void publishPhoneActions(
+  BuildContext context,
+  WidgetRef ref,
+  List<Widget> actions,
+) {
+  final where = GoRouterState.of(context).uri.path;
+  // The element, not just the context: a screen that is being removed is still "mounted" in its
+  // final frame and must not put its buttons back over the screen replacing it.
+  final element = context as Element;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!element.mounted) return;
+    Future.microtask(
+      () => ref.read(pageActionsProvider.notifier).set(where, actions),
+    );
+  });
+}
 
 /// A modal sheet with a page's filters, kept above the keyboard so a search field stays visible.
 Future<void> showFiltersSheet(BuildContext context, WidgetBuilder builder) =>

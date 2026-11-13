@@ -516,6 +516,26 @@ void main() {
     expect(find.text('Cold start'), findsOneWidget);
   });
 
+  testWidgets(
+    'RideDetailScreen_ShouldPutTheRideMenuInTheTitleBar_WhenTheScreenIsAPhone',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.byKey(const Key('ride-r1')));
+      await tester.pumpAndSettle();
+
+      // No page header on a phone, so the menu is a title-bar control.
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('edit-ride-text')), findsOneWidget);
+      expect(find.byKey(const Key('edit-ride-type')), findsOneWidget);
+      expect(find.byKey(const Key('delete')), findsOneWidget);
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldListWhoLooked_WhenACoachOpenedTheRide', (
     tester,
   ) async {

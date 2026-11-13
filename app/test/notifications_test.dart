@@ -120,6 +120,25 @@ void main() {
     );
   });
 
+  testWidgets(
+    'NotificationsScreen_ShouldPutMarkAllReadInTheTitleBar_WhenTheScreenIsAPhone',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.byKey(const Key('open-notifications')));
+      await tester.pumpAndSettle();
+
+      // No page header on a phone, so the action is a title-bar control.
+      await tester.tap(find.byKey(const Key('notifications-read-all')));
+      await tester.pumpAndSettle();
+
+      expect(server.notifications.every((n) => n['isRead'] == true), isTrue);
+      expect(find.byKey(const Key('notifications-read-all')), findsNothing);
+    },
+  );
+
   testWidgets('NotificationsScreen_ShouldShowEmptyMessage_WhenThereAreNone', (
     tester,
   ) async {
