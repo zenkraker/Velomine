@@ -45,13 +45,6 @@ public sealed class SupporterTests(PostgresFixture postgres)
     private static Task<SupporterStatusResponse?> StatusAsync(HttpClient client) =>
         client.GetFromJsonAsync<SupporterStatusResponse>("/api/v1/supporter", Ct);
 
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, string ownerEmail, string name)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync("/api/v1/admin/clubs", new CreateClubRequest { Name = name, OwnerEmail = ownerEmail }, Ct);
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
-
     [Fact]
     public async Task ActivateSupporter_ShouldMarkTheMember_WhenTheRiderKeyIsValid()
     {
@@ -93,7 +86,7 @@ public sealed class SupporterTests(PostgresFixture postgres)
         using var issuer = new Issuer();
         await using var api = await StartAsync(issuer.PublicKey);
         var owner = await api.NewMemberAsync("Owner");
-        var club = await CreateClubAsync(api, owner.Email, "Test Club");
+        var club = await TestClubs.CreateAsync(api, owner.Email, "Test Club");
         var member = await api.NewMemberAsync("Member");
 
         var joined = await member.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct);
@@ -111,14 +104,14 @@ public sealed class SupporterTests(PostgresFixture postgres)
         using var issuer = new Issuer();
         await using var api = await StartAsync(issuer.PublicKey);
         var owner = await api.NewMemberAsync("Owner");
-        var club = await CreateClubAsync(api, owner.Email, "Test Club");
+        var club = await TestClubs.CreateAsync(api, owner.Email, "Test Club");
 
         Assert.Equal(HttpStatusCode.OK, (await ActivateAsync(owner.Client, issuer.Sign("club", "Test Club", 7))).StatusCode);
         Assert.Equal("Test Club", (await StatusAsync(owner.Client))!.Club!.Holder);
 
         // A rider in a different club, and one in none, never see it.
         var elsewhere = await api.NewMemberAsync("Elsewhere");
-        await CreateClubAsync(api, elsewhere.Email, "Another Club");
+        await TestClubs.CreateAsync(api, elsewhere.Email, "Another Club");
         Assert.Null((await StatusAsync(elsewhere.Client))!.Club);
 
         var loner = await api.NewMemberAsync("Loner");
@@ -177,13 +170,13 @@ public sealed class SupporterTests(PostgresFixture postgres)
         using var issuer = new Issuer();
         await using var api = await StartAsync(issuer.PublicKey);
         var owner = await api.NewMemberAsync("Owner");
-        var club = await CreateClubAsync(api, owner.Email, "Test Club");
+        var club = await TestClubs.CreateAsync(api, owner.Email, "Test Club");
         Assert.Equal(HttpStatusCode.OK, (await ActivateAsync(owner.Client, issuer.Sign("rider", "Owner", 42))).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await ActivateAsync(owner.Client, issuer.Sign("club", "Test Club", 43))).StatusCode);
 
         // A rider in a club of their own with its own licence: the export holds neither of the other's.
         var elsewhere = await api.NewMemberAsync("Elsewhere");
-        await CreateClubAsync(api, elsewhere.Email, "Another Club");
+        await TestClubs.CreateAsync(api, elsewhere.Email, "Another Club");
 
         var exported = await ExportAsync(owner.Client);
         var licences = JsonDocument.Parse(Encoding.UTF8.GetString(exported["supporter.json"])).RootElement;

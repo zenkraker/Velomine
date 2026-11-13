@@ -10,6 +10,10 @@
     <ProjectReference Include="..\..\src\Velomine.Server\Velomine.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Files as devices write them; RealRideFileTests reads them from the output folder. -->
+    <None Include="Rides\Samples\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit.v3" />

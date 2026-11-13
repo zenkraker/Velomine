@@ -76,6 +76,25 @@ public sealed class PartCatalogueTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Component_ShouldMatchTheSharedPartByGtin_WhenTheBrandAndNameDiffer()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var bikeId = await AddBikeAsync(member);
+        // The publisher lists the pad under a code, with a barcode; the member types a different name.
+        await AddToSharedCatalogueAsync(api, "HG701 11-speed", null, "4006381333931");
+
+        var chain = await AddChainAsync(member, bikeId, Chain("Shimano", "Different name", null, "4006381333931"));
+
+        // The barcode identifies the part on its own, so the member's part is linked to the publisher's row and its
+        // GTIN is stored in the normalised fourteen-digit form.
+        Assert.NotNull(chain.PartId);
+        Assert.Equal("04006381333931", chain.Gtin);
+        // The linked part is the publisher's row, not a copy the member's entry created.
+        Assert.Single(await SearchAsync(member, "HG701"));
+    }
+
+    [Fact]
     public async Task Component_ShouldStayUnlinked_WhenThePublisherHasNotListedThePart()
     {
         await using var api = await StartAsync();

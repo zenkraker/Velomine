@@ -44,17 +44,6 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     private static Task<RideResponse> UploadAsync(HttpClient client) =>
         TestApi.UploadAndWaitAsync(client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 1300)));
 
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, string ownerEmail)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = ownerEmail },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
-
     private static async Task ShareAsync(HttpClient client, string rides, string analytics, string wellbeing) =>
         (await client.PutAsJsonAsync(
             "/api/v1/sharing",
@@ -101,7 +90,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var (coach, _, coachEmail) = await NewMemberAsync(api, "Coach Rina");
-        var club = await CreateClubAsync(api, coachEmail);
+        var club = await TestClubs.CreateAsync(api, coachEmail);
         var (athlete, athleteId, athleteEmail) = await NewMemberAsync(api, "Athlete Luca");
         (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();
 
@@ -185,7 +174,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var (coach, _, coachEmail) = await NewMemberAsync(api, "Coach Rina");
-        var club = await CreateClubAsync(api, coachEmail);
+        var club = await TestClubs.CreateAsync(api, coachEmail);
         var (athlete, athleteId, _) = await NewMemberAsync(api, "Athlete Luca");
         (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();
         await ConsentAsync(athlete);
@@ -212,6 +201,27 @@ public sealed class WellbeingTests(PostgresFixture postgres)
         await using var scope = api.Services.CreateAsyncScope();
         Assert.True(await scope.ServiceProvider.GetRequiredService<VelomineDbContext>()
             .DailyCheckIns.AnyAsync(c => c.UserId == athleteId, Ct));
+    }
+
+    [Fact]
+    public async Task Wellbeing_ShouldAskAgain_WhenTheConsentVersionHasChanged()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        (await ConsentAsync(client)).EnsureSuccessStatusCode();
+        (await CheckInAsync(client, fatigue: 3)).EnsureSuccessStatusCode();
+        Assert.False((await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct))!.ConsentRequired);
+
+        // The wording changed: the stored consent is for the old version, so the member is asked again and saves stop.
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        await db.Users.Where(u => u.WellbeingConsentVersion == WellbeingTerms.Version)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.WellbeingConsentVersion, WellbeingTerms.Version - 1), Ct);
+
+        var after = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
+        Assert.True(after!.ConsentRequired);
+        Assert.False(after.Consented);
+        Assert.Equal(HttpStatusCode.Conflict, (await CheckInAsync(client, fatigue: 4)).StatusCode);
     }
 
     [Fact]

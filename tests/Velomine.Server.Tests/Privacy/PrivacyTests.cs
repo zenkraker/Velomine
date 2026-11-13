@@ -18,19 +18,7 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync() =>
         TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-
     private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
-
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = owner.Email },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
 
     private static async Task JoinAsync(Member member, AdminClubResponse club) =>
         (await member.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct))
@@ -277,7 +265,7 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     private async Task<(Member Owner, AdminClubResponse Club, Member Rider, Guid RideId)> SharedRideAsync(TestApi api)
     {
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var rider = await NewMemberAsync(api);
         await JoinAsync(rider, club);
         var ride = await UploadAndWaitAsync(rider.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));

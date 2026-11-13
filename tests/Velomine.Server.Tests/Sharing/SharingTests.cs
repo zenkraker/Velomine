@@ -25,17 +25,6 @@ public sealed class SharingTests(PostgresFixture postgres)
 
     private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
 
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = owner.Email },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
-
     private static async Task JoinAsync(Member member, AdminClubResponse club)
     {
         (await member.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct))
@@ -91,7 +80,7 @@ public sealed class SharingTests(PostgresFixture postgres)
             b.ConfigureTestServices(services => services.AddSingleton<IInterceptor>(counter));
         });
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var first = await NewMemberAsync(api);
         await JoinAsync(first, club);
         await UploadAndWaitAsync(first.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
@@ -120,7 +109,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var start = new DateTime(2026, 10, 3, 8, 0, 0, DateTimeKind.Utc);
@@ -152,7 +141,7 @@ public sealed class SharingTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.Conflict, (await rider.Client.GetAsync("/api/v1/sharing", Ct)).StatusCode);
 
-        var club = await CreateClubAsync(api, rider);
+        var club = await TestClubs.CreateAsync(api, rider);
         var sharing = await rider.Client.GetFromJsonAsync<SharingResponse>("/api/v1/sharing", Ct);
         Assert.Equal(new SharingResponse("none", "none", "none", "none"), sharing);
 
@@ -171,7 +160,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         await UploadAndWaitAsync(
@@ -211,7 +200,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var ridesOnly = await NewMemberAsync(api);
         var trainingOnly = await NewMemberAsync(api);
         await JoinAsync(ridesOnly, club);
@@ -254,7 +243,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await UploadAndWaitAsync(
@@ -302,7 +291,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         (await athlete.Client.PutAsJsonAsync(
@@ -348,7 +337,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await UploadAndWaitAsync(athlete.Client, Fit(new FitSession(Start, 60)));
@@ -368,9 +357,9 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var ownerA = await NewMemberAsync(api);
-        var clubA = await CreateClubAsync(api, ownerA);
+        var clubA = await TestClubs.CreateAsync(api, ownerA);
         var ownerB = await NewMemberAsync(api);
-        _ = await CreateClubAsync(api, ownerB);
+        _ = await TestClubs.CreateAsync(api, ownerB);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, clubA);
         await ShareAsync(athlete, "coaches", "coaches", "coaches");
@@ -394,7 +383,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         (await ShareAsync(athlete, "coaches", "coaches")).EnsureSuccessStatusCode();
@@ -418,7 +407,7 @@ public sealed class SharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         (await ShareAsync(athlete, "coaches")).EnsureSuccessStatusCode();

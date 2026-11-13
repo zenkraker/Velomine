@@ -152,6 +152,57 @@ public sealed class RideReparseTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Reparse_ShouldKeepTheMaximumHeartRateOfTheFirstRead_WhenTheMembersBirthYearChangedSince()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        // A birth year of 1990 gives a maximum of 183 (Tanaka) on the first read.
+        await InDbAsync(api, async db =>
+        {
+            await db.Users.Where(u => u.Id == member.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.BirthYear, 1990), Ct);
+            return 0;
+        });
+        var id = await UploadAsync(member, Fit(new FitSession(Start, 600)));
+        var first = await LoadAsync(api, id);
+        Assert.Equal(183, first.LoadMaxHeartRate);
+        Assert.NotNull(first.Trimp);
+
+        // The member corrects their birth year; a re-read must still use the maximum the ride was read with.
+        await InDbAsync(api, async db =>
+        {
+            await db.Users.Where(u => u.Id == member.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.BirthYear, 1970), Ct);
+            await db.Rides.Where(r => r.Id == id).ExecuteUpdateAsync(s => s.SetProperty(r => r.Trimp, 1.0), Ct);
+            return 0;
+        });
+
+        await ReparseAsync(api);
+
+        var after = await LoadAsync(api, id);
+        Assert.Equal(183, after.LoadMaxHeartRate);
+        Assert.Equal(first.Trimp, after.Trimp);
+    }
+
+    [Fact]
+    public async Task Reparse_ShouldKeepTheMembersTitleAndDescription_WhenTheRideIsReadAgain()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var id = await UploadAsync(member, Fit(new FitSession(Start, 120)));
+        var ride = await LoadAsync(api, id);
+        var named = await member.Client.PutAsJsonAsync($"/api/v1/rides/{id}/details",
+            new SetRideDetailsRequest { Title = "Morning loop", Description = "Frosty but calm", Version = ride.Version }, Ct);
+        named.EnsureSuccessStatusCode();
+        await InDbAsync(api, db => db.Rides.Where(r => r.Id == id).ExecuteUpdateAsync(s => s.SetProperty(r => r.ElevationGainM, 999.0), Ct));
+
+        await ReparseAsync(api);
+
+        var after = await LoadAsync(api, id);
+        Assert.Equal("Morning loop", after.Title);
+        Assert.Equal("Frosty but calm", after.Description);
+        Assert.InRange(after.ElevationGainM!.Value, 10, 13); // the derived numbers were still refreshed
+    }
+
+    [Fact]
     public async Task Reparse_ShouldRecoverTheFtpFromTheStoredLoad_WhenTheRideWasReadBeforeItWasRecorded()
     {
         await using var api = await StartAsync();
