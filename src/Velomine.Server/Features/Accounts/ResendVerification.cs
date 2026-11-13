@@ -40,7 +40,7 @@ public sealed class ResendVerification(
 
     public override async Task HandleAsync(ResendVerificationRequest req, CancellationToken ct)
     {
-        if (!throttle.Allowed("resend", HttpContext))
+        if (!throttle.AllowedForEmail(req.Email))
         {
             await Send.ResponseAsync(new { error = "too_many_requests" }, 429, ct);
             return;
