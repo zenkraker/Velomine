@@ -65,7 +65,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - Speed comes from a wheel sensor when present, otherwise GPS; each ride records which.
 - A gap between samples longer than `max(30 s, 5 × the median gap)` is a pause; FIT timer events are pauses too. Pauses are left out of moving time, averages, distance and normalized power. Speed under 0.5 m/s is stopped.
 - **NP:** the device's NP from the FIT file when present; otherwise a 30-second rolling average of power resampled to 1 Hz, fourth powers, mean, fourth root.
-- **Max speed:** the maximum of 5-sample sliding medians. **Elevation:** median filter, moving average, then the sum of changes above a threshold.
+- **Max speed:** a speed that would need more than 10 m/s² to reach from the last plausible one is a gap, then the maximum of 5-sample sliding medians over what is left. **Elevation:** median filter, moving average, then the sum of changes above a threshold.
 - **Zones:** heart-rate zones as a percentage of maximum heart rate, estimated with Tanaka (208 − 0.7 × age) when the member has not set it; power zones from FTP.
 - Every formula has a test against known values.
 
