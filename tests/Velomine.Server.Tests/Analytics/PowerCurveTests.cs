@@ -10,7 +10,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Analytics;
 
-[Collection("postgres")]
 public sealed class PowerCurveTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -32,17 +31,6 @@ public sealed class PowerCurveTests(PostgresFixture postgres)
             Ct);
 
     private static Task UploadAsync(HttpClient client, byte[] file) => TestApi.UploadAndWaitAsync(client, file);
-
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, string ownerEmail)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = ownerEmail },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
 
     [Fact]
     public async Task PowerCurve_ShouldReturnBestPowerAndEstimates_WhenARideHasPower()
@@ -73,7 +61,7 @@ public sealed class PowerCurveTests(PostgresFixture postgres)
         var ownerEmail = TestApi.NewEmail();
         (await api.RegisterAsync(ownerEmail, name: "Coach Rina")).EnsureSuccessStatusCode();
         var coach = await api.SignedInClientAsync(ownerEmail, TestApi.MemberPassword);
-        var club = await CreateClubAsync(api, ownerEmail);
+        var club = await TestClubs.CreateAsync(api, ownerEmail);
 
         var (athlete, athleteId) = await NewMemberAsync(api, "Athlete Luca");
         (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();

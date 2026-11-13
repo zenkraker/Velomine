@@ -15,7 +15,6 @@ using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Admin;
 
-[Collection("postgres")]
 public sealed class UsersTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

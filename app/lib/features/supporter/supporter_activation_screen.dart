@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../auth/auth_page.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/section_card.dart';
 import 'supporter_celebration_screen.dart';
@@ -66,95 +68,51 @@ class _SupporterActivationScreenState
     final s = ref.watch(supporterViewModelProvider);
     final failure = s.activate.failure;
     final loadFailure = s.load.failure;
-    return ListView(
+    return PageScaffold(
       key: const Key('supporter-activation'),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      eyebrow: l10n.profileTitle,
+      title: l10n.supporterSignInTitle,
+      maxWidth: AppLayout.contentNarrow,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.lg,
-              children: [
-                if (loadFailure != null)
-                  Row(
-                    key: const Key('supporter-activation-load-error'),
-                    spacing: AppSpacing.sm,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          failureText(l10n, loadFailure),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        key: const Key('supporter-activation-reload'),
-                        onPressed: s.load.running
-                            ? null
-                            : ref
-                                  .read(supporterViewModelProvider.notifier)
-                                  .load,
-                        child: Text(l10n.tryAgain),
-                      ),
-                    ],
-                  ),
-                SectionCard(
-                  title: l10n.supporterBecome,
-                  description: l10n.supporterKeyHelp,
-                  children: [
-                    AppTextField(
-                      fieldKey: const Key('supporter-key'),
-                      controller: _key,
-                      label: l10n.supporterKey,
-                      maxLines: 3,
-                    ),
-                    if (failure != null)
-                      Row(
-                        key: const Key('supporter-activate-error'),
-                        spacing: AppSpacing.sm,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              switch (failure.code) {
-                                403 => l10n.supporterClubOwnerOnly,
-                                409 => l10n.supporterAlreadyActivated,
-                                503 => l10n.supporterUnavailable,
-                                _ => l10n.supporterKeyInvalid,
-                              },
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            key: const Key('supporter-activate-retry'),
-                            onPressed: s.activate.running ? null : _activate,
-                            child: Text(l10n.tryAgain),
-                          ),
-                        ],
-                      ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ValueListenableBuilder(
-                        valueListenable: _key,
-                        builder: (context, value, _) => FilledButton(
-                          key: const Key('supporter-activate'),
-                          onPressed:
-                              s.activate.running || value.text.trim().isEmpty
-                              ? null
-                              : _activate,
-                          child: Text(l10n.supporterActivate),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+        if (loadFailure != null)
+          AuthFailure(
+            keyName: 'supporter-activation-load-error',
+            message: failureText(l10n, loadFailure),
           ),
+        SectionCard(
+          title: l10n.supporterBecome,
+          description: l10n.supporterKeyHelp,
+          children: [
+            AppTextField(
+              fieldKey: const Key('supporter-key'),
+              controller: _key,
+              label: l10n.supporterKey,
+              maxLines: 3,
+            ),
+            if (failure != null)
+              AuthFailure(
+                keyName: 'supporter-activate-error',
+                message: switch (failure.code) {
+                  403 => l10n.supporterClubOwnerOnly,
+                  409 => l10n.supporterAlreadyActivated,
+                  503 => l10n.supporterUnavailable,
+                  _ => l10n.supporterKeyInvalid,
+                },
+              ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ValueListenableBuilder(
+                valueListenable: _key,
+                builder: (context, value, _) => FilledButton(
+                  key: const Key('supporter-activate'),
+                  onPressed: s.activate.running || value.text.trim().isEmpty
+                      ? null
+                      : _activate,
+                  child: Text(l10n.supporterActivate),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -7,6 +7,9 @@ import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 import 'club_ride_widgets.dart';
 import 'club_rides_view_model.dart';
 
@@ -36,6 +39,77 @@ class ClubRidesScreen extends ConsumerWidget {
       ref.read(clubRidesViewModelProvider.notifier).messageShown,
     );
 
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    final page = PageScaffold(
+      eyebrow: l10n.clubRidesEyebrow,
+      title: l10n.clubRidesTitle,
+      subtitle: l10n.clubRidesSubtitle,
+      actions: wide
+          ? Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                OutlinedButton.icon(
+                  key: const Key('open-calendar-feed'),
+                  onPressed: onCalendar,
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  label: Text(l10n.calendarTitle),
+                ),
+                if (canPlan)
+                  FilledButton.icon(
+                    key: const Key('plan-ride'),
+                    onPressed: onPlan,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.clubPlanRide),
+                  ),
+              ],
+            )
+          : OutlinedButton.icon(
+              key: const Key('open-calendar-feed'),
+              onPressed: onCalendar,
+              icon: const Icon(Icons.calendar_month_outlined),
+              label: Text(l10n.calendarTitle),
+            ),
+      bottomPadding: wide ? AppSpacing.xl : 96,
+      children: [
+        if (s.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('club-rides-error'),
+            onRetry: () =>
+                ref.read(clubRidesViewModelProvider.notifier).refresh(),
+          ),
+        if (s.load.running && s.upcoming.isEmpty && s.past.isEmpty)
+          const Center(child: CircularProgressIndicator())
+        else if (s.upcoming.isEmpty && s.past.isEmpty && s.load.failure == null)
+          EmptyState(
+            key: const Key('no-club-rides'),
+            message: l10n.ridesEmpty,
+            icon: Icons.event_available,
+            action: canPlan
+                ? OutlinedButton.icon(
+                    key: const Key('plan-ride-empty'),
+                    onPressed: onPlan,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.clubPlanRide),
+                  )
+                : null,
+          )
+        else ...[
+          if (s.upcoming.isNotEmpty) ...[
+            SectionHeading(title: l10n.ridesUpcoming),
+            for (final ride in s.upcoming)
+              _RideCard(ride: ride, onOpen: onOpen),
+          ],
+          if (s.past.isNotEmpty) ...[
+            SectionHeading(title: l10n.ridesPast),
+            for (final ride in s.past)
+              _RideCard(ride: ride, onOpen: onOpen, dimmed: true),
+          ],
+        ],
+      ],
+    );
+    if (wide) return page;
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: canPlan
@@ -46,80 +120,7 @@ class ClubRidesScreen extends ConsumerWidget {
               label: Text(l10n.clubPlanRide),
             )
           : null,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: AppSpacing.md,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: OutlinedButton.icon(
-                      key: const Key('open-calendar-feed'),
-                      onPressed: onCalendar,
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      label: Text(l10n.calendarTitle),
-                    ),
-                  ),
-                  if (s.load.failure case final failure?)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            failureText(l10n, failure),
-                            key: const Key('club-rides-error'),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          key: const Key('retry-club-rides'),
-                          onPressed: () => ref
-                              .read(clubRidesViewModelProvider.notifier)
-                              .refresh(),
-                          child: Text(l10n.retry),
-                        ),
-                      ],
-                    ),
-                  if (s.load.running && s.upcoming.isEmpty && s.past.isEmpty)
-                    const Center(child: CircularProgressIndicator())
-                  else if (s.upcoming.isEmpty &&
-                      s.past.isEmpty &&
-                      s.load.failure == null)
-                    EmptyState(
-                      key: const Key('no-club-rides'),
-                      message: l10n.ridesEmpty,
-                      icon: Icons.event_available,
-                    )
-                  else ...[
-                    if (s.upcoming.isNotEmpty) ...[
-                      Text(
-                        l10n.ridesUpcoming,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      for (final ride in s.upcoming)
-                        _RideCard(ride: ride, onOpen: onOpen),
-                    ],
-                    if (s.past.isNotEmpty) ...[
-                      Text(
-                        l10n.ridesPast,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      for (final ride in s.past)
-                        _RideCard(ride: ride, onOpen: onOpen, dimmed: true),
-                    ],
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: page,
     );
   }
 }

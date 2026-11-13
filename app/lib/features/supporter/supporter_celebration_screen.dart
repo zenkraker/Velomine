@@ -155,25 +155,33 @@ class _SupporterCelebrationScreenState extends State<SupporterCelebrationScreen>
           final time = _controller.value * _totalMs;
           return LayoutBuilder(
             builder: (context, constraints) {
-              final scale = constraints.maxWidth / 390;
-              // A tall phone centres the artboard in what is left.
+              // The artboard is drawn for a 390 dp phone: it grows a little on a bigger window and
+              // then stops, instead of becoming a blown-up phone screen.
+              final scale = (constraints.maxWidth / 390).clamp(1.0, 1.35);
+              // The artboard is centred in what is left.
               final top = (constraints.maxHeight / scale - 844) / 2;
-              return Stack(
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _CelebrationPainter(time, scale, top),
-                    ),
+              return Center(
+                child: SizedBox(
+                  width: 390 * scale,
+                  height: constraints.maxHeight,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _CelebrationPainter(time, scale, top),
+                        ),
+                      ),
+                      _Overlay(
+                        time: time,
+                        scale: scale,
+                        top: top,
+                        l10n: l10n,
+                        licence: licence,
+                        onContinue: widget.onContinue,
+                      ),
+                    ],
                   ),
-                  _Overlay(
-                    time: time,
-                    scale: scale,
-                    top: top,
-                    l10n: l10n,
-                    licence: licence,
-                    onContinue: widget.onContinue,
-                  ),
-                ],
+                ),
               );
             },
           );

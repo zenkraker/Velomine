@@ -7,7 +7,11 @@ import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/toolbar_row.dart';
 import 'route_widgets.dart';
 import 'routes_state.dart';
 import 'routes_view_model.dart';
@@ -30,6 +34,88 @@ class RoutesScreen extends ConsumerWidget {
       ref.read(routesViewModelProvider.notifier).messageShown,
     );
 
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    final add = FilledButton.icon(
+      key: const Key('add-route'),
+      onPressed: onAdd,
+      icon: const Icon(Icons.add),
+      label: Text(l10n.clubAddRoute),
+    );
+    final sortAndFilters = [
+      DropdownButton<String>(
+        key: const Key('routes-sort'),
+        value: s.sort,
+        items: [
+          for (final sort in routeSortIds)
+            DropdownMenuItem(
+              value: sort,
+              child: Text(routeSortName(l10n, sort)),
+            ),
+        ],
+        onChanged: (value) {
+          if (value != null) {
+            ref.read(routesViewModelProvider.notifier).setSort(value);
+          }
+        },
+      ),
+      for (final surface in [null, ...routeSurfaceIds])
+        ChoiceChip(
+          key: Key(
+            surface == null ? 'route-surface-all' : 'route-surface-$surface',
+          ),
+          label: Text(
+            surface == null
+                ? l10n.routesFilterAll
+                : routeSurfaceName(l10n, surface),
+          ),
+          selected: s.surface == surface,
+          onSelected: (_) => ref
+              .read(routesViewModelProvider.notifier)
+              .setSurface(
+                surface != null && s.surface == surface ? null : surface,
+              ),
+        ),
+    ];
+
+    final page = PageScaffold(
+      eyebrow: l10n.routesEyebrow,
+      title: l10n.clubRoutesTitle,
+      subtitle: l10n.routesSubtitle,
+      // A phone keeps the action on the floating button, where the thumb is.
+      actions: wide ? add : null,
+      bottomPadding: wide ? AppSpacing.xl : 96,
+      children: [
+        ToolbarRow(children: sortAndFilters),
+        if (s.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('retry-routes'),
+            onRetry: () => ref.read(routesViewModelProvider.notifier).refresh(),
+          ),
+        if (s.load.running && s.routes.isEmpty)
+          const Center(child: CircularProgressIndicator())
+        else if (s.routes.isEmpty && s.load.failure == null)
+          EmptyState(
+            key: const Key('no-routes'),
+            message: l10n.clubRoutesEmpty,
+            icon: Icons.route,
+            action: OutlinedButton.icon(
+              key: const Key('add-route-empty'),
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.routesEmptyCta),
+            ),
+          )
+        else
+          CardGrid(
+            children: [
+              for (final route in s.routes)
+                _RouteCard(route: route, onOpen: onOpen),
+            ],
+          ),
+      ],
+    );
+    if (wide) return page;
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
@@ -38,98 +124,7 @@ class RoutesScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: Text(l10n.clubAddRoute),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: AppSpacing.md,
-                children: [
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      DropdownButton<String>(
-                        key: const Key('routes-sort'),
-                        value: s.sort,
-                        items: [
-                          for (final sort in routeSortIds)
-                            DropdownMenuItem(
-                              value: sort,
-                              child: Text(routeSortName(l10n, sort)),
-                            ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            ref
-                                .read(routesViewModelProvider.notifier)
-                                .setSort(value);
-                          }
-                        },
-                      ),
-                      ChoiceChip(
-                        key: const Key('route-surface-all'),
-                        label: Text(l10n.routesFilterAll),
-                        selected: s.surface == null,
-                        onSelected: (_) => ref
-                            .read(routesViewModelProvider.notifier)
-                            .setSurface(null),
-                      ),
-                      for (final surface in routeSurfaceIds)
-                        ChoiceChip(
-                          key: Key('route-surface-$surface'),
-                          label: Text(routeSurfaceName(l10n, surface)),
-                          selected: s.surface == surface,
-                          onSelected: (_) => ref
-                              .read(routesViewModelProvider.notifier)
-                              .setSurface(
-                                s.surface == surface ? null : surface,
-                              ),
-                        ),
-                    ],
-                  ),
-                  if (s.load.failure case final failure?)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            failureText(l10n, failure),
-                            key: const Key('routes-error'),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          key: const Key('retry-routes'),
-                          onPressed: () => ref
-                              .read(routesViewModelProvider.notifier)
-                              .refresh(),
-                          child: Text(l10n.retry),
-                        ),
-                      ],
-                    ),
-                  if (s.load.running && s.routes.isEmpty)
-                    const Center(child: CircularProgressIndicator())
-                  else if (s.routes.isEmpty && s.load.failure == null)
-                    EmptyState(
-                      key: const Key('no-routes'),
-                      message: l10n.clubRoutesEmpty,
-                      icon: Icons.route,
-                    )
-                  else
-                    for (final route in s.routes)
-                      _RouteCard(route: route, onOpen: onOpen),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: page,
     );
   }
 }

@@ -8,7 +8,6 @@ using Velomine.Server.Features.Bikes;
 
 namespace Velomine.Server.Tests.Bikes;
 
-[Collection("postgres")]
 public sealed class TemplateTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -233,12 +232,11 @@ public sealed class TemplateTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Template_ShouldNotBeVisible_WhenRequestComesFromAnotherTenant()
+    public async Task Template_ShouldBeEachMembersOwn_WhenTwoMembersShareTheServer()
     {
-        await using var one = await StartAsync();
-        await using var two = await StartAsync();
-        var mine = await NewMemberAsync(one);
-        var theirs = await NewMemberAsync(two);
+        await using var api = await StartAsync();
+        var mine = await NewMemberAsync(api);
+        var theirs = await NewMemberAsync(api);
         await CreateTemplateAsync(mine, Template());
 
         var list = await theirs.GetFromJsonAsync<ListTemplatesResponse>("/api/v1/bikes/templates", Ct);

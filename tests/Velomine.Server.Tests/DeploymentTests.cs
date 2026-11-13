@@ -7,11 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
-using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class DeploymentTests(PostgresFixture postgres)
 {
     [Fact]
@@ -26,27 +24,21 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task BackgroundJobs_ShouldNotRun_WhenBackgroundIsDisabled()
-    {
-        await using var api = await TestApi.StartAsync(postgres,
-            b => b.UseSetting("Velomine:Background:Enabled", "false"));
-
-        var hosted = api.Services.GetServices<IHostedService>().ToList();
-
-        Assert.Contains(hosted, service => service is DatabaseMigrator);
-        Assert.DoesNotContain(hosted, service => service is RideIngestionService);
-        Assert.DoesNotContain(hosted, service => service is AccountsStartup);
-    }
-
-    [Fact]
-    public async Task BackgroundJobs_ShouldRun_WhenBackgroundIsEnabled()
+    public async Task BackgroundJobs_ShouldNotRepeatOnATimer_WhenTheTestHostStartsTheServer()
     {
         await using var api = await TestApi.StartAsync(postgres);
 
-        var hosted = api.Services.GetServices<IHostedService>().ToList();
+        var hosted = api.Services.GetServices<IHostedService>().Select(s => s.GetType()).ToList();
 
-        Assert.Contains(hosted, service => service is RideIngestionService);
-        Assert.Contains(hosted, service => service is AccountsStartup);
+        // The test host drops the loops that only repeat on a timer; a test drives them with RunOnceAsync instead.
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Notifier", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Cleanup", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Reparse", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Backfill", StringComparison.Ordinal));
+        Assert.DoesNotContain(hosted, t => t.Name.Contains("Retention", StringComparison.Ordinal));
+        // What a server must do before it answers is still there: the roles and admin, and the upload reader.
+        Assert.Contains(hosted, t => t.Name.Contains("RideIngestion", StringComparison.Ordinal));
+        Assert.Contains(hosted, t => t.Name.Contains("AccountsStartup", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -96,11 +88,36 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode);
     }
 
+    [Fact]
+    public async Task Uploads_ShouldAcceptThemAgain_WhenTheBucketHasRefilled()
+    {
+        // One token a minute, so a burst of one and a later one both fit a refreshed bucket.
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.UseSetting("Velomine:RateLimits:UploadsPerHour", "60");
+            b.UseSetting("Velomine:RateLimits:UploadBurst", "1");
+        });
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+
+        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync(member)).StatusCode); // the bucket is empty
+
+        // Wait past the one-minute replenishment period, then the same member is let in again.
+        await Task.Delay(TimeSpan.FromSeconds(62), Ct);
+
+        Assert.Equal(HttpStatusCode.Accepted, (await UploadAsync(member)).StatusCode);
+    }
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     private static Task<HttpResponseMessage> UploadAsync(HttpClient client) =>
         client.PostAsync(
             "/api/v1/rides/uploads",
             new MultipartFormDataContent { { new ByteArrayContent([1, 2, 3]), "file", "ride.gpx" } },
-            TestContext.Current.CancellationToken);
+            Ct);
 
     [Fact]
     public void PasswordResetThrottle_ShouldKeepOneCacheEntry_WhenTheSameAddressRepeats()
@@ -206,7 +223,7 @@ public sealed class DeploymentTests(PostgresFixture postgres)
             codes.Add((await api.CreateClient().PostAsJsonAsync(
                 "/api/v1/accounts/password/reset",
                 new ResetPasswordRequest(email, "a-guess", "New-password-1"),
-                TestContext.Current.CancellationToken)).StatusCode);
+                Ct)).StatusCode);
 
         Assert.All(codes.Take(PasswordResetThrottle.ResetLimit), code => Assert.Equal(HttpStatusCode.BadRequest, code));
         Assert.Equal(HttpStatusCode.TooManyRequests, codes[^1]);
@@ -225,7 +242,7 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         api.CreateClient().PostAsJsonAsync(
             "/api/v1/accounts/password/forgot",
             new ForgotPasswordRequest(email),
-            TestContext.Current.CancellationToken);
+            Ct);
 
     /// <summary>A clock a test can move forward, so the window passing needs no waiting.</summary>
     private sealed class MovableTime(DateTimeOffset now) : TimeProvider

@@ -10,7 +10,12 @@ import '../../core/units.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/card_grid.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/toolbar_row.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../sharing/sharing_state.dart';
 import '../sharing/sharing_view_model.dart';
@@ -19,9 +24,11 @@ import '../calendar/club_rides_view_model.dart';
 import '../routes/route_widgets.dart';
 import '../routes/routes_view_model.dart';
 import 'club_view_model.dart';
+import 'club_state.dart';
 import 'join_requests_state.dart';
 import 'join_requests_view_model.dart';
 import 'location_picker.dart';
+import 'nearby_clubs_state.dart';
 import 'nearby_clubs_view_model.dart';
 import '../../core/tokens.dart';
 
@@ -274,302 +281,169 @@ class ClubScreen extends ConsumerWidget {
     );
 
     final club = clubState.club;
-    if (club == null) {
-      if (clubState.load.running && !clubState.loaded) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      return ListView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: AppSpacing.md,
-                    children: [
-                      Text(
-                        l10n.clubNoneTitle,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Text(l10n.clubNoneBody),
-                      if (nearby.request != null) ...[
-                        const Divider(),
-                        Text(
-                          l10n.nearbyPendingTitle(nearby.request!.clubName),
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Text(l10n.nearbyPendingBody),
-                        if (nearby.request!.note != null)
-                          Text('“${nearby.request!.note}”'),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            key: const Key('cancel-join-request'),
-                            onPressed: nearby.action.running
-                                ? null
-                                : () => ref
-                                      .read(
-                                        nearbyClubsViewModelProvider.notifier,
-                                      )
-                                      .cancelRequest(),
-                            child: Text(l10n.nearbyCancel),
-                          ),
-                        ),
-                      ],
-                      if (clubState.load.failure case final failure?)
-                        Text(
-                          failureText(l10n, failure),
-                          key: const Key('club-error'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: 8,
-                        children: [
-                          FilledButton.icon(
-                            key: const Key('go-nearby-clubs'),
-                            onPressed: onOpenClubs,
-                            icon: const Icon(Icons.explore_outlined),
-                            label: Text(l10n.clubSeeNearby),
-                          ),
-                          OutlinedButton.icon(
-                            key: const Key('go-join-club'),
-                            onPressed: onJoin,
-                            icon: const Icon(Icons.group_add),
-                            label: Text(l10n.joinTitle),
-                          ),
-                          if (clubState.canStartClub)
-                            OutlinedButton.icon(
-                              key: const Key('go-start-club'),
-                              onPressed: onStartClub,
-                              icon: const Icon(Icons.add_circle_outline),
-                              label: Text(l10n.startClubButton),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
+    if (club == null) return _noClub(context, ref, clubState, nearby);
 
     final owner = club.myRole == 'owner';
     final coach = owner || club.myRole == 'coach';
-    final members = club.members;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+
+    // What the club's owner looks after. Paired on a desktop window, one under the other on a tablet.
+    final manage = <Widget>[
+      if (club.plan case final plan?) _planCard(context, plan),
+      if (owner)
+        _requestsCard(
+          context,
+          ref,
+          requests,
+          onApprove: (request) =>
+              _decideJoinRequest(context, ref, request, approve: true),
+          onDecline: (request) =>
+              _decideJoinRequest(context, ref, request, approve: false),
+        ),
+      if (owner && club.joinCode != null)
+        _joinCodeCard(context, ref, club.joinCode!, clubState),
+      if (owner)
+        _locationCard(context, ref, club, busy: clubState.action.running),
+      _membersCard(context, ref, club, owner: owner),
+      if (coach) _athletesCard(context),
+      _SharingCard(
+        state: sharing,
+        onChoose: ({rides, analytics, routes, wellbeing}) => ref
+            .read(sharingViewModelProvider.notifier)
+            .choose(
+              rides: rides,
+              analytics: analytics,
+              routes: routes,
+              wellbeing: wellbeing,
+            ),
+      ),
+    ];
+
+    return PageScaffold(
+      eyebrow: l10n.eyebrowClub,
+      title: l10n.navClub,
+      subtitle: l10n.clubSubtitle,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
+        _ClubHeader(club: club),
+        if (!club.isActive)
+          Card(
+            color: Theme.of(context).colorScheme.errorContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text(l10n.clubInactive, key: const Key('club-inactive')),
+            ),
+          ),
+        if (clubState.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('club-error'),
+            onRetry: clubState.load.running
+                ? null
+                : ref.read(clubViewModelProvider.notifier).refresh,
+          ),
+        SectionHeading(title: l10n.clubRidesTitle),
+        _ridesSection(context, ref, canPlan: coach),
+        SectionHeading(title: l10n.clubRoutesTitle),
+        _routesSection(context, ref),
+        SectionHeading(title: l10n.clubMembers),
+        if (wide)
+          CardGrid(columns: 2, children: manage)
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.lg,
+            children: manage,
+          ),
+        // Leaving ends the member's place in the club: last on the page, away from the rest.
+        _leaveCard(context, ref, owner: owner, busy: clubState.action.running),
+      ],
+    );
+  }
+
+  /// The page for a member without a club: the one thing to do, and the invitation that is waiting.
+  Widget _noClub(
+    BuildContext context,
+    WidgetRef ref,
+    ClubState clubState,
+    NearbyClubsState nearby,
+  ) {
+    final l10n = context.l10n;
+    if (clubState.load.running && !clubState.loaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return PageScaffold(
+      eyebrow: l10n.eyebrowClub,
+      title: l10n.clubNoneTitleShort,
+      subtitle: l10n.clubNoneSubtitle,
+      children: [
+        if (clubState.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('club-error'),
+            onRetry: clubState.load.running
+                ? null
+                : ref.read(clubViewModelProvider.notifier).refresh,
+          ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.md,
               children: [
-                Row(
+                Text(
+                  l10n.clubNoneTitle,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                Text(l10n.clubNoneBody),
+                // One row of choices with one weight: the main way first, the alternatives beside it.
+                ToolbarRow(
                   children: [
-                    Expanded(
-                      child: Text(
-                        club.name,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
+                    FilledButton.icon(
+                      key: const Key('go-nearby-clubs'),
+                      onPressed: onOpenClubs,
+                      icon: const Icon(Icons.explore_outlined),
+                      label: Text(l10n.clubSeeNearby),
                     ),
-                    Chip(label: Text(clubRoleName(l10n, club.myRole))),
+                    OutlinedButton.icon(
+                      key: const Key('go-join-club'),
+                      onPressed: onJoin,
+                      icon: const Icon(Icons.group_add),
+                      label: Text(l10n.joinTitle),
+                    ),
+                    if (clubState.canStartClub)
+                      TextButton.icon(
+                        key: const Key('go-start-club'),
+                        onPressed: onStartClub,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: Text(l10n.startClubButton),
+                      ),
                   ],
                 ),
-                if (!club.isActive)
-                  Card(
-                    color: Theme.of(context).colorScheme.errorContainer,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Text(
-                        l10n.clubInactive,
-                        key: const Key('club-inactive'),
-                      ),
-                    ),
-                  ),
-                if (clubState.load.failure case final failure?)
-                  Text(
-                    failureText(l10n, failure),
-                    key: const Key('club-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                if (club.plan case final plan?) _planCard(context, plan),
-                if (owner)
-                  _requestsCard(
-                    context,
-                    ref,
-                    requests,
-                    onApprove: (request) => _decideJoinRequest(
-                      context,
-                      ref,
-                      request,
-                      approve: true,
-                    ),
-                    onDecline: (request) => _decideJoinRequest(
-                      context,
-                      ref,
-                      request,
-                      approve: false,
-                    ),
-                  ),
-                if (owner && club.joinCode != null) ...[
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: AppSpacing.sm,
-                        children: [
-                          Text(
-                            l10n.clubJoinCode,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          SelectableText(
-                            club.joinCode!,
-                            key: const Key('join-code-value'),
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(letterSpacing: 4),
-                          ),
-                          Text(
-                            l10n.clubJoinCodeHelp,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            children: [
-                              OutlinedButton.icon(
-                                key: const Key('copy-join-link'),
-                                onPressed: () => _copy(context, club.joinCode!),
-                                icon: const Icon(Icons.link),
-                                label: Text(l10n.clubCopy),
-                              ),
-                              TextButton.icon(
-                                key: const Key('new-join-code'),
-                                onPressed: clubState.action.running
-                                    ? null
-                                    : () => _rotateCode(context, ref),
-                                icon: const Icon(Icons.refresh),
-                                label: Text(l10n.clubNewCode),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                if (owner)
-                  _locationCard(
-                    context,
-                    ref,
-                    club,
-                    busy: clubState.action.running,
-                  ),
-                _ridesSection(context, ref, canPlan: coach),
-                _routesSection(context, ref),
-                Text(
-                  l10n.clubMembers,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                Card(
-                  child: Column(
-                    children: [
-                      for (final member in members)
-                        ListTile(
-                          key: Key('member-${member.userId}'),
-                          leading: const Icon(Icons.account_circle_outlined),
-                          title: Text(member.displayName),
-                          subtitle: Text(clubRoleName(l10n, member.role)),
-                          trailing: owner && member.role != 'owner'
-                              ? PopupMenuButton<String>(
-                                  key: Key('member-menu-${member.userId}'),
-                                  tooltip: l10n.changeRoles,
-                                  onSelected: (role) => ref
-                                      .read(clubViewModelProvider.notifier)
-                                      .setRole(member.userId, role),
-                                  itemBuilder: (_) => [
-                                    if (member.role != 'coach')
-                                      PopupMenuItem(
-                                        value: 'coach',
-                                        child: Text(l10n.clubMakeCoach),
-                                      ),
-                                    if (member.role != 'member')
-                                      PopupMenuItem(
-                                        value: 'member',
-                                        child: Text(l10n.clubMakeMember),
-                                      ),
-                                  ],
-                                )
-                              : null,
-                        ),
-                    ],
-                  ),
-                ),
-                if (coach) ...[
-                  Text(
-                    l10n.athletesTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.people_outline),
-                      title: Text(l10n.athletesTitle),
-                      trailing: TextButton(
-                        key: const Key('open-athletes'),
-                        onPressed: onOpenAthletes,
-                        child: Text(l10n.coachViewAthletes),
-                      ),
-                    ),
-                  ),
-                ],
-                _SharingCard(
-                  state: sharing,
-                  onChoose: ({rides, analytics, routes, wellbeing}) => ref
-                      .read(sharingViewModelProvider.notifier)
-                      .choose(
-                        rides: rides,
-                        analytics: analytics,
-                        routes: routes,
-                        wellbeing: wellbeing,
-                      ),
-                ),
-                if (!owner)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: OutlinedButton.icon(
-                      key: const Key('leave-club'),
-                      onPressed: clubState.action.running
-                          ? null
-                          : () => _leave(context, ref),
-                      icon: const Icon(Icons.logout),
-                      label: Text(l10n.clubLeave),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  )
-                else
-                  Text(
-                    l10n.clubOwnerCannotLeave,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
               ],
             ),
           ),
         ),
+        if (nearby.request case final request?)
+          SectionCard(
+            title: l10n.nearbyPendingTitle(request.clubName),
+            description: l10n.nearbyPendingBody,
+            children: [
+              if (request.note != null) Text('“${request.note}”'),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  key: const Key('cancel-join-request'),
+                  onPressed: nearby.action.running
+                      ? null
+                      : () => ref
+                            .read(nearbyClubsViewModelProvider.notifier)
+                            .cancelRequest(),
+                  child: Text(l10n.nearbyCancel),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -632,6 +506,145 @@ class ClubScreen extends ConsumerWidget {
     );
   }
 
+  Widget _joinCodeCard(
+    BuildContext context,
+    WidgetRef ref,
+    String code,
+    ClubState clubState,
+  ) {
+    final l10n = context.l10n;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Text(
+              l10n.clubJoinCode,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            SelectableText(
+              code,
+              key: const Key('join-code-value'),
+              style: Theme.of(context).textTheme.headlineSmall
+                  ?.copyWith(letterSpacing: 4),
+            ),
+            Text(
+              l10n.clubJoinCodeHelp,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            ToolbarRow(
+              children: [
+                OutlinedButton.icon(
+                  key: const Key('copy-join-link'),
+                  onPressed: () => _copy(context, code),
+                  icon: const Icon(Icons.link),
+                  label: Text(l10n.clubCopy),
+                ),
+                TextButton.icon(
+                  key: const Key('new-join-code'),
+                  onPressed: clubState.action.running
+                      ? null
+                      : () => _rotateCode(context, ref),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l10n.clubNewCode),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _membersCard(
+    BuildContext context,
+    WidgetRef ref,
+    ClubResponse club, {
+    required bool owner,
+  }) {
+    final l10n = context.l10n;
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final member in club.members)
+            ListTile(
+              key: Key('member-${member.userId}'),
+              leading: const Icon(Icons.account_circle_outlined),
+              title: Text(member.displayName),
+              subtitle: Text(clubRoleName(l10n, member.role)),
+              trailing: owner && member.role != 'owner'
+                  ? PopupMenuButton<String>(
+                      key: Key('member-menu-${member.userId}'),
+                      tooltip: l10n.changeRoles,
+                      onSelected: (role) => ref
+                          .read(clubViewModelProvider.notifier)
+                          .setRole(member.userId, role),
+                      itemBuilder: (_) => [
+                        if (member.role != 'coach')
+                          PopupMenuItem(
+                            value: 'coach',
+                            child: Text(l10n.clubMakeCoach),
+                          ),
+                        if (member.role != 'member')
+                          PopupMenuItem(
+                            value: 'member',
+                            child: Text(l10n.clubMakeMember),
+                          ),
+                      ],
+                    )
+                  : null,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _athletesCard(BuildContext context) {
+    final l10n = context.l10n;
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.people_outline),
+        title: Text(l10n.athletesTitle),
+        trailing: TextButton(
+          key: const Key('open-athletes'),
+          onPressed: onOpenAthletes,
+          child: Text(l10n.coachViewAthletes),
+        ),
+      ),
+    );
+  }
+
+  /// Leaving a club ends the member's place in it, so it is the last thing here and quietly styled.
+  Widget _leaveCard(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool owner,
+    required bool busy,
+  }) {
+    final l10n = context.l10n;
+    if (owner) {
+      return Text(
+        l10n.clubOwnerCannotLeave,
+        style: Theme.of(context).textTheme.bodySmall,
+      );
+    }
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        key: const Key('leave-club'),
+        onPressed: busy ? null : () => _leave(context, ref),
+        style: TextButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.error,
+        ),
+        icon: const Icon(Icons.logout),
+        label: Text(l10n.clubLeave),
+      ),
+    );
+  }
+
   /// The next few club rides, with the way to the whole calendar and to planning one.
   Widget _ridesSection(
     BuildContext context,
@@ -672,8 +685,7 @@ class ClubScreen extends ConsumerWidget {
               ),
               onTap: () => onOpenRide(ride.id),
             ),
-        Wrap(
-          spacing: AppSpacing.sm,
+        ToolbarRow(
           children: [
             TextButton(
               key: const Key('open-club-rides'),
@@ -729,8 +741,7 @@ class ClubScreen extends ConsumerWidget {
               ),
               onTap: () => onOpenRoute(route.id),
             ),
-        Wrap(
-          spacing: AppSpacing.sm,
+        ToolbarRow(
           children: [
             TextButton(
               key: const Key('open-club-routes'),
@@ -824,8 +835,7 @@ class ClubScreen extends ConsumerWidget {
                 if (request.note != null) Text('“${request.note}”'),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Wrap(
-                    spacing: AppSpacing.sm,
+                  child: ToolbarRow(
                     children: [
                       TextButton(
                         key: Key('decline-${request.id}'),
@@ -876,12 +886,22 @@ class ClubScreen extends ConsumerWidget {
               l10n.clubLocationHelp,
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            Text(
-              hasPoint
-                  ? '${club.latitude!.toStringAsFixed(5)}, '
-                        '${club.longitude!.toStringAsFixed(5)}'
-                  : l10n.clubLocationNone,
-              key: const Key('club-location-value'),
+            // The point a club is found by, as a person reads a map, not a raw pair of coordinates.
+            Row(
+              spacing: AppSpacing.sm,
+              children: [
+                Icon(
+                  hasPoint ? Icons.place : Icons.place_outlined,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                Expanded(
+                  child: Text(
+                    hasPoint ? l10n.clubLocationOnMap : l10n.clubLocationNone,
+                    key: const Key('club-location-value'),
+                  ),
+                ),
+              ],
             ),
             Align(
               alignment: Alignment.centerLeft,
@@ -910,6 +930,57 @@ class ClubScreen extends ConsumerWidget {
               onChanged: busy
                   ? null
                   : (value) => _toggleDiscoverable(context, ref, club, value),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The top of the club page: the name, the person's role, how many ride here, and the join code
+/// when they own it — the handful of facts the rest of the page builds on.
+class _ClubHeader extends StatelessWidget {
+  const _ClubHeader({required this.club});
+
+  final ClubResponse club;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Text(
+              club.name,
+              style: text.headlineSmall,
+              semanticsLabel: club.name,
+            ),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Chip(
+                  label: Text(clubRoleName(l10n, club.myRole)),
+                  backgroundColor: scheme.primaryContainer,
+                  side: BorderSide.none,
+                  visualDensity: VisualDensity.compact,
+                ),
+                Text(
+                  l10n.clubMemberCount(club.members.length),
+                  style: text.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

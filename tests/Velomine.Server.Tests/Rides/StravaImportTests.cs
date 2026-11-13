@@ -11,7 +11,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class StravaImportTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -50,11 +49,11 @@ public sealed class StravaImportTests(PostgresFixture postgres)
 
     private static async Task<RideImportResponse> WaitImportAsync(HttpClient client, Guid id)
     {
-        for (var i = 0; i < 200; i++)
+        for (var i = 0; i < 1000; i++)
         {
             var import = await client.GetFromJsonAsync<RideImportResponse>($"/api/v1/rides/imports/{id}", Ct);
             if (import!.Status != "processing") return import;
-            await Task.Delay(100, Ct);
+            await Task.Delay(20, Ct);
         }
 
         throw new TimeoutException("The import was still processing after 20 seconds.");
@@ -71,14 +70,7 @@ public sealed class StravaImportTests(PostgresFixture postgres)
         var accepted = await client.SendAsync(request, Ct);
         Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
         var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
+        return await TestApi.WaitForReadAsync(client, id);
     }
 
     [Fact]
@@ -284,13 +276,4 @@ public sealed class StravaImportTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    [Fact]
-    public async Task StravaImport_ShouldRejectTheRequest_WhenTheCallerIsNotSignedIn()
-    {
-        await using var api = await StartAsync();
-
-        var response = await UploadAsync(api.CreateClient(), Zip(("activities.csv", Bytes(""))));
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
 }

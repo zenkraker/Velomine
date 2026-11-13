@@ -10,7 +10,6 @@ using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class PowerBestsBackfillTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -5,7 +5,10 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import 'coach_athletes_view_model.dart';
-import '../../core/tokens.dart';
+import '../../core/widgets/card_grid.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_scaffold.dart';
 
 /// The athletes in this club who share rides or training.
 class CoachAthletesScreen extends ConsumerWidget {
@@ -22,57 +25,56 @@ class CoachAthletesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(coachAthletesViewModelProvider(clubId));
     final l10n = context.l10n;
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return PageScaffold(
+      eyebrow: l10n.navGroupClub,
+      title: l10n.athletesTitle,
+      subtitle: l10n.athletesSubtitle,
       children: [
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                if (s.load.failure case final failure?)
-                  Text(
-                    failureText(l10n, failure),
-                    key: const Key('coach-athletes-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                if (s.load.running && s.athletes.isEmpty)
-                  const Center(child: CircularProgressIndicator())
-                else if (s.athletes.isEmpty)
-                  Text(l10n.athletesEmpty, key: const Key('no-athletes')),
-                for (final athlete in s.athletes)
-                  Card(
-                    key: Key('athlete-${athlete.userId}'),
-                    child: ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: Text(athlete.displayName),
-                      subtitle: Text(
-                        [
-                          if (athlete.lastRideAt != null)
-                            l10n.lastRideOn(dateTime(athlete.lastRideAt)),
-                          if (athlete.tss7 != null)
-                            '${l10n.days7}: ${athlete.tss7!.round()} TSS',
-                          if (athlete.tss42 != null)
-                            '${l10n.days42}: ${athlete.tss42!.round()} TSS',
-                          if (athlete.lastRideAt == null &&
-                              athlete.tss7 == null) ...[
-                            if (athlete.sharesRides) l10n.sharesRides,
-                            if (athlete.sharesAnalytics) l10n.sharesTraining,
-                            if (athlete.sharesWellbeing) l10n.sharesWellbeing,
-                          ],
-                        ].join(' · '),
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => onOpen(athlete.userId),
-                    ),
-                  ),
-              ],
-            ),
+        if (s.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('coach-athletes-error'),
+            onRetry: () => ref
+                .read(coachAthletesViewModelProvider(clubId).notifier)
+                .refresh(),
           ),
+        if (s.load.running && s.athletes.isEmpty)
+          const Center(child: CircularProgressIndicator())
+        else if (s.athletes.isEmpty)
+          EmptyState(
+            key: const Key('no-athletes'),
+            message: l10n.athletesEmpty,
+            icon: Icons.people_outline,
+          ),
+        CardGrid(
+          children: [
+            for (final athlete in s.athletes)
+              Card(
+                key: Key('athlete-${athlete.userId}'),
+                child: ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(athlete.displayName),
+                  subtitle: Text(
+                    [
+                      if (athlete.lastRideAt != null)
+                        l10n.lastRideOn(dateTime(athlete.lastRideAt)),
+                      if (athlete.tss7 != null)
+                        '${l10n.days7}: ${athlete.tss7!.round()} TSS',
+                      if (athlete.tss42 != null)
+                        '${l10n.days42}: ${athlete.tss42!.round()} TSS',
+                      if (athlete.lastRideAt == null &&
+                          athlete.tss7 == null) ...[
+                        if (athlete.sharesRides) l10n.sharesRides,
+                        if (athlete.sharesAnalytics) l10n.sharesTraining,
+                        if (athlete.sharesWellbeing) l10n.sharesWellbeing,
+                      ],
+                    ].join(' · '),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => onOpen(athlete.userId),
+                ),
+              ),
+          ],
         ),
       ],
     );

@@ -29,11 +29,11 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
     [NotMapped]
-    public int? MaxHeartRate => EstimateMaxHeartRate(BirthYear);
+    public int? MaxHeartRate => EstimateMaxHeartRate(BirthYear, TimeProvider.System);
 
-    public static int? EstimateMaxHeartRate(int? birthYear) =>
+    public static int? EstimateMaxHeartRate(int? birthYear, TimeProvider time) =>
         birthYear is { } year
-            ? (int)Math.Round(208 - 0.7 * Math.Clamp(DateTime.UtcNow.Year - year, 10, 100))
+            ? (int)Math.Round(208 - 0.7 * Math.Clamp(time.GetUtcNow().Year - year, 10, 100))
             : null;
 
     /// <summary>The language chosen for this account, or null to follow the device. Applies on every device.</summary>

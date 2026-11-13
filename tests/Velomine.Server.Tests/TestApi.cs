@@ -3,8 +3,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Tests;
@@ -48,6 +51,12 @@ public sealed class TestApi : IAsyncDisposable
             builder.UseSetting("Velomine:Admin:Password", AdminPassword);
             // Tests start with an empty catalogue unless they ask for the bundled seed.
             builder.UseSetting("Velomine:Catalogue:Seed", "false");
+            // The database is a clone of the migrated template, so the migration history is already current and
+            // re-running it on every server only costs time: the fixture migrated the template once.
+            // Background work stays registered, because the server's own startup needs it (the roles and admin, the
+            // upload reader, the import worker, the catalogue bootstrap all hang off the same flag). Only the jobs
+            // that repeat on a timer are dropped, plus the migration; a test drives a job with its RunOnceAsync.
+            builder.ConfigureTestServices(services => TestHost.RemoveJobs(services));
             configure?.Invoke(builder);
         });
         return new TestApi(factory, connection, filesPath);
@@ -102,14 +111,38 @@ public sealed class TestApi : IAsyncDisposable
         var accepted = await client.PostAsync("/api/v1/rides/uploads", form);
         accepted.EnsureSuccessStatusCode();
         var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>())!.RideId;
-        for (var i = 0; i < 100; i++)
+        return await WaitForReadAsync(client, id);
+    }
+
+    /// <summary>Waits until the background reader has finished with a ride that was already uploaded.</summary>
+    public static async Task<RideResponse> WaitForReadAsync(HttpClient client, Guid id)
+    {
+        for (var i = 0; i < 500; i++)
         {
             var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}");
             if (ride!.Status != "processing") return ride;
-            await Task.Delay(100);
+            await Task.Delay(20);
         }
 
         throw new TimeoutException("The ride was still processing after 10 seconds.");
+    }
+
+    /// <summary>
+    /// Waits until the notification of <paramref name="type"/> is there. A ride is marked ready before the wear and
+    /// reminder pass in the same read writes theirs, so a test that reads notifications waits for its own.
+    /// </summary>
+    public static async Task<ListNotificationsResponse> WaitForNotificationAsync(
+        HttpClient client, string type, Func<ListNotificationsResponse, bool>? until = null)
+    {
+        ListNotificationsResponse? list = null;
+        for (var i = 0; i < 500; i++)
+        {
+            list = await client.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications");
+            if (list!.Notifications.Any(n => n.Type == type) && (until is null || until(list))) return list;
+            await Task.Delay(20);
+        }
+
+        throw new TimeoutException($"No {type} notification arrived within 10 seconds.");
     }
 
     public async ValueTask DisposeAsync()

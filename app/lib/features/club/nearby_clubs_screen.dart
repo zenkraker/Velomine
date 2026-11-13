@@ -11,6 +11,7 @@ import 'location_picker.dart';
 import 'nearby_clubs_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
 
 /// The suggestion page: a rider without a club sees which clubs are within reach and may ask to join one.
 class NearbyClubsScreen extends ConsumerStatefulWidget {
@@ -113,195 +114,207 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
           onPressed: widget.onBack,
         ),
       ),
-      body: Builder(
-        builder: (context) {
-          if (s.locating) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(l10n.nearbyLocating),
-                ],
-              ),
-            );
-          }
-
-          final position = s.position;
-          if (position == null) {
-            return _WhereAreYou(
-              askedDevice: s.askedDevice,
-              onUseDevice: () =>
-                  ref.read(nearbyClubsViewModelProvider.notifier).start(),
-              onPick: () => _setSavedLocation(null),
-            );
-          }
-
-          final nextRadius = ref
-              .read(nearbyClubsViewModelProvider.notifier)
-              .nextRadius();
-          return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(nearbyClubsViewModelProvider.notifier).refresh(),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              children: [
-                Text(l10n.nearbyIntro),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.nearbyLocationHelp,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (s.usingSavedPoint) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
+      // The page keeps its own bar (it is outside the shell), but the content stops being a strip.
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppLayout.contentNarrow),
+          child: Builder(
+            builder: (context) {
+              if (s.locating) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.home_outlined,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(child: Text(l10n.nearbyHomeUsed)),
-                      TextButton(
-                        key: const Key('change-home-location'),
-                        onPressed: () => _setSavedLocation(position),
-                        child: Text(l10n.clubLocationChange),
-                      ),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(l10n.nearbyLocating),
                     ],
                   ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                Row(
+                );
+              }
+
+              final position = s.position;
+              if (position == null) {
+                return _WhereAreYou(
+                  askedDevice: s.askedDevice,
+                  onUseDevice: () =>
+                      ref.read(nearbyClubsViewModelProvider.notifier).start(),
+                  onPick: () => _setSavedLocation(null),
+                );
+              }
+
+              final nextRadius = ref
+                  .read(nearbyClubsViewModelProvider.notifier)
+                  .nextRadius();
+              return RefreshIndicator(
+                onRefresh: () =>
+                    ref.read(nearbyClubsViewModelProvider.notifier).refresh(),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                   children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: 4,
+                    Text(l10n.nearbyIntro),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.nearbyLocationHelp,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (s.usingSavedPoint) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
                         children: [
-                          for (final km in NearbyClubsViewModel.radii)
-                            ChoiceChip(
-                              key: Key('radius-$km'),
-                              label: Text(l10n.nearbyRadius(km)),
-                              selected: s.radiusKm == km,
-                              onSelected: s.action.running || s.load.running
-                                  ? null
-                                  : (_) => ref
-                                        .read(
-                                          nearbyClubsViewModelProvider.notifier,
-                                        )
-                                        .setRadius(km),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    IconButton.filledTonal(
-                      key: const Key('nearby-relocate'),
-                      tooltip: l10n.nearbyUseDevice,
-                      onPressed: () => ref
-                          .read(nearbyClubsViewModelProvider.notifier)
-                          .start(),
-                      icon: const Icon(Icons.my_location),
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton.filledTonal(
-                      key: const Key('nearby-set-location'),
-                      tooltip: l10n.nearbySetHome,
-                      onPressed: () => _setSavedLocation(position),
-                      icon: const Icon(Icons.edit_location_alt_outlined),
-                    ),
-                  ],
-                ),
-                if (s.load.failure case final failure?) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    failureText(l10n, failure),
-                    key: const Key('nearby-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-                if (s.request != null) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  Card(
-                    key: const Key('pending-join-request'),
-                    color: Theme.of(context).colorScheme.secondaryContainer
-                        .withValues(alpha: 0.5),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 6,
-                        children: [
-                          Text(
-                            l10n.nearbyPendingTitle(s.request!.clubName),
-                            style: Theme.of(context).textTheme.titleMedium,
+                          Icon(
+                            Icons.home_outlined,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                          Text(l10n.nearbyPendingBody),
-                          if (s.request!.note != null)
-                            Text('“${s.request!.note}”'),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              key: const Key('cancel-join-request'),
-                              onPressed: s.action.running
-                                  ? null
-                                  : () => ref
-                                        .read(
-                                          nearbyClubsViewModelProvider.notifier,
-                                        )
-                                        .cancelRequest(),
-                              child: Text(l10n.nearbyCancel),
-                            ),
+                          const SizedBox(width: 6),
+                          Expanded(child: Text(l10n.nearbyHomeUsed)),
+                          TextButton(
+                            key: const Key('change-home-location'),
+                            onPressed: () => _setSavedLocation(position),
+                            child: Text(l10n.clubLocationChange),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ],
-                if (s.load.running)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppSpacing.xl),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                else if (s.clubs.isEmpty && s.load.failure == null) ...[
-                  const SizedBox(height: AppSpacing.xl),
-                  EmptyState(
-                    key: const Key('nearby-empty'),
-                    message: l10n.nearbyEmpty(s.radiusKm),
-                    icon: Icons.explore_outlined,
-                  ),
-                  if (nextRadius != null) ...[
+                    ],
                     const SizedBox(height: AppSpacing.md),
-                    Center(
-                      child: TextButton(
-                        key: const Key('nearby-widen'),
-                        onPressed: s.load.running
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            spacing: AppSpacing.sm,
+                            runSpacing: 4,
+                            children: [
+                              for (final km in NearbyClubsViewModel.radii)
+                                ChoiceChip(
+                                  key: Key('radius-$km'),
+                                  label: Text(l10n.nearbyRadius(km)),
+                                  selected: s.radiusKm == km,
+                                  onSelected: s.action.running || s.load.running
+                                      ? null
+                                      : (_) => ref
+                                            .read(
+                                              nearbyClubsViewModelProvider
+                                                  .notifier,
+                                            )
+                                            .setRadius(km),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.filledTonal(
+                          key: const Key('nearby-relocate'),
+                          tooltip: l10n.nearbyUseDevice,
+                          onPressed: () => ref
+                              .read(nearbyClubsViewModelProvider.notifier)
+                              .start(),
+                          icon: const Icon(Icons.my_location),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton.filledTonal(
+                          key: const Key('nearby-set-location'),
+                          tooltip: l10n.nearbySetHome,
+                          onPressed: () => _setSavedLocation(position),
+                          icon: const Icon(Icons.edit_location_alt_outlined),
+                        ),
+                      ],
+                    ),
+                    if (s.load.failure case final failure?) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      ErrorState(
+                        message: failureText(l10n, failure),
+                        actionKey: const Key('nearby-error'),
+                        onRetry: s.load.running
                             ? null
                             : () => ref
                                   .read(nearbyClubsViewModelProvider.notifier)
-                                  .setRadius(nextRadius),
-                        child: Text(l10n.nearbyWiden),
+                                  .refresh(),
                       ),
-                    ),
+                    ],
+                    if (s.request != null) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      Card(
+                        key: const Key('pending-join-request'),
+                        color: Theme.of(context).colorScheme.secondaryContainer
+                            .withValues(alpha: 0.5),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 6,
+                            children: [
+                              Text(
+                                l10n.nearbyPendingTitle(s.request!.clubName),
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(l10n.nearbyPendingBody),
+                              if (s.request!.note != null)
+                                Text('“${s.request!.note}”'),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  key: const Key('cancel-join-request'),
+                                  onPressed: s.action.running
+                                      ? null
+                                      : () => ref
+                                            .read(
+                                              nearbyClubsViewModelProvider
+                                                  .notifier,
+                                            )
+                                            .cancelRequest(),
+                                  child: Text(l10n.nearbyCancel),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (s.load.running)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (s.clubs.isEmpty && s.load.failure == null) ...[
+                      const SizedBox(height: AppSpacing.xl),
+                      EmptyState(
+                        key: const Key('nearby-empty'),
+                        message: l10n.nearbyEmpty(s.radiusKm),
+                        icon: Icons.explore_outlined,
+                      ),
+                      if (nextRadius != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Center(
+                          child: TextButton(
+                            key: const Key('nearby-widen'),
+                            onPressed: s.load.running
+                                ? null
+                                : () => ref
+                                      .read(
+                                        nearbyClubsViewModelProvider.notifier,
+                                      )
+                                      .setRadius(nextRadius),
+                            child: Text(l10n.nearbyWiden),
+                          ),
+                        ),
+                      ],
+                    ] else
+                      for (final club in s.clubs)
+                        _ClubRow(
+                          club: club,
+                          requested: s.request?.clubId == club.id,
+                          busy: s.action.running,
+                          onAsk: () => _ask(club),
+                        ),
                   ],
-                ] else
-                  for (final club in s.clubs)
-                    _ClubRow(
-                      club: club,
-                      requested: s.request?.clubId == club.id,
-                      busy: s.action.running,
-                      onAsk: () => _ask(club),
-                    ),
-              ],
-            ),
-          );
-        },
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

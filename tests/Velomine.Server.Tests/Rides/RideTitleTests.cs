@@ -12,7 +12,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class RideTitleTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -27,21 +26,8 @@ public sealed class RideTitleTests(PostgresFixture postgres)
         return await api.SignedInClientAsync(email, TestApi.MemberPassword);
     }
 
-    private static async Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file, string name = "ride.gpx")
-    {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(file), "file", name } };
-        var accepted = await client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        for (var i = 0; i < 100; i++)
-        {
-            var ride = await client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") return ride;
-            await Task.Delay(100, Ct);
-        }
-
-        throw new TimeoutException("The ride was still processing after 10 seconds.");
-    }
+    private static Task<RideResponse> UploadAndWaitAsync(HttpClient client, byte[] file, string name = "ride.gpx") =>
+        TestApi.UploadAndWaitAsync(client, file, name);
 
     /// <summary>A GPX ride that is not named by its file, so the test decides the title.</summary>
     private static Task<RideResponse> UploadUnnamedAsync(HttpClient client, DateTime start) =>
@@ -328,11 +314,11 @@ public sealed class RideTitleTests(PostgresFixture postgres)
         var started = await client.PostAsync("/api/v1/rides/imports", form, Ct);
         Assert.Equal(HttpStatusCode.Accepted, started.StatusCode);
         var id = (await started.Content.ReadFromJsonAsync<StartRideImportResponse>(Ct))!.ImportId;
-        for (var i = 0; i < 200; i++)
+        for (var i = 0; i < 1000; i++)
         {
             var import = await client.GetFromJsonAsync<RideImportResponse>($"/api/v1/rides/imports/{id}", Ct);
             if (import!.Status != "processing") return;
-            await Task.Delay(100, Ct);
+            await Task.Delay(20, Ct);
         }
 
         throw new TimeoutException("The import was still processing after 20 seconds.");

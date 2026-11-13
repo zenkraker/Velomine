@@ -8,7 +8,6 @@ using Velomine.Server.Features.Bikes;
 
 namespace Velomine.Server.Tests.Bikes;
 
-[Collection("postgres")]
 public sealed class PartCatalogueTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -77,6 +76,25 @@ public sealed class PartCatalogueTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Component_ShouldMatchTheSharedPartByGtin_WhenTheBrandAndNameDiffer()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var bikeId = await AddBikeAsync(member);
+        // The publisher lists the pad under a code, with a barcode; the member types a different name.
+        await AddToSharedCatalogueAsync(api, "HG701 11-speed", null, "4006381333931");
+
+        var chain = await AddChainAsync(member, bikeId, Chain("Shimano", "Different name", null, "4006381333931"));
+
+        // The barcode identifies the part on its own, so the member's part is linked to the publisher's row and its
+        // GTIN is stored in the normalised fourteen-digit form.
+        Assert.NotNull(chain.PartId);
+        Assert.Equal("04006381333931", chain.Gtin);
+        // The linked part is the publisher's row, not a copy the member's entry created.
+        Assert.Single(await SearchAsync(member, "HG701"));
+    }
+
+    [Fact]
     public async Task Component_ShouldStayUnlinked_WhenThePublisherHasNotListedThePart()
     {
         await using var api = await StartAsync();
@@ -87,20 +105,6 @@ public sealed class PartCatalogueTests(PostgresFixture postgres)
 
         Assert.Null(chain.PartId);
         Assert.Empty(await SearchAsync(member, "CN-M8100"));
-    }
-
-    [Fact]
-    public async Task Component_ShouldMatchTheSharedPartByGtin_WhenTheBarcodeMatches()
-    {
-        await using var api = await StartAsync();
-        var member = await NewMemberAsync(api);
-        var bikeId = await AddBikeAsync(member);
-        await AddToSharedCatalogueAsync(api, "HG701 11-speed", null, "4006381333931");
-
-        var chain = await AddChainAsync(member, bikeId, Chain("Shimano", "Different name", null, "4006381333931"));
-
-        Assert.NotNull(chain.PartId);
-        Assert.Equal("04006381333931", chain.Gtin);
     }
 
     [Fact]
@@ -145,15 +149,14 @@ public sealed class PartCatalogueTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task PartCatalogue_ShouldNotBeVisible_WhenRequestComesFromAnotherTenant()
+    public async Task PartCatalogue_ShouldBeSharedByEveryMember_WhenThePublisherListsThePart()
     {
-        await using var one = await StartAsync();
-        await using var two = await StartAsync();
-        var mine = await NewMemberAsync(one);
-        var theirs = await NewMemberAsync(two);
-        await AddToSharedCatalogueAsync(one);
+        await using var api = await StartAsync();
+        var mine = await NewMemberAsync(api);
+        var theirs = await NewMemberAsync(api);
+        await AddToSharedCatalogueAsync(api);
 
         Assert.Single(await SearchAsync(mine, "Shimano"));
-        Assert.Empty(await SearchAsync(theirs, "Shimano"));
+        Assert.Single(await SearchAsync(theirs, "Shimano"));
     }
 }

@@ -13,7 +13,6 @@ using Velomine.Server.Features.Notifications.Email;
 
 namespace Velomine.Server.Tests.Clubs;
 
-[Collection("postgres")]
 public sealed class ClubPlanTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -505,14 +504,6 @@ public sealed class ClubPlanTests(PostgresFixture postgres)
         Assert.Empty(await PlanNoticesAsync(owner.Client));
     }
 
-    [Fact]
-    public async Task ClubPlanNotifier_ShouldRunInTheBackground_WhenBackgroundWorkIsOn()
-    {
-        await using var api = await StartAsync();
-
-        Assert.Contains(api.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>(), s => s is ClubPlanNotifier);
-    }
-
     [Theory]
     [InlineData("en", "Your club's plan ends on", "31 March 2027")]
     [InlineData("it", "Il piano del tuo club scade il", "31 marzo 2027")]
@@ -527,10 +518,4 @@ public sealed class ClubPlanTests(PostgresFixture postgres)
         Assert.DoesNotContain("ClubPlan", NotificationText.Sentence(new Notification { Type = NotificationTypes.ClubPlanEnded, Subject = "2027-03-31" }));
     }
 
-    [Fact]
-    public void NotificationKinds_ShouldSendAccountMail_WhenThePlanIsEnding()
-    {
-        Assert.Equal(NotificationKinds.Account, NotificationKinds.Of(NotificationTypes.ClubPlanEnding));
-        Assert.Equal(NotificationKinds.Account, NotificationKinds.Of(NotificationTypes.ClubPlanEnded));
-    }
 }

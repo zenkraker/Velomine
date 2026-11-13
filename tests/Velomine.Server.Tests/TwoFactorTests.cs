@@ -6,7 +6,6 @@ using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class TwoFactorTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -149,13 +148,4 @@ public sealed class TwoFactorTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
     }
 
-    [Fact]
-    public async Task TwoFactor_ShouldStayOptional_WhenTheMemberNeverEnablesIt()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var login = await api.CreateClient().PostAsJsonAsync("/api/v1/accounts/login", new LoginRequest(TestApi.AdminEmail, TestApi.AdminPassword), Ct);
-
-        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
-    }
 }

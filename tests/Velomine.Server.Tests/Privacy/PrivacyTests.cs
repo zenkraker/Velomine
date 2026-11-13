@@ -11,7 +11,6 @@ using Member = Velomine.Server.Tests.TestMember;
 
 namespace Velomine.Server.Tests.Privacy;
 
-[Collection("postgres")]
 public sealed class PrivacyTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -19,19 +18,7 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync() =>
         TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-
     private static Task<Member> NewMemberAsync(TestApi api) => api.NewMemberAsync();
-
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = owner.Email },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
 
     private static async Task JoinAsync(Member member, AdminClubResponse club) =>
         (await member.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct))
@@ -234,21 +221,32 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Privacy_ShouldAnswerUnauthorized_WhenTheTokenComesFromAnotherTenant()
+    public async Task Privacy_ShouldBeEachMembersOwn_WhenTwoMembersShareTheServer()
     {
-        await using var first = await StartAsync();
-        await using var second = await StartAsync();
-        var rider = await NewMemberAsync(first);
-        var login = await first.LoginAsync(rider.Email, TestApi.MemberPassword);
-        login.EnsureSuccessStatusCode();
-        using var json = JsonDocument.Parse(await login.Content.ReadAsStringAsync(Ct));
-        var client = second.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", json.RootElement.GetProperty("accessToken").GetString());
+        await using var api = await StartAsync();
+        var first = await NewMemberAsync(api);
+        var second = await NewMemberAsync(api);
+        (await first.Client.PutAsJsonAsync(
+            "/api/v1/privacy/settings",
+            new UpdatePrivacyRequest
+            {
+                HideHeartRate = true,
+                HidePower = true,
+                HideCadence = false,
+                HideSpeed = false,
+                HideElevation = false,
+                HideTemperature = false,
+                TrimStartM = 900,
+                TrimEndM = 0,
+            },
+            Ct)).EnsureSuccessStatusCode();
 
-        var response = await client.GetAsync("/api/v1/privacy", Ct);
+        var secondView = await second.Client.GetFromJsonAsync<PrivacyResponse>("/api/v1/privacy", Ct);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.False(secondView!.Streams.HideHeartRate);
+        Assert.False(secondView.Streams.HidePower);
+        Assert.Equal(0, secondView.TrimStartM);
+        Assert.Empty(secondView.Zones);
     }
 
     private static async Task<HttpResponseMessage> AddZoneAsync(HttpClient client, double latitude, double longitude, int radiusM) =>
@@ -267,7 +265,7 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     private async Task<(Member Owner, AdminClubResponse Club, Member Rider, Guid RideId)> SharedRideAsync(TestApi api)
     {
         var owner = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, owner);
+        var club = await TestClubs.CreateAsync(api, owner);
         var rider = await NewMemberAsync(api);
         await JoinAsync(rider, club);
         var ride = await UploadAndWaitAsync(rider.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));

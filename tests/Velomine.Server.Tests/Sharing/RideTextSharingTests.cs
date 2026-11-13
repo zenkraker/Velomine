@@ -10,7 +10,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 namespace Velomine.Server.Tests.Sharing;
 
 /// <summary>A ride's title and description, and who looked at a ride, across members and clubs.</summary>
-[Collection("postgres")]
 public sealed class RideTextSharingTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -18,67 +17,43 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync() =>
         TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    private sealed record Member(string Email, Guid Id, HttpClient Client);
-
-    private static async Task<Member> NewMemberAsync(TestApi api, string name = "Test Rider")
+    private static async Task<TestMember> NewMemberAsync(TestApi api, string name = "Test Rider")
     {
         var email = TestApi.NewEmail();
         var id = (await (await api.RegisterAsync(email, name: name)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!.Id;
-        return new Member(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
+        return new TestMember(email, id, await api.SignedInClientAsync(email, TestApi.MemberPassword));
     }
 
-    private static async Task<AdminClubResponse> CreateClubAsync(TestApi api, Member owner)
-    {
-        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var response = await admin.PostAsJsonAsync(
-            "/api/v1/admin/clubs",
-            new CreateClubRequest { Name = $"Club {Guid.NewGuid():N}", OwnerEmail = owner.Email },
-            Ct);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AdminClubResponse>(Ct))!;
-    }
-
-    private static async Task JoinAsync(Member member, AdminClubResponse club) =>
+    private static async Task JoinAsync(TestMember member, AdminClubResponse club) =>
         (await member.Client.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct))
             .EnsureSuccessStatusCode();
 
-    private static Task<HttpResponseMessage> ShareRidesAsync(Member member, string rides) =>
+    private static Task<HttpResponseMessage> ShareRidesAsync(TestMember member, string rides) =>
         member.Client.PutAsJsonAsync(
             "/api/v1/sharing",
             new UpdateSharingRequest { Rides = rides, Analytics = "none", Routes = "none", Wellbeing = "none" },
             Ct);
 
     /// <summary>Uploads a ride and gives it a title and a description.</summary>
-    private static async Task<RideResponse> NamedRideAsync(Member member, DateTime start, string title, string description)
+    private static async Task<RideResponse> NamedRideAsync(TestMember member, DateTime start, string title, string description)
     {
-        var form = new MultipartFormDataContent { { new ByteArrayContent(Fit(new FitSession(start, 120))), "file", "ride.fit" } };
-        var accepted = await member.Client.PostAsync("/api/v1/rides/uploads", form, Ct);
-        accepted.EnsureSuccessStatusCode();
-        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
-        RideResponse? ride = null;
-        for (var i = 0; i < 100; i++)
-        {
-            ride = await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{id}", Ct);
-            if (ride!.Status != "processing") break;
-            await Task.Delay(100, Ct);
-        }
-
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(start, 120)));
         var named = await member.Client.PutAsJsonAsync(
-            $"/api/v1/rides/{id}/details",
-            new SetRideDetailsRequest { Title = title, Description = description, Version = ride!.Version },
+            $"/api/v1/rides/{ride.Id}/details",
+            new SetRideDetailsRequest { Title = title, Description = description, Version = ride.Version },
             Ct);
         named.EnsureSuccessStatusCode();
         return (await named.Content.ReadFromJsonAsync<RideResponse>(Ct))!;
     }
 
-    private static string Rides(AdminClubResponse club, Member athlete) => $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides";
+    private static string Rides(AdminClubResponse club, TestMember athlete) => $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides";
 
     [Fact]
     public async Task CoachRides_ShouldShowTitleAndDescription_WhenTheCoachHasTheRidesGrant()
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await NamedRideAsync(athlete, Start, "Dawn patrol", "Cold start, warm finish");
@@ -99,7 +74,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await NamedRideAsync(athlete, Start, "Private words", "Nobody reads these");
@@ -113,13 +88,13 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await NamedRideAsync(athlete, Start, "Club ride title", "Club ride words");
         (await ShareRidesAsync(athlete, "coaches")).EnsureSuccessStatusCode();
         var strangerCoach = await NewMemberAsync(api);
-        var otherClub = await CreateClubAsync(api, strangerCoach);
+        var otherClub = await TestClubs.CreateAsync(api, strangerCoach);
 
         // Asking through the other club, or through the athlete's club, is a 404 either way.
         var throughOwnClub = await strangerCoach.Client.GetAsync(Rides(club, athlete), Ct);
@@ -139,7 +114,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         var teammate = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
@@ -154,7 +129,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
 
     // --- Who looked
 
-    private static async Task<ShareViewResponse[]> ViewsOfAsync(Member owner, Guid rideId) =>
+    private static async Task<ShareViewResponse[]> ViewsOfAsync(TestMember owner, Guid rideId) =>
         (await owner.Client.GetFromJsonAsync<ShareViewsResponse>($"/api/v1/sharing/views?rideId={rideId}", Ct))!.Views;
 
     [Fact]
@@ -162,7 +137,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api, "Marco Coach");
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var watched = await NamedRideAsync(athlete, Start, "Watched", "");
@@ -186,7 +161,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var first = await NamedRideAsync(athlete, Start, "First", "");
@@ -207,7 +182,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         var teammate = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
@@ -229,7 +204,7 @@ public sealed class RideTextSharingTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var coach = await NewMemberAsync(api);
-        var club = await CreateClubAsync(api, coach);
+        var club = await TestClubs.CreateAsync(api, coach);
         var athlete = await NewMemberAsync(api);
         await JoinAsync(athlete, club);
         var ride = await NamedRideAsync(athlete, Start, "Watched", "");
