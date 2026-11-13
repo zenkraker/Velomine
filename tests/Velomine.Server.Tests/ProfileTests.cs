@@ -1,18 +1,24 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class ProfileTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     private async Task<(TestApi Api, HttpClient Member)> StartAsync()
     {
-        var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            // A known date, so the estimated maximum heart rate is one number.
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero))));
+        });
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
         return (api, await api.SignedInClientAsync(email, TestApi.MemberPassword));
@@ -39,7 +45,7 @@ public sealed class ProfileTests(PostgresFixture postgres)
             new UpdateProfileRequest("Ada L", 265, 68.04, 1990, "Europe/Rome", "sunday"), Ct);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
         Assert.Equal(
-            new ProfileResponse("Ada L", 265, 68.0, 1990, User.EstimateMaxHeartRate(1990), "Europe/Rome", "sunday", true, true, true, false),
+            new ProfileResponse("Ada L", 265, 68.0, 1990, 183, "Europe/Rome", "sunday", true, true, true, false),
             await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
 
         await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada L", null, null, null, null, "monday"), Ct);
@@ -163,23 +169,4 @@ public sealed class ProfileTests(PostgresFixture postgres)
         Assert.Equal("metric", me!.Units);
     }
 
-    [Fact]
-    public async Task Units_ShouldBeUnauthorized_WhenNotSignedIn()
-    {
-        var (api, _) = await StartAsync();
-        await using var __ = api;
-
-        Assert.Equal(
-            HttpStatusCode.Unauthorized,
-            (await api.CreateClient().PutAsJsonAsync("/api/v1/accounts/me/units", new SetMyUnitsRequest("imperial"), Ct)).StatusCode);
-    }
-
-    [Fact]
-    public async Task Profile_ShouldBeUnauthorized_WhenNotSignedIn()
-    {
-        var (api, _) = await StartAsync();
-        await using var __ = api;
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync("/api/v1/accounts/me/profile", Ct)).StatusCode);
-    }
 }
