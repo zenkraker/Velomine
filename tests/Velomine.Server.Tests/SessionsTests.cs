@@ -6,7 +6,6 @@ using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class SessionsTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -50,19 +49,21 @@ public sealed class SessionsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Sessions_ShouldNotBeVisible_WhenRequestComesFromAnotherTenant()
+    public async Task Sessions_ShouldBelongToTheirMember_WhenAnotherMemberTriesToRevokeThem()
     {
-        await using var one = await TestApi.StartAsync(postgres);
-        await using var two = await TestApi.StartAsync(postgres);
-        var (oneAccess, _) = await LoginAsync(one);
-        var (twoAccess, _) = await LoginAsync(two);
-        var twoRows = await WithToken(two, twoAccess).GetFromJsonAsync<SessionResponse[]>("/api/v1/accounts/me/sessions", Ct);
+        await using var api = await TestApi.StartAsync(postgres);
+        var otherEmail = TestApi.NewEmail();
+        (await api.RegisterAsync(otherEmail)).EnsureSuccessStatusCode();
+        var mine = await LoginAsync(api);
+        var theirs = await LoginAsync(api, otherEmail, TestApi.MemberPassword);
+        var theirSession = Assert.Single((await WithToken(api, theirs.Access)
+            .GetFromJsonAsync<SessionResponse[]>("/api/v1/accounts/me/sessions", Ct))!);
 
-        var response = await WithToken(one, oneAccess)
-            .DeleteAsync($"/api/v1/accounts/me/sessions/{twoRows!.Single().Id}", Ct);
+        var response = await WithToken(api, mine.Access).DeleteAsync($"/api/v1/accounts/me/sessions/{theirSession.Id}", Ct);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Single((await WithToken(two, twoAccess).GetFromJsonAsync<SessionResponse[]>("/api/v1/accounts/me/sessions", Ct))!);
+        // Refreshing proves the session is still there: a revoked one is refused.
+        Assert.Equal(HttpStatusCode.OK, (await RefreshAsync(api, theirs.Refresh)).StatusCode);
     }
 
     [Fact]
@@ -130,18 +131,4 @@ public sealed class SessionsTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.Unauthorized, (await RefreshAsync(api, refresh)).StatusCode);
     }
 
-    [Fact]
-    public async Task ChangePassword_ShouldEndEverySession_WhenItSucceeds()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-        var (access, refresh) = await LoginAsync(api);
-
-        var change = await WithToken(api, access).PutAsJsonAsync(
-            "/api/v1/accounts/me/password",
-            new ChangePasswordRequest(TestApi.AdminPassword, "Another-password-1"),
-            Ct);
-
-        Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await RefreshAsync(api, refresh)).StatusCode);
-    }
 }

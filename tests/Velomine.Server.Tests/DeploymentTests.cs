@@ -6,11 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
-using Velomine.Server.Features.Rides.Ingestion;
 
 namespace Velomine.Server.Tests;
 
-[Collection("postgres")]
 public sealed class DeploymentTests(PostgresFixture postgres)
 {
     [Fact]
@@ -30,22 +28,10 @@ public sealed class DeploymentTests(PostgresFixture postgres)
         await using var api = await TestApi.StartAsync(postgres,
             b => b.UseSetting("Velomine:Background:Enabled", "false"));
 
-        var hosted = api.Services.GetServices<IHostedService>().ToList();
+        var hosted = api.Services.GetServices<IHostedService>().Select(s => s.GetType()).ToList();
 
-        Assert.Contains(hosted, service => service is DatabaseMigrator);
-        Assert.DoesNotContain(hosted, service => service is RideIngestionService);
-        Assert.DoesNotContain(hosted, service => service is AccountsStartup);
-    }
-
-    [Fact]
-    public async Task BackgroundJobs_ShouldRun_WhenBackgroundIsEnabled()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-
-        var hosted = api.Services.GetServices<IHostedService>().ToList();
-
-        Assert.Contains(hosted, service => service is RideIngestionService);
-        Assert.Contains(hosted, service => service is AccountsStartup);
+        // Only the migration runs on every instance; every job that reads or sends something waits for its owner.
+        Assert.Equal([typeof(DatabaseMigrator)], hosted);
     }
 
     [Fact]
@@ -102,16 +88,31 @@ public sealed class DeploymentTests(PostgresFixture postgres)
             TestContext.Current.CancellationToken);
 
     [Fact]
-    public void PasswordResetThrottle_ShouldKeepOneCacheEntry_WhenTheSameAddressRepeats()
+    public void PasswordResetThrottle_ShouldRefuseTheTwentyFirstAttempt_WhenTheWindowHasNotPassed()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var throttle = new PasswordResetThrottle(cache, TimeProvider.System);
+        var clock = new FixedTime(new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero));
+        var throttle = new PasswordResetThrottle(new MemoryCache(new MemoryCacheOptions()), clock);
         var context = new DefaultHttpContext();
         context.Connection.RemoteIpAddress = IPAddress.Loopback;
 
-        for (var attempt = 0; attempt < 50; attempt++)
-            throttle.Allowed("forgot", context);
+        for (var attempt = 0; attempt < PasswordResetThrottle.Limit; attempt++)
+            Assert.True(throttle.Allowed("forgot", context), $"Attempt {attempt + 1} was refused inside the budget.");
 
-        Assert.Equal(1, cache.Count);
+        Assert.False(throttle.Allowed("forgot", context));
+        Assert.True(throttle.Allowed("reset", context)); // the two endpoints have separate budgets
+    }
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldAllowAgain_WhenTheWindowHasPassed()
+    {
+        var cache = new MemoryCache(new MemoryCacheOptions());
+        var start = new DateTimeOffset(2026, 11, 13, 10, 0, 0, TimeSpan.Zero);
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = IPAddress.Loopback;
+        for (var attempt = 0; attempt < PasswordResetThrottle.Limit; attempt++)
+            new PasswordResetThrottle(cache, new FixedTime(start)).Allowed("forgot", context);
+
+        Assert.False(new PasswordResetThrottle(cache, new FixedTime(start)).Allowed("forgot", context));
+        Assert.True(new PasswordResetThrottle(cache, new FixedTime(start + PasswordResetThrottle.Window)).Allowed("forgot", context));
     }
 }

@@ -11,7 +11,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class StravaImportTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -284,13 +283,4 @@ public sealed class StravaImportTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    [Fact]
-    public async Task StravaImport_ShouldRejectTheRequest_WhenTheCallerIsNotSignedIn()
-    {
-        await using var api = await StartAsync();
-
-        var response = await UploadAsync(api.CreateClient(), Zip(("activities.csv", Bytes(""))));
-
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
 }

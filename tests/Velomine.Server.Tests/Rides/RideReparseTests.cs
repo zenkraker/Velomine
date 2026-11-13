@@ -16,7 +16,6 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Rides;
 
-[Collection("postgres")]
 public sealed class RideReparseTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -346,23 +345,21 @@ public sealed class RideReparseTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Reparse_ShouldReadOldestFirstInSmallBatches_WhenManyRidesAreWaiting()
+    public async Task Reparse_ShouldReadEveryRideAgain_WhenManyAreWaiting()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
         var file = Fit(new FitSession(Start, 60));
         var id = await UploadAsync(member, file);
         var sha = (await LoadAsync(api, id)).FileSha256;
-        var ids = await InDbAsync(api, async db =>
+        await InDbAsync(api, async db =>
         {
             var ride = await db.Rides.AsNoTracking().SingleAsync(r => r.Id == id, Ct);
-            var made = new List<Guid>();
             for (var i = 0; i < 45; i++)
             {
-                var copyId = Guid.CreateVersion7();
                 db.Rides.Add(new Ride
                 {
-                    Id = copyId,
+                    Id = Guid.CreateVersion7(),
                     UserId = member.Id,
                     Status = RideStatus.Ready,
                     FileSha256 = sha,
@@ -372,10 +369,9 @@ public sealed class RideReparseTests(PostgresFixture postgres)
                     DedupKey = $"test:{Guid.NewGuid():N}:{ride.StartTime!.Value.ToUnixTimeSeconds()}",
                     ElevationGainM = 999,
                 });
-                made.Add(copyId);
             }
             await db.SaveChangesAsync(Ct);
-            return made;
+            return 0;
         });
 
         await ReparseAsync(api);
@@ -383,7 +379,6 @@ public sealed class RideReparseTests(PostgresFixture postgres)
         var remaining = await InDbAsync(api, db => db.Rides.CountAsync(r => r.ParserVersion < Raised, Ct));
         Assert.Equal(0, remaining);
         Assert.Equal(46, await InDbAsync(api, db => db.Rides.CountAsync(r => r.ParserVersion == Raised && r.ElevationGainM < 100, Ct)));
-        Assert.Equal(45, ids.Count);
     }
 
     [Fact]
