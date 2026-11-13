@@ -12,6 +12,7 @@ class PageScaffold extends StatelessWidget {
     super.key,
     this.eyebrow,
     this.title,
+    this.titleKey,
     this.subtitle,
     this.actions,
     required this.children,
@@ -25,6 +26,9 @@ class PageScaffold extends StatelessWidget {
   final String? eyebrow;
 
   final String? title;
+
+  /// A key on the title, for a test that reads or looks for it.
+  final Key? titleKey;
 
   /// A line under the title: what the page shows, in one sentence.
   final String? subtitle;
@@ -69,6 +73,7 @@ class PageScaffold extends StatelessWidget {
                   _PageHeader(
                     eyebrow: eyebrow,
                     title: title,
+                    titleKey: titleKey,
                     subtitle: subtitle,
                     actions: actions,
                   ),
@@ -85,10 +90,17 @@ class PageScaffold extends StatelessWidget {
 }
 
 class _PageHeader extends StatelessWidget {
-  const _PageHeader({this.eyebrow, this.title, this.subtitle, this.actions});
+  const _PageHeader({
+    this.eyebrow,
+    this.title,
+    this.titleKey,
+    this.subtitle,
+    this.actions,
+  });
 
   final String? eyebrow;
   final String? title;
+  final Key? titleKey;
   final String? subtitle;
   final Widget? actions;
 
@@ -114,7 +126,7 @@ class _PageHeader extends StatelessWidget {
         if (title case final title?)
           Semantics(
             header: true,
-            child: Text(title, style: text.headlineMedium),
+            child: Text(title, key: titleKey, style: text.headlineMedium),
           ),
         if (subtitle case final subtitle?)
           Text(

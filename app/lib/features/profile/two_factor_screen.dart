@@ -6,8 +6,6 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'two_factor_view_model.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/error_state.dart';
-import '../../core/widgets/page_scaffold.dart';
 
 class TwoFactorScreen extends ConsumerStatefulWidget {
   const TwoFactorScreen({super.key});
@@ -44,19 +42,13 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
           showUserMessage(context, next.message, notifier.messageShown),
     );
 
-    return PageScaffold(
-      eyebrow: l10n.profileTitle,
-      title: l10n.twoFactorTitle,
-      maxWidth: AppLayout.contentNarrow,
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         if (state.load.running && info == null)
           const Center(child: CircularProgressIndicator())
         else if (state.load.failure case final failure?)
-          ErrorState(
-            message: failureText(l10n, failure),
-            actionKey: const Key('two-factor-error'),
-            onRetry: notifier.load,
-          )
+          Text(failureText(l10n, failure))
         else ...[
           Text(
             (info?.enabled ?? false)

@@ -231,7 +231,7 @@ void main() {
     );
     server.streams['r1'] = streamsJson();
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.byType(Card).first);
+    await tester.tap(find.byKey(const Key('ride-r1')));
     await tester.pumpAndSettle();
 
     expect(
@@ -239,6 +239,13 @@ void main() {
       findsOneWidget,
     ); // the dropdown's current value
 
+    // The map is now above the numbers, so the bike picker sits further down the page.
+    await tester.scrollUntilVisible(
+      find.byType(DropdownButtonFormField<String?>),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String?>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Gravel').last);
