@@ -39,7 +39,7 @@ public sealed class VerifyEmail(
 
     public override async Task HandleAsync(VerifyEmailRequest req, CancellationToken ct)
     {
-        if (!throttle.Allowed("verify", HttpContext))
+        if (!throttle.AllowedForEmail(req.Email))
         {
             await Send.ResponseAsync(new { error = "too_many_requests" }, 429, ct);
             return;
