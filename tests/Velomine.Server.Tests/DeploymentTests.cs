@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
@@ -106,12 +107,133 @@ public sealed class DeploymentTests(PostgresFixture postgres)
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var throttle = new PasswordResetThrottle(cache, TimeProvider.System);
-        var context = new DefaultHttpContext();
-        context.Connection.RemoteIpAddress = IPAddress.Loopback;
 
         for (var attempt = 0; attempt < 50; attempt++)
-            throttle.Allowed("forgot", context);
+            throttle.AllowedForEmail($"rider{attempt % PasswordResetThrottle.ForgotLimit}@test.local");
 
-        Assert.Equal(1, cache.Count);
+        Assert.Equal(PasswordResetThrottle.ForgotLimit, cache.Count);
+    }
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldRefuseTheNextAsk_WhenOneAccountReachesTheLimit()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var throttle = new PasswordResetThrottle(cache, new MovableTime(DateTimeOffset.UtcNow));
+
+        for (var attempt = 0; attempt < PasswordResetThrottle.ForgotLimit; attempt++)
+            Assert.True(throttle.AllowedForEmail("rider@test.local"), $"attempt {attempt + 1} inside the limit was refused");
+
+        Assert.False(throttle.AllowedForEmail("rider@test.local"));
+        // The address is matched the way people type it: case and surrounding spaces do not buy another budget.
+        Assert.False(throttle.AllowedForEmail("  Rider@Test.Local "));
+    }
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldAllowAgain_WhenTheWindowHasPassed()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var clock = new MovableTime(DateTimeOffset.UtcNow);
+        var throttle = new PasswordResetThrottle(cache, clock);
+        for (var attempt = 0; attempt < PasswordResetThrottle.ForgotLimit; attempt++) throttle.AllowedForEmail("rider@test.local");
+        Assert.False(throttle.AllowedForEmail("rider@test.local"));
+
+        clock.Advance(PasswordResetThrottle.Window);
+
+        Assert.True(throttle.AllowedForEmail("rider@test.local"));
+    }
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldNotKeepRefusing_WhenTheCallerKeepsAskingInsideTheWindow()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var clock = new MovableTime(DateTimeOffset.UtcNow);
+        var throttle = new PasswordResetThrottle(cache, clock);
+        for (var attempt = 0; attempt < PasswordResetThrottle.ForgotLimit; attempt++) throttle.AllowedForEmail("rider@test.local");
+        // A refusal must not move the window: asking again does not lock the member out for longer.
+        clock.Advance(TimeSpan.FromMinutes(14));
+        Assert.False(throttle.AllowedForEmail("rider@test.local"));
+
+        clock.Advance(TimeSpan.FromMinutes(1));
+
+        Assert.True(throttle.AllowedForEmail("rider@test.local"));
+    }
+
+    [Fact]
+    public void PasswordResetThrottle_ShouldCountEachAddressApart_WhenForgetsFromOneIpFloodTheOthers()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var throttle = new PasswordResetThrottle(cache, TimeProvider.System);
+        for (var i = 0; i < 100; i++) throttle.AllowedForEmail($"rider{i}@test.local");
+
+        Assert.True(throttle.AllowedForEmail("another@test.local"));
+        Assert.True(throttle.AllowedFromAddress(new DefaultHttpContext()));
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ShouldReturn429_WhenOneAccountAsksTooOften()
+    {
+        await using var api = await ApiWithEmailAsync();
+        var email = TestApi.NewEmail();
+
+        var codes = new List<HttpStatusCode>();
+        for (var attempt = 0; attempt <= PasswordResetThrottle.ForgotLimit; attempt++)
+            codes.Add((await ForgotAsync(api, email)).StatusCode);
+
+        Assert.All(codes.Take(PasswordResetThrottle.ForgotLimit), code => Assert.Equal(HttpStatusCode.Accepted, code));
+        Assert.Equal(HttpStatusCode.TooManyRequests, codes[^1]);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ShouldStillAnswerEveryoneElse_WhenOneAccountAsksTooOften()
+    {
+        await using var api = await ApiWithEmailAsync();
+        var flooded = TestApi.NewEmail();
+        for (var attempt = 0; attempt <= PasswordResetThrottle.ForgotLimit; attempt++) await ForgotAsync(api, flooded);
+
+        var other = await ForgotAsync(api, TestApi.NewEmail());
+
+        Assert.Equal(HttpStatusCode.Accepted, other.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldReturn429_WhenOneAddressGuessesTooOften()
+    {
+        await using var api = await ApiWithEmailAsync();
+        var email = TestApi.NewEmail();
+
+        var codes = new List<HttpStatusCode>();
+        for (var attempt = 0; attempt <= PasswordResetThrottle.ResetLimit; attempt++)
+            codes.Add((await api.CreateClient().PostAsJsonAsync(
+                "/api/v1/accounts/password/reset",
+                new ResetPasswordRequest(email, "a-guess", "New-password-1"),
+                TestContext.Current.CancellationToken)).StatusCode);
+
+        Assert.All(codes.Take(PasswordResetThrottle.ResetLimit), code => Assert.Equal(HttpStatusCode.BadRequest, code));
+        Assert.Equal(HttpStatusCode.TooManyRequests, codes[^1]);
+    }
+
+    private async Task<TestApi> ApiWithEmailAsync() =>
+        await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");
+            b.UseSetting("Velomine:Smtp:From", "velomine@club.example");
+            // The per-address policy is not what this measures; make its minute generous.
+            b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "1000");
+        });
+
+    private static Task<HttpResponseMessage> ForgotAsync(TestApi api, string email) =>
+        api.CreateClient().PostAsJsonAsync(
+            "/api/v1/accounts/password/forgot",
+            new ForgotPasswordRequest(email),
+            TestContext.Current.CancellationToken);
+
+    /// <summary>A clock a test can move forward, so the window passing needs no waiting.</summary>
+    private sealed class MovableTime(DateTimeOffset now) : TimeProvider
+    {
+        private DateTimeOffset current = now;
+
+        public override DateTimeOffset GetUtcNow() => current;
+
+        public void Advance(TimeSpan by) => current += by;
     }
 }
