@@ -96,6 +96,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.EmailNotifications,
             user.EmailAccountNotifications,
             user.EmailTrainingNotifications,
+            user.SoloTrialEndsAt,
             TelemetryConsentAt = user.TelemetryConsentAt,
             TelemetryConsentVersion = user.TelemetryConsentVersion,
             user.TelemetryCrash,

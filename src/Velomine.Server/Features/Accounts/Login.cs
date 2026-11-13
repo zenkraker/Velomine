@@ -76,7 +76,10 @@ public sealed class Login(
         }
 
         if (result.IsLockedOut) await Send.ResponseAsync(new { error = "locked_out" }, 423, ct);
-        else if (result.IsNotAllowed) await Send.ResponseAsync(new { error = "not_approved" }, 403, ct);
+        else if (result.IsNotAllowed) await Send.ResponseAsync(new { error = Refusal(user) }, 403, ct);
         else await Send.UnauthorizedAsync(ct);
     }
+
+    /// <summary>Why the account may not sign in, as the app words it: approval first, then the unconfirmed address.</summary>
+    public static string Refusal(User user) => user.IsApproved ? "email_not_confirmed" : "not_approved";
 }

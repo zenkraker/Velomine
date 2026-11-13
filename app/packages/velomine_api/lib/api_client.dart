@@ -369,6 +369,8 @@ class ApiClient {
           return RegisterResponse.fromJson(value);
         case 'RequestToJoinRequest':
           return RequestToJoinRequest.fromJson(value);
+        case 'ResendVerificationRequest':
+          return ResendVerificationRequest.fromJson(value);
         case 'ResetPasswordRequest':
           return ResetPasswordRequest.fromJson(value);
         case 'RideFeelResponse':
@@ -503,6 +505,8 @@ class ApiClient {
           return UploadRideResponse.fromJson(value);
         case 'UserSummary':
           return UserSummary.fromJson(value);
+        case 'VerifyEmailRequest':
+          return VerifyEmailRequest.fromJson(value);
         case 'Vo2MaxEstimate':
           return Vo2MaxEstimate.fromJson(value);
         case 'WellbeingConsentRequest':

@@ -66,9 +66,10 @@ void main() {
     },
   );
 
-  testWidgets('RegisterScreen_ShouldSayApprovalNeeded_WhenAccountIsNew', (
+  testWidgets('RegisterScreen_ShouldSayApprovalNeeded_WhenServerRequiresIt', (
     tester,
   ) async {
+    server.requireApproval = true;
     await startApp(tester, server.session(useCookies: false));
 
     await register(tester);
@@ -77,6 +78,37 @@ void main() {
     expect(find.textContaining('approve it'), findsOneWidget);
     expect(server.accounts['new@example.com']!.approved, isFalse);
   });
+
+  testWidgets(
+    'RegisterScreen_ShouldSayTheAccountIsReady_WhenNoApprovalIsRequired',
+    (tester) async {
+      await startApp(tester, server.session(useCookies: false));
+
+      await register(tester);
+
+      expect(find.byKey(const Key('registered')), findsOneWidget);
+      expect(find.textContaining('ready'), findsOneWidget);
+      expect(server.accounts['new@example.com']!.approved, isTrue);
+    },
+  );
+
+  testWidgets(
+    'RegisterScreen_ShouldAskToConfirmTheEmail_WhenTheServerSendsVerification',
+    (tester) async {
+      server.smtpConfigured = true;
+      await startApp(tester, server.session(useCookies: false));
+
+      await register(tester);
+
+      expect(find.byKey(const Key('registered')), findsOneWidget);
+      expect(find.textContaining('new@example.com'), findsOneWidget);
+      expect(server.verificationEmails, contains('new@example.com'));
+
+      await tester.tap(find.byKey(const Key('resend-verification')));
+      await tester.pumpAndSettle();
+      expect(server.verificationEmails, hasLength(2));
+    },
+  );
 
   testWidgets('RegisterScreen_ShouldExplainWeakPassword_WhenPasswordIsShort', (
     tester,

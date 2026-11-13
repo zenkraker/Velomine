@@ -87,6 +87,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**refresh**](doc//AccountsApi.md#refresh) | **POST** /api/v1/accounts/refresh | 
 *AccountsApi* | [**regenerateRecoveryCodes**](doc//AccountsApi.md#regeneraterecoverycodes) | **POST** /api/v1/accounts/me/two-factor/recovery-codes | 
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
+*AccountsApi* | [**resendVerification**](doc//AccountsApi.md#resendverification) | **POST** /api/v1/accounts/email/resend | 
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
 *AccountsApi* | [**revokeOtherSessions**](doc//AccountsApi.md#revokeothersessions) | **POST** /api/v1/accounts/me/sessions/logout-others | 
 *AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
@@ -97,6 +98,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**startTwoFactorEnrollment**](doc//AccountsApi.md#starttwofactorenrollment) | **POST** /api/v1/accounts/me/two-factor/start | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
+*AccountsApi* | [**verifyEmail**](doc//AccountsApi.md#verifyemail) | **POST** /api/v1/accounts/email/verify | 
 *AdminApi* | [**bikesGetCatalogue**](doc//AdminApi.md#bikesgetcatalogue) | **GET** /api/v1/admin/catalogue | 
 *AdminApi* | [**clubsCreateClub**](doc//AdminApi.md#clubscreateclub) | **POST** /api/v1/admin/clubs | 
 *AdminApi* | [**clubsListAdminClubs**](doc//AdminApi.md#clubslistadminclubs) | **GET** /api/v1/admin/clubs | 
@@ -324,6 +326,7 @@ Class | Method | HTTP request | Description
  - [RegisterRequest](doc//RegisterRequest.md)
  - [RegisterResponse](doc//RegisterResponse.md)
  - [RequestToJoinRequest](doc//RequestToJoinRequest.md)
+ - [ResendVerificationRequest](doc//ResendVerificationRequest.md)
  - [ResetPasswordRequest](doc//ResetPasswordRequest.md)
  - [RideFeelResponse](doc//RideFeelResponse.md)
  - [RideImportResponse](doc//RideImportResponse.md)
@@ -391,6 +394,7 @@ Class | Method | HTTP request | Description
  - [UpdateTemplateRequest](doc//UpdateTemplateRequest.md)
  - [UploadRideResponse](doc//UploadRideResponse.md)
  - [UserSummary](doc//UserSummary.md)
+ - [VerifyEmailRequest](doc//VerifyEmailRequest.md)
  - [Vo2MaxEstimate](doc//Vo2MaxEstimate.md)
  - [WellbeingConsentRequest](doc//WellbeingConsentRequest.md)
  - [WellbeingResponse](doc//WellbeingResponse.md)

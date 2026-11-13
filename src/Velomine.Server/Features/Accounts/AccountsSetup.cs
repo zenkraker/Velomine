@@ -34,6 +34,7 @@ public static class AccountsSetup
         services.AddSingleton<TwoFactorChallenges>();
         services.AddSingleton<ExportTokens>();
         services.AddScoped<PasswordResetLinks>();
+        services.AddScoped<EmailVerificationLinks>();
         services.AddSingleton<PasswordResetThrottle>();
         services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = PasswordResetLinks.Lifetime);
 

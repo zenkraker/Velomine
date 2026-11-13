@@ -36,6 +36,7 @@ class FakeAccount {
     List<String> roles = const ['member'],
     this.language,
     this.units = 'metric',
+    this.soloTrialEndsAt,
   }) : id = 'id-${email.hashCode.abs()}',
        roles = [...roles];
 
@@ -51,6 +52,9 @@ class FakeAccount {
   String units;
   bool telemetryCrash = false;
   bool telemetryUsage = false;
+
+  /// The last day of the solo trial, the way the profile reports it.
+  String? soloTrialEndsAt;
 }
 
 /// A tiny stand-in for the Velomine server, answering the calls the app makes.
@@ -197,6 +201,13 @@ class FakeServer {
   };
   bool smtpConfigured = false;
 
+  /// Whether a new account waits for an admin; off is the server's default now.
+  bool requireApproval = false;
+
+  /// Addresses that the confirmation email went to, and the ones that opened the link.
+  final List<String> verificationEmails = [];
+  final Set<String> confirmedEmails = {};
+
   /// How many export download links were asked for.
   int exportLinks = 0;
 
@@ -264,6 +275,7 @@ class FakeServer {
     String? clubRole = 'member',
     String? language,
     String units = 'metric',
+    String? soloTrialEndsAt,
   }) {
     final account = FakeAccount(
       email,
@@ -273,6 +285,7 @@ class FakeServer {
       name: name,
       language: language,
       units: units,
+      soloTrialEndsAt: soloTrialEndsAt,
     );
     accounts[email] = account;
     if (clubRole != null) clubRoles[email] = clubRole;
@@ -401,6 +414,9 @@ class FakeServer {
       if (!account.approved) {
         return http.Response('{"error":"not_approved"}', 403);
       }
+      if (smtpConfigured && !confirmedEmails.contains(account.email)) {
+        return http.Response('{"error":"email_not_confirmed"}', 403);
+      }
       if (account.twoFactorEnabled) {
         return http.Response(
           jsonEncode({
@@ -483,11 +499,38 @@ class FakeServer {
       final account = add(
         body['email']! as String,
         password: body['password']! as String,
-        approved: false,
+        approved: !requireApproval,
         name: body['displayName']! as String,
         clubRole: null,
       );
-      return json({'id': account.id, 'isApproved': account.approved}, 201);
+      // Email on means a confirmation email went out and the address is not confirmed yet.
+      if (smtpConfigured) verificationEmails.add(account.email);
+      return json({
+        'id': account.id,
+        'isApproved': account.approved,
+        'emailConfirmationRequired': smtpConfigured,
+      }, 201);
+    }
+    if (path == '/api/v1/accounts/email/verify') {
+      if (!smtpConfigured) {
+        return http.Response('{"error":"email_not_configured"}', 503);
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final email = body['email']! as String;
+      if (accounts[email] == null || body['token'] != 'good-token') {
+        return http.Response('{"error":"invalid_token"}', 400);
+      }
+      confirmedEmails.add(email);
+      return http.Response('', 204);
+    }
+    if (path == '/api/v1/accounts/email/resend') {
+      if (!smtpConfigured) {
+        return http.Response('{"error":"email_not_configured"}', 503);
+      }
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      final email = body['email']! as String;
+      if (accounts[email] != null) verificationEmails.add(email);
+      return http.Response('', 202);
     }
     if (path == '/api/v1/accounts/password/forgot') {
       if (!smtpConfigured) {
@@ -939,7 +982,10 @@ extension on FakeServer {
         },
       );
       if (request.method == 'PUT') profile.addAll(body);
-      return json(_profileWithEstimate(profile));
+      return json({
+        ..._profileWithEstimate(profile),
+        'soloTrialEndsAt': caller.soloTrialEndsAt,
+      });
     }
 
     if (path == '/api/v1/accounts/me/ftp') {

@@ -16,7 +16,8 @@ public sealed record ProfileResponse(
     bool EmailNotifications,
     bool HasPassword,
     bool EmailAccountNotifications,
-    bool EmailTrainingNotifications);
+    bool EmailTrainingNotifications,
+    DateOnly? SoloTrialEndsAt);
 
 public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<ProfileResponse>
 {
@@ -34,5 +35,5 @@ public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<Pr
     }
 
     public static ProfileResponse ProfileOf(User u) =>
-        new(u.DisplayName, u.FtpW, u.WeightKg, u.BirthYear, u.MaxHeartRate, u.TimeZone, WeekDays.Name(u.FirstDayOfWeek), u.EmailNotifications, u.PasswordHash is not null, u.EmailAccountNotifications, u.EmailTrainingNotifications);
+        new(u.DisplayName, u.FtpW, u.WeightKg, u.BirthYear, u.MaxHeartRate, u.TimeZone, WeekDays.Name(u.FirstDayOfWeek), u.EmailNotifications, u.PasswordHash is not null, u.EmailAccountNotifications, u.EmailTrainingNotifications, u.SoloTrialEndsAt);
 }

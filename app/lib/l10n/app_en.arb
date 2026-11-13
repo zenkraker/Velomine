@@ -77,6 +77,35 @@
   "passwordHint": "At least 10 characters, with a capital letter, a small letter and a digit.",
   "registeredReady": "Your account is ready. You can sign in now.",
   "registeredPending": "Your account was created. An admin has to approve it before you can sign in.",
+  "registeredCheckEmail": "Your account is ready. Open the link we sent to {email} to confirm it, then sign in.",
+  "@registeredCheckEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resendVerification": "Send the link again",
+  "resendVerificationSent": "Sent. It may take a minute to arrive.",
+  "resendVerificationTooMany": "Too many requests. Try again in a few minutes.",
+  "resendVerificationUnavailable": "This server does not send email, so there is nothing to resend.",
+  "verifyEmailTitle": "Confirm your email",
+  "verifyEmailWorking": "Confirming your address…",
+  "verifyEmailDone": "Your email is confirmed. You can sign in now.",
+  "verifyEmailInvalid": "This link is not valid or has expired. Sign in to ask for a new one.",
+  "verifyEmailSendAgain": "Send a new link",
+  "verifyEmailResent": "A new link is on its way.",
+  "soloTrialActive": "Solo trial · {days} days left",
+  "@soloTrialActive": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "soloTrialLastDay": "Solo trial · last day",
+  "soloTrialEnded": "Solo trial · ended",
+  "authEmailNotConfirmed": "Confirm your email address before signing in. Check your inbox for the link.",
   "authWrongPassword": "The email or password is not right.",
   "authNotApproved": "Your account is waiting for an admin to approve it.",
   "authLockedOut": "Too many wrong attempts. Try again in a few minutes.",
@@ -1432,6 +1461,8 @@
   "passwordChangeFailed": "Could not change the password. Try again.",
   "actionChangePassword": "change your password",
   "actionResetPassword": "reset this password",
+  "actionResendVerification": "send the link again",
+  "actionVerifyEmail": "confirm this email",
   "resetPasswordLink": "Reset password",
   "resetPasswordLinkTitle": "Password reset link for {name}",
   "@resetPasswordLinkTitle": {

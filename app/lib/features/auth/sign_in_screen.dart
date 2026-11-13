@@ -18,6 +18,7 @@ String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
       AuthProblem.wrongPassword => l10n.authWrongPassword,
       AuthProblem.wrongCode => l10n.authWrongCode,
       AuthProblem.notApproved => l10n.authNotApproved,
+      AuthProblem.emailNotConfirmed => l10n.authEmailNotConfirmed,
       AuthProblem.lockedOut => l10n.authLockedOut,
       AuthProblem.signUpClosed => l10n.authSignUpClosed,
       AuthProblem.weakPassword => l10n.authWeakPassword,
@@ -27,6 +28,7 @@ String authProblemText(AppLocalizations l10n, AuthProblem problem) =>
 
 String ssoErrorText(AppLocalizations l10n, String code) => switch (code) {
   'not_approved' => l10n.authNotApproved,
+  'email_not_confirmed' => l10n.authEmailNotConfirmed,
   'email_not_verified' => l10n.ssoEmailNotVerified,
   'no_account' => l10n.ssoNoAccount,
   'locked_out' => l10n.ssoLockedOut,

@@ -25,6 +25,18 @@
   <data name="ResetExpiry" xml:space="preserve">
     <value>Il link funziona una sola volta e scade tra 30 minuti. Se non sei stato tu, ignora questa email; la password resta la stessa.</value>
   </data>
+  <data name="VerifySubject" xml:space="preserve">
+    <value>Conferma la tua email per Velomine</value>
+  </data>
+  <data name="VerifyIntro" xml:space="preserve">
+    <value>Conferma questo indirizzo per completare la creazione del tuo account Velomine. Apri questo link:</value>
+  </data>
+  <data name="VerifyAction" xml:space="preserve">
+    <value>Conferma la mia email</value>
+  </data>
+  <data name="VerifyExpiry" xml:space="preserve">
+    <value>Il link funziona una sola volta e scade tra 24 ore. Se non ti sei iscritto, ignora questa email.</value>
+  </data>
   <data name="SsoSubject" xml:space="preserve">
     <value>Come accedere a Velomine</value>
   </data>

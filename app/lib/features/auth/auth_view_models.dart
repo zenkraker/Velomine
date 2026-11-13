@@ -83,8 +83,33 @@ class RegisterViewModel extends _$RegisterViewModel {
     state = state.copyWith(
       command: state.command.finish(const Ok(null)),
       problem: result.problem,
-      approved: result.problem == null ? result.approved : null,
+      outcome: result.problem != null
+          ? null
+          : result.needsConfirmation
+          ? RegisterOutcome.needsConfirmation
+          : result.approved
+          ? RegisterOutcome.created
+          : RegisterOutcome.pendingApproval,
+      email: result.problem == null ? email.trim() : null,
     );
+  }
+
+  /// The same address, another confirmation email, for a message that never arrived.
+  Future<ResendProblem?> resend() async {
+    if (state.command.running || state.email == null) return null;
+    state = state.copyWith(command: state.command.start());
+    final result = await ref
+        .read(authDataProvider)
+        .resendVerification(state.email!);
+    if (!ref.mounted) return null;
+    final problem = switch (result.failureOrNull?.code) {
+      503 => ResendProblem.emailNotSetUp,
+      429 => ResendProblem.tooMany,
+      null => null,
+      _ => ResendProblem.failed,
+    };
+    state = state.copyWith(command: state.command.finish(const Ok(null)));
+    return problem;
   }
 }
 

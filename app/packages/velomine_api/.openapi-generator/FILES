@@ -121,6 +121,7 @@ lib/model/refresh_request.dart
 lib/model/register_request.dart
 lib/model/register_response.dart
 lib/model/request_to_join_request.dart
+lib/model/resend_verification_request.dart
 lib/model/reset_password_request.dart
 lib/model/ride_feel_response.dart
 lib/model/ride_import_response.dart
@@ -188,6 +189,7 @@ lib/model/update_sharing_request.dart
 lib/model/update_template_request.dart
 lib/model/upload_ride_response.dart
 lib/model/user_summary.dart
+lib/model/verify_email_request.dart
 lib/model/vo2_max_estimate.dart
 lib/model/wellbeing_consent_request.dart
 lib/model/wellbeing_response.dart

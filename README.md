@@ -59,6 +59,19 @@ A server runs the same `docker-compose.yml`, from the images CI publishes instea
 
 **Backups:** the database (`docker compose exec postgres pg_dump -Fc -U velomine velomine > velomine.dump`) and the `velomine-files` and `velomine-keys` volumes, together. Without the keys, every member is signed out and old links stop working.
 
+### Fill a club with demo data
+
+The database starts empty. After you have created a club and a few members in the app, this adds synthetic bikes,
+components, rides with streams, goals, wellbeing, sharing and notifications to that club:
+
+```bash
+docker compose exec -T postgres psql -U velomine -d velomine \
+  -v ON_ERROR_STOP=1 --single-transaction < deploy/host/seed-demo.sql
+```
+
+`just seed-demo` runs the same command. It creates no accounts or club, and it does nothing if the club already has
+bikes or rides. See [docs/demo.md](docs/demo.md).
+
 ### Settings you can change
 
 Set them in a file named `.env` next to `docker-compose.yml`. [`.env.example`](.env.example) lists every one with its default; copy it to `.env` and change what you need. Every variable in `.env` reaches the server. Names are upper case, with `__` for a nested setting (`VELOMINE__SMTP__HOST` is the server's `Velomine:Smtp:Host`).
@@ -82,7 +95,7 @@ Set them in a file named `.env` next to `docker-compose.yml`. [`.env.example`](.
 | `VELOMINE__PUBLICURL` | `http://localhost:8080` | The address members open, used in password reset emails and each member's calendar feed address. Set it to the public address, for example `https://club.example`; the incoming Host header is never used. |
 | `VELOMINE__ADMIN__EMAIL`, `VELOMINE__ADMIN__PASSWORD` | `admin@velomine.local`, `Velomine-dev-1` | The first admin. Only used while the server has no admin. The password needs 10 characters or more with an upper-case letter, a lower-case letter and a digit; otherwise the server stops on start with `Could not create the admin`. |
 | `VELOMINE__ACCOUNTS__SIGNUPENABLED` | `true` | Whether new people can create an account. |
-| `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `true` | New accounts wait for an admin to approve them. |
+| `VELOMINE__ACCOUNTS__REQUIREADMINAPPROVAL` | `false` | Off, a rider signs up and starts the solo trial at once. Set to `true` to make new accounts wait for an admin. With email on, the address must still be confirmed before signing in. |
 | `VELOMINE__ACCOUNTS__CLUBCREATIONENABLED` | `false` | Lets a rider without a club start one. Off, only the operator creates clubs. |
 | `VELOMINE__BACKGROUND__ENABLED` | `true` | Ride processing, imports, email, catalogue sync and the first-admin setup. With several server instances of one deployment, keep it on exactly one. |
 | `VELOMINE__IMPORTS__MAXARCHIVEMB` | `1024` | The largest Strava export accepted, in MB. A large import needs free disk for the archive and one copy of every activity it brings in. |

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,10 @@ public sealed class EmailTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    /// <summary>
+    /// SMTP on and the fake doing the sending: these tests are about the server deciding what to mail, and the fake
+    /// still receives it through the real emailer's wiring. Email on also means sign-up mails a confirmation.
+    /// </summary>
     private static async Task<(TestApi Api, FakeEmailSender Mail)> StartAsync(PostgresFixture postgres, bool smtp = true)
     {
         var mail = new FakeEmailSender();
@@ -37,10 +42,52 @@ public sealed class EmailTests(PostgresFixture postgres)
         return (api, mail);
     }
 
+    /// <summary>The message a test asks for: not a sign-up confirmation, which these servers also put in the fake.</summary>
+    private static OutgoingEmail TheMail(FakeEmailSender mail) =>
+        Assert.Single(mail.Sent, m => !m.Subject.StartsWith("Confirm your email", StringComparison.Ordinal));
+
+    /// <summary>Nothing but the sign-up confirmations has been sent, and one is always there when email is on.</summary>
+    private static void ShouldBeConfirmationsOnly(FakeEmailSender mail) =>
+        Assert.All(mail.Sent, m => Assert.StartsWith("Confirm your email", m.Subject));
+
+    /// <summary>
+    /// Signs up a member and waits until the sign-up confirmation has reached the fake: Register writes the token
+    /// before answering, so once the answer is in, the mail is only a moment behind.
+    /// </summary>
+    private static async Task<(string Email, HttpClient Client)> NewMemberAfterConfirmationAsync(TestApi api, FakeEmailSender mail)
+    {
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        for (var i = 0; i < 100 && !mail.Sent.Any(m => m.To == email && m.Subject.StartsWith("Confirm your email", StringComparison.Ordinal)); i++)
+            await Task.Delay(20, Ct);
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var user = (await users.FindByEmailAsync(email))!;
+            Assert.True((await users.ConfirmEmailAsync(user, await users.GenerateEmailConfirmationTokenAsync(user))).Succeeded);
+        }
+
+        return (email, await api.SignedInClientAsync(email, TestApi.MemberPassword));
+    }
+
+    /// <summary>The admin is created before email can send; with the gate on, its address is confirmed here.</summary>
+    private static async Task ConfirmAdminAsync(TestApi api)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var admin = (await users.FindByEmailAsync(TestApi.AdminEmail))!;
+        Assert.True((await users.ConfirmEmailAsync(admin, await users.GenerateEmailConfirmationTokenAsync(admin))).Succeeded);
+    }
+
     private static async Task<(string Email, HttpClient Client)> NewMemberAsync(TestApi api)
     {
         var email = TestApi.NewEmail();
         (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+        // Email is on, so the address is confirmed before the member signs in.
+        await using var scope = api.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var user = (await users.FindByEmailAsync(email))!;
+        Assert.True((await users.ConfirmEmailAsync(user, await users.GenerateEmailConfirmationTokenAsync(user))).Succeeded);
         return (email, await api.SignedInClientAsync(email, TestApi.MemberPassword));
     }
 
@@ -85,7 +132,7 @@ public sealed class EmailTests(PostgresFixture postgres)
 
         Assert.Equal(0, await RunAsync(api));
 
-        Assert.Empty(mail.Sent);
+        ShouldBeConfirmationsOnly(mail);
         Assert.False((await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", Ct))!.EmailAvailable);
     }
 
@@ -93,7 +140,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     public async Task EmailSettings_ShouldBeAnnounced_WhenSmtpIsConfigured()
     {
         var (api, _) = await StartAsync(postgres);
-        await using var _ = api;
+        await using var __ = api;
 
         Assert.True((await api.CreateClient().GetFromJsonAsync<ServerInfoResponse>("/api/v1/server", Ct))!.EmailAvailable);
     }
@@ -124,11 +171,11 @@ public sealed class EmailTests(PostgresFixture postgres)
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "old rider", DateTimeOffset.UtcNow.AddHours(-3));
 
         Assert.Equal(0, await RunAsync(api));
-        Assert.Empty(mail.Sent);
+        Assert.DoesNotContain(mail.Sent, m => !m.Subject.StartsWith("Confirm your email", StringComparison.Ordinal));
 
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "new rider", DateTimeOffset.UtcNow);
         Assert.Equal(1, await RunAsync(api));
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal(email, sent.To);
         Assert.Equal("Velomine: new rider asked to join your club.", sent.Subject);
         Assert.Contains("email notifications are on in your Velomine profile", sent.Body);
@@ -147,7 +194,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api); // email is now on
         await member.PutAsJsonAsync(
@@ -158,7 +205,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
 
         Assert.Equal(0, await RunAsync(api));
-        Assert.Empty(mail.Sent);
+        ShouldBeConfirmationsOnly(mail);
     }
 
     [Fact]
@@ -166,14 +213,14 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
         await member.PostAsync("/api/v1/notifications/read", null, Ct);
 
         Assert.Equal(0, await RunAsync(api));
-        Assert.Empty(mail.Sent);
+        ShouldBeConfirmationsOnly(mail);
     }
 
     [Fact]
@@ -181,18 +228,18 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
 
         mail.Fail = new InvalidOperationException("mail server down");
         Assert.Equal(0, await RunAsync(api));
-        Assert.Empty(mail.Sent);
+        ShouldBeConfirmationsOnly(mail);
 
         mail.Fail = null;
         Assert.Equal(1, await RunAsync(api));
-        Assert.Single(mail.Sent);
+        Assert.NotNull(TheMail(mail));
     }
 
     [Fact]
@@ -204,7 +251,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         var (goodEmail, goodClient) = await NewMemberAsync(api);
         var badId = (await badClient.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         var goodId = (await goodClient.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
-        await RunAsync(api); // email is on from now
+        await RunAsync(api); // email is now on
 
         await AddAsync(api, badId, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow);
         await AddAsync(api, goodId, NotificationTypes.ClubJoinRequest, "a rider", DateTimeOffset.UtcNow.AddSeconds(1));
@@ -212,7 +259,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         mail.Rejected.Add(badEmail);
 
         Assert.Equal(1, await RunAsync(api));
-        Assert.Equal(goodEmail, Assert.Single(mail.Sent).To);
+        Assert.Equal(goodEmail, TheMail(mail).To);
 
         await using (var scope = api.Services.CreateAsyncScope())
         {
@@ -229,12 +276,12 @@ public sealed class EmailTests(PostgresFixture postgres)
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
         var (_, member) = await NewMemberAsync(api);
-        await RunAsync(api); // email is on from now
+        await RunAsync(api); // email is now on
 
         await UploadAsync(member, Start);
 
         Assert.Equal(0, await RunAsync(api));
-        Assert.Empty(mail.Sent);
+        Assert.DoesNotContain(mail.Sent, m => !m.Subject.StartsWith("Confirm your email", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -242,15 +289,16 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
-        await RunAsync(api);
         await TurnOnTrainingAsync(member);
+        await RunAsync(api); // email is now on, which also sets the start of what it sends
         await using (var scope = api.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
             var settings = await db.Set<ServerSettings>().FirstAsync(Ct);
-            settings.EmailStartedAt = DateTimeOffset.UtcNow.AddHours(-1);
+            // The account signed up just now; the server must look older than the ride mail to send it.
+            settings.EmailStartedAt = DateTimeOffset.UtcNow.AddDays(-1);
             await db.SaveChangesAsync(Ct);
         }
 
@@ -258,7 +306,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         await AddAsync(api, id, NotificationTypes.RideReady, "new.fit", DateTimeOffset.UtcNow.AddMinutes(-1));
 
         Assert.Equal(1, await RunAsync(api));
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Contains("old.fit", sent.Subject);
         Assert.Contains("old.fit", sent.Body);
         Assert.DoesNotContain("new.fit", sent.Body);
@@ -276,7 +324,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
 
@@ -284,7 +332,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         await AddAsync(api, id, NotificationTypes.ClubJoinApproved, "Club", DateTimeOffset.UtcNow.AddSeconds(1));
 
         Assert.Equal(1, await RunAsync(api));
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal("Velomine: 2 updates", sent.Subject);
         Assert.Contains("Ada asked to join your club.", sent.Body);
         Assert.Contains("Club accepted you.", sent.Body);
@@ -300,12 +348,13 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
+        await ConfirmAdminAsync(api);
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
 
         var response = await admin.PostAsync("/api/v1/admin/settings/test-email", null, Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal(TestApi.AdminEmail, sent.To);
         Assert.Equal("Velomine: test email", sent.Subject);
         Assert.NotNull(sent.HtmlBody);
@@ -316,6 +365,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
+        await ConfirmAdminAsync(api);
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         var (_, member) = await NewMemberAsync(api);
 
@@ -367,15 +417,15 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
-        await RunAsync(api); // email is on from now
+        await RunAsync(api); // email is now on
         await member.PutAsJsonAsync("/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "it" }, Ct);
 
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "Ada", DateTimeOffset.UtcNow);
 
         Assert.Equal(1, await RunAsync(api));
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal("Velomine: Ada ha chiesto di entrare nel tuo club.", sent.Subject);
         Assert.Contains("Ada ha chiesto di entrare nel tuo club.", sent.Body);
         Assert.Contains("lang=\"it\"", sent.HtmlBody);
@@ -386,7 +436,7 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
         await member.PutAsJsonAsync("/api/v1/accounts/me/language", new SetMyLanguageRequest { Language = "de" }, Ct);
@@ -394,7 +444,7 @@ public sealed class EmailTests(PostgresFixture postgres)
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "Ada", DateTimeOffset.UtcNow);
 
         Assert.Equal(1, await RunAsync(api));
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Equal("Velomine: Ada asked to join your club.", sent.Subject);
         Assert.Contains("lang=\"en\"", sent.HtmlBody);
     }
@@ -404,14 +454,14 @@ public sealed class EmailTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartAsync(postgres);
         await using var _ = api;
-        var (_, member) = await NewMemberAsync(api);
+        var (_, member) = await NewMemberAfterConfirmationAsync(api, mail);
         var id = (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await RunAsync(api);
 
         await AddAsync(api, id, NotificationTypes.ClubJoinRequest, "<b>Eve</b>", DateTimeOffset.UtcNow);
         Assert.Equal(1, await RunAsync(api));
 
-        var sent = Assert.Single(mail.Sent);
+        var sent = TheMail(mail);
         Assert.Contains("&lt;b&gt;Eve&lt;/b&gt;", sent.HtmlBody);
         Assert.DoesNotContain("<b>Eve</b>", sent.HtmlBody);
     }

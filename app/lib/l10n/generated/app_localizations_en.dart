@@ -153,6 +153,59 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account was created. An admin has to approve it before you can sign in.';
 
   @override
+  String registeredCheckEmail(String email) {
+    return 'Your account is ready. Open the link we sent to $email to confirm it, then sign in.';
+  }
+
+  @override
+  String get resendVerification => 'Send the link again';
+
+  @override
+  String get resendVerificationSent => 'Sent. It may take a minute to arrive.';
+
+  @override
+  String get resendVerificationTooMany =>
+      'Too many requests. Try again in a few minutes.';
+
+  @override
+  String get resendVerificationUnavailable =>
+      'This server does not send email, so there is nothing to resend.';
+
+  @override
+  String get verifyEmailTitle => 'Confirm your email';
+
+  @override
+  String get verifyEmailWorking => 'Confirming your address…';
+
+  @override
+  String get verifyEmailDone => 'Your email is confirmed. You can sign in now.';
+
+  @override
+  String get verifyEmailInvalid =>
+      'This link is not valid or has expired. Sign in to ask for a new one.';
+
+  @override
+  String get verifyEmailSendAgain => 'Send a new link';
+
+  @override
+  String get verifyEmailResent => 'A new link is on its way.';
+
+  @override
+  String soloTrialActive(int days) {
+    return 'Solo trial · $days days left';
+  }
+
+  @override
+  String get soloTrialLastDay => 'Solo trial · last day';
+
+  @override
+  String get soloTrialEnded => 'Solo trial · ended';
+
+  @override
+  String get authEmailNotConfirmed =>
+      'Confirm your email address before signing in. Check your inbox for the link.';
+
+  @override
   String get authWrongPassword => 'The email or password is not right.';
 
   @override
@@ -2818,6 +2871,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionResetPassword => 'reset this password';
+
+  @override
+  String get actionResendVerification => 'send the link again';
+
+  @override
+  String get actionVerifyEmail => 'confirm this email';
 
   @override
   String get resetPasswordLink => 'Reset password';

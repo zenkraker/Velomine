@@ -39,30 +39,42 @@ class RegisterState {
   const RegisterState({
     this.command = const CommandState.idle(),
     this.problem,
-    this.approved,
+    this.outcome,
+    this.email,
   });
 
   final VoidCommand command;
   final AuthProblem? problem;
 
-  /// Null until the account is created; then whether it may sign in now.
-  final bool? approved;
+  /// What the server said when the account was made; null until then.
+  final RegisterOutcome? outcome;
+
+  /// The address the account was made with: the screen says to confirm it, and offers to send the link again.
+  final String? email;
 
   RegisterState copyWith({
     VoidCommand? command,
     AuthProblem? problem,
     bool clearProblem = false,
-    bool? approved,
+    RegisterOutcome? outcome,
+    String? email,
   }) => RegisterState(
     command: command ?? this.command,
     problem: clearProblem ? null : (problem ?? this.problem),
-    approved: approved ?? this.approved,
+    outcome: outcome ?? this.outcome,
+    email: email ?? this.email,
   );
 }
+
+/// What creating the account left to do: nothing, an admin's approval, or opening the confirmation link.
+enum RegisterOutcome { created, pendingApproval, needsConfirmation }
 
 /// Why asking for a reset link did not work, kept as a kind for the screen to
 /// word in the language showing now.
 enum ForgotProblem { missingEmail, emailNotSetUp, tooMany, failed }
+
+/// Asking for the confirmation link again, worded for the person who has not opened it yet.
+enum ResendProblem { emailNotSetUp, tooMany, failed }
 
 class ForgotState {
   const ForgotState({

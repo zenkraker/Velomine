@@ -104,7 +104,7 @@ public sealed class ExchangeSsoToken(
 
         if (!await signIn.CanSignInAsync(user))
         {
-            await Send.ResponseAsync(new { error = "not_approved" }, 403, ct);
+            await Send.ResponseAsync(new { error = Login.Refusal(user) }, 403, ct);
             return;
         }
 
