@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides.Import;
 
 namespace Velomine.Server.Features.Rides;
@@ -12,6 +13,9 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         {
             t.HasCheckConstraint("ck_rides_title_length", "char_length(title) BETWEEN 1 AND 120");
             t.HasCheckConstraint("ck_rides_description_length", "char_length(description) BETWEEN 1 AND 2000");
+            t.HasCheckConstraint(
+                "ck_rides_privacy_trim",
+                $"trim_start_m BETWEEN 0 AND {PrivacyValues.MaxTrimM} AND trim_end_m BETWEEN 0 AND {PrivacyValues.MaxTrimM}");
         });
         ride.HasKey(r => r.Id);
         ride.Property(r => r.Status).HasConversion<string>().HasMaxLength(16);
@@ -28,6 +32,7 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.Property(r => r.Assist).HasMaxLength(16);
         ride.Property(r => r.Environment).HasMaxLength(16);
         ride.Property(r => r.Version).IsRowVersion();
+        ride.Ignore(r => r.Privacy);
 
         ride.HasOne(r => r.Owner).WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
         ride.HasOne(r => r.Streams).WithOne().HasForeignKey<RideStreams>(s => s.RideId).OnDelete(DeleteBehavior.Cascade);

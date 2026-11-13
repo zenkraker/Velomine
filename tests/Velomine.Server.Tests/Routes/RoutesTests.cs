@@ -51,7 +51,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync(postgres);
         var world = await NewWorldAsync(api);
-        var rideId = await UploadRideAsync(world.Rider.Client);
+        // A ride keeps the privacy defaults it was imported with, so these are saved before the upload.
         (await world.Rider.Client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
             new Velomine.Server.Features.Privacy.UpdatePrivacyRequest
@@ -66,6 +66,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
                 TrimEndM = 1000,
             },
             Ct)).EnsureSuccessStatusCode();
+        var rideId = await UploadRideAsync(world.Rider.Client);
 
         var route = await CreateRouteAsync(
             world.Rider.Client, new CreateRouteRequest { RideId = rideId, Name = "Trimmed", Surface = "road" });

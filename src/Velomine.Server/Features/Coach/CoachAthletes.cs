@@ -119,7 +119,7 @@ public sealed class GetCoachAthlete(VelomineDbContext db, TimeProvider time)
             .Where(g => g.ClubId == req.ClubId && g.MemberId == req.UserId)
             .ToListAsync(ct);
         var summary = await CoachQueries.SummaryAsync(db, time, member, grants, ct);
-        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        var privacy = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
         if (privacy.HidePower) summary = summary with { Tss7 = null, Tss42 = null };
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
@@ -165,7 +165,7 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
 
         var clock = await MemberClock.ForAsync(db, req.UserId, time, ct);
         // Fitness, fatigue and form are built from TSS and TRIMP: hiding either stream hides the trend.
-        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        var privacy = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
         if (privacy.HidesPowerOrHeartRate)
         {
             await Send.NotFoundAsync(ct);

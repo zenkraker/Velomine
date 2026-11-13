@@ -44,7 +44,7 @@ public sealed class GetCoachPowerCurve(VelomineDbContext db, TimeProvider time)
         }
 
         var clock = await MemberClock.ForAsync(db, req.UserId, time, ct);
-        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        var privacy = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
         if (privacy.HidePower)
         {
             await Send.NotFoundAsync(ct);

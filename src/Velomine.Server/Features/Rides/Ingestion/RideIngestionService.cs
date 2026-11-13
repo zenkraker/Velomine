@@ -5,6 +5,7 @@ using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
+using Velomine.Server.Features.Privacy;
 using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
@@ -98,6 +99,9 @@ public sealed class RideIngestionService(
             .Select(u => new { u.FtpW, u.BirthYear, u.TimeZone })
             .FirstAsync(ct);
         var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear);
+        // Copied once, onto the ride row made at upload, so every activity of the file and every later re-read keep it.
+        ride.Privacy ??= PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.UserId == ride.UserId, ct));
         var memberBikes = await db.Bikes.AsNoTracking()
             .Where(b => b.UserId == ride.UserId && b.IsActive)
             .OrderBy(b => b.CreatedAt)
@@ -137,6 +141,7 @@ public sealed class RideIngestionService(
                     ImportId = ride.ImportId,
                     Quiet = ride.Quiet,
                     Source = ride.Source,
+                    Privacy = ride.Privacy,
                 }
                 : ride;
             if (used) db.Rides.Add(target);
