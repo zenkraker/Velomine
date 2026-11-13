@@ -36,8 +36,10 @@ public sealed class PostgresFixture : IAsyncLifetime
         {
             // Test classes run in parallel and every server has its own pool, so the default 100 connections are
             // not enough. The module's own settings (fsync=off and the rest) are added after this command.
+            // The data directory stays in memory: every test clones the migrated template, and a clone is a file copy.
             container = new PostgreSqlBuilder("postgres:17")
                 .WithCommand("-c", "max_connections=500")
+                .WithTmpfsMount("/var/lib/postgresql/data")
                 .Build();
             await container.StartAsync();
             ServerConnection = container.GetConnectionString();
