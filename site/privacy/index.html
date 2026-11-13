@@ -66,17 +66,18 @@
         </nav>
         <p class="eyebrow">Privacy</p>
         <h1>Your data, in plain language.</h1>
-        <p>What Velomine collects, why, how long we keep it, and how to get it back or delete it.</p>
+        <p>What Velomine collects, why, how long it is kept, and how to get it back or delete it.</p>
       </div>
     </section>
 
     <section class="section section--tight">
       <div class="container">
         <div class="legal-body">
-          <h2>Who we are</h2>
-          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use our managed cloud service, which many clubs share with each club’s data kept apart. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> with any question about it.</p>
+          <h2>Who runs Velomine</h2>
+          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use the managed cloud service, which many clubs share with each club’s data kept apart. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> with any question about it.</p>
+          <p>Velomine is run by one person and is not a business yet. No payments are collected, and only the public demo is running; the aim now is feedback. Before the first club pays, this page will name the legal entity that runs the cloud and its address.</p>
 
-          <h2>What we collect</h2>
+          <h2>What is collected</h2>
           <ul>
             <li><strong>Account data:</strong> name, email address, password hash or single sign-on identifier, role, club, and the date you joined. If you turn on two-factor sign-in, the authenticator key and your hashed recovery codes.</li>
             <li><strong>Devices and sessions:</strong> a label and the times for each phone or browser you are signed in on. No IP address and no location are stored; a session row is removed within a week of ending.</li>
@@ -87,7 +88,7 @@
             <li><strong>Club billing data:</strong> the club’s contact, contract and invoices. Members are never billed individually.</li>
           </ul>
 
-          <h2>Why we process it</h2>
+          <h2>Why it is processed</h2>
           <ul>
             <li><strong>To run the service:</strong> your account, your rides, your club and the features you use (contract).</li>
             <li><strong>To keep it safe:</strong> security logs, the sharing view log, rate limits and backups (legitimate interest and legal obligation).</li>
@@ -96,9 +97,9 @@
           </ul>
 
           <h2>Health data</h2>
-          <p>Wellbeing data, and cycle data when that feature is available, are health data. We collect the minimum, ask for explicit consent before the first check-in, and ask again when the terms version changes. Free-text notes are only ever shown to you. A coach sees the scores and RPE you choose to share, never the notes. Health data never appears in share links. It is included in your export and deleted with your account.</p>
+          <p>Wellbeing data, and cycle data (not built yet), are health data. Velomine collects the minimum, asks for explicit consent before the first check-in, and asks again when the terms version changes. Free-text notes are only ever shown to you. A coach sees the scores and RPE you choose to share, never the notes. Health data never appears in share links. It is included in your export and deleted with your account.</p>
 
-          <h2>What we never do</h2>
+          <h2>What Velomine never does</h2>
           <ul>
             <li>No advertising, profiling, data sale or lead generation.</li>
             <li>No use of member data for AI training.</li>
@@ -109,25 +110,25 @@
           <h2>Sharing</h2>
           <p>Nothing you record is visible to anyone else until you share it. Sharing is per data type (rides, analytics, the route of a ride, wellbeing), per audience (the club’s coaches today; a member-facing whole-club view later), and revocable. Every coach view is logged and you can see who looked. Share links, when you create one, show only what you chose to share.</p>
 
-          <h2 id="subprocessors">Sub-processors and the DPA</h2>
-          <p>Clubs on the managed cloud plan sign a data processing agreement (DPA) before go-live. It names the current sub-processors and their locations. The categories are:</p>
+          <h2 id="subprocessors">Sub-processors</h2>
+          <p>Today only the public demo runs, and it holds example data. These are the providers it uses:</p>
           <ul>
-            <li>Cloud hosting for the application.</li>
-            <li>A managed database in the EU/EEA.</li>
-            <li>Object storage for encrypted backups.</li>
-            <li>Email delivery for notifications and password reset.</li>
-            <li>Monitoring and central log collection, fed only with the operational logs described above.</li>
-            <li>Payment and invoicing for the club’s subscription.</li>
-            <li>Optional providers a club chooses, such as its own single sign-on or map tile server.</li>
+            <li><strong>Scaleway</strong> (France): one server in the EU that runs the application, the database and the file store.</li>
+            <li><strong>OpenStreetMap</strong>: map tiles, by default. The tile server sees your network address and the area of the map you look at. Whoever runs a server can set another tile server; the map cannot be turned off.</li>
+            <li><strong>Sentry</strong> (EU region, Germany): error reports, request traces and the operational logs described above, none with member data.</li>
+            <li>Email: none. The demo sends no email.</li>
+            <li>Payment: none. No payments are collected yet.</li>
           </ul>
-          <p>Member data is hosted in the EU/EEA. We do not transfer it outside the EU/EEA without the club’s instruction. Self-hosted clubs keep all data on their own infrastructure; the Velomine project receives nothing from a self-hosted instance.</p>
+          <p>Before the cloud opens for clubs, this list will name every provider and its country, including email delivery, backups and payment, and a club will sign a data processing agreement (DPA) before go-live.</p>
+          <p>Member data is hosted in the EU/EEA. It is not transferred outside the EU/EEA without the club’s instruction.</p>
+          <p>Self-hosted clubs keep all data on their own infrastructure. By default a self-hosted server sends nothing to the Velomine project. Two things are off until whoever runs the server sets them: mirroring the shared parts catalogue, which fetches a list, and sending parts back to it, which carries a part’s type, brand, model and product codes, and no member, bike, club or address. Without them the server keeps its own parts list. The app loads map tiles from the tile server the operator sets, OpenStreetMap by default.</p>
 
           <h2>Where the data lives</h2>
-          <p>On the cloud plan, every club’s data is stored in one database and file store in the EU/EEA, and each request is limited to its own club. Your rides, bikes, wellbeing and profile belong to you, not the club. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has a standing account inside a club’s app; support access is break-glass only.</p>
+          <p>On the cloud plan, every club’s data is stored in one database and file store in the EU/EEA, and each request is limited to its own club. Your rides, bikes, wellbeing and profile belong to you, not the club. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has an account inside a club’s app. Whoever runs a server can reach its database: on the cloud that is the person who runs Velomine, who does so only to fix a problem a club reports.</p>
 
-          <h2>How long we keep it</h2>
+          <h2>How long it is kept</h2>
           <ul>
-            <li>Account, rides, photos and wellbeing: until you delete the account or the data.</li>
+            <li>Account, rides, wellbeing and photos (photos are not built yet): until you delete the account or the data, or 12 months after a cloud subscription ends, following a warning by email.</li>
             <li>Backups: up to 90 days after deletion.</li>
             <li>Sharing view log: 3 months.</li>
             <li>Operational logs: 30 days.</li>
@@ -144,15 +145,15 @@
           <p>Velomine has no public profiles and no public individual results. Clubs are responsible for obtaining a parent or guardian’s consent where the law requires it for a member under the age of consent.</p>
 
           <h2>Security</h2>
-          <p>Traffic is encrypted in transit, access is role-based, and every coach view is logged. The app’s opt-in crash and performance reports contain no member data. The server keeps anonymised operational logs only to fix bugs and performance problems, as GDPR requires. To report a vulnerability, use the <a href="/security/">security page</a>. Please do not include member data in a report.</p>
+          <p>Traffic is encrypted in transit, access is role-based, and every coach view is logged. The app’s opt-in crash and performance reports contain no member data. The server keeps the operational logs listed above only to fix bugs and performance problems. To report a vulnerability, use the <a href="/security/">security page</a>. Please do not include member data in a report.</p>
 
           <h2>Changes</h2>
-          <p>We version this policy. A material change is announced to club administrators before it takes effect, and the date below changes. The version that applies is the one shown when you use the service.</p>
+          <p>This policy is versioned. A material change is announced to club administrators before it takes effect, and the date below changes. The version that applies is the one shown when you use the service.</p>
 
           <h2>Contact</h2>
           <p>Privacy questions and requests: <a href="mailto:horizontodawn@pm.me?subject=Velomine%20privacy">horizontodawn@pm.me</a>.</p>
 
-          <p class="legal-meta">Last updated 10 November 2026. This is the plain-language policy; the signed club agreement and the DPA prevail for a club on the cloud plan.</p>
+          <p class="legal-meta">Last updated 13 November 2026. This is the plain-language policy; the signed club agreement and the DPA prevail for a club on the cloud plan.</p>
         </div>
       </div>
     </section>
@@ -191,11 +192,11 @@
         <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
         <nav class="footer-legal" aria-label="Project and legal">
           <a href="/principles/">Principles</a>
-          <a href="https://github.com/zenkraker/Velomine#readme">Docs</a>
-          <a href="https://github.com/zenkraker/Velomine/commits">Changelog</a>
+          <a href="https://github.com/zenkraker/Velomine/tree/main/docs">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/releases">Changelog</a>
           <a href="/principles/#licence">Licence</a>
           <a href="/privacy/">Privacy</a>
-          <a href="/privacy/#subprocessors">DPA</a>
+          <a href="/privacy/#subprocessors">Sub-processors</a>
           <a href="/terms/">Terms</a>
           <a href="/security/">Security</a>
         </nav>

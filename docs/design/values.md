@@ -70,6 +70,15 @@ member owns the data, and nobody pays again to see their own history.
 - Self-hosting is free under AGPL-3.0, for riders and clubs alike. An optional supporter
   licence (a one-time rider fee or a one-time club fee) funds the project: it unlocks
   nothing, never limits seats and never blocks member data.
+- When a cloud subscription ends, the account becomes read-only for 12 months. The member
+  still sees every ride, chart and total already there, and can export or delete everything;
+  nothing new can be added: no uploads, no new goals, bikes or clubs, no new members. The
+  phone still records rides and keeps them on the phone. Paying again restores the account
+  as it was. After 12 months, and after a warning by email, the account and its data are
+  deleted. We never charge anyone to look at their own rides.
+- When a club stops paying, its members' accounts become read-only on the same terms, because
+  the member owns the data and the club only paid for the hosting. A member who joins another
+  club or takes the solo plan keeps a full account.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 
@@ -91,6 +100,10 @@ member owns the data, and nobody pays again to see their own history.
 - A security disclosure path.
 - Licensed AGPL-3.0 with a trademark policy: clubs can inspect, self-host and fork; anyone
   running it as a service publishes their source, and nobody else may use the Velomine name.
+- If the cloud service closes, clubs get at least six months' notice and export stays
+  available throughout; the open source lets any club keep running it.
+- We say how it is built: one developer, with AI coding agents working under the public rules
+  in `AGENTS.md`. Building a team is a goal once the project gains traction.
 
 ## Decision tests
 

@@ -1,0 +1,90 @@
+name: Feedback
+description: Tried the demo or your own server? Tell what worked, what broke and what you missed.
+title: "Feedback: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for trying Velomine. Five minutes is plenty: answer only what you want, and short answers are fine.
+        Please do not paste personal data, ride files with your home address, passwords or tokens.
+
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who are you?
+      description: Pick every one that fits.
+      multiple: true
+      options:
+        - A rider without a club
+        - A rider in a club or team
+        - A coach
+        - Someone who runs a club
+        - A self-hoster
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tried
+    attributes:
+      label: What did you try?
+      multiple: true
+      options:
+        - The public demo
+        - Self-hosting it on my own server
+        - The Android app
+        - Uploading my own ride file
+        - Importing a Strava export
+        - Only the website
+
+  - type: input
+    id: today
+    attributes:
+      label: What do you use today?
+      description: For example Strava, Garmin Connect, intervals.icu, TrainingPeaks, a spreadsheet.
+
+  - type: textarea
+    id: worked
+    attributes:
+      label: What worked well?
+
+  - type: textarea
+    id: broke
+    attributes:
+      label: What broke or confused you?
+      description: What you did, what you expected, and what happened instead. A screenshot helps.
+
+  - type: textarea
+    id: numbers
+    attributes:
+      label: Did the numbers look right?
+      description: If you uploaded a ride you know, compare distance, elevation, power or heart rate with your current app.
+
+  - type: textarea
+    id: missing
+    attributes:
+      label: What is missing before you would use it for real?
+      description: The one or two things that matter most to you.
+
+  - type: dropdown
+    id: use
+    attributes:
+      label: Would you or your club use it?
+      options:
+        - Yes, now
+        - Yes, once what I listed above is there
+        - Maybe
+        - No
+        - Not sure yet
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: Anything about the price, self-hosting, privacy, or the way it is built.
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser (if something broke)
+      description: For example "Pixel 8, Android 16" or "Firefox 140 on Linux".

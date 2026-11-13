@@ -128,7 +128,7 @@
       <div class="container">
         <div class="trust reveal">
           <div>Every original file, always exportable</div>
-          <div>No ads, no feed, no paywall</div>
+          <div>No ads, no public feed, no pro tier</div>
           <div>Every club’s data, kept apart</div>
           <div>Open source, self-hostable</div>
         </div>
@@ -264,13 +264,13 @@
       <div class="container">
         <div class="section-head reveal">
           <h2>The record belongs to the rider.</h2>
-          <p>Every club’s data kept apart. Members join with a code and an admin approves them; a rider without a club can start one when the server allows it, on the smallest size band with 30 days to try it. Coaches see only what each rider shares. A route library keeps the lines members add from a ride or a GPX file, each still owned by the rider who added it. A ride calendar shows the rides a coach plans, with a meeting point and a route, and members say they are in. Run it on your own server, or in our managed cloud.</p>
+          <p>Every club’s data kept apart. Members join with a code and an admin approves them; a rider without a club can start one when the server allows it, on the smallest size band with 30 days to try it. Coaches see only what each rider shares. A route library keeps the lines members add from a ride or a GPX file, each still owned by the rider who added it. A ride calendar shows the rides a coach plans, with a meeting point and a route, and members say they are in. Run it on your own server, or in the managed cloud.</p>
         </div>
 
         <div class="bento">
           <article class="panel panel-pad lift span-7 reveal">
             <h3>Every club kept apart</h3>
-            <p>Every request is limited to the club it belongs to, and tests prove one club can never see another club’s data.</p>
+            <p>Every request is limited to its club in the application, and every endpoint that touches club data has a test from a second club. Per-club rules inside the database are <a href="/status/">not built yet</a>.</p>
           </article>
 
           <article class="panel panel-pad lift span-5 reveal">
@@ -280,12 +280,12 @@
 
           <article class="panel panel-pad lift span-5 reveal">
             <h3>Self-host or cloud</h3>
-            <p>The same software on the club’s server, or in our managed cloud in the EU. Same features, same export, same ownership.</p>
+            <p>The same software on the club’s server, or in the managed cloud in the EU. Same features, same export, same ownership.</p>
           </article>
 
           <article class="panel panel-pad lift span-7 reveal">
             <h3>Admin and single sign-on</h3>
-            <p>Join with a code and an admin’s approval. Roles for club admin, coach and member, sign-in with the accounts the club already uses — Google, Microsoft or its own identity provider — plus optional two-factor sign-in with an authenticator app, and a list of every device you are signed in on. An owner sees the club’s size band, member count and paid-until day; a full or ended plan stops new members, never the ones already in.</p>
+            <p>Join with a code and an admin’s approval. Roles for club admin, coach and member. On the cloud, members sign in with email and password; single sign-on run by Velomine is planned. A self-hosted club uses passwords, its own single sign-on provider, or both. Optional two-factor sign-in with an authenticator app, and a list of every device you are signed in on. An owner sees the club’s size band and member count; a full or ended plan stops new members, never the ones already in.</p>
           </article>
         </div>
 
@@ -330,11 +330,11 @@
         <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
         <nav class="footer-legal" aria-label="Project and legal">
           <a href="/principles/">Principles</a>
-          <a href="https://github.com/zenkraker/Velomine#readme">Docs</a>
-          <a href="https://github.com/zenkraker/Velomine/commits">Changelog</a>
+          <a href="https://github.com/zenkraker/Velomine/tree/main/docs">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/releases">Changelog</a>
           <a href="/principles/#licence">Open source</a>
           <a href="/privacy/">Privacy</a>
-          <a href="/privacy/#subprocessors">DPA</a>
+          <a href="/privacy/#subprocessors">Sub-processors</a>
           <a href="/terms/">Terms</a>
           <a href="/security/">Security</a>
         </nav>
