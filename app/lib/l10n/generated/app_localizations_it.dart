@@ -138,6 +138,24 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pressBackAgain => 'Premi di nuovo indietro per uscire';
 
   @override
+  String get authEyebrowSignIn => 'Bentornato';
+
+  @override
+  String get authEyebrowRegister => 'Nuovo account';
+
+  @override
+  String get authEyebrowForgot => 'Aiuto password';
+
+  @override
+  String get authEyebrowReset => 'Nuova password';
+
+  @override
+  String get authEyebrowServer => 'Server';
+
+  @override
+  String get signInHelp => 'Accedi per vedere le tue uscite e la tua forma.';
+
+  @override
   String get signIn => 'Accedi';
 
   @override
@@ -818,6 +836,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get coachViewAthletes => 'Vedi atleti';
+
+  @override
+  String get athletesSubtitle =>
+      'I membri che condividono con te le uscite o gli allenamenti.';
 
   @override
   String get athletesEmpty =>
@@ -2230,6 +2252,25 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sunday => 'Domenica';
+
+  @override
+  String get notificationsEyebrow => 'La tua posta';
+
+  @override
+  String get notificationsSubtitle =>
+      'Ciò che il server ti ha detto, dal più recente.';
+
+  @override
+  String get notificationGroupRides => 'Uscite';
+
+  @override
+  String get notificationGroupClub => 'Club';
+
+  @override
+  String get notificationGroupBikes => 'Bici';
+
+  @override
+  String get notificationGroupAccount => 'Account';
 
   @override
   String get markAllRead => 'Segna tutte come lette';
@@ -3814,6 +3855,23 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get routesFilterAll => 'Tutti i fondi';
+
+  @override
+  String get routesEyebrow => 'Percorsi del club';
+
+  @override
+  String get routesSubtitle =>
+      'Le tracce su cui esce il club, con distanza e dislivello.';
+
+  @override
+  String get routesEmptyCta => 'Aggiungi il primo percorso';
+
+  @override
+  String get clubRidesEyebrow => 'Calendario del club';
+
+  @override
+  String get clubRidesSubtitle =>
+      'Le prossime uscite del club e quelle appena passate.';
 
   @override
   String get routesSortNewest => 'Più recenti';

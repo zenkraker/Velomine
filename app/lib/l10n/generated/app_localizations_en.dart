@@ -138,6 +138,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pressBackAgain => 'Press back again to exit';
 
   @override
+  String get authEyebrowSignIn => 'Welcome back';
+
+  @override
+  String get authEyebrowRegister => 'New account';
+
+  @override
+  String get authEyebrowForgot => 'Password help';
+
+  @override
+  String get authEyebrowReset => 'New password';
+
+  @override
+  String get authEyebrowServer => 'Server';
+
+  @override
+  String get signInHelp => 'Sign in to see your rides and your form.';
+
+  @override
   String get signIn => 'Sign in';
 
   @override
@@ -812,6 +830,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachViewAthletes => 'View athletes';
+
+  @override
+  String get athletesSubtitle =>
+      'The members who share their rides or training with you.';
 
   @override
   String get athletesEmpty =>
@@ -2218,6 +2240,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunday => 'Sunday';
+
+  @override
+  String get notificationsEyebrow => 'Your inbox';
+
+  @override
+  String get notificationsSubtitle => 'What the server told you, newest first.';
+
+  @override
+  String get notificationGroupRides => 'Rides';
+
+  @override
+  String get notificationGroupClub => 'Club';
+
+  @override
+  String get notificationGroupBikes => 'Bikes';
+
+  @override
+  String get notificationGroupAccount => 'Account';
 
   @override
   String get markAllRead => 'Mark all read';
@@ -3786,6 +3826,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routesFilterAll => 'All surfaces';
+
+  @override
+  String get routesEyebrow => 'Club routes';
+
+  @override
+  String get routesSubtitle =>
+      'The lines the club rides, with their distance and climbing.';
+
+  @override
+  String get routesEmptyCta => 'Add the first route';
+
+  @override
+  String get clubRidesEyebrow => 'Club calendar';
+
+  @override
+  String get clubRidesSubtitle =>
+      'The club\'s next rides and the ones just gone.';
 
   @override
   String get routesSortNewest => 'Newest';

@@ -44,11 +44,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final s = ref.watch(forgotPasswordViewModelProvider);
     final l10n = context.l10n;
     return AuthPage(
+      eyebrow: l10n.authEyebrowForgot,
       title: l10n.forgotPasswordTitle,
+      help: l10n.forgotPasswordHelp,
       onBack: () => context.go('/sign-in'),
       children: [
-        Text(l10n.forgotPasswordHelp),
-        const SizedBox(height: AppSpacing.lg),
         TextField(
           key: const Key('forgot-email'),
           controller: _email,
@@ -69,10 +69,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ] else ...[
           if (s.problem != null) ...[
             const SizedBox(height: AppSpacing.md),
-            Text(
-              forgotProblemText(l10n, s.problem!),
-              key: const Key('forgot-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            AuthFailure(
+              keyName: 'forgot-error',
+              message: forgotProblemText(l10n, s.problem!),
             ),
           ],
           const SizedBox(height: AppSpacing.lg),

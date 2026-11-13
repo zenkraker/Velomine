@@ -344,6 +344,42 @@ abstract class AppLocalizations {
   /// **'Press back again to exit'**
   String get pressBackAgain;
 
+  /// No description provided for @authEyebrowSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get authEyebrowSignIn;
+
+  /// No description provided for @authEyebrowRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'New account'**
+  String get authEyebrowRegister;
+
+  /// No description provided for @authEyebrowForgot.
+  ///
+  /// In en, this message translates to:
+  /// **'Password help'**
+  String get authEyebrowForgot;
+
+  /// No description provided for @authEyebrowReset.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get authEyebrowReset;
+
+  /// No description provided for @authEyebrowServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get authEyebrowServer;
+
+  /// No description provided for @signInHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your rides and your form.'**
+  String get signInHelp;
+
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:
@@ -1585,6 +1621,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View athletes'**
   String get coachViewAthletes;
+
+  /// No description provided for @athletesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The members who share their rides or training with you.'**
+  String get athletesSubtitle;
 
   /// No description provided for @athletesEmpty.
   ///
@@ -3931,6 +3973,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sunday'**
   String get sunday;
+
+  /// No description provided for @notificationsEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Your inbox'**
+  String get notificationsEyebrow;
+
+  /// No description provided for @notificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the server told you, newest first.'**
+  String get notificationsSubtitle;
+
+  /// No description provided for @notificationGroupRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get notificationGroupRides;
+
+  /// No description provided for @notificationGroupClub.
+  ///
+  /// In en, this message translates to:
+  /// **'Club'**
+  String get notificationGroupClub;
+
+  /// No description provided for @notificationGroupBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Bikes'**
+  String get notificationGroupBikes;
+
+  /// No description provided for @notificationGroupAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get notificationGroupAccount;
 
   /// No description provided for @markAllRead.
   ///
@@ -6643,6 +6721,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All surfaces'**
   String get routesFilterAll;
+
+  /// No description provided for @routesEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Club routes'**
+  String get routesEyebrow;
+
+  /// No description provided for @routesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The lines the club rides, with their distance and climbing.'**
+  String get routesSubtitle;
+
+  /// No description provided for @routesEmptyCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the first route'**
+  String get routesEmptyCta;
+
+  /// No description provided for @clubRidesEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Club calendar'**
+  String get clubRidesEyebrow;
+
+  /// No description provided for @clubRidesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The club\'s next rides and the ones just gone.'**
+  String get clubRidesSubtitle;
 
   /// No description provided for @routesSortNewest.
   ///
