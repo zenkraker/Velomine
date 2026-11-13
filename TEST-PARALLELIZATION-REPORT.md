@@ -3,7 +3,8 @@
 Branch `feat/parallel-tests`, worktree `/tmp/nix-shell.26e4ms/opencode/velomine-parallel`, based on
 `origin/main` @ `8b6a57f`. Not pushed, no PR.
 
-**Result: 712 tests, 0 failures, 1m25s** (was 697 tests in 5m08s). Five consecutive full runs green; a run
+**Result: 715 tests, 0 failures, 1m55s** (was 697 tests in 5m08s; the extra 30 s over the 1m25s below is
+one test that waits 62 s for a rate-limit bucket to refill). Five consecutive full runs green; a run
 against an external `VELOMINE_TEST_POSTGRES` server also green, leaving no database behind; `dotnet format
 --verify-no-changes` clean.
 
@@ -116,7 +117,8 @@ and at 100 (1926→138), null without a birth year.
 Two throttle tests in `DeploymentTests.cs`, both on an injected clock:
 `PasswordResetThrottle_ShouldStartAFreshWindow_WhenTheWindowHasPassed` passes;
 `PasswordResetThrottle_ShouldRefuseTheTwentyFirstAttempt_WhenTheWindowHasNotPassed` is **`[Fact(Skip=…)]`**.
-The upload token-bucket refill test was **not added**.
+The upload token-bucket refill **is** covered: `Uploads_ShouldAcceptThemAgain_WhenTheBucketHasRefilled`
+(burst 1, one token a minute: the second upload is 429, one after the refill is 202).
 
 **Finding (production bug, not fixed):** `PasswordResetThrottle.Allowed` (Features/Accounts/PasswordResetThrottle.cs:22-37)
 writes the counter with `AbsoluteExpiration = counter.Start.Add(Window)` after incrementing. On the next
@@ -128,8 +130,8 @@ intended rule and will go green when the cache expiry is removed or set relative
 ### Story 7 — sessions and two-factor: **DONE** (`SessionRevocationTests.cs`, new).
 Password change ends every session (both refresh tokens refused); the admin two-factor reset ends every
 session of that account; enabling two-factor signs the other devices out; disabling it with a wrong password
-is refused (and login still asks for a code); a revoked cookie stops working. SSO bypassing the code and the
-wrong-2FA-code-counts-toward-lockout case were **not** added — see the checklist at the end.
+is refused (and login still asks for a code); a revoked cookie stops working. Single sign-on bypassing the code and five wrong codes locking the account are in
+`TwoFactorLockoutTests.cs` (new, 2 tests).
 
 ### Story 8 — privacy function for viewers: **DONE** (`Privacy/PrivacyRulesTests.cs`, new, 10 tests).
 End trim; a zone mid-ride; a zone over the whole line; every stream switch; positions hidden without the
