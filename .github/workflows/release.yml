@@ -1,13 +1,16 @@
 name: Release
 
-# Builds the server and web images together, once per commit, smoke-tests them as a pair and pushes them to GHCR:
+# Builds the server and web images together, once per commit, smoke-tests them as a pair and pushes them to GHCR as
+# a release, then tags the commit and writes a GitHub Release with generated notes:
 #
-#   push to main  ->  ghcr.io/zenkraker/velomine-{server,web}:0.0.0-main.<run> and :sha-<commit>
-#   tag vX.Y.Z    ->  :X.Y.Z, :X.Y and :sha-<commit>
+#   push to main  ->  the next patch version after the highest vX.Y.Z tag (v0.2.0 -> v0.2.1)
+#   tag vX.Y.Z    ->  that version; push one by hand for a minor or major release, and main counts on from it
 #
-# Tags and OCI labels come from docker/metadata-action, and both images always get the same ones. Nothing is pushed
-# unless CI and the smoke test pass, and `latest` is never published. Deploying is manual and GitHub has no access to the
-# hosts: the operator sets the version on the host and runs docker compose (deploy/host/README.md, "Releasing").
+# Each version publishes ghcr.io/zenkraker/velomine-{server,web}:X.Y.Z, :X.Y and :sha-<commit>. Tags and OCI labels
+# come from docker/metadata-action, and both images always get the same ones. Nothing is pushed or tagged unless CI and
+# the smoke test pass, and `latest` is never published. A commit that already carries a version tag is not released
+# again from main. Deploying is manual and GitHub has no access to the hosts: the operator sets the version on the
+# host and runs docker compose.
 
 on:
   push:
@@ -28,9 +31,42 @@ jobs:
     name: CI
     uses: ./.github/workflows/ci.yml
 
+  # Only the "add one" is ours: the tags come from the GitHub CLI, and the release itself from gh release create.
+  version:
+    name: Pick the version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+      publish: ${{ steps.pick.outputs.publish }}
+    steps:
+      - name: Next version
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            echo "tag=$GITHUB_REF_NAME" >>"$GITHUB_OUTPUT"
+            echo "publish=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          refs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" \
+            --jq '.[] | select(.ref | test("^refs/tags/v[0-9]+\\.[0-9]+\\.[0-9]+$")) | "\(.ref | ltrimstr("refs/tags/")) \(.object.sha)"')"
+          if grep -q " $GITHUB_SHA\$" <<<"$refs"; then
+            echo "This commit is already a release; its tag's run publishes it."
+            echo "publish=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          latest="$(cut -d' ' -f1 <<<"$refs" | sort -V | tail -n1)"
+          IFS=. read -r major minor patch <<<"${latest:-v0.0.0}"
+          echo "tag=$major.$minor.$((patch + 1))" >>"$GITHUB_OUTPUT"
+          echo "publish=true" >>"$GITHUB_OUTPUT"
+
   images:
     name: Build, smoke-test and push the images
-    needs: ci
+    needs: [ci, version]
+    if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -43,8 +79,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # A tag vX.Y.Z is version X.Y.Z; a build from main is a prerelease of 0.0.0 numbered by the run, so the two can
-      # never be confused. The version is the highest-priority tag (semver, then the main build, then the commit).
+      # The version from the job above; it is also the version the images report (the highest-priority tag).
       - name: Server tags and labels
         id: meta-server
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
@@ -52,9 +87,8 @@ jobs:
           images: ghcr.io/zenkraker/velomine-server
           flavor: latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=0.0.0-main.${{ github.run_number }},enable={{is_default_branch}}
+            type=semver,pattern={{version}},value=${{ needs.version.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.version.outputs.tag }}
             type=sha,format=long
           labels: |
             org.opencontainers.image.title=Velomine server
@@ -67,9 +101,8 @@ jobs:
           images: ghcr.io/zenkraker/velomine-web
           flavor: latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=0.0.0-main.${{ github.run_number }},enable={{is_default_branch}}
+            type=semver,pattern={{version}},value=${{ needs.version.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.version.outputs.tag }}
             type=sha,format=long
           labels: |
             org.opencontainers.image.title=Velomine web
@@ -170,3 +203,20 @@ jobs:
           subject-name: ghcr.io/zenkraker/velomine-web
           subject-digest: ${{ steps.push-web.outputs.digest }}
           push-to-registry: true
+
+  # Tagging with the workflow's token starts no new run, so the tag never builds the images a second time.
+  release:
+    name: Tag the commit and write the GitHub Release
+    needs: [version, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --generate-notes

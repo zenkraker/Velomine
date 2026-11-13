@@ -930,7 +930,6 @@
           "OpenTelemetry.Instrumentation.Http": "[1.20.2, )",
           "OpenTelemetry.Instrumentation.Runtime": "[1.20.1, )",
           "Sentry.AspNetCore": "[6.12.1, )",
-          "Sentry.OpenTelemetry.Exporter": "[6.12.1, )",
           "Sentry.Serilog": "[6.12.1, )",
           "Serilog.AspNetCore": "[10.0.0, )",
           "Serilog.Settings.Configuration": "[10.0.1, )",
@@ -1103,16 +1102,6 @@
         "contentHash": "BdAHa8zGH2jnY3u/ZGzbbDVJBvP5qC/TmoJHZ/HuxNnfA9LQGx9vZrG2eLV2Gfd+9/sN/ZcqA2z6kfnq3TTHUw==",
         "dependencies": {
           "Sentry.Extensions.Logging": "6.12.1"
-        }
-      },
-      "Sentry.OpenTelemetry.Exporter": {
-        "type": "CentralTransitive",
-        "requested": "[6.12.1, )",
-        "resolved": "6.12.1",
-        "contentHash": "GNXTFfn2zaIapAiTFq3ErNAa6D3Ap3HoD4a/UMbQQMQGwppzpPmP9cyVSLGJjRLuxr5yD4rzMJdClKnU0XgZPA==",
-        "dependencies": {
-          "OpenTelemetry.Exporter.OpenTelemetryProtocol": "1.12.0",
-          "Sentry": "6.12.1"
         }
       },
       "Sentry.Serilog": {

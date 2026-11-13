@@ -4,7 +4,7 @@ namespace Velomine.Server.Observability;
 
 /// <summary>
 /// The small set of business and background-job measurements that a trace or an error cannot derive.
-/// Application code uses these System.Diagnostics.Metrics instruments; the listener decides where they go.
+/// Application code uses these System.Diagnostics.Metrics instruments; TelemetrySetup exports them over OTLP when telemetry is on.
 /// </summary>
 public static class VelomineMetrics
 {

@@ -87,11 +87,12 @@ public sealed class SiteTests
     [InlineData("/privacy/")]
     [InlineData("/terms/")]
     [InlineData("/security/")]
-    public async Task SitePages_ShouldDeclareACanonicalLink_WhenServed(string path)
+    public async Task SitePages_ShouldDeclareTheCanonicalSiteAddress_WhenServed(string path)
     {
         var html = await ReadSiteAsync(path);
 
-        Assert.Contains($"<link rel=\"canonical\" href=\"{path}\">", html);
+        // Absolute at velomine.eu on every copy of the site (AGENTS.md: the site's search identity).
+        Assert.Contains($"<link rel=\"canonical\" href=\"https://velomine.eu{path}\">", html);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "rel=\"canonical\""));
     }
 

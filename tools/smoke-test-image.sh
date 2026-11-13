@@ -107,6 +107,7 @@ ok "site pages, and their trailing-slash redirects"
 expect_status 200 /static/site.css
 expect_status 200 /.well-known/security.txt
 expect_status 200 /robots.txt
+expect_status 200 /sitemap.xml
 
 # The web app: its files, and any path without an extension falls back to its index.html.
 expect_status 200 /main.dart.js

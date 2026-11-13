@@ -1,4 +1,0 @@
-# Settings and secrets for each environment and the backup repository. Only the *.example files are committed.
-envs/*/
-restic.env
-.generated/

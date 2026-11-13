@@ -1,13 +1,13 @@
 # Dex: a small OpenID Connect provider for LOCAL DEVELOPMENT ONLY (see docs/dependencies/dex.md).
-# It lets you try single sign-on without any outside account. In production, point
-# VELOMINE__SSO__AUTHORITY at your own provider instead and remove the dex service.
+# It lets you try single sign-on without any outside account. compose.development.yaml runs it; a shared server
+# never does: point VELOMINE__SSO__AUTHORITY at your own provider instead.
 #
 # Log in at the Velomine sign-in page with:  rider@sso.test / password
 # The server tests start Dex from this same file (tests/Velomine.Server.Tests/DexFixture.cs); keep both working.
 #
 # The issuer must be the same address for your browser and for the Velomine container:
 # the host name dex.localhost reaches Dex's published port from your browser (browsers send
-# *.localhost to your own machine) and is a network alias of Dex inside docker compose.
+# *.localhost to your own machine) and is a network alias of Dex inside compose (compose.development.yaml).
 issuer: http://dex.localhost:5556/dex
 
 storage:

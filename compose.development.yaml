@@ -1,0 +1,43 @@
+# Development: the stack in docker-compose.yml plus Dex, a local single sign-on provider. `just up` runs
+#
+#   docker compose -f docker-compose.yml -f compose.development.yaml up --build -d --wait
+#
+# Dex is for development and tests only (docs/dependencies/dex.md): never use this file on a shared server.
+# The server tests start Dex from the same deploy/dex/config.yaml (tests/Velomine.Server.Tests/DexFixture.cs).
+
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:v2.46.1
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    environment:
+      # The config holds bcrypt hashes with $ characters, so do not expand $VARIABLES in it.
+      DEX_EXPAND_ENV: "false"
+    volumes:
+      - ./deploy/dex/config.yaml:/etc/dex/config.yaml:ro
+    ports:
+      - "127.0.0.1:5556:5556"
+    networks:
+      default:
+        aliases:
+          # The issuer must be the same for the browser and the server: browsers send *.localhost to this machine,
+          # and inside compose the name reaches this container.
+          - dex.localhost
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5556/dex/.well-known/openid-configuration"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    depends_on:
+      dex:
+        condition: service_healthy
+    environment:
+      VELOMINE__SSO__AUTHORITY: http://dex.localhost:5556/dex
+      VELOMINE__SSO__CLIENTID: velomine
+      VELOMINE__SSO__CLIENTSECRET: velomine-dev-secret
+      VELOMINE__SSO__APPCLIENTID: velomine-app
+      VELOMINE__SSO__DISPLAYNAME: Dex (local test)
+      VELOMINE__SSO__ALLOWINSECUREHTTP: "true"
+      # Telemetry is for the demo only; a local stack never sends any, even with a copy of the demo's .env.
+      VELOMINE__TELEMETRY__ENABLED: "false"

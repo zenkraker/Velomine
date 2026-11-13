@@ -8,3 +8,6 @@ src/Velomine.Server/wwwroot/
 # Nix dev environment (docs/development.md): direnv cache and machine-local caches, SDKs and data
 .direnv/
 .dev/
+
+# Local compose and app secrets (.env.example is the committed template)
+.env

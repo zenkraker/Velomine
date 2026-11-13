@@ -27,7 +27,7 @@ You only need a few ideas to use this setup.
 | Your distribution (pacman, apt, …) | Nix, direnv, Docker, VS Code, a Chromium-based browser | Used across all projects, or system services Nix cannot run |
 | `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, CodeGraph, OpenCode, VS Code with extensions, just | Versions that matter to this project |
 | `.dev/` in the repository | Caches, unpacked Flutter, emulator | Machine-local and writable; safe to delete |
-| Docker | PostgreSQL and Dex | The same containers as `docker compose`; see [the compose file](../docker-compose.yml) |
+| Docker | PostgreSQL and Dex | The same containers as `just up`; see [the compose file](../docker-compose.yml) and [the development overlay](../compose.development.yaml) |
 
 ## What the flake provides
 
@@ -203,7 +203,7 @@ It runs under the CLI profile named by `SCW_PROFILE`, `velomine-readonly` by def
    `DomainsDNSReadOnly`, `ObjectStorageReadOnly`, `IAMReadOnly`, `ContainerRegistryReadOnly` and `VPCReadOnly`.
 3. Generate an API key for the application and store it as a profile: `scw init -p velomine-readonly`.
 
-Never use the account key, and never commit a key. Changes to the infrastructure go through OpenTofu in `infra/`, never through the MCP.
+Never use the account key, and never commit a key. Changes to the infrastructure are made by hand, never through the MCP.
 
 The dev shell points the NuGet, pub, Gradle and Android caches, and the unpacked Flutter SDK into `.dev/`. Ride files, the database and the Data Protection keys live in Docker volumes.
 
@@ -255,23 +255,12 @@ Open the repository folder in VS Code and allow the `.envrc` when the direnv ext
 
 Nix also runs on other Linux distributions, macOS and WSL 2. Install it with the [official installer](https://nixos.org/download/), turn on flakes as in step 2, and continue from step 3. This has only been tried on CachyOS. The flake currently builds for `x86_64-linux` only.
 
-## Telemetry in development
+## Telemetry
 
-Telemetry is off by default. To send it locally, put the values in the git-ignored `.dev/telemetry.env`; the
-`server` service in `docker-compose.yml` reads that file when it exists. Run `just up` after changing it:
-
-```
-VELOMINE__TELEMETRY__ENABLED=true
-VELOMINE__TELEMETRY__SENTRY__DSN=<server dsn>
-VELOMINE__TELEMETRY__SENTRY__APPDSN=<app dsn>
-VELOMINE__TELEMETRY__SENTRY__ENVIRONMENT=development
-VELOMINE__TELEMETRY__TRACESAMPLERATIO=1
-```
-
-The server starts logs, traces, metrics and errors. The phone reads the app DSN from `GET /api/v1/server`, but only
-after a member opts in under **Profile → Privacy** and restarts the app. If `AppDsn` is unset it falls back to
-`Dsn`, so one project still works. A self-hosted server with no DSN sends nothing. The app also reports its own
-sign-in, recording, upload and API signals through the same consent switches.
+Telemetry is for the demo only. The local stack never sends any: `compose.development.yaml` forces
+`VELOMINE__TELEMETRY__ENABLED=false`, even when your `.env` is a copy of the demo's. The demo's settings are in
+`.env.example` under *Telemetry*. The phone reads the app DSN from `GET /api/v1/server`, and only after a member opts
+in under **Profile → Privacy**.
 
 Release builds do not upload debug symbols or web source maps yet. When you want readable release stack traces,
 add the Sentry Dart Plugin and pass `SENTRY_AUTH_TOKEN` as a build secret; it is deliberately not enabled by
@@ -283,7 +272,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 
 | Command | What it does |
 |---------|--------------|
-| `just up` | Builds the image and starts PostgreSQL, Dex and the server in Docker on http://localhost:8080, exactly as `docker compose up --build` in the README, in the background. Run it again after any change. |
+| `just up` | Builds the images and starts PostgreSQL, Dex, the server and the web image in Docker on http://localhost:8080, in the background: `docker-compose.yml` plus `compose.development.yaml`. Every `just` recipe that calls `docker compose` uses both files. Run it again after any change. |
 | `just logs` | Follows the server's log |
 | `just down` / `just nuke` | Stops the containers. `nuke` also deletes the database, the ride files and the Data Protection keys. |
 | `just db` | Opens psql on the database inside the postgres container |
@@ -295,7 +284,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `just check` | Runs every check before a commit: .NET format check, server tests, Riverpod codegen, Dart format, analyzer and Flutter tests |
 | `nix fmt flake.nix` | Formats the flake with the pinned `nixfmt` |
 
-There is one way to run Velomine, in development and for a self-hoster alike: `docker-compose.yml`. Nothing runs the server from your shell. `flutter run -d chrome` still works for quick UI work, but password sign-in needs the cookie, which only works when the server serves the app, so use `just up` for anything that needs a session.
+There is one way to run Velomine, in development and for a self-hoster alike: `docker-compose.yml`. Development adds `compose.development.yaml` (Dex) and the demo adds `compose.demo.yaml` (Traefik); nothing runs the server from your shell. Settings go in `.env`; `.env.example` lists every one. `flutter run -d chrome` still works for quick UI work, but password sign-in needs the cookie, which only works when the server serves the app, so use `just up` for anything that needs a session.
 
 ## Updating tools
 

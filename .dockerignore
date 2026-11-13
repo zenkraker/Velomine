@@ -8,7 +8,6 @@ TestResults/
 docs/
 tests/
 deploy/
-infra/
 .github/
 app/build/
 app/.dart_tool/
@@ -22,4 +21,5 @@ src/Velomine.Server/wwwroot/
 .env
 *.user
 docker-compose*.yml
+compose*.yaml
 justfile

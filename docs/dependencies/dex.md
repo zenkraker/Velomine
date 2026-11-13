@@ -29,7 +29,7 @@ Apache-2.0. Not distributed with Velomine, so it does not affect Velomine's lice
 ## Platform support
 - Image 218 MB (alpine variant). Tested here: starts in under 3 seconds with `storage: type: memory`, serves discovery at `{issuer}/.well-known/openid-configuration` with `authorization_endpoint {issuer}/auth`, `token_endpoint {issuer}/token`, `jwks_uri {issuer}/keys`, `userinfo_endpoint {issuer}/userinfo`.
 - Static users carry `email`, `name` and `email_verified` in the ID token (`emailVerified` in the config).
-- The issuer URL must be the same for the browser and for the server calling the token endpoint (see `docker-compose.yml` for how that is solved).
+- The issuer URL must be the same for the browser and for the server calling the token endpoint (see `compose.development.yaml` for how that is solved).
 
 ## Size and performance
 Starts in seconds; memory use is small. Not measured further.

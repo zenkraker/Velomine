@@ -1,10 +1,27 @@
-# Runs the whole stack for local testing:  docker compose up --build
-# http://localhost:8080: the web image serves the web app and the presentation site and forwards /api, /health and
-# /openapi (and the single sign-on callbacks) to the server (health: /health, API: /api/v1/server). The server itself is not published.
-# Development defaults only (including the Dex single sign-on test provider); set real values in a .env file for anything shared.
+# Velomine: PostgreSQL, the server (the API and background work) and the web image (the web app and the presentation
+# site). This is the whole stack a self-hoster runs; it holds no development or hosting extras.
+#
+#   From source:              docker compose up --build
+#   From the published images: set VELOMINE_VERSION in .env, then  docker compose pull && docker compose up -d --wait
+#
+# http://localhost:8080 is the web image: it serves the web app and the site and forwards /api, /health and /openapi
+# (and the single sign-on callbacks) to the server, which is not published. Settings go in a .env file next to this one
+# (README, "Settings you can change"); every variable in it reaches the server.
+#
+# Overlays add what one use needs, with -f (or COMPOSE_FILE in .env):
+#   compose.development.yaml  Dex, a local single sign-on provider for development (`just up` uses it)
+#   compose.demo.yaml         Traefik in front, with Let's Encrypt certificates, for a public server
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:17
+    restart: unless-stopped
     environment:
       POSTGRES_DB: velomine
       POSTGRES_USER: velomine
@@ -16,72 +33,41 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-
-  # Local single sign-on provider for testing; remove it (and the VELOMINE__SSO__* settings) if you do not need it.
-  dex:
-    image: ghcr.io/dexidp/dex:v2.46.1
-    command: ["dex", "serve", "/etc/dex/config.yaml"]
-    environment:
-      # The config holds bcrypt hashes with $ characters, so do not expand $VARIABLES in it.
-      DEX_EXPAND_ENV: "false"
-    volumes:
-      - ./deploy/dex/config.yaml:/etc/dex/config.yaml:ro
-    ports:
-      - "127.0.0.1:5556:5556"
-    networks:
-      default:
-        aliases:
-          - dex.localhost
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:5556/dex/.well-known/openid-configuration"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+    logging: *logging
 
   # The API and background services (Dockerfile). The web service below reaches it as `server`.
   server:
+    image: ghcr.io/zenkraker/velomine-server:${VELOMINE_VERSION:-dev}
     build: .
-    # Optional, git-ignored: VELOMINE__TELEMETRY__* settings to send this instance's logs, traces and errors
-    # to Sentry during development (see docs/development.md). Without the file, telemetry stays off.
+    restart: unless-stopped
     env_file:
-      - path: .dev/telemetry.env
+      - path: .env
         required: false
     depends_on:
       postgres:
         condition: service_healthy
-      dex:
-        condition: service_healthy
     environment:
-      CONNECTIONSTRINGS__VELOMINE: Host=postgres;Database=velomine;Username=velomine;Password=${POSTGRES_PASSWORD:-velomine-dev}
+      # The postgres service above, unless .env points at an existing PostgreSQL server.
+      CONNECTIONSTRINGS__VELOMINE: ${CONNECTIONSTRINGS__VELOMINE:-Host=postgres;Database=velomine;Username=velomine;Password=${POSTGRES_PASSWORD:-velomine-dev}}
       # First admin, created on start when the server has none. Change these for anything shared.
       VELOMINE__ADMIN__EMAIL: ${VELOMINE__ADMIN__EMAIL:-admin@velomine.local}
       VELOMINE__ADMIN__PASSWORD: ${VELOMINE__ADMIN__PASSWORD:-Velomine-dev-1}
-      # The public address used in password reset emails. Set this to the address members open, for example
-      # https://club.example, before exposing the server.
+      # The address members open, used in password reset links and calendar feeds. Set it before exposing the server.
       VELOMINE__PUBLICURL: ${VELOMINE__PUBLICURL:-http://localhost:8080}
-      # Maps are on by default (OpenStreetMap). A self-hoster may set VELOMINE__MAP__TILEURL and
-      # VELOMINE__MAP__ATTRIBUTION here to use a private tile server; an empty value falls back to the default.
-      # Single sign-on through the local Dex service above. Any OpenID Connect provider works.
-      VELOMINE__SSO__AUTHORITY: http://dex.localhost:5556/dex
-      VELOMINE__SSO__CLIENTID: velomine
-      VELOMINE__SSO__CLIENTSECRET: velomine-dev-secret
-      VELOMINE__SSO__APPCLIENTID: velomine-app
-      VELOMINE__SSO__DISPLAYNAME: Dex (local test)
-      VELOMINE__SSO__ALLOWINSECUREHTTP: "true"
-      # Background work (ride ingestion, email, catalogue sync) runs on one instance only. On every other API
-      # instance of a cloud deployment set VELOMINE__BACKGROUND__ENABLED=false; keep it true on exactly one.
-      # VELOMINE__BACKGROUND__ENABLED: "false"
     volumes:
       - velomine-files:/data/files
-      # Shared by every API instance: the Data Protection key ring signs the cookies, so a restart or another
-      # instance must read the same keys. Do not give each instance its own volume.
+      # The Data Protection key ring signs the cookies and links, so a restart or another instance must read the same
+      # keys. Back it up with the database and the files; do not give each instance its own volume.
       - velomine-keys:/data/keys
+    logging: *logging
 
   # The web app and the presentation site (app/Dockerfile), the one published port.
   web:
+    image: ghcr.io/zenkraker/velomine-web:${VELOMINE_VERSION:-dev}
     build:
       context: .
       dockerfile: app/Dockerfile
+    restart: unless-stopped
     depends_on:
       - server
     ports:
@@ -91,6 +77,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+    logging: *logging
 
 volumes:
   postgres-data:

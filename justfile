@@ -2,6 +2,9 @@ avd := "velomine"
 device := "medium_phone"
 image := "system-images;android-36;google_apis_playstore;x86_64"
 
+# Every docker compose command below runs the stack with Dex, the local single sign-on provider.
+export COMPOSE_FILE := "docker-compose.yml:compose.development.yaml"
+
 # list commands
 default:
     @just --list
@@ -12,7 +15,7 @@ setup:
     cd app && flutter pub get
     avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}" -d {{device}}
 
-# build and start the whole stack in Docker on http://localhost:8080; run it again after any change
+# build and start the whole stack, with Dex, in Docker on http://localhost:8080; run it again after any change
 up:
     docker compose up --build -d --wait --remove-orphans
 
