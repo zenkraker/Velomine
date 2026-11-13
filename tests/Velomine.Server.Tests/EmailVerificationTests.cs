@@ -12,7 +12,6 @@ using Velomine.Server.Features.Notifications.Email;
 namespace Velomine.Server.Tests;
 
 /// <summary>Email verification on sign-up: on when SMTP is configured, absent when it is not. The solo trial starts too.</summary>
-[Collection("postgres")]
 public sealed class EmailVerificationTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
