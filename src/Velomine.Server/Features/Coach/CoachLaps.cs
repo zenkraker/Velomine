@@ -36,17 +36,16 @@ public sealed class GetCoachRideLaps(VelomineDbContext db, TimeProvider time)
             return;
         }
 
-        var status = await db.Rides.AsNoTracking()
+        var ride = await db.Rides.AsNoTracking()
             .Where(r => r.Id == req.RideId && r.UserId == req.UserId)
-            .Select(r => (RideStatus?)r.Status)
             .FirstOrDefaultAsync(ct);
-        if (status is null)
+        if (ride is null)
         {
             await Send.NotFoundAsync(ct);
             return;
         }
 
-        if (status != RideStatus.Ready)
+        if (ride.Status != RideStatus.Ready)
         {
             AddError("The ride has no laps: it is still being read, or the file could not be used.");
             await Send.ErrorsAsync(409, ct);
@@ -65,7 +64,7 @@ public sealed class GetCoachRideLaps(VelomineDbContext db, TimeProvider time)
                 l.AvgSpeedMs, l.MaxSpeedMs, l.AvgPowerW, l.MaxPowerW,
                 l.AvgHeartRate, l.MaxHeartRate, l.AvgCadence, l.ElevationGainM))
             .ToListAsync(ct);
-        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ride, ct);
         await Send.OkAsync(new RideLapsResponse([.. laps.Select(l => PrivacyRules.ForViewer(l, privacy))]), ct);
     }
 }

@@ -60,22 +60,9 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     public async Task HidePower_ShouldHidePowerAndItsNumbers_WhenCoachReadsTheRide()
     {
         await using var api = await StartAsync();
-        var (owner, club, rider, rideId) = await SharedRideAsync(api);
-        var settings = await rider.Client.PutAsJsonAsync(
-            "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HidePower = true,
-                HideHeartRate = false,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = false,
-                HideTemperature = false,
-                TrimStartM = 0,
-                TrimEndM = 0,
-            },
-            Ct);
-        settings.EnsureSuccessStatusCode();
+        var (owner, club, rider) = await SharedClubAsync(api);
+        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { HidePower = true });
+        var rideId = await SharedRideAsync(api, rider);
 
         var ride = await owner.Client.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}", Ct);
@@ -97,21 +84,9 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     public async Task HideHeartRate_ShouldHideHeartRate_WhenCoachReadsStreams()
     {
         await using var api = await StartAsync();
-        var (owner, club, rider, rideId) = await SharedRideAsync(api);
-        (await rider.Client.PutAsJsonAsync(
-            "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HideHeartRate = true,
-                HidePower = false,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = false,
-                HideTemperature = false,
-                TrimStartM = 0,
-                TrimEndM = 0,
-            },
-            Ct)).EnsureSuccessStatusCode();
+        var (owner, club, rider) = await SharedClubAsync(api);
+        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { HideHeartRate = true });
+        var rideId = await SharedRideAsync(api, rider);
 
         var ride = await owner.Client.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}", Ct);
@@ -127,21 +102,9 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     public async Task TrimStart_ShouldHideTheFirstMetres_WhenCoachReadsStreams()
     {
         await using var api = await StartAsync();
-        var (owner, club, rider, rideId) = await SharedRideAsync(api);
-        (await rider.Client.PutAsJsonAsync(
-            "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HideHeartRate = false,
-                HidePower = false,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = false,
-                HideTemperature = false,
-                TrimStartM = 500,
-                TrimEndM = 0,
-            },
-            Ct)).EnsureSuccessStatusCode();
+        var (owner, club, rider) = await SharedClubAsync(api);
+        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { TrimStartM = 500 });
+        var rideId = await SharedRideAsync(api, rider);
 
         var streams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}/streams", Ct);
@@ -264,11 +227,24 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     /// <summary>Creates the club, rider and shared ride for a test, using the fixture given to the test class.</summary>
     private async Task<(Member Owner, AdminClubResponse Club, Member Rider, Guid RideId)> SharedRideAsync(TestApi api)
     {
+        var (owner, club, rider) = await SharedClubAsync(api);
+        return (owner, club, rider, await SharedRideAsync(api, rider));
+    }
+
+    /// <summary>A ride uploaded after the member's settings, so it keeps the privacy defaults it was imported with.</summary>
+    private static async Task<Guid> SharedRideAsync(TestApi api, Member rider)
+    {
+        var ride = await UploadAndWaitAsync(rider.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
+        return ride.Id;
+    }
+
+    /// <summary>The club and the rider who shares rides, training and routes with its coaches.</summary>
+    private async Task<(Member Owner, AdminClubResponse Club, Member Rider)> SharedClubAsync(TestApi api)
+    {
         var owner = await NewMemberAsync(api);
         var club = await TestClubs.CreateAsync(api, owner);
         var rider = await NewMemberAsync(api);
         await JoinAsync(rider, club);
-        var ride = await UploadAndWaitAsync(rider.Client, Fit(new FitSession(DateTime.UtcNow.AddDays(-1), 600)));
         (await rider.Client.PutAsJsonAsync("/api/v1/sharing", new
         {
             rides = "coaches",
@@ -276,6 +252,23 @@ public sealed class PrivacyTests(PostgresFixture postgres)
             routes = "coaches",
             wellbeing = "none",
         }, Ct)).EnsureSuccessStatusCode();
-        return (owner, club, rider, ride.Id);
+        return (owner, club, rider);
     }
+
+    /// <summary>A ride keeps the defaults it was imported with, so a test that wants them to apply saves them first.</summary>
+    private static Task SetDefaultsAsync(HttpClient client, PrivacyDefaults defaults) =>
+        client.PutAsJsonAsync(
+            "/api/v1/privacy/settings",
+            new UpdatePrivacyRequest
+            {
+                HideHeartRate = defaults.HideHeartRate,
+                HidePower = defaults.HidePower,
+                HideCadence = defaults.HideCadence,
+                HideSpeed = defaults.HideSpeed,
+                HideElevation = defaults.HideElevation,
+                HideTemperature = defaults.HideTemperature,
+                TrimStartM = defaults.TrimStartM,
+                TrimEndM = defaults.TrimEndM,
+            },
+            Ct);
 }

@@ -1,4 +1,5 @@
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Privacy;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -149,6 +150,57 @@ public sealed class Ride
 
     /// <summary>The bike ridden. Copied from the member's default bike when the ride is imported; the member can change it.</summary>
     public Guid? BikeId { get; set; }
+
+    /// <summary>
+    /// <see cref="PrivacySettings.HideHeartRate"/> at import.
+    /// </summary>
+    public bool? HideHeartRate { get; set; }
+
+    /// <summary><see cref="PrivacySettings.HidePower"/> at import.</summary>
+    public bool? HidePower { get; set; }
+
+    /// <summary><see cref="PrivacySettings.HideCadence"/> at import.</summary>
+    public bool? HideCadence { get; set; }
+
+    /// <summary><see cref="PrivacySettings.HideSpeed"/> at import.</summary>
+    public bool? HideSpeed { get; set; }
+
+    /// <summary><see cref="PrivacySettings.HideElevation"/> at import.</summary>
+    public bool? HideElevation { get; set; }
+
+    /// <summary><see cref="PrivacySettings.HideTemperature"/> at import.</summary>
+    public bool? HideTemperature { get; set; }
+
+    /// <summary><see cref="PrivacySettings.TrimStartM"/> at import.</summary>
+    public int? TrimStartM { get; set; }
+
+    /// <summary><see cref="PrivacySettings.TrimEndM"/> at import.</summary>
+    public int? TrimEndM { get; set; }
+
+    /// <summary>
+    /// The member's privacy defaults copied onto the ride when it was imported, so changing a default never changes
+    /// what a viewer sees of this ride. Null on a ride imported before the copy existed; the view then uses the
+    /// member's current choices. Zones are not part of it: they are places, and their current radius always applies.
+    /// A re-read of the ride from its original file keeps it (RideReparseService assigns only what it derives).
+    /// </summary>
+    public PrivacyDefaults? Privacy
+    {
+        get => HideHeartRate is null
+            ? null
+            : new(HideHeartRate.Value, HidePower!.Value, HideCadence!.Value, HideSpeed!.Value,
+                HideElevation!.Value, HideTemperature!.Value, TrimStartM!.Value, TrimEndM!.Value);
+        set
+        {
+            HideHeartRate = value?.HideHeartRate;
+            HidePower = value?.HidePower;
+            HideCadence = value?.HideCadence;
+            HideSpeed = value?.HideSpeed;
+            HideElevation = value?.HideElevation;
+            HideTemperature = value?.HideTemperature;
+            TrimStartM = value?.TrimStartM;
+            TrimEndM = value?.TrimEndM;
+        }
+    }
 
     /// <summary>PostgreSQL's xmin, so two edits of the same ride cannot silently overwrite each other.</summary>
     public uint Version { get; set; }

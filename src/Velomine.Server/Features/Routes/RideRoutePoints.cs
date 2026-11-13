@@ -27,7 +27,6 @@ public static class RideRoutePoints
     {
         var ride = await db.Rides.AsNoTracking()
             .Where(r => r.Id == rideId && r.UserId == userId)
-            .Select(r => new { r.Status, r.FileName })
             .FirstOrDefaultAsync(ct);
         if (ride is null) return new RideRoute(RideRouteProblem.NotFound, "", []);
 
@@ -37,7 +36,7 @@ public static class RideRoutePoints
         if (streams?.Latitude is null || streams.Longitude is null)
             return new RideRoute(RideRouteProblem.NoMap, ride.FileName, []);
 
-        var privacy = await PrivacyRules.LoadAsync(db, userId, ct);
+        var privacy = await PrivacyRules.LoadAsync(db, userId, ride, ct);
         var visible = PrivacyRules.ForViewer(
             new RideStreamsResponse(
                 streams.Time, streams.Latitude, streams.Longitude, streams.Altitude,

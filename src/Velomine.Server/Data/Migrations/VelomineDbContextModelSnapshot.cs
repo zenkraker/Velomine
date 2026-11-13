@@ -1876,6 +1876,30 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("file_sha256");
 
+                    b.Property<bool?>("HideCadence")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_cadence");
+
+                    b.Property<bool?>("HideElevation")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_elevation");
+
+                    b.Property<bool?>("HideHeartRate")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_heart_rate");
+
+                    b.Property<bool?>("HidePower")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_power");
+
+                    b.Property<bool?>("HideSpeed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_speed");
+
+                    b.Property<bool?>("HideTemperature")
+                        .HasColumnType("boolean")
+                        .HasColumnName("hide_temperature");
+
                     b.Property<string>("IdempotencyKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -1964,6 +1988,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("title");
 
+                    b.Property<int?>("TrimEndM")
+                        .HasColumnType("integer")
+                        .HasColumnName("trim_end_m");
+
+                    b.Property<int?>("TrimStartM")
+                        .HasColumnType("integer")
+                        .HasColumnName("trim_start_m");
+
                     b.Property<double?>("Trimp")
                         .HasColumnType("double precision")
                         .HasColumnName("trimp");
@@ -2030,6 +2062,8 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("rides", "rides", t =>
                         {
                             t.HasCheckConstraint("ck_rides_description_length", "char_length(description) BETWEEN 1 AND 2000");
+
+                            t.HasCheckConstraint("ck_rides_privacy_trim", "trim_start_m BETWEEN 0 AND 5000 AND trim_end_m BETWEEN 0 AND 5000");
 
                             t.HasCheckConstraint("ck_rides_title_length", "char_length(title) BETWEEN 1 AND 120");
                         });

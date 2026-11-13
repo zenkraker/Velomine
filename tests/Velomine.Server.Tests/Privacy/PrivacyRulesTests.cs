@@ -17,7 +17,7 @@ public sealed class PrivacyRulesTests
         bool heartRate = false, bool power = false, bool cadence = false, bool speed = false,
         bool elevation = false, bool temperature = false, int trimStart = 0, int trimEnd = 0,
         params PrivacyZone[] zones) =>
-        new(heartRate, power, cadence, speed, elevation, temperature, trimStart, trimEnd, zones);
+        new(new PrivacyDefaults(heartRate, power, cadence, speed, elevation, temperature, trimStart, trimEnd), zones);
 
     /// <summary>A straight line north, 111 m per step, with every signal set.</summary>
     private static RideStreamsResponse Line(int points = 20) => new(
@@ -190,8 +190,9 @@ public sealed class PrivacyRulesTests
     {
         var ride = Ride(Guid.NewGuid());
         var streams = Line();
+        var none = new PrivacyProfile(PrivacyDefaults.None, []);
 
-        Assert.Equal(ride, PrivacyRules.ForViewer(ride, PrivacyProfile.None));
-        Assert.Equal(streams.Latitude, PrivacyRules.ForViewer(streams, PrivacyProfile.None, showRoute: true).Latitude);
+        Assert.Equal(ride, PrivacyRules.ForViewer(ride, none));
+        Assert.Equal(streams.Latitude, PrivacyRules.ForViewer(streams, none, showRoute: true).Latitude);
     }
 }

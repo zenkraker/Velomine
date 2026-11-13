@@ -56,8 +56,12 @@ public static class PrivacyValues
     public const int MaxTrimM = 5000;
 }
 
-/// <summary>The owner's rules, loaded once per non-owner view.</summary>
-public sealed record PrivacyProfile(
+/// <summary>
+/// The static privacy choices: the stream switches and the start and end trim. The member's row in
+/// <see cref="PrivacySettings"/> is the default for new rides; a ride keeps its own copy from the moment it is imported
+/// (<see cref="Ride.Privacy"/>), so changing the default never changes what a viewer sees of an older ride.
+/// </summary>
+public sealed record PrivacyDefaults(
     bool HideHeartRate,
     bool HidePower,
     bool HideCadence,
@@ -65,15 +69,15 @@ public sealed record PrivacyProfile(
     bool HideElevation,
     bool HideTemperature,
     int TrimStartM,
-    int TrimEndM,
-    IReadOnlyList<PrivacyZone> Zones)
+    int TrimEndM)
 {
-    public static readonly PrivacyProfile None = new(false, false, false, false, false, false, 0, 0, []);
+    /// <summary>Everything visible and no trim: what a member with no saved settings imports, and the safe base in a test.</summary>
+    public static readonly PrivacyDefaults None = new(false, false, false, false, false, false, 0, 0);
 
     public bool HidesPowerOrHeartRate => HidePower || HideHeartRate;
 
-    public static PrivacyProfile From(PrivacySettings? settings, IReadOnlyList<PrivacyZone> zones) => settings is null
-        ? None with { Zones = zones }
+    public static PrivacyDefaults From(PrivacySettings? settings) => settings is null
+        ? None
         : new(
             settings.HideHeartRate,
             settings.HidePower,
@@ -82,8 +86,29 @@ public sealed record PrivacyProfile(
             settings.HideElevation,
             settings.HideTemperature,
             settings.TrimStartM,
-            settings.TrimEndM,
-            zones);
+            settings.TrimEndM);
+}
+
+/// <summary>The owner's rules for one ride, loaded once per non-owner view. Zones are always the current ones: they are places, not a copy.</summary>
+public sealed record PrivacyProfile(PrivacyDefaults Defaults, IReadOnlyList<PrivacyZone> Zones)
+{
+    public bool HideHeartRate => Defaults.HideHeartRate;
+
+    public bool HidePower => Defaults.HidePower;
+
+    public bool HideCadence => Defaults.HideCadence;
+
+    public bool HideSpeed => Defaults.HideSpeed;
+
+    public bool HideElevation => Defaults.HideElevation;
+
+    public bool HideTemperature => Defaults.HideTemperature;
+
+    public int TrimStartM => Defaults.TrimStartM;
+
+    public int TrimEndM => Defaults.TrimEndM;
+
+    public bool HidesPowerOrHeartRate => Defaults.HidesPowerOrHeartRate;
 }
 
 /// <summary>
@@ -93,15 +118,31 @@ public sealed record PrivacyProfile(
 /// </summary>
 public static class PrivacyRules
 {
-    public static async Task<PrivacyProfile> LoadAsync(VelomineDbContext db, Guid userId, CancellationToken ct)
-    {
-        var settings = await db.PrivacySettings.AsNoTracking()
-            .FirstOrDefaultAsync(s => s.UserId == userId, ct);
-        var zones = await db.PrivacyZones.AsNoTracking()
-            .Where(z => z.UserId == userId)
-            .ToListAsync(ct);
-        return PrivacyProfile.From(settings, zones);
-    }
+    /// <summary>
+    /// The rules for one ride: the snapshot it was imported with, so relaxing the member's default today never
+    /// exposes a ride that was imported while a stream was hidden. The zones are today's, because they are places.
+    /// A ride imported before the snapshot existed falls back to the member's current choices. Load the whole ride
+    /// row: <see cref="Ride.Privacy"/> reads the columns.
+    /// </summary>
+    public static async Task<PrivacyProfile> LoadAsync(VelomineDbContext db, Guid userId, Ride ride, CancellationToken ct) =>
+        new(ride.Privacy ?? await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
+
+    /// <summary>
+    /// One ride's rules for a list that already holds <paramref name="current"/>, so a page of rides costs no extra
+    /// query per ride.
+    /// </summary>
+    public static PrivacyProfile Effective(Ride ride, PrivacyProfile current) =>
+        ride.Privacy is { } snapshot ? current with { Defaults = snapshot } : current;
+
+    /// <summary>
+    /// The member's current choices, with the zones as they are today, for a field that belongs to no single ride
+    /// (the roster, the power curve, the training trend): a single ride has its own rules, see <see cref="LoadAsync"/>.
+    /// </summary>
+    public static async Task<PrivacyProfile> LoadCurrentAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
+        new(await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
+
+    private static async Task<PrivacyDefaults> CurrentDefaultsAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
+        PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == userId, ct));
 
     /// <summary>The stream switches for several owners at once, for a roster that shows their summaries.</summary>
     public static async Task<Dictionary<Guid, PrivacyProfile>> LoadManyAsync(
@@ -115,8 +156,11 @@ public static class PrivacyRules
             .Where(s => ids.Contains(s.UserId))
             .ToListAsync(ct);
         var byUser = settings.ToDictionary(s => s.UserId);
-        return ids.ToDictionary(id => id, id => PrivacyProfile.From(byUser.GetValueOrDefault(id), []));
+        return ids.ToDictionary(id => id, id => new PrivacyProfile(PrivacyDefaults.From(byUser.GetValueOrDefault(id)), []));
     }
+
+    private static Task<List<PrivacyZone>> ZonesAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
+        db.PrivacyZones.AsNoTracking().Where(z => z.UserId == userId).ToListAsync(ct);
 
     /// <summary>
     /// A ride for a viewer with the rides grant. Title and description are the member's own words about the ride and
