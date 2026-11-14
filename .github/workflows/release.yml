@@ -30,6 +30,8 @@ jobs:
   ci:
     name: CI
     uses: ./.github/workflows/ci.yml
+    # Only the Android job reads one: the APK signing key.
+    secrets: inherit
 
   # Only the "add one" is ours: the tags come from the GitHub CLI, and the release itself from gh release create.
   version:

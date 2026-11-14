@@ -32,11 +32,23 @@ android {
         manifestPlaceholders.putAll(mapOf("appAuthRedirectScheme" to "com.velomine.app"))
     }
 
+    // CI passes the release key through these variables (repository secrets); without them, as on a laptop, the
+    // release build is signed with the debug key so `flutter run --release` works.
+    val releaseKeystore = System.getenv("VELOMINE_KEYSTORE_PATH")
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("VELOMINE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("VELOMINE_KEY_ALIAS")
+                keyPassword = System.getenv("VELOMINE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
         }
     }
 }
