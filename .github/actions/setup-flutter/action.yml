@@ -6,6 +6,11 @@ description: >
   app/Dockerfile is the one place CI reads the version from; tools/check-versions.sh
   keeps flake.nix in step with it. No community action in the chain.
 
+outputs:
+  version:
+    description: The pinned Flutter version, for cache keys that depend on it.
+    value: ${{ steps.pin.outputs.version }}
+
 runs:
   using: composite
   steps:

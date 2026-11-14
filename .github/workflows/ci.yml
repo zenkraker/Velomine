@@ -75,7 +75,7 @@ jobs:
           done
 
   app:
-    name: App
+    name: App (Dart)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     defaults:
@@ -115,16 +115,74 @@ jobs:
       - name: Test
         run: flutter test
 
-      # `flutter test` never compiles the Kotlin side. The FIT encoder and the recorder models are tested here.
+  # `flutter test` never compiles the Kotlin side. The FIT encoder and the recorder models are tested here, in a job
+  # of their own so they run beside the Dart checks instead of after them.
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The JDK the dev shell uses (flake.nix), not whichever one the runner image ships.
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        id: flutter
+        uses: ./.github/actions/setup-flutter
+
+      # The Gradle distribution, the Android build dependencies and the build cache (org.gradle.caching): without them
+      # every run downloads Gradle, resolves every dependency and compiles Flutter's Gradle plugin again. The key
+      # changes with any version that decides what Gradle downloads; an older cache still seeds the run.
+      - name: Cache Gradle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-flutter-${{ steps.flutter.outputs.version }}-${{ hashFiles('app/android/**/*.gradle.kts', 'app/android/gradle.properties', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'app/pubspec.lock') }}
+          restore-keys: gradle-${{ runner.os }}-flutter-${{ steps.flutter.outputs.version }}-
+
+      - name: Install dependencies
+        run: flutter pub get --enforce-lockfile
+
+      # Flutter's Android .gitignore leaves out gradlew and local.properties; --config-only writes them without a build.
+      # The Kotlin tests do not need the Dart code, so its debug compile is skipped.
       - name: Android unit tests
-        # Flutter's Android .gitignore leaves out gradlew and local.properties; --config-only writes them without a build.
         run: |
           flutter build apk --config-only
-          cd android && ./gradlew :app:testDebugUnitTest --no-daemon
+          cd android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug --no-daemon
 
-      # Catches web-only compile errors minutes before the image build would.
-      # The image compiles the web app again from source, so
-      # `docker compose up --build` keeps working without CI.
+  # Catches web-only compile errors minutes before the image build would. The image compiles the web app again from
+  # source, so `docker compose up --build` keeps working without CI. A release builds that image right after CI, so
+  # this job runs for pull requests and by hand only.
+  web:
+    name: Web
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Install dependencies
+        run: flutter pub get --enforce-lockfile
+
       - name: Build web
         run: flutter build web --release --no-web-resources-cdn
 
