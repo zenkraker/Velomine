@@ -46,6 +46,12 @@ android {
         }
     }
 
+    // The release build's lint pass (lintVital) crashes on JDK 17, the dev shell's: AGP 9.3's lint calls Java 21's
+    // List.removeLast(). Lint is not one of our checks, so the release build skips it.
+    lint {
+        checkReleaseBuilds = false
+    }
+
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
