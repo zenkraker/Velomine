@@ -4,8 +4,8 @@ name: CI
 # ones a laptop forgets (generated files committed, API client in step with the
 # server, Flutter pinned the same everywhere). Runs on every pull request, and
 # release.yml calls it before it builds an image, so nothing is published
-# without it. Nothing here holds a secret, so it is safe for pull requests from
-# forks.
+# without it. The only secret is the APK signing key; GitHub gives none to pull
+# requests from forks, and the APK then falls back to the debug key.
 
 on:
   pull_request:
@@ -162,11 +162,20 @@ jobs:
           cd android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug --no-daemon
 
       # An installable APK for trying the app on a phone, downloadable from the run's summary page. The member enters
-      # the server address on first start.
-      # shortcut: signed with the runner's throwaway debug key, so a newer APK only installs after removing the older
-      # one; give the release build its own key (a repository secret) when the app is distributed.
+      # the server address on first start. It is signed with the release key from the repository secrets, so a newer
+      # APK installs over the older one. Pull requests from forks get no secrets and fall back to the debug key.
       - name: Build the APK
-        run: flutter build apk --release
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          VELOMINE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          VELOMINE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          VELOMINE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            base64 -d <<<"$KEYSTORE_BASE64" >"$RUNNER_TEMP/release.jks"
+            export VELOMINE_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+          fi
+          flutter build apk --release
 
       - name: Upload the APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
