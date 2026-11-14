@@ -161,6 +161,21 @@ jobs:
           flutter build apk --config-only
           cd android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug --no-daemon
 
+      # An installable APK for trying the app on a phone, downloadable from the run's summary page. The member enters
+      # the server address on first start.
+      # shortcut: signed with the runner's throwaway debug key, so a newer APK only installs after removing the older
+      # one; give the release build its own key (a repository secret) when the app is distributed.
+      - name: Build the APK
+        run: flutter build apk --release
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: velomine-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
   # Catches web-only compile errors minutes before the image build would. The image compiles the web app again from
   # source, so `docker compose up --build` keeps working without CI. A release builds that image right after CI, so
   # this job runs for pull requests and by hand only.
