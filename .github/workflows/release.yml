@@ -63,17 +63,23 @@ jobs:
           echo "tag=$major.$minor.$((patch + 1))" >>"$GITHUB_OUTPUT"
           echo "publish=true" >>"$GITHUB_OUTPUT"
 
+  # Builds and smoke-tests the pair while CI runs, so a release waits for the longer of the two, not their sum. Nothing
+  # leaves this job: the publish job pushes only once CI has passed too.
   images:
-    name: Build, smoke-test and push the images
-    needs: [ci, version]
+    name: Build and smoke-test the images
+    needs: [version]
     if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: read
-      packages: write
-      id-token: write
-      attestations: write
+    outputs:
+      server-tags: ${{ steps.meta-server.outputs.tags }}
+      server-labels: ${{ steps.meta-server.outputs.labels }}
+      server-version: ${{ steps.meta-server.outputs.version }}
+      web-tags: ${{ steps.meta-web.outputs.tags }}
+      web-labels: ${{ steps.meta-web.outputs.labels }}
+      web-version: ${{ steps.meta-web.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -148,13 +154,31 @@ jobs:
       - name: Smoke test
         run: tools/smoke-test-image.sh velomine-server:smoke velomine-web:smoke "+${GITHUB_SHA::7}"
 
+  # Pushes the tested pair once CI has passed as well.
+  publish:
+    name: Push the images
+    needs: [ci, version, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
       - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Every layer comes from the cache of the builds above, so these push the images that were just tested, with an
+      # Every layer comes from the cache the images job wrote, so these push the images that were just tested, with an
       # SBOM and build provenance attached.
       - name: Push the server image
         id: push-server
@@ -166,10 +190,10 @@ jobs:
           push: true
           provenance: mode=max
           sbom: true
-          tags: ${{ steps.meta-server.outputs.tags }}
-          labels: ${{ steps.meta-server.outputs.labels }}
+          tags: ${{ needs.images.outputs.server-tags }}
+          labels: ${{ needs.images.outputs.server-labels }}
           build-args: |
-            VERSION=${{ steps.meta-server.outputs.version }}
+            VERSION=${{ needs.images.outputs.server-version }}
             REVISION=${{ github.sha }}
           cache-from: type=gha,scope=server
 
@@ -183,10 +207,10 @@ jobs:
           push: true
           provenance: mode=max
           sbom: true
-          tags: ${{ steps.meta-web.outputs.tags }}
-          labels: ${{ steps.meta-web.outputs.labels }}
+          tags: ${{ needs.images.outputs.web-tags }}
+          labels: ${{ needs.images.outputs.web-labels }}
           build-args: |
-            VERSION=${{ steps.meta-web.outputs.version }}
+            VERSION=${{ needs.images.outputs.web-version }}
             REVISION=${{ github.sha }}
           cache-from: type=gha,scope=web
 
@@ -207,7 +231,7 @@ jobs:
   # Tagging with the workflow's token starts no new run, so the tag never builds the images a second time.
   release:
     name: Tag the commit and write the GitHub Release
-    needs: [version, images]
+    needs: [version, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
