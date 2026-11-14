@@ -34,9 +34,9 @@ You only need a few ideas to use this setup.
 | Tool | Version | Why |
 |------|---------|-----|
 | .NET SDK | 10.0 (from nixpkgs) | Server and tests. EF Core tools come from `dotnet-tools.json`, restored when the shell starts. |
-| Flutter | 3.47.9 with Dart 3.13.7 | The official release with the **same version and checksum as the `Dockerfile`**. Not the nixpkgs build, which lags behind (3.47.4 with Dart 3.13.3, too old for `app/pubspec.yaml`). It is unpacked once into `.dev/`, because Flutter writes into its own folder. |
-| Android SDK | platform 36, build tools 36.0.0, NDK 28.2.13676358, CMake 3.22.1, emulator, Play Store image (x86_64) | The versions Flutter 3.47's Gradle plugin asks for |
-| Java | JDK 17 | Gradle 9 and the Android Gradle Plugin 9 need Java 17 or newer. It also runs the OpenAPI generator JAR. |
+| Flutter | 3.50.0 with Dart 3.14.0 | The official release with the **same version and checksum as the `Dockerfile`**. Not the nixpkgs build, which lags behind the Dart version `app/pubspec.yaml` needs. It is unpacked once into `.dev/`, because Flutter writes into its own folder. |
+| Android SDK | platform 36, build tools 36.0.0, NDK 28.2.13676358, CMake 3.22.1, emulator, Play Store image (x86_64) | The versions Flutter 3.50's Gradle plugin asks for |
+| Java | JDK 17 | Gradle 9 and the Android Gradle Plugin 9 need Java 17 or newer; CI pins the same JDK. It also runs the OpenAPI generator JAR. |
 | Claude Code | 2.1.322 | AI coding agent, pinned ahead of nixpkgs from Anthropic's release manifest (see *Updating tools*). It is the only install: no native installer, npm package or VS Code Marketplace extension on the host, and it never updates itself. |
 | Node.js | from nixpkgs | Ponytail's Claude Code hooks (see [AGENTS.md](../AGENTS.md)) |
 | CodeGraph | from nixpkgs | Required by AGENTS.md, so there's no `curl … \| sh` install |
@@ -151,7 +151,7 @@ In the desktop app, add that address under the server settings with the user `op
 The Dart MCP server is the one bundled with the pinned SDK. Do not install a separate global copy:
 
 ```
-dart mcp-server --version     # 1.2.2 with Flutter 3.47.9 / Dart 3.13.7
+dart mcp-server --version     # 1.2.2 with Flutter 3.50.0 / Dart 3.14.0
 flutter --version
 ```
 
@@ -221,7 +221,7 @@ When it is done, check:
 
 ```
 which dotnet         # a path under /nix/store
-flutter --version    # Flutter 3.47.9, Dart 3.13.7
+flutter --version    # Flutter 3.50.0, Dart 3.14.0
 ```
 
 If Nix says a file "does not exist" although you can see it, git does not track it yet. See *Troubleshooting*.
@@ -288,7 +288,7 @@ There is one way to run Velomine, in development and for a self-hoster alike: `d
 
 ## Updating tools
 
-- **Flutter:** change `flutterVersion` and `sha256` in `flake.nix` **and** `FLUTTER_VERSION` and `FLUTTER_SHA256` in the `Dockerfile`, in the same commit. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). Run `direnv reload`. The new version unpacks into its own `.dev/flutter-<version>` folder, so delete the old one. A new minor version (3.48 rather than 3.47.x) may ask for newer Android SDK or NDK versions. See *Troubleshooting*.
+- **Flutter:** change `flutterVersion` and `sha256` in `flake.nix` **and** `FLUTTER_VERSION` and `FLUTTER_SHA256` in the `Dockerfile`, in the same commit. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). Run `direnv reload`. The new version unpacks into its own `.dev/flutter-<version>` folder, so delete the old one. A new minor version (3.51 rather than 3.50.x) may ask for newer Android SDK or NDK versions, and its template names the Gradle, Android Gradle Plugin and Kotlin versions it is tested with (`packages/flutter_tools/lib/src/android/gradle_utils.dart`): use those in `app/android/`. See *Troubleshooting*.
 - **Everything from nixpkgs** (.NET SDK, Java, Node, CodeGraph, just, the Android packages): `nix flake update nixpkgs`, then commit the new `flake.lock` on its own.
 - **Claude Code:** pinned in `flake.nix` ahead of nixpkgs. Take the version from `https://downloads.claude.ai/claude-code-releases/latest` and the `linux-x64` checksum from `https://downloads.claude.ai/claude-code-releases/<version>/manifest.zst.json`, and set both in `claudeCode`. Then set the VS Code extension's `hash` in `claudeCodeExtension` to `pkgs.lib.fakeHash`, run `nix build .#vscode`, and paste the hash it reports. Commit both together. Drop the overrides once nixpkgs' `claude-code` has caught up.
 - **Agent plugins:** OpenCode updates ponytail with `opencode plugin update @dietrichgebert/ponytail`; change the pinned version in `opencode.json` after reading the changelog. Claude Code's plugins (ponytail, the official Flutter plugin) update through `claude plugin update`.

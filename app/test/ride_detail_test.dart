@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine/core/providers.dart';
@@ -8,6 +8,8 @@ import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
 
+import 'package:velomine/core/l10n.dart';
+
 Widget _detailApp(Session session, String id) => ProviderScope(
   overrides: [
     sessionProvider.overrideWith((ref) => session),
@@ -16,7 +18,7 @@ Widget _detailApp(Session session, String id) => ProviderScope(
     ),
   ],
   child: MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: RideDetailScreen(id: id, onDeleted: () {}),

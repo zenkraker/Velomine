@@ -22,15 +22,15 @@
         };
       };
 
-      # Same Flutter release and checksum as app/Dockerfile. nixpkgs' flutter347 is 3.47.4
-      # (Dart 3.13.3), but app/pubspec.yaml needs Dart ^3.13.7. Bump both files together.
-      flutterVersion = "3.47.9";
+      # Same Flutter release and checksum as app/Dockerfile: the official release, not nixpkgs' build, which lags
+      # behind the Dart version app/pubspec.yaml needs. Bump both files together.
+      flutterVersion = "3.50.0";
       flutterTarball = pkgs.fetchurl {
         url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${flutterVersion}-stable.tar.xz";
-        sha256 = "25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a";
+        sha256 = "6ea2d806fd57269ae783e6788e2a81fc26eaad782f1e0d0ff38623bb765ff9f5";
       };
 
-      # Versions Flutter 3.47's Gradle plugin asks for (compileSdk 36, NDK 28.2). Platform 35 is for the jni
+      # Versions Flutter 3.50's Gradle plugin asks for (compileSdk 36, NDK 28.2). Platform 35 is for the jni
       # package (dart.dev, used by shared_preferences on Android), which compiles against it.
       android = pkgs.androidenv.composeAndroidPackages {
         platformVersions = [
@@ -174,7 +174,7 @@
 
           # app
           android.androidsdk
-          pkgs.jdk17 # Gradle 9 / AGP 9 need Java 17+; also runs the OpenAPI generator JAR
+          pkgs.jdk17 # Gradle 9 / AGP 9 need Java 17+; CI pins the same (ci.yml); also runs the OpenAPI generator JAR
 
           # AI coding agents and the tooling they share.
           # Agent plugins are recommended, not pinned here: ponytail

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -66,6 +66,7 @@ import 'features/rides/import/import_screen.dart';
 import 'features/rides/rides_view_model.dart';
 import 'features/rides/rides_screen.dart';
 import 'home_shell.dart';
+import 'core/l10n.dart';
 
 /// Opens the data export in the system browser, which saves the ZIP (on the web, a new tab does).
 Future<void> _openLink(Uri uri) async {
@@ -645,7 +646,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       darkTheme: nightTheme(),
       themeMode: theme,
       locale: language == null ? null : Locale(language),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
       builder: (context, child) {

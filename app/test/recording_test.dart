@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +10,7 @@ import 'package:velomine/features/recording/recorder_settings.dart';
 import 'package:velomine/features/recording/recording_providers.dart';
 import 'package:velomine/features/recording/recording_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
+import 'package:velomine/core/l10n.dart';
 
 final testAccountProvider = NotifierProvider<_TestAccount, String?>(
   _TestAccount.new,
@@ -316,7 +317,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const RecordingScreen(),
         ),

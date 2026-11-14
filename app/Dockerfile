@@ -6,8 +6,8 @@
 # Flutter's official release, pinned by version and checksum (tools/check-versions.sh keeps flake.nix in step). It only
 # exists for Linux x64; its output is plain files, so on an Apple Silicon host this stage runs emulated.
 FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
-ARG FLUTTER_VERSION=3.47.9
-ARG FLUTTER_SHA256=25ed8c3c29d51a7353f2a944310b478af8214920639524b19c50a19e6c044c5a
+ARG FLUTTER_VERSION=3.50.0
+ARG FLUTTER_SHA256=6ea2d806fd57269ae783e6788e2a81fc26eaad782f1e0d0ff38623bb765ff9f5
 RUN apt-get update && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL -o /tmp/flutter.tar.xz "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \

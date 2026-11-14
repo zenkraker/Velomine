@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A neutral block the size of content that is still loading, so the layout does not jump when it arrives.
 class PlaceholderBlock extends StatelessWidget {

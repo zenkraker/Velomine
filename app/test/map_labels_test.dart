@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/rides/detail/lap_range.dart';
 import 'package:velomine/features/rides/detail/ride_series.dart';
@@ -6,6 +6,7 @@ import 'package:velomine/features/rides/detail/route_map.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
 import 'package:velomine/core/units.dart';
+import 'package:velomine/core/l10n.dart';
 
 void main() {
   testWidgets('RouteMap_ShouldScaleItsLabels_WhenTheSystemTextIsLarger', (
@@ -35,7 +36,7 @@ void main() {
     Future<double> labelHeight(double scale) async {
       await tester.pumpWidget(
         MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: MediaQueryData(textScaler: TextScaler.linear(scale)),

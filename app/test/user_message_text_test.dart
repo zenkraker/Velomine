@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/user_message.dart';
-import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine/core/user_message_text.dart';
+import 'package:velomine/core/l10n.dart';
 
 final class _Messages extends Notifier<List<UserMessage>> {
   @override
@@ -24,7 +24,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           home: Scaffold(
             body: Consumer(
               builder: (context, ref, _) {

@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine/features/profile/solo_trial_badge.dart';
-import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
+
+import 'package:velomine/core/l10n.dart';
 
 void main() {
   late FakeServer server;
@@ -56,7 +57,7 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: const [Locale('en'), Locale('it')],
           home: Scaffold(
             body: SoloTrialBadge(

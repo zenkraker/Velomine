@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
@@ -10,6 +10,7 @@ import 'core/theme.dart';
 import 'core/theme_choice.dart';
 import 'features/auth/server_setup_screen.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'core/l10n.dart';
 
 /// The top of the app: the setup screen on a phone until a server is chosen,
 /// then the session app for that address.
@@ -32,7 +33,7 @@ class VelomineRoot extends ConsumerWidget {
       darkTheme: nightTheme(),
       themeMode: theme,
       locale: language == null ? null : Locale(language),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: config.isLoading && value == null
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))

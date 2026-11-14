@@ -12,3 +12,7 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+    # Written by gen-l10n. Flutter 3.50's generator still names the localisation delegates from
+    # flutter_localizations, which 3.50 deprecated in favour of material_ui and cupertino_ui, and it has no
+    # option to change that. Our own code is analysed; this file follows Flutter.
+    - lib/l10n/generated/**
