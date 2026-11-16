@@ -296,55 +296,42 @@ Future<DateTime?> showDoneDialog(
   BuildContext context, {
   required String name,
   required DateTime today,
-}) => showDialog<DateTime>(
-  context: context,
-  builder: (_) => _DoneDialog(name: name, today: dateOnly(today)),
+}) => showSheet<DateTime>(
+  context,
+  builder: (_) => _DoneSheet(name: name, today: dateOnly(today)),
 );
 
-class _DoneDialog extends StatefulWidget {
-  const _DoneDialog({required this.name, required this.today});
+class _DoneSheet extends StatefulWidget {
+  const _DoneSheet({required this.name, required this.today});
 
   final String name;
   final DateTime today;
 
   @override
-  State<_DoneDialog> createState() => _DoneDialogState();
+  State<_DoneSheet> createState() => _DoneSheetState();
 }
 
-class _DoneDialogState extends State<_DoneDialog> {
+class _DoneSheetState extends State<_DoneSheet> {
   late DateTime _day = widget.today;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(widget.name),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: AppSpacing.sm,
-        children: [
-          Text(l10n.reminderDoneBody),
-          TextButton.icon(
-            key: const Key('done-date'),
-            icon: const Icon(Icons.event),
-            label: Text(l10n.doneOnDate(isoDate(_day))),
-            onPressed: () async {
-              final d = await _pickPastDate(context, _day);
-              if (d != null) setState(() => _day = dateOnly(d));
-            },
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          key: const Key('confirm-done'),
-          onPressed: () => Navigator.pop(context, _day),
-          child: Text(l10n.reminderDone),
+    return FormSheet(
+      title: widget.name,
+      saveKey: const Key('confirm-done'),
+      saveLabel: l10n.reminderDone,
+      onSave: () => Navigator.pop(context, _day),
+      children: [
+        Text(l10n.reminderDoneBody),
+        TextButton.icon(
+          key: const Key('done-date'),
+          icon: const Icon(Icons.event),
+          label: Text(l10n.doneOnDate(isoDate(_day))),
+          onPressed: () async {
+            final d = await _pickPastDate(context, _day);
+            if (d != null) setState(() => _day = dateOnly(d));
+          },
         ),
       ],
     );

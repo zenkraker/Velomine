@@ -57,14 +57,85 @@ void main() {
     await tester.tap(find.byKey(const Key('bike-bike-1')));
     await tester.pumpAndSettle();
 
-    // The page header shows on a phone too, so the bike's jobs are under it.
-    expect(find.byKey(const Key('edit-bike')), findsOneWidget);
+    // The page header shows on a phone too: Add part is its one action, the rest is in the menu.
     expect(find.byKey(const Key('add-part')), findsOneWidget);
+    expect(find.byKey(const Key('edit-bike')), findsNothing);
 
     await tester.tap(find.byKey(const Key('bike-actions')));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('edit-bike')), findsOneWidget);
     expect(find.byKey(const Key('delete-bike')), findsOneWidget);
   });
+
+  testWidgets('BikeDetailScreen_ShouldListDeleteLastInRed_WhenTheMenuIsOpen', (
+    tester,
+  ) async {
+    server.bikes.add(_bike());
+    await openBikes(tester);
+    await tester.tap(find.byKey(const Key('bike-bike-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('bike-actions')));
+    await tester.pumpAndSettle();
+
+    final archive = tester.getTopLeft(find.byKey(const Key('toggle-archive')));
+    final delete = tester.getTopLeft(find.byKey(const Key('delete-bike')));
+    expect(delete.dy, greaterThan(archive.dy));
+    final error = Theme.of(tester.element(find.byKey(const Key('delete-bike'))))
+        .colorScheme
+        .error;
+    final button = tester.widget<MenuItemButton>(
+      find.byKey(const Key('delete-bike')),
+    );
+    expect(button.style?.foregroundColor?.resolve(<WidgetState>{}), error);
+  });
+
+  testWidgets('BikeDetailScreen_ShouldAskFirstInARowMenu_WhenAPartIsRemoved', (
+    tester,
+  ) async {
+    server.bikes.add(_bike());
+    server.parts['bike-1'] = [_part()];
+    await openBikes(tester);
+    await tester.tap(find.byKey(const Key('bike-bike-1')));
+    await tester.pumpAndSettle();
+
+    // Remove is not a visible button: it sits behind the row's menu, in red.
+    expect(find.byKey(const Key('remove-part-1')), findsNothing);
+    await tester.tap(find.byKey(const Key('part-actions-part-1')));
+    await tester.pumpAndSettle();
+    final remove = tester.widget<MenuItemButton>(
+      find.byKey(const Key('remove-part-1')),
+    );
+    expect(
+      remove.style?.foregroundColor?.resolve(<WidgetState>{}),
+      Theme.of(tester.element(find.byKey(const Key('remove-part-1'))))
+          .colorScheme
+          .error,
+    );
+
+    await tester.tap(find.byKey(const Key('remove-part-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('confirm-remove-part')), findsOneWidget);
+    expect(server.parts['bike-1']!.single['removedOn'], isNull);
+
+    await tester.tap(find.byKey(const Key('confirm-remove-part')));
+    await tester.pumpAndSettle();
+    expect(server.parts['bike-1'], isEmpty);
+  });
+
+  testWidgets(
+    'BikeDetailScreen_ShouldOpenThePickerAsASheet_WhenApplyingATemplate',
+    (tester) async {
+      server.bikes.add(_bike());
+      await openBikes(tester);
+      await tester.tap(find.byKey(const Key('bike-bike-1')));
+      await tester.pumpAndSettle();
+      await chooseBikeAction(tester, 'apply-template');
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(SimpleDialog), findsNothing);
+    },
+  );
 
   testWidgets('BikesScreen_ShouldExplainBikes_WhenThereAreNone', (
     tester,
@@ -478,3 +549,30 @@ void main() {
     expect(part['mpn'], 'CN-M8100');
   });
 }
+
+Map<String, Object?> _bike() => {
+  'id': 'bike-1',
+  'name': 'Climber',
+  'kind': 'road',
+  'wheelCircumferenceMm': 2105,
+  'initialDistanceM': 0.0,
+  'isDefault': true,
+};
+
+Map<String, Object?> _part() => {
+  'id': 'part-1',
+  'type': 'chain',
+  'typeName': 'Chain',
+  'brand': null,
+  'model': null,
+  'installedOn': '2026-01-01',
+  'removedOn': null,
+  'expectedDistanceM': 4000000.0,
+  'expectedHours': null,
+  'expectedMonths': null,
+  'usedDistanceM': 100000.0,
+  'usedHours': 5.0,
+  'usedMonths': 1.0,
+  'wearPercent': 3,
+  'status': 'ok',
+};

@@ -8,6 +8,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart' show distanceUnit;
+import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
@@ -17,6 +18,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'bike_forms.dart' show dateOnly, isoDate;
 import 'bikes_view_models.dart';
 import 'service_forms.dart';
+import 'row_menu.dart';
 import 'service_names.dart';
 
 DateTime _today() => dateOnly(DateTime.now());
@@ -127,25 +129,15 @@ class ServiceSection extends ConsumerWidget {
     MaintenanceReminderResponse reminder,
   ) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.reminderRemoveTitle),
-        content: Text(l10n.reminderRemoveBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.keepIt),
-          ),
-          FilledButton(
-            key: const Key('confirm-remove-reminder'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final ok = await confirmDestructive(
+      context,
+      title: l10n.reminderRemoveTitle,
+      body: l10n.reminderRemoveBody,
+      action: l10n.delete,
+      key: const Key('confirm-remove-reminder'),
+      cancelLabel: l10n.keepIt,
     );
-    if (ok == true) {
+    if (ok) {
       await ref
           .read(bikeDetailViewModelProvider(id).notifier)
           .removeReminder(reminder.id);
@@ -193,29 +185,17 @@ class ServiceSection extends ConsumerWidget {
     ServiceEntryResponse entry,
   ) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.entryRemoveTitle),
-        content: Text(
-          entry.origin == 'reminder'
-              ? l10n.entryRemoveDoneBody
-              : l10n.entryRemoveBody,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.keepIt),
-          ),
-          FilledButton(
-            key: const Key('confirm-remove-entry'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final ok = await confirmDestructive(
+      context,
+      title: l10n.entryRemoveTitle,
+      body: entry.origin == 'reminder'
+          ? l10n.entryRemoveDoneBody
+          : l10n.entryRemoveBody,
+      action: l10n.delete,
+      key: const Key('confirm-remove-entry'),
+      cancelLabel: l10n.keepIt,
     );
-    if (ok == true) {
+    if (ok) {
       await ref
           .read(bikeDetailViewModelProvider(id).notifier)
           .removeServiceEntry(entry.id);
@@ -394,6 +374,11 @@ class _ReminderCard extends ConsumerWidget {
                   key: Key('reminder-status-${reminder.id}'),
                   style: TextStyle(color: color, fontWeight: FontWeight.w600),
                 ),
+                RowRemoveMenu(
+                  menuKey: Key('reminder-actions-${reminder.id}'),
+                  removeKey: Key('reminder-remove-${reminder.id}'),
+                  onRemove: onRemove,
+                ),
               ],
             ),
             if (reminder.percent != null)
@@ -440,11 +425,6 @@ class _ReminderCard extends ConsumerWidget {
                         ? l10n.reminderResume
                         : l10n.reminderPause,
                   ),
-                ),
-                TextButton(
-                  key: Key('reminder-remove-${reminder.id}'),
-                  onPressed: onRemove,
-                  child: Text(l10n.remove),
                 ),
               ],
             ),
@@ -496,7 +476,16 @@ class _EntryCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 6,
           children: [
-            Text(entry.title, style: text.titleMedium),
+            Row(
+              children: [
+                Expanded(child: Text(entry.title, style: text.titleMedium)),
+                RowRemoveMenu(
+                  menuKey: Key('entry-actions-${entry.id}'),
+                  removeKey: Key('entry-remove-${entry.id}'),
+                  onRemove: onRemove,
+                ),
+              ],
+            ),
             Text(
               [
                 isoDate(entry.date),
@@ -515,11 +504,6 @@ class _EntryCard extends ConsumerWidget {
                   key: Key('entry-edit-${entry.id}'),
                   onPressed: onEdit,
                   child: Text(l10n.edit),
-                ),
-                TextButton(
-                  key: Key('entry-remove-${entry.id}'),
-                  onPressed: onRemove,
-                  child: Text(l10n.remove),
                 ),
               ],
             ),

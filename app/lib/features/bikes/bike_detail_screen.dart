@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../core/widgets/loading_state.dart';
 
 import 'package:material_ui/material_ui.dart';
@@ -21,7 +23,9 @@ import 'service_section.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
+import 'row_menu.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/stat_tile.dart';
 
@@ -168,29 +172,17 @@ class BikeDetailScreen extends ConsumerWidget {
     ComponentResponse part,
   ) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          l10n.removePartTitle(
-            componentTypeName(l10n, part.type, part.typeName).toLowerCase(),
-          ),
-        ),
-        content: Text(l10n.removePartBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.keepIt),
-          ),
-          FilledButton(
-            key: const Key('confirm-remove-part'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.remove),
-          ),
-        ],
+    final ok = await confirmDestructive(
+      context,
+      title: l10n.removePartTitle(
+        componentTypeName(l10n, part.type, part.typeName).toLowerCase(),
       ),
+      body: l10n.removePartBody,
+      action: l10n.remove,
+      key: const Key('confirm-remove-part'),
+      cancelLabel: l10n.keepIt,
     );
-    if (ok == true) {
+    if (ok) {
       await ref
           .read(bikeDetailViewModelProvider(id).notifier)
           .removePart(part.id);
@@ -214,53 +206,79 @@ class BikeDetailScreen extends ConsumerWidget {
       eyebrow: l10n.eyebrowBikes,
       title: detail?.bike.name ?? l10n.navBikes,
       titleKey: const Key('bike-title'),
-      actions: detail == null
-          ? null
-          : Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                OutlinedButton.icon(
-                  key: const Key('edit-bike'),
-                  onPressed: () => _edit(context, ref),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: Text(l10n.edit),
-                ),
-                FilledButton.icon(
-                  key: const Key('add-part'),
-                  onPressed: () => _addPart(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addPartAction),
-                ),
-                // The rare jobs on a bike live together, away from the ones done every day.
-                _bikeMenu(context, ref, detail.bike),
-              ],
-            ),
+      primaryAction: detail == null ? null : _addPartButton(context, ref),
+      menu: detail == null ? null : _bikeMenu(context, ref, detail.bike),
       children: _body(context, ref, s),
     );
   }
 
-  /// The rare jobs on a bike, behind one menu: the same menu in the page header and in the phone's
-  /// title bar.
-  Widget _bikeMenu(BuildContext context, WidgetRef ref, BikeResponse bike) =>
-      _BikeMenu(
-        bike: bike,
-        onPick: (choice) {
-          final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
-          switch (choice) {
-            case 'template':
-              _saveTemplate(context, ref);
-            case 'apply':
-              _applyTemplate(context, ref);
-            case 'default':
-              notifier.makeDefault();
-            case 'archive':
-              notifier.setActive(!bike.isActive);
-            case 'delete':
-              _confirmDelete(context, ref);
-          }
-        },
-      );
+  /// The page's one action: a filled icon on a phone, whose tooltip names it, a labelled button from 600 dp.
+  Widget _addPartButton(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    return wide
+        ? FilledButton.icon(
+            key: const Key('add-part'),
+            onPressed: () => _addPart(context, ref),
+            icon: const Icon(Icons.add),
+            label: Text(l10n.addPartAction),
+          )
+        : IconButton.filled(
+            key: const Key('add-part'),
+            tooltip: l10n.addPartAction,
+            onPressed: () => _addPart(context, ref),
+            icon: const Icon(Icons.add),
+          );
+  }
+
+  /// The rare jobs on a bike, behind one menu in the page header. Entries that open a sheet or a
+  /// dialog wait for the menu to close.
+  Widget _bikeMenu(BuildContext context, WidgetRef ref, BikeResponse bike) {
+    final l10n = context.l10n;
+    final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
+    void later(Future<void> Function() run) => scheduleMicrotask(() {
+      if (context.mounted) run();
+    });
+    return PageMenu(
+      buttonKey: const Key('bike-actions'),
+      entries: [
+        PageMenuEntry(
+          key: const Key('edit-bike'),
+          icon: Icons.edit_outlined,
+          label: l10n.edit,
+          onSelected: () => later(() => _edit(context, ref)),
+        ),
+        PageMenuEntry(
+          key: const Key('save-template'),
+          label: l10n.saveAsTemplate,
+          onSelected: () => later(() => _saveTemplate(context, ref)),
+        ),
+        PageMenuEntry(
+          key: const Key('apply-template'),
+          label: l10n.applyTemplate,
+          onSelected: () => later(() => _applyTemplate(context, ref)),
+        ),
+        if (!bike.isDefault && bike.isActive)
+          PageMenuEntry(
+            key: const Key('make-default'),
+            label: l10n.makeDefault,
+            onSelected: notifier.makeDefault,
+          ),
+        PageMenuEntry(
+          key: const Key('toggle-archive'),
+          label: bike.isActive ? l10n.archive : l10n.restore,
+          onSelected: () => notifier.setActive(!bike.isActive),
+        ),
+        PageMenuEntry(
+          key: const Key('delete-bike'),
+          icon: Icons.delete_outline,
+          label: l10n.delete,
+          destructive: true,
+          onSelected: () => later(() => _confirmDelete(context, ref)),
+        ),
+      ],
+    );
+  }
 
   List<Widget> _body(BuildContext context, WidgetRef ref, BikeDetailState s) {
     final units = ref.watch(unitsChoiceViewModelProvider);
@@ -378,58 +396,6 @@ String wearLabel(AppLocalizations l10n, String status) => switch (status) {
   _ => l10n.wearGood,
 };
 
-/// The rare jobs on a bike — its build template, making it the default, archiving it and deleting
-/// it — behind one menu, so the parts and their wear stay the page.
-class _BikeMenu extends StatelessWidget {
-  const _BikeMenu({required this.bike, required this.onPick});
-
-  final BikeResponse bike;
-  final void Function(String choice) onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return PopupMenuButton<String>(
-      key: const Key('bike-actions'),
-      tooltip: l10n.rideActions,
-      icon: const Icon(Icons.more_vert),
-      onSelected: onPick,
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          key: const Key('save-template'),
-          value: 'template',
-          child: Text(l10n.saveAsTemplate),
-        ),
-        PopupMenuItem(
-          key: const Key('apply-template'),
-          value: 'apply',
-          child: Text(l10n.applyTemplate),
-        ),
-        if (!bike.isDefault && bike.isActive)
-          PopupMenuItem(
-            key: const Key('make-default'),
-            value: 'default',
-            child: Text(l10n.makeDefault),
-          ),
-        PopupMenuItem(
-          key: const Key('toggle-archive'),
-          value: 'archive',
-          child: Text(bike.isActive ? l10n.archive : l10n.restore),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem(
-          key: const Key('delete-bike'),
-          value: 'delete',
-          child: Text(
-            l10n.delete,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// A wear distance in whole kilometres or whole miles, whichever the member reads.
 String _wearNumber(Units units, double metres) => units == Units.imperial
     ? (metres / 1609.344).toStringAsFixed(0)
@@ -498,6 +464,11 @@ class _PartCard extends ConsumerWidget {
                   wearLabel(l10n, part.status),
                   style: TextStyle(color: color, fontWeight: FontWeight.w600),
                 ),
+                RowRemoveMenu(
+                  menuKey: Key('part-actions-${part.id}'),
+                  removeKey: Key('remove-${part.id}'),
+                  onRemove: onRemove,
+                ),
               ],
             ),
             if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
@@ -545,11 +516,6 @@ class _PartCard extends ConsumerWidget {
                     onPressed: onReplace,
                     child: Text(l10n.replace),
                   ),
-                TextButton(
-                  key: Key('remove-${part.id}'),
-                  onPressed: onRemove,
-                  child: Text(l10n.remove),
-                ),
               ],
             ),
           ],

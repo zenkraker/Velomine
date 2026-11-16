@@ -1,5 +1,3 @@
-import '../../core/widgets/inline_error.dart';
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -453,21 +451,18 @@ String _fmt(num? v) => v == null
 
 enum _PartProblem { type, limits, gtin, removedBeforeInstalled }
 
-/// Asks for the name of a build template. Returns null when the member cancels.
+/// Asks for the name of a build template in a sheet. Returns null when the member dismisses it.
 Future<String?> showTemplateNameDialog(BuildContext context) =>
-    showDialog<String>(
-      context: context,
-      builder: (_) => const _TemplateNameDialog(),
-    );
+    showSheet<String>(context, builder: (_) => const _TemplateNameSheet());
 
-class _TemplateNameDialog extends StatefulWidget {
-  const _TemplateNameDialog();
+class _TemplateNameSheet extends StatefulWidget {
+  const _TemplateNameSheet();
 
   @override
-  State<_TemplateNameDialog> createState() => _TemplateNameDialogState();
+  State<_TemplateNameSheet> createState() => _TemplateNameSheetState();
 }
 
-class _TemplateNameDialogState extends State<_TemplateNameDialog> {
+class _TemplateNameSheetState extends State<_TemplateNameSheet> {
   final _name = TextEditingController();
   bool _missing = false;
 
@@ -489,81 +484,48 @@ class _TemplateNameDialogState extends State<_TemplateNameDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.saveTemplateTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: AppSpacing.sm,
-        children: [
-          TextField(
-            key: const Key('template-name'),
-            controller: _name,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: l10n.templateName,
-              hintText: l10n.templateNameHint,
-            ),
-            onSubmitted: (_) => _submit(),
+    return FormSheet(
+      title: l10n.saveTemplateTitle,
+      saveKey: const Key('template-save'),
+      onSave: _submit,
+      error: _missing ? l10n.errorTemplateName : null,
+      children: [
+        TextField(
+          key: const Key('template-name'),
+          controller: _name,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: l10n.templateName,
+            hintText: l10n.templateNameHint,
           ),
-          if (_missing)
-            InlineError(l10n.errorTemplateName, key: const Key('form-error')),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          key: const Key('template-save'),
-          onPressed: _submit,
-          child: Text(l10n.save),
+          onSubmitted: (_) => _submit(),
         ),
       ],
     );
   }
 }
 
-/// Picks one of the member's build templates. Returns null when there is none or the member closes it.
+/// Picks one of the member's build templates in a sheet. Returns null when there is none or the member
+/// dismisses it.
 Future<BikeTemplateResponse?> showApplyTemplateDialog(
   BuildContext context, {
   required List<BikeTemplateResponse> templates,
-}) => showDialog<BikeTemplateResponse>(
-  context: context,
+}) => showSheet<BikeTemplateResponse>(
+  context,
   builder: (context) {
     final l10n = context.l10n;
-    return SimpleDialog(
-      title: Text(l10n.applyTemplateTitle),
+    return SheetFrame(
+      title: l10n.applyTemplateTitle,
       children: templates.isEmpty
-          ? [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                child: Text(l10n.noTemplates, key: const Key('no-templates')),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.close),
-                ),
-              ),
-            ]
+          ? [Text(l10n.noTemplates, key: const Key('no-templates'))]
           : [
               for (final template in templates)
-                SimpleDialogOption(
+                ListTile(
                   key: Key('template-${template.id}'),
-                  onPressed: () => Navigator.pop(context, template),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(template.name),
-                      Text(
-                        l10n.templateParts(template.parts.length),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(template.name),
+                  subtitle: Text(l10n.templateParts(template.parts.length)),
+                  onTap: () => Navigator.pop(context, template),
                 ),
             ],
     );

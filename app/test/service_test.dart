@@ -163,6 +163,8 @@ void main() {
     server.reminders['bike-1'] = [reminder('r1', 'Lube the chain', 'ok')];
     await openBike(tester);
 
+    await tester.tap(find.byKey(const Key('reminder-actions-r1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('reminder-remove-r1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirm-remove-reminder')));
@@ -219,6 +221,8 @@ void main() {
     expect(find.text('New brake pads'), findsOneWidget);
     expect(find.textContaining('Bici Rossi'), findsOneWidget);
 
+    await tester.tap(find.byKey(Key('entry-actions-${saved['id']}')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(Key('entry-remove-${saved['id']}')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirm-remove-entry')));

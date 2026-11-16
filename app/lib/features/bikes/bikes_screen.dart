@@ -38,12 +38,22 @@ class BikesScreen extends ConsumerWidget {
     final s = ref.watch(bikesViewModelProvider);
     final l10n = context.l10n;
     final notifier = ref.read(bikesViewModelProvider.notifier);
-    final add = FilledButton.icon(
-      key: const Key('add-bike'),
-      onPressed: s.action.running ? null : () => _add(context, ref),
-      icon: const Icon(Icons.add),
-      label: Text(l10n.addBike),
-    );
+    final onAdd = s.action.running ? null : () => _add(context, ref);
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    // The one action, in the header at every width; on a phone a filled icon whose tooltip names it.
+    final add = wide
+        ? FilledButton.icon(
+            key: const Key('add-bike'),
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+            label: Text(l10n.addBike),
+          )
+        : IconButton.filled(
+            key: const Key('add-bike'),
+            tooltip: l10n.addBike,
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+          );
 
     listenUserMessages(
       ref,
@@ -52,46 +62,40 @@ class BikesScreen extends ConsumerWidget {
       notifier.messageShown,
     );
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      // A single action: on the floating button on a phone, in the page header from a tablet up.
-      floatingActionButton: wide ? null : add,
-      body: PageScaffold(
-        eyebrow: l10n.eyebrowBikes,
-        title: l10n.navBikes,
-        subtitle: l10n.bikesSubtitle,
-        actions: wide ? add : null,
-        children: [
-          if (s.load.failure case final failure?)
-            ErrorState(
-              message: failureText(l10n, failure),
-              actionKey: const Key('bikes-error'),
-              onRetry: s.load.running ? null : notifier.refresh,
-            ),
-          if (s.load.running && s.bikes.isEmpty)
-            const LoadingState()
-          else if (s.bikes.isEmpty && s.load.failure == null)
-            EmptyState(
-              key: const Key('no-bikes'),
-              message: l10n.noBikes,
-              icon: Icons.pedal_bike,
-              // A different key: the page's own add button may be in the tree already.
-              action: FilledButton.icon(
-                key: const Key('no-bikes-add'),
-                onPressed: s.action.running ? null : () => _add(context, ref),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addBike),
-              ),
-            ),
-          CardGrid(
-            columns: 3,
-            children: [
-              for (final bike in s.bikes) _BikeCard(bike: bike, onOpen: onOpen),
-            ],
+    return PageScaffold(
+      eyebrow: l10n.eyebrowBikes,
+      title: l10n.navBikes,
+      subtitle: l10n.bikesSubtitle,
+      primaryAction: add,
+      children: [
+        if (s.load.failure case final failure?)
+          ErrorState(
+            message: failureText(l10n, failure),
+            actionKey: const Key('bikes-error'),
+            onRetry: s.load.running ? null : notifier.refresh,
           ),
-        ],
-      ),
+        if (s.load.running && s.bikes.isEmpty)
+          const LoadingState()
+        else if (s.bikes.isEmpty && s.load.failure == null)
+          EmptyState(
+            key: const Key('no-bikes'),
+            message: l10n.noBikes,
+            icon: Icons.pedal_bike,
+            // A different key: the page's own add button may be in the tree already.
+            action: FilledButton.icon(
+              key: const Key('no-bikes-add'),
+              onPressed: s.action.running ? null : () => _add(context, ref),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addBike),
+            ),
+          ),
+        CardGrid(
+          columns: 3,
+          children: [
+            for (final bike in s.bikes) _BikeCard(bike: bike, onOpen: onOpen),
+          ],
+        ),
+      ],
     );
   }
 }
