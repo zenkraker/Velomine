@@ -107,7 +107,7 @@ member owns the data, and nobody pays again to see their own history.
 ### 10. Openness and accountability
 
 - Public changelog and documented product decisions.
-- Each month the community votes on which planned features come next. The principles decide the list; the community decides the order. Each club casts one vote, by its admins, ideally after asking its members, and each solo rider casts one. The results, and what was then built, are published.
+- Each month the community votes on which planned features come next. The principles decide the list; the community decides the order. Each club casts one vote, by its admins, ideally after asking its members, and each solo rider casts one. A self-hosted club votes by sending feedback through the site's form until there is a better way. The results, and what was then built, are published.
 - A security disclosure path.
 - Licensed AGPL-3.0 with a trademark policy: clubs can inspect, self-host and fork; anyone
   running it as a service publishes their source, and nobody else may use the Velomine name.
