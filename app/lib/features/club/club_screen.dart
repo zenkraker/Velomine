@@ -370,8 +370,14 @@ class ClubScreen extends ConsumerWidget {
     NearbyClubsState nearby,
   ) {
     final l10n = context.l10n;
+    // The real header while the club is read, so the page is opaque from its first frame.
     if (clubState.load.running && !clubState.loaded) {
-      return const LoadingState();
+      return PageScaffold(
+        eyebrow: l10n.eyebrowClub,
+        title: l10n.clubNoneTitleShort,
+        subtitle: l10n.clubNoneSubtitle,
+        children: const [LoadingState.rows(key: Key('club-loading'), count: 4)],
+      );
     }
     return PageScaffold(
       eyebrow: l10n.eyebrowClub,

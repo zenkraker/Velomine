@@ -22,6 +22,9 @@ void main() {
   ) async {
     await tester.enterText(find.byKey(const Key('email')), email);
     await tester.enterText(find.byKey(const Key('password')), password);
+    // The button follows the fields, so on a short window it is below the fold.
+    await tester.ensureVisible(find.byKey(const Key('sign-in')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('sign-in')));
     await tester.pumpAndSettle();
   }
@@ -64,6 +67,8 @@ void main() {
         find.byKey(const Key('two-factor-code')),
         '000000',
       );
+      await tester.ensureVisible(find.byKey(const Key('two-factor-verify')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('two-factor-verify')));
       await tester.pumpAndSettle();
       expect(find.textContaining('did not work'), findsOneWidget);
@@ -72,6 +77,8 @@ void main() {
         find.byKey(const Key('two-factor-code')),
         server.twoFactorCode,
       );
+      await tester.ensureVisible(find.byKey(const Key('two-factor-verify')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('two-factor-verify')));
       await tester.pumpAndSettle();
 

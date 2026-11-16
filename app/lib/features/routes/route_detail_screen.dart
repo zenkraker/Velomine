@@ -64,8 +64,16 @@ class RouteDetailScreen extends ConsumerWidget {
       notifier.messageShown,
     );
 
+    // The real header while the route is read, so the page is opaque from its first frame.
     if (s.load.running && s.detail == null) {
-      return const LoadingState();
+      return PageScaffold(
+        eyebrow: l10n.routesEyebrow,
+        title: l10n.clubRoutesTitle,
+        maxWidth: AppLayout.contentNarrow,
+        children: const [
+          LoadingState.rows(key: Key('route-loading'), count: 4),
+        ],
+      );
     }
     if (s.notFound) {
       return EmptyState(

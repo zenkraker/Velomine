@@ -46,6 +46,11 @@ class RidesState {
 
   bool get loading => load.running;
 
+  /// No ride has arrived yet and the load has not failed: placeholder rows, also on the first frame before
+  /// the load starts, so the page is never header-only.
+  bool get waiting =>
+      rides.isEmpty && !filtered && load.failure == null && !load.completed;
+
   RidesState copyWith({
     List<RideResponse>? rides,
     String? next,

@@ -64,8 +64,16 @@ class ClubRideDetailScreen extends ConsumerWidget {
       notifier.messageShown,
     );
 
+    // The real header while the ride is read, so the page is opaque from its first frame.
     if (s.load.running && s.detail == null) {
-      return const LoadingState();
+      return PageScaffold(
+        eyebrow: l10n.clubRidesEyebrow,
+        title: l10n.clubRidesTitle,
+        maxWidth: AppLayout.contentNarrow,
+        children: const [
+          LoadingState.rows(key: Key('club-ride-loading'), count: 4),
+        ],
+      );
     }
     if (s.notFound) {
       return EmptyState(

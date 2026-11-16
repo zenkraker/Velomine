@@ -326,7 +326,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
               child: Text(l10n.loadMore),
             ),
           ),
-        if (s.load.running && s.rides.isEmpty)
+        if (s.waiting)
           const LoadingState.rows(
             key: Key('rides-loading'),
             count: 5,
