@@ -20,6 +20,9 @@ public static class DemoLock
         // A reset link would set a new password on a shared account, if the demo ever had email.
         ("POST", "accounts/password/forgot"),
         ("POST", "accounts/password/reset"),
+        // The demo's only email is the feedback form: its accounts are shared and their addresses are not mailboxes.
+        ("POST", "accounts/email/resend"),
+        ("POST", "admin/settings/test-email"),
         ("POST", "accounts/me/delete"),
         ("POST", "accounts/me/two-factor/start"),
         ("POST", "accounts/me/two-factor/enable"),

@@ -75,6 +75,8 @@ Copy the files off the VPS. A Scaleway volume snapshot is a cheap second copy.
 `VELOMINE__DEMO__ENABLED=true` makes the server the demo. The code is in `src/Velomine.Server/Features/Demo/`, and the example data is `demo-seed.sql` there. In demo mode the server:
 
 - keeps three accounts, all with the public password the presentation site prints: `demo-admin@velomine.eu` (the club owner), `demo-coach@velomine.eu` and `demo-rider@velomine.eu`. They share the club *Velo Club Demo*, and each has about three months of rides, with the original files, so export works.
+- puts all its example data around Girona, Spain, as generated loops that follow no real track: the rides, the privacy zones, and a club library of four routes (*Sunday road loop*, *Gravel hills*, *Climb repeats*, *Coffee ride*) with two upcoming club rides on them. New example data stays in that area.
 - every night at 03:00 UTC deletes every club and every account except the server admins, then makes the accounts, the club and the rides again. Whatever a visitor changed is undone.
 - catches up after downtime: when the server starts, or within a minute of being up, it makes the demo again if the last 03:00 UTC has passed since the demo was made.
 - answers 403 (`code: demo_locked`) to the actions a visitor could use to lock out the others: registration, changing or resetting the password, deleting the account, two-factor sign-in, signing other sessions out, leaving the club, changing the join code and changing club roles. The list is `DemoLock.Refused`.
+- sends no email except the feedback form: SMTP may be set for it, but notification emails, the test email and verification emails are switched off, and email verification is never required to sign in.

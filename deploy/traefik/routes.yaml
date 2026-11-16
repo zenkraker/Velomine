@@ -4,7 +4,7 @@
 #
 # One name for both (VELOMINE_SITE_DOMAIN unset): one router, and the web image serves everything as it would anywhere.
 # Two names: each serves only its own part and redirects the rest to the other, keeping the path:
-#   site name: the site's pages (the same list as app/nginx.conf); anything else, such as /sign-in, goes to the app.
+#   site name: the site's pages (the same list as app/nginx.conf) and the feedback form's post (/api/v1/feedback, a POST that a redirect would turn into a GET); anything else, such as /sign-in, goes to the app.
 #   app name:  the app and the API; the site's pages go to the site, and / opens the app (/rides; it signs in first).
 # robots.txt and /.well-known/ answer on both names, since crawlers and security.txt are per host.
 # Redirects are temporary (302), so browsers do not remember them if prod later answers elsewhere.
@@ -21,7 +21,7 @@ http:
 {{- if ne (env "VELOMINE_SITE_DOMAIN") (env "VELOMINE_DOMAIN") }}
 
     velomine-site:
-      rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`) && (Path(`/`) || PathRegexp(`^/(status|pricing|demo|contact|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || PathPrefix(`/.well-known/`) || Path(`/robots.txt`) || Path(`/sitemap.xml`))
+      rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`) && (Path(`/`) || PathRegexp(`^/(status|pricing|demo|contact|feedback|principles|privacy|terms|security)(/|$)`) || Path(`/api/v1/feedback`) || PathPrefix(`/static/`) || PathPrefix(`/.well-known/`) || Path(`/robots.txt`) || Path(`/sitemap.xml`))
       priority: 300
       entryPoints: [websecure]
       service: velomine
@@ -37,7 +37,7 @@ http:
       tls:
         certResolver: letsencrypt
     velomine-app-to-site:
-      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`) && (PathRegexp(`^/(status|pricing|demo|contact|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || Path(`/sitemap.xml`))
+      rule: Host(`{{ env "VELOMINE_DOMAIN" }}`) && (PathRegexp(`^/(status|pricing|demo|contact|feedback|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || Path(`/sitemap.xml`))
       priority: 300
       entryPoints: [websecure]
       service: velomine

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Demo;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Notifications.Email;
 
@@ -34,8 +35,11 @@ public sealed class SoloTrialTests
     [Fact]
     public void EmailVerification_ShouldBeRequired_WhenSmtpIsConfigured()
     {
-        Assert.True(EmailVerification.Required(Options.Create(new SmtpOptions { Host = "smtp.club.example", From = "velomine@club.example" })));
-        Assert.False(EmailVerification.Required(Options.Create(new SmtpOptions())));
+        var smtp = Options.Create(new SmtpOptions { Host = "smtp.club.example", From = "velomine@club.example" });
+        var off = Options.Create(new DemoOptions());
+        Assert.True(EmailVerification.Required(smtp, off));
+        Assert.False(EmailVerification.Required(Options.Create(new SmtpOptions()), off));
+        Assert.False(EmailVerification.Required(smtp, Options.Create(new DemoOptions { Enabled = true })));
     }
 
     [Fact]

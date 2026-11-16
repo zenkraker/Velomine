@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Demo;
 using Velomine.Server.Features.Notifications.Email;
 
 namespace Velomine.Server.Features.Accounts;
@@ -25,6 +26,7 @@ public sealed class ResendVerification(
     UserManager<User> users,
     IEmailSender sender,
     IOptions<SmtpOptions> smtp,
+    IOptions<DemoOptions> demo,
     EmailVerificationLinks links,
     PasswordResetThrottle throttle,
     ILogger<ResendVerification> logger) : Endpoint<ResendVerificationRequest>
@@ -46,7 +48,7 @@ public sealed class ResendVerification(
             return;
         }
 
-        if (!EmailVerification.Required(smtp))
+        if (!EmailVerification.Required(smtp, demo))
         {
             await Send.ResponseAsync(new { error = "email_not_configured" }, 503, ct);
             return;

@@ -39,7 +39,7 @@ public sealed class GetServerInfo(
             version,
             map.Value.EffectiveTileUrl,
             map.Value.EffectiveAttribution,
-            smtp.Value.Configured,
+            smtp.Value.Configured && !demo.Value.Enabled,
             options.IsAppActive,
             options.IsAppActive ? options.AppDsn : null,
             TelemetryTerms.Version,

@@ -196,9 +196,9 @@ BEGIN
     v_loop_len := v_distance_total / greatest(p_laps, 1);
     v_radius := v_loop_len / (2 * pi());
     IF p_discipline = 'gravel' THEN
-        v_lat0 := 45.468; v_lon0 := 10.535;
+        v_lat0 := 41.940; v_lon0 := 2.760;
     ELSE
-        v_lat0 := 45.438; v_lon0 := 10.685;
+        v_lat0 := 41.995; v_lon0 := 2.800;
     END IF;
     v_lat0 := v_lat0 + ((p_seed % 7) - 3) * 0.003;
     v_lon0 := v_lon0 + ((p_seed % 5) - 2) * 0.004;
@@ -251,7 +251,7 @@ BEGIN
         speed_source, avg_power_w, max_power_w, normalized_power_w, avg_heart_rate, max_heart_rate, avg_cadence,
         bike_id, intensity_factor, trimp, tss, assist, commute, discipline, environment, power_bests_backfilled_at)
     VALUES (
-        v_ride_id, p_user, 'Ready', '', 'demo-' || to_char(p_start AT TIME ZONE 'Europe/Rome', 'YYYY-MM-DD')
+        v_ride_id, p_user, 'Ready', '', 'demo-' || to_char(p_start AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD')
             || '-' || p_kind || '.tcx.gz',
         p_start + make_interval(secs => v_n + 119), p_start, p_offset,
         CASE WHEN p_environment = 'virtual' THEN 'Zwift'
@@ -322,10 +322,87 @@ BEGIN
 END
 $ride$;
 
+-- A route for the club library: a closed loop around a base point, generated like the ride loops (nothing is copied
+-- from a real track). The line is scaled to the wanted length, then distance and climbing are measured on the points
+-- themselves: great-circle distance, and climbing with a 2 m threshold.
+CREATE OR REPLACE FUNCTION pg_temp.demo_seed_route(
+    p_user uuid,
+    p_club uuid,
+    p_name text,
+    p_description text,
+    p_surface text,
+    p_lat0 float8,
+    p_lon0 float8,
+    p_km float8,
+    p_relief float8,
+    p_hills int,
+    p_points int,
+    p_seed int,
+    p_created_at timestamptz
+) RETURNS void LANGUAGE plpgsql AS $route$
+DECLARE
+    v_i int;
+    v_theta float8;
+    v_frac float8;
+    v_r float8;
+    v_scale float8;
+    v_raw float8 := 0;
+    v_distance float8 := 0;
+    v_gain float8 := 0;
+    v_ref float8;
+    v_step float8;
+    v_lat double precision[] := array_fill(0::double precision, ARRAY[p_points]);
+    v_lon double precision[] := array_fill(0::double precision, ARRAY[p_points]);
+    v_ele real[] := array_fill(0::real, ARRAY[p_points]);
+    v_x float8[] := array_fill(0::float8, ARRAY[p_points]);
+    v_y float8[] := array_fill(0::float8, ARRAY[p_points]);
+    v_route uuid := gen_random_uuid();
+BEGIN
+    -- A first pass on a unit loop of 1 km radius gives its length, which scales the radius to the wanted length.
+    FOR v_i IN 1..p_points LOOP
+        v_frac := (v_i - 1)::float8 / (p_points - 1);
+        v_theta := 2 * pi() * v_frac;
+        v_r := 1000 * (1 + 0.22 * sin(3 * v_theta + p_seed * 0.1) + 0.08 * cos(5 * v_theta));
+        v_x[v_i] := v_r * cos(v_theta);
+        v_y[v_i] := v_r * sin(v_theta);
+        IF v_i > 1 THEN
+            v_raw := v_raw + sqrt(power(v_x[v_i] - v_x[v_i - 1], 2) + power(v_y[v_i] - v_y[v_i - 1], 2));
+        END IF;
+    END LOOP;
+    v_scale := p_km * 1000 / v_raw;
+
+    FOR v_i IN 1..p_points LOOP
+        v_frac := (v_i - 1)::float8 / (p_points - 1);
+        v_lat[v_i] := p_lat0 + v_y[v_i] * v_scale / 111320.0;
+        v_lon[v_i] := p_lon0 + v_x[v_i] * v_scale / (111320.0 * cos(radians(p_lat0)));
+        v_ele[v_i] := (120 + p_relief * (sin(2 * pi() * p_hills * v_frac + 0.4)
+                                        + 0.25 * sin(2 * pi() * p_hills * 3 * v_frac + 1.1)))::real;
+    END LOOP;
+
+    v_ref := v_ele[1];
+    FOR v_i IN 2..p_points LOOP
+        v_distance := v_distance + 2 * 6371000 * asin(sqrt(
+            power(sin(radians(v_lat[v_i] - v_lat[v_i - 1]) / 2), 2)
+            + cos(radians(v_lat[v_i - 1])) * cos(radians(v_lat[v_i]))
+              * power(sin(radians(v_lon[v_i] - v_lon[v_i - 1]) / 2), 2)));
+        v_step := v_ele[v_i] - v_ref;
+        IF abs(v_step) >= 2 THEN
+            IF v_step > 0 THEN v_gain := v_gain + v_step; END IF;
+            v_ref := v_ele[v_i];
+        END IF;
+    END LOOP;
+
+    INSERT INTO routes.routes (id, user_id, club_id, name, description, surface, distance_m, climbing_m, created_at)
+    VALUES (v_route, p_user, p_club, p_name, p_description, p_surface, v_distance, v_gain, p_created_at);
+    INSERT INTO routes.route_lines (route_id, latitude, longitude, elevation)
+    VALUES (v_route, v_lat, v_lon, v_ele);
+END
+$route$;
+
 DO $seed$
 DECLARE
     v_now timestamptz := now();
-    v_today date := (now() AT TIME ZONE 'Europe/Rome')::date;
+    v_today date := (now() AT TIME ZONE 'Europe/Madrid')::date;
     v_club uuid;
     v_club_name text;
     v_coach uuid;
@@ -411,7 +488,7 @@ BEGIN
             WHEN dm.n % 3 = 1 THEN 1988
             ELSE 1997
         END),
-        time_zone = COALESCE(u.time_zone, 'Europe/Rome'),
+        time_zone = COALESCE(u.time_zone, 'Europe/Madrid'),
         wellbeing_consent_at = COALESCE(u.wellbeing_consent_at, v_now - interval '90 days'),
         wellbeing_consent_version = COALESCE(u.wellbeing_consent_version, 1)
     FROM demo_members dm
@@ -528,12 +605,12 @@ BEGIN
             v_day := v_today - i * v_step;
             v_hour := CASE WHEN k.minutes >= 120 THEN 9 ELSE 18 END;
 
-            v_start := (v_day::timestamp + make_interval(hours => v_hour)) AT TIME ZONE 'Europe/Rome';
+            v_start := (v_day::timestamp + make_interval(hours => v_hour)) AT TIME ZONE 'Europe/Madrid';
             IF v_start > now() - interval '1 hour' THEN
-                v_start := ((v_day - 1)::timestamp + make_interval(hours => v_hour)) AT TIME ZONE 'Europe/Rome';
+                v_start := ((v_day - 1)::timestamp + make_interval(hours => v_hour)) AT TIME ZONE 'Europe/Madrid';
             END IF;
             v_offset := round(extract(epoch FROM
-                ((v_start AT TIME ZONE 'Europe/Rome') - (v_start AT TIME ZONE 'UTC'))) / 60)::int;
+                ((v_start AT TIME ZONE 'Europe/Madrid') - (v_start AT TIME ZONE 'UTC'))) / 60)::int;
 
             v_bike := CASE WHEN k.discipline = 'gravel' THEN m.gravel_bike ELSE m.road_bike END;
             v_max_hr := round(208 - 0.7 * (extract(year FROM v_today) - m.birth_year))::int;
@@ -578,7 +655,7 @@ BEGIN
     ON CONFLICT (user_id) DO NOTHING;
 
     INSERT INTO privacy.zones (id, user_id, name, latitude, longitude, radius_m, created_at)
-    SELECT gen_random_uuid(), dm.user_id, 'Home', 45.438 + dm.n * 0.002, 10.685, 500, v_now - interval '60 days'
+    SELECT gen_random_uuid(), dm.user_id, 'Home', 41.995 + dm.n * 0.002, 2.800, 500, v_now - interval '60 days'
     FROM demo_members dm
     WHERE dm.n <= 2;
 
@@ -629,6 +706,47 @@ BEGIN
         WHERE user_id IN (SELECT user_id FROM demo_members)
     ) r
     WHERE r.rn <= 3;
+
+    -- The club's route library: four generated loops around Girona, shared with the club by different members.
+    PERFORM pg_temp.demo_seed_route(v_coach, v_club, 'Sunday road loop',
+        'A steady loop on quiet roads, the club''s usual Sunday ride.', 'road',
+        41.995, 2.800, 60, 70, 3, 400, 11, v_now - interval '45 days');
+    PERFORM pg_temp.demo_seed_route((SELECT user_id FROM demo_members WHERE n = 2), v_club, 'Gravel hills',
+        'Rolling gravel tracks through the woods.', 'gravel',
+        41.945, 2.765, 40, 90, 4, 300, 23, v_now - interval '30 days');
+    PERFORM pg_temp.demo_seed_route((SELECT user_id FROM demo_members WHERE n = 3), v_club, 'Climb repeats',
+        'One hill, six times: a short loop for hill training.', 'mountain',
+        42.015, 2.745, 25, 70, 6, 250, 37, v_now - interval '20 days');
+    PERFORM pg_temp.demo_seed_route(v_coach, v_club, 'Coffee ride',
+        'Easy mixed roads and paths with a stop halfway.', 'mixed',
+        41.985, 2.815, 30, 40, 2, 250, 41, v_now - interval '10 days');
+
+    -- Two upcoming club rides on those routes; the first meets where its route starts.
+    FOR i IN 0..1 LOOP
+        v_start := (((v_today + ((7 - extract(dow FROM v_today)::int) % 7 + 7 * i + CASE WHEN extract(dow FROM v_today) = 0 THEN 7 ELSE 0 END))::timestamp
+                     + interval '9 hours') AT TIME ZONE 'Europe/Madrid');
+        v_offset := round(extract(epoch FROM
+            ((v_start AT TIME ZONE 'Europe/Madrid') - (v_start AT TIME ZONE 'UTC'))) / 60)::int;
+        INSERT INTO calendar.planned_rides (
+            id, club_id, created_by_user_id, title, starts_at, utc_offset_minutes, meeting_name,
+            meeting_latitude, meeting_longitude, route_id, pace, no_drop, notes, max_riders, created_at, updated_at)
+        SELECT gen_random_uuid(), v_club, v_coach,
+               CASE i WHEN 0 THEN 'Sunday club ride' ELSE 'Gravel hills ride' END,
+               v_start, v_offset, 'Club meeting point, Girona',
+               l.latitude[1], l.longitude[1], r.id,
+               CASE i WHEN 0 THEN 'steady' ELSE 'easy' END, true,
+               CASE i WHEN 0 THEN 'Coffee afterwards.' ELSE 'Bring a spare tube.' END,
+               NULL, v_now - interval '5 days', v_now - interval '5 days'
+        FROM routes.routes r
+        JOIN routes.route_lines l ON l.route_id = r.id
+        WHERE r.club_id = v_club AND r.name = CASE i WHEN 0 THEN 'Sunday road loop' ELSE 'Gravel hills' END;
+    END LOOP;
+
+    INSERT INTO calendar.ride_sign_ups (planned_ride_id, user_id, created_at)
+    SELECT p.id, dm.user_id, v_now - interval '2 days'
+    FROM calendar.planned_rides p
+    CROSS JOIN demo_members dm
+    WHERE p.club_id = v_club AND p.title = 'Sunday club ride';
 
     RAISE NOTICE 'Demo data seeded for club "%": % members, % rides.',
         v_club_name,

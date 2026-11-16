@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Demo;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Notifications.Email;
@@ -39,6 +40,7 @@ public sealed class Register(
     EmailVerificationLinks links,
     IEmailSender sender,
     IOptions<SmtpOptions> smtp,
+    IOptions<DemoOptions> demo,
     ILogger<Register> logger) : Endpoint<RegisterRequest, RegisterResponse>
 {
     public override void Configure()
@@ -79,7 +81,7 @@ public sealed class Register(
         await Notify.SignUpWaitingAsync(db, users, clock, user);
 
         // Prepare the link before answering (it writes the security stamp), but never wait for SMTP.
-        var verify = EmailVerification.Required(smtp);
+        var verify = EmailVerification.Required(smtp, demo);
         if (verify) SendVerificationInBackground(await links.CreateAsync(user), user);
 
         await Send.ResponseAsync(new RegisterResponse(user.Id, user.IsApproved, verify), 201, ct);

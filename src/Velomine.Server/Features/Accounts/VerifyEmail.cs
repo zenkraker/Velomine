@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Demo;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -26,6 +27,7 @@ public sealed class VerifyEmailValidator : Validator<VerifyEmailRequest>
 public sealed class VerifyEmail(
     UserManager<User> users,
     IOptions<SmtpOptions> smtp,
+    IOptions<DemoOptions> demo,
     PasswordResetThrottle throttle) : Endpoint<VerifyEmailRequest>
 {
     public override void Configure()
@@ -45,7 +47,7 @@ public sealed class VerifyEmail(
             return;
         }
 
-        if (!EmailVerification.Required(smtp))
+        if (!EmailVerification.Required(smtp, demo))
         {
             await Send.ResponseAsync(new { error = "email_not_configured" }, 503, ct);
             return;

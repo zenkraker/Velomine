@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Demo;
 
 namespace Velomine.Server.Features.Notifications.Email;
 
@@ -17,6 +18,7 @@ public sealed class NotificationEmailService(
     IServiceProvider services,
     IEmailSender sender,
     IOptions<SmtpOptions> smtp,
+    IOptions<DemoOptions> demo,
     TimeProvider time,
     ILogger<NotificationEmailService> logger) : BackgroundService
 {
@@ -66,7 +68,8 @@ public sealed class NotificationEmailService(
     /// <summary>One run: returns how many emails went out.</summary>
     public async Task<int> RunOnceAsync(CancellationToken ct)
     {
-        if (!smtp.Value.Configured) return 0;
+        // A demo's accounts are shared and their addresses are not mailboxes: the only email it sends is the feedback form.
+        if (!smtp.Value.Configured || demo.Value.Enabled) return 0;
 
         await running.WaitAsync(ct);
         try

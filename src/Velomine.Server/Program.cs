@@ -15,6 +15,7 @@ using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Demo;
+using Velomine.Server.Features.Feedback;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Server;
@@ -46,6 +47,7 @@ builder.Services.AddBikes(builder.Configuration);
 builder.Services.AddClubs(builder.Configuration);
 builder.Services.AddSupporter(builder.Configuration);
 builder.Services.AddDemo(builder.Configuration);
+builder.Services.AddFeedback();
 builder.Services.AddOptions<MapOptions>().BindConfiguration("Velomine:Map");
 builder.Services.AddFastEndpoints();
 builder.Services.OpenApiDocument(o =>
@@ -110,6 +112,27 @@ builder.Services.AddRateLimiter(options =>
             PermitLimit = permitLimit,
             Window = TimeSpan.FromMinutes(1),
         }));
+
+    // The anonymous feedback form is a browser form post, so a refusal is the same 303 to a page of the site as every
+    // other answer, not a bare 429. The key is the network address, held in memory only and never logged.
+    var feedbackPerHour = builder.Configuration.GetValue("Velomine:RateLimits:FeedbackPerHour", 5);
+    options.AddPolicy(Velomine.Server.Features.Feedback.SendFeedback.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = feedbackPerHour,
+            Window = TimeSpan.FromHours(1),
+        }));
+    options.OnRejected = (context, _) =>
+    {
+        if (context.HttpContext.Request.Path.Equals("/api/v1/" + Velomine.Server.Features.Feedback.SendFeedback.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status303SeeOther;
+            context.HttpContext.Response.Headers.Location = Velomine.Server.Features.Feedback.SendFeedback.NotSentPage + "?reason=busy";
+        }
+
+        return ValueTask.CompletedTask;
+    };
 
     // Uploads are signed in, so the key is the member: a whole club behind one address must not share a budget.
     // A bucket rather than a window: a member dropping a bike computer's whole Activities folder sends hundreds of

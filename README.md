@@ -2,7 +2,7 @@
 
 **Cycling training for clubs and riders, where every ride stays yours.**
 
-[Website](https://velomine.eu) · [Try the demo](https://velomine.eu/demo/) · [What works today](https://velomine.eu/status/) · [Self-host it](#self-hosting) · [Give feedback](https://github.com/zenkraker/Velomine/issues/new?template=feedback.yml)
+[Website](https://velomine.eu) · [Try the demo](https://velomine.eu/demo/) · [What works today](https://velomine.eu/status/) · [Self-host it](#self-hosting) · [Give feedback](https://velomine.eu/feedback/)
 
 ![A ride in Velomine: the route on the map, with distance, power, heart rate, training load and laps](docs/images/ride.webp)
 
@@ -94,6 +94,7 @@ Nothing is sent to the Velomine project by default.
 | Error reports, traces and logs | Off | `VELOMINE__TELEMETRY__*` and the standard `OTEL_EXPORTER_OTLP_*` |
 | Email (password reset, notifications) | Off | `VELOMINE__SMTP__*` |
 | Shared parts catalogue: fetch a list, send back new parts | Off; the server keeps its own bundled list | `VELOMINE__CATALOGUE__*` |
+| Anonymous feedback form on the site: answers emailed to this address | Off | `VELOMINE__FEEDBACK__ADDRESS` (needs email) |
 | Single sign-on | Off | `VELOMINE__SSO__*` |
 
 ### Settings you can change
@@ -149,7 +150,7 @@ Velomine is built by one developer, with AI coding agents writing much of the co
 
 ## Contributing
 
-Feedback is the most useful contribution right now: [tell what worked and what broke](https://github.com/zenkraker/Velomine/issues/new?template=feedback.yml). For a security problem, see the [security page](https://velomine.eu/security/) instead of opening an issue.
+Feedback is the most useful contribution right now: [tell what worked and what broke](https://velomine.eu/feedback/). For a security problem, see the [security page](https://velomine.eu/security/) instead of opening an issue.
 
 For code, read [AGENTS.md](AGENTS.md) first: it holds the rules for code, the API, the app and dependencies, and the approved libraries. Run `just check` before every commit. Claude Code reads the same file through `CLAUDE.md`.
 

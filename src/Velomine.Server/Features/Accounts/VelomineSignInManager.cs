@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Demo;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -17,7 +18,8 @@ public sealed class VelomineSignInManager(
     ILogger<SignInManager<User>> logger,
     IAuthenticationSchemeProvider schemes,
     IUserConfirmation<User> confirmation,
-    IOptions<SmtpOptions> smtp)
+    IOptions<SmtpOptions> smtp,
+    IOptions<DemoOptions> demo)
     : SignInManager<User>(userManager, contextAccessor, claimsFactory, optionsAccessor, logger, schemes, confirmation)
 {
     /// <summary>
@@ -27,6 +29,6 @@ public sealed class VelomineSignInManager(
     /// </summary>
     public override async Task<bool> CanSignInAsync(User user) =>
         user.IsApproved
-        && (!EmailVerification.Required(smtp) || user.EmailConfirmed)
+        && (!EmailVerification.Required(smtp, demo) || user.EmailConfirmed)
         && await base.CanSignInAsync(user);
 }
