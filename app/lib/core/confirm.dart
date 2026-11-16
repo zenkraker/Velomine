@@ -12,6 +12,43 @@ Future<bool> confirmDestructive(
   required String action,
   required Key key,
   String? cancelLabel,
+}) => _confirm(
+  context,
+  title: title,
+  body: body,
+  action: action,
+  key: key,
+  cancelLabel: cancelLabel,
+  destructive: true,
+);
+
+/// Asks before something that is not lost for good, such as approving a request: the same dialog with
+/// a normal primary action. Returns true only when the action is chosen.
+Future<bool> confirmAction(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required String action,
+  required Key key,
+  String? cancelLabel,
+}) => _confirm(
+  context,
+  title: title,
+  body: body,
+  action: action,
+  key: key,
+  cancelLabel: cancelLabel,
+  destructive: false,
+);
+
+Future<bool> _confirm(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required String action,
+  required Key key,
+  required bool destructive,
+  String? cancelLabel,
 }) async {
   final sure = await showDialog<bool>(
     context: context,
@@ -28,10 +65,12 @@ Future<bool> confirmDestructive(
           ),
           FilledButton(
             key: key,
-            style: FilledButton.styleFrom(
-              backgroundColor: scheme.error,
-              foregroundColor: scheme.onError,
-            ),
+            style: destructive
+                ? FilledButton.styleFrom(
+                    backgroundColor: scheme.error,
+                    foregroundColor: scheme.onError,
+                  )
+                : null,
             onPressed: () => Navigator.pop(context, true),
             child: Text(action),
           ),

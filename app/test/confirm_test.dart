@@ -72,4 +72,38 @@ void main() {
 
     expect(button.style?.backgroundColor?.resolve({}), scheme.error);
   });
+
+  testWidgets('confirmAction_ShouldUseThePrimaryColour_WhenAskingToApprove', (
+    tester,
+  ) async {
+    bool? result;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () async {
+              result = await confirmAction(
+                context,
+                title: 'Approve?',
+                body: 'They join.',
+                action: 'Approve',
+                key: const Key('sure'),
+              );
+            },
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<FilledButton>(find.byKey(const Key('sure')));
+    expect(button.style, isNull);
+    await tester.tap(find.byKey(const Key('sure')));
+    await tester.pumpAndSettle();
+    expect(result, isTrue);
+  });
 }

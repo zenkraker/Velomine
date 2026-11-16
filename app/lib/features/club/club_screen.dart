@@ -180,7 +180,8 @@ class ClubScreen extends ConsumerWidget {
     required bool approve,
   }) async {
     final l10n = context.l10n;
-    final sure = await confirmDestructive(
+    final confirm = approve ? confirmAction : confirmDestructive;
+    final sure = await confirm(
       context,
       title: approve
           ? l10n.joinRequestApproveTitle(request.displayName)
