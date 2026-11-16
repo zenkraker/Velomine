@@ -1,5 +1,3 @@
-import '../../core/widgets/inline_error.dart';
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -10,6 +8,8 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/empty_state.dart';
 
 /// Every club on the server, for the instance admin: create one, and turn it on or off.
@@ -17,9 +17,9 @@ class ClubsTab extends ConsumerWidget {
   const ClubsTab({super.key});
 
   Future<void> _create(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<({String name, String ownerEmail})>(
-      context: context,
-      builder: (_) => const _CreateClubDialog(),
+    final result = await showSheet<({String name, String ownerEmail})>(
+      context,
+      builder: (_) => const _CreateClubSheet(),
     );
     if (result == null) return;
     await ref
@@ -32,9 +32,9 @@ class ClubsTab extends ConsumerWidget {
     WidgetRef ref,
     AdminClubResponse club,
   ) async {
-    final userId = await showDialog<String>(
-      context: context,
-      builder: (_) => _OwnerDialog(club: club),
+    final userId = await showSheet<String>(
+      context,
+      builder: (_) => _OwnerSheet(club: club),
     );
     if (userId != null) {
       await ref
@@ -48,9 +48,9 @@ class ClubsTab extends ConsumerWidget {
     WidgetRef ref,
     AdminClubResponse club,
   ) async {
-    final plan = await showDialog<_Plan>(
-      context: context,
-      builder: (_) => _PlanDialog(club: club),
+    final plan = await showSheet<_Plan>(
+      context,
+      builder: (_) => _PlanSheet(club: club),
     );
     if (plan == null) return;
     await ref
@@ -73,7 +73,7 @@ class ClubsTab extends ConsumerWidget {
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(
@@ -211,14 +211,14 @@ class ClubsTab extends ConsumerWidget {
   }
 }
 
-class _CreateClubDialog extends StatefulWidget {
-  const _CreateClubDialog();
+class _CreateClubSheet extends StatefulWidget {
+  const _CreateClubSheet();
 
   @override
-  State<_CreateClubDialog> createState() => _CreateClubDialogState();
+  State<_CreateClubSheet> createState() => _CreateClubSheetState();
 }
 
-class _CreateClubDialogState extends State<_CreateClubDialog> {
+class _CreateClubSheetState extends State<_CreateClubSheet> {
   final _name = TextEditingController();
   final _owner = TextEditingController();
   bool _showProblem = false;
@@ -242,67 +242,51 @@ class _CreateClubDialogState extends State<_CreateClubDialog> {
         : email.isEmpty
         ? l10n.errorClubOwner
         : null;
-    return AlertDialog(
-      title: Text(l10n.adminCreateClub),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: AppSpacing.md,
-          children: [
-            TextField(
-              key: const Key('club-name'),
-              controller: _name,
-              onChanged: (_) => setState(() => _showProblem = false),
-              decoration: InputDecoration(labelText: l10n.adminClubName),
-            ),
-            TextField(
-              key: const Key('club-owner-email'),
-              controller: _owner,
-              keyboardType: TextInputType.emailAddress,
-              onChanged: (_) => setState(() => _showProblem = false),
-              decoration: InputDecoration(
-                labelText: l10n.adminClubOwnerEmail,
-                helperText: l10n.adminClubOwnerHelp,
-                helperMaxLines: 3,
-              ),
-            ),
-            if (problem != null)
-              InlineError(problem, key: const Key('create-club-error')),
-          ],
+    return FormSheet(
+      title: l10n.adminCreateClub,
+      saveKey: const Key('save-club'),
+      onSave: () {
+        if (name.isEmpty || email.isEmpty) {
+          setState(() => _showProblem = true);
+          return;
+        }
+        Navigator.pop(context, (name: name, ownerEmail: email));
+      },
+      children: [
+        TextField(
+          key: const Key('club-name'),
+          controller: _name,
+          onChanged: (_) => setState(() => _showProblem = false),
+          decoration: InputDecoration(labelText: l10n.adminClubName),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+        TextField(
+          key: const Key('club-owner-email'),
+          controller: _owner,
+          keyboardType: TextInputType.emailAddress,
+          onChanged: (_) => setState(() => _showProblem = false),
+          decoration: InputDecoration(
+            labelText: l10n.adminClubOwnerEmail,
+            helperText: l10n.adminClubOwnerHelp,
+            helperMaxLines: 3,
+          ),
         ),
-        FilledButton(
-          key: const Key('save-club'),
-          onPressed: () {
-            if (name.isEmpty || email.isEmpty) {
-              setState(() => _showProblem = true);
-              return;
-            }
-            Navigator.pop(context, (name: name, ownerEmail: email));
-          },
-          child: Text(l10n.save),
-        ),
+        if (problem != null)
+          InlineError(problem, key: const Key('create-club-error')),
       ],
     );
   }
 }
 
-class _OwnerDialog extends StatefulWidget {
-  const _OwnerDialog({required this.club});
+class _OwnerSheet extends StatefulWidget {
+  const _OwnerSheet({required this.club});
 
   final AdminClubResponse club;
 
   @override
-  State<_OwnerDialog> createState() => _OwnerDialogState();
+  State<_OwnerSheet> createState() => _OwnerSheetState();
 }
 
-class _OwnerDialogState extends State<_OwnerDialog> {
+class _OwnerSheetState extends State<_OwnerSheet> {
   late String? _chosen = widget.club.members
       .where((m) => m.userId != widget.club.ownerId)
       .firstOrNull
@@ -314,41 +298,23 @@ class _OwnerDialogState extends State<_OwnerDialog> {
     final members = widget.club.members
         .where((m) => m.userId != widget.club.ownerId)
         .toList();
-    return AlertDialog(
-      title: Text(l10n.changeOwner),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: AppSpacing.md,
-          children: [
-            Text(l10n.chooseOwner),
-            DropdownButtonFormField<String>(
-              key: const Key('new-owner'),
-              initialValue: _chosen,
-              items: [
-                for (final member in members)
-                  DropdownMenuItem(
-                    value: member.userId,
-                    child: Text(member.displayName),
-                  ),
-              ],
-              onChanged: (value) => setState(() => _chosen = value),
-            ),
+    return FormSheet(
+      title: l10n.changeOwner,
+      saveKey: const Key('save-owner'),
+      onSave: _chosen == null ? null : () => Navigator.pop(context, _chosen),
+      children: [
+        Text(l10n.chooseOwner),
+        DropdownButtonFormField<String>(
+          key: const Key('new-owner'),
+          initialValue: _chosen,
+          items: [
+            for (final member in members)
+              DropdownMenuItem(
+                value: member.userId,
+                child: Text(member.displayName),
+              ),
           ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          key: const Key('save-owner'),
-          onPressed: _chosen == null
-              ? null
-              : () => Navigator.pop(context, _chosen),
-          child: Text(l10n.save),
+          onChanged: (value) => setState(() => _chosen = value),
         ),
       ],
     );
@@ -358,16 +324,16 @@ class _OwnerDialogState extends State<_OwnerDialog> {
 /// The two values an operator records for a club.
 typedef _Plan = ({int? memberLimit, DateTime? paidUntil});
 
-class _PlanDialog extends StatefulWidget {
-  const _PlanDialog({required this.club});
+class _PlanSheet extends StatefulWidget {
+  const _PlanSheet({required this.club});
 
   final AdminClubResponse club;
 
   @override
-  State<_PlanDialog> createState() => _PlanDialogState();
+  State<_PlanSheet> createState() => _PlanSheetState();
 }
 
-class _PlanDialogState extends State<_PlanDialog> {
+class _PlanSheetState extends State<_PlanSheet> {
   static const _bands = [25, 75, 150];
 
   late int? _limit = widget.club.memberLimit;
@@ -392,73 +358,56 @@ class _PlanDialogState extends State<_PlanDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.adminClubEditPlan),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.md,
-          children: [
-            DropdownButtonFormField<int?>(
-              key: const Key('plan-limit'),
-              initialValue: _limit,
-              // The longest band's label does not fit beside the arrow on a phone.
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l10n.adminClubLimit),
-              items: [
-                for (final band in _bands)
-                  DropdownMenuItem<int?>(
-                    value: band,
-                    child: Text(l10n.adminClubLimitOption(band)),
-                  ),
-                DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text(l10n.adminClubLimitNone),
-                ),
-              ],
-              onChanged: (value) => setState(() => _limit = value),
-            ),
-            Text(
-              l10n.adminClubPaidUntil,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            Text(
-              _until == null ? l10n.adminClubNoDate : dateOnly(_until),
-              key: const Key('plan-date'),
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                OutlinedButton.icon(
-                  key: const Key('plan-choose-date'),
-                  onPressed: _chooseDate,
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(l10n.adminClubChooseDate),
-                ),
-                TextButton(
-                  key: const Key('plan-clear-date'),
-                  onPressed: _until == null
-                      ? null
-                      : () => setState(() => _until = null),
-                  child: Text(l10n.adminClubNoDate),
-                ),
-              ],
+    return FormSheet(
+      title: l10n.adminClubEditPlan,
+      saveKey: const Key('save-plan'),
+      onSave: () =>
+          Navigator.pop(context, (memberLimit: _limit, paidUntil: _until)),
+      children: [
+        DropdownButtonFormField<int?>(
+          key: const Key('plan-limit'),
+          initialValue: _limit,
+          // The longest band's label does not fit beside the arrow on a phone.
+          isExpanded: true,
+          decoration: InputDecoration(labelText: l10n.adminClubLimit),
+          items: [
+            for (final band in _bands)
+              DropdownMenuItem<int?>(
+                value: band,
+                child: Text(l10n.adminClubLimitOption(band)),
+              ),
+            DropdownMenuItem<int?>(
+              value: null,
+              child: Text(l10n.adminClubLimitNone),
             ),
           ],
+          onChanged: (value) => setState(() => _limit = value),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+        Text(
+          l10n.adminClubPaidUntil,
+          style: Theme.of(context).textTheme.labelLarge,
         ),
-        FilledButton(
-          key: const Key('save-plan'),
-          onPressed: () =>
-              Navigator.pop(context, (memberLimit: _limit, paidUntil: _until)),
-          child: Text(l10n.save),
+        Text(
+          _until == null ? l10n.adminClubNoDate : dateOnly(_until),
+          key: const Key('plan-date'),
+        ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('plan-choose-date'),
+              onPressed: _chooseDate,
+              icon: const Icon(Icons.calendar_today),
+              label: Text(l10n.adminClubChooseDate),
+            ),
+            TextButton(
+              key: const Key('plan-clear-date'),
+              onPressed: _until == null
+                  ? null
+                  : () => setState(() => _until = null),
+              child: Text(l10n.adminClubNoDate),
+            ),
+          ],
         ),
       ],
     );

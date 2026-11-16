@@ -2464,6 +2464,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pairStrapTitle => 'Abbina una fascia cardio';
 
   @override
+  @override
+  String get deleteLocalRideTitle => 'Eliminare questa uscita dal telefono?';
+
+  @override
+  String get deleteLocalRideBodyUploaded =>
+      'L\'uscita è già sul server. Viene rimossa solo la copia su questo telefono.';
+
+  @override
+  String get deleteLocalRideBodyNotUploaded =>
+      'Questa uscita non è stata caricata. Se la elimini dal telefono è persa per sempre.';
+
   String get pairStrapHelp =>
       'Indossa la fascia perché si attivi, poi sceglila qui sotto. Verrà ricordata per le prossime uscite.';
 

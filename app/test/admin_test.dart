@@ -144,6 +144,51 @@ void main() {
     },
   );
 
+  testWidgets('AccountsTab_ShouldListDeleteLastAndInRed_WhenRowMenuOpens', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', name: 'Rider');
+    await openAdmin(tester);
+
+    await tester.tap(find.byKey(Key('user-menu-${rider.id}')));
+    await tester.pumpAndSettle();
+
+    final delete = find.byKey(Key('delete-${rider.id}'));
+    final others = [
+      for (final k in ['roles', 'lock', 'reset-password', 'reset-two-factor'])
+        tester.getTopLeft(find.byKey(Key('$k-${rider.id}'))).dy,
+    ];
+    expect(
+      tester.getTopLeft(delete).dy,
+      greaterThan(others.reduce((a, b) => a > b ? a : b)),
+    );
+    final style = tester.widget<MenuItemButton>(delete).style!;
+    expect(
+      style.foregroundColor!.resolve({}),
+      Theme.of(tester.element(delete)).colorScheme.error,
+    );
+
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    expect(find.text('Delete Rider?'), findsOneWidget);
+    expect(server.accounts, contains('rider@example.com'));
+  });
+
+  testWidgets('ClubsTab_ShouldOpenCreateClubAsSheet_WhenTapped', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('create-club')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byKey(const Key('save-club')), findsOneWidget);
+  });
+
   testWidgets('SettingsTab_ShouldSaveSettings_WhenSaved', (tester) async {
     await openAdmin(tester);
     await tester.tap(find.byKey(const Key('tab-settings')));

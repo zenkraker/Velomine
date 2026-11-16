@@ -2451,6 +2451,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairStrapTitle => 'Pair a heart-rate strap';
 
   @override
+  @override
+  String get deleteLocalRideTitle => 'Delete this ride from the phone?';
+
+  @override
+  String get deleteLocalRideBodyUploaded =>
+      'The ride is already on the server. Only the copy on this phone is removed.';
+
+  @override
+  String get deleteLocalRideBodyNotUploaded =>
+      'This ride has not been uploaded. If you delete it from the phone it is lost for good.';
+
   String get pairStrapHelp =>
       'Wear the strap so it wakes up, then pick it below. It is remembered for your next rides.';
 

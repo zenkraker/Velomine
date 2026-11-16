@@ -43,7 +43,7 @@ class SettingsTab extends ConsumerWidget {
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(

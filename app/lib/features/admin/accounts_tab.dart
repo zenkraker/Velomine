@@ -1,4 +1,4 @@
-import '../../core/widgets/inline_error.dart';
+import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +13,10 @@ import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/confirm.dart';
+import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/inline_error.dart';
+import '../../core/widgets/page_menu.dart';
 
 String _roleName(AppLocalizations l10n, String role) => switch (role) {
   'member' => l10n.roleMember,
@@ -44,9 +48,9 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
     WidgetRef ref,
     AdminUserSummary user,
   ) async {
-    final chosen = await showDialog<List<String>>(
-      context: context,
-      builder: (_) => _RolesDialog(user: user),
+    final chosen = await showSheet<List<String>>(
+      context,
+      builder: (_) => _RolesSheet(user: user),
     );
     if (chosen != null) {
       await ref
@@ -61,29 +65,14 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
     AdminUserSummary user,
   ) async {
     final l10n = context.l10n;
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteUserTitle(user.displayName)),
-        content: Text(l10n.deleteUserBody(user.email)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: const Key('confirm-delete'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final sure = await confirmDestructive(
+      context,
+      title: l10n.deleteUserTitle(user.displayName),
+      body: l10n.deleteUserBody(user.email),
+      action: l10n.delete,
+      key: const Key('confirm-delete'),
     );
-    if ((sure ?? false) && context.mounted) {
+    if (sure && context.mounted) {
       await ref.read(adminAccountsViewModelProvider.notifier).delete(user);
     }
   }
@@ -94,25 +83,14 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
     AdminUserSummary user,
   ) async {
     final l10n = context.l10n;
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.resetTwoFactor),
-        content: Text(l10n.resetTwoFactorBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: const Key('confirm-reset-two-factor'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.resetTwoFactor),
-          ),
-        ],
-      ),
+    final sure = await confirmDestructive(
+      context,
+      title: l10n.resetTwoFactor,
+      body: l10n.resetTwoFactorBody,
+      action: l10n.resetTwoFactor,
+      key: const Key('confirm-reset-two-factor'),
     );
-    if ((sure ?? false) && context.mounted) {
+    if (sure && context.mounted) {
       await ref
           .read(adminAccountsViewModelProvider.notifier)
           .resetTwoFactor(user);
@@ -128,9 +106,9 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
         .read(adminAccountsViewModelProvider.notifier)
         .createResetLink(user);
     if (link == null || !context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (_) => _ResetLinkDialog(user: user, link: link),
+    await showSheet<void>(
+      context,
+      builder: (_) => _ResetLinkSheet(user: user, link: link),
     );
   }
 
@@ -162,7 +140,7 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
       children: [
         TextField(
           key: const Key('account-search'),
@@ -242,55 +220,57 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
               )
             : mine
             ? null
-            : PopupMenuButton<String>(
-                key: Key('user-menu-${user.id}'),
-                tooltip: l10n.actionsFor(user.displayName),
-                onSelected: (action) => switch (action) {
-                  'roles' => _roles(context, ref, user),
-                  'lock' =>
-                    ref
-                        .read(adminAccountsViewModelProvider.notifier)
-                        .lock(user),
-                  'unlock' =>
-                    ref
-                        .read(adminAccountsViewModelProvider.notifier)
-                        .unlock(user),
-                  'reset-password' => _resetLink(context, ref, user),
-                  'two-factor' => _resetTwoFactor(context, ref, user),
-                  _ => _delete(context, ref, user),
-                },
-                itemBuilder: (_) => [
-                  PopupMenuItem(
+            : PageMenu(
+                buttonKey: Key('user-menu-${user.id}'),
+                entries: [
+                  PageMenuEntry(
                     key: Key('roles-${user.id}'),
-                    value: 'roles',
-                    child: Text(l10n.changeRoles),
+                    icon: Icons.admin_panel_settings_outlined,
+                    label: l10n.changeRoles,
+                    onSelected: () =>
+                        _later(context, () => _roles(context, ref, user)),
                   ),
                   if (user.isLockedOut)
-                    PopupMenuItem(
+                    PageMenuEntry(
                       key: Key('unlock-${user.id}'),
-                      value: 'unlock',
-                      child: Text(l10n.unlockAccount),
+                      icon: Icons.lock_open_outlined,
+                      label: l10n.unlockAccount,
+                      onSelected: () => ref
+                          .read(adminAccountsViewModelProvider.notifier)
+                          .unlock(user),
                     )
                   else
-                    PopupMenuItem(
+                    PageMenuEntry(
                       key: Key('lock-${user.id}'),
-                      value: 'lock',
-                      child: Text(l10n.lockAccount),
+                      icon: Icons.lock_outline,
+                      label: l10n.lockAccount,
+                      onSelected: () => ref
+                          .read(adminAccountsViewModelProvider.notifier)
+                          .lock(user),
                     ),
-                  PopupMenuItem(
+                  PageMenuEntry(
                     key: Key('reset-password-${user.id}'),
-                    value: 'reset-password',
-                    child: Text(l10n.resetPasswordLink),
+                    icon: Icons.link,
+                    label: l10n.resetPasswordLink,
+                    onSelected: () =>
+                        _later(context, () => _resetLink(context, ref, user)),
                   ),
-                  PopupMenuItem(
+                  PageMenuEntry(
                     key: Key('reset-two-factor-${user.id}'),
-                    value: 'two-factor',
-                    child: Text(l10n.resetTwoFactor),
+                    icon: Icons.phonelink_lock_outlined,
+                    label: l10n.resetTwoFactor,
+                    onSelected: () => _later(
+                      context,
+                      () => _resetTwoFactor(context, ref, user),
+                    ),
                   ),
-                  PopupMenuItem(
+                  PageMenuEntry(
                     key: Key('delete-${user.id}'),
-                    value: 'delete',
-                    child: Text(l10n.deleteAccountAction),
+                    icon: Icons.delete_outline,
+                    label: l10n.deleteAccountAction,
+                    destructive: true,
+                    onSelected: () =>
+                        _later(context, () => _delete(context, ref, user)),
                   ),
                 ],
               ),
@@ -299,18 +279,23 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
   }
 }
 
+/// Runs [action] after the menu has closed, when its context is still mounted.
+void _later(BuildContext context, VoidCallback action) => scheduleMicrotask(() {
+  if (context.mounted) action();
+});
+
 /// Shows the one-time link so the admin can copy it. The server does not store it; this dialog is the only copy.
-class _ResetLinkDialog extends StatefulWidget {
-  const _ResetLinkDialog({required this.user, required this.link});
+class _ResetLinkSheet extends StatefulWidget {
+  const _ResetLinkSheet({required this.user, required this.link});
 
   final AdminUserSummary user;
   final String link;
 
   @override
-  State<_ResetLinkDialog> createState() => _ResetLinkDialogState();
+  State<_ResetLinkSheet> createState() => _ResetLinkSheetState();
 }
 
-class _ResetLinkDialogState extends State<_ResetLinkDialog> {
+class _ResetLinkSheetState extends State<_ResetLinkSheet> {
   bool _copied = false;
 
   Future<void> _copy() async {
@@ -321,82 +306,70 @@ class _ResetLinkDialogState extends State<_ResetLinkDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.resetPasswordLinkTitle(widget.user.displayName)),
-      content: Column(
+    return SheetFrame(
+      title: l10n.resetPasswordLinkTitle(widget.user.displayName),
+      bottom: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: AppSpacing.md,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.sm,
         children: [
-          Text(l10n.resetPasswordLinkHelp),
-          SelectableText(
-            widget.link,
-            key: const Key('reset-link'),
-            style: Theme.of(context).textTheme.bodySmall,
+          OutlinedButton(
+            onPressed: _copy,
+            child: Text(_copied ? l10n.linkCopied : l10n.copyLink),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.close),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _copy,
-          child: Text(_copied ? l10n.linkCopied : l10n.copyLink),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.close),
+      children: [
+        Text(l10n.resetPasswordLinkHelp),
+        SelectableText(
+          widget.link,
+          key: const Key('reset-link'),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );
   }
 }
 
-class _RolesDialog extends StatefulWidget {
-  const _RolesDialog({required this.user});
+class _RolesSheet extends StatefulWidget {
+  const _RolesSheet({required this.user});
 
   final AdminUserSummary user;
 
   @override
-  State<_RolesDialog> createState() => _RolesDialogState();
+  State<_RolesSheet> createState() => _RolesSheetState();
 }
 
-class _RolesDialogState extends State<_RolesDialog> {
+class _RolesSheetState extends State<_RolesSheet> {
   late final Set<String> _chosen = {...widget.user.roles};
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.rolesFor(widget.user.displayName)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+    return FormSheet(
+      title: l10n.rolesFor(widget.user.displayName),
+      saveKey: const Key('roles-save'),
+      onSave: () => Navigator.pop(context, _chosen.toList()),
+      children: [
+        CheckboxListTile(
+          value: true,
+          onChanged: null,
+          title: Text(l10n.roleMember),
+          subtitle: Text(l10n.everyAccountMember),
+        ),
+        for (final role in ['coach', 'admin'])
           CheckboxListTile(
-            value: true,
-            onChanged: null,
-            title: Text(l10n.roleMember),
-            subtitle: Text(l10n.everyAccountMember),
-          ),
-          for (final role in ['coach', 'admin'])
-            CheckboxListTile(
-              key: Key('role-$role'),
-              value: _chosen.contains(role),
-              title: Text(_roleName(l10n, role)),
-              onChanged: (on) => setState(
-                () => (on ?? false) ? _chosen.add(role) : _chosen.remove(role),
-              ),
+            key: Key('role-$role'),
+            value: _chosen.contains(role),
+            title: Text(_roleName(l10n, role)),
+            onChanged: (on) => setState(
+              () => (on ?? false) ? _chosen.add(role) : _chosen.remove(role),
             ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          key: const Key('roles-save'),
-          onPressed: () => Navigator.pop(context, _chosen.toList()),
-          child: Text(l10n.save),
-        ),
+          ),
       ],
     );
   }

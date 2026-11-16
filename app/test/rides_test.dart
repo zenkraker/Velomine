@@ -587,9 +587,6 @@ void main() {
     await tester.tap(find.byKey(const Key('live-ride-banner')));
     await tester.pumpAndSettle();
 
-    // The test font is wider than the real one, so the recorder's live card overflows at phone width;
-    // that layout is the recorder's own and not under test here.
-    tester.takeException();
     expect(find.byType(RecordingScreen), findsOneWidget);
     expect(find.byKey(const Key('live-ride-banner')), findsNothing);
   });

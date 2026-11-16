@@ -500,12 +500,69 @@ void main() {
     );
     await pump(tester, recorder);
 
+    expect(find.byKey(const Key('delete-ride-1')), findsNothing);
+    await tester.tap(find.byKey(const Key('ride-actions-ride-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('delete-ride-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-local-ride')));
     await tester.pumpAndSettle();
 
     expect(recorder.deleted, ['ride-1']);
     expect(find.byKey(const Key('local-ride-ride-1')), findsNothing);
   });
+
+  testWidgets(
+    'RecordingScreen_ShouldWarnTheRideIsLostForGood_WhenDeletingARideNotUploaded',
+    (tester) async {
+      final recorder = FakeRecorder();
+      recorder.rides.add(
+        LocalRide(
+          id: 'ride-1',
+          startedAt: DateTime(2026, 11, 5, 8),
+          state: 'ready',
+          distanceM: 1200,
+          movingS: 300,
+        ),
+      );
+      await pump(tester, recorder);
+
+      await tester.tap(find.byKey(const Key('ride-actions-ride-1')));
+      await tester.pumpAndSettle();
+      final entry = tester.widget<MenuItemButton>(
+        find.byKey(const Key('delete-ride-1')),
+      );
+      final error = Theme.of(
+        tester.element(find.byKey(const Key('delete-ride-1'))),
+      ).colorScheme.error;
+      expect(entry.style?.foregroundColor?.resolve({}), error);
+
+      await tester.tap(find.byKey(const Key('delete-ride-1')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('lost for good'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(recorder.deleted, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'RecordingScreen_ShouldNotOverflow_WhenRecordingAtNarrowWidthWithLargeText',
+    (tester) async {
+      final recorder = FakeRecorder();
+      await pump(tester, recorder);
+      tester.view.physicalSize = const Size(360, 780);
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await tester.tap(find.byKey(const Key('record-start')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('record-stop')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('RecordingScreen_ShouldListOnlyRecordedRides_WhenOneIsImported', (
     tester,

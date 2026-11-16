@@ -4364,6 +4364,24 @@ abstract class AppLocalizations {
   /// **'Pair a heart-rate strap'**
   String get pairStrapTitle;
 
+  /// No description provided for @deleteLocalRideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this ride from the phone?'**
+  String get deleteLocalRideTitle;
+
+  /// No description provided for @deleteLocalRideBodyUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride is already on the server. Only the copy on this phone is removed.'**
+  String get deleteLocalRideBodyUploaded;
+
+  /// No description provided for @deleteLocalRideBodyNotUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride has not been uploaded. If you delete it from the phone it is lost for good.'**
+  String get deleteLocalRideBodyNotUploaded;
+
   /// No description provided for @pairStrapHelp.
   ///
   /// In en, this message translates to:
