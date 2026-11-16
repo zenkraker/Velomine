@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'tokens.dart';
+
 /// Whether the person asked the system to reduce motion.
 bool reduceMotion(BuildContext context) =>
     MediaQuery.disableAnimationsOf(context);
@@ -32,5 +34,34 @@ final noAnimationPageTransitions = PageTransitionsTheme(
   builders: {
     for (final platform in TargetPlatform.values)
       platform: const NoAnimationPageTransitionsBuilder(),
+  },
+);
+
+/// A page change on the web: the new page fades in over [AppMotion.standard]. The platform's zoom transition is
+/// re-painted live there (its snapshotting is off on the web), so the old page would stay on screen far longer.
+class VelominePageTransitionsBuilder extends PageTransitionsBuilder {
+  const VelominePageTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => AppMotion.standard;
+
+  @override
+  Duration get reverseTransitionDuration => AppMotion.standard;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => FadeTransition(opacity: animation, child: child);
+}
+
+/// The page transitions the web app uses, in place of the platform's.
+final webPageTransitions = PageTransitionsTheme(
+  builders: {
+    for (final platform in TargetPlatform.values)
+      platform: const VelominePageTransitionsBuilder(),
   },
 );

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'motion.dart';
 import 'tokens.dart';
 
 // Brand direction D, "Contour × Night Ride" (docs/design/brand-directions.html): the Contour palette by day,
@@ -187,6 +189,8 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     colorScheme: scheme,
     fontFamily: sans,
     scaffoldBackgroundColor: scheme.surface,
+    // The web has no snapshotting, so the platform's zoom keeps the old page on screen; fade instead.
+    pageTransitionsTheme: kIsWeb ? webPageTransitions : null,
     textTheme: text.copyWith(
       displayLarge: displayStyle(text.displayLarge).copyWith(fontSize: 68),
       displayMedium: displayStyle(text.displayMedium).copyWith(fontSize: 56),

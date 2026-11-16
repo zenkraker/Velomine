@@ -197,8 +197,16 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
       _time = TimeOfDay(hour: local.hour, minute: local.minute);
     }
 
+    // The real header while the ride is read, so the page is opaque from its first frame.
     if (s.load.running && (editing && detail == null)) {
-      return const LoadingState();
+      return PageScaffold(
+        eyebrow: l10n.clubRidesEyebrow,
+        title: l10n.editRideTitle,
+        maxWidth: AppLayout.contentNarrow,
+        children: const [
+          LoadingState.rows(key: Key('plan-ride-loading'), count: 4),
+        ],
+      );
     }
 
     final problem = _problemText(l10n);

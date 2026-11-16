@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/server_config.dart';
-import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/features/auth/server_setup_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
@@ -65,6 +64,8 @@ void main() {
         find.byKey(const Key('server-url')),
         'https://velo.example/',
       );
+      await tester.ensureVisible(find.byKey(const Key('server-save')));
+      await tester.ensureVisible(find.byKey(const Key('server-save')));
       await tester.tap(find.byKey(const Key('server-save')));
       await tester.pumpAndSettle();
 
@@ -85,6 +86,7 @@ void main() {
     );
 
     await tester.enterText(find.byKey(const Key('server-url')), 'velo.example');
+    await tester.ensureVisible(find.byKey(const Key('server-save')));
     await tester.tap(find.byKey(const Key('server-save')));
     await tester.pumpAndSettle();
 
@@ -102,6 +104,7 @@ void main() {
       find.byKey(const Key('server-url')),
       'https://elsewhere.example',
     );
+    await tester.ensureVisible(find.byKey(const Key('server-save')));
     await tester.tap(find.byKey(const Key('server-save')));
     await tester.pumpAndSettle();
 
@@ -119,12 +122,13 @@ void main() {
       find.byKey(const Key('server-url')),
       'http://192.168.10.193:8080',
     );
+    await tester.ensureVisible(find.byKey(const Key('server-save')));
     await tester.tap(find.byKey(const Key('server-save')));
     await tester.pump();
 
     expect(
       find.descendant(
-        of: find.byType(BottomActionBar),
+        of: find.byKey(const Key('server-save')),
         matching: find.byType(CircularProgressIndicator),
       ),
       findsOneWidget,

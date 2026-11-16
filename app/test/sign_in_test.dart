@@ -16,6 +16,9 @@ void main() {
   ) async {
     await tester.enterText(find.byKey(const Key('email')), email);
     await tester.enterText(find.byKey(const Key('password')), password);
+    // The button follows the fields, so on a short window it is below the fold.
+    await tester.ensureVisible(find.byKey(const Key('sign-in')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('sign-in')));
     await tester.pumpAndSettle();
   }
@@ -34,6 +37,10 @@ void main() {
     'SignInScreen_ShouldKeepSignInInTheBottomBar_WhenTheKeyboardIsOpen',
     (tester) async {
       await startApp(tester, server.session(useCookies: false));
+      tester.view.physicalSize = const Size(390, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       addTearDown(tester.view.resetViewInsets);
       await tester.pumpAndSettle();
