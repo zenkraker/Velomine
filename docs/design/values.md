@@ -23,6 +23,8 @@ member owns the data, and nobody pays again to see their own history.
 - Delete means delete: account, rides, files and derived data. Backups expire within 90 days.
 - Member data is never used for advertising, profiling, resale or AI training.
 - Changing platform must never mean losing history.
+- If a club stops paying, its members lose nothing: the account stays readable, exportable and deletable for free. It is never deleted for non-payment: only after two years without a sign-in and two unanswered emails.
+- On a self-hosted server the account lives where the club runs it, and the member can always export and delete everything.
 
 ### 2. No feature paywall
 
@@ -70,15 +72,23 @@ member owns the data, and nobody pays again to see their own history.
 - Self-hosting is free under AGPL-3.0, for riders and clubs alike. An optional supporter
   licence (a one-time rider fee or a one-time club fee) funds the project: it unlocks
   nothing, never limits seats and never blocks member data.
-- When a cloud subscription ends, the account becomes read-only for 12 months. The member
-  still sees every ride, chart and total already there, and can export or delete everything;
-  nothing new can be added: no uploads, no new goals, bikes or clubs, no new members. The
-  phone still records rides and keeps them on the phone. Paying again restores the account
-  as it was. After 12 months, and after a warning by email, the account and its data are
-  deleted. We never charge anyone to look at their own rides.
-- When a club stops paying, its members' accounts become read-only on the same terms, because
-  the member owns the data and the club only paid for the hosting. A member who joins another
-  club or takes the solo plan keeps a full account.
+- Fees exist to pay for the servers and to keep the project healthy and alive for the long run.
+- When a club, or a solo rider, stops paying on the cloud, the member's account becomes
+  read-only and stays read-only for free. The member still
+  sees every ride, chart and total already there, and can export or delete everything at any
+  time; nothing new can be added: no uploads, no new goals, bikes, clubs or members. The phone
+  still records rides and keeps them on the phone. Joining a paying club or taking the solo
+  plan restores full use. A member's account is never deleted for non-payment: data
+  is never held hostage, and a member never loses their history because a club stopped paying.
+  The club itself (its memberships, sharing settings and club ride calendar) may be closed
+  after 12 months unpaid, with an email warning to its admins; routes stay owned by the riders
+  who added them.
+- Inactivity rule, cloud only, read-only accounts only (never an account in a paying club or on the
+  solo plan): after 2 years with no sign-in an email asks whether to keep the account, and a second
+  follows a month later. Signing in or one click in either email keeps it for 2 more years. If
+  neither is answered, the account and its data are deleted; backups expire within 90 days.
+- A rider without a club on the cloud gets 30 days of full use, then the account becomes
+  read-only on the same terms until the rider joins a club or takes the solo plan.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 
@@ -91,12 +101,13 @@ member owns the data, and nobody pays again to see their own history.
 ### 9. Health data is special
 
 - Collect the minimum, explain why, and encrypt what matters.
-- Wellbeing and cycle data are never shared without separate, explicit consent.
+- Wellbeing and menstrual-cycle data are never shared without separate, explicit consent.
 - The member can see, export and delete it like everything else.
 
 ### 10. Openness and accountability
 
 - Public changelog and documented product decisions.
+- Each month the community votes on which planned features come next. The principles decide the list; the community decides the order. Each club casts one vote, by its admins, ideally after asking its members, and each solo rider casts one. The results, and what was then built, are published.
 - A security disclosure path.
 - Licensed AGPL-3.0 with a trademark policy: clubs can inspect, self-host and fork; anyone
   running it as a service publishes their source, and nobody else may use the Velomine name.
@@ -126,7 +137,7 @@ Before building or shipping something, ask:
 | Users | Clubs and teams, and riders on their own. One club per account, club admin and coach roles, sign-up with admin approval, joining a club with a code, single sign-on alongside local accounts. A club is an opt-in step, never a requirement. |
 | Social | Private rides and coach sharing instead of a public feed or followers. Inside a club, members who opt in see each other's shared rides and routes, and can react, comment and rate; each member's own privacy settings still apply, and nothing leaves the club. Privacy zones hide home and other saved places. |
 | Clubs and coaches | The member decides what to share (rides, training, routes, wellbeing) and with whom (the club's coaches today). Every share is revocable and every view is logged. |
-| Health | A daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride. Cycle tracking is planned as optional, highly protected context. |
+| Health | A daily 1–5 check-in (fatigue, soreness, mood, stress, motivation), RPE and notes after each ride. Menstrual-cycle tracking is planned as optional, highly protected context. |
 | Body data | Weight is a single profile field, not a tracked series: W/kg, the VO2max estimate and calories need it. |
 | Brand | Velomine, direction D: Contour × Night Ride. Cloud Dancer, deep teal and iron oxide by day; asphalt and Volt while riding. |
 | Languages | English and Italian first, as an account setting that follows the member to every device. |

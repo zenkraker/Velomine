@@ -45,7 +45,7 @@
       </details>
       <nav class="nav" aria-label="Main">
         <a href="/">Home</a>
-        <a href="/status/">Status</a>
+        <a href="/principles/">Principles</a>
         <a href="/pricing/" aria-current="page">Pricing</a>
         <a href="/demo/">Demo</a>
         <a href="/contact/">Contact</a>
@@ -66,7 +66,7 @@
         </nav>
         <p class="eyebrow">Pricing</p>
         <h1>One plan for clubs. One price for solo riders.</h1>
-        <p>Clubs pay €190 to €990 a year by size. One rider pays €39 a year. Every feature is included, and your data is always yours.</p>
+        <p>Clubs pay €190 to €990 a year by size. One rider pays €39 a year for every personal feature; a club gets every feature for every member. Your data is always yours. Fees pay for the servers and keep the project healthy and alive for the long run.</p>
         <p><strong>Nothing is charged today.</strong> Velomine is not a business yet and collects no payments: these are the planned prices. The demo and self-hosting are free, and the goal now is feedback.</p>
       </div>
     </section>
@@ -143,14 +143,14 @@
       </div>
     </section>
 
-    <section class="section section--tight">
+    <section class="section section--tight" id="solo">
       <div class="container">
         <div class="split">
           <div class="split-copy">
             <p class="eyebrow">Solo riders</p>
             <h2>No club? One price.</h2>
-            <p>Use Velomine on your own for €39 a year. Rides, charts, laps, zones, bikes, parts, goals and readiness — everything personal, no club needed. Thirty days free, no card.</p>
-            <p class="note-small">The solo plan is not open yet: solo sign-up and payment are still being built. Strava export import works today, so your history can come with you when it opens. <a href="/contact/">Join the waitlist <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a></p>
+            <p>Use Velomine on your own for €39 a year. Rides, charts, laps, zones, bikes, parts, goals and readiness — everything personal, no club needed. Thirty days free, no card. A club pays for its members, so a rider in a paying club does not need the solo plan.</p>
+            <p class="note-small">The solo plan is not open yet: solo sign-up and payment are still being built. Strava export import works today, so your history can come with you when it opens. Without a club or the solo plan, an account gets 30 days of full use and then becomes read-only, on the terms under “What happens if I stop paying?”, until the rider joins a club or takes the solo plan. The app does not enforce this yet. <a href="/contact/">Join the waitlist <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a></p>
           </div>
           <div class="split-visual">
             <article class="panel panel-pad price-block price-block--solo">
@@ -281,9 +281,13 @@
           </details>
           <details>
             <summary>What happens if I stop paying?</summary>
-            <p>On the cloud, the account becomes read-only for 12 months. You still see every ride, chart and total already there, and you can export or delete everything. Nothing new can be added: no uploads, no new goals, bikes or clubs, no new members. The phone still records rides and keeps them on the phone. Paying again restores the account as it was. After 12 months, and after a warning by email, the account and its data are deleted.</p>
-            <p>When a club stops paying, its members get the same terms: the rides belong to the member, and the club only paid for the hosting. A member who joins another club or takes the solo plan keeps a full account. A self-hosted server is not affected: it has no subscription.</p>
-            <p>The app does not enforce the read-only state yet. This is the rule it will follow, and no account is deleted before the 12 months and the warning.</p>
+            <p>On the cloud, the account becomes read-only, and it stays read-only for free. You still see every ride, chart and total already there, and you can export or delete everything at any time. Nothing new can be added: no uploads, no new goals, bikes or clubs, no new members. The phone still records rides and keeps them on the phone. Joining a paying club or taking the solo plan restores full use. Your account is never deleted for non-payment. The one exception is inactivity: after two years with no sign-in on a read-only account, Velomine emails to ask whether to keep it, and a second email follows a month later. Signing in, or one click in either email, keeps the account for two more years. Only if neither is answered are the account and its data deleted, and backups expire within 90 days. This never applies to an account in a paying club or on the solo plan.</p>
+            <p>When a club stops paying, its members get the same terms: the rides belong to the member, and the club only paid for the hosting. The club itself, with its memberships, sharing settings and club ride calendar, may be closed after 12 months unpaid, with a warning by email to its admins. Routes stay owned by the riders who added them. A self-hosted server is not affected: it has no subscription.</p>
+            <p>Data is never held hostage, and a member never loses their history because a club stopped paying. The app does not enforce the read-only state or the inactivity rule yet. This is the rule it will follow.</p>
+          </details>
+          <details>
+            <summary>What if I ride without a club?</summary>
+            <p>On the cloud, an account without a club gets 30 days of full use. After that it becomes read-only, on the terms above, including the inactivity rule, until the rider joins a club or takes the <a href="#solo">solo plan</a>. The app does not enforce this yet, and the solo plan is not open yet.</p>
           </details>
           <details>
             <summary>What is still missing?</summary>
@@ -319,7 +323,7 @@
             </svg>
             <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
-          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
+          <p class="footer-tagline">Cycling rides you own, for riders and their clubs. Self-hosted or cloud.</p>
         </div>
         <div class="footer-col">
           <h3>Site</h3>
@@ -328,6 +332,7 @@
           <a href="/pricing/">Pricing</a>
           <a href="/demo/">Demo</a>
           <a href="/contact/">Contact</a>
+          <a href="/feedback/">Feedback</a>
         </div>
         <div class="footer-col">
           <h3>App</h3>

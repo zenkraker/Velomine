@@ -1658,7 +1658,8 @@ a {
   pointer-events: none;
 }
 
-.hero-stage .board {
+.hero-stage .board,
+.hero-stage .share-card {
   position: relative;
   z-index: 1;
   margin: 0;
@@ -2285,4 +2286,65 @@ a {
     align-items: center;
     min-height: 44px;
   }
+}
+
+/* Feedback form */
+
+.feedback-form {
+  display: grid;
+  gap: 1.4rem;
+  margin-top: 1.6rem;
+}
+
+.feedback-form .field {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.feedback-form label,
+.feedback-form legend {
+  color: var(--ink);
+  font-weight: 600;
+  padding: 0;
+}
+
+.feedback-form .check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  font-weight: 400;
+}
+
+.feedback-form .check-row input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.field-hint {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.feedback-form input[type="text"],
+.feedback-form select,
+.feedback-form textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.feedback-form button {
+  justify-self: start;
 }

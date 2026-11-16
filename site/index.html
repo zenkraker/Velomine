@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Velomine — every ride belongs to its rider</title>
-  <meta name="description" content="Velomine is a cycling-only training platform for clubs and solo riders. Record or upload every ride, decide exactly what your coach can see, and keep every original file. Self-hosted or cloud; a club pays one fee by its size and its members pay nothing.">
+  <meta name="description" content="Velomine is a cycling-only platform for riders and their clubs. Move in with your history, ride, and belong: you keep every original file and decide exactly what your club sees. Self-hosted or EU cloud, open source.">
   <meta name="theme-color" content="#F0EEE9">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://velomine.eu/">
   <meta property="og:site_name" content="Velomine">
   <meta property="og:title" content="Velomine — every ride belongs to its rider">
-  <meta property="og:description" content="Record every ride, keep every file, and decide exactly what your coach can see. Self-hosted or cloud; a club pays one fee by its size and its members pay nothing.">
+  <meta property="og:description" content="Move in with your history, ride, and belong. Keep every original file and decide exactly what your club sees. Self-hosted or EU cloud, open source.">
   <meta property="og:image" content="https://velomine.eu/static/img/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -47,7 +47,7 @@
       </details>
       <nav class="nav" aria-label="Main">
         <a href="/" aria-current="page">Home</a>
-        <a href="/status/">Status</a>
+        <a href="/principles/">Principles</a>
         <a href="/pricing/">Pricing</a>
         <a href="/demo/">Demo</a>
         <a href="/contact/">Contact</a>
@@ -73,18 +73,171 @@
       <div class="container">
         <div class="hero-grid">
           <div class="hero-copy">
-            <p class="eyebrow">Self-hosted or cloud · For cycling clubs</p>
+            <p class="eyebrow">Move in, ride, belong · Self-hosted or cloud</p>
             <h1>Every ride belongs to its rider.</h1>
-            <p class="hero-sub">Velomine records or imports every ride, shows every stream, and lets each rider decide exactly what their coach can see. Clubs pay one fee by size and their members pay nothing. The solo plan is €39 a year and is not open yet.</p>
+            <p class="hero-sub">Bring your history, keep every original file, and share with your club only what you choose. Your rides, your club, on your terms.</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="/demo/">Try the demo <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
               <a class="btn btn-secondary" href="/contact/">For my club</a>
+              <a class="btn btn-secondary" href="/demo/">For me</a>
             </div>
             <a class="hero-status" href="/status/"><span class="dot" aria-hidden="true"></span>Early development — see what works today <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5 12.5 8 9 11.5"/></svg></span></a>
           </div>
 
           <div class="hero-stage">
-            <figure class="panel panel-pad board lift" role="img" aria-label="Example coach view: a squad list with each rider's last ride, seven-day load and what they share.">
+            <div class="share-card card card--lg">
+            <div class="share-card-head">
+              <strong>Who sees what</strong>
+              <span class="pill">Private by default</span>
+            </div>
+            <div class="share-row">
+              <span>Rides</span>
+              <div class="segmented" aria-label="Example: rides are shared with the coach">
+                <span>Nobody</span><span class="active coach">Coach</span>
+              </div>
+            </div>
+            <div class="share-row">
+              <span>Analytics</span>
+              <div class="segmented" aria-label="Example: analytics are shared with the coach">
+                <span>Nobody</span><span class="active coach">Coach</span>
+              </div>
+            </div>
+            <div class="share-row">
+              <span>Route of a ride</span>
+              <div class="segmented" aria-label="Example: the route of a ride is shared with the coach">
+                <span>Nobody</span><span class="active coach">Coach</span>
+              </div>
+            </div>
+            <div class="share-row">
+              <span>Wellbeing</span>
+              <div class="segmented" aria-label="Example: wellbeing starts private">
+                <span class="active">Nobody</span><span>Coach</span>
+              </div>
+            </div>
+            <p class="share-foot">Example choices. Every choice starts at Nobody and can be revoked. Coaches see a read-only view.</p>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="move-in">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Move in</p>
+          <h2>Bring everything you have ridden.</h2>
+          <p>Your history is the point, so it comes with you. Nothing is thrown away on the way in.</p>
+        </div>
+        <div class="ownership-grid reveal">
+          <div class="ownership-item">
+            <h3>Any file, any bike computer</h3>
+            <p>Add FIT, GPX and TCX files, one at a time or a whole folder dropped on the web app. On Android, share or open a file into Velomine from another app.</p>
+          </div>
+          <div class="ownership-item">
+            <h3>Your Strava export</h3>
+            <p>Import your Strava export and every cycling activity becomes a ride. Import a newer one later and what is already here is skipped.</p>
+          </div>
+          <div class="ownership-item">
+            <h3>Nothing doubled, nothing lost</h3>
+            <p>The same ride from two apps is recognised and the copy is hidden. Every original file is kept as received, so a ride can be read again when the reader improves.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section on-dark" id="ride">
+      <div class="container split split--flip">
+        <div class="split-copy reveal">
+          <p class="eyebrow">Ride</p>
+          <h2>Record it. Keep it. See all of it.</h2>
+          <p>Record on Android with the screen off and a heart-rate strap, or add files from any bike computer. Name and describe each ride, then search your history by words or dates.</p>
+          <ul class="feature-list feature-list--day">
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Every stream on one page, with the map following the chart.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Laps, heart-rate and power zones, TSS and the power curve.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Bikes, parts and wear, service reminders and a log of everything done to each bike.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Goals, readiness and a private wellbeing check-in.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Your files stay yours: export everything, delete everything.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="split-visual reveal">
+          <div class="ride-sheet" role="img" aria-label="A ride sheet with 32.8 kilometres, 412 metres of climbing, 148 beats per minute and a route line.">
+            <div class="ride-sheet-top">
+              <span class="rec"><span class="rec-dot"></span>Ride · Gravel</span>
+              <span>01:24:07</span>
+            </div>
+            <div class="ride-sheet-stats">
+              <div class="ride-sheet-stat"><strong>32.8</strong><span>km</span></div>
+              <div class="ride-sheet-stat"><strong>412</strong><span>m climbed</span></div>
+              <div class="ride-sheet-stat"><strong>148</strong><span>bpm average</span></div>
+            </div>
+            <svg class="route-svg" viewBox="0 0 520 240" aria-hidden="true">
+              <path class="grid" d="M0 40H520M0 100H520M0 160H520M0 220H520" opacity=".5"/>
+              <path class="route" d="M20 190 C 80 120, 120 210, 180 150 S 270 40, 330 110 S 430 210, 500 80"/>
+              <circle class="start" cx="20" cy="190" r="5"/>
+              <circle class="finish" cx="500" cy="80" r="5"/>
+            </svg>
+            <svg class="ride-chart" viewBox="0 0 520 100" aria-hidden="true">
+              <path class="grid" d="M0 25H520M0 60H520M0 95H520"/>
+              <path class="area" d="M0 82 L40 74 L80 78 L120 55 L160 63 L200 42 L240 50 L280 28 L320 38 L360 22 L400 32 L440 16 L480 27 L520 14 L520 100 L0 100 Z"/>
+              <path class="line" d="M0 82 L40 74 L80 78 L120 55 L160 63 L200 42 L240 50 L280 28 L320 38 L360 22 L400 32 L440 16 L480 27 L520 14"/>
+            </svg>
+            <div class="ride-foot">
+              <span>Saved here first</span>
+              <span>syncs to Velomine</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="belong">
+      <div class="container split">
+        <div class="split-copy reveal">
+          <p class="eyebrow">Belong</p>
+          <h2>Ride with your club. Share only what you choose.</h2>
+          <p>Join a club with a code and an admin’s approval. Your rides stay yours; the coach sees what you share, read-only, and every look is logged.</p>
+          <ul class="feature-list feature-list--day">
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>A route library the club shares, each route still owned by the rider who added it.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Planned club rides with a meeting point and a route, and an “I’m in” for members.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>A private calendar feed of the club’s rides.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Coaches see only what each rider shares: last ride, fatigue, fitness and form for every athlete.</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Read-only views, revocable by the rider, with a record of who looked.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="split-visual reveal">
+          <figure class="panel panel-pad board lift" role="img" aria-label="Example coach view: a squad list with each rider's last ride, distance, fatigue, fitness and form, and what they share.">
               <div class="board-head">
                 <div>
                   <p class="board-kicker">Coach view</p>
@@ -119,182 +272,39 @@
 
               <p class="board-foot">Read-only, revocable, and every look is logged. Coach sees shared scores and RPE, never notes.</p>
             </figure>
-          </div>
         </div>
       </div>
     </section>
 
-    <section class="section section--tight section--flush">
-      <div class="container">
-        <div class="trust reveal">
-          <div>Every original file, always exportable</div>
-          <div>No ads, no public feed, no pro tier</div>
-          <div>Every club’s data, kept apart</div>
-          <div>Open source, self-hostable</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="coach">
-      <div class="container split">
-        <div class="split-copy reveal">
-          <p class="eyebrow">For the coach</p>
-          <h2>One screen for the squad.</h2>
-          <p>See who rode, how much load they carried and when they last trained — before Sunday. A rider’s data appears only after they share it with you, and every look is logged.</p>
-          <ul class="feature-list feature-list--day">
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Last ride, distance and seven- and six-week load for every athlete.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>A shared ride opens with its streams, laps and training load.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Read-only views, revocable by the rider, with a record of who looked.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Shared scores and RPE, never notes.</span>
-            </li>
-          </ul>
-          <p class="note-small">No workout plans or comments yet. Velomine is analysis and coach review today.</p>
-        </div>
-
-        <div class="split-visual reveal">
-          <div class="share-card card card--lg">
-            <div class="share-card-head">
-              <strong>Who sees what</strong>
-              <span class="pill">Private by default</span>
-            </div>
-            <div class="share-row">
-              <span>Rides</span>
-              <div class="segmented" aria-label="Example: rides are shared with the coach">
-                <span>Nobody</span><span class="active coach">Coach</span>
-              </div>
-            </div>
-            <div class="share-row">
-              <span>Analytics</span>
-              <div class="segmented" aria-label="Example: analytics are shared with the coach">
-                <span>Nobody</span><span class="active coach">Coach</span>
-              </div>
-            </div>
-            <div class="share-row">
-              <span>Route of a ride</span>
-              <div class="segmented" aria-label="Example: the route of a ride is shared with the coach">
-                <span>Nobody</span><span class="active coach">Coach</span>
-              </div>
-            </div>
-            <div class="share-row">
-              <span>Wellbeing</span>
-              <div class="segmented" aria-label="Example: wellbeing starts private">
-                <span class="active">Nobody</span><span>Coach</span>
-              </div>
-            </div>
-            <p class="share-foot">Example choices. Every choice starts at Nobody and can be revoked. Coaches see a read-only view.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section on-dark" id="rider">
-      <div class="container split split--flip">
-        <div class="split-copy reveal">
-          <p class="eyebrow">For the rider</p>
-          <h2>Record it. Keep it. See all of it.</h2>
-          <p>Record on Android with the screen off and a heart-rate strap, or add FIT, GPX and TCX files from any bike computer — one file, several, or a whole folder dropped on the web app; on Android, share or open a file into Velomine from another app. Name and describe each ride, then search your history by words or dates. Route on the map, a chart for every stream, laps, zones, TSS, the power curve, bikes, parts and service, goals and readiness.</p>
-          <ul class="feature-list feature-list--day">
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Every stream on one page, with the map following the chart.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>A name and a description on your rides, and a search over them with a date range.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Bikes, parts and wear, so a chain is replaced before it fails.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Service reminders and a log of everything done to each bike.</span>
-            </li>
-            <li>
-              <svg class="check" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4L16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span>Your files stay yours: export everything, delete everything.</span>
-            </li>
-          </ul>
-          <p class="note-small">Android recorder today. The iOS recorder is not built yet. Heart rate only: speed, cadence and power sensors are not supported yet. Strava export import works today.</p>
-        </div>
-
-        <div class="split-visual reveal">
-          <div class="ride-sheet" role="img" aria-label="A ride sheet with 32.8 kilometres, 412 metres of climbing, 148 beats per minute and a route line.">
-            <div class="ride-sheet-top">
-              <span class="rec"><span class="rec-dot"></span>Ride · Gravel</span>
-              <span>01:24:07</span>
-            </div>
-            <div class="ride-sheet-stats">
-              <div class="ride-sheet-stat"><strong>32.8</strong><span>km</span></div>
-              <div class="ride-sheet-stat"><strong>412</strong><span>m climbed</span></div>
-              <div class="ride-sheet-stat"><strong>148</strong><span>bpm average</span></div>
-            </div>
-            <svg class="route-svg" viewBox="0 0 520 240" aria-hidden="true">
-              <path class="grid" d="M0 40H520M0 100H520M0 160H520M0 220H520" opacity=".5"/>
-              <path class="route" d="M20 190 C 80 120, 120 210, 180 150 S 270 40, 330 110 S 430 210, 500 80"/>
-              <circle class="start" cx="20" cy="190" r="5"/>
-              <circle class="finish" cx="500" cy="80" r="5"/>
-            </svg>
-            <svg class="ride-chart" viewBox="0 0 520 100" aria-hidden="true">
-              <path class="grid" d="M0 25H520M0 60H520M0 95H520"/>
-              <path class="area" d="M0 82 L40 74 L80 78 L120 55 L160 63 L200 42 L240 50 L280 28 L320 38 L360 22 L400 32 L440 16 L480 27 L520 14 L520 100 L0 100 Z"/>
-              <path class="line" d="M0 82 L40 74 L80 78 L120 55 L160 63 L200 42 L240 50 L280 28 L320 38 L360 22 L400 32 L440 16 L480 27 L520 14"/>
-            </svg>
-            <div class="ride-foot">
-              <span>Saved here first</span>
-              <span>syncs to Velomine</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="club">
+    <section class="section section--tight" id="why">
       <div class="container">
         <div class="section-head reveal">
           <h2>The record belongs to the rider.</h2>
-          <p>Every club’s data kept apart. Members join with a code and an admin approves them; a rider without a club can start one when the server allows it, on the smallest size band with 30 days to try it. Coaches see only what each rider shares. A route library keeps the lines members add from a ride or a GPX file, each still owned by the rider who added it. A ride calendar shows the rides a coach plans, with a meeting point and a route, and members say they are in. Run it on your own server, or in the managed cloud.</p>
         </div>
 
         <div class="bento">
           <article class="panel panel-pad lift span-7 reveal">
+            <h3>Yours to export or delete</h3>
+            <p>Download everything as a ZIP, including every original file. Delete the account and all of it goes; backups expire within 90 days. Nobody pays to see their own history.</p>
+          </article>
+
+          <article class="panel panel-pad lift span-5 reveal">
+            <h3>Private by default</h3>
+            <p>Nothing is visible to anyone until you share it, per data type, revocable, with a log of who looked. No ads, no public feed, no pro tier.</p>
+          </article>
+
+          <article class="panel panel-pad lift span-5 reveal">
             <h3>Every club kept apart</h3>
-            <p>Every request is limited to its club in the application, and every endpoint that touches club data has a test from a second club. Per-club rules inside the database are not built yet.</p>
-          </article>
-
-          <article class="panel panel-pad lift span-5 reveal">
-            <h3>Export or delete</h3>
-            <p>Download everything as a ZIP, including every original file. Delete the account and all of it goes; backups expire within 90 days.</p>
-          </article>
-
-          <article class="panel panel-pad lift span-5 reveal">
-            <h3>Self-host or cloud</h3>
-            <p>The same software on the club’s server, or in the managed cloud in the EU. Same features, same export, same ownership.</p>
+            <p>Every request is limited to its club in the application, and every endpoint that touches club data has a test from a second club.</p>
           </article>
 
           <article class="panel panel-pad lift span-7 reveal">
-            <h3>Admin and single sign-on</h3>
-            <p>Join with a code and an admin’s approval. Roles for club admin, coach and member. On the cloud, members sign in with email and password; single sign-on run by Velomine is planned. A self-hosted club uses passwords, its own single sign-on provider, or both. Optional two-factor sign-in with an authenticator app, and a list of every device you are signed in on. An owner sees the club’s size band and member count; a full or ended plan stops new members, never the ones already in.</p>
+            <h3>Self-host or EU cloud, open source</h3>
+            <p>The same software on your own server, or in the managed cloud in the EU. Same features, same export, same ownership. Open source under AGPL-3.0, so you can inspect it, run it and fork it.</p>
           </article>
         </div>
-
       </div>
     </section>
-
-
-
-
   </main>
 
   <footer class="site-footer">
@@ -309,7 +319,7 @@
             </svg>
             <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
-          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
+          <p class="footer-tagline">Cycling rides you own, for riders and their clubs. Self-hosted or cloud.</p>
         </div>
         <div class="footer-col">
           <h3>Site</h3>
@@ -318,6 +328,7 @@
           <a href="/pricing/">Pricing</a>
           <a href="/demo/">Demo</a>
           <a href="/contact/">Contact</a>
+          <a href="/feedback/">Feedback</a>
         </div>
         <div class="footer-col">
           <h3>App</h3>
@@ -332,7 +343,7 @@
           <a href="/principles/">Principles</a>
           <a href="https://github.com/zenkraker/Velomine/tree/main/docs">Docs</a>
           <a href="https://github.com/zenkraker/Velomine/releases">Changelog</a>
-          <a href="/principles/#licence">Open source</a>
+          <a href="/principles/#licence">Licence</a>
           <a href="/privacy/">Privacy</a>
           <a href="/privacy/#subprocessors">Sub-processors</a>
           <a href="/terms/">Terms</a>

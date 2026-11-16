@@ -45,7 +45,7 @@
       </details>
       <nav class="nav" aria-label="Main">
         <a href="/">Home</a>
-        <a href="/status/">Status</a>
+        <a href="/principles/">Principles</a>
         <a href="/pricing/">Pricing</a>
         <a href="/demo/">Demo</a>
         <a href="/contact/">Contact</a>
@@ -74,8 +74,11 @@
       <div class="container">
         <div class="legal-body">
           <h2>Who runs Velomine</h2>
-          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use the managed cloud service, which many clubs share with each club’s data kept apart. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> with any question about it.</p>
-          <p>Velomine is run by one person and is not a business yet. No payments are collected, and only the public demo is running; the aim now is feedback. Before the first club pays, this page will name the legal entity that runs the cloud and its address.</p>
+          <p>Velomine is a cycling training platform for clubs and teams. A club can run it on its own server, or use the managed cloud service, which many clubs share with each club’s data kept apart. This policy covers the presentation site, the cloud service, and the self-hosted software. Write to <a href="mailto:hello@velomine.eu">hello@velomine.eu</a> with any question about it.</p>
+          <p>Velomine is run by one person and is not a business yet. No payments are collected, and only the public demo is running; the aim now is feedback. On the cloud, Velomine is the controller of each member’s own account and data (see “Who is responsible”). Before the first club pays, this page will name the legal entity that runs the cloud and its address.</p>
+
+          <h2>Who is responsible</h2>
+          <p>On the cloud, Velomine is the controller of each member’s own account and data: profile, rides and their files, bikes, goals, wellbeing, sharing choices and sessions. The account belongs to the member and can outlive a club. The club is the controller of club data: the club, its memberships and roles, join requests, and its planned rides and calendar. Velomine processes club data for the club under the data processing agreement (DPA). On a self-hosted server, the club is the controller of everything on it.</p>
 
           <h2>What is collected</h2>
           <ul>
@@ -83,9 +86,10 @@
             <li><strong>Devices and sessions:</strong> a label and the times for each phone or browser you are signed in on. No IP address and no location are stored; a session row is removed within a week of ending.</li>
             <li><strong>Ride data:</strong> the original FIT, GPX or TCX file, and the distance, time, speed, elevation, heart rate, power, cadence, temperature, laps and map points it contains.</li>
             <li><strong>Wellbeing data:</strong> daily check-in scores, the RPE and notes you add to a ride, and your consent record. This is health data and is treated as such.</li>
+            <li><strong>Feedback form messages:</strong> what you write in the anonymous feedback form is emailed to whoever runs the server and is never stored in Velomine’s database. The form has no reply address. Your network address is used only in memory, to limit how many messages one address can send, and is never logged or stored.</li>
             <li><strong>Operational logs:</strong> request id, club, route template, status, duration and error code. They do not contain ride or health data, names, email addresses, IP addresses, tokens, cookies, request bodies or query strings. Kept for 30 days.</li>
             <li><strong>Sharing view log:</strong> which coach looked at which of your shared data, and when. Visible to you and kept for 3 months.</li>
-            <li><strong>Club billing data:</strong> the club’s contact, contract and invoices. Members are never billed individually.</li>
+            <li><strong>Billing data:</strong> a club’s contact, contract and invoices, and for a solo rider their billing details and invoices. A member of a paying club is never billed.</li>
           </ul>
 
           <h2>Why it is processed</h2>
@@ -97,7 +101,7 @@
           </ul>
 
           <h2>Health data</h2>
-          <p>Wellbeing data, and cycle data (not built yet), are health data. Velomine collects the minimum, asks for explicit consent before the first check-in, and asks again when the terms version changes. Free-text notes are only ever shown to you. A coach sees the scores and RPE you choose to share, never the notes. Health data never appears in share links. It is included in your export and deleted with your account.</p>
+          <p>Wellbeing data, and menstrual-cycle data (not built yet), are health data. Velomine collects the minimum, asks for explicit consent before the first check-in, and asks again when the terms version changes. Free-text notes are only ever shown to you. A coach sees the scores and RPE you choose to share, never the notes. Health data never appears in share links. It is included in your export and deleted with your account.</p>
 
           <h2>What Velomine never does</h2>
           <ul>
@@ -116,7 +120,7 @@
             <li><strong>Scaleway</strong> (France): one server in the EU that runs the application, the database and the file store.</li>
             <li><strong>OpenStreetMap</strong>: map tiles, by default. The tile server sees your network address and the area of the map you look at. Whoever runs a server can set another tile server; the map cannot be turned off.</li>
             <li><strong>Sentry</strong> (EU region, Germany): error reports, request traces and the operational logs described above, none with member data.</li>
-            <li>Email: none. The demo sends no email.</li>
+            <li><strong>Scaleway Transactional Email</strong> (France): sends the feedback form’s messages to whoever runs the server.</li>
             <li>Payment: none. No payments are collected yet.</li>
           </ul>
           <p>Before the cloud opens for clubs, this list will name every provider and its country, including email delivery, backups and payment, and a club will sign a data processing agreement (DPA) before go-live.</p>
@@ -124,11 +128,11 @@
           <p>Self-hosted clubs keep all data on their own infrastructure. By default a self-hosted server sends nothing to the Velomine project. Two things are off until whoever runs the server sets them: mirroring the shared parts catalogue, which fetches a list, and sending parts back to it, which carries a part’s type, brand, model and product codes, and no member, bike, club or address. Without them the server keeps its own parts list. The app loads map tiles from the tile server the operator sets, OpenStreetMap by default.</p>
 
           <h2>Where the data lives</h2>
-          <p>On the cloud plan, every club’s data is stored in one database and file store in the EU/EEA, and each request is limited to its own club. Your rides, bikes, wellbeing and profile belong to you, not the club. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has an account inside a club’s app. Whoever runs a server can reach its database: on the cloud that is the person who runs Velomine, who does so only to fix a problem a club reports.</p>
+          <p>On the cloud plan, every club’s data is stored in one database and file store in the EU/EEA, and each request is limited to its own club. Your rides, bikes, wellbeing and profile belong to you, not the club. On the self-hosted plan, the club runs the server, database and file volume itself. No one at Velomine has an account inside a club’s app. On a self-hosted server the account lives where the club runs it, and ownership means the member can always export and delete everything. Whoever runs a server can reach its database: on the cloud that is the person who runs Velomine, who does so only to fix a problem a club reports.</p>
 
           <h2>How long it is kept</h2>
           <ul>
-            <li>Account, rides, wellbeing and photos (photos are not built yet): until you delete the account or the data, or 12 months after a cloud subscription ends, following a warning by email.</li>
+            <li>Account, rides, wellbeing and photos (photos are not built yet): until you delete the account or the data. A member’s account is never deleted because a club or a subscription stopped paying: it becomes read-only and stays so for free. On the cloud, a read-only account is deleted only after two years with no sign-in and two unanswered emails: the first asks whether to keep the account, a second follows a month later, and signing in or one click in either keeps it for two more years. This never applies to an account in a paying club or on the solo plan.</li>
             <li>Backups: up to 90 days after deletion.</li>
             <li>Sharing view log: 3 months.</li>
             <li>Operational logs: 30 days.</li>
@@ -136,7 +140,7 @@
           </ul>
 
           <h2>Your rights</h2>
-          <p>You can access, correct, export, restrict, object to or delete your data, and withdraw consent for health data. Export and deletion are in the app: <strong>Download my data</strong> gives you a ZIP with your profile, bikes, goals, sessions, rides and every original ride file; <strong>Delete my account</strong> removes the account and its data. Backups expire within 90 days. You can also complain to your data protection authority. Write to <a href="mailto:horizontodawn@pm.me">horizontodawn@pm.me</a> for any request.</p>
+          <p>You can access, correct, export, restrict, object to or delete your data, and withdraw consent for health data. Export and deletion are in the app: <strong>Download my data</strong> gives you a ZIP with your profile, bikes, goals, sessions, rides and every original ride file; <strong>Delete my account</strong> removes the account and its data. Backups expire within 90 days. You can also complain to your data protection authority. Write to <a href="mailto:hello@velomine.eu">hello@velomine.eu</a> for any request.</p>
 
           <h2>Cookies and tracking</h2>
           <p>This presentation site sets no cookies, no analytics and no third-party scripts. The web app uses a session cookie when you sign in, and the phone app keeps a refresh token in the device’s secure storage. There is no advertising or cross-site tracking. The app sends crash reports and performance data only if you opt in, and you can withdraw at any time.</p>
@@ -151,9 +155,9 @@
           <p>This policy is versioned. A material change is announced to club administrators before it takes effect, and the date below changes. The version that applies is the one shown when you use the service.</p>
 
           <h2>Contact</h2>
-          <p>Privacy questions and requests: <a href="mailto:horizontodawn@pm.me?subject=Velomine%20privacy">horizontodawn@pm.me</a>.</p>
+          <p>Privacy questions and requests: <a href="mailto:hello@velomine.eu?subject=Velomine%20privacy">hello@velomine.eu</a>.</p>
 
-          <p class="legal-meta">Last updated 13 November 2026. This is the plain-language policy; the signed club agreement and the DPA prevail for a club on the cloud plan.</p>
+          <p class="legal-meta">Last updated 16 November 2026. This is the plain-language policy; the signed club agreement and the DPA prevail for a club on the cloud plan, for club data.</p>
         </div>
       </div>
     </section>
@@ -171,7 +175,7 @@
             </svg>
             <span class="wordmark" translate="no">velo<em>mine</em></span>
           </a>
-          <p class="footer-tagline">Cycling training for clubs and teams. Self-hosted or cloud, your data on your terms.</p>
+          <p class="footer-tagline">Cycling rides you own, for riders and their clubs. Self-hosted or cloud.</p>
         </div>
         <div class="footer-col">
           <h3>Site</h3>
@@ -180,6 +184,7 @@
           <a href="/pricing/">Pricing</a>
           <a href="/demo/">Demo</a>
           <a href="/contact/">Contact</a>
+          <a href="/feedback/">Feedback</a>
         </div>
         <div class="footer-col">
           <h3>App</h3>

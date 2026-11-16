@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Feedback — Velomine</title>
+  <meta name="description" content="Tell Velomine what worked and what broke, anonymously. Short answers are fine.">
+  <meta name="theme-color" content="#F0EEE9">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://velomine.eu/feedback/">
+  <meta property="og:site_name" content="Velomine">
+  <meta property="og:title" content="Feedback — Velomine">
+  <meta property="og:description" content="Anonymous feedback on Velomine: what worked, what broke, what is missing.">
+  <meta property="og:image" content="https://velomine.eu/static/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Velomine: every ride belongs to its rider">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://velomine.eu/static/img/og.png">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/site.css">
+  <link rel="canonical" href="https://velomine.eu/feedback/">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" translate="no" href="/" aria-label="Velomine home">
+        <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="mark-dot" cx="60" cy="31" r="8"/>
+        </svg>
+        <span class="wordmark" translate="no">velo<em>mine</em></span>
+      </a>
+
+      <details class="nav-menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+      </details>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/principles/">Principles</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/demo/">Demo</a>
+        <a href="/contact/">Contact</a>
+        <a class="btn btn-ghost" href="/sign-in">Sign in</a>
+      </nav>
+      <a class="btn btn-primary nav-cta" href="/demo/">Try the demo</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-current="page">Feedback</li>
+          </ol>
+        </nav>
+        <p class="eyebrow">Feedback</p>
+        <h1>Tell us what worked and what broke.</h1>
+        <p>Thank you for trying Velomine. Five minutes is plenty: answer only what you want, and short answers are fine. Please do not paste personal data, ride files with your home address, passwords or tokens.</p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="contact-card card card--lg">
+          <p class="contact-note">This form is anonymous: it asks for no name and no reply address, so Velomine cannot answer you. If you want a reply, <a href="/contact/">send an email</a> instead. Your answers are emailed to whoever runs this server and are not stored by Velomine. At least one written answer is needed.</p>
+
+          <form class="feedback-form" method="post" action="/api/v1/feedback">
+            <fieldset class="field">
+              <legend>Who are you? <span class="field-hint">Pick every one that fits.</span></legend>
+              <label class="check-row"><input type="checkbox" name="who" value="A rider without a club"> <span>A rider without a club</span></label>
+              <label class="check-row"><input type="checkbox" name="who" value="A rider in a club or team"> <span>A rider in a club or team</span></label>
+              <label class="check-row"><input type="checkbox" name="who" value="A coach"> <span>A coach</span></label>
+              <label class="check-row"><input type="checkbox" name="who" value="Someone who runs a club"> <span>Someone who runs a club</span></label>
+              <label class="check-row"><input type="checkbox" name="who" value="A self-hoster"> <span>A self-hoster</span></label>
+              
+            </fieldset>
+            <fieldset class="field">
+              <legend>What did you try?</legend>
+              <label class="check-row"><input type="checkbox" name="tried" value="The public demo"> <span>The public demo</span></label>
+              <label class="check-row"><input type="checkbox" name="tried" value="Self-hosting it on my own server"> <span>Self-hosting it on my own server</span></label>
+              <label class="check-row"><input type="checkbox" name="tried" value="The Android app"> <span>The Android app</span></label>
+              <label class="check-row"><input type="checkbox" name="tried" value="Uploading my own ride file"> <span>Uploading my own ride file</span></label>
+              <label class="check-row"><input type="checkbox" name="tried" value="Importing a Strava export"> <span>Importing a Strava export</span></label>
+              <label class="check-row"><input type="checkbox" name="tried" value="Only the website"> <span>Only the website</span></label>
+              
+            </fieldset>
+            <div class="field">
+              <label for="today">What do you use today?</label>
+              <span class="field-hint">For example Strava, Garmin Connect, intervals.icu, TrainingPeaks, a spreadsheet.</span>
+              <input id="today" name="today" type="text" maxlength="200">
+            </div>
+            <div class="field">
+              <label for="worked">What worked well?</label>
+              <textarea id="worked" name="worked" rows="4" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <label for="broke">What broke or confused you?</label><span class="field-hint">What you did, what you expected, and what happened instead.</span>
+              <textarea id="broke" name="broke" rows="4" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <label for="numbers">Did the numbers look right?</label><span class="field-hint">If you uploaded a ride you know, compare distance, elevation, power or heart rate with your current app.</span>
+              <textarea id="numbers" name="numbers" rows="4" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <label for="missing">What is missing before you would use it for real?</label><span class="field-hint">The one or two things that matter most to you.</span>
+              <textarea id="missing" name="missing" rows="4" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <label for="use">Would you or your club use it?</label>
+              <select id="use" name="use">
+                <option value="">No answer</option>
+                <option>Yes, now</option><option>Yes, once what I listed above is there</option><option>Maybe</option><option>No</option><option>Not sure yet</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="why">Why?</label><span class="field-hint">Anything about the price, self-hosting, privacy, or the way it is built.</span>
+              <textarea id="why" name="why" rows="4" maxlength="2000"></textarea>
+            </div>
+            <div class="field">
+              <label for="device">Device and browser (if something broke)</label>
+              <span class="field-hint">For example “Pixel 8, Android 16” or “Firefox 140 on Linux”.</span>
+              <input id="device" name="device" type="text" maxlength="200">
+            </div>
+            <button class="btn btn-primary" type="submit">Send feedback</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" translate="no" href="/" aria-label="Velomine home">
+            <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+              <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle class="mark-dot" cx="60" cy="31" r="8"/>
+            </svg>
+            <span class="wordmark" translate="no">velo<em>mine</em></span>
+          </a>
+          <p class="footer-tagline">Cycling rides you own, for riders and their clubs. Self-hosted or cloud.</p>
+        </div>
+        <div class="footer-col">
+          <h3>Site</h3>
+          <a href="/">Home</a>
+          <a href="/status/">Status</a>
+          <a href="/pricing/">Pricing</a>
+          <a href="/demo/">Demo</a>
+          <a href="/contact/">Contact</a>
+          <a href="/feedback/">Feedback</a>
+        </div>
+        <div class="footer-col">
+          <h3>App</h3>
+          <a href="/sign-in">Sign in</a>
+          <a href="/register">Create account</a>
+          <a href="/openapi/v1.json">API</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
+        <nav class="footer-legal" aria-label="Project and legal">
+          <a href="/principles/">Principles</a>
+          <a href="https://github.com/zenkraker/Velomine/tree/main/docs">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/releases">Changelog</a>
+          <a href="/principles/#licence">Licence</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/privacy/#subprocessors">Sub-processors</a>
+          <a href="/terms/">Terms</a>
+          <a href="/security/">Security</a>
+        </nav>
+        <span>Early development. <a href="/status/">See what works.</a></span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
