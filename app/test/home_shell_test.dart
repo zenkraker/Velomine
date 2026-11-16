@@ -78,6 +78,7 @@ void main() {
     double textScale = 1,
     Widget? page,
     bool reduceMotion = false,
+    bool withRecorder = true,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -105,7 +106,7 @@ void main() {
       ProviderScope(
         overrides: [
           sessionProvider.overrideWith((ref) => session),
-          recorderProvider.overrideWithValue(recorder),
+          recorderProvider.overrideWithValue(withRecorder ? recorder : null),
           themeChoiceStoreProvider.overrideWithValue(MemoryThemeStore()),
         ],
         child: MaterialApp(
@@ -374,4 +375,122 @@ void main() {
       );
     },
   );
+
+  const live = RecorderSnapshot(
+    state: 'recording',
+    elapsedS: 125,
+    movingS: 120,
+    distanceM: 5200,
+  );
+
+  testWidgets('HomeShell_ShouldShowLiveRideBanner_WhenARideIsRecording', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    expect(find.byKey(const Key('live-ride-banner')), findsNothing);
+
+    recorder.emit(live);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+    expect(find.text('2:05'), findsOneWidget);
+    expect(find.text('5.2 km'), findsOneWidget);
+    expect(find.byIcon(Icons.pause_circle_outline), findsNothing);
+    expect(find.bySemanticsLabel('Recording, 2:05, 5.2 km'), findsOneWidget);
+    // It sits just above the pill and is a comfortable tap target.
+    final banner = tester.getRect(find.byKey(const Key('live-ride-banner')));
+    final pill = tester.getRect(find.byType(FloatingNavPill));
+    expect(banner.bottom, lessThanOrEqualTo(pill.top));
+    expect(banner.height, greaterThanOrEqualTo(48));
+  });
+
+  testWidgets('HomeShell_ShouldShowPauseIndicator_WhenTheRideIsPaused', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+
+    recorder.emit(
+      const RecorderSnapshot(
+        state: 'paused',
+        elapsedS: 125,
+        movingS: 120,
+        distanceM: 5200,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+    expect(find.byIcon(Icons.pause_circle_outline), findsOneWidget);
+    expect(find.text('Paused'), findsOneWidget);
+  });
+
+  testWidgets('HomeShell_ShouldHideLiveRideBanner_WhenTheRideStops', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    recorder.emit(live);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+
+    recorder.emit(
+      const RecorderSnapshot(
+        state: 'idle',
+        elapsedS: 0,
+        movingS: 0,
+        distanceM: 0,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsNothing);
+  });
+
+  testWidgets('HomeShell_ShouldNotShowLiveRideBanner_WhenOnTheRecorder', (
+    tester,
+  ) async {
+    await pumpShell(tester, location: '/record');
+
+    recorder.emit(live);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsNothing);
+  });
+
+  testWidgets('HomeShell_ShouldNotShowLiveRideBanner_WhenThereIsNoRecorder', (
+    tester,
+  ) async {
+    await pumpShell(tester, withRecorder: false);
+
+    recorder.emit(live);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsNothing);
+  });
+
+  testWidgets('HomeShell_ShouldKeepLiveRideBanner_WhenThePageScrollsDown', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    recorder.emit(live);
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.text('row 1'), const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+    final banner = tester.getRect(find.byKey(const Key('live-ride-banner')));
+    expect(banner.bottom, lessThanOrEqualTo(900));
+    expect(banner.top, greaterThan(0));
+  });
+
+  testWidgets('HomeShell_ShouldShowLiveRideBanner_WhenTheWindowIsWide', (
+    tester,
+  ) async {
+    await pumpShell(tester, size: const Size(900, 900));
+
+    recorder.emit(live);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+  });
 }

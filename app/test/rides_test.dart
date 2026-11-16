@@ -4,7 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/features/rides/rides_screen.dart';
 import 'package:velomine/features/rides/rides_view_model.dart';
 
+import 'package:flutter_riverpod/misc.dart';
+import 'package:velomine/features/recording/recording_providers.dart';
+import 'package:velomine/features/recording/recording_screen.dart';
+
 import 'fake_server.dart';
+import 'recording_test.dart' show FakeRecorder, MemoryRecorderSettings;
 
 void main() {
   late FakeServer server;
@@ -453,5 +458,78 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(DateRangePickerDialog), findsOneWidget);
+  });
+
+  List<Override> recorderOverrides(FakeRecorder? recorder) => [
+    recorderProvider.overrideWithValue(recorder),
+    recorderSettingsStoreProvider.overrideWithValue(MemoryRecorderSettings()),
+    uploadQueueProvider.overrideWithValue(null),
+  ];
+
+  testWidgets(
+    'RidesScreen_ShouldOpenTheRecorderWithoutStarting_WhenStartRideIsTapped',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final recorder = FakeRecorder();
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        overrides: recorderOverrides(recorder),
+      );
+
+      await tester.tap(find.byKey(const Key('start-ride')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RecordingScreen), findsOneWidget);
+      expect(recorder.starts, 0);
+      // A pushed screen: the way back returns to Rides.
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.byType(RecordingScreen), findsNothing);
+      expect(find.byKey(const Key('start-ride')), findsOneWidget);
+    },
+  );
+
+  testWidgets('RidesScreen_ShouldNotOfferStartRide_WhenThereIsNoRecorder', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      overrides: recorderOverrides(null),
+    );
+
+    expect(find.byKey(const Key('start-ride')), findsNothing);
+  });
+
+  testWidgets('HomeShell_ShouldOpenTheRecorder_WhenTheLiveRideBannerIsTapped', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final recorder = FakeRecorder();
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      overrides: recorderOverrides(recorder),
+    );
+    await recorder.start();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('live-ride-banner')));
+    await tester.pumpAndSettle();
+
+    // The test font is wider than the real one, so the recorder's live card overflows at phone width;
+    // that layout is the recorder's own and not under test here.
+    tester.takeException();
+    expect(find.byType(RecordingScreen), findsOneWidget);
+    expect(find.byKey(const Key('live-ride-banner')), findsNothing);
   });
 }

@@ -13,6 +13,8 @@ import 'core/widgets/floating_nav_pill.dart';
 import 'core/widgets/page_scaffold.dart';
 import 'features/club/club_view_model.dart';
 import 'features/notifications/notifications_view_model.dart';
+import 'features/recording/live_ride_banner.dart';
+import 'features/recording/recording_providers.dart';
 
 /// One tab of the shell: where it goes, its outlined and filled icons and its label.
 typedef _Tab = ({String path, Widget icon, Widget selectedIcon, String label});
@@ -86,6 +88,14 @@ class HomeShell extends ConsumerWidget {
     final expanded = width >= AppBreakpoint.expandedWidth;
     final wide = width >= AppBreakpoint.compactWidth;
     final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    // A ride in progress is one tap away from every screen but its own. No recorder (the web) means none.
+    final recorder = ref.watch(recorderProvider);
+    final snapshot = ref.watch(recorderSnapshotViewModelProvider);
+    final live =
+        recorder != null &&
+        (snapshot.isRecording || snapshot.isPaused) &&
+        location != '/record';
+    final banner = live ? LiveRideBanner(snapshot: snapshot) : null;
 
     // The sidebar carries the notifications and the account itself.
     final page = PageHeaderScope(
@@ -127,7 +137,9 @@ class HomeShell extends ConsumerWidget {
                 isAdmin: state.isAdmin,
                 signedOut: ref.read(sessionProvider).signOut,
               ),
-              Expanded(child: page),
+              Expanded(
+                child: _WithBanner(banner: banner, child: page),
+              ),
             ],
           ),
           (false, true) => Row(
@@ -146,7 +158,9 @@ class HomeShell extends ConsumerWidget {
                 ],
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: page),
+              Expanded(
+                child: _WithBanner(banner: banner, child: page),
+              ),
             ],
           ),
           (false, false) => _PhoneFrame(
@@ -154,6 +168,7 @@ class HomeShell extends ConsumerWidget {
             keyboard: keyboard,
             tabs: tabs,
             selected: selected < 0 ? null : selected,
+            banner: banner,
             child: page,
           ),
         },
@@ -170,6 +185,7 @@ class _PhoneFrame extends StatefulWidget {
     required this.keyboard,
     required this.tabs,
     required this.selected,
+    required this.banner,
     required this.child,
   });
 
@@ -177,6 +193,9 @@ class _PhoneFrame extends StatefulWidget {
   final bool keyboard;
   final List<_Tab> tabs;
   final int? selected;
+
+  /// The live-ride banner while a ride is in progress, else null.
+  final Widget? banner;
   final Widget child;
 
   @override
@@ -217,8 +236,17 @@ class _PhoneFrameState extends State<_PhoneFrame> {
     final media = MediaQuery.of(context);
     // The keyboard replaces the pill; the page then resizes and needs no room for it.
     final showPill = !widget.keyboard;
-    final room = showPill ? AppNav.pillClearance : 0.0;
     final hidden = _hidden && !reduceMotion(context);
+    // The banner keeps its place when the pill hides on scroll (it drops to the pill's slot), and the
+    // page always leaves room for both, so the list never jumps under a finger.
+    final bannerRoom = widget.banner == null
+        ? 0.0
+        : AppNav.bannerHeight + AppNav.bannerGap;
+    final room = (showPill ? AppNav.pillClearance : 0.0) + bannerRoom;
+    final safeBottom = media.padding.bottom;
+    final pillSlot = showPill && !hidden
+        ? AppNav.pillHeight + AppNav.bannerGap
+        : 0.0;
     return Stack(
       children: [
         Positioned.fill(
@@ -236,6 +264,17 @@ class _PhoneFrameState extends State<_PhoneFrame> {
               onNotification: _onScroll,
               child: widget.child,
             ),
+          ),
+        ),
+        AnimatedPositioned(
+          duration: motionDuration(context, AppMotion.standard),
+          curve: motionCurve(context, AppMotion.emphasized),
+          left: AppNav.pillMargin,
+          right: AppNav.pillMargin,
+          bottom: safeBottom + AppNav.pillMargin + pillSlot,
+          child: _BannerSwitcher(
+            maxWidth: AppNav.pillMaxWidth,
+            child: widget.banner,
           ),
         ),
         if (showPill)
@@ -256,6 +295,60 @@ class _PhoneFrameState extends State<_PhoneFrame> {
       ],
     );
   }
+}
+
+/// Fades and grows the live-ride banner in and out, and stops animating under reduced motion.
+class _BannerSwitcher extends StatelessWidget {
+  const _BannerSwitcher({required this.child, this.maxWidth});
+
+  final Widget? child;
+  final double? maxWidth;
+
+  @override
+  Widget build(BuildContext context) => AnimatedSwitcher(
+    duration: motionDuration(context, AppMotion.standard),
+    switchInCurve: motionCurve(context, AppMotion.emphasized),
+    transitionBuilder: (child, animation) => FadeTransition(
+      opacity: animation,
+      child: SizeTransition(sizeFactor: animation, child: child),
+    ),
+    child: child == null
+        ? const SizedBox.shrink(key: ValueKey('no-banner'))
+        : Center(
+            key: const ValueKey('banner'),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxWidth ?? double.infinity,
+              ),
+              child: child,
+            ),
+          ),
+  );
+}
+
+/// A wide window's content with the live-ride banner along its foot.
+class _WithBanner extends StatelessWidget {
+  const _WithBanner({required this.banner, required this.child});
+
+  final Widget? banner;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Expanded(child: child),
+      _BannerSwitcher(
+        maxWidth: AppLayout.contentMax,
+        child: banner == null
+            ? null
+            : Padding(
+                padding: const EdgeInsets.all(AppNav.pillMargin),
+                child: banner,
+              ),
+      ),
+    ],
+  );
 }
 
 /// The notifications button with its unread count, the same in the title bar and the sidebar.

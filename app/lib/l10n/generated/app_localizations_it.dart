@@ -40,6 +40,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideDetailTitle => 'Uscita';
 
   @override
+  String get startRide => 'Inizia uscita';
+
+  @override
   String get navRecord => 'Registra';
 
   @override

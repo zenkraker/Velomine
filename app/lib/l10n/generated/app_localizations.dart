@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Ride'**
   String get rideDetailTitle;
 
+  /// No description provided for @startRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Start ride'**
+  String get startRide;
+
   /// No description provided for @navRecord.
   ///
   /// In en, this message translates to:

@@ -133,6 +133,12 @@ abstract final class AppNav {
   /// The blur behind the translucent pill.
   static const double pillBlur = 20;
 
+  /// The least height of the live-ride banner, a comfortable tap target.
+  static const double bannerHeight = 56;
+
+  /// The space between the live-ride banner and the pill under it.
+  static const double bannerGap = AppSpacing.sm;
+
   /// How opaque the pill's surface is over the blur.
   static const double pillOpacity = 0.82;
 

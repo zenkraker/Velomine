@@ -40,6 +40,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideDetailTitle => 'Ride';
 
   @override
+  String get startRide => 'Start ride';
+
+  @override
   String get navRecord => 'Record';
 
   @override

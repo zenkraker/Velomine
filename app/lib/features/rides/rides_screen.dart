@@ -11,6 +11,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/placeholder_block.dart';
+import '../recording/recording_providers.dart';
 import '../../core/l10n.dart';
 import '../../core/page_actions.dart';
 import '../../core/user_message_text.dart';
@@ -266,6 +267,24 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
       eyebrow: l10n.eyebrowRides,
       title: l10n.navRides,
       subtitle: l10n.ridesSubtitle,
+      // Only opens the recorder, which starts nothing by itself. The web has no recorder.
+      // On a phone the header also holds the filters, the notifications and the account, so the button
+      // is a filled icon there (its tooltip names it); from 600 dp it carries its label.
+      primaryAction: ref.watch(recorderProvider) == null
+          ? null
+          : wide
+          ? FilledButton.icon(
+              key: const Key('start-ride'),
+              onPressed: () => context.push('/record'),
+              icon: const Icon(Icons.play_arrow),
+              label: Text(l10n.startRide),
+            )
+          : IconButton.filled(
+              key: const Key('start-ride'),
+              tooltip: l10n.startRide,
+              onPressed: () => context.push('/record'),
+              icon: const Icon(Icons.play_arrow),
+            ),
       controller: notifier.scroll,
       refresh: notifier.refresh,
       // A phone's upload button floats over the list; the last card ends above it.
