@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
 
 import 'fake_server.dart';
 
@@ -284,6 +285,7 @@ void main() {
 
     await openClub(tester);
     await tapVisible(tester, const Key('open-club-rides'));
+    await tapVisible(tester, const Key('club-rides-actions'));
     await tapVisible(tester, const Key('open-calendar-feed'));
     expect(find.byKey(const Key('calendar-status')), findsOneWidget);
 
@@ -292,6 +294,7 @@ void main() {
     expect(find.text('http://server/api/v1/calendar/fake.ics'), findsOneWidget);
     expect(find.byKey(const Key('replace-calendar-address')), findsOneWidget);
 
+    await tapVisible(tester, const Key('calendar-actions'));
     await tapVisible(tester, const Key('stop-calendar-address'));
     await tester.tap(find.byKey(const Key('confirm-stop-calendar')));
     await tester.pumpAndSettle();
@@ -314,5 +317,59 @@ void main() {
     expect(find.byKey(const Key('ride-date')), findsOneWidget);
     expect(find.byKey(const Key('ride-meeting-point')), findsOneWidget);
     expect(find.byKey(const Key('save-ride')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomActionBar),
+        matching: find.byKey(const Key('save-ride')),
+      ),
+      findsOneWidget,
+    );
   });
+
+  testWidgets(
+    'ClubRidesScreen_ShouldHavePlanRideInTheHeader_WhenACoachOpensIt',
+    (tester) async {
+      wide(tester);
+      final coach = server.add('coach@example.com', clubRole: 'coach');
+      server.signInBrowser(coach);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-rides'));
+
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byKey(const Key('plan-ride')), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'ClubRideDetailScreen_ShouldKeepCancelRedAndLastInTheMenu_WhenACoachOpensIt',
+    (tester) async {
+      wide(tester);
+      final coach = server.add('coach@example.com', clubRole: 'coach');
+      server.signInBrowser(coach);
+      server.clubRides.add(rideSeed(id: 'plan-1', title: 'Sunday ride'));
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-rides'));
+      await tapVisible(tester, const Key('club-ride-plan-1'));
+
+      expect(find.byKey(const Key('edit-ride')), findsOneWidget);
+      expect(find.byKey(const Key('cancel-ride')), findsNothing);
+      await tapVisible(tester, const Key('club-ride-actions'));
+      final cancel = find.byKey(const Key('cancel-ride'));
+      expect(cancel, findsOneWidget);
+      final button = tester.widget<MenuItemButton>(cancel);
+      final scheme = Theme.of(tester.element(cancel)).colorScheme;
+      expect(button.style?.foregroundColor?.resolve({}), scheme.error);
+      expect(tester.widget(find.byType(MenuItemButton).last), same(button));
+
+      await tester.tap(cancel);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirm-cancel-ride')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('ride-cancelled-reason')), findsOneWidget);
+    },
+  );
 }

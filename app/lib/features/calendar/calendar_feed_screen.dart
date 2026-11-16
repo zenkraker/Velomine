@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/toolbar_row.dart';
 import 'club_rides_view_model.dart';
@@ -36,6 +39,33 @@ class CalendarFeedScreen extends ConsumerWidget {
       title: l10n.calendarTitle,
       subtitle: l10n.calendarHelp,
       maxWidth: AppLayout.contentNarrow,
+      menu: s.active
+          ? PageMenu(
+              buttonKey: const Key('calendar-actions'),
+              entries: [
+                PageMenuEntry(
+                  key: const Key('stop-calendar-address'),
+                  icon: Icons.link_off,
+                  label: l10n.calendarDelete,
+                  destructive: true,
+                  onSelected: busy
+                      ? () {}
+                      : () => scheduleMicrotask(() async {
+                          if (!context.mounted) return;
+                          if (await confirmDestructive(
+                            context,
+                            title: l10n.calendarDeleteConfirmTitle,
+                            body: l10n.calendarDeleteConfirmBody,
+                            action: l10n.calendarDelete,
+                            key: const Key('confirm-stop-calendar'),
+                          )) {
+                            await notifier.stop();
+                          }
+                        }),
+                ),
+              ],
+            )
+          : null,
       children: [
         Card(
           child: Padding(
@@ -118,28 +148,6 @@ class CalendarFeedScreen extends ConsumerWidget {
                       },
                 icon: const Icon(Icons.refresh),
                 label: Text(l10n.calendarReplace),
-              ),
-            if (s.active)
-              TextButton.icon(
-                key: const Key('stop-calendar-address'),
-                onPressed: busy
-                    ? null
-                    : () async {
-                        if (await confirmDestructive(
-                          context,
-                          title: l10n.calendarDeleteConfirmTitle,
-                          body: l10n.calendarDeleteConfirmBody,
-                          action: l10n.calendarDelete,
-                          key: const Key('confirm-stop-calendar'),
-                        )) {
-                          await notifier.stop();
-                        }
-                      },
-                icon: const Icon(Icons.link_off),
-                label: Text(l10n.calendarDelete),
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                ),
               ),
           ],
         ),

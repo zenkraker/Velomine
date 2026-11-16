@@ -12,6 +12,7 @@ import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../auth/auth_page.dart';
@@ -205,6 +206,12 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
       eyebrow: l10n.clubRidesEyebrow,
       title: editing ? l10n.editRideTitle : l10n.planRideTitle,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: BottomActionBar.button(
+        buttonKey: const Key('save-ride'),
+        label: l10n.rideFormSave,
+        busy: s.action.running,
+        onPressed: () => _save(s, notifier),
+      ),
       children: [
         // The form's fields, in one card; the page header already names it.
         Card(
@@ -321,15 +328,6 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
             message: failureText(l10n, failure),
             actionKey: const Key('plan-ride-error'),
           ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: FilledButton.icon(
-            key: const Key('save-ride'),
-            onPressed: s.action.running ? null : () => _save(s, notifier),
-            icon: const Icon(Icons.save_outlined),
-            label: Text(l10n.rideFormSave),
-          ),
-        ),
       ],
     );
   }

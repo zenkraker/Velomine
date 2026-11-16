@@ -10,6 +10,7 @@ import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_heading.dart';
 import 'club_ride_widgets.dart';
@@ -42,37 +43,37 @@ class ClubRidesScreen extends ConsumerWidget {
     );
 
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    final page = PageScaffold(
+    return PageScaffold(
       eyebrow: l10n.clubRidesEyebrow,
       title: l10n.clubRidesTitle,
       subtitle: l10n.clubRidesSubtitle,
-      actions: wide
-          ? Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                OutlinedButton.icon(
-                  key: const Key('open-calendar-feed'),
-                  onPressed: onCalendar,
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  label: Text(l10n.calendarTitle),
-                ),
-                if (canPlan)
-                  FilledButton.icon(
+      primaryAction: canPlan
+          ? (wide
+                ? FilledButton.icon(
                     key: const Key('plan-ride'),
                     onPressed: onPlan,
                     icon: const Icon(Icons.add),
                     label: Text(l10n.clubPlanRide),
-                  ),
-              ],
-            )
-          : OutlinedButton.icon(
-              key: const Key('open-calendar-feed'),
-              onPressed: onCalendar,
-              icon: const Icon(Icons.calendar_month_outlined),
-              label: Text(l10n.calendarTitle),
-            ),
-      bottomPadding: wide ? AppSpacing.xl : 96,
+                  )
+                // The phone header row is tight: a filled icon, its tooltip names it.
+                : IconButton.filled(
+                    key: const Key('plan-ride'),
+                    tooltip: l10n.clubPlanRide,
+                    onPressed: onPlan,
+                    icon: const Icon(Icons.add),
+                  ))
+          : null,
+      menu: PageMenu(
+        buttonKey: const Key('club-rides-actions'),
+        entries: [
+          PageMenuEntry(
+            key: const Key('open-calendar-feed'),
+            icon: Icons.calendar_month_outlined,
+            label: l10n.calendarTitle,
+            onSelected: onCalendar,
+          ),
+        ],
+      ),
       children: [
         if (s.load.failure case final failure?)
           ErrorState(
@@ -110,19 +111,6 @@ class ClubRidesScreen extends ConsumerWidget {
           ],
         ],
       ],
-    );
-    if (wide) return page;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: canPlan
-          ? FloatingActionButton.extended(
-              key: const Key('plan-ride'),
-              onPressed: onPlan,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.clubPlanRide),
-            )
-          : null,
-      body: page,
     );
   }
 }

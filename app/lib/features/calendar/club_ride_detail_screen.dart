@@ -1,9 +1,12 @@
 import '../../core/widgets/loading_state.dart';
 
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/confirm.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
@@ -11,6 +14,7 @@ import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../routes/route_widgets.dart';
@@ -34,25 +38,15 @@ class ClubRideDetailScreen extends ConsumerWidget {
 
   Future<void> _cancel(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.rideCancelConfirmTitle),
-        content: Text(l10n.rideCancelConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.keepIt),
-          ),
-          FilledButton(
-            key: const Key('confirm-cancel-ride'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.rideCancel),
-          ),
-        ],
-      ),
+    final sure = await confirmDestructive(
+      context,
+      title: l10n.rideCancelConfirmTitle,
+      body: l10n.rideCancelConfirmBody,
+      action: l10n.rideCancel,
+      cancelLabel: l10n.keepIt,
+      key: const Key('confirm-cancel-ride'),
     );
-    if (sure == true) {
+    if (sure) {
       await ref.read(clubRideDetailViewModelProvider(id).notifier).cancel();
     }
   }
@@ -99,6 +93,7 @@ class ClubRideDetailScreen extends ConsumerWidget {
         ? null
         : ref.watch(routeDetailViewModelProvider(ride.routeId!)).detail;
     final busy = s.action.running;
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
     return PageScaffold(
       eyebrow: l10n.clubRidesEyebrow,
@@ -106,6 +101,39 @@ class ClubRideDetailScreen extends ConsumerWidget {
       titleKey: const Key('club-ride-title'),
       subtitle: rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
       maxWidth: AppLayout.contentNarrow,
+      primaryAction: detail.canPlan
+          ? (wide
+                ? OutlinedButton.icon(
+                    key: const Key('edit-ride'),
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: Text(l10n.rideEdit),
+                  )
+                : IconButton.filled(
+                    key: const Key('edit-ride'),
+                    tooltip: l10n.rideEdit,
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                  ))
+          : null,
+      menu: detail.canPlan && !ride.isCancelled
+          ? PageMenu(
+              buttonKey: const Key('club-ride-actions'),
+              entries: [
+                PageMenuEntry(
+                  key: const Key('cancel-ride'),
+                  icon: Icons.event_busy,
+                  label: l10n.rideCancel,
+                  destructive: true,
+                  onSelected: busy
+                      ? () {}
+                      : () => scheduleMicrotask(() {
+                          if (context.mounted) _cancel(context, ref);
+                        }),
+                ),
+              ],
+            )
+          : null,
       children: [
         if (ride.isCancelled)
           Chip(
@@ -184,24 +212,6 @@ class ClubRideDetailScreen extends ConsumerWidget {
           children: [
             if (!detail.canPlan)
               _joinButton(context, ref, detail, started, busy),
-            if (detail.canPlan) ...[
-              OutlinedButton.icon(
-                key: const Key('edit-ride'),
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
-                label: Text(l10n.rideEdit),
-              ),
-              if (!ride.isCancelled)
-                TextButton.icon(
-                  key: const Key('cancel-ride'),
-                  onPressed: busy ? null : () => _cancel(context, ref),
-                  icon: const Icon(Icons.event_busy),
-                  label: Text(l10n.rideCancel),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-            ],
           ],
         ),
       ],
