@@ -47,7 +47,7 @@ These do not use `PageScaffold` (`core/widgets/page_scaffold.dart`):
 - `recording/recording_screen.dart`: its own `Scaffold` and `ListView` with raw padding `fromLTRB(16, 8, 16, 96)`, a hand-styled section title ("On this phone"), and an empty list as a bare `Text` instead of `EmptyState`.
 - `admin/admin_screen.dart` and its four tabs.
 - `club/nearby_clubs_screen.dart` and `club/location_picker.dart`: their own `Scaffold` and `AppBar`. Both sit outside the shell route, so they need a frame, just not a hand-made one.
-- `auth/auth_page.dart` and the six auth screens: a frame of their own, reasonable for the signed-out flow, but it re-implements the eyebrow style.
+- `auth/auth_page.dart` and the six auth screens: a frame of their own, and it re-implements the eyebrow style.
 - `supporter/supporter_celebration_screen.dart`: a bespoke celebration. It may stay bespoke.
 
 ### Hand-rolled copies of shared widgets
@@ -106,6 +106,7 @@ The agent reads `AGENTS.md` and `.claude/skills/flutter/SKILL.md` first. Those w
 - **Every animation goes through `core/motion.dart`.** Tap targets stay at least 48×48, and icon-only buttons carry a tooltip or `Semantics` label.
 - **Test names follow `Subject_ShouldDoSomething_WhenCondition`.** Update widget tests in `app/test/` for what moved, and add one test for each new shared widget.
 - **Run `just codegen`** after changing a `@riverpod` provider and commit the generated files. Run **`just check`** before every commit.
+- **Every page uses `PageScaffold`.** A screen with its own `Scaffold`, `AppBar` or hand-made header moves onto `PageScaffold`, inside the shell or outside it (with `onBack`). Only a screen that needs something `PageScaffold` cannot give stays bespoke, such as the supporter celebration, and the story says why.
 - **Build for web and phone.** No `dart:io` in shared code.
 - **One story is one pull request.** Its description lists the story id and what a reviewer should try on the phone.
 
@@ -364,7 +365,8 @@ Every story in this phase depends on UI-02 to UI-06. For each screen it also cov
 
 - **Files:** `auth/auth_page.dart`, `sign_in_screen.dart`, `register_screen.dart`, `forgot_password_screen.dart`, `reset_password_screen.dart`, `server_setup_screen.dart`, `verify_email_screen.dart`, `password_field.dart`, `test/sign_in_test.dart` and the other auth tests.
 - **Do:**
-  - `AuthPage` uses the shared `Eyebrow` and the bottom action bar for each step's primary button (Sign in, Create account, Continue). Secondary links stay in the body.
+  - `AuthPage` is built on `PageScaffold` (no shell, no tabs, `onBack` where a step has a way back) instead of its own frame.
+  - It uses the shared `Eyebrow` and the bottom action bar for each step's primary button (Sign in, Create account, Continue). Secondary links stay in the body.
   - Use the bold expressive look for the wordmark.
 
 #### UI-43 Supporter screens and maps
