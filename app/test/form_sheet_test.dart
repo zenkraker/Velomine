@@ -41,6 +41,30 @@ Widget _app(WidgetBuilder sheet) => MaterialApp(
 );
 
 void main() {
+  testWidgets('FormSheet_ShouldDrawSaveInTheErrorColour_WhenDestructive', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        (_) => FormSheet(
+          title: 'Delete',
+          saveKey: const Key('save'),
+          onSave: () {},
+          destructive: true,
+          children: const [Text('Body')],
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('open')));
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<FilledButton>(find.byKey(const Key('save')));
+    expect(
+      button.style!.backgroundColor!.resolve({}),
+      Theme.of(tester.element(find.byKey(const Key('save')))).colorScheme.error,
+    );
+  });
+
   testWidgets('SheetFrame_ShouldShowItsTitleAndContent_WhenOpened', (
     tester,
   ) async {

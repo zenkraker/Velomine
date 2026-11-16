@@ -1,4 +1,8 @@
+import 'dart:async' show scheduleMicrotask;
+
+import '../../core/confirm.dart';
 import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/page_menu.dart';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +38,31 @@ class SessionsScreen extends ConsumerWidget {
       title: l10n.sessionsTitle,
       subtitle: l10n.sessionsIntro,
       maxWidth: AppLayout.contentNarrow,
+      // Signing the other devices out is rare: in the menu, behind a confirmation.
+      menu: PageMenu(
+        buttonKey: const Key('sessions-actions'),
+        entries: [
+          PageMenuEntry(
+            key: const Key('logout-others'),
+            label: l10n.sessionLogoutOthers,
+            icon: Icons.devices_other,
+            destructive: true,
+            onSelected: state.logoutOthers.running
+                ? () {}
+                : () => scheduleMicrotask(() async {
+                    if (!context.mounted) return;
+                    final sure = await confirmDestructive(
+                      context,
+                      title: l10n.sessionLogoutOthers,
+                      body: l10n.sessionLogoutOthersBody,
+                      action: l10n.sessionLogoutOthers,
+                      key: const Key('confirm-logout-others'),
+                    );
+                    if (sure) notifier.logoutOthers();
+                  }),
+          ),
+        ],
+      ),
       children: [
         if (state.load.running && sessions == null)
           const LoadingState()
@@ -76,17 +105,6 @@ class SessionsScreen extends ConsumerWidget {
           Text(l10n.sessionRevoked, key: const Key('session-revoked')),
         if (state.logoutOthers.completed)
           Text(l10n.sessionOthersRevoked, key: const Key('others-revoked')),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            key: const Key('logout-others'),
-            onPressed: state.logoutOthers.running
-                ? null
-                : notifier.logoutOthers,
-            icon: const Icon(Icons.devices_other),
-            label: Text(l10n.sessionLogoutOthers),
-          ),
-        ),
       ],
     );
   }

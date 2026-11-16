@@ -9,7 +9,9 @@ import '../../core/user_message_text.dart';
 import 'two_factor_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_heading.dart';
 
 class TwoFactorScreen extends ConsumerStatefulWidget {
   const TwoFactorScreen({super.key});
@@ -50,6 +52,24 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
       eyebrow: l10n.profileTitle,
       title: l10n.twoFactorTitle,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: !(info?.hasPassword ?? false)
+          ? null
+          : (info?.enabled ?? false)
+          ? BottomActionBar.button(
+              buttonKey: const Key('two-factor-disable'),
+              label: l10n.twoFactorDisable,
+              busy: state.disable.running,
+              onPressed: () => notifier.disable(_password.text),
+            )
+          : setup == null
+          ? null
+          : BottomActionBar.button(
+              buttonKey: const Key('two-factor-enable'),
+              label: l10n.twoFactorEnable,
+              busy: state.enable.running,
+              onPressed: () =>
+                  notifier.enable(password: _password.text, code: _code.text),
+            ),
       children: [
         if (state.load.running && info == null)
           const LoadingState()
@@ -60,11 +80,10 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
             onRetry: notifier.load,
           )
         else ...[
-          Text(
-            (info?.enabled ?? false)
+          SectionHeading(
+            title: (info?.enabled ?? false)
                 ? l10n.twoFactorStateOn
                 : l10n.twoFactorStateOff,
-            style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
           if (!(info?.hasPassword ?? false))
@@ -80,13 +99,6 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                 decoration: InputDecoration(labelText: l10n.twoFactorPassword),
               ),
               const SizedBox(height: AppSpacing.md),
-              FilledButton(
-                key: const Key('two-factor-disable'),
-                onPressed: state.disable.running
-                    ? null
-                    : () => notifier.disable(_password.text),
-                child: Text(l10n.twoFactorDisable),
-              ),
               OutlinedButton(
                 key: const Key('two-factor-regenerate'),
                 onPressed: state.regenerate.running
@@ -131,24 +143,10 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(labelText: l10n.twoFactorCodeLabel),
               ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton(
-                key: const Key('two-factor-enable'),
-                onPressed: state.enable.running
-                    ? null
-                    : () => notifier.enable(
-                        password: _password.text,
-                        code: _code.text,
-                      ),
-                child: Text(l10n.twoFactorEnable),
-              ),
             ],
             if (codes != null) ...[
               const Divider(),
-              Text(
-                l10n.twoFactorRecoveryTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              SectionHeading(title: l10n.twoFactorRecoveryTitle),
               Text(l10n.twoFactorRecoveryHelp),
               const SizedBox(height: AppSpacing.sm),
               for (final code in codes)

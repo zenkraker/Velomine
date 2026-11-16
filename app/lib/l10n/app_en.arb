@@ -158,6 +158,7 @@
   "sessionSince": "Signed in",
   "sessionRevoke": "Sign out",
   "sessionLogoutOthers": "Log out other devices",
+  "sessionLogoutOthersBody": "This signs out every device except this one. They will need to sign in again.",
   "sessionsEmpty": "No other devices are signed in.",
   "sessionRevoked": "That device is signed out.",
   "sessionOthersRevoked": "Every other device is signed out.",

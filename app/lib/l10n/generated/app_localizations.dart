@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'Log out other devices'**
   String get sessionLogoutOthers;
 
+  /// No description provided for @sessionLogoutOthersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This signs out every device except this one. They will need to sign in again.'**
+  String get sessionLogoutOthersBody;
+
   /// No description provided for @sessionsEmpty.
   ///
   /// In en, this message translates to:

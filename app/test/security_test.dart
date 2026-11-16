@@ -131,7 +131,13 @@ void main() {
     });
     await pumpScreen(tester, const SessionsScreen(), server: server);
 
+    await tester.tap(find.byKey(const Key('sessions-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('logout-others')));
+    await tester.pumpAndSettle();
+    // It asks first.
+    expect(find.text('Web app'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('confirm-logout-others')));
     await tester.pumpAndSettle();
 
     expect(find.text('Web app'), findsNothing);

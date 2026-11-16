@@ -1,3 +1,9 @@
+import 'dart:async' show scheduleMicrotask;
+
+import '../../core/confirm.dart';
+import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/page_menu.dart';
+import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/inline_error.dart';
 
@@ -140,12 +146,10 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       ),
     );
     if (point == null || !mounted) return;
-    final answer = await showDialog<(String, int)>(
-      context: context,
-      builder: (_) => _ZoneDialog(
-        l10n: l10n,
-        units: ref.read(unitsChoiceViewModelProvider),
-      ),
+    final answer = await showSheet<(String, int)>(
+      context,
+      builder: (_) =>
+          _ZoneSheet(l10n: l10n, units: ref.read(unitsChoiceViewModelProvider)),
     );
     if (answer == null) return;
     await ref
@@ -162,24 +166,14 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     PrivacyZoneResponse zone,
     AppLocalizations l10n,
   ) async {
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Text(l10n.privacyZoneDelete(zone.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: const Key('confirm-privacy-zone-delete'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.remove),
-          ),
-        ],
-      ),
+    final sure = await confirmDestructive(
+      context,
+      title: zone.name,
+      body: l10n.privacyZoneDelete(zone.name),
+      action: l10n.remove,
+      key: const Key('confirm-privacy-zone-delete'),
     );
-    if (sure == true) {
+    if (sure) {
       await ref.read(privacyViewModelProvider.notifier).deleteZone(zone.id);
     }
   }
@@ -216,10 +210,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                 children: [
                   Text(l10n.privacyHelp),
                   const Divider(),
-                  Text(
-                    l10n.privacyOthersSee,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  SectionHeading(title: l10n.privacyOthersSee),
                   _streamSwitch(
                     'privacy-hide-heart-rate',
                     _showHeartRate,
@@ -257,10 +248,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                     (v) => setState(() => _showTemperature = v),
                   ),
                   const Divider(),
-                  Text(
-                    l10n.privacyTrimTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  SectionHeading(title: l10n.privacyTrimTitle),
                   Row(
                     spacing: AppSpacing.md,
                     children: [
@@ -294,10 +282,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                     ),
                   ),
                   const Divider(),
-                  Text(
-                    l10n.privacyZonesTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  SectionHeading(title: l10n.privacyZonesTitle),
                   Text(l10n.privacyZonesHelp),
                   if (privacy.zones.isEmpty)
                     EmptyState(
@@ -317,13 +302,21 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                             zone.radiusM.toDouble(),
                           ),
                         ),
-                        trailing: IconButton(
-                          key: Key('privacy-zone-delete-${zone.id}'),
-                          tooltip: l10n.privacyZoneDelete(zone.name),
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: state.save.running
-                              ? null
-                              : () => _deleteZone(zone, l10n),
+                        trailing: PageMenu(
+                          buttonKey: Key('privacy-zone-actions-${zone.id}'),
+                          entries: [
+                            PageMenuEntry(
+                              key: Key('privacy-zone-delete-${zone.id}'),
+                              label: l10n.privacyZoneDelete(zone.name),
+                              icon: Icons.delete_outline,
+                              destructive: true,
+                              onSelected: state.save.running
+                                  ? () {}
+                                  : () => scheduleMicrotask(() {
+                                      if (mounted) _deleteZone(zone, l10n);
+                                    }),
+                            ),
+                          ],
                         ),
                       ),
                   Align(
@@ -391,17 +384,17 @@ class _LoadFailed extends StatelessWidget {
   }
 }
 
-class _ZoneDialog extends StatefulWidget {
-  const _ZoneDialog({required this.l10n, required this.units});
+class _ZoneSheet extends StatefulWidget {
+  const _ZoneSheet({required this.l10n, required this.units});
 
   final AppLocalizations l10n;
   final Units units;
 
   @override
-  State<_ZoneDialog> createState() => _ZoneDialogState();
+  State<_ZoneSheet> createState() => _ZoneSheetState();
 }
 
-class _ZoneDialogState extends State<_ZoneDialog> {
+class _ZoneSheetState extends State<_ZoneSheet> {
   final _name = TextEditingController();
   late final _radius = TextEditingController(
     text: widget.units == Units.imperial ? '0.3' : '500',
@@ -438,44 +431,29 @@ class _ZoneDialogState extends State<_ZoneDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
-    return AlertDialog(
-      title: Text(l10n.privacyAddZone),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpacing.md,
-        children: [
-          TextField(
-            key: const Key('privacy-zone-name'),
-            controller: _name,
-            decoration: InputDecoration(labelText: l10n.privacyZoneName),
-          ),
-          TextField(
-            key: const Key('privacy-zone-radius'),
-            controller: _radius,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-            ],
-            decoration: InputDecoration(
-              labelText: l10n.privacyZoneRadius,
-              suffixText: widget.units == Units.imperial ? 'mi' : 'm',
-              helperText: l10n.privacyZoneRadiusHelp,
-            ),
-          ),
-          if (_problem case final problem?)
-            InlineError(problem, key: const Key('privacy-zone-error')),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+    return FormSheet(
+      title: l10n.privacyAddZone,
+      saveKey: const Key('privacy-zone-save'),
+      onSave: _save,
+      error: _problem,
+      children: [
+        TextField(
+          key: const Key('privacy-zone-name'),
+          controller: _name,
+          decoration: InputDecoration(labelText: l10n.privacyZoneName),
         ),
-        FilledButton(
-          key: const Key('privacy-zone-save'),
-          onPressed: _save,
-          child: Text(l10n.save),
+        TextField(
+          key: const Key('privacy-zone-radius'),
+          controller: _radius,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.privacyZoneRadius,
+            suffixText: widget.units == Units.imperial ? 'mi' : 'm',
+            helperText: l10n.privacyZoneRadiusHelp,
+          ),
         ),
       ],
     );

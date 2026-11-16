@@ -305,10 +305,56 @@ void main() {
     expect(find.byKey(const Key('sign-in')), findsOneWidget);
   });
 
+  testWidgets(
+    'ProfileScreen_ShouldOpenPasswordFormAsSheet_WhenChangingPassword',
+    (tester) async {
+      await openProfile(tester);
+
+      await tapVisible(tester, 'change-password');
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byKey(const Key('confirm-change-password')), findsOneWidget);
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldKeepDeleteLastAndRedInMenu_WhenMenuOpens', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    // Not a visible button on the page any more.
+    expect(find.byKey(const Key('delete-account')), findsNothing);
+    await tester.tap(find.byKey(const Key('profile-actions')));
+    await tester.pumpAndSettle();
+
+    final delete = find.byKey(const Key('delete-account'));
+    expect(delete, findsOneWidget);
+    final style = tester.widget<MenuItemButton>(delete).style!;
+    expect(
+      style.foregroundColor!.resolve({}),
+      Theme.of(tester.element(delete)).colorScheme.error,
+    );
+    final items = find.byType(MenuItemButton);
+    expect(tester.getTopLeft(delete).dy, tester.getTopLeft(items.last).dy);
+
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('delete-confirm')), findsOneWidget);
+    expect(find.text('Your password'), findsOneWidget);
+  });
+
   group('deleting the account', () {
+    Future<void> chooseDelete(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('profile-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete-account')));
+      await tester.pumpAndSettle();
+    }
+
     Future<void> openDelete(WidgetTester tester) async {
       await openProfile(tester);
-      await tapVisible(tester, 'delete-account');
+      await chooseDelete(tester);
     }
 
     testWidgets('DeleteAccountDialog_ShouldAskPasswordAndWarn_WhenOpened', (
@@ -346,8 +392,10 @@ void main() {
     ) async {
       await openDelete(tester);
 
-      await tester.tap(find.text('Cancel'));
+      // The sheet has no Cancel: dragging it down is the cancel.
+      await tester.drag(find.byType(BottomSheet), const Offset(0, 600));
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('confirm-delete-account')), findsNothing);
 
       expect(server.accounts, contains('rider@example.com'));
       expect(
@@ -392,7 +440,7 @@ void main() {
       // Let the "does not match" message go away before reaching for the button behind it.
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
-      await tapVisible(tester, 'delete-account');
+      await chooseDelete(tester);
       await tester.enterText(
         find.byKey(const Key('delete-confirm')),
         'sso@example.com',

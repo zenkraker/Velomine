@@ -54,10 +54,14 @@ void main() {
       expect(server.privacyStreams['hideHeartRate'], isFalse);
 
       await tester.ensureVisible(
-        find.byKey(const Key('privacy-zone-delete-zone-home')),
+        find.byKey(const Key('privacy-zone-actions-zone-home')),
       );
+      await tester.tap(find.byKey(const Key('privacy-zone-actions-zone-home')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('privacy-zone-delete-zone-home')));
       await tester.pumpAndSettle();
+      // It asks first: nothing is removed until the red action is chosen.
+      expect(server.privacyZones, isNotEmpty);
       await tester.tap(find.byKey(const Key('confirm-privacy-zone-delete')));
       await tester.pumpAndSettle();
 
@@ -126,12 +130,12 @@ void main() {
 
       // 0.12 mi is 193 m, under the legal 200 m floor, so it is refused and nothing is saved.
       await typeRadius('0.12');
-      expect(find.byKey(const Key('privacy-zone-error')), findsOneWidget);
+      expect(find.byKey(const Key('form-error')), findsOneWidget);
       expect(server.privacyZones, isEmpty);
 
       // 2 mi is 3219 m, over the 1609 m ceiling, so it is refused too.
       await typeRadius('2');
-      expect(find.byKey(const Key('privacy-zone-error')), findsOneWidget);
+      expect(find.byKey(const Key('form-error')), findsOneWidget);
       expect(server.privacyZones, isEmpty);
 
       // 0.2 mi is 322 m: inside the range, and stored in metres.

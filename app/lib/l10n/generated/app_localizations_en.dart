@@ -372,6 +372,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionLogoutOthers => 'Log out other devices';
 
   @override
+  String get sessionLogoutOthersBody =>
+      'This signs out every device except this one. They will need to sign in again.';
+
+  @override
   String get sessionsEmpty => 'No other devices are signed in.';
 
   @override

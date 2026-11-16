@@ -373,6 +373,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sessionLogoutOthers => 'Disconnetti gli altri dispositivi';
 
   @override
+  String get sessionLogoutOthersBody =>
+      'Disconnette ogni dispositivo tranne questo. Dovranno accedere di nuovo.';
+
+  @override
   String get sessionsEmpty => 'Nessun altro dispositivo è connesso.';
 
   @override

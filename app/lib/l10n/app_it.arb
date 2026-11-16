@@ -130,6 +130,7 @@
   "sessionSince": "Accesso",
   "sessionRevoke": "Disconnetti",
   "sessionLogoutOthers": "Disconnetti gli altri dispositivi",
+  "sessionLogoutOthersBody": "Disconnette ogni dispositivo tranne questo. Dovranno accedere di nuovo.",
   "sessionsEmpty": "Nessun altro dispositivo è connesso.",
   "sessionRevoked": "Quel dispositivo è disconnesso.",
   "sessionOthersRevoked": "Tutti gli altri dispositivi sono disconnessi.",

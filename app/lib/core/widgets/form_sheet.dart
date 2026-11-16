@@ -99,6 +99,7 @@ class FormSheet extends StatelessWidget {
     required this.onSave,
     this.error,
     this.saveLabel,
+    this.destructive = false,
   });
 
   final String title;
@@ -116,6 +117,9 @@ class FormSheet extends StatelessWidget {
   /// The button's text when the action is not "Save".
   final String? saveLabel;
 
+  /// Draws the button in the error colour, for a sheet whose action cannot be undone.
+  final bool destructive;
+
   @override
   Widget build(BuildContext context) {
     return SheetFrame(
@@ -128,6 +132,12 @@ class FormSheet extends StatelessWidget {
           if (error != null) InlineError(error!, key: const Key('form-error')),
           FilledButton(
             key: saveKey,
+            style: destructive
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                  )
+                : null,
             onPressed: onSave,
             child: Text(saveLabel ?? context.l10n.save),
           ),

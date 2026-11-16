@@ -1,4 +1,8 @@
+import 'dart:async' show scheduleMicrotask;
+
 import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/inline_error.dart';
 
 import 'package:material_ui/material_ui.dart';
@@ -175,9 +179,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _changePassword() async {
-    final changed = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ChangePasswordDialog(
+    final changed = await showSheet<bool>(
+      context,
+      builder: (_) => _ChangePasswordSheet(
         changePassword: ref
             .read(profileViewModelProvider.notifier)
             .changePassword,
@@ -189,9 +193,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _delete() async {
     final profile = ref.read(profileViewModelProvider).profile;
     if (profile == null) return;
-    final answer = await showDialog<String>(
-      context: context,
-      builder: (_) => _DeleteAccountDialog(hasPassword: profile.hasPassword),
+    final answer = await showSheet<String>(
+      context,
+      builder: (_) => _DeleteAccountSheet(hasPassword: profile.hasPassword),
     );
     if (answer == null) return;
     final deleted = await ref
@@ -578,18 +582,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           if (s.export.completed)
             Text(l10n.exportStarted, key: const Key('export-started')),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              key: const Key('delete-account'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-              ),
-              onPressed: _delete,
-              icon: const Icon(Icons.delete_forever),
-              label: Text(l10n.deleteMyAccount),
-            ),
-          ),
         ],
       ),
     ];
@@ -597,6 +589,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       eyebrow: l10n.accountMenu,
       title: l10n.profileTitle,
       maxWidth: AppLayout.contentMax,
+      // Deleting the account is rare and final: in the menu, last and red.
+      menu: PageMenu(
+        buttonKey: const Key('profile-actions'),
+        entries: [
+          PageMenuEntry(
+            key: const Key('delete-account'),
+            label: l10n.deleteMyAccount,
+            icon: Icons.delete_forever,
+            destructive: true,
+            onSelected: () => scheduleMicrotask(() {
+              if (mounted) _delete();
+            }),
+          ),
+        ],
+      ),
       children: [
         if (s.load.running && s.profile == null)
           const LoadingState()
@@ -616,17 +623,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 }
 
 /// Asks for the current password and the new one. On success the app signs out, because the security stamp moved.
-class _ChangePasswordDialog extends StatefulWidget {
-  const _ChangePasswordDialog({required this.changePassword});
+class _ChangePasswordSheet extends StatefulWidget {
+  const _ChangePasswordSheet({required this.changePassword});
 
   final Future<Failure?> Function(String current, String newPassword)
   changePassword;
 
   @override
-  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
 }
 
-class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
   final _current = TextEditingController();
   final _new = TextEditingController();
   final _confirm = TextEditingController();
@@ -676,47 +683,34 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.changePasswordTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpacing.lg,
-        children: [
-          PasswordField(
-            fieldKey: const Key('current-password'),
-            visibilityKey: const Key('current-password-visibility'),
-            controller: _current,
-            label: l10n.currentPassword,
-            autofillHints: const [AutofillHints.password],
-          ),
-          PasswordField(
-            fieldKey: const Key('new-password'),
-            visibilityKey: const Key('new-password-visibility'),
-            controller: _new,
-            label: l10n.newPassword,
-            autofillHints: const [AutofillHints.newPassword],
-          ),
-          PasswordField(
-            fieldKey: const Key('confirm-password'),
-            visibilityKey: const Key('confirm-password-visibility'),
-            controller: _confirm,
-            label: l10n.confirmPassword,
-            autofillHints: const [AutofillHints.newPassword],
-            onSubmitted: (_) => _submit(),
-          ),
-          if (_error != null)
-            InlineError(_error!, key: const Key('change-password-error')),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _busy ? null : () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+    return FormSheet(
+      title: l10n.changePasswordTitle,
+      saveKey: const Key('confirm-change-password'),
+      saveLabel: l10n.changePassword,
+      onSave: _busy ? null : _submit,
+      error: _error,
+      children: [
+        PasswordField(
+          fieldKey: const Key('current-password'),
+          visibilityKey: const Key('current-password-visibility'),
+          controller: _current,
+          label: l10n.currentPassword,
+          autofillHints: const [AutofillHints.password],
         ),
-        FilledButton(
-          key: const Key('confirm-change-password'),
-          onPressed: _busy ? null : _submit,
-          child: Text(l10n.changePassword),
+        PasswordField(
+          fieldKey: const Key('new-password'),
+          visibilityKey: const Key('new-password-visibility'),
+          controller: _new,
+          label: l10n.newPassword,
+          autofillHints: const [AutofillHints.newPassword],
+        ),
+        PasswordField(
+          fieldKey: const Key('confirm-password'),
+          visibilityKey: const Key('confirm-password-visibility'),
+          controller: _confirm,
+          label: l10n.confirmPassword,
+          autofillHints: const [AutofillHints.newPassword],
+          onSubmitted: (_) => _submit(),
         ),
       ],
     );
@@ -724,16 +718,16 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 }
 
 /// Asks the member to confirm deleting their account: with their password, or by typing their email when they have none.
-class _DeleteAccountDialog extends StatefulWidget {
-  const _DeleteAccountDialog({required this.hasPassword});
+class _DeleteAccountSheet extends StatefulWidget {
+  const _DeleteAccountSheet({required this.hasPassword});
 
   final bool hasPassword;
 
   @override
-  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+  State<_DeleteAccountSheet> createState() => _DeleteAccountSheetState();
 }
 
-class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
   final _answer = TextEditingController();
 
   @override
@@ -745,39 +739,24 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.deleteAccountTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpacing.lg,
-        children: [
-          Text(l10n.deleteAccountBody),
-          TextField(
-            key: const Key('delete-confirm'),
-            controller: _answer,
-            obscureText: widget.hasPassword,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: widget.hasPassword
-                  ? l10n.yourPassword
-                  : l10n.confirmEmail,
-            ),
+    return FormSheet(
+      title: l10n.deleteAccountTitle,
+      saveKey: const Key('confirm-delete-account'),
+      saveLabel: l10n.deleteEverything,
+      destructive: true,
+      onSave: () => Navigator.pop(context, _answer.text),
+      children: [
+        Text(l10n.deleteAccountBody),
+        TextField(
+          key: const Key('delete-confirm'),
+          controller: _answer,
+          obscureText: widget.hasPassword,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: widget.hasPassword
+                ? l10n.yourPassword
+                : l10n.confirmEmail,
           ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          key: const Key('confirm-delete-account'),
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          onPressed: () => Navigator.pop(context, _answer.text),
-          child: Text(l10n.deleteEverything),
         ),
       ],
     );
