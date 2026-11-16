@@ -2452,10 +2452,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteFromPhone => 'Delete this ride from the phone';
 
   @override
-  String get pairStrapTitle => 'Pair a heart-rate strap';
-
-  @override
-  @override
   String get deleteLocalRideTitle => 'Delete this ride from the phone?';
 
   @override
@@ -2466,6 +2462,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteLocalRideBodyNotUploaded =>
       'This ride has not been uploaded. If you delete it from the phone it is lost for good.';
 
+  @override
+  String get pairStrapTitle => 'Pair a heart-rate strap';
+
+  @override
   String get pairStrapHelp =>
       'Wear the strap so it wakes up, then pick it below. It is remembered for your next rides.';
 
