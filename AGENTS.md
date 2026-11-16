@@ -108,6 +108,16 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Maps and charts** are drawn with Flutter's own canvas and plain tile images (`features/rides/detail/geo.dart`, `series_chart.dart`). The tile address comes from `GET /api/v1/server`; OpenStreetMap is the default and the map cannot be turned off.
 - **Accessibility:** `Semantics` labels on icon-only buttons, respect text scaling, tap targets of at least 48×48, and every animation goes through `lib/core/motion.dart` so it stops when the system asks to reduce motion.
 
+### Screens and layout
+
+- **Every routed screen is a `PageScaffold`** (`lib/core/widgets/`), inside the shell or pushed over it with `onBack`. A screen stays bespoke only when `PageScaffold` cannot give what it needs.
+- **One main action per screen**, as `primaryAction` in the header, in the same place at every width. A new screen never adds a `FloatingActionButton`.
+- **Rare and destructive actions go in a `PageMenu`** of `PageMenuEntry`; destructive entries come last, after a divider, in the error colour. Every destructive action is confirmed with `confirmDestructive`, whose button names the action. A destructive action is never a visible button.
+- **Short tasks open in a sheet** through `showSheet`: `FormSheet` for a form (full-width Save pinned, dismissing is cancel), `SheetFrame` for a picker or filters. A full page is for a long flow.
+- **A full-page form puts its submit on `PageScaffold.bottomAction`** (`BottomActionBar`); Cancel is the back arrow.
+- **States:** a first load is `LoadingState`, a failed load is `ErrorState` with a retry, an empty list is `EmptyState`, and an error under a form or section is `InlineError`.
+- **Navigation shell** (`home_shell.dart`): three tabs (Rides, Progress, Club) in a `FloatingNavPill` on the phone, a rail from 600 dp and a sidebar from 1200 dp; recording and bikes are pushed screens.
+
 ### State and events
 
 - **Use Riverpod for state.** `flutter_riverpod` with `riverpod_annotation` and `riverpod_generator` is the only way state is shared between widgets, screens or features; generated `.g.dart` files are committed (`just codegen`). `ChangeNotifier`, `ValueNotifier` and `ListenableBuilder` are allowed only for view-local state that never leaves one widget subtree: text fields, focus, animation, scroll, map gestures and chart hover. Never add a second state-management library.

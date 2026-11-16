@@ -20,7 +20,7 @@ Load the matching official Flutter/Dart skill before the task, for example `flut
 
 ## Writing code
 
-- **New screen:** a route in `go_router`, a `<Screen>ViewModel` and immutable `<Screen>State`, data through the feature's `<area>_data.dart`. Run `just codegen` after changing a `@riverpod` provider.
+- **New screen:** a route in `go_router`, a `<Screen>ViewModel` and immutable `<Screen>State`, data through the feature's `<area>_data.dart`. Build the view on `PageScaffold` with a `title`, one `primaryAction`, a `PageMenu` for rare or destructive actions (confirmed with `confirmDestructive`), short tasks in `showSheet` (`FormSheet`, `SheetFrame`), a full-page form's submit on `bottomAction`, and `LoadingState`, `ErrorState`, `EmptyState` and `InlineError` for the states. Run `just codegen` after changing a `@riverpod` provider.
 - **New string:** add it to both `app_en.arb` and `app_it.arb`.
 - **Widgets:** small and `const` where possible; leaf widgets take plain values and callbacks. Reuse existing widgets before adding new ones.
 - **Platforms:** check every change builds for web as well as the phone; keep `dart:io` out of shared code.
