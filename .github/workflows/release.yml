@@ -1,7 +1,7 @@
 name: Release
 
 # Builds the server and web images together, once per commit, smoke-tests them as a pair and pushes them to GHCR as
-# a release, then tags the commit and writes a GitHub Release with generated notes:
+# a release, then tags the commit and writes a GitHub Release with generated notes and the signed Android APK:
 #
 #   push to main  ->  the next patch version after the highest vX.Y.Z tag (v0.2.0 -> v0.2.1)
 #   tag vX.Y.Z    ->  that version; push one by hand for a minor or major release, and main counts on from it
@@ -238,6 +238,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      actions: read
     steps:
       - name: Create the release
         env:
@@ -246,3 +247,14 @@ jobs:
         run: |
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
             || gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --generate-notes
+
+      # The APK that CI built and signed in this run, attached so anyone can install the Android app from the
+      # release page; the site's demo page links there. --clobber makes a rerun replace it.
+      - name: Attach the Android APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name velomine-apk --dir "$RUNNER_TEMP/apk"
+          mv "$RUNNER_TEMP/apk/app-release.apk" "$RUNNER_TEMP/velomine-$TAG.apk"
+          gh release upload "$TAG" "$RUNNER_TEMP/velomine-$TAG.apk" --repo "$GITHUB_REPOSITORY" --clobber
