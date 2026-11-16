@@ -160,7 +160,9 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
         )
         .toList();
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
       children: [
         TextField(
           key: const Key('account-search'),

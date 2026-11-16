@@ -23,7 +23,6 @@ import 'ride_selection.dart';
 import 'route_map.dart';
 import 'scale.dart';
 import 'series_chart.dart';
-import '../../../core/page_actions.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -75,14 +74,8 @@ class RideDetailScreen extends ConsumerWidget {
       ref.read(rideDetailViewModelProvider(id).notifier).messageShown,
     );
 
-    final compact =
-        MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth;
     final ride = s.ride;
     final actions = ride == null ? null : _actions(context, ref, ride);
-    // A phone has no page header, so the ride's menu goes in the title bar instead.
-    if (compact && actions != null) {
-      publishPhoneActions(context, ref, [actions]);
-    }
 
     return PageScaffold(
       eyebrow: l10n.eyebrowRides,

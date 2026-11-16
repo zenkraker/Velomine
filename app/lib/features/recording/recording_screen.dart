@@ -16,6 +16,7 @@ import 'upload_queue.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
 import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/stat_tile.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
@@ -58,72 +59,65 @@ class RecordingScreen extends ConsumerWidget {
     final recorder = ref.watch(recorderProvider);
     final uploadsEnabled = ref.watch(uploadQueueProvider) != null;
     final notifier = ref.read(recordingViewModelProvider.notifier);
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-        children: [
-          if (s.live)
-            _LiveCard(
-              state: s.snapshot,
-              sensorsSupported: recorder?.sensorsSupported ?? false,
-              busy: s.command.running,
-              onPause: () =>
-                  _haptic(ref, notifier.pause, HapticFeedback.lightImpact),
-              onResume: () =>
-                  _haptic(ref, notifier.resume, HapticFeedback.mediumImpact),
-              onStop: () =>
-                  _haptic(ref, notifier.stop, HapticFeedback.heavyImpact),
-            )
-          else
-            _StartCard(
-              busy: s.command.running,
-              loading: s.loading,
-              autoPause: s.autoPause,
-              rideType: s.rideType,
-              ebike: s.ebike,
-              onStart: () =>
-                  _haptic(ref, notifier.start, HapticFeedback.mediumImpact),
-              sensorName: s.snapshot.sensorName,
-            ),
-          if (s.errorCode != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            InlineError(
-              recorderErrorText(context.l10n, s.errorCode),
-              key: const Key('record-error'),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            context.l10n.onThisPhone,
-            style: Theme.of(context).textTheme.titleLarge,
+    return PageScaffold(
+      title: context.l10n.navRecord,
+      children: [
+        if (s.live)
+          _LiveCard(
+            state: s.snapshot,
+            sensorsSupported: recorder?.sensorsSupported ?? false,
+            busy: s.command.running,
+            onPause: () =>
+                _haptic(ref, notifier.pause, HapticFeedback.lightImpact),
+            onResume: () =>
+                _haptic(ref, notifier.resume, HapticFeedback.mediumImpact),
+            onStop: () =>
+                _haptic(ref, notifier.stop, HapticFeedback.heavyImpact),
+          )
+        else
+          _StartCard(
+            busy: s.command.running,
+            loading: s.loading,
+            autoPause: s.autoPause,
+            rideType: s.rideType,
+            ebike: s.ebike,
+            onStart: () =>
+                _haptic(ref, notifier.start, HapticFeedback.mediumImpact),
+            sensorName: s.snapshot.sensorName,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          if (s.recordedRides.isEmpty && !s.loading)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text(
-                context.l10n.noLocalRides,
-                key: const Key('no-local-rides'),
-              ),
-            )
-          else
-            for (final ride in s.recordedRides)
-              _LocalRideCard(
-                ride: ride,
-                upload: s.uploads[ride.id],
-                busy: s.command.running,
-                onFinalize: () => notifier.finalizeRide(ride.id),
-                onDelete: () => notifier.deleteRide(ride.id),
-                onUpload: uploadsEnabled
-                    ? () => notifier.uploadRide(ride.id)
-                    : null,
-                onRetryUpload: uploadsEnabled
-                    ? () => notifier.retryUpload(ride.id)
-                    : null,
-              ),
-        ],
-      ),
+        if (s.errorCode != null)
+          InlineError(
+            recorderErrorText(context.l10n, s.errorCode),
+            key: const Key('record-error'),
+          ),
+        Text(
+          context.l10n.onThisPhone,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        if (s.recordedRides.isEmpty && !s.loading)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              context.l10n.noLocalRides,
+              key: const Key('no-local-rides'),
+            ),
+          )
+        else
+          for (final ride in s.recordedRides)
+            _LocalRideCard(
+              ride: ride,
+              upload: s.uploads[ride.id],
+              busy: s.command.running,
+              onFinalize: () => notifier.finalizeRide(ride.id),
+              onDelete: () => notifier.deleteRide(ride.id),
+              onUpload: uploadsEnabled
+                  ? () => notifier.uploadRide(ride.id)
+                  : null,
+              onRetryUpload: uploadsEnabled
+                  ? () => notifier.retryUpload(ride.id)
+                  : null,
+            ),
+      ],
     );
   }
 }

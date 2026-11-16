@@ -61,8 +61,8 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
             _ => failureText(l10n, failure),
           };
     return PageScaffold(
-      // The title bar already names this screen; the page adds the purpose line under it.
       eyebrow: l10n.eyebrowClub,
+      title: l10n.joinTitle,
       subtitle: l10n.joinIntro,
       maxWidth: AppLayout.contentNarrow,
       children: [

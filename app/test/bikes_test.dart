@@ -18,8 +18,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Bikes'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/bikes');
   }
 
   /// Opens the bike's actions menu and picks one of its rare jobs.
@@ -39,35 +38,33 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-    'BikeDetailScreen_ShouldPutTheBikeJobsInTheTitleBar_WhenTheScreenIsAPhone',
-    (tester) async {
-      server.bikes.add({
-        'id': 'bike-1',
-        'name': 'Climber',
-        'kind': 'road',
-        'wheelCircumferenceMm': 2105,
-        'initialDistanceM': 0.0,
-        'isDefault': true,
-      });
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await startApp(tester, server.session(useCookies: true));
-      await tester.tap(find.text('Bikes'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('bike-bike-1')));
-      await tester.pumpAndSettle();
+  testWidgets('BikeDetailScreen_ShouldOfferTheBikeJobs_WhenTheScreenIsAPhone', (
+    tester,
+  ) async {
+    server.bikes.add({
+      'id': 'bike-1',
+      'name': 'Climber',
+      'kind': 'road',
+      'wheelCircumferenceMm': 2105,
+      'initialDistanceM': 0.0,
+      'isDefault': true,
+    });
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/bikes');
+    await tester.tap(find.byKey(const Key('bike-bike-1')));
+    await tester.pumpAndSettle();
 
-      // No page header on a phone, so the bike's jobs are title-bar controls.
-      expect(find.byKey(const Key('edit-bike')), findsOneWidget);
-      expect(find.byKey(const Key('add-part')), findsOneWidget);
+    // The page header shows on a phone too, so the bike's jobs are under it.
+    expect(find.byKey(const Key('edit-bike')), findsOneWidget);
+    expect(find.byKey(const Key('add-part')), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('bike-actions')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('delete-bike')), findsOneWidget);
-    },
-  );
+    await tester.tap(find.byKey(const Key('bike-actions')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('delete-bike')), findsOneWidget);
+  });
 
   testWidgets('BikesScreen_ShouldExplainBikes_WhenThereAreNone', (
     tester,

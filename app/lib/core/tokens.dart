@@ -115,3 +115,33 @@ abstract final class AppLoading {
   /// The size of the icon before an error line.
   static const double errorIcon = 18;
 }
+
+/// The floating navigation pill the shell draws over a phone's content.
+abstract final class AppNav {
+  /// The pill's height.
+  static const double pillHeight = 64;
+
+  /// The space between the pill and the screen edges, and between it and the bottom safe area.
+  static const double pillMargin = AppSpacing.md;
+
+  /// The pill never grows wider than this, so it stays a pill on a large phone.
+  static const double pillMaxWidth = 420;
+
+  /// The room a page leaves under its content, over the bottom safe area, so the last item clears the pill.
+  static const double pillClearance = pillHeight + pillMargin;
+
+  /// The blur behind the translucent pill.
+  static const double pillBlur = 20;
+
+  /// How opaque the pill's surface is over the blur.
+  static const double pillOpacity = 0.82;
+
+  /// How far the pill slides down, in its own heights, when it hides: past the margin and safe area.
+  static const double pillHiddenOffset = 2;
+
+  /// The most the pill's labels grow with the system text size.
+  static const double maxLabelScale = 1.2;
+
+  /// How far a scroll must move, in logical pixels, before the pill hides or returns.
+  static const double scrollThreshold = 4;
+}

@@ -28,8 +28,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Bikes'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/bikes');
     await tester.tap(find.byKey(const Key('bike-bike-1')));
     await tester.pumpAndSettle();
   }
@@ -343,8 +342,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await startApp(tester, server.session(useCookies: true));
-      await tester.tap(find.text('Bikes'));
-      await tester.pumpAndSettle();
+      await goTo(tester, '/bikes');
       await tester.tap(find.byKey(const Key('bike-bike-1')));
       await tester.pumpAndSettle();
 
@@ -370,8 +368,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Bikes'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/bikes');
 
     expect(find.byKey(const Key('service-due')), findsOneWidget);
     expect(find.byKey(const Key('service-soon')), findsOneWidget);

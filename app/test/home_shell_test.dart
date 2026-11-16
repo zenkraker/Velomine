@@ -5,7 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
+import 'package:velomine/core/tokens.dart';
 import 'package:velomine/core/theme_choice.dart';
+import 'package:velomine/core/widgets/floating_nav_pill.dart';
+import 'package:velomine/core/widgets/page_scaffold.dart';
 import 'package:velomine/features/recording/recorder.dart';
 import 'package:velomine/features/recording/recording_providers.dart';
 import 'package:velomine/home_shell.dart';
@@ -15,7 +18,7 @@ import 'fake_server.dart';
 
 import 'package:velomine/core/l10n.dart';
 
-/// Answers [state] and [events]; everything else is unused by the title bar.
+/// Answers [state] and [events]; everything else is unused by the shell.
 class _StateRecorder extends Fake implements Recorder {
   _StateRecorder(this.snapshot);
 
@@ -32,6 +35,24 @@ class _StateRecorder extends Fake implements Recorder {
 
   @override
   Stream<RecorderSnapshot> get events => _events.stream;
+}
+
+String _titleOf(String location) =>
+    location.isEmpty ? '' : location.substring(1).split('/').first;
+
+/// A page that names itself like every routed screen, tall enough to scroll.
+class _Page extends StatelessWidget {
+  const _Page({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => PageScaffold(
+    title: title,
+    children: [
+      for (var i = 0; i < 40; i++) SizedBox(height: 80, child: Text('row $i')),
+    ],
+  );
 }
 
 void main() {
@@ -55,12 +76,21 @@ void main() {
     bool admin = false,
     Size size = const Size(400, 900),
     double textScale = 1,
+    Widget? page,
+    bool reduceMotion = false,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    if (reduceMotion) {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+    }
 
     final server = FakeServer();
     server.signInBrowser(
@@ -82,77 +112,154 @@ void main() {
           locale: const Locale('en'),
           localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: HomeShell(location: location, child: const SizedBox.shrink()),
+          home: HomeShell(
+            location: location,
+            child: page ?? _Page(title: _titleOf(location)),
+          ),
         ),
       ),
     );
     await tester.pump();
   }
 
-  testWidgets('HomeShell_ShouldMarkTheRecordTab_WhenRecordingIsLive', (
-    tester,
-  ) async {
-    await pumpShell(tester);
-
-    expect(find.text('Record'), findsOneWidget);
-    expect(find.byIcon(Icons.fiber_manual_record), findsOneWidget);
-
-    recorder.emit(
-      const RecorderSnapshot(
-        state: 'recording',
-        elapsedS: 5,
-        movingS: 5,
-        distanceM: 20,
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byIcon(Icons.fiber_smart_record), findsOneWidget);
-    expect(find.text('Record'), findsOneWidget);
-
-    recorder.emit(
-      const RecorderSnapshot(
-        state: 'paused',
-        elapsedS: 10,
-        movingS: 8,
-        distanceM: 30,
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byIcon(Icons.pause_circle_outline), findsOneWidget);
-  });
-
-  testWidgets('HomeShell_ShouldShowFiveTabs_WhenTheMemberIsAnAdmin', (
+  testWidgets('HomeShell_ShouldShowThreeTabs_WhenTheWindowIsAPhone', (
     tester,
   ) async {
     await pumpShell(tester, admin: true);
 
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
-    expect(find.text('Admin'), findsNothing);
-    expect(find.text('Bikes'), findsOneWidget);
-  });
-
-  testWidgets('HomeShell_ShouldShowARail_WhenTheWindowIsSixHundredWide', (
-    tester,
-  ) async {
-    await pumpShell(tester, size: const Size(800, 1000));
-
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byType(FloatingNavPill), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
-    expect(find.text('Bikes'), findsOneWidget);
+    expect(find.byKey(const Key('tab-rides')), findsOneWidget);
+    expect(find.byKey(const Key('tab-progress')), findsOneWidget);
+    expect(find.byKey(const Key('tab-club')), findsOneWidget);
+    expect(find.byKey(const Key('tab-record')), findsNothing);
+    expect(find.byKey(const Key('tab-bikes')), findsNothing);
+    expect(find.text('Admin'), findsNothing);
   });
 
-  testWidgets('HomeShell_ShouldNameTheScreen_WhenTheLocationChanges', (
+  testWidgets(
+    'HomeShell_ShouldNotOfferRecordOrBikesAsTabs_WhenTheWindowIsAPhone',
+    (tester) async {
+      await pumpShell(tester);
+
+      expect(find.text('Record'), findsNothing);
+      expect(find.text('Bikes'), findsNothing);
+      expect(find.byIcon(Icons.fiber_manual_record), findsNothing);
+    },
+  );
+
+  testWidgets('HomeShell_ShouldHighlightTheSelectedTab_WhenOnATab', (
     tester,
   ) async {
     await pumpShell(tester, location: '/progress');
 
+    expect(find.byIcon(Icons.insights), findsOneWidget);
+    expect(find.byIcon(Icons.insights_outlined), findsNothing);
+    expect(find.byIcon(Icons.directions_bike_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.directions_bike), findsNothing);
+    expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+  });
+
+  testWidgets('HomeShell_ShouldHighlightNoTab_WhenTheRouteIsPushed', (
+    tester,
+  ) async {
+    await pumpShell(tester, location: '/bikes');
+
+    expect(find.byIcon(Icons.directions_bike_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.insights_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.insights), findsNothing);
+    expect(find.byIcon(Icons.groups), findsNothing);
+  });
+
+  testWidgets(
+    'HomeShell_ShouldShowTheSameThreeTabsInARail_WhenTheWindowIsSixHundredWide',
+    (tester) async {
+      await pumpShell(tester, size: const Size(800, 1000));
+
+      expect(find.byType(NavigationRail), findsOneWidget);
+      expect(find.byType(FloatingNavPill), findsNothing);
+      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+      expect(rail.destinations, hasLength(3));
+      expect(find.text('Bikes'), findsNothing);
+      expect(find.text('Record'), findsNothing);
+    },
+  );
+
+  testWidgets('HomeShell_ShouldHideThePill_WhenThePageScrollsDown', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    final pill = find.byKey(const Key('tab-rides'));
+    final top = tester.getTopLeft(pill).dy;
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(pill).dy, greaterThan(top + 40));
     expect(
-      find.descendant(of: find.byType(AppBar), matching: find.text('Progress')),
-      findsOneWidget,
+      tester
+          .widget<IgnorePointer>(
+            find
+                .descendant(
+                  of: find.byType(FloatingNavPill),
+                  matching: find.byType(IgnorePointer),
+                )
+                .first,
+          )
+          .ignoring,
+      isTrue,
     );
+  });
+
+  testWidgets('HomeShell_ShouldShowThePillAgain_WhenThePageScrollsUp', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    final pill = find.byKey(const Key('tab-rides'));
+    final top = tester.getTopLeft(pill).dy;
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 150));
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(pill).dy, top);
+  });
+
+  testWidgets('HomeShell_ShouldKeepThePillInView_WhenMotionIsReduced', (
+    tester,
+  ) async {
+    await pumpShell(tester, reduceMotion: true);
+    final pill = find.byKey(const Key('tab-rides'));
+    final top = tester.getTopLeft(pill).dy;
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(pill).dy, top);
+  });
+
+  testWidgets('HomeShell_ShouldLeaveRoomUnderThePage_WhenThePillFloatsOverIt', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -10000));
+    await tester.pumpAndSettle();
+
+    final last = tester.getBottomLeft(find.text('row 39')).dy;
+    final bottom = tester.getBottomLeft(find.byType(PageScaffold)).dy;
+    expect(bottom - last, greaterThanOrEqualTo(AppNav.pillClearance));
+  });
+
+  testWidgets('HomeShell_ShouldNameTheScreen_WhenThePageHasATitle', (
+    tester,
+  ) async {
+    await pumpShell(tester, location: '/progress');
+
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.text('progress'), findsOneWidget);
   });
 
   testWidgets('HomeShell_ShouldOfferTheWayBack_WhenTheRouteIsPushed', (
@@ -160,7 +267,13 @@ void main() {
   ) async {
     await pumpShell(tester, location: '/profile');
 
-    expect(find.byType(BackButton), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(PageScaffold),
+        matching: find.byType(BackButton),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('HomeShell_ShouldOfferNoBackArrow_WhenTheRouteIsATab', (
@@ -189,7 +302,7 @@ void main() {
     (tester) async {
       await pumpShell(tester, location: '/rides');
 
-      final bar = find.byType(AppBar);
+      final bar = find.byType(PageScaffold);
       expect(
         find.descendant(
           of: bar,

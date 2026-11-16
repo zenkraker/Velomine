@@ -6,38 +6,57 @@ import '../tokens.dart';
 import 'bottom_action_bar.dart';
 import 'eyebrow.dart';
 
-/// Says whether [PageScaffold] draws its header below the tablet width.
+/// What the shell gives every page under it: whether to draw the header on a phone, the buttons that
+/// end the header's top row, and the way back for a pushed screen.
 ///
-/// Until the shell stops drawing its own phone title bar, a phone page shows no header of its own. The
-/// shell will wrap its pages in `PageHeaderScope(showOnPhone: true)` once it does. Without a scope the
-/// answer is false.
+/// A page merges these with its own: its own `onBack` wins, and its own `trailing` comes before the
+/// shell's. Without a scope a phone page draws no header and the shell supplies nothing.
 class PageHeaderScope extends InheritedWidget {
   const PageHeaderScope({
     super.key,
     required this.showOnPhone,
+    this.trailing = const [],
+    this.onBack,
     required super.child,
   });
 
   final bool showOnPhone;
 
+  /// Notifications and the account (and, until the pages carry their own, a phone's page buttons).
+  final List<Widget> trailing;
+
+  /// The way back, set while the location is a pushed screen rather than a tab.
+  final VoidCallback? onBack;
+
+  static PageHeaderScope? _of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<PageHeaderScope>();
+
   /// Whether a page under [context] draws its header on a phone.
   static bool showOnPhoneOf(BuildContext context) =>
-      context
-          .dependOnInheritedWidgetOfExactType<PageHeaderScope>()
-          ?.showOnPhone ??
-      false;
+      _of(context)?.showOnPhone ?? false;
+
+  /// The shell's buttons for the end of the header's top row.
+  static List<Widget> trailingOf(BuildContext context) =>
+      _of(context)?.trailing ?? const [];
+
+  /// The shell's way back, or null on a tab.
+  static VoidCallback? onBackOf(BuildContext context) => _of(context)?.onBack;
 
   @override
   bool updateShouldNotify(PageHeaderScope oldWidget) =>
-      showOnPhone != oldWidget.showOnPhone;
+      showOnPhone != oldWidget.showOnPhone ||
+      trailing != oldWidget.trailing ||
+      onBack != oldWidget.onBack;
 }
 
 /// The body of a page: a large title that collapses into a small bar as the page scrolls, then its
 /// content in a readable measure.
 ///
 /// The header is drawn from the tablet width up (600 dp), and at any width under a
-/// [PageHeaderScope] with `showOnPhone` true. Otherwise (a phone, today) the shell's title bar names the
-/// screen and only the content is laid out.
+/// [PageHeaderScope] with `showOnPhone` true (the shell sets it). Otherwise only the content is laid out.
+///
+/// The content ends above the bottom safe area, and above the floating navigation pill when the shell
+/// shows one: the shell widens the media padding by the pill's room, and this reads it.
 class PageScaffold extends StatelessWidget {
   const PageScaffold({
     super.key,
@@ -106,13 +125,18 @@ class PageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final wide = width >= AppBreakpoint.compactWidth;
+    final onBack = this.onBack ?? PageHeaderScope.onBackOf(context);
+    final trailing = [
+      ...?this.trailing,
+      ...PageHeaderScope.trailingOf(context),
+    ];
     final hasHeader =
         (wide || PageHeaderScope.showOnPhoneOf(context)) &&
         (title != null ||
             primaryAction != null ||
             menu != null ||
             onBack != null ||
-            (trailing?.isNotEmpty ?? false));
+            trailing.isNotEmpty);
     final gutter = AppLayout.gutterFor(width);
     final legacyActions = hasHeader || wide ? actions : null;
     final scroll = CustomScrollView(
@@ -142,7 +166,9 @@ class PageScaffold extends StatelessWidget {
             gutter,
             hasHeader ? AppSpacing.md : AppSpacing.sm,
             gutter,
-            bottomPadding,
+            // A pinned bottom action already sits above the safe area and the pill.
+            bottomPadding +
+                (bottomAction == null ? bottomClearanceOf(context) : 0),
           ),
           sliver: SliverToBoxAdapter(
             child: Center(

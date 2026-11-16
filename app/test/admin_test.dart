@@ -249,6 +249,5 @@ void main() {
 
     await openAccountMenu(tester);
     expect(find.byKey(const Key('account-admin')), findsNothing);
-    expect(find.text('Bikes'), findsOneWidget);
   });
 }

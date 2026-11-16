@@ -1,98 +1,52 @@
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/back_guard.dart';
 import 'core/l10n.dart';
+import 'core/motion.dart';
 import 'core/page_actions.dart';
 import 'core/providers.dart';
-import 'core/session.dart';
 import 'core/theme_choice.dart';
 import 'core/tokens.dart';
+import 'core/widgets/floating_nav_pill.dart';
+import 'core/widgets/page_scaffold.dart';
 import 'features/club/club_view_model.dart';
 import 'features/notifications/notifications_view_model.dart';
-import 'features/recording/recording_providers.dart';
 
-/// One tab of the shell: where it goes, its icon and its label.
-typedef _Tab = ({String path, Widget icon, String label});
+/// One tab of the shell: where it goes, its outlined and filled icons and its label.
+typedef _Tab = ({String path, Widget icon, Widget selectedIcon, String label});
 
-/// The frame around the signed-in screens. On a phone: a title bar and at most five tabs in a bottom
-/// bar. From 600 dp: the same tabs in a rail. From 1200 dp: a sidebar that holds the brand, the tabs
-/// and the account, and the page names itself — the width a desktop window has is for the page, not
-/// for a stretched phone column.
+/// The frame around the signed-in screens. On a phone: three tabs in a floating pill over the page. From
+/// 600 dp: the same tabs in a rail. From 1200 dp: a sidebar that holds the brand, the tabs and the
+/// account. Every page names itself with its own header, and the shell hands that header the
+/// notifications, the account and the way back through a [PageHeaderScope].
 class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.location, required this.child});
 
   final String location;
   final Widget child;
 
-  List<_Tab> _tabs(BuildContext context, String recording) => [
+  List<_Tab> _tabs(BuildContext context) => [
     (
       path: '/rides',
-      icon: const Icon(Icons.directions_bike),
+      icon: const Icon(Icons.directions_bike_outlined),
+      selectedIcon: const Icon(Icons.directions_bike),
       label: context.l10n.navRides,
     ),
-    if (!kIsWeb)
-      (
-        path: '/record',
-        icon: switch (recording) {
-          'recording' => Badge(
-            child: Icon(
-              Icons.fiber_smart_record,
-              color: Theme.of(context).colorScheme.error,
-            ),
-          ),
-          'paused' => const Icon(Icons.pause_circle_outline),
-          _ => const Icon(Icons.fiber_manual_record),
-        },
-        label: context.l10n.navRecord,
-      ),
     (
       path: '/progress',
-      icon: const Icon(Icons.insights),
+      icon: const Icon(Icons.insights_outlined),
+      selectedIcon: const Icon(Icons.insights),
       label: context.l10n.navProgress,
     ),
     (
       path: '/club',
       icon: const Icon(Icons.groups_outlined),
+      selectedIcon: const Icon(Icons.groups),
       label: context.l10n.navClub,
     ),
-    (
-      path: '/bikes',
-      icon: const Icon(Icons.pedal_bike),
-      label: context.l10n.navBikes,
-    ),
   ];
-
-  /// The name of the screen the person is on; the brand only where nothing else fits. A specific
-  /// screen is named before the tab it was opened from, so a ride does not read "Rides".
-  String _title(BuildContext context) {
-    final l10n = context.l10n;
-    final path = location;
-    if (path.startsWith('/rides/import')) return l10n.importTitle;
-    if (_rideId.hasMatch(path)) return l10n.rideDetailTitle;
-    if (path.startsWith('/rides')) return l10n.navRides;
-    if (path.startsWith('/record')) return l10n.navRecord;
-    if (path.startsWith('/progress')) return l10n.navProgress;
-    if (path.startsWith('/bikes')) return l10n.navBikes;
-    if (path.startsWith('/club/athletes')) return l10n.athletesTitle;
-    if (path.startsWith('/club/rides')) return l10n.clubRidesTitle;
-    if (path.startsWith('/club/routes')) return l10n.clubRoutesTitle;
-    if (path.startsWith('/club/calendar')) return l10n.calendarTitle;
-    if (path.startsWith('/club')) return l10n.navClub;
-    if (path.startsWith('/join')) return l10n.joinTitle;
-    if (path.startsWith('/profile/two-factor')) return l10n.twoFactorNavTitle;
-    if (path.startsWith('/profile/sessions')) return l10n.sessionsNavTitle;
-    if (path.startsWith('/profile/supporter')) return l10n.supporterSignInTitle;
-    if (path.startsWith('/profile')) return l10n.profileTitle;
-    if (path.startsWith('/privacy')) return l10n.privacyTitle;
-    if (path.startsWith('/notifications')) return l10n.notifications;
-    if (path.startsWith('/admin')) return l10n.navAdmin;
-    return 'Velomine';
-  }
-
-  static final _rideId = RegExp(r'^/rides/[^/]+$');
 
   /// A route that is not one of the tabs was pushed, so it offers the way back.
   bool _pushed(List<_Tab> tabs) => !tabs.any((tab) => tab.path == location);
@@ -109,7 +63,6 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(sessionViewModelProvider);
-    final recording = ref.watch(recorderSnapshotViewModelProvider).state;
     final unread = ref.watch(
       notificationsViewModelProvider.select((state) => state.unread),
     );
@@ -123,29 +76,44 @@ class HomeShell extends ConsumerWidget {
         }
       });
     }
-    // The tab's own title-bar buttons, empty on a wide window where the page has its header.
+    // Until the pages carry their own buttons, a phone tab's filters and import come through here.
     final pageActions = ref.watch(pageActionsProvider);
-    final tabs = _tabs(context, recording);
-    final selected = tabs.indexWhere((tab) => location.startsWith(tab.path));
+    final tabs = _tabs(context);
     final pushed = _pushed(tabs);
+    // A pushed screen lights no tab.
+    final selected = pushed ? -1 : tabs.indexWhere((t) => t.path == location);
     final width = MediaQuery.sizeOf(context).width;
     final expanded = width >= AppBreakpoint.expandedWidth;
     final wide = width >= AppBreakpoint.compactWidth;
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    // The sidebar carries the notifications and the account itself.
+    final page = PageHeaderScope(
+      showOnPhone: true,
+      onBack: pushed ? () => _back(context) : null,
+      trailing: expanded
+          ? const []
+          : [
+              ...pageActions,
+              if (!pushed)
+                NotificationsButton(
+                  unread: unread,
+                  selected: location == '/notifications',
+                ),
+              _AccountMenu(
+                name: state.me?.displayName,
+                isAdmin: state.isAdmin,
+                signedOut: ref.read(sessionProvider).signOut,
+                // Below the rail's 600 dp the page header is the only place to stand.
+                avatar: !wide,
+              ),
+            ],
+      child: child,
+    );
 
     return BackGuard(
       location: location,
       child: Scaffold(
-        // A blank page on a wide window, where the page brings its own header.
-        appBar: expanded
-            ? null
-            : _appBar(
-                context,
-                state,
-                unread,
-                pushed,
-                ref.read(sessionProvider).signOut,
-                pageActions,
-              ),
         body: switch ((expanded, wide)) {
           (true, _) => Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,10 +126,8 @@ class HomeShell extends ConsumerWidget {
                 name: state.me?.displayName,
                 isAdmin: state.isAdmin,
                 signedOut: ref.read(sessionProvider).signOut,
-                // A pushed screen has no title bar here, so the sidebar carries its way back.
-                onBack: pushed ? () => _back(context) : null,
               ),
-              Expanded(child: child),
+              Expanded(child: page),
             ],
           ),
           (false, true) => Row(
@@ -174,73 +140,120 @@ class HomeShell extends ConsumerWidget {
                   for (final tab in tabs)
                     NavigationRailDestination(
                       icon: tab.icon,
+                      selectedIcon: tab.selectedIcon,
                       label: Text(tab.label),
                     ),
                 ],
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: child),
+              Expanded(child: page),
             ],
           ),
-          (false, false) => child,
+          (false, false) => _PhoneFrame(
+            location: location,
+            keyboard: keyboard,
+            tabs: tabs,
+            selected: selected < 0 ? null : selected,
+            child: page,
+          ),
         },
-        bottomNavigationBar: wide
-            ? null
-            : NavigationBar(
-                // A screen that is not a tab lights none of them: the bar needs an index, so it keeps
-                // the first one with its highlight hidden.
-                selectedIndex: selected < 0 ? 0 : selected,
-                indicatorColor: selected < 0 ? Colors.transparent : null,
-                onDestinationSelected: (i) => context.go(tabs[i].path),
-                destinations: [
-                  for (final tab in tabs)
-                    NavigationDestination(icon: tab.icon, label: tab.label),
-                ],
-              ),
       ),
     );
   }
+}
 
-  /// The phone's title bar: it names the screen, offers the way back and the account, and keeps its
-  /// surface so a list does not read as sliding under it.
-  AppBar _appBar(
-    BuildContext context,
-    SessionState state,
-    int unread,
-    bool pushed,
-    VoidCallback signedOut,
-    List<Widget> pageActions,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppBar(
-      // The shell decides: an automatic back arrow would appear on a tab after a push.
-      automaticallyImplyLeading: false,
-      title: Text(_title(context)),
-      leading: pushed ? BackButton(onPressed: () => _back(context)) : null,
-      // A pushed screen keeps its back arrow and the account; the notifications stay on the tabs'
-      // bars. A phone has no room for a third icon beside the filters, so the theme moves into the
-      // account menu; a rail keeps its own theme button.
-      actions: [
-        // The page's own controls first, then the ones every tab has.
-        ...pageActions,
-        if (!pushed)
-          NotificationsButton(
-            unread: unread,
-            selected: location == '/notifications',
+/// A phone's page with the floating pill over it. The page scrolls under the pill; the pill hides while
+/// the page scrolls down and returns when it scrolls up, and never hides under reduced motion.
+class _PhoneFrame extends StatefulWidget {
+  const _PhoneFrame({
+    required this.location,
+    required this.keyboard,
+    required this.tabs,
+    required this.selected,
+    required this.child,
+  });
+
+  final String location;
+  final bool keyboard;
+  final List<_Tab> tabs;
+  final int? selected;
+  final Widget child;
+
+  @override
+  State<_PhoneFrame> createState() => _PhoneFrameState();
+}
+
+class _PhoneFrameState extends State<_PhoneFrame> {
+  bool _hidden = false;
+
+  @override
+  void didUpdateWidget(_PhoneFrame oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A new screen starts with the pill in view.
+    if (oldWidget.location != widget.location) _hidden = false;
+  }
+
+  bool _onScroll(ScrollNotification n) {
+    // Only the page's own list: a carousel or a map inside it must not move the pill.
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    if (n is ScrollUpdateNotification && n.dragDetails != null) {
+      final delta = n.scrollDelta ?? 0;
+      final atTop = n.metrics.pixels <= n.metrics.minScrollExtent;
+      if (atTop || delta < -AppNav.scrollThreshold) {
+        _set(false);
+      } else if (delta > AppNav.scrollThreshold) {
+        _set(true);
+      }
+    }
+    return false;
+  }
+
+  void _set(bool hidden) {
+    if (_hidden != hidden) setState(() => _hidden = hidden);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    // The keyboard replaces the pill; the page then resizes and needs no room for it.
+    final showPill = !widget.keyboard;
+    final room = showPill ? AppNav.pillClearance : 0.0;
+    final hidden = _hidden && !reduceMotion(context);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: MediaQuery(
+            // Pages read the bottom padding to clear what floats over them.
+            data: media.copyWith(
+              padding: media.padding.copyWith(
+                bottom: media.padding.bottom + room,
+              ),
+              viewPadding: media.viewPadding.copyWith(
+                bottom: media.viewPadding.bottom + room,
+              ),
+            ),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: _onScroll,
+              child: widget.child,
+            ),
           ),
-        _AccountMenu(
-          name: state.me?.displayName,
-          isAdmin: state.isAdmin,
-          signedOut: signedOut,
-          // Below the rail's 600 dp the title bar is the only place to stand.
-          avatar: MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth,
         ),
+        if (showPill)
+          FloatingNavPill(
+            visible: !hidden,
+            selected: widget.selected,
+            onSelected: (i) => context.go(widget.tabs[i].path),
+            items: [
+              for (final tab in widget.tabs)
+                (
+                  key: Key('tab-${tab.path.substring(1)}'),
+                  icon: tab.icon,
+                  selectedIcon: tab.selectedIcon,
+                  label: tab.label,
+                ),
+            ],
+          ),
       ],
-      backgroundColor: scheme.surface,
-      scrolledUnderElevation: 0,
-      shape: Border(
-        bottom: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-      ),
     );
   }
 }
@@ -283,7 +296,6 @@ class _Sidebar extends ConsumerWidget {
     required this.name,
     required this.isAdmin,
     required this.signedOut,
-    this.onBack,
   });
 
   final List<_Tab> tabs;
@@ -294,9 +306,6 @@ class _Sidebar extends ConsumerWidget {
   final bool isAdmin;
   final VoidCallback signedOut;
 
-  /// The way back to the tab, on a screen that was pushed over one.
-  final VoidCallback? onBack;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -306,10 +315,10 @@ class _Sidebar extends ConsumerWidget {
     final club = ref.watch(clubViewModelProvider).club;
     final personal = [
       for (final (i, tab) in tabs.indexed)
-        // Recording is a phone job; the club has its own group below.
-        if (tab.path != '/club' && tab.path != '/record')
+        // The club has its own group below.
+        if (tab.path != '/club')
           _SidebarDestination(
-            icon: tab.icon,
+            icon: i == selected ? tab.selectedIcon : tab.icon,
             label: tab.label,
             selected: i == selected,
             onTap: () => context.go(tab.path),
@@ -338,7 +347,6 @@ class _Sidebar extends ConsumerWidget {
             child: Row(
               spacing: AppSpacing.sm,
               children: [
-                if (onBack case final back?) BackButton(onPressed: back),
                 Expanded(
                   child: Text(
                     'Velomine',

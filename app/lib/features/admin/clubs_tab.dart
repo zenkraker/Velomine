@@ -71,7 +71,9 @@ class ClubsTab extends ConsumerWidget {
     );
 
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
       children: [
         Center(
           child: ConstrainedBox(

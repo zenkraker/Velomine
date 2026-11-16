@@ -5,8 +5,6 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import '../../core/page_actions.dart';
-import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -63,12 +61,6 @@ class NotificationsScreen extends ConsumerWidget {
             child: Text(l10n.markAllRead),
           )
         : null;
-    // The action sits in the header with the title; a phone has no header, so it goes in the title
-    // bar — and leaves it once everything is read.
-    if (MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth) {
-      publishPhoneActions(context, ref, [?markAll]);
-    }
-
     return PageScaffold(
       eyebrow: l10n.notificationsEyebrow,
       title: l10n.notifications,

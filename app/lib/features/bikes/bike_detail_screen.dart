@@ -18,7 +18,6 @@ import 'bikes_state.dart';
 import 'bikes_view_models.dart';
 import 'component_names.dart';
 import 'service_section.dart';
-import '../../core/page_actions.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -211,27 +210,6 @@ class BikeDetailScreen extends ConsumerWidget {
     );
 
     final detail = s.detail;
-    final compact =
-        MediaQuery.sizeOf(context).width < AppBreakpoint.compactWidth;
-    // A phone has no page header: the bike's jobs go in the title bar, the daily ones as icons and
-    // the rare ones behind the same menu.
-    if (compact && detail != null) {
-      publishPhoneActions(context, ref, [
-        IconButton(
-          key: const Key('edit-bike'),
-          tooltip: l10n.edit,
-          onPressed: () => _edit(context, ref),
-          icon: const Icon(Icons.edit_outlined),
-        ),
-        IconButton(
-          key: const Key('add-part'),
-          tooltip: l10n.addPartAction,
-          onPressed: () => _addPart(context, ref),
-          icon: const Icon(Icons.add),
-        ),
-        _bikeMenu(context, ref, detail.bike),
-      ]);
-    }
     return PageScaffold(
       eyebrow: l10n.eyebrowBikes,
       title: detail?.bike.name ?? l10n.navBikes,

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/home_shell.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:velomine/app.dart';
@@ -2558,7 +2559,14 @@ ProviderContainer containerOf(WidgetTester tester) => ProviderScope.containerOf(
   listen: false,
 );
 
-/// Opens the account menu in the title bar.
+/// Goes to [path] in the running app, as a link or a pushed screen would: Bikes and Record are no
+/// longer tabs, so a test reaches them by their address.
+Future<void> goTo(WidgetTester tester, String path) async {
+  GoRouter.of(tester.element(find.byType(HomeShell))).go(path);
+  await tester.pumpAndSettle();
+}
+
+/// Opens the account menu in the page header.
 Future<void> openAccountMenu(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('account-menu')));
   await tester.pumpAndSettle();

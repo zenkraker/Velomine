@@ -22,7 +22,7 @@ void main() {
 
   Future<void> open(
     WidgetTester tester, {
-    String tab = '',
+    String path = '',
     double textScale = 2,
   }) async {
     tester.view.physicalSize = const Size(320, 640);
@@ -31,22 +31,19 @@ void main() {
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await startApp(tester, server.session(useCookies: true));
-    if (tab.isNotEmpty) {
-      await tester.tap(find.text(tab));
-      await tester.pumpAndSettle();
-    }
+    if (path.isNotEmpty) await goTo(tester, path);
   }
 
-  for (final (tab, name) in [
+  for (final (path, name) in [
     ('', 'rides'),
-    ('Record', 'record'),
-    ('Progress', 'progress'),
-    ('Bikes', 'bikes'),
+    ('/record', 'record'),
+    ('/progress', 'progress'),
+    ('/bikes', 'bikes'),
   ]) {
     testWidgets('${name}_ShouldLayOutWithoutClipping_WhenTextIsTwiceTheSize', (
       tester,
     ) async {
-      await open(tester, tab: tab);
+      await open(tester, path: path);
 
       expect(tester.takeException(), isNull);
     });
@@ -55,7 +52,7 @@ void main() {
   testWidgets('bikeForm_ShouldLayOutWithoutClipping_WhenTextIsTwiceTheSize', (
     tester,
   ) async {
-    await open(tester, tab: 'Bikes');
+    await open(tester, path: '/bikes');
     await tester.tap(find.byKey(const Key('add-bike')));
     await tester.pumpAndSettle();
 
