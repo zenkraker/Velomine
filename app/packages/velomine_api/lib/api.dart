@@ -36,6 +36,7 @@ part 'api/bikes_api.dart';
 part 'api/calendar_api.dart';
 part 'api/club_api.dart';
 part 'api/clubs_api.dart';
+part 'api/early_access_api.dart';
 part 'api/feedback_api.dart';
 part 'api/notifications_api.dart';
 part 'api/privacy_api.dart';

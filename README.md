@@ -94,7 +94,7 @@ Nothing is sent to the Velomine project by default.
 | Error reports, traces and logs | Off | `VELOMINE__TELEMETRY__*` and the standard `OTEL_EXPORTER_OTLP_*` |
 | Email (password reset, notifications) | Off | `VELOMINE__SMTP__*` |
 | Shared parts catalogue: fetch a list, send back new parts | Off; the server keeps its own bundled list | `VELOMINE__CATALOGUE__*` |
-| Anonymous feedback form on the site: answers emailed to this address | Off | `VELOMINE__FEEDBACK__ADDRESS` (needs email) |
+| Anonymous feedback form and early-access list on the site: answers and sign-ups emailed to this address | Off | `VELOMINE__FEEDBACK__ADDRESS` (needs email) |
 | Single sign-on | Off | `VELOMINE__SSO__*` |
 
 ### Settings you can change

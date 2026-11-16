@@ -12,6 +12,7 @@ lib/api/bikes_api.dart
 lib/api/calendar_api.dart
 lib/api/club_api.dart
 lib/api/clubs_api.dart
+lib/api/early_access_api.dart
 lib/api/feedback_api.dart
 lib/api/notifications_api.dart
 lib/api/privacy_api.dart

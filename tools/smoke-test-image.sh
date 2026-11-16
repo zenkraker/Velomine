@@ -98,7 +98,7 @@ expect_status() {
 # The presentation site, served before the app.
 body / | grep -q '<title>Velomine' || fail "/ is not the presentation site"
 ok "/ -> presentation site"
-for page in status pricing demo contact feedback principles privacy terms security; do
+for page in status pricing demo contact feedback early-access principles privacy terms security; do
   body "/$page/" | grep -q 'class="wordmark"' || fail "/$page/ is not a site page"
   location="$(curl -s -o /dev/null -w '%{redirect_url}' "$base/$page")"
   [[ "$(status "/$page")" == 301 && "$location" == *"/$page/" ]] || fail "/$page does not redirect to /$page/"

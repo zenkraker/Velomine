@@ -2333,6 +2333,7 @@ a {
 }
 
 .feedback-form input[type="text"],
+.feedback-form input[type="email"],
 .feedback-form select,
 .feedback-form textarea {
   width: 100%;

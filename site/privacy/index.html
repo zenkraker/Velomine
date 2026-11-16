@@ -87,6 +87,7 @@
             <li><strong>Ride data:</strong> the original FIT, GPX or TCX file, and the distance, time, speed, elevation, heart rate, power, cadence, temperature, laps and map points it contains.</li>
             <li><strong>Wellbeing data:</strong> daily check-in scores, the RPE and notes you add to a ride, and your consent record. This is health data and is treated as such.</li>
             <li><strong>Feedback form messages:</strong> what you write in the anonymous feedback form is emailed to whoever runs the server and is never stored in Velomine’s database. The form has no reply address. Your network address is used only in memory, to limit how many messages one address can send, and is never logged or stored.</li>
+            <li><strong>Early-access sign-ups:</strong> the email address you enter, whether you chose rider or club, and the club name if you give one. The sign-up is emailed to the Velomine mailbox and is never stored in Velomine’s database. It is used only for the one announcement that the cloud has opened, and for a reply about a pilot if you chose club. It is deleted on request, or once the cloud has opened and the announcement is sent. Your network address is used only in memory, to limit sign-ups, and is never logged or stored.</li>
             <li><strong>Operational logs:</strong> request id, club, route template, status, duration and error code. They do not contain ride or health data, names, email addresses, IP addresses, tokens, cookies, request bodies or query strings. Kept for 30 days.</li>
             <li><strong>Sharing view log:</strong> which coach looked at which of your shared data, and when. Visible to you and kept for 3 months.</li>
             <li><strong>Billing data:</strong> a club’s contact, contract and invoices, and for a solo rider their billing details and invoices. A member of a paying club is never billed.</li>
@@ -120,7 +121,8 @@
             <li><strong>Scaleway</strong> (France): one server in the EU that runs the application, the database and the file store.</li>
             <li><strong>OpenStreetMap</strong>: map tiles, by default. The tile server sees your network address and the area of the map you look at. Whoever runs a server can set another tile server; the map cannot be turned off.</li>
             <li><strong>Sentry</strong> (EU region, Germany): error reports, request traces and the operational logs described above, none with member data.</li>
-            <li><strong>Scaleway Transactional Email</strong> (France): sends the feedback form’s messages to whoever runs the server.</li>
+            <li><strong>Scaleway Transactional Email</strong> (France): sends the feedback and early-access forms’ messages to whoever runs the server.</li>
+            <li><strong>Proton AG</strong> (Switzerland): hosts the hello@velomine.eu mailbox, which receives the feedback and early-access messages and the emails people send to Velomine.</li>
             <li>Payment: none. No payments are collected yet.</li>
           </ul>
           <p>Before the cloud opens for clubs, this list will name every provider and its country, including email delivery, backups and payment, and a club will sign a data processing agreement (DPA) before go-live.</p>
@@ -185,6 +187,7 @@
           <a href="/demo/">Demo</a>
           <a href="/contact/">Contact</a>
           <a href="/feedback/">Feedback</a>
+          <a href="/early-access/">Early access</a>
         </div>
         <div class="footer-col">
           <h3>App</h3>

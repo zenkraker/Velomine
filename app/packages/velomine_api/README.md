@@ -184,6 +184,7 @@ Class | Method | HTTP request | Description
 *ClubsApi* | [**coachGetCoachWellbeing**](doc//ClubsApi.md#coachgetcoachwellbeing) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/wellbeing | 
 *ClubsApi* | [**coachListCoachAthletes**](doc//ClubsApi.md#coachlistcoachathletes) | **GET** /api/v1/clubs/{clubId}/athletes | 
 *ClubsApi* | [**coachListCoachRides**](doc//ClubsApi.md#coachlistcoachrides) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides | 
+*EarlyAccessApi* | [**joinEarlyAccess**](doc//EarlyAccessApi.md#joinearlyaccess) | **POST** /api/v1/early-access | Join the early-access list by email
 *FeedbackApi* | [**sendFeedback**](doc//FeedbackApi.md#sendfeedback) | **POST** /api/v1/feedback | Send anonymous feedback by email
 *NotificationsApi* | [**listNotifications**](doc//NotificationsApi.md#listnotifications) | **GET** /api/v1/notifications | 
 *NotificationsApi* | [**markAllNotificationsRead**](doc//NotificationsApi.md#markallnotificationsread) | **POST** /api/v1/notifications/read | 

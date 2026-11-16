@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Early access — Velomine</title>
+  <meta name="description" content="Leave an email address to be told once when the Velomine cloud opens, or say your club might try it as a pilot.">
+  <meta name="theme-color" content="#F0EEE9">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://velomine.eu/early-access/">
+  <meta property="og:site_name" content="Velomine">
+  <meta property="og:title" content="Early access — Velomine">
+  <meta property="og:description" content="Be told when the Velomine cloud opens. One email, nothing else.">
+  <meta property="og:image" content="https://velomine.eu/static/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Velomine: every ride belongs to its rider">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://velomine.eu/static/img/og.png">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/site.css">
+  <link rel="canonical" href="https://velomine.eu/early-access/">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" translate="no" href="/" aria-label="Velomine home">
+        <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="mark-dot" cx="60" cy="31" r="8"/>
+        </svg>
+        <span class="wordmark" translate="no">velo<em>mine</em></span>
+      </a>
+
+      <details class="nav-menu">
+        <summary aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </summary>
+      </details>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/principles/">Principles</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/demo/">Demo</a>
+        <a href="/contact/">Contact</a>
+        <a class="btn btn-ghost" href="/sign-in">Sign in</a>
+      </nav>
+      <a class="btn btn-primary nav-cta" href="/demo/">Try the demo</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-current="page">Early access</li>
+          </ol>
+        </nav>
+        <p class="eyebrow">Early access</p>
+        <h1>Be told when the cloud opens.</h1>
+        <p>The Velomine cloud is not open yet. Today you can <a href="/demo/">try the demo</a> or <a href="/pricing/">self-host it</a>. Leave an address and you get one email when the cloud opens. If you say your club might try it, you also get a reply about a pilot.</p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="contact-card card card--lg">
+          <p class="contact-note">There is no account and no newsletter. Your answers are emailed to whoever runs this server and are not stored in Velomine’s database. They are deleted on request, and once the cloud has opened and the announcement is sent. See the <a href="/privacy/">privacy page</a>.</p>
+
+          <form class="feedback-form" method="post" action="/api/v1/early-access">
+            <div class="field">
+              <label for="email">Email address</label>
+              <input id="email" name="email" type="email" maxlength="200" required autocomplete="email">
+            </div>
+            <fieldset class="field">
+              <legend>Who is it for?</legend>
+              <label class="check-row"><input type="radio" name="who" value="rider" required> <span>I ride, for myself</span></label>
+              <label class="check-row"><input type="radio" name="who" value="club" required> <span>My club might try it as a pilot</span></label>
+            </fieldset>
+            <div class="field">
+              <label for="club">Club name and town</label>
+              <span class="field-hint">Optional. Only if you chose club.</span>
+              <input id="club" name="club" type="text" maxlength="200">
+            </div>
+            <div class="field">
+              <label class="check-row"><input type="checkbox" name="consent" value="yes" required> <span>Use this address only to tell me when the cloud opens, and about a pilot if I chose club. Nothing else, no newsletter, deleted on request.</span></label>
+            </div>
+            <button class="btn btn-primary" type="submit">Tell me when it opens</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" translate="no" href="/" aria-label="Velomine home">
+            <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+              <path class="mark-outer" d="M12 20 L60 100 L108 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="mark-inner" d="M36 20 L60 60 L84 20" fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle class="mark-dot" cx="60" cy="31" r="8"/>
+            </svg>
+            <span class="wordmark" translate="no">velo<em>mine</em></span>
+          </a>
+          <p class="footer-tagline">Cycling rides you own, for riders and their clubs. Self-hosted or cloud.</p>
+        </div>
+        <div class="footer-col">
+          <h3>Site</h3>
+          <a href="/">Home</a>
+          <a href="/status/">Status</a>
+          <a href="/pricing/">Pricing</a>
+          <a href="/demo/">Demo</a>
+          <a href="/contact/">Contact</a>
+          <a href="/feedback/">Feedback</a>
+          <a href="/early-access/">Early access</a>
+        </div>
+        <div class="footer-col">
+          <h3>App</h3>
+          <a href="/sign-in">Sign in</a>
+          <a href="/register">Create account</a>
+          <a href="/openapi/v1.json">API</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Velomine. This site sets no cookies, no analytics and no third-party scripts.</span>
+        <nav class="footer-legal" aria-label="Project and legal">
+          <a href="/principles/">Principles</a>
+          <a href="https://github.com/zenkraker/Velomine/tree/main/docs">Docs</a>
+          <a href="https://github.com/zenkraker/Velomine/releases">Changelog</a>
+          <a href="/principles/#licence">Licence</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/privacy/#subprocessors">Sub-processors</a>
+          <a href="/terms/">Terms</a>
+          <a href="/security/">Security</a>
+        </nav>
+        <span>Early development. <a href="/status/">See what works.</a></span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

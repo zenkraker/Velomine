@@ -123,12 +123,27 @@ builder.Services.AddRateLimiter(options =>
             PermitLimit = feedbackPerHour,
             Window = TimeSpan.FromHours(1),
         }));
+    // The early-access form is the same kind of browser post, with the same limit and the same refusal.
+    var earlyAccessPerHour = builder.Configuration.GetValue("Velomine:RateLimits:EarlyAccessPerHour", 5);
+    options.AddPolicy(Velomine.Server.Features.EarlyAccess.JoinEarlyAccess.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = earlyAccessPerHour,
+            Window = TimeSpan.FromHours(1),
+        }));
     options.OnRejected = (context, _) =>
     {
-        if (context.HttpContext.Request.Path.Equals("/api/v1/" + Velomine.Server.Features.Feedback.SendFeedback.Path, StringComparison.OrdinalIgnoreCase))
+        var path = context.HttpContext.Request.Path;
+        string? notSent = null;
+        if (path.Equals("/api/v1/" + Velomine.Server.Features.Feedback.SendFeedback.Path, StringComparison.OrdinalIgnoreCase))
+            notSent = Velomine.Server.Features.Feedback.SendFeedback.NotSentPage;
+        else if (path.Equals("/api/v1/" + Velomine.Server.Features.EarlyAccess.JoinEarlyAccess.Path, StringComparison.OrdinalIgnoreCase))
+            notSent = Velomine.Server.Features.EarlyAccess.JoinEarlyAccess.NotSentPage;
+        if (notSent is not null)
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status303SeeOther;
-            context.HttpContext.Response.Headers.Location = Velomine.Server.Features.Feedback.SendFeedback.NotSentPage + "?reason=busy";
+            context.HttpContext.Response.Headers.Location = notSent + "?reason=busy";
         }
 
         return ValueTask.CompletedTask;
