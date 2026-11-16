@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:velomine_api/api.dart';
 
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/features/club/widgets/club_hero_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -338,5 +339,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.sharingChoices['wellbeing'], 'coaches');
+  });
+
+  testWidgets('StartClubScreen_ShouldPinSubmitInTheBottomBar_WhenOpened', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.adminSettings['clubCreationEnabled'] = true;
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('go-start-club')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(BottomActionBar),
+        matching: find.byKey(const Key('start-club')),
+      ),
+      findsOneWidget,
+    );
   });
 }

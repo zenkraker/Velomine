@@ -179,4 +179,7 @@ abstract final class AppClub {
   /// The plan's member bar and the small icon before a status line.
   static const double barHeight = 8;
   static const double inlineIcon = 18;
+
+  /// The map of the location picker, which sits in the page's scroll view.
+  static const double pickerMapHeight = 420;
 }

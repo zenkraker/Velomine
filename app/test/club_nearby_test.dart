@@ -237,4 +237,62 @@ void main() {
     expect(server.joinRequests, isEmpty);
     expect(find.byKey(const Key('join-requests-empty')), findsOneWidget);
   });
+
+  testWidgets(
+    'NearbyClubsScreen_ShouldShowABackArrowAndNoAppBar_WhenOpenedOnAPhone',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        locationService: FakeLocationService((
+          latitude: 45.4642,
+          longitude: 9.19,
+        )),
+      );
+
+      await tester.tap(find.text('Club'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('go-nearby-clubs')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.text('Clubs near you'), findsWidgets);
+      expect(find.byType(BackButton), findsOneWidget);
+    },
+  );
+
+  testWidgets('NearbyClubsScreen_ShouldOpenTheNoteInASheet_WhenAskingToJoin', (
+    tester,
+  ) async {
+    widen(tester);
+    server.clubLatitude = 45.4642;
+    server.clubLongitude = 9.19;
+    server.clubDiscoverable = true;
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      locationService: FakeLocationService((
+        latitude: 45.4642,
+        longitude: 9.19,
+      )),
+    );
+
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('go-nearby-clubs')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ask-club-1')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byKey(const Key('join-request-note')), findsOneWidget);
+  });
 }

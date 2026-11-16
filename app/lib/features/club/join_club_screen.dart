@@ -6,6 +6,7 @@ import '../../core/l10n.dart';
 import '../auth/auth_page.dart';
 import 'club_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 
 /// Where a signed-in account without a club lands. It joins with the code the owner shared.
@@ -65,6 +66,12 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
       title: l10n.joinTitle,
       subtitle: l10n.joinIntro,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: BottomActionBar.button(
+        buttonKey: const Key('join-club'),
+        label: l10n.joinAction,
+        busy: state.action.running,
+        onPressed: _join,
+      ),
       children: [
         AutofillGroup(
           child: Column(
@@ -85,14 +92,6 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
                 AuthFailure(keyName: 'join-error', message: message),
               ],
               const SizedBox(height: AppSpacing.lg),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton(
-                  key: const Key('join-club'),
-                  onPressed: state.action.running ? null : _join,
-                  child: Text(l10n.joinAction),
-                ),
-              ),
               if (widget.onSkip != null)
                 Align(
                   alignment: Alignment.centerLeft,

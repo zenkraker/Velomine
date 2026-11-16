@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'location_picker.dart';
 import 'start_club_view_model.dart';
@@ -91,6 +92,12 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
       title: l10n.startClubTitle,
       subtitle: l10n.startClubIntro,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: BottomActionBar.button(
+        buttonKey: const Key('start-club'),
+        label: l10n.startClubAction,
+        busy: state.create.running,
+        onPressed: _start,
+      ),
       children: [
         AppTextField(
           fieldKey: const Key('start-club-name'),
@@ -142,14 +149,6 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
             actionKey: const Key('start-club-error'),
           ),
         ],
-        Align(
-          alignment: Alignment.centerLeft,
-          child: FilledButton(
-            key: const Key('start-club'),
-            onPressed: state.create.running ? null : _start,
-            child: Text(l10n.startClubAction),
-          ),
-        ),
       ],
     );
   }

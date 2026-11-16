@@ -8,6 +8,8 @@ import '../../core/location_service.dart';
 import '../../core/map_defaults.dart';
 import '../rides/detail/geo.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/bottom_action_bar.dart';
+import '../../core/widgets/page_scaffold.dart';
 
 /// Picks a point for a club, or for the rider's saved fallback. The map is always there: the pin stays at the
 /// centre and the map moves under it.
@@ -111,27 +113,26 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // Outside the shell: the page asks for the header on a phone too. The map has a fixed height, so it
+    // sits in the page's scroll view; its gestures claim the pointer at once so a drag moves the map.
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.locationPickerTitle)),
-      body: SafeArea(
-        child: Column(
+      body: PageHeaderScope(
+        showOnPhone: true,
+        child: PageScaffold(
+          title: l10n.locationPickerTitle,
+          subtitle: l10n.locationPickerHelp,
+          onBack: () => Navigator.of(context).maybePop(),
+          maxWidth: AppLayout.contentNarrow,
+          bottomAction: BottomActionBar.button(
+            buttonKey: const Key('location-use'),
+            label: l10n.locationPickerUse,
+            onPressed: _use,
+            maxWidth: AppLayout.contentNarrow,
+          ),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Text(l10n.locationPickerHelp),
-            ),
-            Expanded(child: _map()),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  key: const Key('location-use'),
-                  onPressed: _use,
-                  icon: const Icon(Icons.place),
-                  label: Text(l10n.locationPickerUse),
-                ),
-              ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              child: SizedBox(height: AppClub.pickerMapHeight, child: _map()),
             ),
           ],
         ),
@@ -161,15 +162,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               });
             }
           },
-          child: GestureDetector(
+          child: RawGestureDetector(
             key: const Key('location-map'),
-            onScaleStart: (details) {
-              _focalStart = details.localFocalPoint;
-              _latitudeStart = latitude;
-              _longitudeStart = longitude;
-              _zoomStart = _zoom;
+            gestures: {
+              _EagerScaleRecognizer:
+                  GestureRecognizerFactoryWithHandlers<_EagerScaleRecognizer>(
+                    _EagerScaleRecognizer.new,
+                    (recognizer) {
+                      recognizer
+                        ..onStart = (details) {
+                          _focalStart = details.localFocalPoint;
+                          _latitudeStart = latitude;
+                          _longitudeStart = longitude;
+                          _zoomStart = _zoom;
+                        }
+                        ..onUpdate = _pan;
+                    },
+                  ),
             },
-            onScaleUpdate: _pan,
             child: Stack(
               children: [
                 Positioned.fill(
@@ -192,8 +202,8 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 Center(child: Icon(Icons.place, size: 44, color: colors.error)),
                 if (_locating) const LoadingState(),
                 Positioned(
-                  top: 8,
-                  right: 8,
+                  top: AppSpacing.sm,
+                  right: AppSpacing.sm,
                   child: IconButton.filledTonal(
                     key: const Key('location-current'),
                     tooltip: context.l10n.locationPickerCurrent,
@@ -202,13 +212,13 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   ),
                 ),
                 Positioned(
-                  left: 8,
-                  bottom: 8,
+                  left: AppSpacing.sm,
+                  bottom: AppSpacing.sm,
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
                       ),
                       child: Text(
                         '${latitude.toStringAsFixed(5)}, '
@@ -222,15 +232,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   right: 0,
                   bottom: 0,
                   child: Container(
-                    color: Colors.white.withValues(alpha: 0.75),
+                    color: colors.surface.withValues(alpha: 0.75),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.xs / 2,
                     ),
                     child: Text(
                       widget.attribution,
                       style: Theme.of(context).textTheme.labelSmall
-                          ?.copyWith(color: Colors.black87),
+                          ?.copyWith(color: colors.onSurface),
                     ),
                   ),
                 ),
@@ -240,5 +250,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         );
       },
     );
+  }
+}
+
+/// A scale recogniser that claims the pointer on touch down, so the page's scroll view does not take a
+/// drag that is meant to move the map.
+class _EagerScaleRecognizer extends ScaleGestureRecognizer {
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
   }
 }
