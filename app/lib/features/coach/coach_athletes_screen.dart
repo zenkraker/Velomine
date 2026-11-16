@@ -41,7 +41,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                 .refresh(),
           ),
         if (s.load.running && s.athletes.isEmpty)
-          const LoadingState()
+          const LoadingState.rows()
         else if (s.athletes.isEmpty)
           EmptyState(
             key: const Key('no-athletes'),

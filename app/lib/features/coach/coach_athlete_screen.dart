@@ -142,7 +142,7 @@ class _CoachWellbeingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.coachWellbeing, style: text.titleMedium),
+            SectionHeading(title: l10n.coachWellbeing),
             const SizedBox(height: AppSpacing.xs),
             Text(l10n.coachWellbeingNoNotes, style: text.bodySmall),
             if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty) ...[
@@ -151,7 +151,7 @@ class _CoachWellbeingCard extends StatelessWidget {
             ],
             for (final checkIn in wellbeing.checkIns)
               Padding(
-                padding: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Text(
                   '${date(checkIn.date)} · '
                   '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
@@ -164,7 +164,7 @@ class _CoachWellbeingCard extends StatelessWidget {
               ),
             for (final ride in wellbeing.rides)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
                 child: Text(
                   '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
                   style: text.bodySmall,

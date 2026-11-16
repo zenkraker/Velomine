@@ -139,6 +139,22 @@ void main() {
     },
   );
 
+  testWidgets(
+    'NotificationsScreen_ShouldPutMarkAllReadInTheHeader_WhenThereAreUnread',
+    (tester) async {
+      await openNotifications(tester);
+
+      final action = tester.getTopLeft(
+        find.byKey(const Key('notifications-read-all')),
+      );
+      final firstTile = tester.getTopLeft(
+        find.byKey(Key('notification-${server.notifications.first['id']}')),
+      );
+      expect(find.byType(FilledButton), findsWidgets);
+      expect(action.dy, lessThan(firstTile.dy));
+    },
+  );
+
   testWidgets('NotificationsScreen_ShouldShowEmptyMessage_WhenThereAreNone', (
     tester,
   ) async {

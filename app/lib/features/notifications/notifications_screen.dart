@@ -9,6 +9,7 @@ import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/tokens.dart';
 import '../../core/widgets/section_heading.dart';
 import 'notifications_text.dart';
 import 'notifications_view_model.dart';
@@ -52,20 +53,31 @@ class NotificationsScreen extends ConsumerWidget {
       _ => l10n.notificationGroupAccount,
     };
 
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    final markAllAction = s.markAll.running
+        ? null
+        : ref.read(notificationsViewModelProvider.notifier).markAllRead;
     final markAll = s.unread > 0
-        ? TextButton(
-            key: const Key('notifications-read-all'),
-            onPressed: s.markAll.running
-                ? null
-                : ref.read(notificationsViewModelProvider.notifier).markAllRead,
-            child: Text(l10n.markAllRead),
-          )
+        ? (wide
+              ? FilledButton.icon(
+                  key: const Key('notifications-read-all'),
+                  onPressed: markAllAction,
+                  icon: const Icon(Icons.done_all),
+                  label: Text(l10n.markAllRead),
+                )
+              // The phone header row is tight: a filled icon, its tooltip names it.
+              : IconButton.filled(
+                  key: const Key('notifications-read-all'),
+                  tooltip: l10n.markAllRead,
+                  onPressed: markAllAction,
+                  icon: const Icon(Icons.done_all),
+                ))
         : null;
     return PageScaffold(
       eyebrow: l10n.notificationsEyebrow,
       title: l10n.notifications,
       subtitle: l10n.notificationsSubtitle,
-      actions: markAll,
+      primaryAction: markAll,
       children: [
         if (s.load.failure case final failure?)
           ErrorState(

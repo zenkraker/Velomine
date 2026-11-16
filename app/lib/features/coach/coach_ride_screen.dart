@@ -65,7 +65,7 @@ class CoachRideScreen extends ConsumerWidget {
           if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
           Wrap(
             spacing: AppSpacing.xl,
-            runSpacing: 12,
+            runSpacing: AppSpacing.md,
             children: [
               StatTile(
                 label: l10n.statDistance,
