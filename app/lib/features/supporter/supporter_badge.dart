@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -180,12 +182,7 @@ class _SupporterSectionState extends ConsumerState<SupporterSection> {
         key: const Key('supporter-load-error'),
         spacing: AppSpacing.sm,
         children: [
-          Expanded(
-            child: Text(
-              failureText(l10n, failure),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
+          Expanded(child: InlineError(failureText(l10n, failure))),
           TextButton(
             key: const Key('supporter-retry'),
             onPressed: s.load.running ? null : notifier.load,

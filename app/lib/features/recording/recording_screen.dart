@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -86,10 +88,9 @@ class RecordingScreen extends ConsumerWidget {
             ),
           if (s.errorCode != null) ...[
             const SizedBox(height: AppSpacing.md),
-            Text(
+            InlineError(
               recorderErrorText(context.l10n, s.errorCode),
               key: const Key('record-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
           const SizedBox(height: AppSpacing.xl),
@@ -712,10 +713,9 @@ class _SensorSheetState extends State<_SensorSheet> {
           Text(l10n.searchingStraps, key: const Key('sensor-searching')),
         ],
         if (_errorCode != null || _found == null && !_scanning)
-          Text(
+          InlineError(
             recorderErrorText(l10n, _errorCode),
             key: const Key('sensor-sheet-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         if (found != null && found.isEmpty && !_scanning)
           Text(l10n.noStraps, key: const Key('sensor-none')),

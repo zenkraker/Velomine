@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -50,7 +52,7 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
       maxWidth: AppLayout.contentNarrow,
       children: [
         if (state.load.running && info == null)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (state.load.failure case final failure?)
           ErrorState(
             message: failureText(l10n, failure),

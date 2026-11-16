@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -188,7 +190,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     ),
                   ),
                 Center(child: Icon(Icons.place, size: 44, color: colors.error)),
-                if (_locating) const Center(child: CircularProgressIndicator()),
+                if (_locating) const LoadingState(),
                 Positioned(
                   top: 8,
                   right: 8,

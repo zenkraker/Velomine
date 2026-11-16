@@ -1,3 +1,6 @@
+import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -402,11 +405,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           if ((problem ?? (failure == null ? null : failureText(l10n, failure)))
               case final message?)
-            Text(
-              message,
-              key: const Key('profile-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+            InlineError(message, key: const Key('profile-error')),
           if (s.save.completed)
             Text(l10n.saved, key: const Key('profile-saved')),
           Align(
@@ -596,7 +595,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       maxWidth: AppLayout.contentMax,
       children: [
         if (s.load.running && s.profile == null)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (failure != null)
           ErrorState(
             message: failureText(l10n, failure),
@@ -702,11 +701,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             onSubmitted: (_) => _submit(),
           ),
           if (_error != null)
-            Text(
-              _error!,
-              key: const Key('change-password-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+            InlineError(_error!, key: const Key('change-password-error')),
         ],
       ),
       actions: [

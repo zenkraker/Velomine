@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -95,12 +97,9 @@ class ClubsTab extends ConsumerWidget {
                   ],
                 ),
                 if (s.load.failure case final failure?)
-                  Text(
+                  InlineError(
                     failureText(l10n, failure),
                     key: const Key('clubs-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
                   ),
                 if (s.clubs.isEmpty && !s.load.running)
                   EmptyState(
@@ -267,11 +266,7 @@ class _CreateClubDialogState extends State<_CreateClubDialog> {
               ),
             ),
             if (problem != null)
-              Text(
-                problem,
-                key: const Key('create-club-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+              InlineError(problem, key: const Key('create-club-error')),
           ],
         ),
       ),

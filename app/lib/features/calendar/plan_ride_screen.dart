@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -195,7 +197,7 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
     }
 
     if (s.load.running && (editing && detail == null)) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingState();
     }
 
     final problem = _problemText(l10n);

@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,7 +41,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                 .refresh(),
           ),
         if (s.load.running && s.athletes.isEmpty)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (s.athletes.isEmpty)
           EmptyState(
             key: const Key('no-athletes'),

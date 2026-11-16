@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -47,7 +49,7 @@ class CoachAthleteScreen extends ConsumerWidget {
             icon: Icons.person_off_outlined,
           )
         else if (c.load.running && summary == null)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (summary != null) ...[
           Wrap(
             spacing: AppSpacing.sm,

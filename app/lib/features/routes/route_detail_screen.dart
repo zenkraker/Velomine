@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -60,7 +62,7 @@ class RouteDetailScreen extends ConsumerWidget {
     );
 
     if (s.load.running && s.detail == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingState();
     }
     if (s.notFound) {
       return EmptyState(

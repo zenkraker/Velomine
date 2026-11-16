@@ -1,12 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'tokens.dart';
+
 /// A neutral block the size of content that is still loading, so the layout does not jump when it arrives.
 class PlaceholderBlock extends StatelessWidget {
   const PlaceholderBlock({
     super.key,
     required this.height,
     this.width,
-    this.radius = 12,
+    this.radius = AppRadius.small,
   });
 
   final double height;

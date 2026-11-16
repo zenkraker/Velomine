@@ -1,3 +1,6 @@
+import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,7 +203,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       maxWidth: AppLayout.contentNarrow,
       children: [
         privacy == null && state.load.running
-            ? const Center(child: CircularProgressIndicator())
+            ? const LoadingState()
             : privacy == null
             ? _LoadFailed(
                 failure: state.load.failure,
@@ -279,13 +282,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                   ),
                   Text(l10n.privacyTrimHelp),
                   if (_problem case final problem?)
-                    Text(
-                      problem,
-                      key: const Key('privacy-error'),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
+                    InlineError(problem, key: const Key('privacy-error')),
                   if (state.save.completed)
                     Text(l10n.saved, key: const Key('privacy-saved')),
                   Align(
@@ -467,11 +464,7 @@ class _ZoneDialogState extends State<_ZoneDialog> {
             ),
           ),
           if (_problem case final problem?)
-            Text(
-              problem,
-              key: const Key('privacy-zone-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+            InlineError(problem, key: const Key('privacy-zone-error')),
         ],
       ),
       actions: [

@@ -1,3 +1,6 @@
+import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -314,10 +317,9 @@ class ServiceSection extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
+                child: InlineError(
                   failureText(l10n, failure),
                   key: const Key('log-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
               TextButton(
@@ -328,7 +330,7 @@ class ServiceSection extends ConsumerWidget {
             ],
           )
         else if (s.logLoad.running && s.log.isEmpty)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (s.log.isEmpty)
           s.logComponentId == null
               ? Text(l10n.serviceLogIntro, key: const Key('no-entries'))

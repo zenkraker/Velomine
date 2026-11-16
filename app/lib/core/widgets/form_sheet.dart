@@ -1,3 +1,5 @@
+import 'inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n.dart';
@@ -112,7 +114,6 @@ class FormSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SheetFrame(
       title: title,
       bottom: Column(
@@ -120,12 +121,7 @@ class FormSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: AppSpacing.sm,
         children: [
-          if (error != null)
-            Text(
-              error!,
-              key: const Key('form-error'),
-              style: TextStyle(color: scheme.error),
-            ),
+          if (error != null) InlineError(error!, key: const Key('form-error')),
           FilledButton(
             key: saveKey,
             onPressed: onSave,

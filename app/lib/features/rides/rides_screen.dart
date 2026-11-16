@@ -1,3 +1,6 @@
+import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/inline_error.dart';
+
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
@@ -332,12 +335,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
             ),
           )
         else if (s.load.running)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: CircularProgressIndicator(),
-            ),
-          ),
+          const LoadingState(),
       ],
     );
     if (wide) return page;
@@ -548,10 +546,9 @@ class RideCard extends ConsumerWidget {
                   ],
                 )
               else if (ride.status == 'failed')
-                Text(
+                InlineError(
                   rideErrorText(l10n, ride.error),
                   key: const Key('ride-failed'),
-                  style: TextStyle(color: scheme.error),
                 )
               else if (empty || facts.isEmpty)
                 Text(

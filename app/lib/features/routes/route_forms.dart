@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -116,7 +118,7 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
               ),
             if (_source == 'ride') ...[
               if (s.ridesLoad.running && s.rides.isEmpty)
-                const Center(child: CircularProgressIndicator())
+                const LoadingState()
               else if (s.rides.isEmpty)
                 EmptyState(
                   key: const Key('no-rides-for-route'),
@@ -147,13 +149,7 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                     onTap: () => notifier.fromRide(ride.id),
                   ),
             ],
-            if (s.draftLoad.running)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
+            if (s.draftLoad.running) const LoadingState(),
           ],
         ),
         if (draft != null) ...[
@@ -275,7 +271,7 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
 
     if (detail == null) {
       return s.load.running
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingState()
           : EmptyState(message: l10n.failureMissing, icon: Icons.route);
     }
     if (!_filled) {

@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -93,7 +95,7 @@ class RoutesScreen extends ConsumerWidget {
             onRetry: () => ref.read(routesViewModelProvider.notifier).refresh(),
           ),
         if (s.load.running && s.routes.isEmpty)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (s.routes.isEmpty && s.load.failure == null)
           EmptyState(
             key: const Key('no-routes'),

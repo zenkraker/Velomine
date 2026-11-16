@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -298,7 +300,7 @@ class BikeDetailScreen extends ConsumerWidget {
     final detail = s.detail;
     if (detail == null) {
       return [
-        if (s.load.running) const Center(child: CircularProgressIndicator()),
+        if (s.load.running) const LoadingState(),
         if (s.load.failure case final failure?)
           ErrorState(
             message: failureText(l10n, failure),

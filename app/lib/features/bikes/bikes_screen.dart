@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -68,7 +70,7 @@ class BikesScreen extends ConsumerWidget {
               onRetry: s.load.running ? null : notifier.refresh,
             ),
           if (s.load.running && s.bikes.isEmpty)
-            const Center(child: CircularProgressIndicator())
+            const LoadingState()
           else if (s.bikes.isEmpty && s.load.failure == null)
             EmptyState(
               key: const Key('no-bikes'),

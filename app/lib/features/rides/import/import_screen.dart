@@ -1,3 +1,5 @@
+import '../../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -41,10 +43,7 @@ class ImportScreen extends ConsumerWidget {
             onRetry: ref.read(importViewModelProvider(id).notifier).retry,
           )
         else if (status == null)
-          const Padding(
-            padding: EdgeInsets.all(AppSpacing.xl),
-            child: Center(child: CircularProgressIndicator()),
-          )
+          const LoadingState()
         else
           _Status(status: status, onDone: onDone),
       ],

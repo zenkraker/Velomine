@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -80,7 +82,7 @@ class ClubRidesScreen extends ConsumerWidget {
                 ref.read(clubRidesViewModelProvider.notifier).refresh(),
           ),
         if (s.load.running && s.upcoming.isEmpty && s.past.isEmpty)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (s.upcoming.isEmpty && s.past.isEmpty && s.load.failure == null)
           EmptyState(
             key: const Key('no-club-rides'),

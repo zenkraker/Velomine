@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/tokens.dart';
@@ -104,21 +106,6 @@ class AuthFailure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      key: Key(keyName),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.sm,
-      children: [
-        Icon(Icons.error_outline, size: 18, color: scheme.error),
-        Expanded(
-          child: Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: scheme.error),
-          ),
-        ),
-      ],
-    );
+    return InlineError(message, key: Key(keyName), showIcon: true);
   }
 }

@@ -1,3 +1,6 @@
+import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -369,7 +372,7 @@ class ClubScreen extends ConsumerWidget {
   ) {
     final l10n = context.l10n;
     if (clubState.load.running && !clubState.loaded) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingState();
     }
     return PageScaffold(
       eyebrow: l10n.eyebrowClub,
@@ -658,18 +661,12 @@ class ClubScreen extends ConsumerWidget {
       description: l10n.clubRidesHelp,
       children: [
         if (s.load.failure case final failure?)
-          Text(
+          InlineError(
             failureText(l10n, failure),
             key: const Key('club-rides-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         if (s.load.running && s.upcoming.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: CircularProgressIndicator(),
-            ),
-          )
+          const LoadingState()
         else if (s.upcoming.isEmpty && s.load.failure == null)
           Text(l10n.ridesEmpty, key: const Key('club-rides-empty'))
         else
@@ -714,18 +711,12 @@ class ClubScreen extends ConsumerWidget {
       description: l10n.clubRoutesHelp,
       children: [
         if (s.load.failure case final failure?)
-          Text(
+          InlineError(
             failureText(l10n, failure),
             key: const Key('club-routes-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         if (s.load.running && s.routes.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(8),
-              child: CircularProgressIndicator(),
-            ),
-          )
+          const LoadingState()
         else if (s.routes.isEmpty && s.load.failure == null)
           Text(l10n.clubRoutesEmpty, key: const Key('club-routes-empty'))
         else
@@ -798,18 +789,12 @@ class ClubScreen extends ConsumerWidget {
               ],
             ),
             if (requests.load.failure case final failure?)
-              Text(
+              InlineError(
                 failureText(l10n, failure),
                 key: const Key('join-requests-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             if (requests.load.running)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8),
-                  child: CircularProgressIndicator(),
-                ),
-              )
+              const LoadingState()
             else if (requests.requests.isEmpty)
               Text(
                 l10n.joinRequestsEmpty,
@@ -1050,7 +1035,7 @@ class _SharingCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             if (state.load.running && !state.loaded)
-              const Center(child: CircularProgressIndicator())
+              const LoadingState()
             else ...[
               choice(
                 l10n.shareRides,
@@ -1081,10 +1066,9 @@ class _SharingCard extends StatelessWidget {
               ),
             ],
             if (state.load.failure case final failure?)
-              Text(
+              InlineError(
                 failureText(l10n, failure),
                 key: const Key('sharing-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             const Divider(),
             Text(

@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -505,11 +507,7 @@ class _TemplateNameDialogState extends State<_TemplateNameDialog> {
             onSubmitted: (_) => _submit(),
           ),
           if (_missing)
-            Text(
-              l10n.errorTemplateName,
-              key: const Key('form-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+            InlineError(l10n.errorTemplateName, key: const Key('form-error')),
         ],
       ),
       actions: [

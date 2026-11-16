@@ -103,3 +103,15 @@ abstract final class AppBottomBar {
   /// The size of the progress ring shown in the button while it works.
   static const double busyIndicator = 20;
 }
+
+/// The block [LoadingState] fills while a page loads for the first time.
+abstract final class AppLoading {
+  /// The height of the centred indicator block.
+  static const double blockHeight = 160;
+
+  /// The height of one skeleton row from [LoadingState.rows].
+  static const double rowHeight = 56;
+
+  /// The size of the icon before an error line.
+  static const double errorIcon = 18;
+}

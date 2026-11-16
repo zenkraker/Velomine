@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -125,7 +127,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const CircularProgressIndicator(),
+                      const LoadingState(),
                       const SizedBox(height: AppSpacing.lg),
                       Text(l10n.nearbyLocating),
                     ],
@@ -272,12 +274,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                       ),
                     ],
                     if (s.load.running)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(AppSpacing.xl),
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
+                      const LoadingState()
                     else if (s.clubs.isEmpty && s.load.failure == null) ...[
                       const SizedBox(height: AppSpacing.xl),
                       EmptyState(

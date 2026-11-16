@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,7 +21,7 @@ class OverviewTab extends ConsumerWidget {
     if (o == null) {
       return Center(
         child: s.load.running
-            ? const CircularProgressIndicator()
+            ? const LoadingState()
             : Text(
                 s.load.failure == null
                     ? l10n.noOverview

@@ -1,3 +1,5 @@
+import '../../core/widgets/loading_state.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,7 +60,7 @@ class CoachRideScreen extends ConsumerWidget {
             icon: Icons.search_off,
           )
         else if (c.load.running && ride == null)
-          const Center(child: CircularProgressIndicator())
+          const LoadingState()
         else if (ride != null) ...[
           if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
           Wrap(

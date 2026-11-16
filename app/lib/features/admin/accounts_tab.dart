@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -181,10 +183,9 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
         ),
         const SizedBox(height: AppSpacing.lg),
         if (s.load.failure case final failure?)
-          Text(
+          InlineError(
             failureText(l10n, failure),
             key: const Key('admin-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         Text(
           l10n.waitingForApproval,

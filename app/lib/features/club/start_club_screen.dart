@@ -1,3 +1,5 @@
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,10 +99,9 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
         ),
         if (_showProblem && _name.text.trim().isEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
-          Text(
+          InlineError(
             l10n.startClubNameRequired,
             key: const Key('start-club-name-error'),
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ],
         const SizedBox(height: AppSpacing.lg),

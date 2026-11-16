@@ -1,3 +1,6 @@
+import '../../core/widgets/loading_state.dart';
+import '../../core/widgets/inline_error.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -29,7 +32,7 @@ class SettingsTab extends ConsumerWidget {
     if (settings == null) {
       return Center(
         child: s.load.running
-            ? const CircularProgressIndicator()
+            ? const LoadingState()
             : Text(
                 s.load.failure == null
                     ? l10n.noSettings
@@ -77,12 +80,9 @@ class SettingsTab extends ConsumerWidget {
                       .setClubCreationEnabled(v),
                 ),
                 if (s.load.failure case final failure?)
-                  Text(
+                  InlineError(
                     failureText(l10n, failure),
                     key: const Key('settings-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
                   ),
                 if (s.save.completed)
                   Text(l10n.saved, key: const Key('settings-saved')),
@@ -119,15 +119,15 @@ class SettingsTab extends ConsumerWidget {
                     ),
                   ),
                 if (s.testEmail.completed || s.testEmail.failure != null)
-                  Text(
-                    s.testEmail.failure == null
-                        ? l10n.testEmailSent
-                        : failureText(l10n, s.testEmail.failure!),
-                    key: const Key('test-email-result'),
-                    style: s.testEmail.failure != null
-                        ? TextStyle(color: Theme.of(context).colorScheme.error)
-                        : null,
-                  ),
+                  s.testEmail.failure == null
+                      ? Text(
+                          l10n.testEmailSent,
+                          key: const Key('test-email-result'),
+                        )
+                      : InlineError(
+                          failureText(l10n, s.testEmail.failure!),
+                          key: const Key('test-email-result'),
+                        ),
                 _StatusCard(
                   key: const Key('smtp-status'),
                   icon: Icons.mail_outline,
