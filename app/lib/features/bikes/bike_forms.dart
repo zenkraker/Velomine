@@ -10,7 +10,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'component_names.dart';
 import 'part_identity.dart';
 import '../../core/tokens.dart';
-import '../../core/motion.dart';
+import '../../core/widgets/form_sheet.dart';
 
 const bikeKindIds = [
   'road',
@@ -133,17 +133,7 @@ Future<DateTime?> _pickDate(BuildContext context, DateTime? initial) =>
 Future<BikeFormData?> showBikeForm(
   BuildContext context, {
   BikeResponse? bike,
-}) => showModalBottomSheet<BikeFormData>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  // The sheet keeps the app's motion, or none when the system asks for none.
-  sheetAnimationStyle: AnimationStyle(
-    duration: motionDuration(context, AppMotion.standard),
-  ),
-  constraints: const BoxConstraints(maxWidth: 640),
-  builder: (_) => _BikeForm(bike: bike),
-);
+}) => showSheet<BikeFormData>(context, builder: (_) => _BikeForm(bike: bike));
 
 class _BikeForm extends ConsumerStatefulWidget {
   const _BikeForm({this.bike});
@@ -236,174 +226,114 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
       _BikeProblem.wheelRange => l10n.errorWheelRange,
       _BikeProblem.initialDistance => l10n.errorInitialDistance,
     };
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return FormSheet(
+      title: widget.bike == null ? l10n.addBikeTitle : l10n.editBikeTitle,
+      saveKey: const Key('bike-save'),
+      onSave: _submit,
+      error: problem,
       children: [
-        Center(
-          child: Container(
-            width: 32,
-            height: 4,
-            margin: const EdgeInsets.only(top: 8, bottom: 4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+        TextField(
+          key: const Key('bike-name'),
+          controller: _name,
+          decoration: InputDecoration(labelText: l10n.name),
         ),
-        Flexible(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                Text(
-                  widget.bike == null ? l10n.addBikeTitle : l10n.editBikeTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                TextField(
-                  key: const Key('bike-name'),
-                  controller: _name,
-                  decoration: InputDecoration(labelText: l10n.name),
-                ),
-                DropdownButtonFormField<String>(
-                  key: const Key('bike-kind'),
-                  initialValue: _kind,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: l10n.kind),
-                  items: [
-                    for (final id in bikeKindIds)
-                      DropdownMenuItem(
-                        value: id,
-                        child: Text(bikeKindName(l10n, id)),
-                      ),
-                  ],
-                  onChanged: (v) => setState(() => _kind = v ?? _kind),
-                ),
-                Row(
-                  spacing: AppSpacing.md,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('bike-brand'),
-                        controller: _brand,
-                        decoration: InputDecoration(labelText: l10n.brand),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('bike-model'),
-                        controller: _model,
-                        decoration: InputDecoration(labelText: l10n.model),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  spacing: AppSpacing.md,
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        fieldKey: const Key('bike-year'),
-                        controller: _year,
-                        keyboardType: TextInputType.number,
-                        label: l10n.modelYear,
-                        helper: l10n.modelYearHelper,
-                      ),
-                    ),
-                    Expanded(
-                      child: AppTextField(
-                        fieldKey: const Key('bike-size'),
-                        controller: _size,
-                        label: l10n.frameSize,
-                        helper: l10n.frameSizeHelper,
-                      ),
-                    ),
-                  ],
-                ),
-                AppTextField(
-                  fieldKey: const Key('bike-spec'),
-                  controller: _spec,
-                  label: l10n.buildSpec,
-                  helper: l10n.buildSpecHelper,
-                ),
-                AppTextField(
-                  fieldKey: const Key('bike-wheel'),
-                  controller: _wheel,
-                  keyboardType: TextInputType.number,
-                  label: l10n.wheelCircumference,
-                  helper: l10n.wheelHelper,
-                ),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  children: [
-                    for (final e in wheelPresets.entries)
-                      ActionChip(
-                        label: Text('${e.key} · ${e.value}'),
-                        onPressed: () =>
-                            setState(() => _wheel.text = '${e.value}'),
-                      ),
-                  ],
-                ),
-                AppTextField(
-                  fieldKey: const Key('bike-initial'),
-                  controller: _initial,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  label: l10n.initialDistance,
-                  suffix: distanceUnit(ref.watch(unitsChoiceViewModelProvider)),
-                  helper: l10n.initialHelper,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('bike-purchased'),
-                    icon: const Icon(Icons.event),
-                    label: Text(
-                      _purchased == null
-                          ? l10n.purchaseDate
-                          : l10n.boughtOn(isoDate(_purchased!)),
-                    ),
-                    onPressed: () async {
-                      final d = await _pickDate(context, _purchased);
-                      if (d != null) setState(() => _purchased = dateOnly(d));
-                    },
-                  ),
-                ),
-                if (problem != null)
-                  Text(
-                    problem,
-                    key: const Key('form-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-              ],
-            ),
-          ),
+        DropdownButtonFormField<String>(
+          key: const Key('bike-kind'),
+          initialValue: _kind,
+          isExpanded: true,
+          decoration: InputDecoration(labelText: l10n.kind),
+          items: [
+            for (final id in bikeKindIds)
+              DropdownMenuItem(value: id, child: Text(bikeKindName(l10n, id))),
+          ],
+          onChanged: (v) => setState(() => _kind = v ?? _kind),
         ),
-        const Divider(height: 1),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          // Twice the text: the two actions stack instead of running off the sheet.
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              TextButton(
-                key: const Key('bike-cancel'),
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.cancel),
+        Row(
+          spacing: AppSpacing.md,
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('bike-brand'),
+                controller: _brand,
+                decoration: InputDecoration(labelText: l10n.brand),
               ),
-              FilledButton(
-                key: const Key('bike-save'),
-                onPressed: _submit,
-                child: Text(l10n.save),
+            ),
+            Expanded(
+              child: TextField(
+                key: const Key('bike-model'),
+                controller: _model,
+                decoration: InputDecoration(labelText: l10n.model),
               ),
-            ],
+            ),
+          ],
+        ),
+        Row(
+          spacing: AppSpacing.md,
+          children: [
+            Expanded(
+              child: AppTextField(
+                fieldKey: const Key('bike-year'),
+                controller: _year,
+                keyboardType: TextInputType.number,
+                label: l10n.modelYear,
+                helper: l10n.modelYearHelper,
+              ),
+            ),
+            Expanded(
+              child: AppTextField(
+                fieldKey: const Key('bike-size'),
+                controller: _size,
+                label: l10n.frameSize,
+                helper: l10n.frameSizeHelper,
+              ),
+            ),
+          ],
+        ),
+        AppTextField(
+          fieldKey: const Key('bike-spec'),
+          controller: _spec,
+          label: l10n.buildSpec,
+          helper: l10n.buildSpecHelper,
+        ),
+        AppTextField(
+          fieldKey: const Key('bike-wheel'),
+          controller: _wheel,
+          keyboardType: TextInputType.number,
+          label: l10n.wheelCircumference,
+          helper: l10n.wheelHelper,
+        ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            for (final e in wheelPresets.entries)
+              ActionChip(
+                label: Text('${e.key} · ${e.value}'),
+                onPressed: () => setState(() => _wheel.text = '${e.value}'),
+              ),
+          ],
+        ),
+        AppTextField(
+          fieldKey: const Key('bike-initial'),
+          controller: _initial,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          label: l10n.initialDistance,
+          suffix: distanceUnit(ref.watch(unitsChoiceViewModelProvider)),
+          helper: l10n.initialHelper,
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('bike-purchased'),
+            icon: const Icon(Icons.event),
+            label: Text(
+              _purchased == null
+                  ? l10n.purchaseDate
+                  : l10n.boughtOn(isoDate(_purchased!)),
+            ),
+            onPressed: () async {
+              final d = await _pickDate(context, _purchased);
+              if (d != null) setState(() => _purchased = dateOnly(d));
+            },
           ),
         ),
       ],
@@ -485,15 +415,8 @@ Future<PartFormData?> showPartForm(
   search,
   ComponentResponse? part,
   ComponentResponse? replacing,
-}) => showModalBottomSheet<PartFormData>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  constraints: const BoxConstraints(maxWidth: 640),
-  // The sheet keeps the app's motion, or none when the system asks for none.
-  sheetAnimationStyle: AnimationStyle(
-    duration: motionDuration(context, AppMotion.standard),
-  ),
+}) => showSheet<PartFormData>(
+  context,
   builder: (_) => _PartForm(
     types: types,
     today: today,
@@ -788,234 +711,182 @@ class _PartFormState extends ConsumerState<_PartForm> {
       _PartProblem.gtin => l10n.errorGtin,
       _PartProblem.removedBeforeInstalled => l10n.errorRemovedBeforeInstalled,
     };
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return FormSheet(
+      title: title,
+      saveKey: const Key('part-save'),
+      onSave: _submit,
+      error: problem,
       children: [
-        Center(
-          child: Container(
-            width: 32,
-            height: 4,
-            margin: const EdgeInsets.only(top: 8, bottom: 4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
+        Autocomplete<PartResponse>(
+          optionsBuilder: (value) async {
+            final text = value.text.trim();
+            if (text.length < 2) return const <PartResponse>[];
+            return widget.search(text, _type);
+          },
+          displayStringForOption: (p) =>
+              [p.brand, p.model].where((s) => s.isNotEmpty).join(' '),
+          fieldViewBuilder:
+              (context, controller, focusNode, onFieldSubmitted) => TextField(
+                key: const Key('part-search'),
+                controller: controller,
+                focusNode: focusNode,
+                decoration: InputDecoration(
+                  labelText: l10n.findPart,
+                  hintText: l10n.findPartHint,
+                ),
+              ),
+          onSelected: _applyKnownPart,
+        ),
+        DropdownButtonFormField<String>(
+          key: const Key('part-type'),
+          initialValue: _type,
+          isExpanded: true,
+          decoration: InputDecoration(labelText: l10n.partLabel),
+          items: [
+            for (final t in widget.types)
+              DropdownMenuItem(
+                value: t.id,
+                child: Text(
+                  '${componentTypeName(l10n, t.id, t.name)} '
+                  '(${componentGroupName(l10n, t.group)})',
+                ),
+              ),
+          ],
+          onChanged: widget.replacing != null ? null : _pickType,
+        ),
+        Row(
+          spacing: AppSpacing.md,
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('part-brand'),
+                controller: _brand,
+                decoration: InputDecoration(labelText: l10n.brand),
+              ),
             ),
+            Expanded(
+              child: TextField(
+                key: const Key('part-model'),
+                controller: _model,
+                decoration: InputDecoration(labelText: l10n.model),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          spacing: AppSpacing.md,
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('part-mpn'),
+                controller: _mpn,
+                decoration: InputDecoration(
+                  labelText: l10n.mpn,
+                  helperText: l10n.mpnHelper,
+                  helperMaxLines: 3,
+                ),
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                key: const Key('part-gtin'),
+                controller: _gtin,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.gtin,
+                  helperText: l10n.gtinHelper,
+                  helperMaxLines: 3,
+                ),
+              ),
+            ),
+          ],
+        ),
+        CheckboxListTile(
+          key: const Key('part-custom'),
+          value: _custom,
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.custom),
+          subtitle: Text(l10n.customHelper),
+          onChanged: (v) => setState(() => _custom = v ?? false),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('part-installed'),
+            icon: const Icon(Icons.event),
+            label: Text(l10n.installedOn(isoDate(_installed))),
+            onPressed: () async {
+              final d = await _pickDate(context, _installed);
+              if (d != null) setState(() => _installed = dateOnly(d));
+            },
           ),
         ),
-        Flexible(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
+        if (widget.part != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleLarge),
-                Autocomplete<PartResponse>(
-                  optionsBuilder: (value) async {
-                    final text = value.text.trim();
-                    if (text.length < 2) return const <PartResponse>[];
-                    return widget.search(text, _type);
+                TextButton.icon(
+                  key: const Key('part-removed'),
+                  icon: const Icon(Icons.event_busy),
+                  label: Text(
+                    _removed == null
+                        ? l10n.stillOnBike
+                        : l10n.removedOn(isoDate(_removed!)),
+                  ),
+                  onPressed: () async {
+                    final d = await _pickDate(context, _removed);
+                    if (d != null) {
+                      setState(() => _removed = dateOnly(d));
+                    }
                   },
-                  displayStringForOption: (p) =>
-                      [p.brand, p.model].where((s) => s.isNotEmpty).join(' '),
-                  fieldViewBuilder:
-                      (context, controller, focusNode, onFieldSubmitted) =>
-                          TextField(
-                            key: const Key('part-search'),
-                            controller: controller,
-                            focusNode: focusNode,
-                            decoration: InputDecoration(
-                              labelText: l10n.findPart,
-                              hintText: l10n.findPartHint,
-                            ),
-                          ),
-                  onSelected: _applyKnownPart,
                 ),
-                DropdownButtonFormField<String>(
-                  key: const Key('part-type'),
-                  initialValue: _type,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: l10n.partLabel),
-                  items: [
-                    for (final t in widget.types)
-                      DropdownMenuItem(
-                        value: t.id,
-                        child: Text(
-                          '${componentTypeName(l10n, t.id, t.name)} '
-                          '(${componentGroupName(l10n, t.group)})',
-                        ),
-                      ),
-                  ],
-                  onChanged: widget.replacing != null ? null : _pickType,
-                ),
-                Row(
-                  spacing: AppSpacing.md,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-brand'),
-                        controller: _brand,
-                        decoration: InputDecoration(labelText: l10n.brand),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-model'),
-                        controller: _model,
-                        decoration: InputDecoration(labelText: l10n.model),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  spacing: AppSpacing.md,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-mpn'),
-                        controller: _mpn,
-                        decoration: InputDecoration(
-                          labelText: l10n.mpn,
-                          helperText: l10n.mpnHelper,
-                          helperMaxLines: 3,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-gtin'),
-                        controller: _gtin,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: l10n.gtin,
-                          helperText: l10n.gtinHelper,
-                          helperMaxLines: 3,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                CheckboxListTile(
-                  key: const Key('part-custom'),
-                  value: _custom,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.custom),
-                  subtitle: Text(l10n.customHelper),
-                  onChanged: (v) => setState(() => _custom = v ?? false),
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('part-installed'),
-                    icon: const Icon(Icons.event),
-                    label: Text(l10n.installedOn(isoDate(_installed))),
-                    onPressed: () async {
-                      final d = await _pickDate(context, _installed);
-                      if (d != null) setState(() => _installed = dateOnly(d));
-                    },
-                  ),
-                ),
-                if (widget.part != null)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      children: [
-                        TextButton.icon(
-                          key: const Key('part-removed'),
-                          icon: const Icon(Icons.event_busy),
-                          label: Text(
-                            _removed == null
-                                ? l10n.stillOnBike
-                                : l10n.removedOn(isoDate(_removed!)),
-                          ),
-                          onPressed: () async {
-                            final d = await _pickDate(context, _removed);
-                            if (d != null) {
-                              setState(() => _removed = dateOnly(d));
-                            }
-                          },
-                        ),
-                        if (_removed != null)
-                          IconButton(
-                            tooltip: l10n.putBackOnBike,
-                            icon: const Icon(Icons.close),
-                            onPressed: () => setState(() => _removed = null),
-                          ),
-                      ],
-                    ),
-                  ),
-                Text(
-                  l10n.partLimitsHelp,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                Row(
-                  spacing: AppSpacing.md,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-km'),
-                        controller: _km,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: distanceUnit(
-                            ref.watch(unitsChoiceViewModelProvider),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-hours'),
-                        controller: _hours,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(labelText: l10n.hours),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        key: const Key('part-months'),
-                        controller: _months,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: l10n.months),
-                      ),
-                    ),
-                  ],
-                ),
-                if (problem != null)
-                  Text(
-                    problem,
-                    key: const Key('form-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                if (_removed != null)
+                  IconButton(
+                    tooltip: l10n.putBackOnBike,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _removed = null),
                   ),
               ],
             ),
           ),
-        ),
-        const Divider(height: 1),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.cancel),
+        Text(l10n.partLimitsHelp, style: Theme.of(context).textTheme.bodySmall),
+        Row(
+          spacing: AppSpacing.md,
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('part-km'),
+                controller: _km,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: distanceUnit(
+                    ref.watch(unitsChoiceViewModelProvider),
+                  ),
+                ),
               ),
-              FilledButton(
-                key: const Key('part-save'),
-                onPressed: _submit,
-                child: Text(l10n.save),
+            ),
+            Expanded(
+              child: TextField(
+                key: const Key('part-hours'),
+                controller: _hours,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(labelText: l10n.hours),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: TextField(
+                key: const Key('part-months'),
+                controller: _months,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: l10n.months),
+              ),
+            ),
+          ],
         ),
       ],
     );

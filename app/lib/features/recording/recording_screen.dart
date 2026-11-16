@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import '../../core/motion.dart';
 import '../rides/ride_type_chips.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'recorder.dart';
@@ -14,6 +13,7 @@ import 'recording_view_model.dart';
 import 'upload_queue.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
+import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/stat_tile.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
@@ -220,15 +220,7 @@ class _StartCard extends StatelessWidget {
 ///
 /// The sheet watches the recorder itself, so a strap paired from inside it appears without reopening.
 Future<void> showRecorderSettings(BuildContext context) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      sheetAnimationStyle: AnimationStyle(
-        duration: motionDuration(context, AppMotion.standard),
-      ),
-      builder: (_) => const _SettingsSheet(),
-    );
+    showSheet<void>(context, builder: (_) => const _SettingsSheet());
 
 class _SettingsSheet extends ConsumerStatefulWidget {
   const _SettingsSheet();
@@ -242,9 +234,8 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
 
   Future<void> _pair() async {
     final notifier = ref.read(recordingViewModelProvider.notifier);
-    final sensor = await showModalBottomSheet<SensorInfo>(
-      context: context,
-      isScrollControlled: true,
+    final sensor = await showSheet<SensorInfo>(
+      context,
       builder: (context) => _SensorSheet(
         requestPermission: notifier.requestSensorPermissions,
         scan: notifier.scanSensors,
@@ -263,98 +254,62 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
     final notifier = ref.read(recordingViewModelProvider.notifier);
     final sensorsSupported =
         ref.watch(recorderProvider)?.sensorsSupported ?? false;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return SheetFrame(
+      title: l10n.recorderSettings,
+      bottom: FilledButton(
+        key: const Key('record-settings-done'),
+        onPressed: () => Navigator.of(context).pop(),
+        child: Text(l10n.done),
+      ),
       children: [
-        Center(
-          child: Container(
-            width: 32,
-            height: 4,
-            margin: const EdgeInsets.only(top: 8, bottom: 4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+        DropdownButtonFormField<String>(
+          key: const Key('record-ride-type'),
+          initialValue: s.rideType,
+          isExpanded: true,
+          decoration: InputDecoration(labelText: l10n.recorderRideType),
+          items: [
+            for (final id in const [
+              'road',
+              'gravel',
+              'mountain',
+              'track',
+              'indoor',
+              'virtual',
+              'commute',
+            ])
+              DropdownMenuItem(value: id, child: Text(_rideTypeName(l10n, id))),
+          ],
+          onChanged: (value) {
+            if (value != null) notifier.setRideType(value);
+          },
         ),
-        Flexible(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                Text(
-                  l10n.recorderSettings,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                DropdownButtonFormField<String>(
-                  key: const Key('record-ride-type'),
-                  initialValue: s.rideType,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: l10n.recorderRideType),
-                  items: [
-                    for (final id in const [
-                      'road',
-                      'gravel',
-                      'mountain',
-                      'track',
-                      'indoor',
-                      'virtual',
-                      'commute',
-                    ])
-                      DropdownMenuItem(
-                        value: id,
-                        child: Text(_rideTypeName(l10n, id)),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) notifier.setRideType(value);
-                  },
-                ),
-                // The strap row is what needs the room at the bottom of a phone sheet, so the two
-                // switches stay to one line each.
-                SwitchListTile(
-                  key: const Key('record-ebike-switch'),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(l10n.recorderEbike),
-                  value: s.ebike,
-                  onChanged: notifier.setEbike,
-                ),
-                SwitchListTile(
-                  key: const Key('auto-pause-switch'),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(l10n.pauseWhenStopped),
-                  subtitle: Text(l10n.pauseWhenStoppedHelp),
-                  value: s.autoPause,
-                  onChanged: notifier.setAutoPause,
-                ),
-                if (sensorsSupported)
-                  _SensorTile(
-                    name: s.snapshot.sensorName,
-                    status: s.snapshot.sensorStatus,
-                    busy: _pairing,
-                    onPair: _pair,
-                    onForget: notifier.forgetSensor,
-                  ),
-              ],
-            ),
-          ),
+        // The strap row is what needs the room at the bottom of a phone sheet, so the two
+        // switches stay to one line each.
+        SwitchListTile(
+          key: const Key('record-ebike-switch'),
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(l10n.recorderEbike),
+          value: s.ebike,
+          onChanged: notifier.setEbike,
         ),
-        const Divider(height: 1),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              key: const Key('record-settings-done'),
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.done),
-            ),
-          ),
+        SwitchListTile(
+          key: const Key('auto-pause-switch'),
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(l10n.pauseWhenStopped),
+          subtitle: Text(l10n.pauseWhenStoppedHelp),
+          value: s.autoPause,
+          onChanged: notifier.setAutoPause,
         ),
+        if (sensorsSupported)
+          _SensorTile(
+            name: s.snapshot.sensorName,
+            status: s.snapshot.sensorStatus,
+            busy: _pairing,
+            onPair: _pair,
+            onForget: notifier.forgetSensor,
+          ),
       ],
     );
   }
@@ -747,59 +702,40 @@ class _SensorSheetState extends State<_SensorSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final found = _found;
-    return SafeArea(
+    return SheetFrame(
       key: const Key('sensor-sheet'),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.pairStrapTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(l10n.pairStrapHelp),
-            const SizedBox(height: AppSpacing.lg),
-            if (_scanning) ...[
-              const LinearProgressIndicator(),
-              const SizedBox(height: AppSpacing.md),
-              Text(l10n.searchingStraps, key: const Key('sensor-searching')),
-            ],
-            if (_errorCode != null || _found == null && !_scanning)
-              Text(
-                recorderErrorText(l10n, _errorCode),
-                key: const Key('sensor-sheet-error'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            if (found != null && found.isEmpty && !_scanning)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(l10n.noStraps, key: const Key('sensor-none')),
-              ),
-            for (final sensor in found ?? const <SensorInfo>[])
-              ListTile(
-                key: Key('sensor-${sensor.address}'),
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.favorite),
-                title: Text(sensor.name),
-                subtitle: Text(sensor.address),
-                trailing: sensor.rssi == null
-                    ? null
-                    : Text('${sensor.rssi} dBm'),
-                onTap: () => Navigator.of(context).pop(sensor),
-              ),
-            const SizedBox(height: AppSpacing.sm),
-            if (!_scanning)
-              TextButton(
-                key: const Key('sensor-scan-again'),
-                onPressed: _scan,
-                child: Text(l10n.searchAgain),
-              ),
-          ],
-        ),
-      ),
+      title: l10n.pairStrapTitle,
+      children: [
+        Text(l10n.pairStrapHelp),
+        if (_scanning) ...[
+          const LinearProgressIndicator(),
+          Text(l10n.searchingStraps, key: const Key('sensor-searching')),
+        ],
+        if (_errorCode != null || _found == null && !_scanning)
+          Text(
+            recorderErrorText(l10n, _errorCode),
+            key: const Key('sensor-sheet-error'),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        if (found != null && found.isEmpty && !_scanning)
+          Text(l10n.noStraps, key: const Key('sensor-none')),
+        for (final sensor in found ?? const <SensorInfo>[])
+          ListTile(
+            key: Key('sensor-${sensor.address}'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.favorite),
+            title: Text(sensor.name),
+            subtitle: Text(sensor.address),
+            trailing: sensor.rssi == null ? null : Text('${sensor.rssi} dBm'),
+            onTap: () => Navigator.of(context).pop(sensor),
+          ),
+        if (!_scanning)
+          TextButton(
+            key: const Key('sensor-scan-again'),
+            onPressed: _scan,
+            child: Text(l10n.searchAgain),
+          ),
+      ],
     );
   }
 }

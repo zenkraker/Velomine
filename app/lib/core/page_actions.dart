@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'tokens.dart';
+import 'widgets/form_sheet.dart';
 
 /// The screen the shell is showing. The title bar only takes buttons from this one, so a page that
 /// is being replaced cannot put its own back over the next screen.
@@ -80,19 +80,6 @@ void publishPhoneActions(
   });
 }
 
-/// A modal sheet with a page's filters, kept above the keyboard so a search field stays visible.
+/// A modal sheet with a page's filters: the builder returns a [SheetFrame], which keeps it above the keyboard.
 Future<void> showFiltersSheet(BuildContext context, WidgetBuilder builder) =>
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
-        ),
-        child: builder(context),
-      ),
-    );
+    showSheet<void>(context, builder: builder);

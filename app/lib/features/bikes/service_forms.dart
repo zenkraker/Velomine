@@ -85,7 +85,7 @@ Future<ReminderFormData?> showReminderForm(
   MaintenanceReminderResponse? reminder,
   MaintenanceJob? job,
   String? jobName,
-}) => showFormSheet<ReminderFormData>(
+}) => showSheet<ReminderFormData>(
   context,
   builder: (_) => _ReminderForm(
     jobs: jobs,
@@ -404,7 +404,7 @@ Future<ServiceEntryFormData?> showServiceEntryForm(
   required List<ComponentResponse> parts,
   required List<MaintenanceReminderResponse> reminders,
   ServiceEntryResponse? entry,
-}) => showFormSheet<ServiceEntryFormData>(
+}) => showSheet<ServiceEntryFormData>(
   context,
   builder: (_) => _ServiceEntryForm(
     today: today,

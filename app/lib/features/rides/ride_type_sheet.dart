@@ -2,8 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import '../../core/tokens.dart';
-import '../../core/motion.dart';
+import '../../core/widgets/form_sheet.dart';
 
 /// Saves the four dimensions of a ride and answers whether the server took them.
 typedef RideTypeSaver = Future<bool> Function({
@@ -18,13 +17,8 @@ Future<void> showRideTypeSheet(
   BuildContext context,
   RideResponse ride,
   RideTypeSaver save,
-) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  // The sheet keeps the app's motion, or none when the system asks for none.
-  sheetAnimationStyle: AnimationStyle(
-    duration: motionDuration(context, AppMotion.standard),
-  ),
+) => showSheet<void>(
+  context,
   builder: (_) => _RideTypeSheet(ride: ride, save: save),
 );
 
@@ -74,89 +68,56 @@ class _RideTypeSheetState extends State<_RideTypeSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          16 + MediaQuery.viewInsetsOf(context).bottom,
+    return FormSheet(
+      title: l10n.rideTypeTitle,
+      saveKey: const Key('ride-type-save'),
+      onSave: _saving ? null : _save,
+      children: [
+        Text(l10n.rideTypeHelp, style: Theme.of(context).textTheme.bodySmall),
+        _Choice(
+          fieldKey: const Key('ride-type-discipline'),
+          label: l10n.rideTypeDiscipline,
+          value: _discipline,
+          items: {
+            '': l10n.rideTypeUnset,
+            'road': l10n.bikeKindRoad,
+            'gravel': l10n.bikeKindGravel,
+            'mountain': l10n.bikeKindMountain,
+            'track': l10n.bikeKindTrack,
+          },
+          onChanged: (value) => setState(() => _discipline = value),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.md,
-          children: [
-            Text(
-              l10n.rideTypeTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              l10n.rideTypeHelp,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            _Choice(
-              fieldKey: const Key('ride-type-discipline'),
-              label: l10n.rideTypeDiscipline,
-              value: _discipline,
-              items: {
-                '': l10n.rideTypeUnset,
-                'road': l10n.bikeKindRoad,
-                'gravel': l10n.bikeKindGravel,
-                'mountain': l10n.bikeKindMountain,
-                'track': l10n.bikeKindTrack,
-              },
-              onChanged: (value) => setState(() => _discipline = value),
-            ),
-            _Choice(
-              fieldKey: const Key('ride-type-assist'),
-              label: l10n.rideTypeAssist,
-              value: _assist,
-              items: {
-                '': l10n.rideTypeUnset,
-                'none': l10n.rideTypeNoAssist,
-                'ebike': l10n.bikeKindEbike,
-              },
-              onChanged: (value) => setState(() => _assist = value),
-            ),
-            _Choice(
-              fieldKey: const Key('ride-type-environment'),
-              label: l10n.rideTypeEnvironment,
-              value: _environment,
-              items: {
-                '': l10n.rideTypeUnset,
-                'outdoor': l10n.rideTypeOutdoor,
-                'indoor': l10n.rideTypeIndoor,
-                'virtual': l10n.rideTypeVirtual,
-              },
-              onChanged: (value) => setState(() => _environment = value),
-            ),
-            _Choice(
-              fieldKey: const Key('ride-type-commute'),
-              label: l10n.rideTypeCommute,
-              value: _commute,
-              items: {'': l10n.rideTypeUnset, 'yes': l10n.yes, 'no': l10n.no},
-              onChanged: (value) => setState(() => _commute = value),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  key: const Key('ride-type-cancel'),
-                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                FilledButton(
-                  key: const Key('ride-type-save'),
-                  onPressed: _saving ? null : _save,
-                  child: Text(l10n.save),
-                ),
-              ],
-            ),
-          ],
+        _Choice(
+          fieldKey: const Key('ride-type-assist'),
+          label: l10n.rideTypeAssist,
+          value: _assist,
+          items: {
+            '': l10n.rideTypeUnset,
+            'none': l10n.rideTypeNoAssist,
+            'ebike': l10n.bikeKindEbike,
+          },
+          onChanged: (value) => setState(() => _assist = value),
         ),
-      ),
+        _Choice(
+          fieldKey: const Key('ride-type-environment'),
+          label: l10n.rideTypeEnvironment,
+          value: _environment,
+          items: {
+            '': l10n.rideTypeUnset,
+            'outdoor': l10n.rideTypeOutdoor,
+            'indoor': l10n.rideTypeIndoor,
+            'virtual': l10n.rideTypeVirtual,
+          },
+          onChanged: (value) => setState(() => _environment = value),
+        ),
+        _Choice(
+          fieldKey: const Key('ride-type-commute'),
+          label: l10n.rideTypeCommute,
+          value: _commute,
+          items: {'': l10n.rideTypeUnset, 'yes': l10n.yes, 'no': l10n.no},
+          onChanged: (value) => setState(() => _commute = value),
+        ),
+      ],
     );
   }
 }

@@ -24,6 +24,7 @@ import 'ride_title.dart';
 import 'ride_type_chips.dart';
 import 'rides_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/form_sheet.dart';
 import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 
@@ -371,43 +372,35 @@ class _RidesFilterSheet extends ConsumerWidget {
           selected: selected,
           onSelected: (_) => notifier.setDisciplineFilter(value),
         );
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpacing.lg,
-        children: [
-          Text(
-            l10n.rideFilterTitle,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          RideFilters(
-            query: s.query,
-            dateRange: s.dateRange,
-            onQuery: notifier.setQuery,
-            onDateRange: notifier.setDateRange,
-          ),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.xs,
-            children: [
+    return SheetFrame(
+      title: l10n.rideFilterTitle,
+      children: [
+        RideFilters(
+          query: s.query,
+          dateRange: s.dateRange,
+          onQuery: notifier.setQuery,
+          onDateRange: notifier.setDateRange,
+        ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            discipline(
+              'filter-all',
+              l10n.rideFilterAll,
+              null,
+              s.disciplineFilter == null,
+            ),
+            for (final name in ['road', 'gravel', 'mountain', 'track'])
               discipline(
-                'filter-all',
-                l10n.rideFilterAll,
-                null,
-                s.disciplineFilter == null,
+                'filter-$name',
+                disciplineName(l10n, name),
+                name,
+                s.disciplineFilter == name,
               ),
-              for (final name in ['road', 'gravel', 'mountain', 'track'])
-                discipline(
-                  'filter-$name',
-                  disciplineName(l10n, name),
-                  name,
-                  s.disciplineFilter == name,
-                ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

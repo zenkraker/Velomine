@@ -85,3 +85,12 @@ abstract final class AppMotion {
   /// Fast out, slow in: things that move on the screen.
   static const Curve emphasized = Cubic(0.2, 0, 0, 1);
 }
+
+/// The bottom sheet that [SheetFrame] draws.
+abstract final class AppSheet {
+  /// The widest a sheet grows on a tablet or the web.
+  static const double maxWidth = 640;
+
+  /// The margin at the sides of the title, the fields and the pinned action.
+  static const double gutter = AppSpacing.xl;
+}

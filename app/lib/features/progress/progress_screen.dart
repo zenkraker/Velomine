@@ -24,6 +24,7 @@ import 'totals_chart.dart';
 import 'training_summary.dart';
 import 'wellbeing_card.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/form_sheet.dart';
 import '../../core/units.dart';
 
 /// How many totals rows the table lists before the rest are counted.
@@ -356,48 +357,40 @@ class _ProgressFilterSheet extends ConsumerWidget {
     final filters = ref.watch(progressFiltersViewModelProvider);
     final notifier = ref.read(progressFiltersViewModelProvider.notifier);
     final l10n = context.l10n;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpacing.lg,
-        children: [
-          Text(
-            l10n.progressFilterTitle,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          SegmentedButton<String>(
-            key: const Key('progress-period'),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(value: 'week', label: Text(l10n.periodWeeks)),
-              ButtonSegment(value: 'month', label: Text(l10n.periodMonths)),
-              ButtonSegment(value: 'year', label: Text(l10n.periodYears)),
-            ],
-            selected: {filters.period},
-            onSelectionChanged: (s) => notifier.setPeriod(s.single),
-          ),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.xs,
-            children: [
+    return SheetFrame(
+      title: l10n.progressFilterTitle,
+      children: [
+        SegmentedButton<String>(
+          key: const Key('progress-period'),
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(value: 'week', label: Text(l10n.periodWeeks)),
+            ButtonSegment(value: 'month', label: Text(l10n.periodMonths)),
+            ButtonSegment(value: 'year', label: Text(l10n.periodYears)),
+          ],
+          selected: {filters.period},
+          onSelectionChanged: (s) => notifier.setPeriod(s.single),
+        ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            ChoiceChip(
+              key: const Key('progress-filter-all'),
+              label: Text(l10n.rideFilterAll),
+              selected: filters.discipline == null,
+              onSelected: (_) => notifier.setDiscipline(null),
+            ),
+            for (final discipline in ['road', 'gravel', 'mountain', 'track'])
               ChoiceChip(
-                key: const Key('progress-filter-all'),
-                label: Text(l10n.rideFilterAll),
-                selected: filters.discipline == null,
-                onSelected: (_) => notifier.setDiscipline(null),
+                key: Key('progress-filter-$discipline'),
+                label: Text(disciplineName(l10n, discipline)),
+                selected: filters.discipline == discipline,
+                onSelected: (_) => notifier.setDiscipline(discipline),
               ),
-              for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-                ChoiceChip(
-                  key: Key('progress-filter-$discipline'),
-                  label: Text(disciplineName(l10n, discipline)),
-                  selected: filters.discipline == discipline,
-                  onSelected: (_) => notifier.setDiscipline(discipline),
-                ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

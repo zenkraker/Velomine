@@ -2,8 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
-import '../../core/motion.dart';
-import '../../core/tokens.dart';
+import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/app_text_field.dart';
 
 /// Saves the title and description and answers whether the server took them.
@@ -22,12 +21,8 @@ Future<void> showRideTextSheet(
   BuildContext context,
   RideResponse ride,
   RideTextSaver save,
-) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  sheetAnimationStyle: AnimationStyle(
-    duration: motionDuration(context, AppMotion.standard),
-  ),
+) => showSheet<void>(
+  context,
   builder: (_) => _RideTextSheet(ride: ride, save: save),
 );
 
@@ -76,62 +71,30 @@ class _RideTextSheetState extends State<_RideTextSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
+    return FormSheet(
+      title: l10n.rideTextSheetTitle,
+      saveKey: const Key('ride-text-save'),
+      onSave: _saving ? null : _save,
+      children: [
+        Text(l10n.rideTextHelp, style: Theme.of(context).textTheme.bodySmall),
+        AppTextField(
+          fieldKey: const Key('ride-title-field'),
+          controller: _title,
+          label: l10n.rideTextTitle,
+          helper: l10n.rideTextTitleHelper,
+          enabled: !_saving,
+          maxLength: rideTitleLimit,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.md,
-          children: [
-            Text(
-              l10n.rideTextSheetTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              l10n.rideTextHelp,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            AppTextField(
-              fieldKey: const Key('ride-title-field'),
-              controller: _title,
-              label: l10n.rideTextTitle,
-              helper: l10n.rideTextTitleHelper,
-              enabled: !_saving,
-              maxLength: rideTitleLimit,
-            ),
-            AppTextField(
-              fieldKey: const Key('ride-description-field'),
-              controller: _description,
-              label: l10n.rideTextDescription,
-              keyboardType: TextInputType.multiline,
-              enabled: !_saving,
-              maxLength: rideDescriptionLimit,
-              maxLines: 5,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              spacing: AppSpacing.sm,
-              children: [
-                TextButton(
-                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                FilledButton(
-                  key: const Key('ride-text-save'),
-                  onPressed: _saving ? null : _save,
-                  child: Text(l10n.save),
-                ),
-              ],
-            ),
-          ],
+        AppTextField(
+          fieldKey: const Key('ride-description-field'),
+          controller: _description,
+          label: l10n.rideTextDescription,
+          keyboardType: TextInputType.multiline,
+          enabled: !_saving,
+          maxLength: rideDescriptionLimit,
+          maxLines: 5,
         ),
-      ),
+      ],
     );
   }
 }
