@@ -97,9 +97,16 @@ ThemeData dayTheme() {
       ).copyWith(
         primary: deepTeal,
         onPrimary: Colors.white,
+        primaryContainer: const Color(0xFFBFE3DE),
+        onPrimaryContainer: const Color(0xFF062C2A),
         secondary: valleyTeal,
         surface: cloudDancer,
         onSurface: forestInk,
+        surfaceContainerLowest: Colors.white,
+        surfaceContainerLow: const Color(0xFFF7F5F1),
+        surfaceContainer: const Color(0xFFE8E5DE),
+        surfaceContainerHigh: const Color(0xFFE0DDD5),
+        surfaceContainerHighest: const Color(0xFFD8D4CB),
         tertiary: ironOxide,
         outlineVariant: gravel,
       );
@@ -181,32 +188,74 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
     fontFamily: sans,
     scaffoldBackgroundColor: scheme.surface,
     textTheme: text.copyWith(
-      displayLarge: displayStyle(text.displayLarge),
-      displayMedium: displayStyle(text.displayMedium),
-      displaySmall: displayStyle(text.displaySmall),
-      headlineLarge: displayStyle(text.headlineLarge),
+      displayLarge: displayStyle(text.displayLarge).copyWith(fontSize: 68),
+      displayMedium: displayStyle(text.displayMedium).copyWith(fontSize: 56),
+      displaySmall: displayStyle(text.displaySmall).copyWith(fontSize: 44),
+      headlineLarge: displayStyle(text.headlineLarge).copyWith(fontSize: 40),
+      headlineMedium: text.headlineMedium?.copyWith(fontSize: 34),
+      headlineSmall: text.headlineSmall?.copyWith(fontSize: 28),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: scheme.surface,
       foregroundColor: scheme.onSurface,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: scheme.surfaceContainerLow,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheet),
+        ),
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.primaryContainer
+              : null,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.onPrimaryContainer
+              : null,
+        ),
+        textStyle: buttonLabel,
+      ),
     ),
     inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
     ),
-    filledButtonTheme: FilledButtonThemeData(style: pill()),
+    filledButtonTheme: FilledButtonThemeData(
+      style: pill().copyWith(
+        backgroundColor: WidgetStatePropertyAll(scheme.primary),
+        foregroundColor: WidgetStatePropertyAll(scheme.onPrimary),
+        minimumSize: const WidgetStatePropertyAll(Size(48, 52)),
+        textStyle: const WidgetStatePropertyAll(
+          TextStyle(fontFamily: sans, fontWeight: FontWeight.w700),
+        ),
+      ),
+    ),
     outlinedButtonTheme: OutlinedButtonThemeData(style: pill()),
     textButtonTheme: TextButtonThemeData(style: pill()),
     cardTheme: CardThemeData(
       elevation: 0,
+      color: scheme.surfaceContainer,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.large),
-        side: BorderSide(color: scheme.outlineVariant),
       ),
     ),
     chipTheme: ChipThemeData(
       shape: const StadiumBorder(),
       side: BorderSide(color: scheme.outlineVariant),
+      selectedColor: scheme.primaryContainer,
+      labelStyle: TextStyle(color: scheme.onSurface),
+      secondaryLabelStyle: TextStyle(color: scheme.onPrimaryContainer),
     ),
     navigationBarTheme: NavigationBarThemeData(
       indicatorColor: scheme.primaryContainer,

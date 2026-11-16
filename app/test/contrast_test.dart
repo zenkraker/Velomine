@@ -17,6 +17,30 @@ void _expectBodyTextReadable(ThemeData theme, String name) {
     'onSurfaceVariant on surface': (scheme.onSurfaceVariant, scheme.surface),
     'onPrimary on primary': (scheme.onPrimary, scheme.primary),
     'error on surface': (scheme.error, scheme.surface),
+    'onPrimaryContainer on primaryContainer': (
+      scheme.onPrimaryContainer,
+      scheme.primaryContainer,
+    ),
+    'onSurface on surfaceContainerLow': (
+      scheme.onSurface,
+      scheme.surfaceContainerLow,
+    ),
+    'onSurface on surfaceContainer': (
+      scheme.onSurface,
+      scheme.surfaceContainer,
+    ),
+    'onSurface on surfaceContainerHigh': (
+      scheme.onSurface,
+      scheme.surfaceContainerHigh,
+    ),
+    'onSurface on surfaceContainerHighest': (
+      scheme.onSurface,
+      scheme.surfaceContainerHighest,
+    ),
+    'onSurfaceVariant on surfaceContainer': (
+      scheme.onSurfaceVariant,
+      scheme.surfaceContainer,
+    ),
   };
   pairs.forEach((label, colors) {
     expect(

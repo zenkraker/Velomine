@@ -8,6 +8,11 @@ bool reduceMotion(BuildContext context) =>
 Duration motionDuration(BuildContext context, Duration duration) =>
     reduceMotion(context) ? Duration.zero : duration;
 
+/// [curve], or [Curves.linear] when the person asked to reduce motion (the duration is zero then, so no
+/// overshoot is ever seen).
+Curve motionCurve(BuildContext context, Curve curve) =>
+    reduceMotion(context) ? Curves.linear : curve;
+
 /// A page change with no transition, for when the person asked to reduce motion.
 class NoAnimationPageTransitionsBuilder extends PageTransitionsBuilder {
   const NoAnimationPageTransitionsBuilder();

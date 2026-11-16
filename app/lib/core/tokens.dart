@@ -1,3 +1,5 @@
+import 'package:flutter/animation.dart' show Cubic, Curve;
+
 /// Layout constants shared by every screen, so a gap or a corner is the same number everywhere.
 /// Colours and type come from the theme; these are the numbers the theme does not carry.
 abstract final class AppSpacing {
@@ -13,10 +15,13 @@ abstract final class AppSpacing {
 abstract final class AppRadius {
   static const double small = 8;
   static const double medium = 16;
-  static const double large = 22;
+  static const double large = 28;
+
+  /// The top corners of a bottom sheet.
+  static const double sheet = 28;
 
   /// A card that needs to stand out of the page, for an overlay or a selected state.
-  static const double xlarge = 28;
+  static const double xlarge = 32;
 }
 
 /// Where the layout changes shape: a phone, a tablet, a desktop window.
@@ -54,4 +59,10 @@ abstract final class AppMotion {
   static const fast = Duration(milliseconds: 120);
   static const standard = Duration(milliseconds: 220);
   static const slow = Duration(milliseconds: 320);
+
+  /// A small overshoot that settles: things that arrive (a sheet, a pill, a chip).
+  static const Curve spring = Cubic(0.34, 1.56, 0.64, 1);
+
+  /// Fast out, slow in: things that move on the screen.
+  static const Curve emphasized = Cubic(0.2, 0, 0, 1);
 }
