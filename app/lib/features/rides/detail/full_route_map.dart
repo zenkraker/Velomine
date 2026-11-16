@@ -88,7 +88,7 @@ class _FullRouteMapScreenState extends ConsumerState<FullRouteMapScreen> {
             elevation(units, widget.elevationGainM),
           );
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: Listener(
         onPointerSignal: (event) {
           if (event is PointerScrollEvent) {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../auth/auth_page.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -73,6 +74,17 @@ class _SupporterActivationScreenState
       eyebrow: l10n.profileTitle,
       title: l10n.supporterSignInTitle,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: ValueListenableBuilder(
+        valueListenable: _key,
+        builder: (context, value, _) => BottomActionBar.button(
+          buttonKey: const Key('supporter-activate'),
+          label: l10n.supporterActivate,
+          busy: s.activate.running,
+          onPressed: s.activate.running || value.text.trim().isEmpty
+              ? null
+              : _activate,
+        ),
+      ),
       children: [
         if (loadFailure != null)
           AuthFailure(
@@ -99,19 +111,6 @@ class _SupporterActivationScreenState
                   _ => l10n.supporterKeyInvalid,
                 },
               ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ValueListenableBuilder(
-                valueListenable: _key,
-                builder: (context, value, _) => FilledButton(
-                  key: const Key('supporter-activate'),
-                  onPressed: s.activate.running || value.text.trim().isEmpty
-                      ? null
-                      : _activate,
-                  child: Text(l10n.supporterActivate),
-                ),
-              ),
-            ),
           ],
         ),
       ],

@@ -7,6 +7,7 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/motion.dart';
 import '../../core/theme.dart';
+import '../../core/tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'supporter_badge.dart';
 
@@ -15,8 +16,8 @@ import 'supporter_badge.dart';
 // peak do not come from a ride.
 // shortcut: the summit's ride is decoration, query the member's hardest climb when the server offers it.
 
-const _ink = Color(0xFF0E0F0C);
-const _paper = Color(0xFFF0EEE9);
+/// The verified chip is this tall on the artboard; its corners are half of it.
+const _chipHeight = 40.0;
 
 const _effort = EffortCurve();
 const _soft = Cubic(0.16, 1, 0.3, 1);
@@ -148,7 +149,7 @@ class _SupporterCelebrationScreenState extends State<SupporterCelebrationScreen>
     final l10n = context.l10n;
     final licence = widget.licence;
     return Scaffold(
-      backgroundColor: _ink,
+      backgroundColor: asphalt,
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
@@ -262,11 +263,15 @@ class _Overlay extends StatelessWidget {
                 scale: 0.9 + 0.1 * chipIn,
                 child: Container(
                   key: const Key('supporter-chip'),
-                  height: 40 * scale,
+                  height: _chipHeight * scale,
                   padding: EdgeInsets.symmetric(horizontal: 18 * scale),
                   decoration: BoxDecoration(
-                    border: Border.all(color: _paper.withValues(alpha: 0.18)),
-                    borderRadius: BorderRadius.circular(20 * scale),
+                    border: Border.all(
+                      color: cloudDancer.withValues(alpha: 0.18),
+                    ),
+                    borderRadius: BorderRadius.circular(
+                      _chipHeight / 2 * scale,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -279,7 +284,7 @@ class _Overlay extends StatelessWidget {
                       Text(
                         l10n.supporterKeyVerified.toUpperCase(),
                         style: text.labelSmall?.copyWith(
-                          color: _paper.withValues(alpha: 0.8),
+                          color: cloudDancer.withValues(alpha: 0.8),
                           letterSpacing: 1.8,
                           fontWeight: FontWeight.w600,
                         ),
@@ -333,7 +338,7 @@ class _Overlay extends StatelessWidget {
                       fontFamily: serif,
                       fontSize: 34 * scale,
                       height: 1.1,
-                      color: _paper,
+                      color: cloudDancer,
                     ),
                   ),
                 ),
@@ -344,7 +349,7 @@ class _Overlay extends StatelessWidget {
                     key: const Key('supporter-body'),
                     textAlign: TextAlign.center,
                     style: text.bodyMedium?.copyWith(
-                      color: _paper.withValues(alpha: 0.66),
+                      color: cloudDancer.withValues(alpha: 0.66),
                       height: 1.5,
                     ),
                   ),
@@ -359,7 +364,7 @@ class _Overlay extends StatelessWidget {
                     key: const Key('supporter-serial'),
                     textAlign: TextAlign.center,
                     style: text.labelSmall?.copyWith(
-                      color: _paper.withValues(alpha: 0.5),
+                      color: cloudDancer.withValues(alpha: 0.5),
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -383,13 +388,13 @@ class _Overlay extends StatelessWidget {
                   SupporterBadge(
                     key: const Key('supporter-celebration-badge'),
                     label: l10n.supporter,
-                    style: text.labelLarge?.copyWith(color: _paper),
+                    style: text.labelLarge?.copyWith(color: cloudDancer),
                     background: volt.withValues(alpha: 0.12),
                   ),
                   Text(
                     l10n.supporterAppearsOnProfile,
                     style: text.labelSmall?.copyWith(
-                      color: _paper.withValues(alpha: 0.5),
+                      color: cloudDancer.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -411,16 +416,18 @@ class _Overlay extends StatelessWidget {
                   key: const Key('supporter-continue'),
                   style: FilledButton.styleFrom(
                     backgroundColor: volt,
-                    foregroundColor: _ink,
+                    foregroundColor: asphalt,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28 * scale),
+                      borderRadius: BorderRadius.circular(
+                        AppRadius.large * scale,
+                      ),
                     ),
                   ),
                   onPressed: buttonIn > 0 ? onContinue : null,
                   child: Text(
                     l10n.supporterContinue,
                     style: text.labelLarge?.copyWith(
-                      color: _ink,
+                      color: asphalt,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -515,7 +522,7 @@ class _CelebrationPainter extends CustomPainter {
     canvas.drawPath(
       climb.extractPath(0, climb.length * effort.clamp(0, 1)),
       Paint()
-        ..color = _paper.withValues(alpha: 0.75 * _profile.raw(time))
+        ..color = cloudDancer.withValues(alpha: 0.75 * _profile.raw(time))
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
         ..strokeCap = StrokeCap.round,
@@ -539,7 +546,7 @@ class _CelebrationPainter extends CustomPainter {
       final line = _descentLine.computeMetrics().first;
       final length = line.length * descent;
       final paint = Paint()
-        ..color = _paper.withValues(alpha: 0.28)
+        ..color = cloudDancer.withValues(alpha: 0.28)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5;
       // Dash 2, gap 6.
@@ -571,7 +578,9 @@ class _CelebrationPainter extends CustomPainter {
             Offset(0, -radius),
             Offset(0, -radius - 14 * scale * (1.5 - .85 * burst)),
             Paint()
-              ..color = (i.isEven ? volt : _paper).withValues(alpha: 1 - burst)
+              ..color = (i.isEven ? volt : cloudDancer).withValues(
+                alpha: 1 - burst,
+              )
               ..strokeWidth = 3 * scale
               ..strokeCap = StrokeCap.round,
           )
@@ -610,7 +619,7 @@ class _CelebrationPainter extends CustomPainter {
           box.top + box.height * 20 / 120,
         );
       for (final (path, color) in [
-        (chevron(12, 12), _paper),
+        (chevron(12, 12), cloudDancer),
         (chevron(36, 36), volt),
       ]) {
         final line = path.computeMetrics().first;

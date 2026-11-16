@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:velomine/core/theme.dart';
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/features/supporter/supporter_badge.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine/features/supporter/supporter_celebration_screen.dart';
@@ -73,6 +75,48 @@ void main() {
     expect(find.byKey(const Key('supporter-badge')), findsNothing);
     expect(server.supporterLicences['rider@example.com']!['hidden'], isTrue);
   });
+
+  testWidgets(
+    'SupporterActivationScreen_ShouldKeepSubmitInTheBottomBar_WhenTheScreenOpens',
+    (tester) async {
+      await openProfile(tester);
+      await tester.ensureVisible(find.byKey(const Key('supporter-become')));
+      await tester.tap(find.byKey(const Key('supporter-become')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(BottomActionBar),
+          matching: find.byKey(const Key('supporter-activate')),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'SupporterCelebrationScreen_ShouldUseTheBrandInk_WhenShownOnTheNightTheme',
+    (tester) async {
+      licence();
+      await openProfile(tester);
+      final badge = find.byKey(const Key('supporter-badge'));
+      await tester.ensureVisible(badge);
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(badge);
+        await tester.pump(const Duration(milliseconds: 80));
+      }
+      await tester.pumpAndSettle();
+
+      final scaffold = tester.widget<Scaffold>(
+        find.descendant(
+          of: find.byType(SupporterCelebrationScreen),
+          matching: find.byType(Scaffold),
+        ),
+      );
+      expect(scaffold.backgroundColor, asphalt);
+    },
+  );
 
   testWidgets('SupporterBadge_ShouldOpenTheCelebration_WhenTappedThreeTimes', (
     tester,

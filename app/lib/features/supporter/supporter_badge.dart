@@ -7,6 +7,7 @@ import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/loading_state.dart';
 import 'supporter_view_model.dart';
 
 /// The Velomine mark drawn inline, so no font or image asset is needed: the
@@ -191,7 +192,7 @@ class _SupporterSectionState extends ConsumerState<SupporterSection> {
         ],
       );
     }
-    if (s.load.running) return const SizedBox(height: 48);
+    if (s.load.running) return const LoadingState.rows(count: 1);
     if (s.becomeSupporter) {
       return Align(
         alignment: Alignment.centerLeft,
