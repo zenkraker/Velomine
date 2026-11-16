@@ -13,9 +13,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRides => 'Rides';
 
   @override
-  String get navGroupPersonal => 'Personal';
-
-  @override
   String get navGroupClub => 'Club';
 
   @override

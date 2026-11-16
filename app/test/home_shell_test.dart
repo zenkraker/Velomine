@@ -79,6 +79,7 @@ void main() {
     Widget? page,
     bool reduceMotion = false,
     bool withRecorder = true,
+    String? clubRole = 'member',
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -98,6 +99,7 @@ void main() {
       server.add(
         admin ? 'admin@example.com' : 'rider@example.com',
         roles: [if (admin) 'admin' else 'member'],
+        clubRole: clubRole,
       ),
     );
     final session = server.session(useCookies: true);
@@ -173,17 +175,89 @@ void main() {
     expect(find.byIcon(Icons.groups), findsNothing);
   });
 
-  testWidgets(
-    'HomeShell_ShouldShowTheSameThreeTabsInARail_WhenTheWindowIsSixHundredWide',
-    (tester) async {
-      await pumpShell(tester, size: const Size(800, 1000));
+  for (final width in [800.0, 1300.0]) {
+    testWidgets(
+      'HomeShell_ShouldShowTheSameThreeDestinations_WhenTheWindowIs${width.toInt()}Wide',
+      (tester) async {
+        await pumpShell(tester, size: Size(width, 1000));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(NavigationRail), findsOneWidget);
-      expect(find.byType(FloatingNavPill), findsNothing);
-      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-      expect(rail.destinations, hasLength(3));
-      expect(find.text('Bikes'), findsNothing);
-      expect(find.text('Record'), findsNothing);
+        expect(find.byType(FloatingNavPill), findsNothing);
+        expect(find.byKey(const Key('rail-rides')), findsOneWidget);
+        expect(find.byKey(const Key('rail-progress')), findsOneWidget);
+        expect(find.byKey(const Key('rail-club')), findsOneWidget);
+        expect(find.text('Bikes'), findsNothing);
+        expect(find.text('Record'), findsNothing);
+        expect(
+          find.text('Velomine'),
+          width >= 1200 ? findsOneWidget : findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'HomeShell_ShouldReachNotificationsAndAccount_WhenTheWindowIs${width.toInt()}Wide',
+      (tester) async {
+        await pumpShell(tester, size: Size(width, 1000), admin: true);
+
+        final rail = find.byKey(const Key('rail-rides'));
+        expect(rail, findsOneWidget);
+        expect(find.byKey(const Key('open-notifications')), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(PageScaffold),
+            matching: find.byKey(const Key('open-notifications')),
+          ),
+          findsNothing,
+        );
+        await tester.tap(find.byKey(const Key('account-menu')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('account-admin')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'HomeShell_ShouldHighlightNoDestination_WhenTheRouteIsPushedAt${width.toInt()}',
+      (tester) async {
+        await pumpShell(tester, location: '/bikes', size: Size(width, 1000));
+
+        expect(find.byIcon(Icons.directions_bike), findsNothing);
+        expect(find.byIcon(Icons.insights), findsNothing);
+        expect(find.byIcon(Icons.groups), findsNothing);
+      },
+    );
+  }
+
+  testWidgets(
+    'HomeShell_ShouldNameTheClub_WhenTheWindowIsExpandedAndTheRiderHasOne',
+    (tester) async {
+      await pumpShell(tester, size: const Size(1300, 1000));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('rail-club')),
+          matching: find.text('Test Club'),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'HomeShell_ShouldNotNameAClub_WhenTheWindowIsExpandedAndTheRiderHasNone',
+    (tester) async {
+      await pumpShell(tester, size: const Size(1300, 1000), clubRole: null);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Test Club'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('rail-club')),
+          matching: find.text('No club'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 

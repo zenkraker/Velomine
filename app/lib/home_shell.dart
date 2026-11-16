@@ -20,8 +20,8 @@ import 'features/recording/recording_providers.dart';
 typedef _Tab = ({String path, Widget icon, Widget selectedIcon, String label});
 
 /// The frame around the signed-in screens. On a phone: three tabs in a floating pill over the page. From
-/// 600 dp: the same tabs in a rail. From 1200 dp: a sidebar that holds the brand, the tabs and the
-/// account. Every page names itself with its own header, and the shell hands that header the
+/// 600 dp: the same tabs in one rail, which grows to hold the brand, the club and the privacy note from
+/// 1200 dp and carries the notifications and the account at every width. Every page names itself with its own header, and the shell hands that header the
 /// notifications, the account and the way back through a [PageHeaderScope].
 class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.location, required this.child});
@@ -97,81 +97,61 @@ class HomeShell extends ConsumerWidget {
         location != '/record';
     final banner = live ? LiveRideBanner(snapshot: snapshot) : null;
 
-    // The sidebar carries the notifications and the account itself.
+    final signOut = ref.read(sessionProvider).signOut;
+    // The rail carries the notifications and the account from 600 dp; below that the page header does.
     final page = PageHeaderScope(
       showOnPhone: true,
       onBack: pushed ? () => _back(context) : null,
-      trailing: expanded
-          ? const []
-          : [
-              ...pageActions,
-              if (!pushed)
-                NotificationsButton(
-                  unread: unread,
-                  selected: location == '/notifications',
-                ),
-              _AccountMenu(
-                name: state.me?.displayName,
-                isAdmin: state.isAdmin,
-                signedOut: ref.read(sessionProvider).signOut,
-                // Below the rail's 600 dp the page header is the only place to stand.
-                avatar: !wide,
-              ),
-            ],
+      trailing: [
+        // A tab's filters and import stay in its header at every width the shell has no rail for them.
+        if (!expanded) ...pageActions,
+        if (!wide) ...[
+          if (!pushed)
+            NotificationsButton(
+              unread: unread,
+              selected: location == '/notifications',
+            ),
+          _AccountMenu(
+            name: state.me?.displayName,
+            isAdmin: state.isAdmin,
+            signedOut: signOut,
+            avatar: true,
+          ),
+        ],
+      ],
       child: child,
     );
 
     return BackGuard(
       location: location,
       child: Scaffold(
-        body: switch ((expanded, wide)) {
-          (true, _) => Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Sidebar(
+        body: wide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _AppRail(
+                    expanded: expanded,
+                    tabs: tabs,
+                    selected: selected < 0 ? null : selected,
+                    location: location,
+                    unread: unread,
+                    name: state.me?.displayName,
+                    isAdmin: state.isAdmin,
+                    signedOut: signOut,
+                  ),
+                  Expanded(
+                    child: _WithBanner(banner: banner, child: page),
+                  ),
+                ],
+              )
+            : _PhoneFrame(
+                location: location,
+                keyboard: keyboard,
                 tabs: tabs,
                 selected: selected < 0 ? null : selected,
-                location: location,
-                unread: unread,
-                name: state.me?.displayName,
-                isAdmin: state.isAdmin,
-                signedOut: ref.read(sessionProvider).signOut,
+                banner: banner,
+                child: page,
               ),
-              Expanded(
-                child: _WithBanner(banner: banner, child: page),
-              ),
-            ],
-          ),
-          (false, true) => Row(
-            children: [
-              NavigationRail(
-                selectedIndex: selected < 0 ? null : selected,
-                labelType: NavigationRailLabelType.all,
-                onDestinationSelected: (i) => context.go(tabs[i].path),
-                destinations: [
-                  for (final tab in tabs)
-                    NavigationRailDestination(
-                      icon: tab.icon,
-                      selectedIcon: tab.selectedIcon,
-                      label: Text(tab.label),
-                    ),
-                ],
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: _WithBanner(banner: banner, child: page),
-              ),
-            ],
-          ),
-          (false, false) => _PhoneFrame(
-            location: location,
-            keyboard: keyboard,
-            tabs: tabs,
-            selected: selected < 0 ? null : selected,
-            banner: banner,
-            child: page,
-          ),
-        },
       ),
     );
   }
@@ -351,7 +331,7 @@ class _WithBanner extends StatelessWidget {
   );
 }
 
-/// The notifications button with its unread count, the same in the title bar and the sidebar.
+/// The notifications button with its unread count, the same in the page header and the rail.
 class NotificationsButton extends StatelessWidget {
   const NotificationsButton({
     super.key,
@@ -378,10 +358,13 @@ class NotificationsButton extends StatelessWidget {
   );
 }
 
-/// The desktop frame: the brand, the rider's own tabs and their club, the privacy note, and the
-/// person's own controls at the foot.
-class _Sidebar extends ConsumerWidget {
-  const _Sidebar({
+/// The one navigation rail from 600 dp. Collapsed: the tabs as icons with their labels under them. Expanded
+/// (from 1200 dp): the brand, the tabs with labels beside the icons, the rider's club by name and the
+/// privacy note. Either way the notifications and the account sit at the foot, and the expanded rail adds
+/// the theme choice. It draws no line: a tonal surface sets it apart from the page.
+class _AppRail extends ConsumerWidget {
+  const _AppRail({
+    required this.expanded,
     required this.tabs,
     required this.selected,
     required this.location,
@@ -391,6 +374,7 @@ class _Sidebar extends ConsumerWidget {
     required this.signedOut,
   });
 
+  final bool expanded;
   final List<_Tab> tabs;
   final int? selected;
   final String location;
@@ -404,145 +388,92 @@ class _Sidebar extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    // The club is the rider's own here, shown by name; the rail and the phone keep their Club tab.
+    // The club is the rider's own: the expanded rail shows it by name, the collapsed one keeps "Club".
     final club = ref.watch(clubViewModelProvider).club;
-    final personal = [
+    final destinations = [
       for (final (i, tab) in tabs.indexed)
-        // The club has its own group below.
-        if (tab.path != '/club')
-          _SidebarDestination(
-            icon: i == selected ? tab.selectedIcon : tab.icon,
-            label: tab.label,
-            selected: i == selected,
-            onTap: () => context.go(tab.path),
-          ),
-    ];
-    return Container(
-      width: AppLayout.sidebarWidth,
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        border: Border(
-          right: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
-          ),
+        _RailDestination(
+          key: Key('rail-${tab.path.substring(1)}'),
+          expanded: expanded,
+          icon: i == selected ? tab.selectedIcon : tab.icon,
+          avatar: expanded && tab.path == '/club' && club != null
+              ? club.name.characters.first.toUpperCase()
+              : null,
+          label: expanded && tab.path == '/club'
+              ? (club?.name ?? l10n.navNoClub)
+              : tab.label,
+          quiet: expanded && tab.path == '/club' && club == null,
+          selected: i == selected,
+          onTap: () => context.go(tab.path),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.xl,
-              AppSpacing.xl,
-              AppSpacing.lg,
-            ),
-            child: Row(
-              spacing: AppSpacing.sm,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Velomine',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.headlineSmall?.copyWith(
-                      fontFamily: 'Instrument Serif',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              children: [
-                _SidebarLabel(group: _SidebarGroup.personal),
-                ...personal,
-                _SidebarLabel(group: _SidebarGroup.club, top: true),
-                if (club == null)
-                  _SidebarDestination(
-                    icon: const Icon(Icons.groups_outlined),
-                    label: l10n.navNoClub,
-                    selected: location.startsWith('/club'),
-                    onTap: () => context.go('/club'),
-                    quiet: true,
-                  )
-                else
-                  _SidebarDestination(
-                    avatar: club.name.characters.first.toUpperCase(),
-                    label: club.name,
-                    selected: location.startsWith('/club'),
-                    onTap: () => context.go('/club'),
-                  ),
-              ],
-            ),
-          ),
-          const _PrivacyNote(),
-          const Divider(
-            height: 1,
-            indent: AppSpacing.md,
-            endIndent: AppSpacing.md,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                const ThemeChoiceButton(),
-                NotificationsButton(
-                  unread: unread,
-                  selected: location == '/notifications',
-                ),
-                const Spacer(),
-                _AccountMenu(
-                  name: name,
-                  isAdmin: isAdmin,
-                  signedOut: signedOut,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    ];
+    final notifications = NotificationsButton(
+      unread: unread,
+      selected: location == '/notifications',
     );
-  }
-}
-
-/// The two groups the sidebar is read in: the rider's own tabs, then their club.
-enum _SidebarGroup { personal, club }
-
-/// A quiet heading over a group of sidebar entries.
-class _SidebarLabel extends StatelessWidget {
-  const _SidebarLabel({required this.group, this.top = false});
-
-  final _SidebarGroup group;
-
-  /// Room above it, so the second group reads as its own.
-  final bool top;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        top ? AppSpacing.xl : AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
-      child: Semantics(
-        header: true,
-        child: Text(
-          group == _SidebarGroup.personal
-              ? l10n.navGroupPersonal
-              : l10n.navGroupClub,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.5,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+    final account = _AccountMenu(
+      name: name,
+      isAdmin: isAdmin,
+      signedOut: signedOut,
+      // Without the theme button, the account menu carries the theme.
+      avatar: !expanded,
+    );
+    return Container(
+      width: expanded ? AppNav.railExpandedWidth : AppNav.railWidth,
+      color: scheme.surfaceContainerLow,
+      child: SafeArea(
+        right: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (expanded)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                ),
+                child: Text(
+                  'Velomine',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.headlineSmall?.copyWith(
+                    fontFamily: 'Instrument Serif',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              )
+            else
+              const SizedBox(height: AppSpacing.lg),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                children: destinations,
+              ),
+            ),
+            if (expanded) ...[
+              const _PrivacyNote(),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    const ThemeChoiceButton(),
+                    notifications,
+                    const Spacer(),
+                    account,
+                  ],
+                ),
+              ),
+            ] else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Column(
+                  spacing: AppSpacing.xs,
+                  children: [notifications, account],
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -609,19 +540,23 @@ class _PrivacyNote extends StatelessWidget {
   }
 }
 
-/// One entry of the sidebar: a pill behind the icon and the label when it is the current one. A club
-/// shows its initial instead of an icon; a rider without one gets a quieter entry.
-class _SidebarDestination extends StatelessWidget {
-  const _SidebarDestination({
-    this.icon,
+/// One entry of the rail. Collapsed: the icon in a pill with the label under it. Expanded: a pill behind
+/// the icon and the label side by side; a club shows its initial instead of an icon, and a rider without
+/// one gets a quieter entry.
+class _RailDestination extends StatelessWidget {
+  const _RailDestination({
+    super.key,
+    required this.expanded,
+    required this.icon,
     this.avatar,
     this.quiet = false,
     required this.label,
     required this.selected,
     required this.onTap,
-  }) : assert(icon != null || avatar != null);
+  });
 
-  final Widget? icon;
+  final bool expanded;
+  final Widget icon;
   final String? avatar;
 
   /// A destination with nothing to act on yet, such as "No club".
@@ -634,78 +569,116 @@ class _SidebarDestination extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+    final foreground = selected
+        ? scheme.onPrimaryContainer
+        : quiet
+        ? scheme.onSurfaceVariant
+        : scheme.onSurface;
+    final glyph = avatar == null
+        ? IconTheme.merge(
+            data: IconThemeData(
+              color: selected
+                  ? scheme.onPrimaryContainer
+                  : scheme.onSurfaceVariant,
+            ),
+            child: icon,
+          )
+        : CircleAvatar(
+            radius: 12,
+            backgroundColor: selected
+                ? scheme.onPrimaryContainer
+                : scheme.primaryContainer,
+            child: Text(
+              avatar!,
+              style: text.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: selected
+                    ? scheme.primaryContainer
+                    : scheme.onPrimaryContainer,
+              ),
+            ),
+          );
+    final labelStyle = text.labelLarge?.copyWith(
+      color: foreground,
+      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Semantics(
         selected: selected,
         button: true,
-        child: Material(
-          color: selected ? scheme.primaryContainer : Colors.transparent,
-          shape: const StadiumBorder(),
-          child: InkWell(
-            customBorder: const StadiumBorder(),
-            onTap: onTap,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                child: Row(
-                  spacing: AppSpacing.md,
-                  children: [
-                    if (avatar case final initial?)
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundColor: selected
-                            ? scheme.onPrimaryContainer
-                            : scheme.primaryContainer,
-                        foregroundColor: selected
-                            ? scheme.primaryContainer
-                            : scheme.onPrimaryContainer,
-                        child: Text(
-                          initial,
-                          style: text.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: selected
-                                ? scheme.primaryContainer
-                                : scheme.onPrimaryContainer,
-                          ),
-                        ),
-                      )
-                    else
-                      IconTheme.merge(
-                        data: IconThemeData(
-                          color: selected
-                              ? scheme.onPrimaryContainer
-                              : scheme.onSurfaceVariant,
-                        ),
-                        child: icon!,
+        excludeSemantics: true,
+        label: label,
+        onTap: onTap,
+        child: expanded
+            ? Material(
+                color: selected ? scheme.primaryContainer : Colors.transparent,
+                shape: const StadiumBorder(),
+                child: InkWell(
+                  customBorder: const StadiumBorder(),
+                  onTap: onTap,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
                       ),
-                    Expanded(
-                      child: Text(
+                      child: Row(
+                        spacing: AppSpacing.md,
+                        children: [
+                          glyph,
+                          Expanded(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: labelStyle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : InkWell(
+                customBorder: const StadiumBorder(),
+                onTap: onTap,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 64),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: AppSpacing.xs,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 32,
+                        alignment: Alignment.center,
+                        decoration: ShapeDecoration(
+                          color: selected
+                              ? scheme.primaryContainer
+                              : Colors.transparent,
+                          shape: const StadiumBorder(),
+                        ),
+                        child: glyph,
+                      ),
+                      Text(
                         label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: text.labelLarge?.copyWith(
-                          color: selected
-                              ? scheme.onPrimaryContainer
-                              : quiet
-                              ? scheme.onSurfaceVariant
-                              : scheme.onSurface,
+                        textAlign: TextAlign.center,
+                        style: text.labelMedium?.copyWith(
+                          color: foreground,
                           fontWeight: selected
                               ? FontWeight.w600
                               : FontWeight.w500,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }

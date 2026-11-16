@@ -104,12 +104,6 @@ abstract class AppLocalizations {
   /// **'Rides'**
   String get navRides;
 
-  /// No description provided for @navGroupPersonal.
-  ///
-  /// In en, this message translates to:
-  /// **'Personal'**
-  String get navGroupPersonal;
-
   /// No description provided for @navGroupClub.
   ///
   /// In en, this message translates to:

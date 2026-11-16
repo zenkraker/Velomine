@@ -116,7 +116,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Short tasks open in a sheet** through `showSheet`: `FormSheet` for a form (full-width Save pinned, dismissing is cancel), `SheetFrame` for a picker or filters. A full page is for a long flow.
 - **A full-page form puts its submit on `PageScaffold.bottomAction`** (`BottomActionBar`); Cancel is the back arrow.
 - **States:** a first load is `LoadingState`, a failed load is `ErrorState` with a retry, an empty list is `EmptyState`, and an error under a form or section is `InlineError`.
-- **Navigation shell** (`home_shell.dart`): three tabs (Rides, Progress, Club) in a `FloatingNavPill` on the phone, a rail from 600 dp and a sidebar from 1200 dp; recording and bikes are pushed screens.
+- **Navigation shell** (`home_shell.dart`): three tabs (Rides, Progress, Club) in a `FloatingNavPill` on the phone, one rail from 600 dp (collapsed to icons with labels, expanded from 1200 dp with the brand, club and privacy note); recording and bikes are pushed screens.
 
 ### State and events
 

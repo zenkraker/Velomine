@@ -41,8 +41,6 @@ abstract final class AppLayout {
   /// A form or a page of prose, which reads better short.
   static const double contentNarrow = 720;
 
-  static const double sidebarWidth = 240;
-
   static const double gutter = 32;
   static const double gutterMedium = 24;
   static const double gutterCompact = 16;
@@ -118,6 +116,12 @@ abstract final class AppLoading {
 
 /// The floating navigation pill the shell draws over a phone's content.
 abstract final class AppNav {
+  /// The collapsed rail's width: icons with labels under them.
+  static const double railWidth = 88;
+
+  /// The expanded rail's width: the brand, labels beside the icons, the club and the privacy note.
+  static const double railExpandedWidth = 240;
+
   /// The pill's height.
   static const double pillHeight = 64;
 
