@@ -326,6 +326,44 @@ void main() {
     expect(find.byKey(const Key('ride-r1')), findsOneWidget);
   });
 
+  testWidgets(
+    'RideDetailScreen_ShouldShowDeleteLastInErrorColour_WhenMenuOpens',
+    (tester) async {
+      await open(tester);
+
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      final deleteY = tester.getTopLeft(find.byKey(const Key('delete'))).dy;
+      expect(
+        tester.getTopLeft(find.byKey(const Key('edit-ride-text'))).dy,
+        lessThan(deleteY),
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const Key('edit-ride-type'))).dy,
+        lessThan(deleteY),
+      );
+      final error = Theme.of(tester.element(find.byKey(const Key('delete'))))
+          .colorScheme
+          .error;
+      final label = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const Key('delete')),
+          matching: find.text('Delete'),
+        ),
+      );
+      final style = DefaultTextStyle.of(
+        tester.element(
+          find.descendant(
+            of: find.byKey(const Key('delete')),
+            matching: find.text('Delete'),
+          ),
+        ),
+      ).style;
+      expect(label.style?.color ?? style.color, error);
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldAskAndDelete_WhenTapped', (tester) async {
     await open(tester);
 

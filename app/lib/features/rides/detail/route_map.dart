@@ -73,7 +73,7 @@ class _RouteMapState extends State<RouteMap> {
             key: const Key('route-map-open'),
             onTap: () => _openFullMap(context),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: LayoutBuilder(
@@ -218,7 +218,7 @@ class _HeartRateLegend extends StatelessWidget {
             key: const Key('heart-rate-legend'),
             height: 6,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(AppSpacing.xs),
               gradient: LinearGradient(
                 colors: [
                   colors.route,

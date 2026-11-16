@@ -122,8 +122,8 @@ class _RideFeelCardState extends State<RideFeelCard> {
               Text(l10n.wellbeingRpeHint, style: text.bodySmall),
               const SizedBox(height: AppSpacing.sm),
               Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
                 children: [
                   for (var i = 1; i <= 10; i++)
                     ChoiceChip(
@@ -136,7 +136,7 @@ class _RideFeelCardState extends State<RideFeelCard> {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.md),
               TextField(
                 key: const Key('ride-feel-notes'),
                 controller: _notes,

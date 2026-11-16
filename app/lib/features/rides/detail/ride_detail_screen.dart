@@ -1,3 +1,5 @@
+import 'dart:async' show scheduleMicrotask;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -26,6 +28,7 @@ import 'series_chart.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
+import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
@@ -75,75 +78,70 @@ class RideDetailScreen extends ConsumerWidget {
     );
 
     final ride = s.ride;
-    final actions = ride == null ? null : _actions(context, ref, ride);
+    final menu = ride == null ? null : _menu(context, ref, ride);
 
     return PageScaffold(
       eyebrow: l10n.eyebrowRides,
       // The title is the page's name, so a rename shows here at once.
       title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
       titleKey: const Key('ride-title'),
-      actions: actions,
+      menu: menu,
       children: _body(context, ref, s, selection),
     );
   }
 
   /// One menu for everything rare about a ride: its text, its type and deleting it. The numbers
   /// stay the loudest thing on the screen, and there is one place to change any of it.
-  Widget _actions(BuildContext context, WidgetRef ref, RideResponse ride) {
+  Widget _menu(BuildContext context, WidgetRef ref, RideResponse ride) {
     final l10n = context.l10n;
     final notifier = ref.read(rideDetailViewModelProvider(id).notifier);
-    return PopupMenuButton<String>(
-      key: const Key('ride-actions'),
-      tooltip: l10n.rideActions,
-      icon: const Icon(Icons.more_vert),
-      onSelected: (choice) {
-        // The sheet opens after the menu has closed, so the two never fight for the tap.
-        switch (choice) {
-          case 'text':
-            showRideTextSheet(context, ride, notifier.saveDetails);
-          case 'type':
-            showRideTypeSheet(
-              context,
-              ride,
-              ({
-                String? discipline,
-                String? assist,
-                String? environment,
-                bool? commute,
-              }) => notifier.setType(
-                discipline: discipline,
-                assist: assist,
-                environment: environment,
-                commute: commute,
-              ),
-            );
-          case 'delete':
-            _confirmDelete(context, ref);
-        }
-      },
-      itemBuilder: (context) => [
+    // The sheet or dialog opens after the menu has closed, so the two never fight for the tap.
+    void later(VoidCallback open) => scheduleMicrotask(() {
+      if (context.mounted) open();
+    });
+    return PageMenu(
+      buttonKey: const Key('ride-actions'),
+      entries: [
         if (ride.status == 'ready') ...[
-          PopupMenuItem(
+          PageMenuEntry(
             key: const Key('edit-ride-text'),
-            value: 'text',
-            child: Text(l10n.rideTextEdit),
-          ),
-          PopupMenuItem(
-            key: const Key('edit-ride-type'),
-            value: 'type',
-            child: Text(
-              rideTypeIsSet(ride) ? l10n.rideTypeEdit : l10n.rideTypeNotSet,
+            label: l10n.rideTextEdit,
+            icon: Icons.edit_outlined,
+            onSelected: () => later(
+              () => showRideTextSheet(context, ride, notifier.saveDetails),
             ),
           ),
-          const PopupMenuDivider(),
-        ],
-        PopupMenuItem(
-          key: const Key('delete'),
-          value: 'delete',
-          child: Text(
-            l10n.delete,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          PageMenuEntry(
+            key: const Key('edit-ride-type'),
+            label: rideTypeIsSet(ride)
+                ? l10n.rideTypeEdit
+                : l10n.rideTypeNotSet,
+            icon: Icons.directions_bike_outlined,
+            onSelected: () => later(
+              () => showRideTypeSheet(
+                context,
+                ride,
+                ({
+                  String? discipline,
+                  String? assist,
+                  String? environment,
+                  bool? commute,
+                }) => notifier.setType(
+                  discipline: discipline,
+                  assist: assist,
+                  environment: environment,
+                  commute: commute,
+                ),
+              ),
+            ),
           ),
+        ],
+        PageMenuEntry(
+          key: const Key('delete'),
+          label: l10n.delete,
+          icon: Icons.delete_outline,
+          destructive: true,
+          onSelected: () => later(() => _confirmDelete(context, ref)),
         ),
       ],
     );
@@ -519,7 +517,7 @@ class _ZonesCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppSpacing.xs),
                         child: LinearProgressIndicator(
                           value: maxSeconds <= 0
                               ? 0
@@ -545,7 +543,8 @@ class _ZonesCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (index < zones.length - 1) const SizedBox(height: 6),
+              if (index < zones.length - 1)
+                const SizedBox(height: AppSpacing.xs),
             ],
           ],
         ),
