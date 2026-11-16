@@ -1,19 +1,21 @@
+import 'dart:async' show scheduleMicrotask;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/placeholder_block.dart';
 import '../../core/l10n.dart';
-import '../../core/page_actions.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_heading.dart';
+import '../../core/widgets/stat_tile.dart';
 import '../../core/widgets/toolbar_row.dart';
 import '../rides/ride_type_chips.dart';
 import 'goals.dart';
@@ -144,7 +146,7 @@ class ProgressScreen extends ConsumerWidget {
         ),
     ];
 
-    // A wide window keeps the filters on the page; a phone opens them from the title bar.
+    // A wide window also keeps the filters on the page; every width opens them from the header menu.
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     final periods = SegmentedButton<String>(
       key: const Key('progress-period'),
@@ -190,7 +192,7 @@ class ProgressScreen extends ConsumerWidget {
       final data? when data.totals.isNotEmpty => data.totals.last,
       _ => null,
     };
-    final thisPeriod = _MetricCard(
+    final thisPeriod = _metricCard(
       key: const Key('metric-period'),
       label: l10n.metricThisPeriod(periodWord),
       value: latest == null ? '–' : km(units, latest.distanceM),
@@ -204,7 +206,7 @@ class ProgressScreen extends ConsumerWidget {
     );
     final metrics = <Widget>[
       if (readiness.load.value case final r?)
-        _MetricCard(
+        _metricCard(
           key: const Key('metric-readiness'),
           label: l10n.readiness,
           value: r.score == null ? '–' : '${r.score}',
@@ -216,14 +218,14 @@ class ProgressScreen extends ConsumerWidget {
           },
         ),
       if (training.load.value case final t?)
-        _MetricCard(
+        _metricCard(
           key: const Key('metric-training'),
           label: l10n.metricTrainingLoad,
           value: t.tss.round().toString(),
           detail: 'TSS · ${l10n.bikeRides(t.rides)}',
         ),
       if (power.load.value case final p? when p.hasPower)
-        _MetricCard(
+        _metricCard(
           key: const Key('metric-power'),
           label: l10n.metricPower,
           value: p.currentFtpW == null ? '–' : '${p.currentFtpW} W',
@@ -232,10 +234,29 @@ class ProgressScreen extends ConsumerWidget {
       thisPeriod,
     ];
 
+    final menu = PageMenu(
+      buttonKey: const Key('progress-actions'),
+      badge: filters.discipline != null,
+      entries: [
+        PageMenuEntry(
+          key: const Key('progress-filter'),
+          icon: Icons.filter_list,
+          label: l10n.progressFilterTitle,
+          // The menu closes first; the sheet then opens over the page, not over the menu.
+          onSelected: () => scheduleMicrotask(() {
+            if (context.mounted) {
+              showFiltersSheet(context, (_) => const _ProgressFilterSheet());
+            }
+          }),
+        ),
+      ],
+    );
+
     final page = PageScaffold(
       eyebrow: l10n.eyebrowProgress,
       title: l10n.navProgress,
       subtitle: l10n.progressSubtitle,
+      menu: menu,
       children: [
         if (wide) ToolbarRow(children: [periods, ...disciplines]),
         if (failures.isNotEmpty)
@@ -291,64 +312,11 @@ class ProgressScreen extends ConsumerWidget {
         ),
       ],
     );
-    if (wide) return page;
-    return _PhoneFilterButton(active: filters.discipline != null, child: page);
+    return page;
   }
 }
 
-/// On a phone the filters open from the title bar, so the page registers that button while it is on
-/// screen and takes it down when it leaves.
-class _PhoneFilterButton extends ConsumerStatefulWidget {
-  const _PhoneFilterButton({required this.active, required this.child});
-
-  final bool active;
-  final Widget child;
-
-  @override
-  ConsumerState<_PhoneFilterButton> createState() => _PhoneFilterButtonState();
-}
-
-class _PhoneFilterButtonState extends ConsumerState<_PhoneFilterButton> {
-  @override
-  void initState() {
-    super.initState();
-    // After the first frame: the title bar then has its place, and the page is not changing under it.
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => Future.microtask(_publish),
-    );
-  }
-
-  @override
-  void didUpdateWidget(_PhoneFilterButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.active != widget.active) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => Future.microtask(_publish),
-      );
-    }
-  }
-
-  void _publish() {
-    if (!mounted) return;
-    final actions = [
-      phoneFilterButton(
-        key: const Key('progress-filter'),
-        tooltip: context.l10n.progressFilterTitle,
-        active: widget.active,
-        onPressed: () =>
-            showFiltersSheet(context, (_) => const _ProgressFilterSheet()),
-      ),
-    ];
-    ref
-        .read(pageActionsProvider.notifier)
-        .set(GoRouterState.of(context).uri.path, actions);
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
-}
-
-/// A phone's filters in one sheet: the period and the discipline, applied as they are chosen.
+/// The filters in one sheet: the period and the discipline, applied as they are chosen.
 class _ProgressFilterSheet extends ConsumerWidget {
   const _ProgressFilterSheet();
 
@@ -395,57 +363,20 @@ class _ProgressFilterSheet extends ConsumerWidget {
   }
 }
 
-/// A number and what it means, in a card of its own: the top of a dashboard.
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({
-    super.key,
-    required this.label,
-    required this.value,
-    this.detail,
-  });
-
-  final String label;
-  final String value;
-  final String? detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          spacing: 2,
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: text.labelSmall?.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.3,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              value,
-              style: text.headlineMedium?.copyWith(fontWeight: FontWeight.w400),
-            ),
-            if (detail case final detail?)
-              Text(
-                detail,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+/// A number and what it means, on a surface of its own: the top of a dashboard.
+Widget _metricCard({
+  required Key key,
+  required String label,
+  required String value,
+  String? detail,
+}) => StatTile(
+  key: key,
+  label: label,
+  value: value,
+  detail: detail,
+  boxed: true,
+  headline: true,
+);
 
 /// The metric cards in one row: equal columns on a desktop window, two and two on a tablet, one
 /// under the other on a phone.

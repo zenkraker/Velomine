@@ -317,54 +317,98 @@ void main() {
     },
   );
 
-  testWidgets('ProgressScreen_ShouldWithdrawConsent_WhenTheButtonIsTapped', (
+  const consented = {
+    'date': '2026-11-08',
+    'fatigue': 3,
+    'soreness': 2,
+    'mood': 4,
+    'stress': 2,
+    'motivation': 5,
+  };
+
+  Future<void> openWithdraw(WidgetTester tester) async {
+    await reveal(tester, find.byKey(const Key('wellbeing-actions')));
+    await tester.tap(find.byKey(const Key('wellbeing-actions')));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'ProgressScreen_ShouldWithdrawConsent_WhenTheMenuEntryIsConfirmed',
+    (tester) async {
+      server.wellbeingConsent = true;
+      server.wellbeingToday = consented;
+      await openProgress(tester);
+
+      await openWithdraw(tester);
+      // The only red thing in the card is the menu entry; no button stays on the card.
+      final entry = tester.widget<MenuItemButton>(
+        find.byKey(const Key('wellbeing-withdraw')),
+      );
+      final scheme = Theme.of(
+        tester.element(find.byKey(const Key('wellbeing-withdraw'))),
+      ).colorScheme;
+      expect(entry.style?.foregroundColor?.resolve({}), scheme.error);
+      await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wellbeing-withdraw-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(server.wellbeingConsent, isFalse);
+      expect(server.sharingChoices['wellbeing'], 'none');
+      expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldKeepConsent_WhenWithdrawIsCancelled', (
     tester,
   ) async {
     server.wellbeingConsent = true;
-    server.wellbeingToday = {
-      'date': '2026-11-08',
-      'fatigue': 3,
-      'soreness': 2,
-      'mood': 4,
-      'stress': 2,
-      'motivation': 5,
-    };
+    server.wellbeingToday = consented;
     await openProgress(tester);
 
-    await reveal(tester, find.byKey(const Key('wellbeing-withdraw')));
+    await openWithdraw(tester);
     await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
     await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
 
-    expect(server.wellbeingConsent, isFalse);
-    expect(server.sharingChoices['wellbeing'], 'none');
-    expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
+    expect(server.wellbeingConsent, isTrue);
+    expect(find.byKey(const Key('wellbeing-card')), findsOneWidget);
   });
 
-  testWidgets(
-    'ProgressScreen_ShouldFilterFromOneSheet_WhenAPhonePressesTheFilterButton',
-    (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await startApp(tester, server.session(useCookies: true));
-      await tester.tap(find.text('Progress'));
-      await tester.pumpAndSettle();
+  for (final (name, size) in [
+    ('Phone', const Size(390, 844)),
+    ('Wide', const Size(1000, 2000)),
+  ]) {
+    testWidgets(
+      'ProgressScreen_ShouldFilterFromOneSheet_WhenA${name}OpensTheMenuFilter',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(tester, server.session(useCookies: true));
+        await tester.tap(find.text('Progress'));
+        await tester.pumpAndSettle();
 
-      // The filters are not on the page itself on a phone.
-      expect(find.byKey(const Key('progress-period')), findsNothing);
-      expect(find.byKey(const Key('progress-filter-gravel')), findsNothing);
+        await tester.tap(find.byKey(const Key('progress-actions')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('progress-filter')));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('progress-filter')));
-      await tester.pumpAndSettle();
+        expect(find.byType(BottomSheet), findsOneWidget);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byKey(const Key('progress-filter-gravel')),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(BottomSheet), findsOneWidget);
-      expect(find.byKey(const Key('progress-period')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('progress-filter-gravel')));
-      await tester.pumpAndSettle();
-
-      expect(server.analyticsFilters, contains('gravel'));
-    },
-  );
+        expect(server.analyticsFilters, contains('gravel'));
+      },
+    );
+  }
 
   testWidgets('ProgressScreen_ShouldAskForOneDiscipline_WhenAFilterIsChosen', (
     tester,

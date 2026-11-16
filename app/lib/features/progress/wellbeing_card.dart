@@ -1,9 +1,13 @@
+import 'dart:async' show scheduleMicrotask;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/confirm.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/section_card.dart';
 
 /// The daily check-in: consent first, then either today's scores or a short form.
@@ -72,6 +76,20 @@ class _WellbeingCardState extends State<WellbeingCard> {
     if (ok && mounted) setState(() => _editing = false);
   }
 
+  /// Asks first, after the menu has closed: withdrawing stops the check-in and the shares of it.
+  void _withdraw() => scheduleMicrotask(() async {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final sure = await confirmDestructive(
+      context,
+      title: l10n.wellbeingWithdrawTitle,
+      body: l10n.wellbeingWithdrawBody,
+      action: l10n.wellbeingWithdrawConsent,
+      key: const Key('wellbeing-withdraw-confirm'),
+    );
+    if (sure) await widget.onWithdraw();
+  });
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -106,6 +124,18 @@ class _WellbeingCardState extends State<WellbeingCard> {
     return SectionCard(
       key: const Key('wellbeing-card'),
       title: l10n.wellbeing,
+      menu: PageMenu(
+        buttonKey: const Key('wellbeing-actions'),
+        entries: [
+          PageMenuEntry(
+            key: const Key('wellbeing-withdraw'),
+            icon: Icons.block,
+            label: l10n.wellbeingWithdrawConsent,
+            destructive: true,
+            onSelected: widget.saving ? () {} : _withdraw,
+          ),
+        ],
+      ),
       children: [
         if (today != null && !_editing)
           Row(
@@ -116,9 +146,9 @@ class _WellbeingCardState extends State<WellbeingCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(l10n.wellbeingSaved, style: text.titleSmall),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.sm),
                     Wrap(
-                      spacing: 14,
+                      spacing: AppSpacing.lg,
                       runSpacing: 6,
                       children: [
                         _Score(
@@ -204,22 +234,9 @@ class _WellbeingCardState extends State<WellbeingCard> {
             ],
           ),
         ],
-        // Withdrawing consent is not a second save: it sits apart, below a line, as a quiet text action.
-        const Divider(height: AppSpacing.xxl),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
-            key: const Key('wellbeing-withdraw'),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: widget.saving ? null : widget.onWithdraw,
-            child: Text(l10n.wellbeingWithdrawConsent),
-          ),
-        ),
         if (widget.checkIns case final checkIns?
             when checkIns.checkIns.isNotEmpty) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.lg),
           Text(l10n.wellbeingHistory, style: text.labelLarge),
           const SizedBox(height: AppSpacing.xs),
           for (final checkIn in checkIns.checkIns.reversed.take(7))
@@ -256,11 +273,11 @@ class _ScoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 3),
+    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
     child: Row(
       children: [
         SizedBox(
-          width: 108,
+          width: AppProgress.scoreLabelWidth,
           child: Text(label, style: Theme.of(context).textTheme.bodySmall),
         ),
         Expanded(
@@ -291,11 +308,11 @@ class _HistoryRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final locale = Localizations.localeOf(context).toLanguageTag();
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         children: [
           SizedBox(
-            width: 54,
+            width: AppProgress.dateWidth,
             child: Text(
               DateFormat.MMMd(locale).format(checkIn.date),
               style: text.bodySmall,

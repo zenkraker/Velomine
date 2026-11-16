@@ -4640,6 +4640,18 @@ abstract class AppLocalizations {
   /// **'I agree'**
   String get wellbeingConsentAction;
 
+  /// No description provided for @wellbeingWithdrawTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw wellbeing consent?'**
+  String get wellbeingWithdrawTitle;
+
+  /// No description provided for @wellbeingWithdrawBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine stops using your check-ins and ride notes, and your coaches stop seeing them. What you saved stays until you delete it, and you can agree again at any time.'**
+  String get wellbeingWithdrawBody;
+
   /// No description provided for @wellbeingWithdrawConsent.
   ///
   /// In en, this message translates to:

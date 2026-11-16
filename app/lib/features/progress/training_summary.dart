@@ -88,7 +88,7 @@ class TrainingSummary extends ConsumerWidget {
             ),
             if (training.tss == 0 && training.rides > 0)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
                 child: Text(
                   l10n.trainingLoadHint,
                   key: const Key('training-hint'),
@@ -112,7 +112,7 @@ class TrainingSummary extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.lg,
               runSpacing: 6,
@@ -122,7 +122,7 @@ class TrainingSummary extends ConsumerWidget {
                 _LegendDot(color: colors[2], label: l10n.form),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Semantics(
               label: l10n.fitnessSemantics(
                 training.days.isEmpty ? 0 : training.days.last.fitness.round(),
@@ -130,7 +130,7 @@ class TrainingSummary extends ConsumerWidget {
                 training.days.isEmpty ? 0 : training.days.last.form.round(),
               ),
               child: SizedBox(
-                height: 170,
+                height: AppProgress.fitnessChartHeight,
                 child: CustomPaint(
                   key: const Key('fitness-chart'),
                   size: Size.infinite,
@@ -146,11 +146,11 @@ class TrainingSummary extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(l10n.dailyLoad, style: text.titleSmall),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Semantics(
               label: l10n.dailyLoadSemantics(training.dayCount),
               child: SizedBox(
-                height: 120,
+                height: AppProgress.loadChartHeight,
                 child: CustomPaint(
                   key: const Key('tss-chart'),
                   size: Size.infinite,
@@ -189,7 +189,7 @@ class _LegendDot extends StatelessWidget {
           height: 9,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: AppSpacing.xs),
         Text(label, style: Theme.of(context).textTheme.labelSmall),
       ],
     );

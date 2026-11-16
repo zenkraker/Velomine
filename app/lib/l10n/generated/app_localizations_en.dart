@@ -2603,6 +2603,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingConsentAction => 'I agree';
 
   @override
+  String get wellbeingWithdrawTitle => 'Withdraw wellbeing consent?';
+
+  @override
+  String get wellbeingWithdrawBody =>
+      'Velomine stops using your check-ins and ride notes, and your coaches stop seeing them. What you saved stays until you delete it, and you can agree again at any time.';
+
+  @override
   String get wellbeingWithdrawConsent => 'Withdraw consent';
 
   @override

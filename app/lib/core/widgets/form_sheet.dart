@@ -26,6 +26,10 @@ Future<T?> showSheet<T>(
   builder: builder,
 );
 
+/// A modal sheet with a page's filters: the builder returns a [SheetFrame], which keeps it above the keyboard.
+Future<void> showFiltersSheet(BuildContext context, WidgetBuilder builder) =>
+    showSheet<void>(context, builder: builder);
+
 /// The frame of every bottom sheet: a title, the content in a scrolling column, and an optional [bottom]
 /// widget pinned under it, above the keyboard and the safe area. The handle comes from [showSheet].
 class SheetFrame extends StatelessWidget {

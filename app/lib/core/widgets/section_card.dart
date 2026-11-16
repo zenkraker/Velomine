@@ -8,6 +8,7 @@ class SectionCard extends StatelessWidget {
     super.key,
     required this.title,
     this.description,
+    this.menu,
     required this.children,
   });
 
@@ -15,6 +16,9 @@ class SectionCard extends StatelessWidget {
 
   /// A line under the title, for what the whole group is for.
   final String? description;
+
+  /// A [PageMenu] at the end of the title row, for the card's rare or destructive actions.
+  final Widget? menu;
   final List<Widget> children;
 
   @override
@@ -27,10 +31,21 @@ class SectionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: AppSpacing.sm,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text(title, style: text.titleMedium),
-            ),
+            if (menu == null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Text(title, style: text.titleMedium),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(left: AppSpacing.lg),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(title, style: text.titleMedium)),
+                    menu!,
+                  ],
+                ),
+              ),
             if (description != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),

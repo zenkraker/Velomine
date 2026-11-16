@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens.dart';
+import 'eyebrow.dart';
 
 /// One number with the name of what it counts, so a row of them reads as a table.
 class StatTile extends StatelessWidget {
@@ -10,6 +11,8 @@ class StatTile extends StatelessWidget {
     required this.value,
     this.valueKey,
     this.boxed = false,
+    this.headline = false,
+    this.detail,
   });
 
   final String label;
@@ -21,29 +24,51 @@ class StatTile extends StatelessWidget {
   /// A surface behind the tile, for a grid of numbers rather than a row.
   final bool boxed;
 
+  /// A dashboard number: an uppercase [Eyebrow] label over a large value, filling the width it is given.
+  final bool headline;
+
+  /// A line under the number, for what it means.
+  final String? detail;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     final column = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 2,
+      mainAxisSize: MainAxisSize.min,
+      spacing: AppSpacing.xs / 2,
       children: [
-        Text(
-          label,
-          style: text.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (headline)
+          Eyebrow(label)
+        else
+          Text(
+            label,
+            style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
+        Text(
+          value,
+          key: valueKey,
+          style: headline
+              ? text.headlineMedium?.copyWith(fontWeight: FontWeight.w400)
+              : text.titleSmall,
         ),
-        Text(value, key: valueKey, style: text.titleSmall),
+        if (detail case final detail?)
+          Text(
+            detail,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
       ],
     );
     if (!boxed) return column;
     return Container(
-      width: 150,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      width: headline ? null : AppStat.boxWidth,
+      padding: EdgeInsets.all(headline ? AppSpacing.lg : AppSpacing.md),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.small),
       ),
       child: column,
     );

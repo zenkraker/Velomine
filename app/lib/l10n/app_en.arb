@@ -1351,6 +1351,8 @@
   "wellbeingConsentTitle": "Before you start",
   "wellbeingConsentBody": "Velomine stores a short daily check-in and the RPE you add to rides. It is health data: nobody else sees it unless you share it with your coaches, and you can export or delete it at any time. It is not medical advice.",
   "wellbeingConsentAction": "I agree",
+  "wellbeingWithdrawTitle": "Withdraw wellbeing consent?",
+  "wellbeingWithdrawBody": "Velomine stops using your check-ins and ride notes, and your coaches stop seeing them. What you saved stays until you delete it, and you can agree again at any time.",
   "wellbeingWithdrawConsent": "Withdraw consent",
   "wellbeingToday": "How do you feel today?",
   "wellbeingSaved": "Today's check-in",

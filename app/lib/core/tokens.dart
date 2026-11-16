@@ -158,3 +158,18 @@ abstract final class AppNav {
   /// How far a scroll must move, in logical pixels, before the pill hides or returns.
   static const double scrollThreshold = 4;
 }
+
+/// The fixed sizes inside the Progress cards: chart heights and the label columns of their rows.
+abstract final class AppProgress {
+  static const double fitnessChartHeight = 170;
+  static const double loadChartHeight = 120;
+  static const double detailWidth = 190;
+  static const double effectWidth = 34;
+  static const double scoreLabelWidth = 108;
+  static const double dateWidth = 54;
+}
+
+/// The boxed [StatTile] in a grid of numbers.
+abstract final class AppStat {
+  static const double boxWidth = 150;
+}

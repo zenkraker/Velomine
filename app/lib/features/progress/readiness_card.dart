@@ -25,7 +25,7 @@ class ReadinessCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.readiness, style: text.titleMedium),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Text(l10n.readinessNoData, style: text.bodyMedium),
             ],
           ),
@@ -76,7 +76,7 @@ class ReadinessCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +89,7 @@ class ReadinessCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(advice, style: text.bodyMedium),
                     ],
                   ),
@@ -97,7 +97,7 @@ class ReadinessCard extends StatelessWidget {
               ],
             ),
             if (!readiness.hasWellbeing) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 l10n.readinessLoadOnly,
                 key: const Key('readiness-load-only'),
@@ -105,13 +105,13 @@ class ReadinessCard extends StatelessWidget {
               ),
             ],
             if (readiness.factors.isNotEmpty) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
               Text(l10n.readinessWhy, style: text.labelLarge),
               const SizedBox(height: AppSpacing.xs),
               for (final factor in readiness.factors)
                 _FactorRow(factor: factor),
             ],
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.md),
             Text(l10n.readinessNotMedical, style: text.bodySmall),
           ],
         ),
@@ -152,14 +152,14 @@ class _FactorRow extends StatelessWidget {
         : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         children: [
           Expanded(child: Text(label, style: text.bodySmall)),
           Text(value, style: text.bodySmall),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           SizedBox(
-            width: 34,
+            width: AppProgress.effectWidth,
             child: Text(
               effectText,
               textAlign: TextAlign.right,

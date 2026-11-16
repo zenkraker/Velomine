@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'core/back_guard.dart';
 import 'core/l10n.dart';
 import 'core/motion.dart';
-import 'core/page_actions.dart';
 import 'core/providers.dart';
 import 'core/theme_choice.dart';
 import 'core/tokens.dart';
@@ -68,18 +67,6 @@ class HomeShell extends ConsumerWidget {
     final unread = ref.watch(
       notificationsViewModelProvider.select((state) => state.unread),
     );
-    // The shell names the screen before the page is built, so a page that is being replaced cannot
-    // set the next screen's buttons. After the frame, because a build may not change a provider.
-    final current = ref.read(currentLocationProvider);
-    if (current != location) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          ref.read(currentLocationProvider.notifier).moveTo(location);
-        }
-      });
-    }
-    // Until the pages carry their own buttons, a phone tab's filters and import come through here.
-    final pageActions = ref.watch(pageActionsProvider);
     final tabs = _tabs(context);
     final pushed = _pushed(tabs);
     // A pushed screen lights no tab.
@@ -103,8 +90,6 @@ class HomeShell extends ConsumerWidget {
       showOnPhone: true,
       onBack: pushed ? () => _back(context) : null,
       trailing: [
-        // A tab's filters and import stay in its header at every width the shell has no rail for them.
-        if (!expanded) ...pageActions,
         if (!wide) ...[
           if (!pushed)
             NotificationsButton(

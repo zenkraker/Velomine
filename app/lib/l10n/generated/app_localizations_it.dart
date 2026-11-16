@@ -2625,6 +2625,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingConsentAction => 'Accetto';
 
   @override
+  String get wellbeingWithdrawTitle => 'Revocare il consenso al benessere?';
+
+  @override
+  String get wellbeingWithdrawBody =>
+      'Velomine smette di usare i tuoi check-in e le note sui giri, e i tuoi allenatori non li vedono più. Quello che hai salvato resta finché non lo elimini, e puoi acconsentire di nuovo quando vuoi.';
+
+  @override
   String get wellbeingWithdrawConsent => 'Revoca il consenso';
 
   @override

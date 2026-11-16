@@ -57,7 +57,7 @@ class PowerSummary extends StatelessWidget {
                 onChanged: onDays,
               ),
             if (!curve.hasPower) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 l10n.powerCurveEmpty,
                 key: const Key('power-curve-empty'),
@@ -94,7 +94,7 @@ class PowerSummary extends StatelessWidget {
               Text(l10n.powerBestEfforts, style: text.labelLarge),
               const SizedBox(height: AppSpacing.xs),
               Wrap(
-                spacing: 14,
+                spacing: AppSpacing.lg,
                 runSpacing: 4,
                 children: [
                   for (final point in curve.points)
@@ -136,7 +136,7 @@ class PowerSummary extends StatelessWidget {
               ],
             ),
             if (!readOnly && curve.vo2Max == null && curve.hasPower) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 curve.weightKg == null
                     ? l10n.vo2MaxNeedsWeight
@@ -148,7 +148,7 @@ class PowerSummary extends StatelessWidget {
                 curve.ftp != null &&
                 curve.ftp!.watts != curve.currentFtpW &&
                 onUseFtp != null) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.md),
               FilledButton.tonal(
                 key: const Key('use-ftp'),
                 onPressed: () => onUseFtp!(curve.ftp!.watts),
@@ -198,7 +198,10 @@ class _Estimate extends StatelessWidget {
           style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         if (detail != null)
-          SizedBox(width: 190, child: Text(detail!, style: text.bodySmall)),
+          SizedBox(
+            width: AppProgress.detailWidth,
+            child: Text(detail!, style: text.bodySmall),
+          ),
       ],
     );
   }

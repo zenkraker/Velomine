@@ -821,6 +821,8 @@
   "wellbeingConsentTitle": "Prima di iniziare",
   "wellbeingConsentBody": "Velomine conserva un breve check-in giornaliero e l'RPE che aggiungi alle uscite. Sono dati sulla salute: nessun altro li vede se non li condividi con i tuoi allenatori, e puoi esportarli o eliminarli in qualsiasi momento. Non sono consigli medici.",
   "wellbeingConsentAction": "Accetto",
+  "wellbeingWithdrawTitle": "Revocare il consenso al benessere?",
+  "wellbeingWithdrawBody": "Velomine smette di usare i tuoi check-in e le note sui giri, e i tuoi allenatori non li vedono più. Quello che hai salvato resta finché non lo elimini, e puoi acconsentire di nuovo quando vuoi.",
   "wellbeingWithdrawConsent": "Revoca il consenso",
   "wellbeingToday": "Come ti senti oggi?",
   "wellbeingSaved": "Check-in di oggi",

@@ -7,6 +7,7 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/form_sheet.dart';
 import '../../core/units.dart';
 
 const goalPeriodIds = ['week', 'month', 'year'];
@@ -80,10 +81,7 @@ String _plain(double v) =>
 Future<({String period, String metric, double target})?> showGoalForm(
   BuildContext context, {
   GoalResponse? goal,
-}) => showDialog(
-  context: context,
-  builder: (_) => _GoalForm(goal: goal),
-);
+}) => showSheet(context, builder: (_) => _GoalForm(goal: goal));
 
 class _GoalForm extends ConsumerStatefulWidget {
   const _GoalForm({this.goal});
@@ -134,77 +132,59 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
     final l10n = context.l10n;
     final units = ref.watch(unitsChoiceViewModelProvider);
     final editing = widget.goal != null;
-    return AlertDialog(
-      title: Text(editing ? l10n.goalChange : l10n.goalAdd),
-      content: SizedBox(
-        width: 360,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: AppSpacing.lg,
-          children: [
-            DropdownButtonFormField<String>(
-              key: const Key('goal-period'),
-              initialValue: _period,
-              decoration: InputDecoration(labelText: l10n.goalEvery),
-              items: [
-                for (final p in goalPeriodIds)
-                  DropdownMenuItem(
-                    value: p,
-                    child: Text(switch (p) {
-                      'week' => l10n.goalEveryWeek,
-                      'month' => l10n.goalEveryMonth,
-                      _ => l10n.goalEveryYear,
-                    }),
-                  ),
-              ],
-              onChanged: editing
-                  ? null
-                  : (v) => setState(() => _period = v ?? _period),
-            ),
-            DropdownButtonFormField<String>(
-              key: const Key('goal-metric'),
-              initialValue: _metric,
-              decoration: InputDecoration(labelText: l10n.goalCount),
-              items: [
-                for (final metric in goalMetricIds)
-                  DropdownMenuItem(
-                    value: metric,
-                    child: Text(goalMetricName(l10n, metric)),
-                  ),
-              ],
-              onChanged: editing
-                  ? null
-                  : (v) => setState(() => _metric = v ?? _metric),
-            ),
-            TextField(
-              key: const Key('goal-target'),
-              controller: _target,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+    return FormSheet(
+      title: editing ? l10n.goalChange : l10n.goalAdd,
+      saveKey: const Key('goal-save'),
+      onSave: () => _submit(units),
+      children: [
+        DropdownButtonFormField<String>(
+          key: const Key('goal-period'),
+          initialValue: _period,
+          decoration: InputDecoration(labelText: l10n.goalEvery),
+          items: [
+            for (final p in goalPeriodIds)
+              DropdownMenuItem(
+                value: p,
+                child: Text(switch (p) {
+                  'week' => l10n.goalEveryWeek,
+                  'month' => l10n.goalEveryMonth,
+                  _ => l10n.goalEveryYear,
+                }),
               ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.goalTarget,
-                suffixText: goalUnit(l10n, units, _metric),
-                errorText: _badTarget ? l10n.errorGoalTarget : null,
-              ),
-              onSubmitted: (_) => _submit(units),
-            ),
           ],
+          onChanged: editing
+              ? null
+              : (v) => setState(() => _period = v ?? _period),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
+        DropdownButtonFormField<String>(
+          key: const Key('goal-metric'),
+          initialValue: _metric,
+          decoration: InputDecoration(labelText: l10n.goalCount),
+          items: [
+            for (final metric in goalMetricIds)
+              DropdownMenuItem(
+                value: metric,
+                child: Text(goalMetricName(l10n, metric)),
+              ),
+          ],
+          onChanged: editing
+              ? null
+              : (v) => setState(() => _metric = v ?? _metric),
         ),
-        FilledButton(
-          key: const Key('goal-save'),
-          onPressed: () => _submit(units),
-          child: Text(l10n.save),
+        TextField(
+          key: const Key('goal-target'),
+          controller: _target,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.goalTarget,
+            suffixText: goalUnit(l10n, units, _metric),
+            errorText: _badTarget ? l10n.errorGoalTarget : null,
+          ),
+          onSubmitted: (_) => _submit(units),
         ),
       ],
     );
@@ -238,7 +218,12 @@ class GoalCard extends ConsumerWidget {
     return Card(
       key: Key('goal-${goal.id}'),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 4, 16),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.xs,
+          AppSpacing.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: AppSpacing.sm,
@@ -273,7 +258,7 @@ class GoalCard extends ConsumerWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: AppSpacing.md),
               child: LinearProgressIndicator(
                 value: (goal.percent / 100).clamp(0, 1).toDouble(),
                 minHeight: 8,
