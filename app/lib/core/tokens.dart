@@ -55,6 +55,25 @@ abstract final class AppLayout {
       : gutterCompact;
 }
 
+/// The page header that [PageScaffold] draws: a toolbar row with a large title that collapses into it.
+abstract final class AppHeader {
+  /// The pinned toolbar row: back arrow, collapsed title and the page's buttons.
+  static const double toolbarHeight = 64;
+
+  /// Room under the large title before the content starts.
+  static const double bottomGap = AppSpacing.md;
+
+  /// Line heights the large block is sized from, as multiples of the font size.
+  static const double titleLineHeight = 1.4;
+  static const double textLineHeight = 1.4;
+
+  /// How many lines of subtitle the large block reserves room for.
+  static const int subtitleLines = 2;
+
+  /// A subtitle longer than this many characters may wrap, so the block reserves [subtitleLines].
+  static const int longSubtitle = 60;
+}
+
 abstract final class AppMotion {
   static const fast = Duration(milliseconds: 120);
   static const standard = Duration(milliseconds: 220);
