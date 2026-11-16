@@ -11,6 +11,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `docs/architecture.md` | System shape: deployment, tenancy, data ownership, background work, security model, decisions |
 | `docs/design/values.md` | Product values, scope, non-goals and decision tests |
 | `docs/design/v2.md` | Inter-club ideas, not committed |
+| `docs/design/ui-refresh.md` | The chosen app layout, the audit against it and the stories that implement it |
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/demo.md` | How the public demo is deployed, checked and backed up |
 | `docs/dependencies/` | Background evaluations of community libraries |
