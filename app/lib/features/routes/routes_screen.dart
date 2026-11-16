@@ -37,12 +37,6 @@ class RoutesScreen extends ConsumerWidget {
     );
 
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    final add = FilledButton.icon(
-      key: const Key('add-route'),
-      onPressed: onAdd,
-      icon: const Icon(Icons.add),
-      label: Text(l10n.clubAddRoute),
-    );
     final sortAndFilters = [
       DropdownButton<String>(
         key: const Key('routes-sort'),
@@ -83,9 +77,20 @@ class RoutesScreen extends ConsumerWidget {
       eyebrow: l10n.routesEyebrow,
       title: l10n.clubRoutesTitle,
       subtitle: l10n.routesSubtitle,
-      // A phone keeps the action on the floating button, where the thumb is.
-      actions: wide ? add : null,
-      bottomPadding: wide ? AppSpacing.xl : 96,
+      primaryAction: wide
+          ? FilledButton.icon(
+              key: const Key('add-route'),
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.clubAddRoute),
+            )
+          // The phone header row is tight: a filled icon, its tooltip names it.
+          : IconButton.filled(
+              key: const Key('add-route'),
+              tooltip: l10n.clubAddRoute,
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+            ),
       children: [
         ToolbarRow(children: sortAndFilters),
         if (s.load.failure case final failure?)
@@ -117,17 +122,7 @@ class RoutesScreen extends ConsumerWidget {
           ),
       ],
     );
-    if (wide) return page;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('add-route'),
-        onPressed: onAdd,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.clubAddRoute),
-      ),
-      body: page,
-    );
+    return page;
   }
 }
 

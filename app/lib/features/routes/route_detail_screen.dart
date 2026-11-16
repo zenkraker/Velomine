@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../core/widgets/loading_state.dart';
 
 import 'package:material_ui/material_ui.dart';
@@ -13,6 +15,7 @@ import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../club/club_view_model.dart';
 import 'route_widgets.dart';
@@ -81,6 +84,90 @@ class RouteDetailScreen extends ConsumerWidget {
       );
     }
 
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    final busy = s.action.running;
+
+    // Destructive entries open a dialog after the menu has closed, never inside its callback.
+    void confirmThen({
+      required String title,
+      required String body,
+      required String action,
+      required String confirmKey,
+      required Future<void> Function() run,
+    }) {
+      scheduleMicrotask(() async {
+        if (!context.mounted) return;
+        final ok = await confirmDestructive(
+          context,
+          title: title,
+          body: body,
+          action: action,
+          key: Key(confirmKey),
+        );
+        if (ok) await run();
+      });
+    }
+
+    final entries = [
+      if (route.isMine && route.isShared)
+        PageMenuEntry(
+          key: const Key('withdraw-route'),
+          icon: Icons.link_off,
+          label: l10n.routeWithdraw,
+          destructive: true,
+          onSelected: busy
+              ? () {}
+              : () => confirmThen(
+                  title: l10n.routeWithdrawConfirmTitle,
+                  body: l10n.routeWithdrawConfirmBody,
+                  action: l10n.routeWithdraw,
+                  confirmKey: 'confirm-withdraw-route',
+                  run: notifier.withdraw,
+                ),
+        ),
+      // The club's owner moderates the library without editing anybody's words.
+      if (!route.isMine && isClubOwner)
+        PageMenuEntry(
+          key: const Key('remove-route-as-owner'),
+          icon: Icons.link_off,
+          label: l10n.routeWithdraw,
+          destructive: true,
+          onSelected: busy
+              ? () {}
+              : () => confirmThen(
+                  title: l10n.routeWithdrawConfirmTitle,
+                  body: l10n.routeWithdrawConfirmBody,
+                  action: l10n.routeWithdraw,
+                  confirmKey: 'confirm-withdraw-route',
+                  run: () async {
+                    if (await notifier.withdraw() && context.mounted) {
+                      onDeleted();
+                    }
+                  },
+                ),
+        ),
+      if (route.isMine)
+        PageMenuEntry(
+          key: const Key('delete-route'),
+          icon: Icons.delete_outline,
+          label: l10n.routeDelete,
+          destructive: true,
+          onSelected: busy
+              ? () {}
+              : () => confirmThen(
+                  title: l10n.routeDeleteConfirmTitle,
+                  body: l10n.routeDeleteConfirmBody,
+                  action: l10n.routeDelete,
+                  confirmKey: 'confirm-delete-route',
+                  run: () async {
+                    if (await notifier.delete() && context.mounted) {
+                      onDeleted();
+                    }
+                  },
+                ),
+        ),
+    ];
+
     return PageScaffold(
       eyebrow: l10n.routesEyebrow,
       title: route.name,
@@ -91,6 +178,25 @@ class RouteDetailScreen extends ConsumerWidget {
         route.climbingM,
       ),
       maxWidth: AppLayout.contentNarrow,
+      primaryAction: route.isMine
+          ? (wide
+                ? FilledButton.icon(
+                    key: const Key('edit-route'),
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                    label: Text(l10n.routeEdit),
+                  )
+                // The phone header row is tight: a filled icon, its tooltip names it.
+                : IconButton.filled(
+                    key: const Key('edit-route'),
+                    tooltip: l10n.routeEdit,
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                  ))
+          : null,
+      menu: entries.isEmpty
+          ? null
+          : PageMenu(buttonKey: const Key('route-actions'), entries: entries),
       children: [
         Chip(label: Text(routeSurfaceName(l10n, route.surface))),
         Text(
@@ -137,84 +243,12 @@ class RouteDetailScreen extends ConsumerWidget {
               icon: const Icon(Icons.download),
               label: Text(l10n.routeOpenGpx),
             ),
-            if (route.isMine)
-              OutlinedButton.icon(
-                key: const Key('edit-route'),
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
-                label: Text(l10n.routeEdit),
-              ),
-            if (route.isMine && route.isShared)
-              OutlinedButton.icon(
-                key: const Key('withdraw-route'),
-                onPressed: s.action.running
-                    ? null
-                    : () async {
-                        if (await confirmDestructive(
-                          context,
-                          title: l10n.routeWithdrawConfirmTitle,
-                          body: l10n.routeWithdrawConfirmBody,
-                          action: l10n.routeWithdraw,
-                          key: const Key('confirm-withdraw-route'),
-                        )) {
-                          await notifier.withdraw();
-                        }
-                      },
-                icon: const Icon(Icons.link_off),
-                label: Text(l10n.routeWithdraw),
-              ),
             if (route.isMine && !route.isShared)
               OutlinedButton.icon(
                 key: const Key('share-route'),
                 onPressed: s.action.running ? null : notifier.share,
                 icon: const Icon(Icons.link),
                 label: Text(l10n.routeShare),
-              ),
-            if (route.isMine)
-              TextButton.icon(
-                key: const Key('delete-route'),
-                onPressed: s.action.running
-                    ? null
-                    : () async {
-                        if (await confirmDestructive(
-                          context,
-                          title: l10n.routeDeleteConfirmTitle,
-                          body: l10n.routeDeleteConfirmBody,
-                          action: l10n.routeDelete,
-                          key: const Key('confirm-delete-route'),
-                        )) {
-                          if (await notifier.delete() && context.mounted) {
-                            onDeleted();
-                          }
-                        }
-                      },
-                icon: const Icon(Icons.delete_outline),
-                label: Text(l10n.routeDelete),
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            // The club's owner moderates the library without editing anybody's words.
-            if (!route.isMine && isClubOwner)
-              OutlinedButton.icon(
-                key: const Key('remove-route-as-owner'),
-                onPressed: s.action.running
-                    ? null
-                    : () async {
-                        if (await confirmDestructive(
-                          context,
-                          title: l10n.routeWithdrawConfirmTitle,
-                          body: l10n.routeWithdrawConfirmBody,
-                          action: l10n.routeWithdraw,
-                          key: const Key('confirm-withdraw-route'),
-                        )) {
-                          if (await notifier.withdraw() && context.mounted) {
-                            onDeleted();
-                          }
-                        }
-                      },
-                icon: const Icon(Icons.link_off),
-                label: Text(l10n.routeWithdraw),
               ),
           ],
         ),

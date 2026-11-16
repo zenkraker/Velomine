@@ -125,6 +125,7 @@ void main() {
       await tapVisible(tester, const Key('route-route-1'));
 
       expect(find.byKey(const Key('edit-route')), findsNothing);
+      await tapVisible(tester, const Key('route-actions'));
       expect(find.byKey(const Key('remove-route-as-owner')), findsOneWidget);
       await tapVisible(tester, const Key('remove-route-as-owner'));
       await tester.tap(find.byKey(const Key('confirm-withdraw-route')));
@@ -172,6 +173,7 @@ void main() {
       await tapVisible(tester, const Key('route-route-1'));
 
       expect(find.text('Lake loop'), findsWidgets);
+      await tapVisible(tester, const Key('route-actions'));
       expect(find.byKey(const Key('withdraw-route')), findsOneWidget);
       await tapVisible(tester, const Key('withdraw-route'));
       await tester.tap(find.byKey(const Key('confirm-withdraw-route')));
@@ -179,6 +181,66 @@ void main() {
 
       expect(server.routeLibrary.single['shared'], isFalse);
       expect(find.byKey(const Key('route-not-shared')), findsOneWidget);
+    },
+  );
+
+  testWidgets('RoutesScreen_ShouldNotShowAFloatingButton_WhenOnAPhone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final rider = server.add('rider@example.com');
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('open-club-routes'));
+
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byKey(const Key('add-route')), findsOneWidget);
+  });
+
+  testWidgets(
+    'RouteDetailScreen_ShouldListDeleteLastAndRedAndAskFirst_WhenTheOwnerOpensTheMenu',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com');
+      server.routeLibrary.add(
+        routeSeed(
+          id: 'route-1',
+          name: 'Lake loop',
+          ownerId: rider.id,
+          ownerName: rider.name,
+        ),
+      );
+      server.signInBrowser(rider);
+      await startApp(tester, server.session(useCookies: true));
+
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-routes'));
+      await tapVisible(tester, const Key('route-route-1'));
+      expect(find.byKey(const Key('delete-route')), findsNothing);
+      await tapVisible(tester, const Key('route-actions'));
+
+      final delete = find.byKey(const Key('delete-route'));
+      expect(
+        tester.getTopLeft(delete).dy,
+        greaterThan(
+          tester.getTopLeft(find.byKey(const Key('withdraw-route'))).dy,
+        ),
+      );
+      final button = tester.widget<MenuItemButton>(delete);
+      final error = Theme.of(tester.element(delete)).colorScheme.error;
+      expect(button.style?.foregroundColor?.resolve({}), error);
+
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('confirm-delete-route')), findsOneWidget);
+      expect(server.routeLibrary, hasLength(1));
+      await tester.tap(find.byKey(const Key('confirm-delete-route')));
+      await tester.pumpAndSettle();
+      expect(server.routeLibrary, isEmpty);
     },
   );
 
@@ -200,6 +262,13 @@ void main() {
     expect(find.text('morning'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('route-name')), 'Lake loop');
+    expect(
+      find.descendant(
+        of: find.byType(BottomActionBar),
+        matching: find.byKey(const Key('save-route')),
+      ),
+      findsOneWidget,
+    );
     await tapVisible(tester, const Key('save-route'));
 
     expect(server.routeLibrary, hasLength(1));

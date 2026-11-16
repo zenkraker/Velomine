@@ -10,6 +10,7 @@ import '../../core/units.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -78,6 +79,25 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
       title: l10n.addRouteTitle,
       subtitle: l10n.addRouteHelp,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: draft == null
+          ? null
+          : BottomActionBar.button(
+              buttonKey: const Key('save-route'),
+              label: l10n.addRouteSave,
+              busy: s.action.running,
+              onPressed: s.action.running
+                  ? null
+                  : () async {
+                      final id = await notifier.save(
+                        name: _name.text.trim(),
+                        surface: _surface,
+                        description: _description.text,
+                      );
+                      if (id != null && context.mounted) {
+                        widget.onAdded(id);
+                      }
+                    },
+            ),
       children: [
         SectionCard(
           title: l10n.addRouteFromRide,
@@ -203,23 +223,6 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
               ),
             ],
           ),
-          FilledButton.icon(
-            key: const Key('save-route'),
-            onPressed: s.action.running
-                ? null
-                : () async {
-                    final id = await notifier.save(
-                      name: _name.text.trim(),
-                      surface: _surface,
-                      description: _description.text,
-                    );
-                    if (id != null && context.mounted) {
-                      widget.onAdded(id);
-                    }
-                  },
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addRouteSave),
-          ),
           if (s.action.failure case final failure?)
             ErrorState(
               message: failureText(l10n, failure),
@@ -285,6 +288,21 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
       eyebrow: l10n.routesEyebrow,
       title: l10n.editRouteTitle,
       maxWidth: AppLayout.contentNarrow,
+      bottomAction: BottomActionBar.button(
+        buttonKey: const Key('save-route-edit'),
+        label: l10n.save,
+        busy: s.action.running,
+        onPressed: s.action.running
+            ? null
+            : () async {
+                final ok = await notifier.save(
+                  name: _name.text.trim(),
+                  surface: _surface,
+                  description: _description.text,
+                );
+                if (ok && context.mounted) widget.onSaved();
+              },
+      ),
       children: [
         SectionCard(
           title: l10n.editRouteTitle,
@@ -315,21 +333,6 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
               },
             ),
           ],
-        ),
-        FilledButton.icon(
-          key: const Key('save-route-edit'),
-          onPressed: s.action.running
-              ? null
-              : () async {
-                  final ok = await notifier.save(
-                    name: _name.text.trim(),
-                    surface: _surface,
-                    description: _description.text,
-                  );
-                  if (ok && context.mounted) widget.onSaved();
-                },
-          icon: const Icon(Icons.save_outlined),
-          label: Text(l10n.save),
         ),
         if (s.action.failure case final failure?)
           ErrorState(
