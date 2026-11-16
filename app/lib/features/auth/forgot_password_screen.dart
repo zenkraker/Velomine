@@ -48,6 +48,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       title: l10n.forgotPasswordTitle,
       help: l10n.forgotPasswordHelp,
       onBack: () => context.go('/sign-in'),
+      primaryLabel: l10n.sendResetLink,
+      primaryKey: const Key('forgot-submit'),
+      onPrimary: _send,
+      primaryBusy: s.command.running,
       children: [
         TextField(
           key: const Key('forgot-email'),
@@ -74,12 +78,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               message: forgotProblemText(l10n, s.problem!),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            key: const Key('forgot-submit'),
-            onPressed: s.command.running ? null : _send,
-            child: Text(l10n.sendResetLink),
-          ),
         ],
       ],
     );

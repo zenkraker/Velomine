@@ -91,6 +91,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     return AuthPage(
       eyebrow: l10n.authEyebrowSignIn,
       help: l10n.signInHelp,
+      primaryLabel: s.challenge != null ? l10n.twoFactorVerify : l10n.signIn,
+      primaryKey: Key(s.challenge != null ? 'two-factor-verify' : 'sign-in'),
+      onPrimary: s.challenge != null ? _verifyCode : _signIn,
+      primaryBusy: s.command.running,
       children: [
         if (widget.onChangeServer != null) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -137,12 +141,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             const SizedBox(height: AppSpacing.md),
             AuthFailure(keyName: 'sign-in-error', message: message),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            key: const Key('two-factor-verify'),
-            onPressed: s.command.running ? null : _verifyCode,
-            child: Text(l10n.twoFactorVerify),
-          ),
           TextButton(
             key: const Key('two-factor-back'),
             onPressed: s.command.running
@@ -204,12 +202,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               child: Text(l10n.tryAgain),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            key: const Key('sign-in'),
-            onPressed: s.command.running ? null : _signIn,
-            child: Text(l10n.signIn),
-          ),
           if (kIsWeb
               ? (sso?.enabled ?? false)
               : (sso?.appSsoEnabled ?? false)) ...[

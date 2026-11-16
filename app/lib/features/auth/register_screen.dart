@@ -65,6 +65,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return AuthPage(
       eyebrow: l10n.authEyebrowRegister,
       title: l10n.createAccount,
+      primaryLabel: created ? l10n.backToSignIn : l10n.createAccountAction,
+      primaryKey: created ? null : const Key('register'),
+      onPrimary: created ? () => context.go('/sign-in') : _register,
+      primaryBusy: !created && s.command.running,
       children: created
           ? [
               Text(
@@ -84,11 +88,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: Text(l10n.resendVerification),
                 ),
               ],
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                onPressed: () => context.go('/sign-in'),
-                child: Text(l10n.backToSignIn),
-              ),
             ]
           : [
               // One group, so the manager sees an address, a name and a new password that belong together
@@ -139,12 +138,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   message: authProblemText(l10n, s.problem!),
                 ),
               ],
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                key: const Key('register'),
-                onPressed: s.command.running ? null : _register,
-                child: Text(l10n.createAccountAction),
-              ),
               TextButton(
                 onPressed: () => context.go('/sign-in'),
                 child: Text(l10n.haveAccount),

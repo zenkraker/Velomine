@@ -65,15 +65,13 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       title: l10n.resetPasswordTitle,
       help: s.done ? null : l10n.resetPasswordHelp,
       onBack: () => context.go('/sign-in'),
+      primaryLabel: s.done ? l10n.goToSignIn : l10n.setNewPassword,
+      primaryKey: Key(s.done ? 'reset-to-sign-in' : 'reset-submit'),
+      onPrimary: s.done ? () => context.go('/sign-in') : _reset,
+      primaryBusy: !s.done && s.command.running,
       children: [
         if (s.done) ...[
           Text(l10n.resetPasswordDone, key: const Key('reset-done')),
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            key: const Key('reset-to-sign-in'),
-            onPressed: () => context.go('/sign-in'),
-            child: Text(l10n.goToSignIn),
-          ),
         ] else ...[
           PasswordField(
             fieldKey: const Key('reset-password'),
@@ -98,13 +96,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               message: resetProblemText(l10n, s.problem!),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            key: const Key('reset-submit'),
-            onPressed: s.command.running ? null : _reset,
-            child: Text(l10n.setNewPassword),
-          ),
-          const SizedBox(height: AppSpacing.sm),
           TextButton(
             key: const Key('reset-ask-again'),
             onPressed: () => context.go('/forgot-password'),

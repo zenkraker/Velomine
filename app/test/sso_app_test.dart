@@ -42,6 +42,8 @@ void main() {
     final session = server.session(useCookies: false, appSso: appSso);
     await startApp(tester, session, startSso: session.signInWithSso);
 
+    await tester.ensureVisible(find.byKey(const Key('sso')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('sso')));
     await tester.pumpAndSettle();
 
@@ -67,6 +69,8 @@ void main() {
     final session = server.session(useCookies: false, appSso: appSso);
     await startApp(tester, session, startSso: session.signInWithSso);
 
+    await tester.ensureVisible(find.byKey(const Key('sso')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('sso')));
     await tester.pumpAndSettle();
 
@@ -85,6 +89,8 @@ void main() {
     final session = server.session(useCookies: false, appSso: appSso);
     await startApp(tester, session, startSso: session.signInWithSso);
 
+    await tester.ensureVisible(find.byKey(const Key('sso')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('sso')));
     await tester.pumpAndSettle();
 

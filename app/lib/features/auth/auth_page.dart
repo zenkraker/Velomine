@@ -1,11 +1,17 @@
-import '../../core/widgets/inline_error.dart';
-
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/tokens.dart';
+import '../../core/widgets/bottom_action_bar.dart';
+import '../../core/widgets/eyebrow.dart';
+import '../../core/widgets/inline_error.dart';
+import '../../core/widgets/page_scaffold.dart';
 
-/// The frame every signed-out screen shares: the wordmark, the step's name, one sentence about it,
-/// then one column at a readable width — and a bar with a way back where there is one.
+/// The frame every signed-out screen shares: the wordmark as a hero, the step's name, one sentence
+/// about it, then one column at a readable width, a back arrow where there is a way back, and the
+/// step's one primary button pinned at the bottom.
+///
+/// There is no shell here, so the page asks for the header itself (`showOnPhone`): it only holds the
+/// back arrow, because the wordmark is the page's title.
 class AuthPage extends StatelessWidget {
   const AuthPage({
     super.key,
@@ -13,6 +19,10 @@ class AuthPage extends StatelessWidget {
     this.eyebrow,
     this.help,
     this.onBack,
+    this.primaryLabel,
+    this.primaryKey,
+    this.onPrimary,
+    this.primaryBusy = false,
     required this.children,
   });
 
@@ -25,8 +35,16 @@ class AuthPage extends StatelessWidget {
   /// One sentence on what the step is for, under the title.
   final String? help;
 
-  /// Where the bar's arrow goes when leaving means going somewhere, not popping.
+  /// Where the back arrow goes when leaving means going somewhere, not popping.
   final VoidCallback? onBack;
+
+  /// The step's primary button, pinned at the bottom: its text, its key, what it does and whether it
+  /// is working. Without a label the step has none.
+  final String? primaryLabel;
+  final Key? primaryKey;
+  final VoidCallback? onPrimary;
+  final bool primaryBusy;
+
   final List<Widget> children;
 
   @override
@@ -34,58 +52,44 @@ class AuthPage extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: onBack == null
-          ? null
-          : AppBar(
-              leading: BackButton(onPressed: onBack),
-              backgroundColor: scheme.surface,
-            ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppLayout.contentNarrow),
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.xl,
-              AppSpacing.xl,
-              AppSpacing.xxl,
-            ),
-            children: [
-              Text(
-                'Velomine',
-                style: text.headlineLarge,
-                textAlign: TextAlign.center,
-              ),
-              if (eyebrow case final eyebrow?) ...[
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  eyebrow.toUpperCase(),
-                  style: text.labelSmall?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.76,
-                    color: scheme.onSurfaceVariant,
+      body: SafeArea(
+        bottom: false,
+        child: PageHeaderScope(
+          showOnPhone: true,
+          child: PageScaffold(
+            maxWidth: AppLayout.contentNarrow,
+            onBack: onBack,
+            bottomAction: primaryLabel == null
+                ? null
+                : BottomActionBar.button(
+                    maxWidth: AppLayout.contentNarrow,
+                    buttonKey: primaryKey,
+                    label: primaryLabel!,
+                    onPressed: onPrimary,
+                    busy: primaryBusy,
                   ),
+            children: [
+              Semantics(
+                header: title == null,
+                child: Text(
+                  'Velomine',
+                  style: text.displayMedium?.copyWith(color: scheme.primary),
+                  textAlign: TextAlign.center,
                 ),
-              ],
-              if (title case final title?) ...[
-                const SizedBox(height: AppSpacing.xs),
+              ),
+              if (eyebrow case final eyebrow?) Eyebrow(eyebrow),
+              if (title case final title?)
                 Semantics(
                   header: true,
                   child: Text(title, style: text.headlineMedium),
                 ),
-              ],
-              if (help case final help?) ...[
-                const SizedBox(height: AppSpacing.sm),
+              if (help case final help?)
                 Text(
                   help,
                   style: text.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-              ],
-              const SizedBox(height: AppSpacing.xl),
               ...children,
             ],
           ),

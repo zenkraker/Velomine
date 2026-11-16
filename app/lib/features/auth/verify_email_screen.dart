@@ -57,6 +57,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     return AuthPage(
       title: l10n.verifyEmailTitle,
       onBack: () => context.go('/sign-in'),
+      primaryLabel: _confirmed == null ? null : l10n.backToSignIn,
+      primaryKey: const Key('verify-to-sign-in'),
+      onPrimary: () => context.go('/sign-in'),
       children: [
         if (_confirmed == null)
           Row(
@@ -86,12 +89,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 child: Text(l10n.verifyEmailSendAgain),
               ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          FilledButton(
-            key: const Key('verify-to-sign-in'),
-            onPressed: () => context.go('/sign-in'),
-            child: Text(l10n.backToSignIn),
-          ),
         ],
       ],
     );

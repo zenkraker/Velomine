@@ -119,6 +119,10 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       eyebrow: l10n.authEyebrowServer,
       title: l10n.setupTitle,
       help: l10n.setupHelp,
+      primaryLabel: l10n.setupConnect,
+      primaryKey: const Key('server-save'),
+      onPrimary: _save,
+      primaryBusy: s.busy,
       children: [
         TextField(
           key: const Key('server-url'),
@@ -148,12 +152,6 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
           const SizedBox(height: AppSpacing.md),
           AuthFailure(keyName: 'server-error', message: error),
         ],
-        const SizedBox(height: AppSpacing.lg),
-        FilledButton(
-          key: const Key('server-save'),
-          onPressed: s.busy ? null : _save,
-          child: Text(s.busy ? l10n.setupChecking : l10n.setupConnect),
-        ),
       ],
     );
   }

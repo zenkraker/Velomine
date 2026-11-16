@@ -12,6 +12,8 @@ void main() {
     String email = 'new@example.com',
     String password = 'Rider-pass-123',
   }) async {
+    await tester.ensureVisible(find.byKey(const Key('to-register')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('to-register')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('email')), email);
@@ -25,6 +27,8 @@ void main() {
     'RegisterScreen_ShouldOfferANewPasswordToPasswordManagers_WhenTheFormOpens',
     (tester) async {
       await startApp(tester, server.session(useCookies: false));
+      await tester.ensureVisible(find.byKey(const Key('to-register')));
+      await tester.pump();
       await tester.tap(find.byKey(const Key('to-register')));
       await tester.pumpAndSettle();
       TextField field(String key) =>
@@ -45,6 +49,8 @@ void main() {
     'RegisterScreen_ShouldSubmitTheSaveToPasswordManagers_WhenRegistering',
     (tester) async {
       await startApp(tester, server.session(useCookies: false));
+      await tester.ensureVisible(find.byKey(const Key('to-register')));
+      await tester.pump();
       await tester.tap(find.byKey(const Key('to-register')));
       await tester.pumpAndSettle();
       final textInput = tester.testTextInput..log.clear();

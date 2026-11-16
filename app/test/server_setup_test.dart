@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/server_config.dart';
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/features/auth/server_setup_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
@@ -121,7 +122,13 @@ void main() {
     await tester.tap(find.byKey(const Key('server-save')));
     await tester.pump();
 
-    expect(find.text('Checking…'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomActionBar),
+        matching: find.byType(CircularProgressIndicator),
+      ),
+      findsOneWidget,
+    );
 
     await tester.pump(const Duration(seconds: 11));
     await tester.pumpAndSettle();

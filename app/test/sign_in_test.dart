@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -28,6 +30,47 @@ void main() {
     },
   );
 
+  testWidgets(
+    'SignInScreen_ShouldKeepSignInInTheBottomBar_WhenTheKeyboardIsOpen',
+    (tester) async {
+      await startApp(tester, server.session(useCookies: false));
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpAndSettle();
+
+      final button = find.byKey(const Key('sign-in'));
+      expect(
+        find.ancestor(of: button, matching: find.byType(BottomActionBar)),
+        findsOneWidget,
+      );
+      final bottom = tester.getBottomLeft(button).dy;
+      final height =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(
+        bottom,
+        lessThanOrEqualTo(height - 300 / tester.view.devicePixelRatio),
+      );
+      expect(bottom, greaterThan(0));
+    },
+  );
+
+  testWidgets(
+    'ForgotPasswordScreen_ShouldGoBackToSignIn_WhenTheBackArrowIsTapped',
+    (tester) async {
+      await startApp(tester, server.session(useCookies: false));
+      await tester.ensureVisible(find.byKey(const Key('forgot-password')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('forgot-password')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('forgot-submit')), findsOneWidget);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sign-in')), findsOneWidget);
+      expect(find.byKey(const Key('forgot-submit')), findsNothing);
+    },
+  );
+
   testWidgets('App_ShouldGoBackToSignIn_WhenAnApiCallAnswers401', (
     tester,
   ) async {
@@ -52,6 +95,8 @@ void main() {
       );
 
       expect(find.text('Continue with Test IdP'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('sso')));
+      await tester.pump();
       await tester.tap(find.byKey(const Key('sso')));
       expect(started, isTrue);
     },
