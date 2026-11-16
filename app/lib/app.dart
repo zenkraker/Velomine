@@ -68,11 +68,6 @@ import 'features/rides/rides_screen.dart';
 import 'home_shell.dart';
 import 'core/l10n.dart';
 
-/// Opens the data export in the system browser, which saves the ZIP (on the web, a new tab does).
-Future<void> _openLink(Uri uri) async {
-  await launchUrl(uri, mode: LaunchMode.externalApplication);
-}
-
 /// Opens single sign-on in the phone's or the computer's browser. Tests override it.
 final ssoStarterProvider = Provider<SsoStarter>((ref) {
   if (kIsWeb) {
@@ -88,9 +83,6 @@ final ssoStarterProvider = Provider<SsoStarter>((ref) {
   }
   return () => ref.read(sessionProvider).signInWithSso();
 });
-
-/// Opens the data export in the system browser. Tests override it.
-final linkOpenerProvider = Provider<LinkOpener>((ref) => _openLink);
 
 /// Signs out and forgets the server address, so the setup screen returns. Null
 /// on the web, which is served by its own server.

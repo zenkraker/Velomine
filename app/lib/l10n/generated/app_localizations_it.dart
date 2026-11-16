@@ -82,6 +82,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get sendFeedback => 'Invia un feedback';
+
+  @override
   String get signOut => 'Esci';
 
   @override

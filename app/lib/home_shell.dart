@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/back_guard.dart';
+import 'core/hooks.dart';
 import 'core/l10n.dart';
 import 'core/motion.dart';
 import 'core/providers.dart';
@@ -729,6 +730,8 @@ class _AccountMenu extends ConsumerWidget {
             context.push('/profile');
           case 'admin':
             context.push('/admin');
+          case 'feedback':
+            ref.read(linkOpenerProvider)(feedbackUrl);
           default:
             signedOut();
         }
@@ -766,6 +769,12 @@ class _AccountMenu extends ConsumerWidget {
         ],
         const PopupMenuDivider(),
         PopupMenuItem(
+          key: const Key('account-feedback'),
+          value: 'feedback',
+          child: Text(l10n.sendFeedback),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
           key: const Key('account-sign-out'),
           value: 'sign-out',
           child: Text(l10n.signOut),
@@ -774,6 +783,10 @@ class _AccountMenu extends ConsumerWidget {
     );
   }
 }
+
+/// The project's feedback form on the public site: it reaches whoever builds Velomine, whichever server the member
+/// uses, and is anonymous, so the app sends nothing with it.
+final feedbackUrl = Uri.parse('https://velomine.eu/feedback/');
 
 /// The three themes, the current one check-marked. They are ordinary menu entries: choosing one
 /// sets the theme and closes the menu, the same way the toolbar's own button does.

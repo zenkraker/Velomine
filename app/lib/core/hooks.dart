@@ -1,4 +1,6 @@
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Opens the ride file picker. The real one is in app.dart; tests pass their own.
 typedef FilePicker = Future<XFile?> Function();
@@ -24,8 +26,15 @@ Future<XFile?> pickGpxFile() => openFile(
   ],
 );
 
-/// Opens an address in the phone's or computer's browser (the data export download). The real one is in app.dart.
+/// Opens an address in the phone's or computer's browser: the data export download, the feedback form.
 typedef LinkOpener = Future<void> Function(Uri uri);
+
+/// Opens an address in the system browser, which saves a download (on the web, a new tab does). Tests override it.
+final linkOpenerProvider = Provider<LinkOpener>(
+  (ref) => (uri) async {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  },
+);
 
 /// Sends the browser to the single sign-on provider. The real one is in app.dart; tests pass their own.
 typedef SsoStarter = Future<void> Function();

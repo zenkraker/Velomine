@@ -25,6 +25,7 @@
 
   "notifications": "Notifiche",
   "notificationsUnread": "Notifiche, {count} non lette",
+  "sendFeedback": "Invia un feedback",
   "signOut": "Esci",
 
   "themeTooltip": "Tema: {name}",

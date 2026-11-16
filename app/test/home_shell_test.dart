@@ -11,6 +11,7 @@ import 'package:velomine/core/widgets/floating_nav_pill.dart';
 import 'package:velomine/core/widgets/page_scaffold.dart';
 import 'package:velomine/features/recording/recorder.dart';
 import 'package:velomine/features/recording/recording_providers.dart';
+import 'package:velomine/core/hooks.dart';
 import 'package:velomine/home_shell.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
@@ -80,6 +81,7 @@ void main() {
     bool reduceMotion = false,
     bool withRecorder = true,
     String? clubRole = 'member',
+    LinkOpener? openLink,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -110,6 +112,7 @@ void main() {
           sessionProvider.overrideWith((ref) => session),
           recorderProvider.overrideWithValue(withRecorder ? recorder : null),
           themeChoiceStoreProvider.overrideWithValue(MemoryThemeStore()),
+          linkOpenerProvider.overrideWithValue(openLink ?? (_) async {}),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -358,6 +361,21 @@ void main() {
 
     expect(find.byType(BackButton), findsNothing);
   });
+
+  testWidgets(
+    'HomeShell_ShouldOpenTheFeedbackForm_WhenTheMemberPicksItFromTheAccountMenu',
+    (tester) async {
+      final opened = <Uri>[];
+      await pumpShell(tester, openLink: (uri) async => opened.add(uri));
+
+      await tester.tap(find.byKey(const Key('account-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('account-feedback')));
+      await tester.pumpAndSettle();
+
+      expect(opened, [Uri.parse('https://velomine.eu/feedback/')]);
+    },
+  );
 
   testWidgets(
     'HomeShell_ShouldOpenTheAdminScreen_WhenAnAdminPicksItFromTheAccountMenu',

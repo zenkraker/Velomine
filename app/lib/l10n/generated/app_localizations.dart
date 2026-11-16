@@ -236,6 +236,12 @@ abstract class AppLocalizations {
   /// **'Notifications, {count} unread'**
   String notificationsUnread(int count);
 
+  /// No description provided for @sendFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback'**
+  String get sendFeedback;
+
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
