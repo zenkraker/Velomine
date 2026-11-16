@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
@@ -15,35 +16,6 @@ import 'club_rides_view_model.dart';
 /// The member's private calendar address: shown once, replaceable, and stopped when they leave the club.
 class CalendarFeedScreen extends ConsumerWidget {
   const CalendarFeedScreen({super.key});
-
-  Future<bool> _confirm(
-    BuildContext context, {
-    required String title,
-    required String body,
-    required String action,
-    required Key key,
-  }) async {
-    final l10n = context.l10n;
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: key,
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(action),
-          ),
-        ],
-      ),
-    );
-    return sure == true;
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -134,7 +106,7 @@ class CalendarFeedScreen extends ConsumerWidget {
                 onPressed: busy
                     ? null
                     : () async {
-                        if (await _confirm(
+                        if (await confirmDestructive(
                           context,
                           title: l10n.calendarReplaceConfirmTitle,
                           body: l10n.calendarReplaceConfirmBody,
@@ -153,7 +125,7 @@ class CalendarFeedScreen extends ConsumerWidget {
                 onPressed: busy
                     ? null
                     : () async {
-                        if (await _confirm(
+                        if (await confirmDestructive(
                           context,
                           title: l10n.calendarDeleteConfirmTitle,
                           body: l10n.calendarDeleteConfirmBody,

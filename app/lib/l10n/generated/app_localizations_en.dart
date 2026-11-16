@@ -4300,4 +4300,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionSaveSupporter => 'save your supporter badge';
+
+  @override
+  String get moreActions => 'More actions';
 }

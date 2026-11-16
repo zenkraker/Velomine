@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/hooks.dart';
+import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/tokens.dart';
@@ -41,35 +42,6 @@ class RouteDetailScreen extends ConsumerWidget {
         .download();
     if (path == null || !context.mounted) return;
     await openLink(Uri.parse('$serverUrl$path'));
-  }
-
-  Future<bool> _confirm(
-    BuildContext context, {
-    required String title,
-    required String body,
-    required String action,
-    required Key key,
-  }) async {
-    final l10n = context.l10n;
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: key,
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(action),
-          ),
-        ],
-      ),
-    );
-    return sure == true;
   }
 
   @override
@@ -176,7 +148,7 @@ class RouteDetailScreen extends ConsumerWidget {
                 onPressed: s.action.running
                     ? null
                     : () async {
-                        if (await _confirm(
+                        if (await confirmDestructive(
                           context,
                           title: l10n.routeWithdrawConfirmTitle,
                           body: l10n.routeWithdrawConfirmBody,
@@ -202,7 +174,7 @@ class RouteDetailScreen extends ConsumerWidget {
                 onPressed: s.action.running
                     ? null
                     : () async {
-                        if (await _confirm(
+                        if (await confirmDestructive(
                           context,
                           title: l10n.routeDeleteConfirmTitle,
                           body: l10n.routeDeleteConfirmBody,
@@ -227,7 +199,7 @@ class RouteDetailScreen extends ConsumerWidget {
                 onPressed: s.action.running
                     ? null
                     : () async {
-                        if (await _confirm(
+                        if (await confirmDestructive(
                           context,
                           title: l10n.routeWithdrawConfirmTitle,
                           body: l10n.routeWithdrawConfirmBody,

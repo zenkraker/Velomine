@@ -4331,4 +4331,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionSaveSupporter => 'salvare il badge sostenitore';
+
+  @override
+  String get moreActions => 'Altre azioni';
 }

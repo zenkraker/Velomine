@@ -2268,5 +2268,6 @@
   "supporterHideBadgeHelp": "The licence still counts. The badge is yours to show or hide.",
   "actionLoadSupporter": "load your supporter licence",
   "actionActivateSupporter": "activate the licence",
-  "actionSaveSupporter": "save your supporter badge"
+  "actionSaveSupporter": "save your supporter badge",
+  "moreActions": "More actions"
 }

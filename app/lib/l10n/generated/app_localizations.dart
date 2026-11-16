@@ -7567,6 +7567,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'save your supporter badge'**
   String get actionSaveSupporter;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get moreActions;
 }
 
 class _AppLocalizationsDelegate

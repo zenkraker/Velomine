@@ -1490,5 +1490,6 @@
   "supporterHideBadgeHelp": "La licenza vale lo stesso. Il badge lo mostri o lo nascondi tu.",
   "actionLoadSupporter": "caricare la tua licenza sostenitore",
   "actionActivateSupporter": "attivare la licenza",
-  "actionSaveSupporter": "salvare il badge sostenitore"
+  "actionSaveSupporter": "salvare il badge sostenitore",
+  "moreActions": "Altre azioni"
 }

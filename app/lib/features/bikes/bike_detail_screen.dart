@@ -5,6 +5,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
+import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/theme.dart';
@@ -78,25 +79,15 @@ class BikeDetailScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteBikeTitle),
-        content: Text(l10n.deleteBikeBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.keepIt),
-          ),
-          FilledButton(
-            key: const Key('confirm-delete-bike'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final ok = await confirmDestructive(
+      context,
+      title: l10n.deleteBikeTitle,
+      body: l10n.deleteBikeBody,
+      action: l10n.delete,
+      key: const Key('confirm-delete-bike'),
+      cancelLabel: l10n.keepIt,
     );
-    if (ok == true &&
+    if (ok &&
         await ref.read(bikeDetailViewModelProvider(id).notifier).delete()) {
       onDeleted();
     }
