@@ -10,10 +10,10 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
-import '../../core/placeholder_block.dart';
 import '../recording/recording_providers.dart';
 import '../../core/l10n.dart';
-import '../../core/page_actions.dart';
+import '../../core/page_actions.dart' show showFiltersSheet;
+import '../../core/widgets/page_menu.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
@@ -83,57 +83,6 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
     });
   }
 
-  /// A phone's title bar: one filter button and the ways to add rides behind a menu, instead of a row
-  /// of buttons over the list.
-  void _phoneAppBar(
-    BuildContext context,
-    List<(Key, IconData, String?, VoidCallback?)> imports,
-    bool filterActive,
-  ) {
-    final l10n = context.l10n;
-    final actions = <Widget>[
-      phoneFilterButton(
-        key: const Key('rides-filter'),
-        tooltip: l10n.rideFilterTitle,
-        active: filterActive,
-        onPressed: () =>
-            showFiltersSheet(context, (_) => const _RidesFilterSheet()),
-      ),
-      if (imports.isNotEmpty)
-        PopupMenuButton<VoidCallback?>(
-          key: const Key('rides-actions'),
-          tooltip: l10n.ridesImportMenu,
-          icon: const Icon(Icons.more_vert),
-          onSelected: (action) => action?.call(),
-          itemBuilder: (_) => [
-            for (final (key, icon, label, onPressed) in imports)
-              if (label != null)
-                PopupMenuItem(
-                  key: key,
-                  value: onPressed,
-                  enabled: onPressed != null,
-                  child: ListTile(
-                    leading: Icon(icon),
-                    title: Text(label),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-          ],
-        ),
-    ];
-    // The title bar belongs to the shell, so the page hands its buttons over after the frame.
-    final where = GoRouterState.of(context).uri.path;
-    // The element, not just the context: a tab that is being removed is still "mounted" in its
-    // final frame and must not put its buttons back over the screen replacing it.
-    final element = context as Element;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!element.mounted) return;
-      Future.microtask(
-        () => ref.read(pageActionsProvider.notifier).set(where, actions),
-      );
-    });
-  }
-
   /// Called with a ride's id when its card is pressed.
   void Function(String id) get onOpen => widget.onOpen;
   bool get showSoloCard => widget.showSoloCard;
@@ -168,13 +117,8 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
     final bulkBusy = ref.watch(
       bulkUploadViewModelProvider.select((s) => s.busy),
     );
-    final action = FilledButton.icon(
-      key: const Key('upload'),
-      onPressed: upload,
-      icon: const Icon(Icons.upload_file),
-      label: Text(s.upload.running ? l10n.uploading : l10n.uploadRide),
-    );
-    // Getting data in, for a phone's title bar and its empty screen: the three ways other than upload.
+    final uploadLabel = s.upload.running ? l10n.uploading : l10n.uploadRide;
+    // Getting data in, for the menu and the empty screen: the ways other than upload.
     final imports = <(Key, IconData, String?, VoidCallback?)>[
       (
         const Key('import-strava'),
@@ -217,23 +161,81 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
         ),
     ];
 
-    // A wide window keeps the controls on the page; a phone puts them in the title bar and the list.
-    if (!wide) _phoneAppBar(context, imports, filterActive);
-
-    final wideActions = ToolbarRow(
-      alignment: WrapAlignment.end,
-      children: [
-        action,
+    // The phone with a recorder starts rides from the header; everywhere else the header uploads, and
+    // on the phone Upload then waits in the menu.
+    final hasRecorder = ref.watch(recorderProvider) != null;
+    final startRidePrimary = hasRecorder && !wide;
+    // On a phone the header also holds the notifications and the account, and the labelled button
+    // overflows it at 360 dp, so it is a filled icon there (its tooltip names it).
+    Widget headerButton(
+      Key key,
+      IconData icon,
+      String label,
+      VoidCallback? onPressed,
+    ) => wide
+        ? FilledButton.icon(
+            key: key,
+            onPressed: onPressed,
+            icon: Icon(icon),
+            label: Text(label),
+          )
+        : IconButton.filled(
+            key: key,
+            tooltip: label,
+            onPressed: onPressed,
+            icon: Icon(icon),
+          );
+    final primaryAction = startRidePrimary
+        ? headerButton(
+            const Key('start-ride'),
+            Icons.play_arrow,
+            l10n.startRide,
+            () => context.push('/record'),
+          )
+        : headerButton(
+            const Key('upload'),
+            Icons.upload_file,
+            uploadLabel,
+            upload,
+          );
+    final menu = PageMenu(
+      buttonKey: const Key('rides-actions'),
+      badge: filterActive,
+      entries: [
+        if (startRidePrimary)
+          PageMenuEntry(
+            key: const Key('upload'),
+            icon: Icons.upload_file,
+            label: uploadLabel,
+            onSelected: upload ?? () {},
+          ),
+        // A tablet with a recorder uploads from the header; starting a ride stays one tap away.
+        if (hasRecorder && wide)
+          PageMenuEntry(
+            key: const Key('start-ride'),
+            icon: Icons.play_arrow,
+            label: l10n.startRide,
+            onSelected: () => context.push('/record'),
+          ),
         for (final (key, icon, label, onPressed) in imports)
           if (label != null)
-            OutlinedButton.icon(
+            PageMenuEntry(
               key: key,
-              onPressed: onPressed,
-              icon: Icon(icon),
-              label: Text(label),
+              icon: icon,
+              label: label,
+              onSelected: onPressed ?? () {},
             ),
+        if (!wide)
+          PageMenuEntry(
+            key: const Key('rides-filter'),
+            icon: Icons.filter_list,
+            label: l10n.rideFilterTitle,
+            onSelected: () =>
+                showFiltersSheet(context, (_) => const _RidesFilterSheet()),
+          ),
       ],
     );
+
     final wideFilters = ToolbarRow(
       children: [
         RideFilters(
@@ -251,11 +253,16 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: [
-        action,
+        FilledButton.icon(
+          key: const Key('empty-upload'),
+          onPressed: upload,
+          icon: const Icon(Icons.upload_file),
+          label: Text(uploadLabel),
+        ),
         for (final (key, icon, label, onPressed) in imports)
           if (label != null)
             OutlinedButton.icon(
-              key: key,
+              key: Key('empty-${(key as ValueKey<String>).value}'),
               onPressed: onPressed,
               icon: Icon(icon),
               label: Text(label),
@@ -267,30 +274,12 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
       eyebrow: l10n.eyebrowRides,
       title: l10n.navRides,
       subtitle: l10n.ridesSubtitle,
-      // Only opens the recorder, which starts nothing by itself. The web has no recorder.
-      // On a phone the header also holds the filters, the notifications and the account, so the button
-      // is a filled icon there (its tooltip names it); from 600 dp it carries its label.
-      primaryAction: ref.watch(recorderProvider) == null
-          ? null
-          : wide
-          ? FilledButton.icon(
-              key: const Key('start-ride'),
-              onPressed: () => context.push('/record'),
-              icon: const Icon(Icons.play_arrow),
-              label: Text(l10n.startRide),
-            )
-          : IconButton.filled(
-              key: const Key('start-ride'),
-              tooltip: l10n.startRide,
-              onPressed: () => context.push('/record'),
-              icon: const Icon(Icons.play_arrow),
-            ),
+      primaryAction: primaryAction,
+      menu: menu,
       controller: notifier.scroll,
       refresh: notifier.refresh,
-      // A phone's upload button floats over the list; the last card ends above it.
-      bottomPadding: wide ? AppSpacing.xl : 96,
       children: [
-        if (wide) ...[wideActions, const BulkUploadCard()],
+        if (wide) const BulkUploadCard(),
         if (s.load.failure case final failure?)
           ErrorState(
             message: failureText(l10n, failure),
@@ -321,7 +310,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
               key: const Key('no-rides'),
               message: l10n.noRides,
               icon: Icons.directions_bike,
-              // Wide has the button in its header already.
+              // Wide has the ways in on its page already.
               action: wide ? null : emptyActions,
             ),
         CardGrid(
@@ -339,36 +328,16 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
             ),
           ),
         if (s.load.running && s.rides.isEmpty)
-          Semantics(
-            liveRegion: true,
-            label: l10n.loading,
-            child: Column(
-              key: const Key('rides-loading'),
-              children: [
-                for (var i = 0; i < 5; i++)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: PlaceholderBlock(height: 96, radius: 16),
-                  ),
-              ],
-            ),
+          const LoadingState.rows(
+            key: Key('rides-loading'),
+            count: 5,
+            rowHeight: AppLoading.cardRowHeight,
           )
         else if (s.load.running)
           const LoadingState(),
       ],
     );
-    if (wide) return page;
-    // The list ends above the button, so the last card is never under it.
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('upload'),
-        onPressed: upload,
-        icon: const Icon(Icons.upload_file),
-        label: Text(s.upload.running ? l10n.uploading : l10n.uploadRide),
-      ),
-      body: page,
-    );
+    return page;
   }
 }
 

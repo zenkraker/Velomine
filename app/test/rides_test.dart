@@ -73,7 +73,7 @@ void main() {
     expect(find.byKey(const Key('no-rides')), findsOneWidget);
   });
 
-  testWidgets('RidesScreen_ShouldPutUploadInTheList_WhenTheScreenIsWide', (
+  testWidgets('RidesScreen_ShouldPutUploadInTheHeader_WhenThereIsNoRecorder', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1000, 2400);
@@ -86,9 +86,10 @@ void main() {
       tester.widget<FilledButton>(find.byKey(const Key('upload'))),
       isA<FilledButton>(),
     );
+    expect(find.byKey(const Key('start-ride')), findsNothing);
   });
 
-  testWidgets('RidesScreen_ShouldPutUploadOnAButton_WhenTheScreenIsAPhone', (
+  testWidgets('RidesScreen_ShouldHaveNoFloatingButton_WhenAPhoneHasRides', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -97,8 +98,7 @@ void main() {
     server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
     await startApp(tester, server.session(useCookies: true));
 
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-    expect(find.byKey(const Key('upload')), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
     // No row of buttons over the list: the imports wait in the menu.
     expect(find.byKey(const Key('import-strava')), findsNothing);
     expect(find.byKey(const Key('rides-actions')), findsOneWidget);
@@ -114,7 +114,7 @@ void main() {
 
     final empty = find.byKey(const Key('no-rides'));
     expect(empty, findsOneWidget);
-    for (final key in ['upload', 'import-strava']) {
+    for (final key in ['empty-upload', 'empty-import-strava']) {
       expect(
         find.descendant(of: empty, matching: find.byKey(Key(key))),
         findsOneWidget,
@@ -136,7 +136,40 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('import-strava')), findsOneWidget);
+    expect(find.byKey(const Key('rides-filter')), findsOneWidget);
+    // Without a recorder Upload is the header's button, so the menu does not repeat it.
+    expect(find.byKey(const Key('upload')), findsOneWidget);
   });
+
+  testWidgets(
+    'RidesScreen_ShouldShowAFilterBadgeOnTheMenu_WhenAFilterIsActive',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      server.rides.add(
+        rideJson('r1', 'ready', discipline: 'road', title: 'Road loop'),
+      );
+      await startApp(tester, server.session(useCookies: true));
+
+      Finder badge() => find.descendant(
+        of: find.byKey(const Key('rides-actions')),
+        matching: find.byType(Badge),
+      );
+      expect(tester.widget<Badge>(badge()).isLabelVisible, isFalse);
+
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('rides-filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('filter-gravel')));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<Badge>(badge()).isLabelVisible, isTrue);
+    },
+  );
 
   testWidgets(
     'RidesScreen_ShouldFilterFromOneSheet_WhenTheFilterButtonIsPressed',
@@ -153,6 +186,8 @@ void main() {
       expect(find.byKey(const Key('filter-gravel')), findsNothing);
       expect(find.byKey(const Key('ride-search')), findsNothing);
 
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('rides-filter')));
       await tester.pumpAndSettle();
 
@@ -489,6 +524,32 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(RecordingScreen), findsNothing);
       expect(find.byKey(const Key('start-ride')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RidesScreen_ShouldPutUploadInTheMenu_WhenStartRideIsTheHeaderButton',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearAllTestValues);
+      server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        overrides: recorderOverrides(FakeRecorder()),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('start-ride')), findsOneWidget);
+      expect(find.byKey(const Key('upload')), findsNothing);
+      expect(find.byType(FloatingActionButton), findsNothing);
+
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('upload')), findsOneWidget);
     },
   );
 

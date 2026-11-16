@@ -110,6 +110,9 @@ abstract final class AppLoading {
   /// The height of one skeleton row from [LoadingState.rows].
   static const double rowHeight = 56;
 
+  /// The height of one skeleton card in a list of cards, such as the rides.
+  static const double cardRowHeight = 96;
+
   /// The size of the icon before an error line.
   static const double errorIcon = 18;
 }

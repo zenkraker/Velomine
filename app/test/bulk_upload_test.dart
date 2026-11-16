@@ -281,6 +281,8 @@ void main() {
         ],
       );
 
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('bulk-files')));
       for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 20));

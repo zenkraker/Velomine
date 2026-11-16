@@ -26,6 +26,8 @@ void main() {
       ),
     );
 
+    await tester.tap(find.byKey(const Key('rides-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('import-strava')));
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 50));
@@ -42,6 +44,8 @@ void main() {
   ) async {
     await startApp(tester, server.session(useCookies: true));
 
+    await tester.tap(find.byKey(const Key('rides-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('import-strava')));
     await tester.pumpAndSettle();
 
