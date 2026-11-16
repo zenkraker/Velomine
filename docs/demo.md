@@ -39,7 +39,6 @@ sudo docker compose logs --tail 50 server     # or web, traefik, postgres
 | `Bind for 0.0.0.0:80 failed: port is already allocated` | Something else holds 80 or 443: `sudo ss -ltnp '( sport = :80 )'` and `sudo docker ps`. |
 | No certificate, or the browser warns | `sudo docker compose logs traefik`. Both names' DNS must point at the VPS, and ports 80 and 443 must be open in the security group. |
 | `manifest unknown` / `not found` on pull | That version was never published. Check the Releases page and the Release workflow's run. |
-| `VELOMINE__DEMO__ENABLED is on, but: ...` at start | Demo mode refuses to delete anything: the database holds other accounts, a demo address is an admin, or an admin is a club member. Use an empty database, or set `VELOMINE__DEMO__ENABLED=false`. |
 
 ## The `.env` on the VPS
 
@@ -79,7 +78,3 @@ Copy the files off the VPS. A Scaleway volume snapshot is a cheap second copy.
 - every night at 03:00 UTC deletes every club and every account except the server admins, then makes the accounts, the club and the rides again. Whatever a visitor changed is undone.
 - catches up after downtime: when the server starts, or within a minute of being up, it makes the demo again if the last 03:00 UTC has passed since the demo was made.
 - answers 403 (`code: demo_locked`) to the actions a visitor could use to lock out the others: registration, changing or resetting the password, deleting the account, two-factor sign-in, signing other sessions out, leaving the club, changing the join code and changing club roles. The list is `DemoLock.Refused`.
-- refuses to start, rather than delete anything, when it finds:
-  - `A demo account is a server admin. Use another address for VELOMINE__ADMIN__EMAIL: the demo accounts are public.`
-  - `This server has accounts that are not demo accounts. Demo mode deletes every account but the admins each night, so it only starts on an empty server or on a demo.`
-  - `A server admin is a member of a club. Demo mode deletes every club each night, so it only starts on an empty server or on a demo.`

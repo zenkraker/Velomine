@@ -39,27 +39,6 @@ public sealed class DemoData(
         new("demo-rider@velomine.eu", "Luca Ferri", ClubRoles.Member),
     ];
 
-    /// <summary>
-    /// Why this database must not be reset, or null when it may. A reset deletes every account that is not a server
-    /// admin, so it runs only where those accounts are the demo's own: never on a server that holds real members.
-    /// </summary>
-    public async Task<string?> RefusalAsync(CancellationToken ct)
-    {
-        var demo = Accounts.Select(a => (string?)users.NormalizeEmail(a.Email)).ToList();
-        var admins = (await users.GetUsersInRoleAsync(Roles.Admin)).ToList();
-        if (admins.Any(a => demo.Contains(a.NormalizedEmail)))
-            return "A demo account is a server admin. Use another address for VELOMINE__ADMIN__EMAIL: the demo accounts are public.";
-
-        var adminIds = admins.Select(a => a.Id).ToList();
-        if (await db.Users.AnyAsync(u => !adminIds.Contains(u.Id) && (u.NormalizedEmail == null || !demo.Contains(u.NormalizedEmail)), ct))
-            return "This server has accounts that are not demo accounts. Demo mode deletes every account but the admins each night, so it only starts on an empty server or on a demo.";
-
-        if (await db.ClubMemberships.AnyAsync(m => adminIds.Contains(m.UserId), ct))
-            return "A server admin is a member of a club. Demo mode deletes every club each night, so it only starts on an empty server or on a demo.";
-
-        return null;
-    }
-
     /// <summary>When the demo data was last made: the demo club is made again by every reset.</summary>
     public Task<DateTimeOffset?> LastResetAsync(CancellationToken ct) =>
         db.Clubs.AsNoTracking().OrderBy(c => c.CreatedAt).Select(c => (DateTimeOffset?)c.CreatedAt).FirstOrDefaultAsync(ct);
@@ -67,8 +46,6 @@ public sealed class DemoData(
     /// <summary>Deletes the demo's club, accounts and everything they own, then makes them again with fresh example data.</summary>
     public async Task ResetAsync(CancellationToken ct)
     {
-        if (await RefusalAsync(ct) is { } refusal) throw new InvalidOperationException(refusal);
-
         // The club first: an account that is the only owner of a club cannot be deleted.
         await db.Clubs.ExecuteDeleteAsync(ct);
         var adminIds = (await users.GetUsersInRoleAsync(Roles.Admin)).Select(a => a.Id).ToList();
