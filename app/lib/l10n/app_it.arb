@@ -1492,5 +1492,8 @@
   "actionLoadSupporter": "caricare la tua licenza sostenitore",
   "actionActivateSupporter": "attivare la licenza",
   "actionSaveSupporter": "salvare il badge sostenitore",
-  "moreActions": "Altre azioni"
+  "moreActions": "Altre azioni",
+  "myBikes": "Le mie bici",
+  "bikeCount": "{count, plural, =0{Nessuna bici} =1{1 bici} other{{count} bici}}",
+  "@bikeCount": {"placeholders": {"count": {"type": "int"}}}
 }

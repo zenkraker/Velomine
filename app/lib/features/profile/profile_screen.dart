@@ -22,6 +22,8 @@ import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
+import '../bikes/bikes_view_models.dart';
+import '../bikes/service_marker.dart';
 import '../supporter/supporter_badge.dart';
 import '../supporter/supporter_view_model.dart';
 
@@ -298,7 +300,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _ProfileProblem.birthYear => l10n.errorBirthYear,
     };
     final failure = s.load.failure;
+    final bikes = ref.watch(bikesSummaryProvider);
     final sections = <Widget>[
+      _MyBikesRow(summary: bikes, onTap: () => context.push('/bikes')),
       SectionCard(
         title: l10n.profileAthlete,
         children: [
@@ -776,6 +780,45 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           child: Text(l10n.deleteEverything),
         ),
       ],
+    );
+  }
+}
+
+/// The way to the member's bikes, with how many there are and whether one needs service.
+class _MyBikesRow extends StatelessWidget {
+  const _MyBikesRow({required this.summary, required this.onTap});
+
+  final BikesSummary summary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final subtitle = l10n.bikeCount(summary.count);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Semantics(
+        button: true,
+        label: '${l10n.myBikes}, $subtitle',
+        excludeSemantics: true,
+        child: ListTile(
+          key: const Key('profile-my-bikes'),
+          minTileHeight: 56,
+          leading: const Icon(Icons.directions_bike),
+          title: Text(l10n.myBikes),
+          subtitle: Text(subtitle),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppSpacing.sm,
+            children: [
+              if (summary.due > 0 || summary.soon > 0)
+                ServiceMarker(due: summary.due > 0),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+          onTap: onTap,
+        ),
+      ),
     );
   }
 }

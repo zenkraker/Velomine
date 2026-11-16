@@ -4337,4 +4337,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get moreActions => 'Altre azioni';
+
+  @override
+  String get myBikes => 'Le mie bici';
+
+  @override
+  String bikeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bici',
+      one: '1 bici',
+      zero: 'Nessuna bici',
+    );
+    return '$_temp0';
+  }
 }

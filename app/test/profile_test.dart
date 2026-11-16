@@ -425,4 +425,61 @@ void main() {
       );
     });
   });
+
+  Map<String, Object?> bike(String id, {int due = 0}) => {
+    'id': id,
+    'name': 'Bike $id',
+    'kind': 'road',
+    'wheelCircumferenceMm': 2105,
+    'initialDistanceM': 0.0,
+    'isDefault': false,
+    'serviceDueCount': due,
+  };
+
+  testWidgets('ProfileScreen_ShouldOpenBikesAndReturn_WhenMyBikesIsTapped', (
+    tester,
+  ) async {
+    server.bikes.add(bike('bike-1'));
+    await openProfile(tester);
+
+    await tester.tap(find.byKey(const Key('profile-my-bikes')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('bike-bike-1')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('profile-my-bikes')), findsOneWidget);
+    expect(find.byKey(const Key('profile-name')), findsOneWidget);
+  });
+
+  testWidgets('ProfileScreen_ShouldShowCountAndDueMarker_WhenABikeHasAJobDue', (
+    tester,
+  ) async {
+    server.bikes.addAll([bike('bike-1'), bike('bike-2', due: 1)]);
+    await openProfile(tester);
+
+    expect(find.text('2 bikes'), findsOneWidget);
+    expect(find.byKey(const Key('service-due')), findsOneWidget);
+  });
+
+  testWidgets('ProfileScreen_ShouldShowNoMarker_WhenNoBikeNeedsService', (
+    tester,
+  ) async {
+    server.bikes.add(bike('bike-1'));
+    await openProfile(tester);
+
+    expect(find.text('1 bike'), findsOneWidget);
+    expect(find.byKey(const Key('service-due')), findsNothing);
+  });
+
+  testWidgets('BikeDetailScreen_ShouldOpen_WhenAnOldBikeLinkIsFollowed', (
+    tester,
+  ) async {
+    server.bikes.add(bike('bike-1'));
+    await openProfile(tester);
+
+    await goTo(tester, '/bikes/bike-1');
+    expect(find.text('Bike bike-1'), findsWidgets);
+    expect(find.byKey(const Key('bike-actions')), findsOneWidget);
+  });
 }

@@ -4306,4 +4306,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moreActions => 'More actions';
+
+  @override
+  String get myBikes => 'My bikes';
+
+  @override
+  String bikeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bikes',
+      one: '1 bike',
+      zero: 'No bikes',
+    );
+    return '$_temp0';
+  }
 }

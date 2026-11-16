@@ -436,3 +436,26 @@ class BikeDetailViewModel extends _$BikeDetailViewModel {
     messages: [...state.messages, FailureMessage(_messageId++, failure)],
   );
 }
+
+/// What the profile shows about the member's bikes.
+class BikesSummary {
+  const BikesSummary({this.count = 0, this.due = 0, this.soon = 0});
+
+  final int count;
+
+  /// Bikes with a job due, and bikes with one nearly due.
+  final int due;
+  final int soon;
+}
+
+@Riverpod(keepAlive: true)
+BikesSummary bikesSummary(Ref ref) {
+  final bikes = ref.watch(bikesViewModelProvider).bikes;
+  return BikesSummary(
+    count: bikes.length,
+    due: bikes.where((b) => b.serviceDueCount > 0).length,
+    soon: bikes
+        .where((b) => b.serviceDueCount == 0 && b.serviceSoonCount > 0)
+        .length,
+  );
+}

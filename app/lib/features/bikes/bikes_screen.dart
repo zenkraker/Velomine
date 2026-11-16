@@ -8,10 +8,10 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
-import '../../core/theme.dart';
 import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
 import 'bikes_view_models.dart';
+import 'service_marker.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -142,7 +142,7 @@ class _BikeCard extends ConsumerWidget {
                     ),
                   ),
                   if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
-                    _ServiceMarker(due: bike.serviceDueCount > 0),
+                    ServiceMarker(due: bike.serviceDueCount > 0),
                 ],
               ),
               Text(
@@ -182,34 +182,6 @@ class _BikeCard extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A small flag on a bike that has a job due (red) or nearly due.
-class _ServiceMarker extends StatelessWidget {
-  const _ServiceMarker({required this.due});
-
-  final bool due;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final color = due
-        ? Theme.of(context).colorScheme.error
-        : VelomineColors.of(context).wearSoon;
-    final label = due ? l10n.bikeServiceDue : l10n.bikeServiceSoon;
-    return Semantics(
-      label: label,
-      child: Tooltip(
-        message: label,
-        child: Icon(
-          Icons.build_circle_outlined,
-          key: Key(due ? 'service-due' : 'service-soon'),
-          color: color,
-          size: 22,
         ),
       ),
     );

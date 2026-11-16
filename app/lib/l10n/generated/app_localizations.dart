@@ -7579,6 +7579,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More actions'**
   String get moreActions;
+
+  /// No description provided for @myBikes.
+  ///
+  /// In en, this message translates to:
+  /// **'My bikes'**
+  String get myBikes;
+
+  /// No description provided for @bikeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No bikes} =1{1 bike} other{{count} bikes}}'**
+  String bikeCount(int count);
 }
 
 class _AppLocalizationsDelegate

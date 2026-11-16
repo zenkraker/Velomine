@@ -179,3 +179,44 @@ abstract class _$BikeDetailViewModel extends $Notifier<BikeDetailState> {
     return element.handleCreate(ref, () => build(_$args));
   }
 }
+
+@ProviderFor(bikesSummary)
+final bikesSummaryProvider = BikesSummaryProvider._();
+
+final class BikesSummaryProvider
+    extends $FunctionalProvider<BikesSummary, BikesSummary, BikesSummary>
+    with $Provider<BikesSummary> {
+  BikesSummaryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'bikesSummaryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$bikesSummaryHash();
+
+  @$internal
+  @override
+  $ProviderElement<BikesSummary> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  BikesSummary create(Ref ref) {
+    return bikesSummary(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BikesSummary value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BikesSummary>(value),
+    );
+  }
+}
+
+String _$bikesSummaryHash() => r'a8538ffcd567523623f9d579c518612d1c48cbf6';
