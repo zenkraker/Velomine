@@ -28,6 +28,7 @@ import 'series_chart.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
+import '../../../core/widgets/inline_error.dart';
 import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
@@ -155,7 +156,6 @@ class RideDetailScreen extends ConsumerWidget {
   ) {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
-    final error = Theme.of(context).colorScheme.error;
     if (s.notFound) {
       return [
         EmptyState(
@@ -233,11 +233,7 @@ class RideDetailScreen extends ConsumerWidget {
           ),
         ),
       if (s.load.failure case final failure?)
-        Text(
-          failureText(l10n, failure),
-          key: const Key('ride-error'),
-          style: TextStyle(color: error),
-        ),
+        InlineError(failureText(l10n, failure), key: const Key('ride-error')),
       if (ride.status == 'processing')
         Row(
           spacing: AppSpacing.sm,
@@ -251,10 +247,9 @@ class RideDetailScreen extends ConsumerWidget {
           ],
         )
       else if (ride.status == 'failed')
-        Text(
+        InlineError(
           rideErrorText(l10n, ride.error),
           key: const Key('ride-failed'),
-          style: TextStyle(color: error),
         )
       else ...[
         if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
