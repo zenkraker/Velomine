@@ -122,4 +122,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('result: saved'), findsOneWidget);
   });
+
+  testWidgets('FormSheet_ShouldNotAddSafeAreaToKeyboard_WhenBothApply', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(bottom: 34);
+    tester.view.viewPadding = const FakeViewPadding(bottom: 34);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        (_) => FormSheet(
+          title: 'Form',
+          saveKey: const Key('save'),
+          onSave: () {},
+          children: const [],
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('open')));
+    await tester.pumpAndSettle();
+    // Save rests above the keyboard (1200 - 300) with the sheet's own gap, not 34 dp higher.
+    expect(
+      tester.getBottomLeft(find.byKey(const Key('save'))).dy,
+      1200 - 300 - 16,
+    );
+  });
 }

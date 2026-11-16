@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../l10n.dart';
 import '../motion.dart';
 import '../tokens.dart';
+import 'bottom_action_bar.dart';
 
 /// Opens [builder] as a bottom sheet that keeps the app's motion, and returns what the sheet pops.
 /// The one place a sheet is opened, so the handle, the width and the reduced-motion rule are the same
@@ -42,7 +43,7 @@ class SheetFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.only(bottom: bottomClearanceOf(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

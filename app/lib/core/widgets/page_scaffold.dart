@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens.dart';
+import 'bottom_action_bar.dart';
 import 'eyebrow.dart';
 
 /// Says whether [PageScaffold] draws its header below the tablet width.
@@ -54,6 +55,7 @@ class PageScaffold extends StatelessWidget {
     this.controller,
     this.refresh,
     this.bottomPadding = AppSpacing.xl,
+    this.bottomAction,
   });
 
   /// A short line above the title, saying what the page is for in two or three words.
@@ -95,6 +97,10 @@ class PageScaffold extends StatelessWidget {
 
   /// Room under the last child, for a button that floats over the list.
   final double bottomPadding;
+
+  /// The action that finishes the page, such as Save: pinned under the scrolling content, above the
+  /// keyboard and the safe area, so it never scrolls away. Usually a [BottomActionBar].
+  final Widget? bottomAction;
 
   @override
   Widget build(BuildContext context) {
@@ -160,8 +166,19 @@ class PageScaffold extends StatelessWidget {
         ),
       ],
     );
-    if (refresh == null) return scroll;
-    return RefreshIndicator(onRefresh: refresh!, child: scroll);
+    final body = refresh == null
+        ? scroll
+        : RefreshIndicator(onRefresh: refresh!, child: scroll);
+    final action = bottomAction;
+    if (action == null) return body;
+    // The bar sits below the scroll view, not over it, so the last field always scrolls clear of it.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: body),
+        action,
+      ],
+    );
   }
 }
 

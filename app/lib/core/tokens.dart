@@ -94,3 +94,12 @@ abstract final class AppSheet {
   /// The margin at the sides of the title, the fields and the pinned action.
   static const double gutter = AppSpacing.xl;
 }
+
+/// The bottom action bar that [PageScaffold] pins under a full-page form.
+abstract final class AppBottomBar {
+  /// The smallest height of the pinned button: a comfortable tap target.
+  static const double buttonHeight = 48;
+
+  /// The size of the progress ring shown in the button while it works.
+  static const double busyIndicator = 20;
+}
