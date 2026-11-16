@@ -1,6 +1,11 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine_api/api.dart';
+
+import 'package:velomine/features/club/widgets/club_hero_card.dart';
+import 'package:velomine/l10n/generated/app_localizations.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -47,7 +52,8 @@ void main() {
     expect(find.byKey(Key('member-${rider.id}')), findsOneWidget);
     expect(find.byKey(const Key('join-code-value')), findsNothing);
 
-    await tester.ensureVisible(find.byKey(const Key('leave-club')));
+    await tester.tap(find.byKey(const Key('club-actions')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('leave-club')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirm-leave-club')));
@@ -104,6 +110,71 @@ void main() {
 
     expect(server.clubRoles[rider.email], 'coach');
     expect(find.text('Coach'), findsWidgets);
+  });
+
+  testWidgets('ClubScreen_ShouldPutLeaveLastAndRedInMenu_WhenMember', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com');
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('leave-club')), findsNothing);
+    await tester.tap(find.byKey(const Key('club-actions')));
+    await tester.pumpAndSettle();
+    final leave = tester.widget<MenuItemButton>(
+      find.byKey(const Key('leave-club')),
+    );
+    expect(
+      leave.style?.foregroundColor?.resolve({}),
+      Theme.of(tester.element(find.byKey(const Key('leave-club'))))
+          .colorScheme
+          .error,
+    );
+    expect(find.byType(MenuItemButton).last.evaluate().single.widget, leave);
+  });
+
+  testWidgets('ClubScreen_ShouldHideLeaveAndExplain_WhenOwner', (tester) async {
+    final owner = server.add('owner@example.com', clubRole: 'owner');
+    server.signInBrowser(owner);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Club'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('club-actions')), findsNothing);
+    expect(find.byKey(const Key('leave-club')), findsNothing);
+    expect(find.textContaining('cannot leave'), findsOneWidget);
+  });
+
+  testWidgets('ClubHeroCard_ShouldShowNameAndRole_WhenBuilt', (tester) async {
+    final club = ClubResponse(
+      id: 'c1',
+      name: 'Hero Club',
+      myRole: 'coach',
+      joinCode: null,
+      latitude: null,
+      longitude: null,
+      plan: null,
+      isActive: true,
+      isDiscoverable: false,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: ClubHeroCard(club: club)),
+      ),
+    );
+    expect(find.text('Hero Club'), findsOneWidget);
+    expect(find.text('Coach'), findsOneWidget);
   });
 
   testWidgets('JoinClubScreen_ShouldPrefillCode_WhenInvited', (tester) async {

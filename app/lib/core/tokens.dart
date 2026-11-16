@@ -173,3 +173,10 @@ abstract final class AppProgress {
 abstract final class AppStat {
   static const double boxWidth = 150;
 }
+
+/// The club page's cards.
+abstract final class AppClub {
+  /// The plan's member bar and the small icon before a status line.
+  static const double barHeight = 8;
+  static const double inlineIcon = 18;
+}
