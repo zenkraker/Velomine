@@ -1,9 +1,27 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../motion.dart';
 import '../tokens.dart';
+
+/// The blur behind the pill on this device, 0 for none.
+///
+/// A live blur redraws the whole page behind it on every frame, which many Android phones and the web
+/// cannot do smoothly, so those get a nearly solid pill instead. iOS and desktop keep the blur. A system
+/// that asks for high contrast gets no blur either.
+double pillBlurOf(BuildContext context) {
+  if (MediaQuery.highContrastOf(context)) return 0;
+  if (kIsWeb) return 0;
+  return switch (defaultTargetPlatform) {
+    TargetPlatform.iOS ||
+    TargetPlatform.macOS ||
+    TargetPlatform.windows ||
+    TargetPlatform.linux => AppNav.pillBlur,
+    TargetPlatform.android || TargetPlatform.fuchsia => 0,
+  };
+}
 
 /// One destination of the [FloatingNavPill]: an outlined icon, the filled one while selected, a label.
 typedef NavPillItem = ({
@@ -38,6 +56,27 @@ class FloatingNavPill extends StatelessWidget {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     final duration = motionDuration(context, AppMotion.standard);
     final curve = motionCurve(context, AppMotion.emphasized);
+    final blur = pillBlurOf(context);
+    final surface = ColoredBox(
+      color: scheme.surfaceContainer.withValues(
+        alpha: blur > 0 ? AppNav.pillOpacity : AppNav.pillOpacityNoBlur,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        child: Row(
+          children: [
+            for (final (i, item) in items.indexed)
+              Expanded(
+                child: _PillItem(
+                  item: item,
+                  selected: i == selected,
+                  onTap: () => onSelected(i),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
     return Positioned(
       left: AppNav.pillMargin,
       right: AppNav.pillMargin,
@@ -71,32 +110,15 @@ class FloatingNavPill extends StatelessWidget {
                   ),
                   child: ClipPath(
                     clipper: const ShapeBorderClipper(shape: StadiumBorder()),
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(
-                        sigmaX: AppNav.pillBlur,
-                        sigmaY: AppNav.pillBlur,
-                      ),
-                      child: ColoredBox(
-                        color: scheme.surfaceContainer.withValues(
-                          alpha: AppNav.pillOpacity,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.xs),
-                          child: Row(
-                            children: [
-                              for (final (i, item) in items.indexed)
-                                Expanded(
-                                  child: _PillItem(
-                                    item: item,
-                                    selected: i == selected,
-                                    onTap: () => onSelected(i),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    child: blur > 0
+                        ? BackdropFilter(
+                            filter: ui.ImageFilter.blur(
+                              sigmaX: blur,
+                              sigmaY: blur,
+                            ),
+                            child: surface,
+                          )
+                        : surface,
                   ),
                 ),
               ),

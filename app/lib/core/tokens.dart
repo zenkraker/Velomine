@@ -137,7 +137,7 @@ abstract final class AppNav {
   /// The room a page leaves under its content, over the bottom safe area, so the last item clears the pill.
   static const double pillClearance = pillHeight + pillMargin;
 
-  /// The blur behind the translucent pill.
+  /// The blur behind the translucent pill, where the device can afford it (see `pillBlurOf`).
   static const double pillBlur = 20;
 
   /// The least height of the live-ride banner, a comfortable tap target.
@@ -148,6 +148,9 @@ abstract final class AppNav {
 
   /// How opaque the pill's surface is over the blur.
   static const double pillOpacity = 0.82;
+
+  /// How opaque it is with no blur: nearly solid, so the content behind never shows through unreadably.
+  static const double pillOpacityNoBlur = 0.96;
 
   /// How far the pill slides down, in its own heights, when it hides: past the margin and safe area.
   static const double pillHiddenOffset = 2;
