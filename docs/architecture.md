@@ -7,7 +7,7 @@ It describes only what is decided. Features that are not built yet are on the st
 ## 1. Goals and constraints
 
 - **Simple to run.** One application image and one PostgreSQL database, for the cloud and for a self-hosted club alike. No microservices, brokers, caches or extra services; scale by running more instances behind a proxy.
-- **Cycling only.** Every model, screen and metric is about bikes and rides.
+- **Cycling first.** Every model, screen and metric is about bikes and rides today. Another sport is a product decision first (`docs/design/values.md`) and would get models and metrics of its own.
 - **Private by default.** Nothing a member records is visible to anyone else until the member shares it, and every share can be revoked.
 - **Members own their data.** Full export (original files and JSON) and complete deletion, whether or not they belong to a club.
 - **Small clubs.** A club has up to about 1,000 members; a cloud deployment serves many such clubs.

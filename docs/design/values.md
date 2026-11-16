@@ -92,9 +92,9 @@ member owns the data, and nobody pays again to see their own history.
 - Pricing is published before a club commits, and the same for comparable clubs.
 - Self-hosting is a first-class option, not a punishment.
 
-### 8. Cycling-only and club-first
+### 8. Cycling first, for riders and their clubs
 
-- We build for cycling clubs and teams, not a generic multi-sport social network.
+- We build for cycling first: every screen and metric is shaped for bikes. Another sport may come later, chosen through the monthly polls, with screens and metrics of its own; never as generic fitness, and never as a social network.
 - Club and coach needs come before individual engagement metrics.
 - A feature that only makes the app stickier, without making the club better, is suspect.
 
@@ -133,7 +133,7 @@ Before building or shipping something, ask:
 
 | Topic | Decision |
 |-------|----------|
-| Sports | Cycling only: road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific. |
+| Sports | Cycling first: road, gravel, MTB, e-bike, indoor, commute. Every screen and metric is bike-specific today; another sport comes only through the polls, with its own screens and metrics. |
 | Users | Clubs and teams, and riders on their own. One club per account, club admin and coach roles, sign-up with admin approval, joining a club with a code, single sign-on alongside local accounts. A club is an opt-in step, never a requirement. |
 | Social | Private rides and coach sharing instead of a public feed or followers. Inside a club, members who opt in see each other's shared rides and routes, and can react, comment and rate; each member's own privacy settings still apply, and nothing leaves the club. Privacy zones hide home and other saved places. |
 | Clubs and coaches | The member decides what to share (rides, training, routes, wellbeing) and with whom (the club's coaches today). Every share is revocable and every view is logged. |
@@ -156,7 +156,6 @@ Before building or shipping something, ask:
 
 ### Out of scope
 
-- Gym and running concepts.
 - A social feed with followers: clubs and coaches replace it.
 - Health logging (steps, sleep, water, fasting, bowel log): the wellness check-in replaces it.
 - Health logs imported from the phone (sleep, steps, mood): the member enters the wellbeing check-in. Rides come from the phone recorder or a bike computer's files.
@@ -170,7 +169,6 @@ Before building or shipping something, ask:
 - Public individual segment leaderboards by default.
 - Dark patterns: forced sharing, hidden defaults, cancellation mazes.
 - Collecting health data without consent.
-- Building a generic multi-sport platform.
 
 ## Inter-club social principles
 

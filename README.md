@@ -13,7 +13,7 @@ Velomine reads your rides from a bike computer, the Android app or a Strava expo
 - **Your data is yours.** Export everything, every original file included, or delete everything, whenever you want. Nothing is visible to anyone until you share it, and you can see who looked.
 - **No pro tier.** Every feature is included for everyone. You pay to have it hosted, or host it yourself for free.
 - **No ads, no data sale, no AI training on your rides.** No public feed, no follower graph, no leaderboards by default.
-- **Cycling only.** Power, components, climbing and club rides, not a generic fitness app.
+- **Cycling first.** Power, components, climbing and club rides, not a generic fitness app.
 - **Open source** under AGPL-3.0. The cloud and a self-hosted server run the same software.
 
 ## What it does today
