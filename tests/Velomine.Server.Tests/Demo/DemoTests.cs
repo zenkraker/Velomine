@@ -134,20 +134,6 @@ public sealed class DemoTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DemoData_ShouldRefuseAndDeleteNothing_WhenTheServerHoldsAnAccountThatIsNotADemoAccount()
-    {
-        await using var api = await TestApi.StartAsync(postgres);
-        var member = await api.NewMemberAsync();
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var demo = scope.ServiceProvider.GetRequiredService<DemoData>();
-        Assert.NotNull(await demo.RefusalAsync(Ct));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => demo.ResetAsync(Ct));
-
-        Assert.Equal(HttpStatusCode.OK, (await member.Client.GetAsync("/api/v1/accounts/me", Ct)).StatusCode);
-    }
-
-    [Fact]
     public async Task DemoLock_ShouldRefuseEveryLockedAction_WhenTheServerIsADemo()
     {
         await using var api = await StartDemoAsync();

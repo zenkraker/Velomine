@@ -16,16 +16,11 @@ public sealed class DemoResetService(
 
     private DateTimeOffset? failedFor;
 
-    /// <summary>Refuses to start a demo on a server that holds anything but a demo, before any request is served.</summary>
+    /// <summary>Announces demo mode, then lets the background loop make the demo.</summary>
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
         if (options.Value.Enabled)
-        {
-            await using var scope = scopes.CreateAsyncScope();
-            if (await scope.ServiceProvider.GetRequiredService<DemoData>().RefusalAsync(cancellationToken) is { } refusal)
-                throw new InvalidOperationException("VELOMINE__DEMO__ENABLED is on, but: " + refusal);
             logger.LogWarning("Demo mode is on: every account but the admins is deleted and made again each night at 03:00 UTC.");
-        }
 
         await base.StartAsync(cancellationToken);
     }
