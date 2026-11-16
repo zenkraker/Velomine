@@ -112,7 +112,9 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
     [Fact]
     public async Task Totals_ShouldNotChange_WhenTheMemberChangesTimeZoneAfterUpload()
     {
-        await using var api = await StartAsync();
+        // A known date, so "the last two weeks" is always the weeks starting 1 and 8 November.
+        await using var api = await StartAsync(b => b.ConfigureTestServices(s =>
+            s.AddSingleton<TimeProvider>(new FixedTime(new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero)))));
         var member = await NewMemberAsync(api);
         await SetProfileAsync(member, "Europe/Rome", "sunday");
         // Saturday 31 October 23:30 UTC is Sunday 1 November in Rome.
