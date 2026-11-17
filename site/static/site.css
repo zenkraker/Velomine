@@ -2349,3 +2349,23 @@ a {
 .feedback-form button {
   justify-self: start;
 }
+
+.feedback-more {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.feedback-more summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feedback-more-body {
+  display: grid;
+  gap: 1.4rem;
+  padding: 0.6rem 0 1.4rem;
+}

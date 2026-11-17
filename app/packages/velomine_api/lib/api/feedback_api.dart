@@ -18,13 +18,15 @@ class FeedbackApi {
 
   /// Send anonymous feedback by email
   ///
-  /// For the site's feedback form. Fields: who (repeated, at least one of the listed options), tried (repeated), today, worked, broke, numbers, missing, use, why, device. At least one of worked, broke, numbers, missing and why is required; text fields are at most 2000 characters, today and device 200. Nothing is stored and no reply address is taken. Always answers 303 See Other with a Location header: /feedback/sent/ when the email was sent, otherwise /feedback/not-sent/?reason=invalid (the answers did not pass validation), reason=unavailable (no feedback address or email is configured, or sending failed) or reason=busy (rate limit of 5 per hour per network address, which is answered with the same redirect, status 303, by the limiter).
+  /// For the site's feedback form. Fields: message (the main answer), who (repeated, optional, one of the listed options), tried (repeated), today, worked, broke, numbers, missing, use, why, device. At least one of message, worked, broke, numbers, missing and why is required; text fields are at most 2000 characters, today and device 200. Nothing is stored and no reply address is taken. Always answers 303 See Other with a Location header: /feedback/sent/ when the email was sent, otherwise /feedback/not-sent/?reason=invalid (the answers did not pass validation), reason=unavailable (no feedback address or email is configured, or sending failed) or reason=busy (rate limit of 5 per hour per network address, which is answered with the same redirect, status 303, by the limiter).
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
-  /// * [List<String>] who (required):
+  /// * [String] message:
+  ///
+  /// * [List<String>] who:
   ///
   /// * [List<String>] tried:
   ///
@@ -43,7 +45,7 @@ class FeedbackApi {
   /// * [String] why:
   ///
   /// * [String] device:
-  Future<Response> sendFeedbackWithHttpInfo(List<String> who, { List<String>? tried, String? today, String? worked, String? broke, String? numbers, String? missing, String? use, String? why, String? device, Future<void>? abortTrigger, }) async {
+  Future<Response> sendFeedbackWithHttpInfo({ String? message, List<String>? who, List<String>? tried, String? today, String? worked, String? broke, String? numbers, String? missing, String? use, String? why, String? device, Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/v1/feedback';
 
@@ -56,6 +58,9 @@ class FeedbackApi {
 
     const contentTypes = <String>['application/x-www-form-urlencoded'];
 
+    if (message != null) {
+      formParams[r'message'] = parameterToString(message);
+    }
     if (who != null) {
       formParams[r'who'] = parameterToString(who);
     }
@@ -101,11 +106,13 @@ class FeedbackApi {
 
   /// Send anonymous feedback by email
   ///
-  /// For the site's feedback form. Fields: who (repeated, at least one of the listed options), tried (repeated), today, worked, broke, numbers, missing, use, why, device. At least one of worked, broke, numbers, missing and why is required; text fields are at most 2000 characters, today and device 200. Nothing is stored and no reply address is taken. Always answers 303 See Other with a Location header: /feedback/sent/ when the email was sent, otherwise /feedback/not-sent/?reason=invalid (the answers did not pass validation), reason=unavailable (no feedback address or email is configured, or sending failed) or reason=busy (rate limit of 5 per hour per network address, which is answered with the same redirect, status 303, by the limiter).
+  /// For the site's feedback form. Fields: message (the main answer), who (repeated, optional, one of the listed options), tried (repeated), today, worked, broke, numbers, missing, use, why, device. At least one of message, worked, broke, numbers, missing and why is required; text fields are at most 2000 characters, today and device 200. Nothing is stored and no reply address is taken. Always answers 303 See Other with a Location header: /feedback/sent/ when the email was sent, otherwise /feedback/not-sent/?reason=invalid (the answers did not pass validation), reason=unavailable (no feedback address or email is configured, or sending failed) or reason=busy (rate limit of 5 per hour per network address, which is answered with the same redirect, status 303, by the limiter).
   ///
   /// Parameters:
   ///
-  /// * [List<String>] who (required):
+  /// * [String] message:
+  ///
+  /// * [List<String>] who:
   ///
   /// * [List<String>] tried:
   ///
@@ -124,8 +131,8 @@ class FeedbackApi {
   /// * [String] why:
   ///
   /// * [String] device:
-  Future<void> sendFeedback(List<String> who, { List<String>? tried, String? today, String? worked, String? broke, String? numbers, String? missing, String? use, String? why, String? device, Future<void>? abortTrigger, }) async {
-    final response = await sendFeedbackWithHttpInfo(who, tried: tried, today: today, worked: worked, broke: broke, numbers: numbers, missing: missing, use: use, why: why, device: device, abortTrigger: abortTrigger,);
+  Future<void> sendFeedback({ String? message, List<String>? who, List<String>? tried, String? today, String? worked, String? broke, String? numbers, String? missing, String? use, String? why, String? device, Future<void>? abortTrigger, }) async {
+    final response = await sendFeedbackWithHttpInfo(message: message, who: who, tried: tried, today: today, worked: worked, broke: broke, numbers: numbers, missing: missing, use: use, why: why, device: device, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

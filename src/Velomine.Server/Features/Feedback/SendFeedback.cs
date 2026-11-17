@@ -50,7 +50,10 @@ public sealed class SendFeedbackRequest
     ];
 
     public static readonly string[] UseOptions =
-        ["Yes, now", "Yes, once what I listed above is there", "Maybe", "No", "Not sure yet"];
+        ["Yes, now", "Yes, once what I need is there", "Yes, once what I listed above is there", "Maybe", "No", "Not sure yet"];
+
+    /// <summary>The one box at the top of the form: what is wrong, confusing or missing. Enough on its own.</summary>
+    public string? Message { get; set; }
 
     public List<string>? Who { get; set; }
 
@@ -80,18 +83,18 @@ public sealed class SendFeedbackValidator : Validator<SendFeedbackRequest>
 
     public SendFeedbackValidator()
     {
-        RuleFor(x => x.Who).NotEmpty();
         RuleForEach(x => x.Who).Must(v => SendFeedbackRequest.WhoOptions.Contains(v));
         RuleForEach(x => x.Tried).Must(v => SendFeedbackRequest.TriedOptions.Contains(v));
         RuleFor(x => x.Use).Must(v => string.IsNullOrEmpty(v) || SendFeedbackRequest.UseOptions.Contains(v));
         RuleFor(x => x.Today).MaximumLength(ShortText);
         RuleFor(x => x.Device).MaximumLength(ShortText);
+        RuleFor(x => x.Message).MaximumLength(LongText);
         RuleFor(x => x.Worked).MaximumLength(LongText);
         RuleFor(x => x.Broke).MaximumLength(LongText);
         RuleFor(x => x.Numbers).MaximumLength(LongText);
         RuleFor(x => x.Missing).MaximumLength(LongText);
         RuleFor(x => x.Why).MaximumLength(LongText);
-        RuleFor(x => x).Must(x => new[] { x.Worked, x.Broke, x.Numbers, x.Missing, x.Why }.Any(t => !string.IsNullOrWhiteSpace(t)))
+        RuleFor(x => x).Must(x => new[] { x.Message, x.Worked, x.Broke, x.Numbers, x.Missing, x.Why }.Any(t => !string.IsNullOrWhiteSpace(t)))
             .WithMessage("Fill in at least one written answer.");
     }
 }
@@ -130,8 +133,9 @@ public sealed class SendFeedback(
         Summary(s =>
         {
             s.Summary = "Send anonymous feedback by email";
-            s.Description = "For the site's feedback form. Fields: who (repeated, at least one of the listed options), tried (repeated), "
-                + "today, worked, broke, numbers, missing, use, why, device. At least one of worked, broke, numbers, missing and why is required; "
+            s.Description = "For the site's feedback form. Fields: message (the main answer), who (repeated, optional, one of the listed options), "
+                + "tried (repeated), today, worked, broke, numbers, missing, use, why, device. At least one of message, worked, broke, numbers, "
+                + "missing and why is required; "
                 + "text fields are at most 2000 characters, today and device 200. Nothing is stored and no reply address is taken. "
                 + "Always answers 303 See Other with a Location header: /feedback/sent/ when the email was sent, otherwise "
                 + "/feedback/not-sent/?reason=invalid (the answers did not pass validation), reason=unavailable (no feedback address or email is "
@@ -185,6 +189,7 @@ public sealed class SendFeedback(
     private static string Format(SendFeedbackRequest r)
     {
         var text = new StringBuilder();
+        Line(text, "What is wrong, confusing or missing?", r.Message);
         Line(text, "Who are you?", string.Join(", ", r.Who ?? []));
         Line(text, "What did you try?", string.Join(", ", r.Tried ?? []));
         Line(text, "What do you use today?", r.Today);

@@ -58,6 +58,20 @@ public sealed class FeedbackTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task SendFeedback_ShouldEmailTheMessage_WhenOnlyTheMainBoxIsFilled()
+    {
+        var (api, mail) = await StartAsync(postgres);
+        await using var _ = api;
+
+        var fields = new[] { new KeyValuePair<string, string>("message", "The power curve is empty on my phone.") };
+        var response = await api.CreateClient().PostAsync("/api/v1/feedback", new FormUrlEncodedContent(fields), Ct);
+
+        Assert.Equal("/feedback/sent/", Location(response));
+        var sent = Assert.Single(mail.Sent);
+        Assert.StartsWith("What is wrong, confusing or missing?\nThe power curve is empty on my phone.", sent.Body);
+    }
+
+    [Fact]
     public async Task SendFeedback_ShouldSendNothing_WhenNoFeedbackAddressIsConfigured()
     {
         var (api, mail) = await StartAsync(postgres, configured: false);

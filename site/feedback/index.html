@@ -66,72 +66,72 @@
         </nav>
         <p class="eyebrow">Feedback</p>
         <h1>Tell Velomine what worked and what broke.</h1>
-        <p>Thank you for trying Velomine. Five minutes is plenty: answer only what you want, and short answers are fine. Please do not paste personal data, ride files with your home address, passwords or tokens.</p>
+        <p>Thank you for trying Velomine. One sentence in the box below is enough. Please do not paste personal data, ride files with your home address, passwords or tokens.</p>
       </div>
     </section>
 
     <section class="section section--tight">
       <div class="container">
         <div class="contact-card card card--lg">
-          <p class="contact-note">This form is anonymous: it asks for no name and no reply address, so Velomine cannot answer you. If you want a reply, <a href="/contact/">send an email</a> instead. Your answers are emailed to whoever runs this server and are not stored by Velomine. At least one written answer is needed.</p>
+          <p class="contact-note">This form is anonymous: it asks for no name and no reply address, so Velomine cannot answer you. If you want a reply, <a href="/contact/">send an email</a> instead. Your answers are emailed to whoever runs this server and are not stored by Velomine.</p>
 
           <form class="feedback-form" method="post" action="/api/v1/feedback">
-            <fieldset class="field">
-              <legend>Who are you? <span class="field-hint">Pick every one that fits.</span></legend>
-              <label class="check-row"><input type="checkbox" name="who" value="A rider without a club"> <span>A rider without a club</span></label>
-              <label class="check-row"><input type="checkbox" name="who" value="A rider in a club or team"> <span>A rider in a club or team</span></label>
-              <label class="check-row"><input type="checkbox" name="who" value="A coach"> <span>A coach</span></label>
-              <label class="check-row"><input type="checkbox" name="who" value="Someone who runs a club"> <span>Someone who runs a club</span></label>
-              <label class="check-row"><input type="checkbox" name="who" value="A self-hoster"> <span>A self-hoster</span></label>
-              
-            </fieldset>
-            <fieldset class="field">
-              <legend>What did you try?</legend>
-              <label class="check-row"><input type="checkbox" name="tried" value="The public demo"> <span>The public demo</span></label>
-              <label class="check-row"><input type="checkbox" name="tried" value="Self-hosting it on my own server"> <span>Self-hosting it on my own server</span></label>
-              <label class="check-row"><input type="checkbox" name="tried" value="The Android app"> <span>The Android app</span></label>
-              <label class="check-row"><input type="checkbox" name="tried" value="Uploading my own ride file"> <span>Uploading my own ride file</span></label>
-              <label class="check-row"><input type="checkbox" name="tried" value="Importing a Strava export"> <span>Importing a Strava export</span></label>
-              <label class="check-row"><input type="checkbox" name="tried" value="Only the website"> <span>Only the website</span></label>
-              
-            </fieldset>
             <div class="field">
-              <label for="today">What do you use today?</label>
-              <span class="field-hint">For example Strava, Garmin Connect, intervals.icu, TrainingPeaks, a spreadsheet.</span>
-              <input id="today" name="today" type="text" maxlength="200">
+              <label for="message">What’s wrong, confusing or missing?</label>
+              <span class="field-hint">Anything counts: a bug, a number that looks off, a feature you’d need, or why you wouldn’t use it.</span>
+              <textarea id="message" name="message" rows="6" maxlength="2000" required></textarea>
             </div>
-            <div class="field">
-              <label for="worked">What worked well?</label>
-              <textarea id="worked" name="worked" rows="4" maxlength="2000"></textarea>
-            </div>
-            <div class="field">
-              <label for="broke">What broke or confused you?</label><span class="field-hint">What you did, what you expected, and what happened instead.</span>
-              <textarea id="broke" name="broke" rows="4" maxlength="2000"></textarea>
-            </div>
-            <div class="field">
-              <label for="numbers">Did the numbers look right?</label><span class="field-hint">If you uploaded a ride you know, compare distance, elevation, power or heart rate with your current app.</span>
-              <textarea id="numbers" name="numbers" rows="4" maxlength="2000"></textarea>
-            </div>
-            <div class="field">
-              <label for="missing">What is missing before you would use it for real?</label><span class="field-hint">The one or two things that matter most to you.</span>
-              <textarea id="missing" name="missing" rows="4" maxlength="2000"></textarea>
-            </div>
-            <div class="field">
-              <label for="use">Would you or your club use it?</label>
-              <select id="use" name="use">
-                <option value="">No answer</option>
-                <option>Yes, now</option><option>Yes, once what I listed above is there</option><option>Maybe</option><option>No</option><option>Not sure yet</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="why">Why?</label><span class="field-hint">Anything about the price, self-hosting, privacy, or the way it is built.</span>
-              <textarea id="why" name="why" rows="4" maxlength="2000"></textarea>
-            </div>
-            <div class="field">
-              <label for="device">Device and browser (if something broke)</label>
-              <span class="field-hint">For example “Pixel 8, Android 16” or “Firefox 140 on Linux”.</span>
-              <input id="device" name="device" type="text" maxlength="200">
-            </div>
+            <details class="feedback-more">
+              <summary>Tell me more (optional)</summary>
+              <div class="feedback-more-body">
+                <fieldset class="field">
+                  <legend>Who are you? <span class="field-hint">Pick any that fit.</span></legend>
+                  <label class="check-row"><input type="checkbox" name="who" value="A rider without a club"> <span>A rider without a club</span></label>
+                  <label class="check-row"><input type="checkbox" name="who" value="A rider in a club or team"> <span>A rider in a club or team</span></label>
+                  <label class="check-row"><input type="checkbox" name="who" value="A coach"> <span>A coach</span></label>
+                  <label class="check-row"><input type="checkbox" name="who" value="Someone who runs a club"> <span>Someone who runs a club</span></label>
+                  <label class="check-row"><input type="checkbox" name="who" value="A self-hoster"> <span>A self-hoster</span></label>
+                </fieldset>
+                <fieldset class="field">
+                  <legend>What did you try?</legend>
+                  <label class="check-row"><input type="checkbox" name="tried" value="The public demo"> <span>The public demo</span></label>
+                  <label class="check-row"><input type="checkbox" name="tried" value="Self-hosting it on my own server"> <span>Self-hosting it on my own server</span></label>
+                  <label class="check-row"><input type="checkbox" name="tried" value="The Android app"> <span>The Android app</span></label>
+                  <label class="check-row"><input type="checkbox" name="tried" value="Uploading my own ride file"> <span>Uploading my own ride file</span></label>
+                  <label class="check-row"><input type="checkbox" name="tried" value="Importing a Strava export"> <span>Importing a Strava export</span></label>
+                  <label class="check-row"><input type="checkbox" name="tried" value="Only the website"> <span>Only the website</span></label>
+                </fieldset>
+                <div class="field">
+                  <label for="today">What do you use today?</label>
+                  <span class="field-hint">For example Strava, Garmin Connect, intervals.icu, TrainingPeaks, a spreadsheet.</span>
+                  <input id="today" name="today" type="text" maxlength="200">
+                </div>
+                <div class="field">
+                  <label for="worked">What worked well?</label>
+                  <textarea id="worked" name="worked" rows="4" maxlength="2000"></textarea>
+                </div>
+                <div class="field">
+                  <label for="numbers">Did the numbers look right?</label><span class="field-hint">If you uploaded a ride you know, compare distance, elevation, power or heart rate with your current app.</span>
+                  <textarea id="numbers" name="numbers" rows="4" maxlength="2000"></textarea>
+                </div>
+                <div class="field">
+                  <label for="use">Would you or your club use it?</label>
+                  <select id="use" name="use">
+                    <option value="">No answer</option>
+                    <option>Yes, now</option><option>Yes, once what I need is there</option><option>Maybe</option><option>No</option><option>Not sure yet</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="why">Why?</label><span class="field-hint">Anything about the price, self-hosting, privacy, or the way it is built.</span>
+                  <textarea id="why" name="why" rows="4" maxlength="2000"></textarea>
+                </div>
+                <div class="field">
+                  <label for="device">Device and browser (if something broke)</label>
+                  <span class="field-hint">For example “Pixel 8, Android 16” or “Firefox 140 on Linux”.</span>
+                  <input id="device" name="device" type="text" maxlength="200">
+                </div>
+              </div>
+            </details>
             <button class="btn btn-primary" type="submit">Send feedback</button>
           </form>
         </div>
