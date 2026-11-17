@@ -4928,6 +4928,60 @@ abstract class AppLocalizations {
   /// **'Use {watts} W'**
   String ftpUse(int watts);
 
+  /// No description provided for @ftpReminderStaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your FTP is {weeks} weeks old'**
+  String ftpReminderStaleTitle(int weeks);
+
+  /// No description provided for @ftpReminderStaleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones and TSS use it. Ride a test, or use the estimate if it looks right.'**
+  String get ftpReminderStaleBody;
+
+  /// No description provided for @ftpReminderEstimateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You may be stronger than your FTP says'**
+  String get ftpReminderEstimateTitle;
+
+  /// No description provided for @ftpReminderEstimateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best efforts suggest {estimate} W; your FTP is {ftp} W.'**
+  String ftpReminderEstimateBody(String estimate, String ftp);
+
+  /// No description provided for @ftpReminderMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your FTP'**
+  String get ftpReminderMissingTitle;
+
+  /// No description provided for @ftpReminderMissingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best efforts suggest {estimate} W.'**
+  String ftpReminderMissingBody(String estimate);
+
+  /// No description provided for @ftpReminderHow.
+  ///
+  /// In en, this message translates to:
+  /// **'How to test'**
+  String get ftpReminderHow;
+
+  /// No description provided for @ftpReminderHowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm up for 15 minutes, with three short hard efforts. Ride 5 minutes hard, then 10 minutes easy. Then ride 20 minutes as hard as you can hold evenly. Velomine will notice the effort and suggest your new FTP (95 % of the 20 minutes).'**
+  String get ftpReminderHowBody;
+
+  /// No description provided for @ftpReminderNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get ftpReminderNotNow;
+
   /// No description provided for @ftpSourceManual.
   ///
   /// In en, this message translates to:

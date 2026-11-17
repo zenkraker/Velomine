@@ -23,6 +23,7 @@ import '../accounts/ftp_source_text.dart';
 import '../rides/ride_type_chips.dart';
 import 'goals.dart';
 import 'ftp_history_sheet.dart';
+import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
 import 'progress_data.dart';
 import 'progress_view_models.dart';
@@ -87,6 +88,7 @@ class ProgressScreen extends ConsumerWidget {
     final power = ref.watch(powerCurveViewModelProvider);
     final readiness = ref.watch(readinessViewModelProvider);
     final wellbeing = ref.watch(wellbeingViewModelProvider);
+    final reminder = ref.watch(ftpReminderViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
 
     listenUserMessages(
@@ -107,6 +109,12 @@ class ProgressScreen extends ConsumerWidget {
       wellbeingViewModelProvider.select((s) => s.messages),
       ref.read(wellbeingViewModelProvider.notifier).messageShown,
     );
+    listenUserMessages(
+      ref,
+      context,
+      ftpReminderViewModelProvider.select((s) => s.messages),
+      ref.read(ftpReminderViewModelProvider.notifier).messageShown,
+    );
 
     final failures = [
       totals.load.failure,
@@ -120,6 +128,17 @@ class ProgressScreen extends ConsumerWidget {
     // The analysis: the totals chart leads, then each source that explains it. The check-in follows,
     // because it is the member's own input rather than an answer.
     final analysis = <Widget>[
+      // A wrong FTP makes every zone and TSS below it wrong, so the reminder leads the analysis.
+      if (reminder.check?.reason != null)
+        FtpReminderCard(
+          check: reminder.check!,
+          busy: reminder.action.running,
+          onUseEstimate: (watts) => ref
+              .read(ftpReminderViewModelProvider.notifier)
+              .useEstimate(watts),
+          onSnooze: () =>
+              ref.read(ftpReminderViewModelProvider.notifier).snooze(),
+        ),
       if (totals.load.value case final totalsData?)
         _TotalsCard(totals: totalsData)
       else if (totals.load.running)

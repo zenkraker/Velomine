@@ -420,4 +420,62 @@ void main() {
 
     expect(server.analyticsFilters, contains('gravel'));
   });
+
+  testWidgets('ProgressScreen_ShouldShowTheFtpReminder_WhenTheCheckHasAReason', (
+    tester,
+  ) async {
+    server.ftpCheck['rider@example.com'] = {
+      'reason': 'stale',
+      'ftpW': 250,
+      'ftpAgeDays': 49,
+      'estimateW': 268,
+      'estimateMethod': '20min',
+    };
+    await openProgress(tester);
+
+    final card = find.byKey(const Key('ftp-reminder'));
+    await reveal(tester, card);
+    expect(find.text('Your FTP is 7 weeks old'), findsOneWidget);
+    expect(find.byKey(const Key('ftp-reminder-use')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('ftp-reminder-how')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Warm up for 15 minutes, with three short hard efforts. Ride 5 '
+        'minutes hard, then 10 minutes easy. Then ride 20 minutes as hard as '
+        'you can hold evenly. Velomine will notice the effort and suggest your '
+        'new FTP (95 % of the 20 minutes).',
+      ),
+      findsOneWidget,
+    );
+    // The card is behind the sheet, so closing it is the way back to "Use ... W".
+    Navigator.of(tester.element(find.byKey(const Key('ftp-reminder-how-body'))))
+        .pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ftp-reminder-how-body')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('ftp-reminder-use')));
+    await tester.pumpAndSettle();
+    expect(server.profiles['rider@example.com']?['ftpW'], 268);
+  });
+
+  testWidgets('ProgressScreen_ShouldHideIt_WhenSnoozed', (tester) async {
+    server.ftpCheck['rider@example.com'] = {
+      'reason': 'missing',
+      'ftpW': null,
+      'estimateW': 268,
+      'estimateMethod': '20min',
+    };
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('ftp-reminder')));
+    expect(find.text('Set your FTP'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('ftp-reminder-not-now')));
+    await tester.pumpAndSettle();
+
+    expect(server.snoozeRequests, 1);
+    expect(find.byKey(const Key('ftp-reminder')), findsNothing);
+  });
 }

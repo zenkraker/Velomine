@@ -71,6 +71,14 @@ class ProgressData {
   /// Every FTP the member has had, newest first.
   Future<Result<FtpHistoryResponse?>> ftpHistory() =>
       _accounts.getFtpHistory().guard(FailureAction.loadProgress);
+
+  /// Whether the FTP may be out of date, and why; null reason means nothing to say.
+  Future<Result<FtpCheckResponse?>> ftpCheck() =>
+      _api.getFtpCheck().guard(FailureAction.loadProgress);
+
+  /// Keeps the reminder quiet for two weeks.
+  Future<Result<void>> snoozeFtpCheck() =>
+      _api.snoozeFtpCheck().guard(FailureAction.setFtp);
 }
 
 @Riverpod(keepAlive: true)

@@ -271,6 +271,8 @@ class ApiClient {
           return ExportLinkResponse.fromJson(value);
         case 'ForgotPasswordRequest':
           return ForgotPasswordRequest.fromJson(value);
+        case 'FtpCheckResponse':
+          return FtpCheckResponse.fromJson(value);
         case 'FtpEstimate':
           return FtpEstimate.fromJson(value);
         case 'FtpHistoryEntry':

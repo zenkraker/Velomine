@@ -119,11 +119,13 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**updateSettings**](doc//AdminApi.md#updatesettings) | **PUT** /api/v1/admin/settings | 
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
+*AnalyticsApi* | [**getFtpCheck**](doc//AnalyticsApi.md#getftpcheck) | **GET** /api/v1/analytics/ftp-check | 
 *AnalyticsApi* | [**getPowerCurve**](doc//AnalyticsApi.md#getpowercurve) | **GET** /api/v1/analytics/power-curve | 
 *AnalyticsApi* | [**getReadiness**](doc//AnalyticsApi.md#getreadiness) | **GET** /api/v1/analytics/readiness | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
 *AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
+*AnalyticsApi* | [**snoozeFtpCheck**](doc//AnalyticsApi.md#snoozeftpcheck) | **POST** /api/v1/analytics/ftp-check/snooze | 
 *AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
 *BikesApi* | [**applyTemplate**](doc//BikesApi.md#applytemplate) | **POST** /api/v1/bikes/{bikeId}/templates/{id} | 
 *BikesApi* | [**completeReminder**](doc//BikesApi.md#completereminder) | **POST** /api/v1/bikes/{bikeId}/reminders/{id}/done | 
@@ -280,6 +282,7 @@ Class | Method | HTTP request | Description
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
+ - [FtpCheckResponse](doc//FtpCheckResponse.md)
  - [FtpEstimate](doc//FtpEstimate.md)
  - [FtpHistoryEntry](doc//FtpHistoryEntry.md)
  - [FtpHistoryResponse](doc//FtpHistoryResponse.md)

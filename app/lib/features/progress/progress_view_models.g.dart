@@ -281,6 +281,59 @@ abstract class _$PowerCurveViewModel extends $Notifier<PowerState> {
   }
 }
 
+@ProviderFor(FtpReminderViewModel)
+final ftpReminderViewModelProvider = FtpReminderViewModelProvider._();
+
+final class FtpReminderViewModelProvider
+    extends $NotifierProvider<FtpReminderViewModel, FtpReminderState> {
+  FtpReminderViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ftpReminderViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$ftpReminderViewModelHash();
+
+  @$internal
+  @override
+  FtpReminderViewModel create() => FtpReminderViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(FtpReminderState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<FtpReminderState>(value),
+    );
+  }
+}
+
+String _$ftpReminderViewModelHash() =>
+    r'fa749d060cf00207f15ed2030de1ea50efcbe30b';
+
+abstract class _$FtpReminderViewModel extends $Notifier<FtpReminderState> {
+  FtpReminderState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<FtpReminderState, FtpReminderState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<FtpReminderState, FtpReminderState>,
+              FtpReminderState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(ReadinessViewModel)
 final readinessViewModelProvider = ReadinessViewModelProvider._();
 

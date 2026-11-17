@@ -285,6 +285,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("first_day_of_week");
 
+                    b.Property<DateOnly?>("FtpReminderSnoozedUntil")
+                        .HasColumnType("date")
+                        .HasColumnName("ftp_reminder_snoozed_until");
+
                     b.Property<int?>("FtpW")
                         .HasColumnType("integer")
                         .HasColumnName("ftp_w");

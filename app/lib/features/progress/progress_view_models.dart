@@ -219,6 +219,79 @@ class PowerCurveViewModel extends _$PowerCurveViewModel {
 }
 
 @Riverpod(keepAlive: true)
+class FtpReminderViewModel extends _$FtpReminderViewModel {
+  int _messageId = 0;
+  int _loadGeneration = 0;
+
+  @override
+  FtpReminderState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const FtpReminderState();
+    }
+    Future.microtask(load);
+    return const FtpReminderState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    final result = await ref.read(progressDataProvider).ftpCheck();
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = state.copyWith(
+      check: switch (result) {
+        Ok(:final value) => value,
+        // A check that could not be read says nothing: a silent card beats a wrong one.
+        Failed() => null,
+      },
+    );
+  }
+
+  /// "Not now": the server keeps it quiet for two weeks.
+  Future<void> snooze() async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref.read(progressDataProvider).snoozeFtpCheck();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    await load();
+  }
+
+  /// Adopts the estimate as the FTP. The server clears its own snooze, so the reminder is reloaded.
+  Future<void> useEstimate(int watts) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(progressDataProvider)
+        .setFtp(watts, source: 'estimate');
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    // The curve already offers "Use ... W"; it follows the new FTP from here.
+    ref
+      ..invalidate(powerCurveViewModelProvider)
+      ..invalidate(trainingViewModelProvider);
+    await load();
+  }
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
+}
+
+@Riverpod(keepAlive: true)
 class ReadinessViewModel extends _$ReadinessViewModel {
   int _loadGeneration = 0;
 

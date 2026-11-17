@@ -2761,6 +2761,42 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String ftpReminderStaleTitle(int weeks) {
+    return 'Your FTP is $weeks weeks old';
+  }
+
+  @override
+  String get ftpReminderStaleBody =>
+      'Zones and TSS use it. Ride a test, or use the estimate if it looks right.';
+
+  @override
+  String get ftpReminderEstimateTitle =>
+      'You may be stronger than your FTP says';
+
+  @override
+  String ftpReminderEstimateBody(String estimate, String ftp) {
+    return 'Your best efforts suggest $estimate W; your FTP is $ftp W.';
+  }
+
+  @override
+  String get ftpReminderMissingTitle => 'Set your FTP';
+
+  @override
+  String ftpReminderMissingBody(String estimate) {
+    return 'Your best efforts suggest $estimate W.';
+  }
+
+  @override
+  String get ftpReminderHow => 'How to test';
+
+  @override
+  String get ftpReminderHowBody =>
+      'Warm up for 15 minutes, with three short hard efforts. Ride 5 minutes hard, then 10 minutes easy. Then ride 20 minutes as hard as you can hold evenly. Velomine will notice the effort and suggest your new FTP (95 % of the 20 minutes).';
+
+  @override
+  String get ftpReminderNotNow => 'Not now';
+
+  @override
   String ftpSourceManual(String date) {
     return 'Set by you on $date';
   }

@@ -110,6 +110,12 @@ class FakeServer {
   /// FTP history entries by email, newest first, as the server keeps them.
   final ftpHistory = <String, List<Map<String, Object?>>>{};
 
+  /// What GET /analytics/ftp-check answers, by email; a missing one says nothing.
+  final ftpCheck = <String, Map<String, Object?>>{};
+
+  /// How many times the member hid the FTP reminder.
+  int snoozeRequests = 0;
+
   /// What GET /analytics/totals answers, by period; a missing period has no rides.
   final totals = <String, List<Map<String, Object?>>>{};
 
@@ -1096,6 +1102,24 @@ extension on FakeServer {
       final period = request.url.queryParameters['period']!;
       analyticsFilters.add(request.url.queryParameters['discipline']);
       return json({'period': period, 'totals': totals[period] ?? []});
+    }
+
+    if (path == '/api/v1/analytics/ftp-check') {
+      return json({
+        'reason': null,
+        'ftpW': null,
+        'ftpAgeDays': null,
+        'estimateW': null,
+        'estimateMethod': null,
+        ...?ftpCheck[caller.email],
+      });
+    }
+
+    if (path == '/api/v1/analytics/ftp-check/snooze') {
+      // The server keeps it quiet for two weeks; here that is simply a null reason from now on.
+      ftpCheck[caller.email] = {...?ftpCheck[caller.email], 'reason': null};
+      snoozeRequests++;
+      return http.Response('', 204);
     }
 
     if (path == '/api/v1/analytics/training') {

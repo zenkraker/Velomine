@@ -2783,6 +2783,42 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String ftpReminderStaleTitle(int weeks) {
+    return 'Il tuo FTP ha $weeks settimane';
+  }
+
+  @override
+  String get ftpReminderStaleBody =>
+      'Zone e TSS lo usano. Fai un test, oppure usa la stima se ti sembra giusta.';
+
+  @override
+  String get ftpReminderEstimateTitle =>
+      'Puoi essere più forte di quanto dica il tuo FTP';
+
+  @override
+  String ftpReminderEstimateBody(String estimate, String ftp) {
+    return 'I tuoi migliori sforzi suggeriscono $estimate W; il tuo FTP è $ftp W.';
+  }
+
+  @override
+  String get ftpReminderMissingTitle => 'Imposta il tuo FTP';
+
+  @override
+  String ftpReminderMissingBody(String estimate) {
+    return 'I tuoi migliori sforzi suggeriscono $estimate W.';
+  }
+
+  @override
+  String get ftpReminderHow => 'Come fare il test';
+
+  @override
+  String get ftpReminderHowBody =>
+      'Riscaldati per 15 minuti, con tre brevi sforzi intensi. Pedala 5 minuti forte, poi 10 minuti facile. Poi pedala 20 minuti il più forte che riesci a tenere in modo costante. Velomine noterà lo sforzo e ti suggerirà il nuovo FTP (95 % dei 20 minuti).';
+
+  @override
+  String get ftpReminderNotNow => 'Non ora';
+
+  @override
   String ftpSourceManual(String date) {
     return 'Impostato da te il $date';
   }

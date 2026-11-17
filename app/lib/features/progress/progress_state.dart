@@ -101,6 +101,29 @@ class PowerState {
   );
 }
 
+class FtpReminderState {
+  const FtpReminderState({
+    this.check,
+    this.action = const CommandState.idle(),
+    this.messages = const [],
+  });
+
+  /// The check as the server answered it; null reason means there is nothing to show.
+  final FtpCheckResponse? check;
+  final VoidCommand action;
+  final List<UserMessage> messages;
+
+  FtpReminderState copyWith({
+    FtpCheckResponse? check,
+    VoidCommand? action,
+    List<UserMessage>? messages,
+  }) => FtpReminderState(
+    check: check ?? this.check,
+    action: action ?? this.action,
+    messages: messages ?? this.messages,
+  );
+}
+
 class ReadinessState {
   const ReadinessState({this.load = const CommandState.idle()});
 

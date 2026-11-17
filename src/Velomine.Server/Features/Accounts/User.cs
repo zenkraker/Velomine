@@ -15,6 +15,9 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>Functional threshold power in watts, entered by the member. Needed for IF, TSS and power zones.</summary>
     public int? FtpW { get; set; }
 
+    /// <summary>The day the member last hid the out-of-date FTP reminder; it stays quiet until the day after. Null when never snoozed.</summary>
+    public DateOnly? FtpReminderSnoozedUntil { get; set; }
+
     public double? WeightKg { get; set; }
 
     /// <summary>Year of birth; the maximum heart rate is estimated from the age it gives.</summary>

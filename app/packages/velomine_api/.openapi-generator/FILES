@@ -74,6 +74,7 @@ lib/model/enable_two_factor_request.dart
 lib/model/exchange_sso_token_request.dart
 lib/model/export_link_response.dart
 lib/model/forgot_password_request.dart
+lib/model/ftp_check_response.dart
 lib/model/ftp_estimate.dart
 lib/model/ftp_history_entry.dart
 lib/model/ftp_history_response.dart

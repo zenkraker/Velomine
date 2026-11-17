@@ -56,8 +56,8 @@ public sealed class FtpHistoryConfiguration : IEntityTypeConfiguration<FtpHistor
 }
 
 /// <summary>
-/// The one way an FTP changes: sets the value and stages its history row. The caller's own <c>SaveChangesAsync</c>
-/// writes both, and nothing is written when the number is the one already set.
+/// The one way an FTP changes: sets the value, clears the FTP reminder's snooze and stages its history row. The
+/// caller's own <c>SaveChangesAsync</c> writes all of it, and nothing is written when the number is the one already set.
 /// </summary>
 public sealed class SetFtpValue(VelomineDbContext db, TimeProvider time)
 {
@@ -65,6 +65,7 @@ public sealed class SetFtpValue(VelomineDbContext db, TimeProvider time)
     {
         if (user.FtpW == watts) return;
         user.FtpW = watts;
+        user.FtpReminderSnoozedUntil = null; // a new number is an answer, so the reminder may ask again
         db.FtpHistory.Add(new FtpHistory
         {
             Id = Guid.NewGuid(),
