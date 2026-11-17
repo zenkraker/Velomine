@@ -422,6 +422,69 @@ public sealed class DemoTests(PostgresFixture postgres)
         Assert.All(steady, r => Assert.NotNull(r.EfficiencyFactor));
     }
 
+    /// <summary>The stored streams as the reader sees them, and the one call an import makes for these three numbers.</summary>
+    private static async Task<Dictionary<Guid, (double? EfficiencyFactor, double? DecouplingPct, bool? Steady)>> ReadMetricsAsync(
+        VelomineDbContext db) =>
+        (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(
+            s => s.RideId,
+            s => Read(Samples(s)));
+
+    private static List<Sample> Samples(RideStreams s) =>
+        [.. Enumerable.Range(0, s.Time.Length).Select(i => new Sample(s.Time[i], HeartRate: s.HeartRate?[i], Power: s.Power?[i]))];
+
+    private static (double? EfficiencyFactor, double? DecouplingPct, bool? Steady) Read(List<Sample> samples) =>
+        RideMetrics.Efficiency(RideMetrics.PairedSeconds(samples, RideMetrics.PauseThresholdS(samples)));
+
+    [Fact]
+    public async Task DemoData_ShouldStoreWhatTheReaderWorksOut_WhenTheDemoIsReset()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var rides = await db.Rides.AsNoTracking()
+            .Select(r => new { r.Id, r.EfficiencyFactor, r.DecouplingPct, r.Steady })
+            .ToListAsync(Ct);
+        var read = await ReadMetricsAsync(db);
+
+        Assert.NotEmpty(rides);
+        Assert.Contains(rides, r => r.Steady == true && r.DecouplingPct is not null);
+        foreach (var ride in rides)
+        {
+            // The seed writes no efficiency of its own: the stored number is the reader's, for every ride.
+            var (efficiencyFactor, decoupling, steady) = read[ride.Id];
+            Assert.Equal(efficiencyFactor, ride.EfficiencyFactor);
+            Assert.Equal(decoupling, ride.DecouplingPct);
+            Assert.Equal(steady, ride.Steady);
+        }
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldStoreThePowerBestsTheReaderWorksOut_WhenTheDemoIsReset()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var rides = await db.Rides.AsNoTracking().Select(r => new { r.Id, r.PowerBests }).ToListAsync(Ct);
+        var streams = (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(s => s.RideId);
+        Assert.NotEmpty(rides);
+
+        foreach (var ride in rides)
+        {
+            var s = streams[ride.Id];
+            var read = PowerBests.FromStreams(s.Power, s.Time);
+            var stored = ride.PowerBests.ToDictionary(b => b.DurationS, b => b.Watts);
+            for (var d = 0; d < PowerBests.Durations.Length; d++)
+            {
+                var expected = read[d] > 0 ? read[d] : 0; // a zero is not stored
+                Assert.Equal(expected, stored.GetValueOrDefault(PowerBests.Durations[d]));
+            }
+        }
+    }
+
     [Fact]
     public async Task DemoData_ShouldGiveTheRiderAWeeklyEfficiencyTrend_WhenTheDemoIsReset()
     {

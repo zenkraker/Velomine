@@ -8,7 +8,8 @@
 -- Idempotent: if any member of that club already has a bike or a ride, it does nothing.
 --
 -- The rides are generated at 1 Hz, so their streams, laps and power bests are consistent with each other and
--- with the metrics stored on the ride. Everything is synthetic.
+-- with the metrics stored on the ride. Everything is synthetic. Effort, efficiency factor, decoupling and
+-- steadiness are not written here: DemoData.cs fills them from the real reader (RideMetrics), from the streams.
 
 CREATE OR REPLACE FUNCTION pg_temp.demo_seed_ride(
     p_user uuid,
@@ -92,9 +93,6 @@ DECLARE
     v_lap_ref float8;
     v_lap_distance float8;
     v_ride_id uuid;
-    v_kept int := 0;
-    v_half int;
-    v_first_p float8; v_first_h float8; v_second_p float8; v_second_h float8;
     v_time double precision[];
     v_lat double precision[];
     v_lon double precision[];
@@ -377,45 +375,6 @@ BEGIN
             round(v_lap_cad / v_lap_count), v_lap_gain);
     END LOOP;
 
-    -- Aerobic decoupling and efficiency factor (Friel), as RideMetrics.Efficiency works them out on import: the
-    -- seconds with a believable heart rate and a pedalling power, after a 15-minute warm-up, split in two halves.
-    -- Each half is its mean power over its mean heart rate, which leaves out the normalized power the reader uses.
-    -- A ride that is not steady stores its efficiency factor and no decoupling, exactly like a read one.
-    v_kept := 0;
-    v_first_p := 0; v_first_h := 0; v_second_p := 0; v_second_h := 0;
-    IF p_power_profile THEN
-        -- How many kept seconds there are decides where the halves meet; the warm-up is the first 900 of them.
-        FOR v_i IN 1..v_n LOOP
-            IF v_hr[v_i] >= 60 AND v_hr[v_i] <= 220 AND v_power[v_i] >= 50 AND v_power[v_i] <= 2500 THEN
-                v_kept := v_kept + 1;
-            END IF;
-        END LOOP;
-        v_half := 900 + (v_kept - 900) / 2; -- the first half ends here: an odd count leaves the second shorter
-        v_kept := 0;
-        FOR v_i IN 1..v_n LOOP
-            IF v_hr[v_i] >= 60 AND v_hr[v_i] <= 220 AND v_power[v_i] >= 50 AND v_power[v_i] <= 2500 THEN
-                v_kept := v_kept + 1;
-                IF v_kept > 900 AND v_kept <= v_half THEN
-                    v_first_p := v_first_p + v_power[v_i]; v_first_h := v_first_h + v_hr[v_i];
-                ELSIF v_kept > v_half THEN
-                    v_second_p := v_second_p + v_power[v_i]; v_second_h := v_second_h + v_hr[v_i];
-                END IF;
-            END IF;
-        END LOOP;
-    END IF;
-
-    IF v_kept >= 3000 THEN
-        v_first_p := v_first_p / (v_half - 900);
-        v_second_p := v_second_p / (v_kept - v_half);
-        v_first_h := v_first_h / (v_half - 900);
-        v_second_h := v_second_h / (v_kept - v_half);
-        UPDATE rides.rides
-        SET efficiency_factor = round((v_first_p / v_first_h)::numeric, 2),
-            steady = true,
-            decoupling_pct = round((((v_first_p / v_first_h) - (v_second_p / v_second_h))
-                                   / (v_first_p / v_first_h) * 100)::numeric, 1)
-        WHERE id = v_ride_id;
-    END IF;
 END
 $ride$;
 

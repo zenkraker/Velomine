@@ -90,6 +90,7 @@ public sealed class DemoData(
         db.Clubs.Add(club);
         await db.SaveChangesAsync(ct);
         await SeedAsync(ct);
+        await StoreReadMetricsAsync(ct);
         await WriteOriginalFilesAsync(ct);
     }
 
@@ -117,6 +118,33 @@ public sealed class DemoData(
         finally
         {
             await db.Database.CloseConnectionAsync();
+        }
+    }
+
+    /// <summary>
+    /// Efficiency factor, decoupling and steadiness come from the real reader, never from the script: each seeded
+    /// ride's stored streams go through the same <see cref="RideMetrics"/> call an import makes, so the demo shows
+    /// the numbers the product produces and a change to the formula reaches it without a second copy here.
+    /// </summary>
+    private async Task StoreReadMetricsAsync(CancellationToken ct)
+    {
+        var streams = await (
+            from s in db.RideStreams.AsNoTracking()
+            join r in db.Rides on s.RideId equals r.Id
+            where r.FileSha256 == ""
+            select s).ToListAsync(ct);
+        foreach (var s in streams)
+        {
+            var samples = Enumerable.Range(0, s.Time.Length)
+                .Select(i => new Sample(s.Time[i], HeartRate: s.HeartRate?[i], Power: s.Power?[i]))
+                .ToList();
+            var (efficiencyFactor, decoupling, steady) = RideMetrics.Efficiency(
+                RideMetrics.PairedSeconds(samples, RideMetrics.PauseThresholdS(samples)));
+            await db.Rides.Where(r => r.Id == s.RideId).ExecuteUpdateAsync(
+                u => u.SetProperty(r => r.EfficiencyFactor, efficiencyFactor)
+                    .SetProperty(r => r.DecouplingPct, decoupling)
+                    .SetProperty(r => r.Steady, steady),
+                ct);
         }
     }
 
