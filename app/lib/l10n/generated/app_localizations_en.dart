@@ -4377,6 +4377,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationPowerRecord(String record) {
+    return 'Personal best: $record.';
+  }
+
+  @override
+  String powerRecordAllTime(String duration, int watts) {
+    return 'Best $duration ever: $watts W';
+  }
+
+  @override
+  String powerRecordNinetyDays(String duration, int watts) {
+    return 'Best $duration in 90 days: $watts W';
+  }
+
+  @override
+  String recordDurationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String recordDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
   String get supporterSignInTitle => 'Supporter';
 
   @override

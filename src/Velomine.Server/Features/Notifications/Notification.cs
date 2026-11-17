@@ -58,6 +58,9 @@ public static class NotificationTypes
 
     /// <summary>A club ride was cancelled. Refers to the ride; the subject is its title.</summary>
     public const string ClubRideCancelled = "club_ride_cancelled";
+
+    /// <summary>The ride beat the member's best power. Refers to the ride; the subject is the longest record, "20 min: 312 W".</summary>
+    public const string PowerRecord = "power_record";
 }
 
 /// <summary>
@@ -94,6 +97,7 @@ public static class NotificationKinds
         NotificationTypes.PartWorn,
         NotificationTypes.ReminderSoon,
         NotificationTypes.ReminderDue,
+        NotificationTypes.PowerRecord,
     ];
 
     /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>

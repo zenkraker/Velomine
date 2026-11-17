@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -28,6 +29,11 @@ public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, Ride
             return;
         }
 
-        await Send.OkAsync(RideDetails.Build(ride), ct);
+        await Send.OkAsync(
+            RideDetails.Build(ride) with
+            {
+                PowerRecords = await PowerRecords.ForRideAsync(db, userId, ride.Id, ride.StartTime, ct),
+            },
+            ct);
     }
 }

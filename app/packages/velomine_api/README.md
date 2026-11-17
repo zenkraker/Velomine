@@ -325,6 +325,7 @@ Class | Method | HTTP request | Description
  - [PlanClubRideRequest](doc//PlanClubRideRequest.md)
  - [PowerCurvePoint](doc//PowerCurvePoint.md)
  - [PowerCurveResponse](doc//PowerCurveResponse.md)
+ - [PowerRecord](doc//PowerRecord.md)
  - [PrivacyResponse](doc//PrivacyResponse.md)
  - [PrivacyStreamsResponse](doc//PrivacyStreamsResponse.md)
  - [PrivacyZoneResponse](doc//PrivacyZoneResponse.md)

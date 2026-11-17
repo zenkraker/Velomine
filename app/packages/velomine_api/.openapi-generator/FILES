@@ -117,6 +117,7 @@ lib/model/period_totals.dart
 lib/model/plan_club_ride_request.dart
 lib/model/power_curve_point.dart
 lib/model/power_curve_response.dart
+lib/model/power_record.dart
 lib/model/privacy_response.dart
 lib/model/privacy_streams_response.dart
 lib/model/privacy_zone_response.dart

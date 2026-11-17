@@ -18,6 +18,7 @@ import '../ride_title.dart';
 import '../ride_type_chips.dart';
 import '../ride_type_sheet.dart';
 import 'lap_table.dart';
+import 'power_record_chips.dart';
 import 'ride_detail_state.dart';
 import 'ride_detail_view_model.dart';
 import 'ride_feel_card.dart';
@@ -253,6 +254,9 @@ class RideDetailScreen extends ConsumerWidget {
         )
       else ...[
         if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
+        PowerRecordChips(
+          records: ride.powerRecords.orElse(const []) ?? const [],
+        ),
         if (s.series?.hasRoute ?? false)
           RouteMap(
             data: s.series!,

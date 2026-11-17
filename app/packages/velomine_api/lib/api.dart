@@ -134,6 +134,7 @@ part 'model/period_totals.dart';
 part 'model/plan_club_ride_request.dart';
 part 'model/power_curve_point.dart';
 part 'model/power_curve_response.dart';
+part 'model/power_record.dart';
 part 'model/privacy_response.dart';
 part 'model/privacy_streams_response.dart';
 part 'model/privacy_zone_response.dart';

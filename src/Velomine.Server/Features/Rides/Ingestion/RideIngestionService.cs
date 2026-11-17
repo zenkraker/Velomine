@@ -190,7 +190,14 @@ public sealed class RideIngestionService(
             return;
         }
 
+        // Worked out before the save: a ride that was just read has its bests in memory, not yet in the database.
+        var clock = read.Any(r => r.Status == RideStatus.Ready) ? await MemberClock.ForAsync(db, ride.UserId, time, ct) : null;
+        if (clock is not null && ride.NotifiesMember)
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+                await Notify.PowerRecordAsync(db, time, clock, r, ct);
+
         foreach (var r in read.Where(r => r.NotifiesMember)) Notify.RideRead(db, time, r);
+
         try
         {
             await db.SaveChangesAsync(ct);

@@ -7658,6 +7658,36 @@ abstract class AppLocalizations {
   /// **'{ride}: the ride is cancelled.'**
   String notificationClubRideCancelled(String ride);
 
+  /// No description provided for @notificationPowerRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal best: {record}.'**
+  String notificationPowerRecord(String record);
+
+  /// No description provided for @powerRecordAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Best {duration} ever: {watts} W'**
+  String powerRecordAllTime(String duration, int watts);
+
+  /// No description provided for @powerRecordNinetyDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Best {duration} in 90 days: {watts} W'**
+  String powerRecordNinetyDays(String duration, int watts);
+
+  /// No description provided for @recordDurationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String recordDurationSeconds(int seconds);
+
+  /// No description provided for @recordDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String recordDurationMinutes(int minutes);
+
   /// No description provided for @supporterSignInTitle.
   ///
   /// In en, this message translates to:

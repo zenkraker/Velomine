@@ -110,7 +110,8 @@ class NotificationsScreen extends ConsumerWidget {
     'ride_ready' ||
     'ride_failed' ||
     'ride_duplicate' ||
-    'ride_import' => 'rides',
+    'ride_import' ||
+    'power_record' => 'rides',
     'club_join_request' ||
     'club_join_approved' ||
     'club_join_declined' => 'club',
@@ -129,6 +130,7 @@ class _NotificationTile extends StatelessWidget {
     'ride_ready' => Icons.check_circle_outline,
     'ride_failed' => Icons.error_outline,
     'ride_duplicate' => Icons.content_copy,
+    'power_record' => Icons.emoji_events_outlined,
     'signup_waiting' => Icons.person_add_alt,
     'part_soon' || 'part_worn' => Icons.build_outlined,
     'club_join_request' => Icons.person_add_alt,

@@ -357,6 +357,8 @@ class ApiClient {
           return PowerCurvePoint.fromJson(value);
         case 'PowerCurveResponse':
           return PowerCurveResponse.fromJson(value);
+        case 'PowerRecord':
+          return PowerRecord.fromJson(value);
         case 'PrivacyResponse':
           return PrivacyResponse.fromJson(value);
         case 'PrivacyStreamsResponse':

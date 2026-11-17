@@ -1529,6 +1529,11 @@
   "notificationClubRidePlanned": "{ride}: il club ha programmato un'uscita.",
   "notificationClubRideChanged": "{ride}: sono cambiati l'orario o il punto di ritrovo.",
   "notificationClubRideCancelled": "{ride}: l'uscita è annullata.",
+  "notificationPowerRecord": "Record personale: {record}.",
+  "powerRecordAllTime": "Miglior {duration} di sempre: {watts} W",
+  "powerRecordNinetyDays": "Miglior {duration} negli ultimi 90 giorni: {watts} W",
+  "recordDurationSeconds": "{seconds} s",
+  "recordDurationMinutes": "{minutes} min",
 
   "supporterSignInTitle": "Sostenitore",
   "supporterBecome": "Diventa sostenitore",

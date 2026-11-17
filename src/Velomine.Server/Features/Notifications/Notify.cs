@@ -43,6 +43,16 @@ public static class Notify
         if (type is not null) Add(db, time, ride.UserId, type, ride.FileName, rideId: ride.Id);
     }
 
+    /// <summary>
+    /// Tells the member when a newly read ride beat their best power. Called after the rides and their bests are in the
+    /// context and before the save, so a ride of this same read counts as an earlier one.
+    /// </summary>
+    public static async Task PowerRecordAsync(VelomineDbContext db, TimeProvider time, MemberClock clock, Ride ride, CancellationToken ct)
+    {
+        if (await Analytics.PowerRecords.SubjectAsync(db, clock, ride, ct) is { } subject)
+            Add(db, time, ride.UserId, NotificationTypes.PowerRecord, subject, rideId: ride.Id);
+    }
+
     /// <summary>Tells every admin that a new account waits for approval.</summary>
     public static async Task SignUpWaitingAsync(VelomineDbContext db, UserManager<User> users, TimeProvider time, User newUser)
     {

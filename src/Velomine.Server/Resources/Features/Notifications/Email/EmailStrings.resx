@@ -112,4 +112,7 @@
   <data name="ClubRideCancelled" xml:space="preserve">
     <value>{0}: the ride is cancelled.</value>
   </data>
+  <data name="PowerRecord" xml:space="preserve">
+    <value>Personal best: {0}.</value>
+  </data>
 </root>

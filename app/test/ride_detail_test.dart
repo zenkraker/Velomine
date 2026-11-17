@@ -627,4 +627,18 @@ void main() {
     );
     expect(find.byKey(const Key('ride-views-empty')), findsOneWidget);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowPowerRecordChips_WhenTheRideSetRecords',
+    (tester) async {
+      server.rides[0]['powerRecords'] = [
+        powerRecordJson(300, 312, 'all_time'),
+        powerRecordJson(1200, 268, '90_days'),
+      ];
+      await open(tester);
+
+      expect(find.text('Best 5 min ever: 312 W'), findsOneWidget);
+      expect(find.text('Best 20 min in 90 days: 268 W'), findsOneWidget);
+    },
+  );
 }

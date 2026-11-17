@@ -44,7 +44,8 @@ public sealed record RideResponse(
     string? Description,
     long Version,
     ZoneTime[]? HeartRateZones = null,
-    ZoneTime[]? PowerZones = null)
+    ZoneTime[]? PowerZones = null,
+    Analytics.PowerRecord[]? PowerRecords = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -90,5 +91,6 @@ public sealed record RideResponse(
         Trimp = null,
         HeartRateZones = null,
         PowerZones = null,
+        PowerRecords = null,
     };
 }

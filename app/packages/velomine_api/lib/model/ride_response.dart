@@ -49,6 +49,7 @@ class RideResponse {
     required this.version,
     this.heartRateZones = const Optional.present(const []),
     this.powerZones = const Optional.present(const []),
+    this.powerRecords = const Optional.present(const []),
   });
 
   final String id;
@@ -123,6 +124,8 @@ class RideResponse {
 
   final Optional<List<ZoneTime>?> powerZones;
 
+  final Optional<List<PowerRecord>?> powerRecords;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -160,7 +163,8 @@ class RideResponse {
     other.description == description &&
     other.version == version &&
     _deepEquality.equals(other.heartRateZones, heartRateZones) &&
-    _deepEquality.equals(other.powerZones, powerZones);
+    _deepEquality.equals(other.powerZones, powerZones) &&
+    _deepEquality.equals(other.powerRecords, powerRecords);
 
   @override
   int get hashCode =>
@@ -200,10 +204,11 @@ class RideResponse {
     (description == null ? 0 : description!.hashCode) +
     (version.hashCode) +
     (heartRateZones.hashCode) +
-    (powerZones.hashCode);
+    (powerZones.hashCode) +
+    (powerRecords.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -365,6 +370,10 @@ class RideResponse {
       final value = this.powerZones.value;
       json[r'powerZones'] = value;
     }
+    if (this.powerRecords.isPresent) {
+      final value = this.powerRecords.value;
+      json[r'powerRecords'] = value;
+    }
     return json;
   }
 
@@ -436,6 +445,7 @@ class RideResponse {
     int? version,
     Optional<List<ZoneTime>?>? heartRateZones,
     Optional<List<ZoneTime>?>? powerZones,
+    Optional<List<PowerRecord>?>? powerRecords,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -473,6 +483,7 @@ class RideResponse {
     version: version ?? this.version,
     heartRateZones: heartRateZones ?? this.heartRateZones,
     powerZones: powerZones ?? this.powerZones,
+    powerRecords: powerRecords ?? this.powerRecords,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -565,6 +576,7 @@ class RideResponse {
         version: mapValueOfType<int>(json, r'version')!,
         heartRateZones: json.containsKey(r'heartRateZones') ? Optional.present(ZoneTime.listFromJson(json[r'heartRateZones'])) : const Optional.absent(),
         powerZones: json.containsKey(r'powerZones') ? Optional.present(ZoneTime.listFromJson(json[r'powerZones'])) : const Optional.absent(),
+        powerRecords: json.containsKey(r'powerRecords') ? Optional.present(PowerRecord.listFromJson(json[r'powerRecords'])) : const Optional.absent(),
       );
     }
     return null;

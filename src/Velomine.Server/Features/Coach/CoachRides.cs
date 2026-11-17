@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Sharing;
@@ -139,9 +140,16 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct, req.RideId);
         var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ride, ct);
+        // The records are analytics: without that grant the ride has none to show.
         await Send.OkAsync(
             PrivacyRules.ForViewer(
-                canAnalytics ? RideDetails.Build(ride) : RideResponse.From(ride).WithoutTrainingLoad(), privacy), ct);
+                (canAnalytics ? RideDetails.Build(ride) : RideResponse.From(ride).WithoutTrainingLoad()) with
+                {
+                    PowerRecords = canAnalytics
+                        ? await PowerRecords.ForRideAsync(db, req.UserId, ride.Id, ride.StartTime, ct)
+                        : null,
+                },
+                privacy), ct);
     }
 }
 

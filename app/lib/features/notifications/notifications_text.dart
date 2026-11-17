@@ -23,6 +23,7 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'club_ride_planned' => l10n.notificationClubRidePlanned(n.subject),
       'club_ride_changed' => l10n.notificationClubRideChanged(n.subject),
       'club_ride_cancelled' => l10n.notificationClubRideCancelled(n.subject),
+      'power_record' => l10n.notificationPowerRecord(n.subject),
       _ => n.subject,
     };
 
@@ -33,7 +34,8 @@ String _day(String subject) => dateOnly(DateTime.tryParse(subject));
 String? notificationTarget(NotificationResponse n) => switch (n.type) {
   'ride_ready' ||
   'ride_failed' ||
-  'ride_duplicate' when n.rideId != null => '/rides/${n.rideId}',
+  'ride_duplicate' ||
+  'power_record' when n.rideId != null => '/rides/${n.rideId}',
   'part_soon' ||
   'part_worn' ||
   'reminder_soon' ||

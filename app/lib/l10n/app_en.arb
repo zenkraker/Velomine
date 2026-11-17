@@ -2383,6 +2383,52 @@
       }
     }
   },
+  "notificationPowerRecord": "Personal best: {record}.",
+  "@notificationPowerRecord": {
+    "placeholders": {
+      "record": {
+        "type": "String"
+      }
+    }
+  },
+  "powerRecordAllTime": "Best {duration} ever: {watts} W",
+  "@powerRecordAllTime": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "watts": {
+        "type": "int"
+      }
+    }
+  },
+  "powerRecordNinetyDays": "Best {duration} in 90 days: {watts} W",
+  "@powerRecordNinetyDays": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "watts": {
+        "type": "int"
+      }
+    }
+  },
+  "recordDurationSeconds": "{seconds} s",
+  "@recordDurationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "recordDurationMinutes": "{minutes} min",
+  "@recordDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
 
   "supporterSignInTitle": "Supporter",
   "supporterBecome": "Become a supporter",

@@ -179,6 +179,7 @@ public static class PrivacyRules
         IntensityFactor = privacy.HidePower ? null : ride.IntensityFactor,
         Tss = privacy.HidePower ? null : ride.Tss,
         PowerZones = privacy.HidePower ? null : ride.PowerZones,
+        PowerRecords = privacy.HidePower ? null : ride.PowerRecords,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
         AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
         MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,

@@ -2461,6 +2461,7 @@ Map<String, Object?> rideJson(
   double? trimp,
   List<Map<String, Object?>> heartRateZones = const [],
   List<Map<String, Object?>> powerZones = const [],
+  List<Map<String, Object?>> powerRecords = const [],
   String? discipline,
   String? assist,
   String? environment,
@@ -2507,6 +2508,14 @@ Map<String, Object?> rideJson(
   'bikeId': bikeId,
   'heartRateZones': heartRateZones,
   'powerZones': powerZones,
+  'powerRecords': powerRecords,
+};
+
+/// One personal power record as the ride detail receives it.
+Map<String, Object?> powerRecordJson(int durationS, int watts, String kind) => {
+  'durationS': durationS,
+  'watts': watts,
+  'kind': kind,
 };
 
 /// One training zone as the ride detail receives it.
