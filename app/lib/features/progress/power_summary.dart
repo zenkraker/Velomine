@@ -125,11 +125,18 @@ class PowerSummary extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               if (criticalPower != null) ...[
                 Text(
-                  l10n.criticalPowerRow(
-                    '${criticalPower.cpW}',
-                    _oneDecimal(criticalPower.wPrimeJ / 1000),
-                    '${criticalPower.peakW ?? _wattsNear(1)}',
-                  ),
+                  switch (criticalPower.peakW) {
+                    final peak? => l10n.criticalPowerRowWithPeak(
+                      '${criticalPower.cpW}',
+                      _oneDecimal(criticalPower.wPrimeJ / 1000),
+                      '$peak',
+                    ),
+                    // Peak power is the 1 s best: with none, the row leaves it out.
+                    null => l10n.criticalPowerRow(
+                      '${criticalPower.cpW}',
+                      _oneDecimal(criticalPower.wPrimeJ / 1000),
+                    ),
+                  },
                   key: const Key('critical-power-row'),
                   style: text.bodyMedium,
                 ),

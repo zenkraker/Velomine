@@ -121,6 +121,37 @@ void main() {
   );
 
   testWidgets(
+    'PowerSummary_ShouldLeavePeakOut_WhenTheServerHasNoOneSecondBest',
+    (tester) async {
+      await tester.pumpWidget(
+        powered(
+          PowerSummary(
+            curve: curve.copyWith(
+              criticalPower: CriticalPowerEstimate(
+                cpW: 250,
+                wPrimeJ: 20000,
+                peakW: null,
+                r2: 0.998,
+                durations: const [120, 300, 600, 1200],
+              ),
+            ),
+            days: 90,
+            onDays: (_) async {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // The row keeps critical power and W′ only, with no peak at all.
+      final row = tester
+          .widget<Text>(find.byKey(const Key('critical-power-row')))
+          .data;
+      expect(row, 'Critical power 250 W · W′ 20.0 kJ');
+      expect(row, isNot(contains('Peak')));
+    },
+  );
+
+  testWidgets(
     'PowerSummary_ShouldExplainTheMissingFit_WhenTheRiderHasPowerButNoFit',
     (tester) async {
       await tester.pumpWidget(

@@ -2915,7 +2915,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coachPowerCurve => 'Power curve';
 
   @override
-  String criticalPowerRow(String cp, String wPrime, String peak) {
+  String criticalPowerRow(String cp, String wPrime) {
+    return 'Critical power $cp W · W′ $wPrime kJ';
+  }
+
+  @override
+  String criticalPowerRowWithPeak(String cp, String wPrime, String peak) {
     return 'Critical power $cp W · W′ $wPrime kJ · Peak $peak W';
   }
 

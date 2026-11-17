@@ -1562,8 +1562,19 @@
   "coachWellbeingEmpty": "Wellbeing was shared, but there are no check-ins yet.",
   "coachWellbeingNoNotes": "Scores and RPE only. Notes stay private.",
   "coachPowerCurve": "Power curve",
-  "criticalPowerRow": "Critical power {cp} W · W′ {wPrime} kJ · Peak {peak} W",
+  "criticalPowerRow": "Critical power {cp} W · W′ {wPrime} kJ",
   "@criticalPowerRow": {
+    "placeholders": {
+      "cp": {
+        "type": "String"
+      },
+      "wPrime": {
+        "type": "String"
+      }
+    }
+  },
+  "criticalPowerRowWithPeak": "Critical power {cp} W · W′ {wPrime} kJ · Peak {peak} W",
+  "@criticalPowerRowWithPeak": {
     "placeholders": {
       "cp": {
         "type": "String"

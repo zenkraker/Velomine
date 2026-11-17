@@ -5165,8 +5165,14 @@ abstract class AppLocalizations {
   /// No description provided for @criticalPowerRow.
   ///
   /// In en, this message translates to:
+  /// **'Critical power {cp} W · W′ {wPrime} kJ'**
+  String criticalPowerRow(String cp, String wPrime);
+
+  /// No description provided for @criticalPowerRowWithPeak.
+  ///
+  /// In en, this message translates to:
   /// **'Critical power {cp} W · W′ {wPrime} kJ · Peak {peak} W'**
-  String criticalPowerRow(String cp, String wPrime, String peak);
+  String criticalPowerRowWithPeak(String cp, String wPrime, String peak);
 
   /// No description provided for @criticalPowerSource.
   ///
