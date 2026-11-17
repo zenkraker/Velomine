@@ -54,7 +54,10 @@ public sealed record TrainingResponse(
     double ElevationGainM,
     double Tss,
     double Trimp,
-    TrainingDay[] Days);
+    TrainingDay[] Days,
+    /// <summary>Seiler's three zones over the range, null when no ride had power or heart rate to place.</summary>
+    IntensityResponse? Intensity,
+    IntensityWeek[] IntensityWeeks);
 
 public sealed class TrainingValidator : Validator<TrainingRequest>
 {

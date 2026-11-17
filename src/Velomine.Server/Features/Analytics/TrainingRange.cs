@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Privacy;
 
 namespace Velomine.Server.Features.Analytics;
 
@@ -16,7 +17,8 @@ public static class TrainingRange
         MemberClock clock,
         int days,
         CancellationToken ct,
-        RideFilter filter = default)
+        RideFilter filter = default,
+        PrivacyProfile? viewer = null)
     {
         var to = clock.Today;
         var from = to.AddDays(-(days - 1));
@@ -61,6 +63,8 @@ public static class TrainingRange
                 Math.Round(fitness - fatigue, 1)));
         }
 
+        var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, from, to.AddDays(1), ct, filter, viewer);
+
         return new TrainingResponse(
             days,
             from,
@@ -71,7 +75,9 @@ public static class TrainingRange
             result.Sum(d => d.ElevationGainM),
             Math.Round(result.Sum(d => d.Tss), 1),
             Math.Round(result.Sum(d => d.Trimp), 1),
-            [.. result]);
+            [.. result],
+            intensity,
+            weeks);
     }
 
     private readonly record struct DayTotals(

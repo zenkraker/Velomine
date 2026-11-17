@@ -164,7 +164,8 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
         }
 
         var clock = await MemberClock.ForAsync(db, req.UserId, time, ct);
-        // Fitness, fatigue and form are built from TSS and TRIMP: hiding either stream hides the trend.
+        // Fitness, fatigue and form are built from TSS and TRIMP: hiding either stream hides the trend. The
+        // intensity split differs: it falls back to whichever signal the member still shares.
         var privacy = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
         if (privacy.HidesPowerOrHeartRate)
         {
@@ -175,7 +176,7 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Training, ct);
-        await Send.OkAsync(await TrainingRange.LoadAsync(db, req.UserId, clock, req.Days ?? 90, ct), ct);
+        await Send.OkAsync(await TrainingRange.LoadAsync(db, req.UserId, clock, req.Days ?? 90, ct, viewer: privacy), ct);
     }
 }
 
