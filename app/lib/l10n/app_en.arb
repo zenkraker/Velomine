@@ -1414,6 +1414,44 @@
       }
     }
   },
+  "ftpSourceManual": "Set by you on {date}",
+  "@ftpSourceManual": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSourceEstimate": "From your estimate, adopted on {date}",
+  "@ftpSourceEstimate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSourceTest": "From your ride on {date}",
+  "@ftpSourceTest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSourceEarlier": "Set before {date}",
+  "@ftpSourceEarlier": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpHistory": "FTP history",
+  "ftpHistoryEmpty": "Your FTP has been set once, so there is nothing to compare it with yet.",
+  "ftpYouTypedIt": "You typed it",
+  "ftpFromTheEstimate": "From the estimate",
+  "ftpFromYourRide": "From your ride",
+  "ftpBeforeHistory": "Before history was kept",
   "vo2MaxEstimate": "VO2max estimate",
   "vo2MaxFrom5Min": "from your best 5-minute power and weight",
   "vo2MaxNeedsWeight": "Set your weight to estimate VO2max.",

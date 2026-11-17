@@ -29,6 +29,7 @@ public static class AccountsSetup
         services.AddHttpClient("sso-userinfo", client => client.Timeout = TimeSpan.FromSeconds(10));
         services.AddScoped<AccountDeletion>();
         services.AddScoped<AccountExport>();
+        services.AddScoped<SetFtpValue>();
         services.AddScoped<UserSessions>();
         services.AddScoped<SessionSignIn>();
         services.AddSingleton<TwoFactorChallenges>();

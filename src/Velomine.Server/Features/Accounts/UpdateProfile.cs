@@ -35,7 +35,7 @@ public sealed class UpdateProfileValidator : Validator<UpdateProfileRequest>
     }
 }
 
-public sealed class UpdateProfile(VelomineDbContext db) : Endpoint<UpdateProfileRequest, ProfileResponse>
+public sealed class UpdateProfile(VelomineDbContext db, SetFtpValue setFtp) : Endpoint<UpdateProfileRequest, ProfileResponse>
 {
     public override void Configure()
     {
@@ -50,7 +50,8 @@ public sealed class UpdateProfile(VelomineDbContext db) : Endpoint<UpdateProfile
         WeekDays.TryParse(req.FirstDayOfWeek, out var firstDay);
 
         user.DisplayName = req.DisplayName.Trim();
-        user.FtpW = req.FtpW;
+        if (req.FtpW is { } ftp) setFtp.Set(user, ftp, FtpSources.Manual);
+        else user.FtpW = null; // clearing it is not a new FTP: history keeps the numbers that were set
         user.WeightKg = req.WeightKg is { } kg ? Math.Round(kg, 1) : null;
         user.BirthYear = req.BirthYear;
         user.TimeZone = string.IsNullOrWhiteSpace(req.TimeZone) ? null : req.TimeZone.Trim();
@@ -60,6 +61,6 @@ public sealed class UpdateProfile(VelomineDbContext db) : Endpoint<UpdateProfile
         user.EmailTrainingNotifications = req.EmailTrainingNotifications ?? user.EmailTrainingNotifications;
         await db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(GetProfile.ProfileOf(user), ct);
+        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, ct), ct);
     }
 }

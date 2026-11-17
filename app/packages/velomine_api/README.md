@@ -74,6 +74,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**exchangeSsoToken**](doc//AccountsApi.md#exchangessotoken) | **POST** /api/v1/accounts/sso/token | 
 *AccountsApi* | [**finishSso**](doc//AccountsApi.md#finishsso) | **GET** /api/v1/accounts/sso/callback | 
 *AccountsApi* | [**forgotPassword**](doc//AccountsApi.md#forgotpassword) | **POST** /api/v1/accounts/password/forgot | 
+*AccountsApi* | [**getFtpHistory**](doc//AccountsApi.md#getftphistory) | **GET** /api/v1/accounts/me/ftp-history | 
 *AccountsApi* | [**getMe**](doc//AccountsApi.md#getme) | **GET** /api/v1/accounts/me | 
 *AccountsApi* | [**getProfile**](doc//AccountsApi.md#getprofile) | **GET** /api/v1/accounts/me/profile | 
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
@@ -280,6 +281,8 @@ Class | Method | HTTP request | Description
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
  - [FtpEstimate](doc//FtpEstimate.md)
+ - [FtpHistoryEntry](doc//FtpHistoryEntry.md)
+ - [FtpHistoryResponse](doc//FtpHistoryResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
  - [JoinClubRequest](doc//JoinClubRequest.md)
  - [JoinCodeResponse](doc//JoinCodeResponse.md)

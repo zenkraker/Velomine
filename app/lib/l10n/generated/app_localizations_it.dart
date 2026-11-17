@@ -2779,6 +2779,45 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String ftpSourceManual(String date) {
+    return 'Impostato da te il $date';
+  }
+
+  @override
+  String ftpSourceEstimate(String date) {
+    return 'Dalla tua stima, adottata il $date';
+  }
+
+  @override
+  String ftpSourceTest(String date) {
+    return 'Dalla tua uscita del $date';
+  }
+
+  @override
+  String ftpSourceEarlier(String date) {
+    return 'Impostato prima del $date';
+  }
+
+  @override
+  String get ftpHistory => 'Storia dell\'FTP';
+
+  @override
+  String get ftpHistoryEmpty =>
+      'Il tuo FTP è stato impostato una sola volta, quindi non c\'è ancora niente da confrontare.';
+
+  @override
+  String get ftpYouTypedIt => 'L\'hai scritto tu';
+
+  @override
+  String get ftpFromTheEstimate => 'Dalla stima';
+
+  @override
+  String get ftpFromYourRide => 'Dalla tua uscita';
+
+  @override
+  String get ftpBeforeHistory => 'Prima che tenessimo la storia';
+
+  @override
   String get vo2MaxEstimate => 'VO2max stimato';
 
   @override

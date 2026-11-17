@@ -181,11 +181,13 @@ class PowerCurveViewModel extends _$PowerCurveViewModel {
   }
 
   /// Adopts the suggested FTP. Past TSS stays as it was; zones and new load use
-  /// the new value.
+  /// the new value. The history records it as adopted from the estimate.
   Future<void> useFtp(int watts) async {
     if (state.action.running) return;
     state = state.copyWith(action: state.action.start());
-    final result = await ref.read(progressDataProvider).setFtp(watts);
+    final result = await ref
+        .read(progressDataProvider)
+        .setFtp(watts, source: 'estimate');
     if (!ref.mounted) return;
     state = state.copyWith(action: state.action.finish(result));
     if (result case Failed(:final failure)) {

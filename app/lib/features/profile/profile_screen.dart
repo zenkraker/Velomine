@@ -26,6 +26,7 @@ import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
+import '../accounts/ftp_source_text.dart';
 import '../bikes/bikes_view_models.dart';
 import '../bikes/service_marker.dart';
 import '../supporter/supporter_badge.dart';
@@ -316,6 +317,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: l10n.name,
           ),
           _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
+          if (s.profile?.ftpSource.value case final source?)
+            Text(
+              ftpSourceText(l10n, source, s.profile?.ftpSetAt.value),
+              key: const Key('profile-ftp-source'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           _number(
             'profile-weight',
             _weight,

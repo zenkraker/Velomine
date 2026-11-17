@@ -92,6 +92,8 @@ part 'model/exchange_sso_token_request.dart';
 part 'model/export_link_response.dart';
 part 'model/forgot_password_request.dart';
 part 'model/ftp_estimate.dart';
+part 'model/ftp_history_entry.dart';
+part 'model/ftp_history_response.dart';
 part 'model/goal_response.dart';
 part 'model/join_club_request.dart';
 part 'model/join_code_response.dart';

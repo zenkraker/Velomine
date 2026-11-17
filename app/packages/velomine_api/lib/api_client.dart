@@ -273,6 +273,10 @@ class ApiClient {
           return ForgotPasswordRequest.fromJson(value);
         case 'FtpEstimate':
           return FtpEstimate.fromJson(value);
+        case 'FtpHistoryEntry':
+          return FtpHistoryEntry.fromJson(value);
+        case 'FtpHistoryResponse':
+          return FtpHistoryResponse.fromJson(value);
         case 'GoalResponse':
           return GoalResponse.fromJson(value);
         case 'JoinClubRequest':

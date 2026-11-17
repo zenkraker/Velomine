@@ -4922,6 +4922,66 @@ abstract class AppLocalizations {
   /// **'Use {watts} W'**
   String ftpUse(int watts);
 
+  /// No description provided for @ftpSourceManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Set by you on {date}'**
+  String ftpSourceManual(String date);
+
+  /// No description provided for @ftpSourceEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'From your estimate, adopted on {date}'**
+  String ftpSourceEstimate(String date);
+
+  /// No description provided for @ftpSourceTest.
+  ///
+  /// In en, this message translates to:
+  /// **'From your ride on {date}'**
+  String ftpSourceTest(String date);
+
+  /// No description provided for @ftpSourceEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Set before {date}'**
+  String ftpSourceEarlier(String date);
+
+  /// No description provided for @ftpHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'FTP history'**
+  String get ftpHistory;
+
+  /// No description provided for @ftpHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your FTP has been set once, so there is nothing to compare it with yet.'**
+  String get ftpHistoryEmpty;
+
+  /// No description provided for @ftpYouTypedIt.
+  ///
+  /// In en, this message translates to:
+  /// **'You typed it'**
+  String get ftpYouTypedIt;
+
+  /// No description provided for @ftpFromTheEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'From the estimate'**
+  String get ftpFromTheEstimate;
+
+  /// No description provided for @ftpFromYourRide.
+  ///
+  /// In en, this message translates to:
+  /// **'From your ride'**
+  String get ftpFromYourRide;
+
+  /// No description provided for @ftpBeforeHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Before history was kept'**
+  String get ftpBeforeHistory;
+
   /// No description provided for @vo2MaxEstimate.
   ///
   /// In en, this message translates to:

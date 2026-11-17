@@ -884,6 +884,16 @@
       }
     }
   },
+  "ftpSourceManual": "Impostato da te il {date}",
+  "ftpSourceEstimate": "Dalla tua stima, adottata il {date}",
+  "ftpSourceTest": "Dalla tua uscita del {date}",
+  "ftpSourceEarlier": "Impostato prima del {date}",
+  "ftpHistory": "Storia dell'FTP",
+  "ftpHistoryEmpty": "Il tuo FTP è stato impostato una sola volta, quindi non c'è ancora niente da confrontare.",
+  "ftpYouTypedIt": "L'hai scritto tu",
+  "ftpFromTheEstimate": "Dalla stima",
+  "ftpFromYourRide": "Dalla tua uscita",
+  "ftpBeforeHistory": "Prima che tenessimo la storia",
   "vo2MaxEstimate": "VO2max stimato",
   "vo2MaxFrom5Min": "dalla migliore potenza sui 5 minuti e dal peso",
   "vo2MaxNeedsWeight": "Imposta il peso per stimare il VO2max.",

@@ -261,7 +261,7 @@ final class PowerCurveViewModelProvider
 }
 
 String _$powerCurveViewModelHash() =>
-    r'b73eac18834e97e8193849a02bd402c2e2fabbcf';
+    r'f40ddebefc4952db57b277e6cb8d067174b06dbd';
 
 abstract class _$PowerCurveViewModel extends $Notifier<PowerState> {
   PowerState build();

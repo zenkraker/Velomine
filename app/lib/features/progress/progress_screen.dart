@@ -19,7 +19,9 @@ import '../../core/widgets/stat_tile.dart';
 import '../../core/widgets/toolbar_row.dart';
 import '../rides/ride_type_chips.dart';
 import 'goals.dart';
+import 'ftp_history_sheet.dart';
 import 'power_summary.dart';
+import 'progress_data.dart';
 import 'progress_view_models.dart';
 import 'readiness_card.dart';
 import 'totals_chart.dart';
@@ -246,6 +248,19 @@ class ProgressScreen extends ConsumerWidget {
           onSelected: () => scheduleMicrotask(() {
             if (context.mounted) {
               showFiltersSheet(context, (_) => const _ProgressFilterSheet());
+            }
+          }),
+        ),
+        PageMenuEntry(
+          key: const Key('progress-ftp-history'),
+          icon: Icons.history,
+          label: l10n.ftpHistory,
+          onSelected: () => scheduleMicrotask(() {
+            if (context.mounted) {
+              showFtpHistorySheet(
+                context,
+                ref.read(progressDataProvider).ftpHistory,
+              );
             }
           }),
         ),

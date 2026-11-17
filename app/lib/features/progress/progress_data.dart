@@ -63,8 +63,14 @@ class ProgressData {
   Future<Result<void>> saveCheckIn(SaveCheckInRequest checkIn) =>
       _wellbeing.saveCheckIn(checkIn).guard(FailureAction.saveWellbeing);
 
-  Future<Result<void>> setFtp(int watts) =>
-      _accounts.setFtp(SetFtpRequest(ftpW: watts)).guard(FailureAction.setFtp);
+  Future<Result<void>> setFtp(int watts, {String source = 'manual'}) =>
+      _accounts
+          .setFtp(SetFtpRequest(ftpW: watts, source_: Optional.present(source)))
+          .guard(FailureAction.setFtp);
+
+  /// Every FTP the member has had, newest first.
+  Future<Result<FtpHistoryResponse?>> ftpHistory() =>
+      _accounts.getFtpHistory().guard(FailureAction.loadProgress);
 }
 
 @Riverpod(keepAlive: true)

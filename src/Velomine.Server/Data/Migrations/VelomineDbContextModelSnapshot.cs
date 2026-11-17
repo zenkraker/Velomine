@@ -185,6 +185,52 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("user_tokens", "accounts");
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.FtpHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("Watts")
+                        .HasColumnType("integer")
+                        .HasColumnName("watts");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ftp_history");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_ftp_history_ride_id");
+
+                    b.HasIndex("UserId", "SetAt", "Id")
+                        .IsDescending(false, true, true)
+                        .HasDatabaseName("ix_ftp_history_user_id_set_at_id");
+
+                    b.ToTable("ftp_history", "accounts", t =>
+                        {
+                            t.HasCheckConstraint("ck_ftp_history_source", "source IN ('manual', 'estimate', 'test', 'earlier')");
+
+                            t.HasCheckConstraint("ck_ftp_history_watts", "watts BETWEEN 30 AND 1000");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Accounts.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2611,6 +2657,22 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_user_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.FtpHistory", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ftp_history_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ftp_history_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Accounts.UserSession", b =>

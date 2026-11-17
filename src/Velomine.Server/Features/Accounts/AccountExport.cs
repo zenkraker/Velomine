@@ -63,6 +63,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(l => l.UserId == userId || db.ClubMemberships.Any(m => m.UserId == userId && m.ClubId == l.ClubId))
             .OrderBy(l => l.ActivatedAt)
             .ToListAsync(ct);
+        var ftpHistory = await db.FtpHistory.AsNoTracking()
+            .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -160,6 +162,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             r.FileSha256,
         }), ct);
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
+        await AddJsonAsync(zip, "ftp-history.json", ftpHistory.Select(h => new { h.Watts, h.SetAt, h.Source, h.RideId }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
         await AddJsonAsync(zip, "imports.json", imports.Select(i => new
@@ -286,6 +289,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         bikes.json          your bikes, their parts, maintenance reminders and service log
         rides.json          every ride: its numbers, its status, and where its original file is in this ZIP
         goals.json          your goals
+        ftp-history.json    every FTP you have had, when you set it and how
         notifications.json  your notifications
         sessions.json       where you are signed in: the device label and the times, never an address
         imports.json        the archives you brought in from another app, and how many rides they held

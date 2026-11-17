@@ -14,27 +14,36 @@ class SetFtpRequest {
   /// Returns a new [SetFtpRequest] instance.
   SetFtpRequest({
     required this.ftpW,
+    this.source_ = const Optional.present('manual'),
   });
 
   /// Minimum value: 30
   /// Maximum value: 1000
   final int ftpW;
 
+  final Optional<String?> source_;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is SetFtpRequest &&
-    other.ftpW == ftpW;
+    other.ftpW == ftpW &&
+    other.source_ == source_;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (ftpW.hashCode);
+    (ftpW.hashCode) +
+    (source_.hashCode);
 
   @override
-  String toString() => 'SetFtpRequest[ftpW=$ftpW]';
+  String toString() => 'SetFtpRequest[ftpW=$ftpW, source_=$source_]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
       json[r'ftpW'] = this.ftpW;
+    if (this.source_.isPresent) {
+      final value = this.source_.value;
+      json[r'source'] = value;
+    }
     return json;
   }
 
@@ -42,8 +51,10 @@ class SetFtpRequest {
   /// properties have changed.
   SetFtpRequest copyWith({
     int? ftpW,
+    Optional<String?>? source_,
   }) => SetFtpRequest(
     ftpW: ftpW ?? this.ftpW,
+    source_: source_ ?? this.source_,
   );
 
   /// Returns a new [SetFtpRequest] instance and imports its values from
@@ -64,6 +75,7 @@ class SetFtpRequest {
 
       return SetFtpRequest(
         ftpW: mapValueOfType<int>(json, r'ftpW')!,
+        source_: json.containsKey(r'source') ? Optional.present(mapValueOfType<String>(json, r'source')) : const Optional.absent(),
       );
     }
     return null;

@@ -93,6 +93,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<Licence> SupporterLicences => Set<Licence>();
 
+    public DbSet<FtpHistory> FtpHistory => Set<FtpHistory>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

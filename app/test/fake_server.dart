@@ -107,6 +107,9 @@ class FakeServer {
   /// Profiles by email; a missing one is the default (nothing set, weeks from Monday).
   final profiles = <String, Map<String, Object?>>{};
 
+  /// FTP history entries by email, newest first, as the server keeps them.
+  final ftpHistory = <String, List<Map<String, Object?>>>{};
+
   /// What GET /analytics/totals answers, by period; a missing period has no rides.
   final totals = <String, List<Map<String, Object?>>>{};
 
@@ -983,7 +986,18 @@ extension on FakeServer {
           'hasPassword': caller.password.isNotEmpty,
         },
       );
-      if (request.method == 'PUT') profile.addAll(body);
+      if (request.method == 'PUT') {
+        final before = profile['ftpW'];
+        profile.addAll(body);
+        if (profile['ftpW'] != before && profile['ftpW'] != null) {
+          ftpHistory.putIfAbsent(caller.email, () => []).insert(0, {
+            'watts': profile['ftpW'],
+            'setAt': '2026-11-12T09:00:00Z',
+            'source': 'manual',
+            'rideId': null,
+          });
+        }
+      }
       return json({
         ..._profileWithEstimate(profile),
         'soloTrialEndsAt': caller.soloTrialEndsAt,
@@ -1006,8 +1020,29 @@ extension on FakeServer {
           'hasPassword': caller.password.isNotEmpty,
         },
       );
-      if (request.method == 'PUT') profile['ftpW'] = body['ftpW'];
+      if (request.method == 'PUT') {
+        final source = (body['source'] as String?) ?? 'manual';
+        if (source != 'manual' && source != 'estimate') {
+          return http.Response('{"detail":"use manual or estimate"}', 400);
+        }
+        final history = ftpHistory.putIfAbsent(caller.email, () => []);
+        if (history.isEmpty || history.first['watts'] != body['ftpW']) {
+          history.insert(0, {
+            'watts': body['ftpW'],
+            'setAt': '2026-11-12T09:00:00Z',
+            'source': source,
+            'rideId': null,
+          });
+        }
+        profile['ftpW'] = body['ftpW'];
+        profile['ftpSetAt'] = history.isEmpty ? null : history.first['setAt'];
+        profile['ftpSource'] = history.isEmpty ? null : history.first['source'];
+      }
       return json(_profileWithEstimate(profile));
+    }
+
+    if (path == '/api/v1/accounts/me/ftp-history') {
+      return json({'entries': ftpHistory[caller.email] ?? const []});
     }
 
     if (path == '/api/v1/analytics/power-curve') {
@@ -1427,6 +1462,9 @@ extension on FakeServer {
     return {
       ...profile,
       'maxHeartRate': age == null ? null : (208 - 0.7 * age).round(),
+      // Where the FTP came from; null when there is no FTP, as the server answers.
+      'ftpSetAt': profile['ftpW'] == null ? null : profile['ftpSetAt'],
+      'ftpSource': profile['ftpW'] == null ? null : profile['ftpSource'],
     };
   }
 

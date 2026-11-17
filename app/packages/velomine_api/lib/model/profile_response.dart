@@ -25,6 +25,8 @@ class ProfileResponse {
     required this.emailAccountNotifications,
     required this.emailTrainingNotifications,
     required this.soloTrialEndsAt,
+    this.ftpSetAt = const Optional.absent(),
+    this.ftpSource = const Optional.absent(),
   });
 
   final String displayName;
@@ -51,6 +53,22 @@ class ProfileResponse {
 
   final DateTime? soloTrialEndsAt;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<DateTime?> ftpSetAt;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> ftpSource;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProfileResponse &&
     other.displayName == displayName &&
@@ -64,7 +82,9 @@ class ProfileResponse {
     other.hasPassword == hasPassword &&
     other.emailAccountNotifications == emailAccountNotifications &&
     other.emailTrainingNotifications == emailTrainingNotifications &&
-    other.soloTrialEndsAt == soloTrialEndsAt;
+    other.soloTrialEndsAt == soloTrialEndsAt &&
+    other.ftpSetAt == ftpSetAt &&
+    other.ftpSource == ftpSource;
 
   @override
   int get hashCode =>
@@ -80,10 +100,12 @@ class ProfileResponse {
     (hasPassword.hashCode) +
     (emailAccountNotifications.hashCode) +
     (emailTrainingNotifications.hashCode) +
-    (soloTrialEndsAt == null ? 0 : soloTrialEndsAt!.hashCode);
+    (soloTrialEndsAt == null ? 0 : soloTrialEndsAt!.hashCode) +
+    (ftpSetAt == null ? 0 : ftpSetAt!.hashCode) +
+    (ftpSource == null ? 0 : ftpSource!.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt, ftpSetAt=$ftpSetAt, ftpSource=$ftpSource]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -123,6 +145,14 @@ class ProfileResponse {
     } else {
       json[r'soloTrialEndsAt'] = null;
     }
+    if (this.ftpSetAt.isPresent) {
+      final value = this.ftpSetAt.value;
+      json[r'ftpSetAt'] = value == null ? null : value.toUtc().toIso8601String();
+    }
+    if (this.ftpSource.isPresent) {
+      final value = this.ftpSource.value;
+      json[r'ftpSource'] = value;
+    }
     return json;
   }
 
@@ -147,6 +177,8 @@ class ProfileResponse {
     bool? emailTrainingNotifications,
     DateTime? soloTrialEndsAt,
     bool soloTrialEndsAtSetToNull = false,
+    Optional<DateTime?>? ftpSetAt,
+    Optional<String?>? ftpSource,
   }) => ProfileResponse(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -160,6 +192,8 @@ class ProfileResponse {
     emailAccountNotifications: emailAccountNotifications ?? this.emailAccountNotifications,
     emailTrainingNotifications: emailTrainingNotifications ?? this.emailTrainingNotifications,
     soloTrialEndsAt: soloTrialEndsAtSetToNull ? null : soloTrialEndsAt ?? this.soloTrialEndsAt,
+    ftpSetAt: ftpSetAt ?? this.ftpSetAt,
+    ftpSource: ftpSource ?? this.ftpSource,
   );
 
   /// Returns a new [ProfileResponse] instance and imports its values from
@@ -207,6 +241,8 @@ class ProfileResponse {
         emailAccountNotifications: mapValueOfType<bool>(json, r'emailAccountNotifications')!,
         emailTrainingNotifications: mapValueOfType<bool>(json, r'emailTrainingNotifications')!,
         soloTrialEndsAt: mapDateTime(json, r'soloTrialEndsAt', r''),
+        ftpSetAt: json.containsKey(r'ftpSetAt') ? Optional.present(mapDateTime(json, r'ftpSetAt', r'')) : const Optional.absent(),
+        ftpSource: json.containsKey(r'ftpSource') ? Optional.present(mapValueOfType<String>(json, r'ftpSource')) : const Optional.absent(),
       );
     }
     return null;
