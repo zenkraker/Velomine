@@ -38,6 +38,7 @@ public static class Intensity
         VelomineDbContext db,
         Guid userId,
         MemberClock clock,
+        TimeProvider time,
         DateOnly from,
         DateOnly to,
         CancellationToken ct,
@@ -48,7 +49,7 @@ public static class Intensity
             .Where(u => u.Id == userId)
             .Select(u => new { u.FtpW, u.BirthYear })
             .FirstAsync(ct);
-        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear, TimeProvider.System);
+        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear, time);
 
         // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
         var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
@@ -71,7 +72,11 @@ public static class Intensity
         var totals = new Dictionary<DateOnly, IntensityTotals>();
         foreach (var ride in rides)
         {
-            var date = clock.LocalDateOf(ride.StartTime!.Value, ride.UtcOffsetMinutes);
+            var start = ride.StartTime!.Value;
+            var date = clock.LocalDateOf(start, ride.UtcOffsetMinutes);
+            // The training range reads two days either side to find its exact local cut; the split only ever counts
+            // the range itself, which is what the caller sums TSS over.
+            // Totals and the split count the same rides, so they always add up.
             if (date < from || date >= to) continue;
 
             // A coach sees a ride through its privacy snapshot: power hidden falls back to heart rate, and both
@@ -81,10 +86,9 @@ public static class Intensity
             var power = hidePower ? null : ride.Power;
             var heartRate = hideHeartRate ? null : ride.HeartRate;
 
-            if (FromPower(power, ride.Time, profile.FtpW) is { } byPower)
-                Add(totals, date, byPower);
-            else if (FromHeartRate(heartRate, ride.Time, maxHeartRate) is { } byHeartRate)
-                Add(totals, date, byHeartRate);
+            var split = FromPower(power, ride.Time, profile.FtpW)
+                ?? FromHeartRate(heartRate, ride.Time, maxHeartRate);
+            if (split is { } zoneTime) Add(totals, date, zoneTime);
         }
 
         if (totals.Count == 0) return (null, []);
@@ -117,8 +121,11 @@ public static class Intensity
             sum.Rides), weeks);
     }
 
-    /// <summary>Easy is below 75 % of FTP, moderate from 75 % to below 105 %, hard from 105 %. Null without both.</summary>
-    public static IntensityTotals? FromPower(short?[]? power, double[] time, int? ftpW)
+    /// <summary>
+    /// Easy is below 75 % of FTP, moderate from 75 % to below 105 %, hard from 105 %. Null without both. The rows are
+    /// the stored 1 Hz streams, whose times leave out pauses.
+    /// </summary>
+    public static IntensityTotals? FromPower(IReadOnlyList<short?>? power, IReadOnlyList<double> time, int? ftpW)
     {
         if (power is null || ftpW is not { } ftp || ftp <= 0) return null;
         // A ride whose power never rises above 0 W has no training time to split.
@@ -130,7 +137,7 @@ public static class Intensity
     }
 
     /// <summary>Easy is below 80 % of maximum heart rate, moderate from 80 % to below 90 %, hard from 90 %. Null without both.</summary>
-    public static IntensityTotals? FromHeartRate(short?[]? heartRate, double[] time, int? maxHeartRate)
+    public static IntensityTotals? FromHeartRate(IReadOnlyList<short?>? heartRate, IReadOnlyList<double> time, int? maxHeartRate)
     {
         if (heartRate is null || maxHeartRate is not { } max || max <= 0) return null;
         // Heart-rate zones count from 1 bpm, so anything below 50 % of maximum (resting) is in zone 1. It is not

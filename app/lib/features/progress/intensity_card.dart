@@ -33,12 +33,11 @@ class IntensityCard extends StatelessWidget {
       hard: scheme.error,
     );
     final label = intensityLabel(l10n, intensity.label);
-    final semantics = [
-      l10n.intensityEasy('${intensity.easyPct}'),
-      l10n.intensityModerate('${intensity.moderatePct}'),
-      l10n.intensityHard('${intensity.hardPct}'),
-      ?label,
-    ].join('. ');
+    final shares = l10n.intensityShares(
+      '${intensity.easyPct}',
+      '${intensity.moderatePct}',
+      '${intensity.hardPct}',
+    );
 
     return Card(
       key: const Key('intensity-card'),
@@ -49,15 +48,15 @@ class IntensityCard extends StatelessWidget {
           spacing: AppSpacing.sm,
           children: [
             Text(l10n.intensityTitle, style: text.titleMedium),
-            if (label != null) Text(label, style: text.bodyMedium),
             Semantics(
               container: true,
-              label: semantics,
+              label: label == null ? shares : '$label. $shares',
               child: ExcludeSemantics(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: AppSpacing.xs,
                   children: [
+                    if (label != null) Text(label, style: text.bodyMedium),
                     _Bar(
                       easyPct: intensity.easyPct,
                       moderatePct: intensity.moderatePct,
@@ -65,14 +64,7 @@ class IntensityCard extends StatelessWidget {
                       colors: colors,
                       height: AppSpacing.sm,
                     ),
-                    Text(
-                      l10n.intensityShares(
-                        '${intensity.easyPct}',
-                        '${intensity.moderatePct}',
-                        '${intensity.hardPct}',
-                      ),
-                      style: text.bodySmall,
-                    ),
+                    Text(shares, style: text.bodySmall),
                   ],
                 ),
               ),

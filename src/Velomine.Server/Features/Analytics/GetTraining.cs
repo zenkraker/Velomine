@@ -93,6 +93,7 @@ public sealed class GetTraining(VelomineDbContext db, TimeProvider time) : Endpo
                 db,
                 User.UserId(),
                 clock,
+                time,
                 req.Days ?? 90,
                 ct,
                 new RideFilter(req.Discipline, req.Assist, req.Environment, req.Commute)),

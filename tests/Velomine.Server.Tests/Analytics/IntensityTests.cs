@@ -173,18 +173,19 @@ public sealed class IntensityTests(PostgresFixture postgres)
         var member = await NewMemberAsync(api);
         var id = member.Id;
         await SetProfileAsync(member.Client, ftpW: 200);
-        await AddRideAsync(api, id, power: Samples(120, 150), startUtc: "2026-10-27T07:00:00"); // last week: 75 %, zone 3
-        await AddRideAsync(api, id, power: Samples(120, 220), startUtc: "2026-11-03T07:00:00"); // this week: 110 %, zone 5
+        // Two minutes at 112 % of FTP: zone 5, hard; three minutes at 80 %: zone 3, moderate.
+        await AddRideAsync(api, id, power: Samples(120, 224), startUtc: "2026-10-27T07:00:00");
+        await AddRideAsync(api, id, power: Samples(180, 160), seconds: 180, startUtc: "2026-11-03T07:00:00");
 
         var training = (await member.Client.GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=14", Ct))!;
 
         Assert.Equal(
             [new DateOnly(2026, 10, 26), new DateOnly(2026, 11, 2)],
             training.IntensityWeeks.Select(w => w.WeekStart));
-        Assert.Equal([120, 0], training.IntensityWeeks.Select(w => w.ModerateS));
-        Assert.Equal([0, 120], training.IntensityWeeks.Select(w => w.HardS));
-        Assert.Equal([0, 120], training.IntensityWeeks.Select(w => w.HardS));
-        Assert.Equal(240, training.Intensity!.ModerateS + training.Intensity.HardS);
+        Assert.Equal([0, 180], training.IntensityWeeks.Select(w => w.ModerateS));
+        Assert.Equal([120, 0], training.IntensityWeeks.Select(w => w.HardS));
+        Assert.Equal(180, training.Intensity!.ModerateS);
+        Assert.Equal(120, training.Intensity.HardS);
         Assert.Equal(2, training.Intensity.Rides);
     }
 

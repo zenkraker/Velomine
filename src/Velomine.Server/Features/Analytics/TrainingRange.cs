@@ -15,6 +15,7 @@ public static class TrainingRange
         VelomineDbContext db,
         Guid userId,
         MemberClock clock,
+        TimeProvider time,
         int days,
         CancellationToken ct,
         RideFilter filter = default,
@@ -63,7 +64,7 @@ public static class TrainingRange
                 Math.Round(fitness - fatigue, 1)));
         }
 
-        var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, from, to.AddDays(1), ct, filter, viewer);
+        var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, time, from, to, ct, filter, viewer);
 
         return new TrainingResponse(
             days,

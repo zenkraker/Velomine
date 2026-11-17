@@ -176,7 +176,7 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Training, ct);
-        await Send.OkAsync(await TrainingRange.LoadAsync(db, req.UserId, clock, req.Days ?? 90, ct, viewer: privacy), ct);
+        await Send.OkAsync(await TrainingRange.LoadAsync(db, req.UserId, clock, time, req.Days ?? 90, ct, viewer: privacy), ct);
     }
 }
 
