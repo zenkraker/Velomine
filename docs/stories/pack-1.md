@@ -168,16 +168,18 @@ Depends on: Stories 1–3.
 
 1. Runs **once per ride**, when a ride becomes `ready` for the first time (never on a re-read by `RideReparseService`, never for a duplicate).
 2. Skipped when the ride's `Assist` is `ebike`, or the ride has no power bests, or its local date is more than 42 days before today.
-3. Candidate FTP = the larger of:
+3. Candidate FTP = the largest of (scaling factors as in Domestique's `FTP_SCALING_FACTORS`; shorter efforts are too variable to suggest an FTP from):
    - round(0.95 × the ride's 1,200 s best) (method `20min`)
+   - round(0.97 × the ride's 1,800 s best) (method `30min`)
    - the ride's 3,600 s best (method `60min`)
+   A missing best is skipped. On a tie, the longer duration wins.
 4. A suggestion is created when the candidate is **at least 3 % above** the current FTP, or the rider has no FTP.
 5. At most **one open suggestion** per rider: a new higher candidate replaces the open one (the old row becomes `replaced`); a lower or equal candidate is ignored.
 6. Ramp tests are **not** detected in Pack 1.
 
 ### Server
 
-1. New table `analytics.ftp_suggestions`: `id uuid`, `user_id uuid not null` (cascade), `ride_id uuid not null` (cascade), `watts integer not null` (30–1000), `method text not null` (`20min`, `60min`), `effort_watts integer not null` (the 20- or 60-minute best), `created_at timestamptz not null`, `status text not null` (`open`, `accepted`, `dismissed`, `replaced`). Partial unique index: one `open` row per `user_id`.
+1. New table `analytics.ftp_suggestions`: `id uuid`, `user_id uuid not null` (cascade), `ride_id uuid not null` (cascade), `watts integer not null` (30–1000), `method text not null` (`20min`, `30min`, `60min`), `effort_watts integer not null` (the 20-, 30- or 60-minute best), `created_at timestamptz not null`, `status text not null` (`open`, `accepted`, `dismissed`, `replaced`). Partial unique index: one `open` row per `user_id`.
 2. Detection is called from the ingestion path right after power bests are stored for a new ride (`RideIngestionService`), in the same transaction as the ride becoming ready.
 3. Notification: new type `ftp_suggested` in `NotificationTypes`, referring to the ride, subject `"{watts} W"`, in the **training** group. Not created when the ride is quiet (`Bulk-Import: true` or from a Strava import); the suggestion itself is still created.
 4. `GET /api/v1/analytics/ftp-suggestion`, operation `getFtpSuggestion`: the open suggestion or 204.
@@ -189,14 +191,15 @@ Depends on: Stories 1–3.
 
 ### App
 
-1. Ride detail: when `ftpSuggestionW` is set, a card at the top: "This ride suggests an FTP of {w} W" / "95 % of your best 20 minutes ({effort} W)" or "Your best 60 minutes" / buttons "Use {w} W" and "Dismiss".
+1. Ride detail: when `ftpSuggestionW` is set, a card at the top: "This ride suggests an FTP of {w} W" / "95 % of your best 20 minutes ({effort} W)", "97 % of your best 30 minutes ({effort} W)" or "Your best 60 minutes" / buttons "Use {w} W" and "Dismiss".
 2. Progress: the same card above the Story 3 reminder when an open suggestion exists; Story 3's reminder is hidden while a suggestion is open.
 
 ### Acceptance tests
 
-- `FtpSuggestion_ShouldBeCreated_WhenTwentyMinutesAt280WAndFtpIs250` (candidate 266 → suggestion, method `20min`)
+- `FtpSuggestion_ShouldBeCreated_WhenTwentyMinutesAt280WAndFtpIs250` (a 25-minute ride, so no 30- or 60-minute best; candidate 266 → suggestion, method `20min`)
 - `FtpSuggestion_ShouldNotBeCreated_WhenTheCandidateIsLessThanThreePercentAbove` (FTP 260, candidate 266 → none, since 266 < 267.8)
-- `FtpSuggestion_ShouldUseTheHour_WhenSixtyMinutesIsHigher` (FTP 250; best 60 min 270, best 20 min 280 → 270 beats 266 → `60min`, 270 W)
+- `FtpSuggestion_ShouldUseTheHour_WhenSixtyMinutesIsHigher` (FTP 250; best 20 min 280, best 30 min 276, best 60 min 270 → 266, 268 and 270 → `60min`, 270 W)
+- `FtpSuggestion_ShouldUseHalfAnHour_WhenThirtyMinutesIsHighest` (FTP 250; a 40-minute ride, best 20 min 280, best 30 min 280 → 266 and 272 → `30min`, 272 W)
 - `FtpSuggestion_ShouldBeCreated_WhenTheRiderHasNoFtp`
 - `FtpSuggestion_ShouldReplaceTheOpenOne_WhenAHigherRideArrives` and `…_ShouldKeepIt_WhenALowerRideArrives`
 - `FtpSuggestion_ShouldBeSkipped_WhenTheRideIsAnEbike` / `…_WhenTheRideIsOlderThan42Days` / `…_WhenTheRideIsReadAgain`
@@ -223,6 +226,8 @@ The two-parameter model `P(t) = CP + W′ / t`, fitted by **ordinary least squar
 3. Reject the fit (return null) when R² < 0.90, CP ≤ 0, W′ ≤ 0, CP outside 50–600 W, or W′ outside 3,000–50,000 J.
 4. Peak power = the 1 s best in the range (null if none).
 5. Round CP to whole watts, W′ to whole joules, R² to 3 decimals.
+
+This is Domestique's `compute_cp_wprime` with two deliberate differences: it fits 180 s instead of 120 s (Velomine stores no 180 s best, and 2 minutes is inside the 2–15 minute range Poole recommends), and its ranges are narrower (CP 100–500 W, W′ 5,000–40,000 J). Keep the rules above.
 
 ### Server
 
@@ -263,6 +268,8 @@ On the ride's power at 1 Hz (the stored streams, resampled to 1 s the same way n
   - else: `bal = bal + (W′ − bal) × (CP − P) / W′`
 - `bal` is never above `W′`; it may go below 0 (that means the rider beat the model).
 
+Domestique uses Skiba's 2012 exponential recovery (τ = 546 · e^(−0.01 · (CP − P)) + 316) and stops the balance at 0. Velomine uses the 2015 differential form above, which intervals.icu also uses, and lets the balance go below 0. Keep the rules above.
+
 CP and W′ are the rider's **current** fit: Story 5 over the last 90 days as of the request. No fit → no W′ balance.
 
 ### Server
@@ -299,8 +306,8 @@ Depends on: Story 2.
 On one ride with both power and heart rate:
 
 1. Use moving samples only (pauses excluded, as for moving time), resampled to 1 s.
-2. Keep a second when heart rate is between 60 and 220 bpm and power is present (0 W counts).
-3. Drop the first **10 minutes** of kept seconds (warm-up).
+2. Keep a second when heart rate is between 60 and 220 bpm **and** power is between 50 and 2,500 W. Coasting (descents, traffic) and spikes are left out, so a hilly ride does not show drift that is only freewheeling. (Same filter as Domestique's `_is_valid_decoupling_sample`.)
+3. Drop the first **15 minutes** of kept seconds (warm-up; Domestique's `DECOUPLING_WARMUP_TRIM_S`).
 4. Require at least **40 minutes** of kept seconds after the drop; otherwise both values are null.
 5. **Efficiency factor (EF)** = normalized power of the kept seconds ÷ mean heart rate of the kept seconds, 2 decimals.
 6. **Decoupling** = split the kept seconds into two halves by count; `EF₁` and `EF₂` per half (normalized power ÷ mean heart rate of that half); decoupling % = `(EF₁ − EF₂) / EF₁ × 100`, 1 decimal. Positive means heart rate drifted up.
@@ -315,15 +322,16 @@ On one ride with both power and heart rate:
 
 ### App
 
-1. Ride detail stats: "Efficiency factor {ef}" and, for steady rides, "Decoupling {d} %" with a word: below 5 % "Steady heart rate", 5–10 % "Some drift", above 10 % "Large drift". `SourceNote`: "From steady riding after a 10-minute warm-up".
-2. Progress: a card "Aerobic efficiency" with the weekly series as a line, and "Higher is better: more power for the same heart rate." Empty state: "Needs steady rides of 50 minutes or more with power and heart rate."
+1. Ride detail stats: "Efficiency factor {ef}" and, for steady rides, "Decoupling {d} %" with a word: below 5 % "Steady heart rate", 5–10 % "Some drift", above 10 % "Large drift". `SourceNote`: "From steady pedalling after a 15-minute warm-up".
+2. Progress: a card "Aerobic efficiency" with the weekly series as a line, and "Higher is better: more power for the same heart rate." Empty state: "Needs steady rides of about an hour with power and heart rate."
 
 ### Acceptance tests (known values)
 
-- `Decoupling_ShouldBeFourPointEight_WhenHeartRateRisesFrom140To147`: an 80-minute ride, 10 minutes of warm-up at 150 W and 120 bpm, then 70 minutes at a constant 200 W with heart rate 140 for the first 35 minutes and 147 for the last 35. EF₁ = 200 / 140 = 1.4286, EF₂ = 200 / 147 = 1.3605, decoupling = 4.8 %; EF = 200 / 143.5 = 1.39; `Steady = true`.
-- `Decoupling_ShouldBeNull_WhenLessThan40MinutesRemainAfterWarmUp` (49 minutes in total)
+- `Decoupling_ShouldBeFourPointEight_WhenHeartRateRisesFrom140To147`: an 85-minute ride, 15 minutes of warm-up at 150 W and 120 bpm, then 70 minutes at a constant 200 W with heart rate 140 for the first 35 minutes and 147 for the last 35. EF₁ = 200 / 140 = 1.4286, EF₂ = 200 / 147 = 1.3605, decoupling = 4.8 %; EF = 200 / 143.5 = 1.39; `Steady = true`.
+- `Decoupling_ShouldBeNull_WhenLessThan40MinutesRemainAfterWarmUp` (54 minutes of pedalling in total)
 - `Decoupling_ShouldBeNull_WhenTheRideIsNotSteady` (VI 1.2), with EF still set and `Steady = false`
 - `EfficiencyFactor_ShouldIgnorePauses_WhenTheRideStopped`
+- `Decoupling_ShouldIgnoreCoasting_WhenPowerIsBelow50W`: the 85-minute ride above with 10 minutes at 0 W and 130 bpm inserted between the two 35-minute parts gives the same 4.8 %.
 - `Training_ShouldAverageEfficiencyOfSteadyRidesPerWeek_WhenThereAreSeveral`
 - `CoachRide_ShouldHideDecoupling_WhenHeartRateIsHidden` and `…_WhenPowerIsHidden`
 - `RideReparse_ShouldFillEfficiency_WhenAnOlderRideIsReadAgain`
@@ -344,16 +352,24 @@ For each ready ride in the range, on read, from the **current** profile (zones a
 - **Otherwise, with heart rate and a max heart rate**, from the existing heart-rate zones (`TrainingLoad.HeartRateBounds`): easy = Z1 + Z2 + Z3 (below 80 % of max), moderate = Z4 (80 % to below 90 %), hard = Z5 (90 % and above).
 - A ride with neither contributes nothing.
 
-Percentages are of the summed easy + moderate + hard seconds.
+Percentages are of the summed easy + moderate + hard seconds, rounded to **1 decimal** before anything below uses them.
 
-**Polarisation index** (Treff 2019): `PI = log10((easy% × hard%) / moderate%)` with percentages 0–100, 2 decimals. Null when moderate% < 1 or hard% = 0.
+**Polarisation index** (Treff 2019, the form intervals.icu shows and Domestique's `treff_polarization_index`): `PI = log10((easy% × hard%) / moderate%)` with percentages 0–100, 2 decimals. Null when moderate% < 0.1 or hard% = 0. This is the value returned and shown.
 
-**Label**, first match wins:
+**Two-pole index**, used only by rule 1 and never returned (Domestique's additive `polarization_index`): `log10((easy% + hard%) / moderate%)`. Null when moderate% < 0.1.
 
-1. `polarised`: PI > 2.00
-2. `pyramidal`: easy > moderate > hard
-3. `threshold`: moderate ≥ easy
-4. `mixed`: anything else
+**Label**: Domestique's `classify_distribution` cascade, first match wins. A rule whose index is null does not match.
+
+1. `polarised`: two-pole index > 2.00 **and** easy > hard > moderate (Treff's precondition)
+2. `polarised`: PI > 2.00 **and** hard ≥ 20 **and** moderate < hard
+3. `hiit`: hard > 40 **and** easy < 20
+4. `threshold`: moderate ≥ 30 **and** hard ≤ 15 **and** easy ≤ 50
+5. `pyramidal`: moderate ≥ 35 **and** moderate > hard + 10
+6. `base`: easy ≥ 70
+7. `pyramidal`: moderate ≥ 20 **and** moderate > hard **and** 40 ≤ easy < 70
+8. `mixed`: anything else
+
+Why not "PI > 2 means polarised" alone: a week of 80 % easy, 5 % moderate and 15 % hard has PI 2.38 but is mostly base riding with some efforts; rules 1 and 2 need a real hard pole.
 
 ### Server
 
@@ -363,13 +379,24 @@ Percentages are of the summed easy + moderate + hard seconds.
 
 ### App
 
-Progress: a card "Easy, moderate, hard": one stacked bar for the range with the three percentages, the label in words ("Polarised: mostly easy, some hard, little in between", "Pyramidal: most easy, less moderate, least hard", "Threshold-heavy: a lot of moderate riding", "Mixed"), and small weekly stacked bars. A `SourceNote`: "From power where you have it, otherwise heart rate."
+Progress: a card "Easy, moderate, hard": one stacked bar for the range with the three percentages, the label in words ("Polarised: mostly easy, a real share of hard, little in between", "Pyramidal: most easy, less moderate, least hard", "Threshold-heavy: a lot of moderate riding", "High-intensity heavy: a lot of hard riding", "Base: almost all easy riding", "Mixed"), and small weekly stacked bars. A `SourceNote`: "From power where you have it, otherwise heart rate."
 
 ### Acceptance tests (known values)
 
-- `Intensity_ShouldBePolarised_When80Easy5Moderate15Hard`: PI = log10(80 × 15 / 5) = 2.38, label `polarised`.
-- `Intensity_ShouldBePyramidal_When70Easy20Moderate10Hard`: PI = log10(70 × 10 / 20) = 1.54, label `pyramidal`.
-- `Intensity_ShouldBeThresholdHeavy_When40Easy50Moderate10Hard`
+Known values (easy / moderate / hard → PI, label); one test per row, for example `IntensityLabel_ShouldBePolarised_When58Easy11Moderate31Hard`. The rows come from Domestique's tests, which were checked against intervals.icu's labels.
+
+| Easy | Moderate | Hard | PI | Label | Rule |
+|---|---|---|---|---|---|
+| 58.0 | 10.7 | 31.3 | 2.23 | `polarised` | 2 |
+| 80.0 | 5.0 | 15.0 | 2.38 | `base` | 6 (rules 1 and 2 fail: two-pole index 1.28, hard < 20) |
+| 99.9 | 0.1 | 0.0 | null | `base` | 6 (rule 1 fails: hard is not above moderate) |
+| 15.0 | 49.2 | 35.8 | 1.04 | `pyramidal` | 5 |
+| 58.3 | 27.6 | 14.1 | 1.47 | `pyramidal` | 7 |
+| 30.0 | 60.0 | 10.0 | 0.70 | `threshold` | 4 |
+| 10.0 | 30.0 | 60.0 | 1.30 | `hiit` | 3 |
+| 50.0 | 25.0 | 25.0 | 1.70 | `mixed` | 8 |
+| 70.0 | 20.0 | 10.0 | 1.54 | `base` | 6 |
+
 - `Intensity_ShouldHaveNoIndex_WhenThereIsNoHardTime`
 - `Intensity_ShouldUseHeartRate_WhenTheRideHasNoPower`
 - `Intensity_ShouldSkipTheRide_WhenItHasNeitherSignal`
