@@ -20,7 +20,10 @@ public sealed record RideMetricValues(
     double? IntensityFactor = null,
     double? Tss = null,
     double? Trimp = null,
-    int[]? PowerBests = null);
+    int[]? PowerBests = null,
+    double? EfficiencyFactor = null,
+    double? DecouplingPct = null,
+    bool? Steady = null);
 
 /// <summary>
 /// The numbers shown for a ride, worked out from its samples. Pure functions, no I/O.
@@ -70,6 +73,7 @@ public static class RideMetrics
         var heartRateZones = maxHeartRate is { } zoneMaxHr
             ? TrainingLoad.ZoneSeconds(samples, s => s.HeartRate, zoneMaxHr, TrainingLoad.HeartRateFloor, TrainingLoad.HeartRateBounds)
             : null;
+        var (efficiencyFactor, decoupling, steady) = Efficiency(PairedSeconds(samples, pause, paused));
 
         return new RideMetricValues(
             elapsed,
@@ -89,7 +93,69 @@ public static class RideMetrics
             intensityFactor,
             tss,
             TrainingLoad.Trimp(heartRateZones),
-            PowerBests.ComputeFromSamples(samples, pause, paused));
+            PowerBests.ComputeFromSamples(samples, pause, paused),
+            efficiencyFactor,
+            decoupling,
+            steady);
+    }
+
+    /// <summary>
+    /// One value per second of riding, from the samples that have both signals: pauses are left out, and a second
+    /// whose power or heart rate the file lacks is dropped as a whole, so the two never drift apart.
+    /// </summary>
+    public static (double Power, double HeartRate)[] PairedSeconds(
+        IReadOnlyList<Sample> samples,
+        double pauseThresholdS,
+        IReadOnlyList<PauseInterval>? pauses = null)
+    {
+        var result = new List<(double Power, double HeartRate)>();
+        for (var i = 0; i + 1 < samples.Count; i++)
+        {
+            var dt = samples[i + 1].T - samples[i].T;
+            if (dt <= 0 || dt > pauseThresholdS ||
+                CrossesPause(pauses, samples[i].T, samples[i + 1].T) ||
+                samples[i].Power is not { } watts || samples[i].HeartRate is not { } bpm) continue;
+            for (var s = 0; s < Math.Max(1, (int)Math.Round(dt)); s++) result.Add((watts, bpm));
+        }
+
+        return [.. result];
+    }
+
+    /// <summary>The shortest ride, after the warm-up, that says anything about aerobic decoupling.</summary>
+    private const int DecouplingWarmupS = 15 * 60;
+    private const int DecouplingMinimumS = 40 * 60;
+    private const double DecouplingSteadyVi = 1.10;
+
+    /// <summary>
+    /// Aerobic decoupling and efficiency factor (Friel): the moving seconds with a heart rate and a pedalling power,
+    /// after a warm-up, split in two halves. Only a steady ride says how much heart rate drifted; every qualifying
+    /// ride has its efficiency factor and whether it was steady.
+    /// </summary>
+    public static (double? EfficiencyFactor, double? DecouplingPct, bool? Steady) Efficiency(
+        IReadOnlyList<(double Power, double HeartRate)> seconds)
+    {
+        // Coasting (descents, traffic) and spikes are left out, so a hilly ride does not show drift from freewheeling.
+        var kept = seconds.Where(s => s.HeartRate is >= 60 and <= 220 && s.Power is >= 50 and <= 2500).ToList();
+        if (kept.Count < DecouplingWarmupS + DecouplingMinimumS) return (null, null, null);
+        kept.RemoveRange(0, DecouplingWarmupS);
+
+        // Both the efficiency factor and the steadiness test use the kept seconds' own numbers, never the whole ride's:
+        // a warm-up or a long descent must not make a ride look steady, nor change what it says about heart rate drift.
+        var normalizedPower = (int?)NormalizedPower(kept.ConvertAll(s => s.Power)) ?? 0;
+        var efficiencyFactor = Math.Round(normalizedPower / kept.Average(s => s.HeartRate), 2);
+        if (normalizedPower / kept.Average(s => s.Power) > DecouplingSteadyVi) return (efficiencyFactor, null, false);
+
+        var half = kept.Count / 2;
+        var first = HalfEfficiency(kept, 0, half);
+        var second = HalfEfficiency(kept, half, kept.Count);
+        return (efficiencyFactor, Math.Round((first - second) / first * 100, 1), true);
+    }
+
+    /// <summary>One half's efficiency factor: the normalized power of its seconds over their mean heart rate.</summary>
+    private static double HalfEfficiency(List<(double Power, double HeartRate)> kept, int from, int to)
+    {
+        var half = kept.GetRange(from, to - from);
+        return (int?)NormalizedPower(half.ConvertAll(s => s.Power)) is { } np ? np / half.Average(s => s.HeartRate) : 0;
     }
 
     /// <summary>A gap this long between samples is a pause (the device stopped recording), not riding.</summary>

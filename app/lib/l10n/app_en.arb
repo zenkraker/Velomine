@@ -598,6 +598,8 @@
   "statIntensity": "Intensity",
   "statTss": "TSS",
   "statTrimp": "TRIMP",
+  "statEfficiency": "Efficiency factor",
+  "statDecoupling": "Decoupling",
   "statAverageHeartRate": "Average heart rate",
   "statMaxHeartRate": "Max heart rate",
   "statAverageCadence": "Average cadence",
@@ -2549,6 +2551,30 @@
       "wPrime": {
         "type": "String"
       }
+    }
+  },
+  "efficiencyFactor": "Efficiency factor {ef}",
+  "@efficiencyFactor": {"placeholders": {"ef": {"type": "String"}}},
+  "decoupling": "Decoupling {pct} % · {word}",
+  "@decoupling": {
+    "placeholders": {
+      "pct": {"type": "String"},
+      "word": {"type": "String"}
+    }
+  },
+  "decouplingSteady": "Steady heart rate",
+  "decouplingDrift": "Some drift",
+  "decouplingLargeDrift": "Large drift",
+  "decouplingSource": "From steady pedalling after a 15-minute warm-up",
+  "efficiencyTitle": "Aerobic efficiency",
+  "efficiencyHint": "Higher is better: more power for the same heart rate.",
+  "efficiencyEmpty": "Needs steady rides of about an hour with power and heart rate.",
+  "efficiencyWeekSemantics": "{date}: efficiency factor {ef} over {count, plural, =1{1 ride} other{{count} rides}}",
+  "@efficiencyWeekSemantics": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "ef": {"type": "String"},
+      "count": {"type": "int"}
     }
   }
 }

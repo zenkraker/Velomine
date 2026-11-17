@@ -308,6 +308,9 @@ public sealed class RideIngestionService(
         ride.AvgHeartRate = m.AvgHeartRate;
         ride.MaxHeartRate = m.MaxHeartRate;
         ride.AvgCadence = m.AvgCadence;
+        ride.EfficiencyFactor = m.EfficiencyFactor;
+        ride.DecouplingPct = m.DecouplingPct;
+        ride.Steady = m.Steady;
     }
 
     /// <summary>One array per signal; a signal the file never had is left null instead of an array of nulls.</summary>

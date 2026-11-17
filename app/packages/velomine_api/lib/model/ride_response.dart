@@ -55,6 +55,9 @@ class RideResponse {
     this.ftpSuggestionId = const Optional.absent(),
     this.minWPrimeBalanceJ = const Optional.absent(),
     this.wPrimeJ = const Optional.absent(),
+    this.efficiencyFactor = const Optional.absent(),
+    this.decouplingPct = const Optional.absent(),
+    this.steady = const Optional.absent(),
   });
 
   final String id;
@@ -171,6 +174,30 @@ class RideResponse {
   ///
   final Optional<int?> wPrimeJ;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> efficiencyFactor;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> decouplingPct;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> steady;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -214,7 +241,10 @@ class RideResponse {
     other.ftpSuggestionMethod == ftpSuggestionMethod &&
     other.ftpSuggestionId == ftpSuggestionId &&
     other.minWPrimeBalanceJ == minWPrimeBalanceJ &&
-    other.wPrimeJ == wPrimeJ;
+    other.wPrimeJ == wPrimeJ &&
+    other.efficiencyFactor == efficiencyFactor &&
+    other.decouplingPct == decouplingPct &&
+    other.steady == steady;
 
   @override
   int get hashCode =>
@@ -260,10 +290,13 @@ class RideResponse {
     (ftpSuggestionMethod == null ? 0 : ftpSuggestionMethod!.hashCode) +
     (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode) +
     (minWPrimeBalanceJ == null ? 0 : minWPrimeBalanceJ!.hashCode) +
-    (wPrimeJ == null ? 0 : wPrimeJ!.hashCode);
+    (wPrimeJ == null ? 0 : wPrimeJ!.hashCode) +
+    (efficiencyFactor == null ? 0 : efficiencyFactor!.hashCode) +
+    (decouplingPct == null ? 0 : decouplingPct!.hashCode) +
+    (steady == null ? 0 : steady!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -449,6 +482,18 @@ class RideResponse {
       final value = this.wPrimeJ.value;
       json[r'wPrimeJ'] = value;
     }
+    if (this.efficiencyFactor.isPresent) {
+      final value = this.efficiencyFactor.value;
+      json[r'efficiencyFactor'] = value;
+    }
+    if (this.decouplingPct.isPresent) {
+      final value = this.decouplingPct.value;
+      json[r'decouplingPct'] = value;
+    }
+    if (this.steady.isPresent) {
+      final value = this.steady.value;
+      json[r'steady'] = value;
+    }
     return json;
   }
 
@@ -526,6 +571,9 @@ class RideResponse {
     Optional<String?>? ftpSuggestionId,
     Optional<int?>? minWPrimeBalanceJ,
     Optional<int?>? wPrimeJ,
+    Optional<double?>? efficiencyFactor,
+    Optional<double?>? decouplingPct,
+    Optional<bool?>? steady,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -569,6 +617,9 @@ class RideResponse {
     ftpSuggestionId: ftpSuggestionId ?? this.ftpSuggestionId,
     minWPrimeBalanceJ: minWPrimeBalanceJ ?? this.minWPrimeBalanceJ,
     wPrimeJ: wPrimeJ ?? this.wPrimeJ,
+    efficiencyFactor: efficiencyFactor ?? this.efficiencyFactor,
+    decouplingPct: decouplingPct ?? this.decouplingPct,
+    steady: steady ?? this.steady,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -667,6 +718,9 @@ class RideResponse {
         ftpSuggestionId: json.containsKey(r'ftpSuggestionId') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionId')) : const Optional.absent(),
         minWPrimeBalanceJ: json.containsKey(r'minWPrimeBalanceJ') ? Optional.present(json[r'minWPrimeBalanceJ'] == null ? null : int.parse('${json[r'minWPrimeBalanceJ']}')) : const Optional.absent(),
         wPrimeJ: json.containsKey(r'wPrimeJ') ? Optional.present(json[r'wPrimeJ'] == null ? null : int.parse('${json[r'wPrimeJ']}')) : const Optional.absent(),
+        efficiencyFactor: json.containsKey(r'efficiencyFactor') ? Optional.present(mapValueOfType<double>(json, r'efficiencyFactor')) : const Optional.absent(),
+        decouplingPct: json.containsKey(r'decouplingPct') ? Optional.present(mapValueOfType<double>(json, r'decouplingPct')) : const Optional.absent(),
+        steady: json.containsKey(r'steady') ? Optional.present(mapValueOfType<bool>(json, r'steady')) : const Optional.absent(),
       );
     }
     return null;

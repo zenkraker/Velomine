@@ -407,6 +407,8 @@
   "statIntensity": "Intensità",
   "statTss": "TSS",
   "statTrimp": "TRIMP",
+  "statEfficiency": "Fattore di efficienza",
+  "statDecoupling": "Decoupling",
   "statAverageHeartRate": "Frequenza cardiaca media",
   "statMaxHeartRate": "Frequenza cardiaca massima",
   "statAverageCadence": "Cadenza media",
@@ -1593,5 +1595,29 @@
   "intensityLabelBase": "Base: quasi tutta bici facile",
   "intensityLabelMixed": "Misto",
   "seriesWPrimeBalance": "Bilancio W′",
-  "wPrimeLowest": "Bilancio W′ più basso: {min} kJ su {wPrime} kJ"
+  "wPrimeLowest": "Bilancio W′ più basso: {min} kJ su {wPrime} kJ",
+  "efficiencyFactor": "Fattore di efficienza {ef}",
+  "@efficiencyFactor": {"placeholders": {"ef": {"type": "String"}}},
+  "decoupling": "Decoupling {pct} % · {word}",
+  "@decoupling": {
+    "placeholders": {
+      "pct": {"type": "String"},
+      "word": {"type": "String"}
+    }
+  },
+  "decouplingSteady": "Frequenza cardiaca stabile",
+  "decouplingDrift": "Un po' di deriva",
+  "decouplingLargeDrift": "Deriva marcata",
+  "decouplingSource": "Dal pedalare costante dopo 15 minuti di riscaldamento",
+  "efficiencyTitle": "Efficienza aerobica",
+  "efficiencyHint": "Più alto è meglio: più potenza con la stessa frequenza cardiaca.",
+  "efficiencyEmpty": "Servono uscite costanti di circa un'ora con potenza e frequenza cardiaca.",
+  "efficiencyWeekSemantics": "{date}: fattore di efficienza {ef} su {count, plural, =1{1 uscita} other{{count} uscite}}",
+  "@efficiencyWeekSemantics": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "ef": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  }
 }

@@ -53,7 +53,12 @@ public sealed record RideResponse(
     Guid? FtpSuggestionId = null,
     // Derived from power: RideDetails sets them, WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
     int? MinWPrimeBalanceJ = null,
-    int? WPrimeJ = null)
+    int? WPrimeJ = null,
+    // From power and heart rate together: WithoutTrainingLoad clears them, and PrivacyRules.ForViewer does too when
+    // it hides either signal.
+    double? EfficiencyFactor = null,
+    double? DecouplingPct = null,
+    bool? Steady = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -89,7 +94,10 @@ public sealed record RideResponse(
         r.BikeId,
         r.Title,
         r.Description,
-        r.Version);
+        r.Version,
+        EfficiencyFactor: r.EfficiencyFactor,
+        DecouplingPct: r.DecouplingPct,
+        Steady: r.Steady);
 
     /// <summary>The same ride without training load, for a viewer allowed to see rides but not analytics.</summary>
     public RideResponse WithoutTrainingLoad() => this with
@@ -105,5 +113,8 @@ public sealed record RideResponse(
         FtpSuggestionId = null,
         MinWPrimeBalanceJ = null,
         WPrimeJ = null,
+        EfficiencyFactor = null,
+        DecouplingPct = null,
+        Steady = null,
     };
 }

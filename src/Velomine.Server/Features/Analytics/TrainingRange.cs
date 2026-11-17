@@ -65,6 +65,7 @@ public static class TrainingRange
         }
 
         var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, time, from, to, ct, filter, viewer);
+        var efficiency = await Efficiency.LoadAsync(db, userId, clock, from, to, ct, filter, viewer);
 
         return new TrainingResponse(
             days,
@@ -78,7 +79,8 @@ public static class TrainingRange
             Math.Round(result.Sum(d => d.Trimp), 1),
             [.. result],
             intensity,
-            weeks);
+            weeks,
+            efficiency);
     }
 
     private readonly record struct DayTotals(

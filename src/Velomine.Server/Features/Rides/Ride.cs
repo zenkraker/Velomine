@@ -148,6 +148,15 @@ public sealed class Ride
 
     public int? AvgCadence { get; set; }
 
+    /// <summary>Normalized power over the moving seconds with a heart rate and a power, per beat per minute (Friel).</summary>
+    public double? EfficiencyFactor { get; set; }
+
+    /// <summary>How much the efficiency factor fell from the first half of the ride to the second, in percent; only a steady ride has one.</summary>
+    public double? DecouplingPct { get; set; }
+
+    /// <summary>Whether the ride's variability index was low enough for decoupling to mean anything; null without both signals.</summary>
+    public bool? Steady { get; set; }
+
     /// <summary>The bike ridden. Copied from the member's default bike when the ride is imported; the member can change it.</summary>
     public Guid? BikeId { get; set; }
 

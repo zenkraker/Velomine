@@ -182,6 +182,10 @@ public static class PrivacyRules
         PowerRecords = privacy.HidePower ? null : ride.PowerRecords,
         MinWPrimeBalanceJ = privacy.HidePower ? null : ride.MinWPrimeBalanceJ,
         WPrimeJ = privacy.HidePower ? null : ride.WPrimeJ,
+        // One signal is not a comparison: hiding either one hides how power and heart rate moved together.
+        EfficiencyFactor = privacy.HidesPowerOrHeartRate ? null : ride.EfficiencyFactor,
+        DecouplingPct = privacy.HidesPowerOrHeartRate ? null : ride.DecouplingPct,
+        Steady = privacy.HidesPowerOrHeartRate ? null : ride.Steady,
         FtpSuggestionW = null, // never shown to a coach or a share viewer
         FtpSuggestionMethod = null,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,

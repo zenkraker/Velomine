@@ -1925,6 +1925,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("commute");
 
+                    b.Property<double?>("DecouplingPct")
+                        .HasColumnType("double precision")
+                        .HasColumnName("decoupling_pct");
+
                     b.Property<string>("DedupKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -1951,6 +1955,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<Guid?>("DuplicateOf")
                         .HasColumnType("uuid")
                         .HasColumnName("duplicate_of");
+
+                    b.Property<double?>("EfficiencyFactor")
+                        .HasColumnType("double precision")
+                        .HasColumnName("efficiency_factor");
 
                     b.Property<double?>("ElapsedS")
                         .HasColumnType("double precision")
@@ -2093,6 +2101,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
+
+                    b.Property<bool?>("Steady")
+                        .HasColumnType("boolean")
+                        .HasColumnName("steady");
 
                     b.Property<string>("Title")
                         .HasColumnType("text")

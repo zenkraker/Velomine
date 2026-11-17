@@ -1303,6 +1303,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statTrimp => 'TRIMP';
 
   @override
+  String get statEfficiency => 'Fattore di efficienza';
+
+  @override
+  String get statDecoupling => 'Decoupling';
+
+  @override
   String get statAverageHeartRate => 'Frequenza cardiaca media';
 
   @override
@@ -4619,5 +4625,50 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String wPrimeLowest(String min, String wPrime) {
     return 'Bilancio W′ più basso: $min kJ su $wPrime kJ';
+  }
+
+  @override
+  String efficiencyFactor(String ef) {
+    return 'Fattore di efficienza $ef';
+  }
+
+  @override
+  String decoupling(String pct, String word) {
+    return 'Decoupling $pct % · $word';
+  }
+
+  @override
+  String get decouplingSteady => 'Frequenza cardiaca stabile';
+
+  @override
+  String get decouplingDrift => 'Un po\' di deriva';
+
+  @override
+  String get decouplingLargeDrift => 'Deriva marcata';
+
+  @override
+  String get decouplingSource =>
+      'Dal pedalare costante dopo 15 minuti di riscaldamento';
+
+  @override
+  String get efficiencyTitle => 'Efficienza aerobica';
+
+  @override
+  String get efficiencyHint =>
+      'Più alto è meglio: più potenza con la stessa frequenza cardiaca.';
+
+  @override
+  String get efficiencyEmpty =>
+      'Servono uscite costanti di circa un\'ora con potenza e frequenza cardiaca.';
+
+  @override
+  String efficiencyWeekSemantics(String date, String ef, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uscite',
+      one: '1 uscita',
+    );
+    return '$date: fattore di efficienza $ef su $_temp0';
   }
 }

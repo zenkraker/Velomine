@@ -265,6 +265,8 @@ class ApiClient {
           return CriticalPowerEstimate.fromJson(value);
         case 'DeleteMyAccountRequest':
           return DeleteMyAccountRequest.fromJson(value);
+        case 'EfficiencyWeek':
+          return EfficiencyWeek.fromJson(value);
         case 'EnableTwoFactorRequest':
           return EnableTwoFactorRequest.fromJson(value);
         case 'ExchangeSsoTokenRequest':

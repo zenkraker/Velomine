@@ -24,7 +24,11 @@ public static class TestRideFiles
         string? WorkoutName = null,
         ushort ManufacturerId = Manufacturer.Garmin,
         double StartLatitude = 46.0,
-        double StartLongitude = 11.0);
+        double StartLongitude = 11.0,
+        /// <summary>Power per second, when the test needs a shape other than the steady 200 W.</summary>
+        Func<int, short>? Power = null,
+        /// <summary>Heart rate per second, when the test needs a shape other than the steady 150 bpm.</summary>
+        Func<int, short>? HeartRate = null);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -68,8 +72,8 @@ public static class TestRideFiles
                 record.SetAltitude(300 + s * 0.1f);
                 record.SetSpeed(8);
                 record.SetDistance(s * 8f);
-                record.SetHeartRate(150);
-                record.SetPower(200);
+                record.SetHeartRate((byte)(session.HeartRate?.Invoke(s) ?? 150));
+                record.SetPower((ushort)(session.Power?.Invoke(s) ?? 200));
                 record.SetCadence(90);
                 record.SetTemperature(18);
                 encode.Write(record);

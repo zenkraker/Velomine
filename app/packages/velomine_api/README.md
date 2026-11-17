@@ -282,6 +282,7 @@ Class | Method | HTTP request | Description
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
  - [CriticalPowerEstimate](doc//CriticalPowerEstimate.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
+ - [EfficiencyWeek](doc//EfficiencyWeek.md)
  - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)

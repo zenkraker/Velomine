@@ -57,7 +57,9 @@ public sealed record TrainingResponse(
     TrainingDay[] Days,
     /// <summary>Seiler's three zones over the range, null when no ride had power or heart rate to place.</summary>
     IntensityResponse? Intensity,
-    IntensityWeek[] IntensityWeeks);
+    IntensityWeek[] IntensityWeeks,
+    /// <summary>The mean efficiency factor of each week's steady rides; a week without one is left out.</summary>
+    EfficiencyWeek[] Efficiency);
 
 public sealed class TrainingValidator : Validator<TrainingRequest>
 {

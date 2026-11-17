@@ -88,6 +88,7 @@ part 'model/create_service_entry_request.dart';
 part 'model/create_template_request.dart';
 part 'model/critical_power_estimate.dart';
 part 'model/delete_my_account_request.dart';
+part 'model/efficiency_week.dart';
 part 'model/enable_two_factor_request.dart';
 part 'model/exchange_sso_token_request.dart';
 part 'model/export_link_response.dart';

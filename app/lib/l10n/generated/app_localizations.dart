@@ -2318,6 +2318,18 @@ abstract class AppLocalizations {
   /// **'TRIMP'**
   String get statTrimp;
 
+  /// No description provided for @statEfficiency.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency factor'**
+  String get statEfficiency;
+
+  /// No description provided for @statDecoupling.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoupling'**
+  String get statDecoupling;
+
   /// No description provided for @statAverageHeartRate.
   ///
   /// In en, this message translates to:
@@ -7975,6 +7987,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lowest W′ balance {min} kJ of {wPrime} kJ'**
   String wPrimeLowest(String min, String wPrime);
+
+  /// No description provided for @efficiencyFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency factor {ef}'**
+  String efficiencyFactor(String ef);
+
+  /// No description provided for @decoupling.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoupling {pct} % · {word}'**
+  String decoupling(String pct, String word);
+
+  /// No description provided for @decouplingSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady heart rate'**
+  String get decouplingSteady;
+
+  /// No description provided for @decouplingDrift.
+  ///
+  /// In en, this message translates to:
+  /// **'Some drift'**
+  String get decouplingDrift;
+
+  /// No description provided for @decouplingLargeDrift.
+  ///
+  /// In en, this message translates to:
+  /// **'Large drift'**
+  String get decouplingLargeDrift;
+
+  /// No description provided for @decouplingSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From steady pedalling after a 15-minute warm-up'**
+  String get decouplingSource;
+
+  /// No description provided for @efficiencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Aerobic efficiency'**
+  String get efficiencyTitle;
+
+  /// No description provided for @efficiencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher is better: more power for the same heart rate.'**
+  String get efficiencyHint;
+
+  /// No description provided for @efficiencyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs steady rides of about an hour with power and heart rate.'**
+  String get efficiencyEmpty;
+
+  /// No description provided for @efficiencyWeekSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: efficiency factor {ef} over {count, plural, =1{1 ride} other{{count} rides}}'**
+  String efficiencyWeekSemantics(String date, String ef, int count);
 }
 
 class _AppLocalizationsDelegate

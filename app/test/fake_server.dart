@@ -2507,6 +2507,9 @@ Map<String, Object?> rideJson(
   String? ftpSuggestionId,
   int? minWPrimeBalanceJ,
   int? wPrimeJ,
+  double? efficiencyFactor,
+  double? decouplingPct,
+  bool? steady,
   String? discipline,
   String? assist,
   String? environment,
@@ -2558,6 +2561,9 @@ Map<String, Object?> rideJson(
   'ftpSuggestionMethod': ftpSuggestionMethod,
   'ftpSuggestionId': ftpSuggestionId,
   'minWPrimeBalanceJ': minWPrimeBalanceJ,
+  'efficiencyFactor': efficiencyFactor,
+  'decouplingPct': decouplingPct,
+  'steady': steady,
   'wPrimeJ': wPrimeJ,
 };
 
@@ -2621,6 +2627,7 @@ Map<String, Object?> trainingJson({
   'trimp': trimp,
   'intensity': null,
   'intensityWeeks': const <Object?>[],
+  'efficiency': const <Object?>[],
   'days': [
     for (var i = 0; i < 3; i++)
       {

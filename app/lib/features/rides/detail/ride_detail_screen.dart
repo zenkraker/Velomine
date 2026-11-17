@@ -35,6 +35,7 @@ import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
+import '../../../core/widgets/source_note.dart';
 import '../../../core/widgets/stat_tile.dart';
 
 class RideDetailScreen extends ConsumerWidget {
@@ -361,6 +362,13 @@ class RideDetailScreen extends ConsumerWidget {
   }
 }
 
+/// The drift in words: below 5 % the heart rate held, 5 to 10 % it moved a little, above 10 % it moved a lot.
+String decouplingWord(AppLocalizations l10n, double pct) => pct < 5
+    ? l10n.decouplingSteady
+    : pct <= 10
+    ? l10n.decouplingDrift
+    : l10n.decouplingLargeDrift;
+
 /// Who else has looked at this ride, most recent first. Only the owner ever sees this.
 class _ViewsCard extends StatelessWidget {
   const _ViewsCard({required this.views});
@@ -436,6 +444,15 @@ class _Stats extends ConsumerWidget {
           ride.intensityFactor!.toStringAsFixed(2),
         ),
       if (ride.tss != null) ('tss', l10n.statTss, ride.tss!.round().toString()),
+      if (ride.efficiencyFactor.value case final efficiency?)
+        ('efficiency', l10n.statEfficiency, efficiency.toStringAsFixed(2)),
+      if (ride.decouplingPct.value case final decoupling?
+          when ride.steady.value == true)
+        (
+          'decoupling',
+          l10n.statDecoupling,
+          '${decoupling.toStringAsFixed(1)} %',
+        ),
       if (ride.trimp != null)
         ('trimp', l10n.statTrimp, ride.trimp!.round().toString()),
       if (ride.avgHeartRate != null)
@@ -474,6 +491,19 @@ class _Stats extends ConsumerWidget {
           ),
         if (ride.tss != null || ride.trimp != null)
           Text(l10n.loadHint, style: text.bodySmall),
+        if (ride.efficiencyFactor.value != null) ...[
+          if (ride.decouplingPct.value case final decoupling?
+              when ride.steady.value == true)
+            Text(
+              l10n.decoupling(
+                decoupling.toStringAsFixed(1),
+                decouplingWord(l10n, decoupling),
+              ),
+              key: const Key('decoupling'),
+              style: text.bodyMedium,
+            ),
+          SourceNote(l10n.decouplingSource),
+        ],
       ],
     );
   }

@@ -71,6 +71,7 @@ lib/model/create_service_entry_request.dart
 lib/model/create_template_request.dart
 lib/model/critical_power_estimate.dart
 lib/model/delete_my_account_request.dart
+lib/model/efficiency_week.dart
 lib/model/enable_two_factor_request.dart
 lib/model/exchange_sso_token_request.dart
 lib/model/export_link_response.dart

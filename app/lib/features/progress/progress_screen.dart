@@ -24,6 +24,7 @@ import '../accounts/ftp_source_text.dart';
 import '../rides/ride_type_chips.dart';
 import 'goals.dart';
 import 'ftp_history_sheet.dart';
+import 'efficiency_card.dart';
 import 'intensity_card.dart';
 import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
@@ -190,6 +191,8 @@ class ProgressScreen extends ConsumerWidget {
             intensity: intensity,
             weeks: trainingData.intensityWeeks,
           ),
+      if (training.load.value case final trainingData?)
+        EfficiencyCard(weeks: trainingData.efficiency),
       if (power.load.value case final curve?)
         PowerSummary(
           curve: curve,
