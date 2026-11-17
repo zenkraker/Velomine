@@ -3,6 +3,7 @@ using Npgsql;
 using System.Diagnostics;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Privacy;
@@ -195,6 +196,10 @@ public sealed class RideIngestionService(
         if (clock is not null && ride.NotifiesMember)
             foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
                 await Notify.PowerRecordAsync(db, time, clock, r, ct);
+        // Only here, on a ride's first read: a re-read and a duplicate never suggest an FTP.
+        if (clock is not null)
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+                await FtpSuggestionDetection.AddAsync(db, time, clock, r, profile.FtpW, ct);
 
         foreach (var r in read.Where(r => r.NotifiesMember)) Notify.RideRead(db, time, r);
 

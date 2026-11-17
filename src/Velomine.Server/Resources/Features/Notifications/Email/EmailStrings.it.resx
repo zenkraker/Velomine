@@ -115,4 +115,7 @@
   <data name="PowerRecord" xml:space="preserve">
     <value>Record personale: {0}.</value>
   </data>
+  <data name="FtpSuggested" xml:space="preserve">
+    <value>Un'uscita suggerisce un FTP di {0}.</value>
+  </data>
 </root>

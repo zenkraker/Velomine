@@ -114,7 +114,7 @@ public sealed class IntensityTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Intensity_ShouldHaveNoIndex_WhenThereIsNoHardTime()
+    public async Task Intensity_ShouldHaveNoIndex_WhenThereIsNoModerateTime()
     {
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
@@ -128,8 +128,28 @@ public sealed class IntensityTests(PostgresFixture postgres)
         Assert.NotNull(intensity);
         Assert.Equal(100, intensity.HardPct);
         Assert.Equal(120, intensity.HardS);
-        Assert.Null(intensity.PolarisationIndex); // no easy time to balance the hard
+        Assert.Null(intensity.PolarisationIndex); // moderate below 0.1 % leaves the index undefined
         Assert.Equal(Labels.Hiit, intensity.Label); // hard above 40 and easy under 20
+        Assert.Equal(1, intensity.Rides);
+    }
+
+    [Fact]
+    public async Task Intensity_ShouldHaveNoIndex_WhenThereIsNoHardTime()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var id = member.Id;
+        await SetProfileAsync(member.Client, ftpW: 200);
+        // 160 W over an FTP of 200 is 80 %: zone 3, moderate. None of it is above 105 %.
+        await AddRideAsync(api, id, power: Samples(120, 160));
+
+        var intensity = await IntensityAsync(member.Client);
+
+        Assert.NotNull(intensity);
+        Assert.Equal(0, intensity.HardS);
+        Assert.Equal(120, intensity.ModerateS);
+        Assert.Null(intensity.PolarisationIndex); // hard at 0 % leaves nothing to balance
+        Assert.Equal(Labels.Threshold, intensity.Label); // most of it moderate, no hard time
         Assert.Equal(1, intensity.Rides);
     }
 

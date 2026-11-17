@@ -9,11 +9,14 @@ part 'progress_data.g.dart';
 
 /// The analytics, goals and wellbeing endpoints as values.
 class ProgressData {
-  ProgressData(this._api, this._accounts, this._wellbeing);
+  ProgressData(this._api, this._accounts, this._wellbeing, this.dateLookup);
 
   final AnalyticsApi _api;
   final AccountsApi _accounts;
   final WellbeingApi _wellbeing;
+
+  /// When a ride started, by its id: the FTP history dates a test by its ride, not by the day it was accepted.
+  final Future<DateTime?> Function(String rideId) dateLookup;
 
   Future<Result<TotalsResponse?>> totals(
     String period,
@@ -79,10 +82,38 @@ class ProgressData {
   /// Keeps the reminder quiet for two weeks.
   Future<Result<void>> snoozeFtpCheck() =>
       _api.snoozeFtpCheck().guard(FailureAction.setFtp);
+
+  /// The FTP the newest ride suggests; null when there is nothing open.
+  Future<Result<FtpSuggestionResponse?>> ftpSuggestion() =>
+      _api.getFtpSuggestion().guard(FailureAction.loadProgress);
+
+  /// The day of each ride the history names, for the day a test FTP really happened on.
+  /// A ride that cannot be read simply has no day: the note then falls back to the day it was set.
+  Future<Result<Map<String, DateTime>>> ftpRideDates(
+    FtpHistoryResponse history,
+  ) async {
+    final dates = <String, DateTime>{};
+    for (final id in history.entries.map((e) => e.rideId).whereType<String>()) {
+      if (await dateLookup(id) case final start?) dates[id] = start;
+    }
+    return Ok(dates);
+  }
+
+  /// Adopts a ride's suggestion: the server sets the FTP and records the ride it came from.
+  Future<Result<ProfileResponse?>> acceptFtpSuggestion(String id) =>
+      _api.acceptFtpSuggestion(id).guard(FailureAction.setFtp);
+
+  Future<Result<void>> dismissFtpSuggestion(String id) =>
+      _api.dismissFtpSuggestion(id).guard(FailureAction.setFtp);
 }
 
 @Riverpod(keepAlive: true)
 ProgressData progressData(Ref ref) {
   final session = ref.watch(sessionProvider);
-  return ProgressData(session.analytics, session.accounts, session.wellbeing);
+  return ProgressData(
+    session.analytics,
+    session.accounts,
+    session.wellbeing,
+    (id) async => (await session.rides.getRide(id))?.startTime,
+  );
 }

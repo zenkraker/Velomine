@@ -180,6 +180,8 @@ public static class PrivacyRules
         Tss = privacy.HidePower ? null : ride.Tss,
         PowerZones = privacy.HidePower ? null : ride.PowerZones,
         PowerRecords = privacy.HidePower ? null : ride.PowerRecords,
+        FtpSuggestionW = null, // never shown to a coach or a share viewer
+        FtpSuggestionMethod = null,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
         AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
         MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,

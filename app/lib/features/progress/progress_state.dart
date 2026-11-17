@@ -104,21 +104,28 @@ class PowerState {
 class FtpReminderState {
   const FtpReminderState({
     this.check,
+    this.suggestion,
     this.action = const CommandState.idle(),
     this.messages = const [],
   });
 
   /// The check as the server answered it; null reason means there is nothing to show.
   final FtpCheckResponse? check;
+
+  /// The FTP a ride suggests; while it is there the reminder stays quiet.
+  final FtpSuggestionResponse? suggestion;
   final VoidCommand action;
   final List<UserMessage> messages;
 
   FtpReminderState copyWith({
     FtpCheckResponse? check,
+    // Not `?? this`: a suggestion that was just answered has to be able to go away.
+    FtpSuggestionResponse? suggestion,
     VoidCommand? action,
     List<UserMessage>? messages,
   }) => FtpReminderState(
     check: check ?? this.check,
+    suggestion: suggestion,
     action: action ?? this.action,
     messages: messages ?? this.messages,
   );

@@ -507,6 +507,66 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.FtpSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EffortWatts")
+                        .HasColumnType("integer")
+                        .HasColumnName("effort_watts");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("method");
+
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("Watts")
+                        .HasColumnType("integer")
+                        .HasColumnName("watts");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ftp_suggestions");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_ftp_suggestions_ride_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_ftp_suggestions_open_user")
+                        .HasFilter("status = 'open'");
+
+                    b.ToTable("ftp_suggestions", "analytics", t =>
+                        {
+                            t.HasCheckConstraint("ck_ftp_suggestions_effort_watts", "effort_watts BETWEEN 30 AND 1000");
+
+                            t.HasCheckConstraint("ck_ftp_suggestions_method", "method IN ('20min', '30min', '60min')");
+
+                            t.HasCheckConstraint("ck_ftp_suggestions_status", "status IN ('open', 'accepted', 'dismissed', 'replaced')");
+
+                            t.HasCheckConstraint("ck_ftp_suggestions_watts", "watts BETWEEN 30 AND 1000");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Analytics.Goal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2689,6 +2749,23 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_user_sessions_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.FtpSuggestion", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ftp_suggestions_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ftp_suggestions_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Analytics.Goal", b =>

@@ -117,9 +117,12 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**setUserRoles**](doc//AdminApi.md#setuserroles) | **PUT** /api/v1/admin/users/{id}/roles | 
 *AdminApi* | [**unlockUser**](doc//AdminApi.md#unlockuser) | **POST** /api/v1/admin/users/{id}/unlock | 
 *AdminApi* | [**updateSettings**](doc//AdminApi.md#updatesettings) | **PUT** /api/v1/admin/settings | 
+*AnalyticsApi* | [**acceptFtpSuggestion**](doc//AnalyticsApi.md#acceptftpsuggestion) | **POST** /api/v1/analytics/ftp-suggestion/{suggestionId}/accept | 
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
+*AnalyticsApi* | [**dismissFtpSuggestion**](doc//AnalyticsApi.md#dismissftpsuggestion) | **POST** /api/v1/analytics/ftp-suggestion/{suggestionId}/dismiss | 
 *AnalyticsApi* | [**getFtpCheck**](doc//AnalyticsApi.md#getftpcheck) | **GET** /api/v1/analytics/ftp-check | 
+*AnalyticsApi* | [**getFtpSuggestion**](doc//AnalyticsApi.md#getftpsuggestion) | **GET** /api/v1/analytics/ftp-suggestion | 
 *AnalyticsApi* | [**getPowerCurve**](doc//AnalyticsApi.md#getpowercurve) | **GET** /api/v1/analytics/power-curve | 
 *AnalyticsApi* | [**getReadiness**](doc//AnalyticsApi.md#getreadiness) | **GET** /api/v1/analytics/readiness | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
@@ -287,6 +290,7 @@ Class | Method | HTTP request | Description
  - [FtpEstimate](doc//FtpEstimate.md)
  - [FtpHistoryEntry](doc//FtpHistoryEntry.md)
  - [FtpHistoryResponse](doc//FtpHistoryResponse.md)
+ - [FtpSuggestionResponse](doc//FtpSuggestionResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
  - [IntensityResponse](doc//IntensityResponse.md)
  - [IntensityWeek](doc//IntensityWeek.md)

@@ -115,4 +115,7 @@
   <data name="PowerRecord" xml:space="preserve">
     <value>Personal best: {0}.</value>
   </data>
+  <data name="FtpSuggested" xml:space="preserve">
+    <value>A ride suggests an FTP of {0}.</value>
+  </data>
 </root>

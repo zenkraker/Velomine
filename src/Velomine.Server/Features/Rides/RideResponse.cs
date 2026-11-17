@@ -45,7 +45,12 @@ public sealed record RideResponse(
     long Version,
     ZoneTime[]? HeartRateZones = null,
     ZoneTime[]? PowerZones = null,
-    Analytics.PowerRecord[]? PowerRecords = null)
+    Analytics.PowerRecord[]? PowerRecords = null,
+    // A suggestion is the owner's own question to answer: copied by hand, never by From, so no hand-built response
+    // can carry one. GetRide sets it; WithoutTrainingLoad and PrivacyRules.ForViewer clear it.
+    int? FtpSuggestionW = null,
+    string? FtpSuggestionMethod = null,
+    Guid? FtpSuggestionId = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -92,5 +97,8 @@ public sealed record RideResponse(
         HeartRateZones = null,
         PowerZones = null,
         PowerRecords = null,
+        FtpSuggestionW = null,
+        FtpSuggestionMethod = null,
+        FtpSuggestionId = null,
     };
 }

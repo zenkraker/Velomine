@@ -113,6 +113,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _emailTraining = false;
   int? _estimatedMaxHr;
   _ProfileProblem? _problem;
+
+  /// When the ride a test FTP came from started: the day of the effort, which the ride itself knows.
+  DateTime? _ftpSourceRideStart;
   late final ProviderSubscription<ProfileState> _profileSub;
 
   @override
@@ -120,8 +123,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.initState();
     _profileSub = ref.listenManual(profileViewModelProvider, (_, next) {
       final profile = next.profile;
-      if (profile != null) _fill(profile);
+      if (profile == null) return;
+      _fill(profile);
+      _readFtpSourceRide(profile);
     }, fireImmediately: true);
+  }
+
+  Future<void> _readFtpSourceRide(ProfileResponse profile) async {
+    final id = profile.ftpRideId.orElse(null);
+    if (id == null) {
+      if (_ftpSourceRideStart != null && mounted) {
+        setState(() => _ftpSourceRideStart = null);
+      }
+      return;
+    }
+    final result = await ref
+        .read(profileViewModelProvider.notifier)
+        .rideStart(id);
+    if (!mounted) return;
+    setState(() => _ftpSourceRideStart = result);
   }
 
   /// The weight the member types, in the units on screen.
@@ -320,7 +340,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
           // Where the FTP came from, read from the newest row of its history.
           if (s.profile case final profile?)
-            if (profileFtpSourceText(l10n, profile) case final note?)
+            if (profileFtpSourceText(
+                  l10n,
+                  profile,
+                  testRideStart: _ftpSourceRideStart,
+                )
+                case final note?)
               SourceNote(note, key: const Key('profile-ftp-source')),
           _number(
             'profile-weight',

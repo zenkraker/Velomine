@@ -11,11 +11,12 @@ part 'ride_detail_data.g.dart';
 
 /// The ride detail endpoints as values: the ViewModel never sees an exception.
 class RideDetailData {
-  RideDetailData(this._rides, this._bikes, this._sharing);
+  RideDetailData(this._rides, this._bikes, this._sharing, this._analytics);
 
   final RidesApi _rides;
   final BikesApi _bikes;
   final SharingApi _sharing;
+  final AnalyticsApi _analytics;
 
   Future<Result<RideResponse?>> ride(String id) =>
       _rides.getRide(id).guard(FailureAction.loadRide);
@@ -103,10 +104,22 @@ class RideDetailData {
 
   Future<Result<void>> deleteRide(String id) =>
       _rides.deleteRide(id).guard(FailureAction.deleteRide);
+
+  /// Adopts the ride's suggestion: the server sets the FTP and records this ride as where it came from.
+  Future<Result<ProfileResponse?>> acceptFtpSuggestion(String id) =>
+      _analytics.acceptFtpSuggestion(id).guard(FailureAction.setFtp);
+
+  Future<Result<void>> dismissFtpSuggestion(String id) =>
+      _analytics.dismissFtpSuggestion(id).guard(FailureAction.setFtp);
 }
 
 @Riverpod(keepAlive: true)
 RideDetailData rideDetailData(Ref ref) {
   final session = ref.watch(sessionProvider);
-  return RideDetailData(session.rides, session.bikes, session.sharing);
+  return RideDetailData(
+    session.rides,
+    session.bikes,
+    session.sharing,
+    session.analytics,
+  );
 }

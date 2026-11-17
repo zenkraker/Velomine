@@ -95,6 +95,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<FtpHistory> FtpHistory => Set<FtpHistory>();
 
+    public DbSet<FtpSuggestion> FtpSuggestions => Set<FtpSuggestion>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

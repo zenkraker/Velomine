@@ -5042,6 +5042,48 @@ abstract class AppLocalizations {
   /// **'Before history was kept'**
   String get ftpBeforeHistory;
 
+  /// No description provided for @ftpSuggestionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride suggests an FTP of {watts} W'**
+  String ftpSuggestionTitle(String watts);
+
+  /// No description provided for @ftpSuggestionMethod20.
+  ///
+  /// In en, this message translates to:
+  /// **'95 % of your best 20 minutes ({effort} W)'**
+  String ftpSuggestionMethod20(String effort);
+
+  /// No description provided for @ftpSuggestionMethod30.
+  ///
+  /// In en, this message translates to:
+  /// **'97 % of your best 30 minutes ({effort} W)'**
+  String ftpSuggestionMethod30(String effort);
+
+  /// No description provided for @ftpSuggestionMethod60.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best 60 minutes'**
+  String get ftpSuggestionMethod60;
+
+  /// No description provided for @ftpSuggestionUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {watts} W'**
+  String ftpSuggestionUse(String watts);
+
+  /// No description provided for @ftpSuggestionDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get ftpSuggestionDismiss;
+
+  /// No description provided for @notificationFtpSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'A ride suggests an FTP of {record}.'**
+  String notificationFtpSuggested(String record);
+
   /// No description provided for @vo2MaxEstimate.
   ///
   /// In en, this message translates to:

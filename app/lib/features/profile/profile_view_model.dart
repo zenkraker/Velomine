@@ -24,6 +24,10 @@ class ProfileViewModel extends _$ProfileViewModel {
     return const ProfileState();
   }
 
+  /// When the ride a test FTP came from started, for the note under the FTP field.
+  Future<DateTime?> rideStart(String id) =>
+      ref.read(profileDataProvider).rideStart(id);
+
   Future<void> load() async {
     if (state.load.running) return;
     state = state.copyWith(load: state.load.start());

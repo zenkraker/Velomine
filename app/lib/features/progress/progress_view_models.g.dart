@@ -314,7 +314,7 @@ final class FtpReminderViewModelProvider
 }
 
 String _$ftpReminderViewModelHash() =>
-    r'fa749d060cf00207f15ed2030de1ea50efcbe30b';
+    r'4dba306cef778a3cea24428883024289f9cb4cff';
 
 abstract class _$FtpReminderViewModel extends $Notifier<FtpReminderState> {
   FtpReminderState build();

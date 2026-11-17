@@ -161,6 +161,30 @@ class RideDetailViewModel extends _$RideDetailViewModel {
     );
   });
 
+  /// Adopts the ride's FTP suggestion. The ride is read again, so the card goes once the server agrees.
+  Future<void> acceptSuggestion(String suggestionId) => _suggestion(
+    () => ref.read(rideDetailDataProvider).acceptFtpSuggestion(suggestionId),
+  );
+
+  Future<void> dismissSuggestion(String suggestionId) => _suggestion(
+    () => ref.read(rideDetailDataProvider).dismissFtpSuggestion(suggestionId),
+  );
+
+  /// Both answers leave no suggestion on the ride; a failure keeps the card and says why.
+  Future<void> _suggestion(Future<Result<Object?>> Function() call) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    final fresh = (await ref.read(rideDetailDataProvider).ride(id)).valueOrNull;
+    if (ref.mounted && fresh != null) state = state.copyWith(ride: fresh);
+  }
+
   /// Returns whether the ride was deleted.
   Future<bool> deleteRide() async {
     if (state.action.running) return false;

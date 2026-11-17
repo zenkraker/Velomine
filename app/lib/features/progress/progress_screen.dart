@@ -14,6 +14,7 @@ import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/ftp_suggestion_card.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/stat_tile.dart';
@@ -129,8 +130,24 @@ class ProgressScreen extends ConsumerWidget {
     // The analysis: the totals chart leads, then each source that explains it. The check-in follows,
     // because it is the member's own input rather than an answer.
     final analysis = <Widget>[
+      // A ride that shows a higher FTP is the strongest answer there is, so it leads; while it is open the
+      // reminder stays quiet, because it would only ask about the number the same FTP is about to replace.
+      if (reminder.suggestion case final suggestion?)
+        FtpSuggestionCard(
+          watts: suggestion.watts,
+          method: suggestion.method,
+          effortWatts: suggestion.effortWatts,
+          suggestionId: suggestion.id,
+          busy: reminder.action.running,
+          onAccept: ref
+              .read(ftpReminderViewModelProvider.notifier)
+              .useSuggestion,
+          onDismiss: ref
+              .read(ftpReminderViewModelProvider.notifier)
+              .dismissSuggestion,
+        ),
       // A wrong FTP makes every zone and TSS below it wrong, so the reminder leads the analysis.
-      if (reminder.check?.reason != null)
+      if (reminder.check?.reason != null && reminder.suggestion == null)
         FtpReminderCard(
           check: reminder.check!,
           busy: reminder.action.running,
@@ -297,10 +314,8 @@ class ProgressScreen extends ConsumerWidget {
           label: l10n.ftpHistory,
           onSelected: () => scheduleMicrotask(() {
             if (context.mounted) {
-              showFtpHistorySheet(
-                context,
-                ref.read(progressDataProvider).ftpHistory,
-              );
+              final data = ref.read(progressDataProvider);
+              showFtpHistorySheet(context, data.ftpHistory, data.ftpRideDates);
             }
           }),
         ),

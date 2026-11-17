@@ -65,7 +65,7 @@ final class RideDetailViewModelProvider
 }
 
 String _$rideDetailViewModelHash() =>
-    r'facc89d1454d65b5ca706dcb5ff582bcb0ee9274';
+    r'2cfd282c8be4fff0b2b79e4112bd37be0140bc73';
 
 /// One ride, read fresh on the detail route. A processing upload is polled
 /// until the server has read it.

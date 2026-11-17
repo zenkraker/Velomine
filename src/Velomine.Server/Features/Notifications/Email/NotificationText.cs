@@ -23,6 +23,7 @@ public static class NotificationText
         NotificationTypes.ClubRideChanged => EmailStrings.Format("ClubRideChanged", n.Subject),
         NotificationTypes.ClubRideCancelled => EmailStrings.Format("ClubRideCancelled", n.Subject),
         NotificationTypes.PowerRecord => EmailStrings.Format("PowerRecord", n.Subject),
+        NotificationTypes.FtpSuggested => EmailStrings.Format("FtpSuggested", n.Subject),
         _ => n.Subject,
     };
 

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Accounts;
@@ -48,7 +49,8 @@ public sealed class FtpHistoryConfiguration : IEntityTypeConfiguration<FtpHistor
             t.HasCheckConstraint("ck_ftp_history_source", "source IN ('manual', 'estimate', 'test', 'earlier')");
         });
         b.HasKey(h => h.Id);
-        // The newest row is the current FTP, so the order is total even when two rows share an instant.
+        // The newest row is the current FTP, so the order is total even when two rows share an instant (a clock
+        // that does not tick writes a new row on the same one), and the newest id is the newest write.
         b.HasIndex(h => new { h.UserId, h.SetAt, h.Id }).IsDescending(false, true, true);
         b.HasOne<User>().WithMany().HasForeignKey(h => h.UserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<Ride>().WithMany().HasForeignKey(h => h.RideId).OnDelete(DeleteBehavior.SetNull);
@@ -66,6 +68,10 @@ public sealed class SetFtpValue(VelomineDbContext db, TimeProvider time)
         if (user.FtpW == watts) return;
         user.FtpW = watts;
         user.FtpReminderSnoozedUntil = null; // a new number is an answer, so the reminder may ask again
+        // Accepting a ride's suggestion answers its question: no other suggestion of that ride stays open.
+        if (rideId is { } fromRide)
+            foreach (var suggestion in db.FtpSuggestions.Where(s => s.RideId == fromRide && s.Status == FtpSuggestionStatuses.Open))
+                suggestion.Status = FtpSuggestionStatuses.Accepted;
         db.FtpHistory.Add(new FtpHistory
         {
             Id = Guid.NewGuid(),

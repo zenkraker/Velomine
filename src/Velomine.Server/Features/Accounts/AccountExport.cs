@@ -65,6 +65,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .ToListAsync(ct);
         var ftpHistory = await db.FtpHistory.AsNoTracking()
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
+        var ftpSuggestions = await db.FtpSuggestions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -163,6 +165,15 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         }), ct);
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
         await AddJsonAsync(zip, "ftp-history.json", ftpHistory.Select(h => new { h.Watts, h.SetAt, h.Source, h.RideId }), ct);
+        await AddJsonAsync(zip, "ftp-suggestions.json", ftpSuggestions.Select(s => new
+        {
+            s.RideId,
+            s.Watts,
+            s.Method,
+            s.EffortWatts,
+            s.CreatedAt,
+            s.Status,
+        }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
         await AddJsonAsync(zip, "imports.json", imports.Select(i => new
@@ -290,6 +301,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         rides.json          every ride: its numbers, its status, and where its original file is in this ZIP
         goals.json          your goals
         ftp-history.json    every FTP you have had, when you set it and how
+        ftp-suggestions.json  the FTPs Velomine noticed in your rides, and what you did with each
         notifications.json  your notifications
         sessions.json       where you are signed in: the device label and the times, never an address
         imports.json        the archives you brought in from another app, and how many rides they held

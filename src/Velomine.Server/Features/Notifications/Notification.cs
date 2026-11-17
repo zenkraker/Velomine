@@ -61,6 +61,9 @@ public static class NotificationTypes
 
     /// <summary>The ride beat the member's best power. Refers to the ride; the subject is the longest record, "20 min: 312 W".</summary>
     public const string PowerRecord = "power_record";
+
+    /// <summary>A ride suggests a higher FTP. Refers to the ride; the subject is the suggested watts, "266 W".</summary>
+    public const string FtpSuggested = "ftp_suggested";
 }
 
 /// <summary>
@@ -98,6 +101,7 @@ public static class NotificationKinds
         NotificationTypes.ReminderSoon,
         NotificationTypes.ReminderDue,
         NotificationTypes.PowerRecord,
+        NotificationTypes.FtpSuggested,
     ];
 
     /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>

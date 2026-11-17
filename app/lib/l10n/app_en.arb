@@ -1486,6 +1486,48 @@
   "ftpFromTheEstimate": "From the estimate",
   "ftpFromYourRide": "From your ride",
   "ftpBeforeHistory": "Before history was kept",
+  "ftpSuggestionTitle": "This ride suggests an FTP of {watts} W",
+  "@ftpSuggestionTitle": {
+    "placeholders": {
+      "watts": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSuggestionMethod20": "95 % of your best 20 minutes ({effort} W)",
+  "@ftpSuggestionMethod20": {
+    "placeholders": {
+      "effort": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSuggestionMethod30": "97 % of your best 30 minutes ({effort} W)",
+  "@ftpSuggestionMethod30": {
+    "placeholders": {
+      "effort": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSuggestionMethod60": "Your best 60 minutes",
+  "ftpSuggestionUse": "Use {watts} W",
+  "@ftpSuggestionUse": {
+    "placeholders": {
+      "watts": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpSuggestionDismiss": "Dismiss",
+  "notificationFtpSuggested": "A ride suggests an FTP of {record}.",
+  "@notificationFtpSuggested": {
+    "placeholders": {
+      "record": {
+        "type": "String"
+      }
+    }
+  },
   "vo2MaxEstimate": "VO2max estimate",
   "vo2MaxFrom5Min": "from your best 5-minute power and weight",
   "vo2MaxNeedsWeight": "Set your weight to estimate VO2max.",

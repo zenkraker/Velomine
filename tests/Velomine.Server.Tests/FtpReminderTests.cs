@@ -186,7 +186,7 @@ public sealed class FtpReminderTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task FtpCheck_ShouldStaySilent_WhenTheSnoozeHasEnded()
+    public async Task FtpCheck_ShouldSpeakAgain_WhenTheSnoozeHasEnded()
     {
         await using var api = await StartAsync();
         var member = await api.NewMemberAsync();

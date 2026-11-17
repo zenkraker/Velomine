@@ -50,6 +50,9 @@ class RideResponse {
     this.heartRateZones = const Optional.present(const []),
     this.powerZones = const Optional.present(const []),
     this.powerRecords = const Optional.present(const []),
+    this.ftpSuggestionW = const Optional.absent(),
+    this.ftpSuggestionMethod = const Optional.absent(),
+    this.ftpSuggestionId = const Optional.absent(),
   });
 
   final String id;
@@ -126,6 +129,30 @@ class RideResponse {
 
   final Optional<List<PowerRecord>?> powerRecords;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> ftpSuggestionW;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> ftpSuggestionMethod;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> ftpSuggestionId;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -164,7 +191,10 @@ class RideResponse {
     other.version == version &&
     _deepEquality.equals(other.heartRateZones, heartRateZones) &&
     _deepEquality.equals(other.powerZones, powerZones) &&
-    _deepEquality.equals(other.powerRecords, powerRecords);
+    _deepEquality.equals(other.powerRecords, powerRecords) &&
+    other.ftpSuggestionW == ftpSuggestionW &&
+    other.ftpSuggestionMethod == ftpSuggestionMethod &&
+    other.ftpSuggestionId == ftpSuggestionId;
 
   @override
   int get hashCode =>
@@ -205,10 +235,13 @@ class RideResponse {
     (version.hashCode) +
     (heartRateZones.hashCode) +
     (powerZones.hashCode) +
-    (powerRecords.hashCode);
+    (powerRecords.hashCode) +
+    (ftpSuggestionW == null ? 0 : ftpSuggestionW!.hashCode) +
+    (ftpSuggestionMethod == null ? 0 : ftpSuggestionMethod!.hashCode) +
+    (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -374,6 +407,18 @@ class RideResponse {
       final value = this.powerRecords.value;
       json[r'powerRecords'] = value;
     }
+    if (this.ftpSuggestionW.isPresent) {
+      final value = this.ftpSuggestionW.value;
+      json[r'ftpSuggestionW'] = value;
+    }
+    if (this.ftpSuggestionMethod.isPresent) {
+      final value = this.ftpSuggestionMethod.value;
+      json[r'ftpSuggestionMethod'] = value;
+    }
+    if (this.ftpSuggestionId.isPresent) {
+      final value = this.ftpSuggestionId.value;
+      json[r'ftpSuggestionId'] = value;
+    }
     return json;
   }
 
@@ -446,6 +491,9 @@ class RideResponse {
     Optional<List<ZoneTime>?>? heartRateZones,
     Optional<List<ZoneTime>?>? powerZones,
     Optional<List<PowerRecord>?>? powerRecords,
+    Optional<int?>? ftpSuggestionW,
+    Optional<String?>? ftpSuggestionMethod,
+    Optional<String?>? ftpSuggestionId,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -484,6 +532,9 @@ class RideResponse {
     heartRateZones: heartRateZones ?? this.heartRateZones,
     powerZones: powerZones ?? this.powerZones,
     powerRecords: powerRecords ?? this.powerRecords,
+    ftpSuggestionW: ftpSuggestionW ?? this.ftpSuggestionW,
+    ftpSuggestionMethod: ftpSuggestionMethod ?? this.ftpSuggestionMethod,
+    ftpSuggestionId: ftpSuggestionId ?? this.ftpSuggestionId,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -577,6 +628,9 @@ class RideResponse {
         heartRateZones: json.containsKey(r'heartRateZones') ? Optional.present(ZoneTime.listFromJson(json[r'heartRateZones'])) : const Optional.absent(),
         powerZones: json.containsKey(r'powerZones') ? Optional.present(ZoneTime.listFromJson(json[r'powerZones'])) : const Optional.absent(),
         powerRecords: json.containsKey(r'powerRecords') ? Optional.present(PowerRecord.listFromJson(json[r'powerRecords'])) : const Optional.absent(),
+        ftpSuggestionW: json.containsKey(r'ftpSuggestionW') ? Optional.present(json[r'ftpSuggestionW'] == null ? null : int.parse('${json[r'ftpSuggestionW']}')) : const Optional.absent(),
+        ftpSuggestionMethod: json.containsKey(r'ftpSuggestionMethod') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionMethod')) : const Optional.absent(),
+        ftpSuggestionId: json.containsKey(r'ftpSuggestionId') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionId')) : const Optional.absent(),
       );
     }
     return null;

@@ -29,6 +29,7 @@ import 'series_chart.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
+import '../../../core/widgets/ftp_suggestion_card.dart';
 import '../../../core/widgets/inline_error.dart';
 import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
@@ -253,6 +254,15 @@ class RideDetailScreen extends ConsumerWidget {
           key: const Key('ride-failed'),
         )
       else ...[
+        if (ride.ftpSuggestionW.value case final watts?)
+          FtpSuggestionCard(
+            watts: watts,
+            method: ride.ftpSuggestionMethod.value ?? '20min',
+            suggestionId: ride.ftpSuggestionId.value,
+            busy: s.action.running,
+            onAccept: notifier.acceptSuggestion,
+            onDismiss: notifier.dismissSuggestion,
+          ),
         if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
         PowerRecordChips(
           records: ride.powerRecords.orElse(const []) ?? const [],

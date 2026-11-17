@@ -641,4 +641,42 @@ void main() {
       expect(find.text('Best 20 min in 90 days: 268 W'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheFtpSuggestionAtTheTop_WhenTheRideSuggestsOne',
+    (tester) async {
+      server.rides[0]['ftpSuggestionW'] = 266;
+      server.rides[0]['ftpSuggestionMethod'] = '20min';
+      server.rides[0]['ftpSuggestionId'] = 'suggestion-1';
+      server.ftpSuggestions['rider@example.com'] = {
+        'id': 'suggestion-1',
+        'rideId': 'r1',
+        'watts': 266,
+        'method': '20min',
+        'effortWatts': 280,
+        'createdAt': '2026-11-01T09:00:00Z',
+      };
+      await open(tester);
+
+      expect(find.text('This ride suggests an FTP of 266 W'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('ftp-suggestion-use')));
+      await tester.pumpAndSettle();
+
+      expect(server.acceptedSuggestions, ['suggestion-1']);
+      // The accepted suggestion is gone from the server; the ride is read again and the card with it.
+      server.rides[0]['ftpSuggestionW'] = null;
+      server.rides[0]['ftpSuggestionMethod'] = null;
+      server.rides[0]['ftpSuggestionId'] = null;
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldHaveNoSuggestion_WhenTheRideHasNone', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
+  });
 }

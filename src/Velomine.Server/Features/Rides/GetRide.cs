@@ -29,10 +29,18 @@ public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, Ride
             return;
         }
 
+        var suggestion = await db.FtpSuggestions.AsNoTracking()
+            .Where(s => s.RideId == ride.Id && s.Status == FtpSuggestionStatuses.Open)
+            .Select(s => new { s.Id, s.Watts, s.Method })
+            .FirstOrDefaultAsync(ct);
         await Send.OkAsync(
             RideDetails.Build(ride) with
             {
                 PowerRecords = await PowerRecords.ForRideAsync(db, userId, ride.Id, ride.StartTime, ct),
+                // Only the owner sees the suggestion, and only on the ride it came from.
+                FtpSuggestionW = suggestion?.Watts,
+                FtpSuggestionMethod = suggestion?.Method,
+                FtpSuggestionId = suggestion?.Id,
             },
             ct);
     }

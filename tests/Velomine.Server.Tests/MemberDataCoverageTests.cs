@@ -31,6 +31,7 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         ["BikeTemplate"] = "templates.json",
         ["Goal"] = "goals.json",
         ["FtpHistory"] = "ftp-history.json",
+        ["FtpSuggestion"] = "ftp-suggestions.json",
         ["Notification"] = "notifications.json",
         ["UserSession"] = "sessions.json",
         ["DailyCheckIn"] = "wellbeing.json",
@@ -83,6 +84,7 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             ["BikeTemplate"] = (context, id) => context.BikeTemplates.CountAsync(r => r.UserId == id, Ct),
             ["Goal"] = (context, id) => context.Goals.CountAsync(r => r.UserId == id, Ct),
             ["FtpHistory"] = (context, id) => context.FtpHistory.CountAsync(h => h.UserId == id, Ct),
+            ["FtpSuggestion"] = (context, id) => context.FtpSuggestions.CountAsync(s => s.UserId == id, Ct),
             ["Notification"] = (context, id) => context.Notifications.CountAsync(r => r.UserId == id, Ct),
             ["UserSession"] = (context, id) => context.UserSessions.CountAsync(r => r.UserId == id, Ct),
             ["DailyCheckIn"] = (context, id) => context.DailyCheckIns.CountAsync(r => r.UserId == id, Ct),
@@ -159,6 +161,7 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             ["BikeTemplate"] = await db.BikeTemplates.CountAsync(r => r.UserId == member.Id, Ct),
             ["Goal"] = await db.Goals.CountAsync(r => r.UserId == member.Id, Ct),
             ["FtpHistory"] = await db.FtpHistory.CountAsync(h => h.UserId == member.Id, Ct),
+            ["FtpSuggestion"] = await db.FtpSuggestions.CountAsync(s => s.UserId == member.Id, Ct),
             ["Notification"] = await db.Notifications.CountAsync(r => r.UserId == member.Id, Ct),
             ["UserSession"] = await db.UserSessions.CountAsync(r => r.UserId == member.Id, Ct),
             ["DailyCheckIn"] = await db.DailyCheckIns.CountAsync(r => r.UserId == member.Id, Ct),
@@ -184,6 +187,7 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         Assert.Equal(0, counts["Notification"]);
         Assert.Equal(0, counts["Goal"]);
         Assert.Equal(0, counts["FtpHistory"]);
+        Assert.Equal(0, counts["FtpSuggestion"]);
     }
 
     private static async Task<Guid> AddBikeAsync(HttpClient client, Guid userId)

@@ -116,6 +116,13 @@ class FakeServer {
   /// How many times the member hid the FTP reminder.
   int snoozeRequests = 0;
 
+  /// The FTP a ride suggests, by email; a missing one is none.
+  final ftpSuggestions = <String, Map<String, Object?>>{};
+
+  /// The suggestions the member accepted and dismissed, in order.
+  final acceptedSuggestions = <String>[];
+  final dismissedSuggestions = <String>[];
+
   /// What GET /analytics/totals answers, by period; a missing period has no rides.
   final totals = <String, List<Map<String, Object?>>>{};
 
@@ -1120,6 +1127,39 @@ extension on FakeServer {
         'estimateMethod': null,
         ...?ftpCheck[caller.email],
       });
+    }
+
+    if (path == '/api/v1/analytics/ftp-suggestion' && request.method == 'GET') {
+      final suggestion = ftpSuggestions[caller.email];
+      if (suggestion == null) return http.Response('', 204);
+      return json(suggestion);
+    }
+
+    final suggestionCall = RegExp(
+      r'^/api/v1/analytics/ftp-suggestion/([^/]+)/(accept|dismiss)$',
+    ).firstMatch(path);
+    if (suggestionCall != null) {
+      final id = suggestionCall.group(1)!;
+      final open = ftpSuggestions[caller.email];
+      if (open == null || open['id'] != id) {
+        return http.Response('', 404);
+      }
+      if (suggestionCall.group(2) == 'dismiss') {
+        dismissedSuggestions.add(id);
+        ftpSuggestions.remove(caller.email);
+        return http.Response('', 204);
+      }
+      acceptedSuggestions.add(id);
+      final watts = open['watts']! as int;
+      final profile = {
+        ...?profiles[caller.email],
+        'ftpW': watts,
+        'ftpSource': 'test',
+        'ftpSetAt': '2026-11-10T09:00:00Z',
+      };
+      profiles[caller.email] = profile;
+      ftpSuggestions.remove(caller.email);
+      return json(_profileWithEstimate(profile));
     }
 
     if (path == '/api/v1/analytics/ftp-check/snooze') {
@@ -2462,6 +2502,9 @@ Map<String, Object?> rideJson(
   List<Map<String, Object?>> heartRateZones = const [],
   List<Map<String, Object?>> powerZones = const [],
   List<Map<String, Object?>> powerRecords = const [],
+  int? ftpSuggestionW,
+  String? ftpSuggestionMethod,
+  String? ftpSuggestionId,
   String? discipline,
   String? assist,
   String? environment,
@@ -2509,6 +2552,9 @@ Map<String, Object?> rideJson(
   'heartRateZones': heartRateZones,
   'powerZones': powerZones,
   'powerRecords': powerRecords,
+  'ftpSuggestionW': ftpSuggestionW,
+  'ftpSuggestionMethod': ftpSuggestionMethod,
+  'ftpSuggestionId': ftpSuggestionId,
 };
 
 /// One personal power record as the ride detail receives it.

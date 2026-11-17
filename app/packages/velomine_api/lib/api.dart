@@ -96,6 +96,7 @@ part 'model/ftp_check_response.dart';
 part 'model/ftp_estimate.dart';
 part 'model/ftp_history_entry.dart';
 part 'model/ftp_history_response.dart';
+part 'model/ftp_suggestion_response.dart';
 part 'model/goal_response.dart';
 part 'model/intensity_response.dart';
 part 'model/intensity_week.dart';

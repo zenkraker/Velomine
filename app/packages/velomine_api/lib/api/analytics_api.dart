@@ -16,6 +16,55 @@ class AnalyticsApi {
 
   final ApiClient apiClient;
 
+  /// Performs an HTTP 'POST /api/v1/analytics/ftp-suggestion/{suggestionId}/accept' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<Response> acceptFtpSuggestionWithHttpInfo(String suggestionId, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/ftp-suggestion/{suggestionId}/accept'
+      .replaceAll('{suggestionId}', suggestionId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<ProfileResponse?> acceptFtpSuggestion(String suggestionId, { Future<void>? abortTrigger, }) async {
+    final response = await acceptFtpSuggestionWithHttpInfo(suggestionId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ProfileResponse',) as ProfileResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/analytics/goals' operation and returns the [Response].
   /// Parameters:
   ///
@@ -105,6 +154,47 @@ class AnalyticsApi {
     }
   }
 
+  /// Performs an HTTP 'POST /api/v1/analytics/ftp-suggestion/{suggestionId}/dismiss' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<Response> dismissFtpSuggestionWithHttpInfo(String suggestionId, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/ftp-suggestion/{suggestionId}/dismiss'
+      .replaceAll('{suggestionId}', suggestionId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<void> dismissFtpSuggestion(String suggestionId, { Future<void>? abortTrigger, }) async {
+    final response = await dismissFtpSuggestionWithHttpInfo(suggestionId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'GET /api/v1/analytics/ftp-check' operation and returns the [Response].
   Future<Response> getFtpCheckWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -142,6 +232,48 @@ class AnalyticsApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'FtpCheckResponse',) as FtpCheckResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/analytics/ftp-suggestion' operation and returns the [Response].
+  Future<Response> getFtpSuggestionWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/ftp-suggestion';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<FtpSuggestionResponse?> getFtpSuggestion({ Future<void>? abortTrigger, }) async {
+    final response = await getFtpSuggestionWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'FtpSuggestionResponse',) as FtpSuggestionResponse;
     
     }
     return null;

@@ -533,4 +533,63 @@ void main() {
     expect(server.snoozeRequests, 1);
     expect(find.byKey(const Key('ftp-reminder')), findsNothing);
   });
+
+  testWidgets(
+    'ProgressScreen_ShouldShowTheSuggestionInsteadOfTheReminder_WhenARideSuggestsAnFtp',
+    (tester) async {
+      server.ftpSuggestions['rider@example.com'] = {
+        'id': 'suggestion-1',
+        'rideId': 'ride-1',
+        'watts': 266,
+        'method': '20min',
+        'effortWatts': 280,
+        'createdAt': '2026-11-10T09:00:00Z',
+      };
+      server.ftpCheck['rider@example.com'] = {
+        'reason': 'stale',
+        'ftpW': 250,
+        'ftpAgeDays': 49,
+        'estimateW': 268,
+        'estimateMethod': '20min',
+      };
+      await openProgress(tester);
+
+      final card = find.byKey(const Key('ftp-suggestion'));
+      await reveal(tester, card);
+      expect(find.text('This ride suggests an FTP of 266 W'), findsOneWidget);
+      expect(find.text('95 % of your best 20 minutes (280 W)'), findsOneWidget);
+      // The reminder would ask about the number the suggestion is about to replace.
+      expect(find.byKey(const Key('ftp-reminder')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('ftp-suggestion-use')));
+      await tester.pumpAndSettle();
+
+      expect(server.acceptedSuggestions, ['suggestion-1']);
+      expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldDropTheSuggestion_WhenTheMemberDismissesIt',
+    (tester) async {
+      server.ftpSuggestions['rider@example.com'] = {
+        'id': 'suggestion-2',
+        'rideId': 'ride-1',
+        'watts': 272,
+        'method': '30min',
+        'effortWatts': 280,
+        'createdAt': '2026-11-10T09:00:00Z',
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('ftp-suggestion')));
+      expect(find.text('97 % of your best 30 minutes (280 W)'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('ftp-suggestion-dismiss')));
+      await tester.pumpAndSettle();
+
+      expect(server.dismissedSuggestions, ['suggestion-2']);
+      expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
+    },
+  );
 }

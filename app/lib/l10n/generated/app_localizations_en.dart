@@ -2836,6 +2836,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ftpBeforeHistory => 'Before history was kept';
 
   @override
+  String ftpSuggestionTitle(String watts) {
+    return 'This ride suggests an FTP of $watts W';
+  }
+
+  @override
+  String ftpSuggestionMethod20(String effort) {
+    return '95 % of your best 20 minutes ($effort W)';
+  }
+
+  @override
+  String ftpSuggestionMethod30(String effort) {
+    return '97 % of your best 30 minutes ($effort W)';
+  }
+
+  @override
+  String get ftpSuggestionMethod60 => 'Your best 60 minutes';
+
+  @override
+  String ftpSuggestionUse(String watts) {
+    return 'Use $watts W';
+  }
+
+  @override
+  String get ftpSuggestionDismiss => 'Dismiss';
+
+  @override
+  String notificationFtpSuggested(String record) {
+    return 'A ride suggests an FTP of $record.';
+  }
+
+  @override
   String get vo2MaxEstimate => 'VO2max estimate';
 
   @override

@@ -48,4 +48,4 @@ final class ProgressDataProvider
   }
 }
 
-String _$progressDataHash() => r'd6b5aaa4079bcf520a9adbd65dc4251057fba8ce';
+String _$progressDataHash() => r'9686df848faa55786baf002f7cfe589bd89375b2';

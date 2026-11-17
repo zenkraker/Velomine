@@ -24,6 +24,7 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'club_ride_changed' => l10n.notificationClubRideChanged(n.subject),
       'club_ride_cancelled' => l10n.notificationClubRideCancelled(n.subject),
       'power_record' => l10n.notificationPowerRecord(n.subject),
+      'ftp_suggested' => l10n.notificationFtpSuggested(n.subject),
       _ => n.subject,
     };
 
@@ -35,7 +36,8 @@ String? notificationTarget(NotificationResponse n) => switch (n.type) {
   'ride_ready' ||
   'ride_failed' ||
   'ride_duplicate' ||
-  'power_record' when n.rideId != null => '/rides/${n.rideId}',
+  'power_record' ||
+  'ftp_suggested' when n.rideId != null => '/rides/${n.rideId}',
   'part_soon' ||
   'part_worn' ||
   'reminder_soon' ||

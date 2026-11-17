@@ -234,7 +234,12 @@ class FtpReminderViewModel extends _$FtpReminderViewModel {
 
   Future<void> load() async {
     final generation = ++_loadGeneration;
-    final result = await ref.read(progressDataProvider).ftpCheck();
+    // A suggestion and the reminder's reason are read together: one open suggestion or the other, never both.
+    final data = ref.read(progressDataProvider);
+    final (result, suggestion) = await (
+      data.ftpCheck(),
+      data.ftpSuggestion(),
+    ).wait;
     if (!ref.mounted || generation != _loadGeneration) return;
     state = state.copyWith(
       check: switch (result) {
@@ -242,7 +247,42 @@ class FtpReminderViewModel extends _$FtpReminderViewModel {
         // A check that could not be read says nothing: a silent card beats a wrong one.
         Failed() => null,
       },
+      suggestion: suggestion.valueOrNull,
     );
+  }
+
+  /// Adopts a ride's suggestion as the FTP. Past TSS stays as it was; zones and new load use the new value.
+  Future<void> useSuggestion(String suggestionId) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(progressDataProvider)
+        .acceptFtpSuggestion(suggestionId);
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    ref
+      ..invalidate(powerCurveViewModelProvider)
+      ..invalidate(trainingViewModelProvider);
+    await load();
+  }
+
+  Future<void> dismissSuggestion(String suggestionId) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(progressDataProvider)
+        .dismissFtpSuggestion(suggestionId);
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    await load();
   }
 
   /// "Not now": the server keeps it quiet for two weeks.

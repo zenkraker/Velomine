@@ -9,12 +9,20 @@ part 'profile_data.g.dart';
 
 /// The profile endpoints as values: the ViewModel never sees an exception.
 class ProfileData {
-  ProfileData(this._api);
+  ProfileData(this._api, this._rides);
 
   final AccountsApi _api;
+  final RidesApi _rides;
 
   Future<Result<ProfileResponse?>> profile() =>
       _api.getProfile().guard(FailureAction.loadProfile);
+
+  /// When the ride a test FTP came from started; null when it cannot be read, and the note then uses the day
+  /// the FTP was set.
+  Future<DateTime?> rideStart(String id) async {
+    final ride = await _rides.getRide(id).guard(FailureAction.loadProfile);
+    return ride.valueOrNull?.startTime;
+  }
 
   Future<Result<TelemetryResponse?>> telemetry() =>
       _api.getTelemetry().guard(FailureAction.loadProfile);
@@ -86,5 +94,7 @@ class ProfileData {
 }
 
 @Riverpod(keepAlive: true)
-ProfileData profileData(Ref ref) =>
-    ProfileData(ref.watch(sessionProvider).accounts);
+ProfileData profileData(Ref ref) {
+  final session = ref.watch(sessionProvider);
+  return ProfileData(session.accounts, session.rides);
+}

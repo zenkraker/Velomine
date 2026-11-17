@@ -4,7 +4,10 @@ using Velomine.Server.Data;
 
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>What the member tells Velomine about themselves. Null means not set. The FTP's date and source come from its history.</summary>
+/// <summary>
+/// What the member tells Velomine about themselves. Null means not set. The FTP's date and source come from its
+/// history, and a test FTP also names the ride it came from, whose own start time is the day of the effort.
+/// </summary>
 public sealed record ProfileResponse(
     string DisplayName,
     int? FtpW,
@@ -19,7 +22,8 @@ public sealed record ProfileResponse(
     bool EmailTrainingNotifications,
     DateOnly? SoloTrialEndsAt,
     DateTimeOffset? FtpSetAt = null,
-    string? FtpSource = null);
+    string? FtpSource = null,
+    Guid? FtpRideId = null);
 
 public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<ProfileResponse>
 {
@@ -36,7 +40,10 @@ public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<Pr
         await Send.OkAsync(await ProfileOfAsync(db, user, ct), ct);
     }
 
-    /// <summary>The profile, with when and how the current FTP was set: both null when the rider has no FTP.</summary>
+    /// <summary>
+    /// The profile, with when and how the current FTP was set (both null when the rider has no FTP) and, when the
+    /// newest row is a test, the ride it came from.
+    /// </summary>
     public static async Task<ProfileResponse> ProfileOfAsync(VelomineDbContext db, User u, CancellationToken ct)
     {
         var newest = u.FtpW is null
@@ -44,9 +51,14 @@ public sealed class GetProfile(VelomineDbContext db) : EndpointWithoutRequest<Pr
             : await db.FtpHistory.AsNoTracking()
                 .Where(h => h.UserId == u.Id)
                 .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Id)
-                .Select(h => new { h.SetAt, h.Source })
+                .Select(h => new { h.SetAt, h.Source, h.RideId })
                 .FirstOrDefaultAsync(ct);
-        return ProfileOf(u) with { FtpSetAt = newest?.SetAt, FtpSource = newest?.Source };
+        return ProfileOf(u) with
+        {
+            FtpSetAt = newest?.SetAt,
+            FtpSource = newest?.Source,
+            FtpRideId = newest is { Source: FtpSources.Test } ? newest.RideId : null,
+        };
     }
 
     public static ProfileResponse ProfileOf(User u) =>
