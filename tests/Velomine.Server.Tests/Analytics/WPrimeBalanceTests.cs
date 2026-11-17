@@ -38,6 +38,71 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
     private static async Task AddFitAsync(TestApi api, Guid userId) =>
         await AddBestsAsync(api, userId, (120, 417), (300, 317), (600, 283), (1200, 267));
 
+    [Fact]
+    public void WPrimeBalance_ShouldKeepOneBalancePerSample_WhenSamplesAreThreeSecondsApart()
+    {
+        var streams = GappedStreams(5, stepS: 3, watts: 350);
+
+        var balance = WPrimeBalance.ForRide(streams, Fit);
+
+        Assert.NotNull(balance);
+        Assert.Equal(streams.Time.Length, balance.PerSample.Length);
+        // 350 W for the 12 s of the 3 s stretches is 1,200 J above CP. Each sample holds the balance its stretch
+        // ended on: one value per sample, never two samples late, and the balances step with time.
+        Assert.Equal<int?>([19_700, 19_400, 19_100, 18_800, 18_800], balance.PerSample);
+        Assert.InRange(balance.MinJ!.Value, 18_800, 18_900);
+    }
+
+    [Fact]
+    public void WPrimeBalance_ShouldKeepOneBalancePerSample_WhenSamplesAreFiveSecondsApart()
+    {
+        var streams = GappedStreams(7, stepS: 5, watts: 350);
+
+        var balance = WPrimeBalance.ForRide(streams, Fit);
+
+        Assert.NotNull(balance);
+        Assert.Equal(streams.Time.Length, balance.PerSample.Length);
+        // 5 stretches of 5 s at 350 W is 2,500 J above CP, and the balance is the ride ending on its last sample.
+        Assert.InRange(balance.MinJ!.Value, 16_900, 17_100);
+        Assert.InRange((int)balance.PerSample[^1]!, 16_900, 17_100);
+    }
+
+    [Fact]
+    public void WPrimeBalance_ShouldEndAtFourteenThousand_WhenSixtySecondsAreRiddenAtOneHertz()
+    {
+        // The steady 1 Hz maths must not move: 60 s at 350 W against CP 250 and W′ 20,000 ends at 14,000 J. A sample
+        // shows its stretch's balance after the seconds up to it, so the 60th second's reading is on sample 59.
+        var balance = WPrimeBalance.ForRide(GappedStreams(61, stepS: 1, watts: 350), Fit);
+
+        Assert.NotNull(balance);
+        Assert.Equal(61, balance.PerSample.Length);
+        Assert.InRange((int)balance.PerSample[^1]!, 13_900, 14_100);
+    }
+
+    /// <summary>Streams of samples <paramref name="stepS"/> apart, each holding the same power.</summary>
+    private static RideStreams GappedStreams(int count, int stepS, short watts) => new()
+    {
+        RideId = Guid.NewGuid(),
+        Time = [.. Enumerable.Range(0, count).Select(i => (double)(i * stepS))],
+        Power = [.. Enumerable.Repeat<short?>(watts, count)],
+    };
+
+    [Fact]
+    public async Task GetRideStreams_ShouldReturnEverySample_WhenSamplesAreGapped()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        await AddFitAsync(api, member.Id);
+        (await SetFtpAsync(member.Client, 250)).EnsureSuccessStatusCode();
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, RideFile(Now.AddMinutes(-30), 120, 350, recordEveryS: 3));
+
+        var response = await member.Client.GetAsync($"/api/v1/rides/{ride.Id}/streams", Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var streams = await response.Content.ReadFromJsonAsync<RideStreamsResponse>(Ct);
+        Assert.Equal(streams!.Time.Length, streams.WPrimeBalanceJ!.Length);
+    }
+
     /// <summary>Critical power and W′ as the story writes them: CP 250 W, W′ 20,000 J.</summary>
     private static readonly CriticalPowerEstimate Fit = new(250, 20_000, null, 1, [120, 300, 600, 1200]);
 
@@ -55,8 +120,8 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
     private static Task<HttpResponseMessage> SetFtpAsync(HttpClient client, int watts) =>
         client.PutAsJsonAsync("/api/v1/accounts/me/ftp", new SetFtpRequest(watts), Ct);
 
-    /// <summary>A FIT file at one power every second, paused from <paramref name="pauseAtS"/> for <paramref name="pauseS"/>.</summary>
-    private static byte[] RideFile(DateTimeOffset start, int seconds, int watts, int? pauseAtS = null, int pauseS = 0)
+    /// <summary>A FIT file at one power every <paramref name="recordEveryS"/> seconds, paused from <paramref name="pauseAtS"/> for <paramref name="pauseS"/>.</summary>
+    private static byte[] RideFile(DateTimeOffset start, int seconds, int watts, int? pauseAtS = null, int pauseS = 0, int recordEveryS = 1)
     {
         using var stream = new MemoryStream();
         var encode = new Encode(ProtocolVersion.V20);
@@ -97,6 +162,8 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
                 encode.Write(resume);
                 continue;
             }
+
+            if (s % recordEveryS != 0) continue;
 
             var record = new RecordMesg();
             record.SetTimestamp(new Dynastream.Fit.DateTime(start.AddSeconds(s).UtcDateTime));

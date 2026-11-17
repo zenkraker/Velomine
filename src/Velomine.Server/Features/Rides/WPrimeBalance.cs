@@ -57,7 +57,7 @@ public static class WPrimeBalance
             balance = over > 0 ? balance - over : balance + (wPrime - balance) * -over / wPrime;
             balance = Math.Min(balance, wPrime);
             lowest = Math.Min(lowest, balance);
-            perSample[last] = (int)Math.Round(balance);
+            perSample[Math.Min(last, perSample.Length - 1)] = (int)Math.Round(balance);
             stretch = secondsStretch;
         }
 

@@ -316,8 +316,10 @@ public static class RideMetrics
                 continue;
             }
 
+            // Every second of the stretch belongs to the sample it starts from, so a gapped recording never puts a
+            // second past the end of the arrays or two samples late.
             var seconds = Math.Max(1, (int)Math.Round(dt));
-            for (var s = 0; s < seconds; s++) result.Add((stretch, i, i + seconds - 1, value));
+            for (var s = 0; s < seconds; s++) result.Add((stretch, i, i, value));
         }
 
         return [.. result];
