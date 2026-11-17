@@ -191,6 +191,7 @@
           pkgs.scaleway-cli # scw, for the read-only profile and `scw init`
           scalewayMcp # read-only Scaleway MCP (see above)
           opencodeCli # alternative to Claude Code
+          pkgs.herdr # terminal workspace above both agents: panes, status, sessions that survive a closed window
 
           # Flutter's own command-line needs, plus helpers
           pkgs.git

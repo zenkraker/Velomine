@@ -41,6 +41,7 @@ You only need a few ideas to use this setup.
 | Node.js | from nixpkgs | Ponytail's Claude Code hooks (see [AGENTS.md](../AGENTS.md)) |
 | CodeGraph | from nixpkgs | Required by AGENTS.md, so there's no `curl … \| sh` install |
 | OpenCode | from nixpkgs | AI coding agent, an alternative to Claude Code |
+| herdr | 0.9.5 (from nixpkgs) | Terminal workspace above the agents: Claude Code and OpenCode in panes side by side, with each one's status (working, waiting, done), and sessions that survive a closed window or SSH drop. See *Running both agents with herdr*. |
 | VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code (same version as the CLI) and OpenCode V2. It is the same Microsoft build as `visual-studio-code-bin`. |
 | just | from nixpkgs | Runs the commands in the `justfile` |
 | nixd | from nixpkgs | Language server for editing `flake.nix` |
@@ -128,6 +129,24 @@ Ponytail keeps changes small (smallest complete change, YAGNI, stdlib first). It
 CodeGraph indexes the code into a local symbol graph and gives the agent one MCP tool, `codegraph_explore`, which returns the source of the relevant symbols with their call paths (`codegraph explore "..."` does the same in a shell). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook, so `codegraph` must be on PATH when Claude Code starts: start it from the dev shell. Without Nix, install it with `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`.
 
 OpenCode reads `AGENTS.md` directly and takes its MCP servers and plugins from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. OpenCode needs no install command for ponytail: the `plugins` entry loads `@dietrichgebert/ponytail` from npm on first start and keeps it active in every session of this repository. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
+
+#### Running both agents with herdr
+
+herdr runs Claude Code and OpenCode side by side in one terminal and keeps them alive when the window closes. Start it from the repository with the dev shell loaded, so every pane inherits `claude`, `opencode`, `dart`, `codegraph` and the MCP wrappers:
+
+```
+herdr
+```
+
+Open a pane per agent and start `claude` or `opencode` in it as usual; herdr recognises both. For exact status (working, waiting for you, done) instead of reading the screen, run once per agent: `herdr integration install claude` and `herdr integration install opencode`. These write hooks into each agent's own user settings (`~/.claude/`, `~/.config/opencode/`), never into the repository; don't commit them. herdr only runs the agents: the rules still come from `AGENTS.md`, `CLAUDE.md` and `opencode.json`.
+
+herdr keeps its config and logs in `~/.config/herdr/`. By default it checks herdr.dev in the background for new versions and agent-detection updates. The flake pins the version, so you can turn both off in `~/.config/herdr/config.toml`:
+
+```toml
+[update]
+version_check = false
+manifest_check = false
+```
 
 #### OpenCode desktop
 
