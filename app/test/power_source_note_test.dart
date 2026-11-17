@@ -1,0 +1,130 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
+import 'package:velomine/core/widgets/source_note.dart';
+
+import 'fake_server.dart';
+
+/// Where each number on the progress power card came from (Story 2).
+void main() {
+  late FakeServer server;
+
+  setUp(() {
+    server = FakeServer();
+    server.signInBrowser(server.add('rider@example.com', name: 'Ada'));
+  });
+
+  Future<void> openProgress(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+  }
+
+  /// Every note on the power card, in order: current FTP, estimate, VO2max.
+  List<SourceNote> notes(WidgetTester tester) =>
+      tester.widgetList<SourceNote>(find.byType(SourceNote)).toList();
+
+  void giveFtp(int watts) => server.profiles['rider@example.com'] = {
+    'displayName': 'Ada',
+    'ftpW': watts,
+    'weightKg': null,
+    'birthYear': null,
+    'timeZone': null,
+    'firstDayOfWeek': 'monday',
+    'emailNotifications': true,
+    'emailAccountNotifications': true,
+    'emailTrainingNotifications': false,
+    'hasPassword': true,
+  };
+
+  testWidgets(
+    'PowerSummary_ShouldSayTheFtpWasSetByTheRider_WhenTheSourceIsManual',
+    (tester) async {
+      giveFtp(250);
+      server.ftpHistory['rider@example.com'] = [
+        {
+          'watts': 250,
+          'setAt': '2026-11-12T09:00:00Z',
+          'source': 'manual',
+          'rideId': null,
+        },
+      ];
+      await openProgress(tester);
+
+      expect(
+        notes(tester).first.text,
+        'Set by you on ${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
+      );
+    },
+  );
+
+  testWidgets('PowerSummary_ShouldOpenTheRide_WhenTheFtpCameFromATest', (
+    tester,
+  ) async {
+    server.rides.add(rideJson('r1', 'ready', distanceM: 42300, movingS: 5400));
+    giveFtp(250);
+    server.ftpHistory['rider@example.com'] = [
+      {
+        'watts': 250,
+        'setAt': '2026-11-12T09:00:00Z',
+        'source': 'test',
+        'rideId': 'r1',
+      },
+    ];
+    await openProgress(tester);
+
+    final note = notes(tester).first;
+    expect(
+      note.text,
+      'From your ride on '
+      '${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
+    );
+
+    // The note is a way back to the ride it names.
+    await tester.tap(find.text(note.text));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('ride-title')), findsOneWidget);
+    expect(server.requests, contains('GET /api/v1/rides/r1'));
+  });
+
+  testWidgets('PowerSummary_ShouldExplainTheEstimate_WhenAnEstimateExists', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    // The rider has no FTP of their own, so the estimate's note is the first.
+    expect(
+      notes(tester).first.text,
+      '95 % of your best 20 minutes, on '
+      '${DateFormat.yMMMd().format(DateTime(2026, 10, 20))}',
+    );
+  });
+
+  testWidgets('PowerSummary_ShouldExplainTheVo2Max_WhenThereIsOne', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': null,
+      'weightKg': 70.0,
+      'birthYear': null,
+      'timeZone': null,
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+    };
+    await openProgress(tester);
+
+    expect(
+      notes(tester).last.text,
+      'From your best 5 minutes on '
+      '${DateFormat.yMMMd().format(DateTime(2026, 10, 20))} and your weight',
+    );
+  });
+}

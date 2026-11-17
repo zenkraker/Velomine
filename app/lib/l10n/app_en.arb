@@ -1218,6 +1218,7 @@
     }
   },
   "estimatedMaxHeartRateNone": "Add your year of birth to estimate it.",
+  "maxHeartRateSource": "Estimated from your year of birth (208 − 0.7 × age)",
   "timeZone": "Time zone",
   "timeZoneHelper": "Decides which day a ride counts on when its file does not say. Empty means UTC.",
   "firstDayOfWeek": "Weeks start on",
@@ -1456,6 +1457,30 @@
   "vo2MaxFrom5Min": "from your best 5-minute power and weight",
   "vo2MaxNeedsWeight": "Set your weight to estimate VO2max.",
   "vo2MaxNeedsEffort": "A 5-minute effort is needed to estimate VO2max.",
+  "ftpEstimateSource20": "95 % of your best 20 minutes, on {date}",
+  "@ftpEstimateSource20": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpEstimateSource8": "90 % of your best 8 minutes, on {date}",
+  "@ftpEstimateSource8": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "vo2MaxSource": "From your best 5 minutes on {date} and your weight",
+  "@vo2MaxSource": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "coachWellbeing": "Wellbeing",
   "coachWellbeingEmpty": "Wellbeing was shared, but there are no check-ins yet.",
   "coachWellbeingNoNotes": "Scores and RPE only. Notes stay private.",

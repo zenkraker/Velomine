@@ -695,6 +695,7 @@
     }
   },
   "estimatedMaxHeartRateNone": "Aggiungi il tuo anno di nascita per stimarla.",
+  "maxHeartRateSource": "Stimata dal tuo anno di nascita (208 − 0,7 × età)",
   "timeZone": "Fuso orario",
   "timeZoneHelper": "Decide in quale giorno conta un'uscita quando il file non lo indica. Vuoto significa UTC.",
   "firstDayOfWeek": "La settimana inizia di",
@@ -898,6 +899,9 @@
   "vo2MaxFrom5Min": "dalla migliore potenza sui 5 minuti e dal peso",
   "vo2MaxNeedsWeight": "Imposta il peso per stimare il VO2max.",
   "vo2MaxNeedsEffort": "Serve uno sforzo di 5 minuti per stimare il VO2max.",
+  "ftpEstimateSource20": "95 % dei tuoi migliori 20 minuti, il {date}",
+  "ftpEstimateSource8": "90 % dei tuoi migliori 8 minuti, il {date}",
+  "vo2MaxSource": "Dai tuoi migliori 5 minuti il {date} e dal tuo peso",
   "coachWellbeing": "Benessere",
   "coachWellbeingEmpty": "Il benessere è condiviso, ma non ci sono ancora check-in.",
   "coachWellbeingNoNotes": "Solo punteggi e RPE. Le note restano private.",

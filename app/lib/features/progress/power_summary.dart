@@ -3,11 +3,14 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/widgets/range_selector.dart';
+import '../../core/widgets/source_note.dart';
 import '../../core/tokens.dart';
 
-/// Best efforts over a range, with an FTP suggestion and (for the member) VO2max.
+/// Best efforts over a range, with an FTP suggestion and (for the member) VO2max. Under a number
+/// that Velomine worked out, a [SourceNote] says where it came from.
 class PowerSummary extends StatelessWidget {
   const PowerSummary({
     super.key,
@@ -15,6 +18,9 @@ class PowerSummary extends StatelessWidget {
     required this.days,
     required this.onDays,
     this.onUseFtp,
+    this.ftpNote,
+    this.ftpRideId,
+    this.onOpenRide,
     this.readOnly = false,
   });
 
@@ -24,6 +30,15 @@ class PowerSummary extends StatelessWidget {
 
   /// Null in a coach's read-only view: only the member can change their FTP.
   final Future<void> Function(int watts)? onUseFtp;
+
+  /// Where the current FTP came from; the member's own history says it.
+  final String? ftpNote;
+
+  /// The ride the current FTP came from, when it came from one.
+  final String? ftpRideId;
+
+  /// Opens a ride by its id, for a note that can be read back.
+  final void Function(String rideId)? onOpenRide;
   final bool readOnly;
 
   @override
@@ -118,6 +133,11 @@ class PowerSummary extends StatelessWidget {
                     detail: curve.ftp?.wPerKg == null
                         ? null
                         : '${curve.ftp!.wPerKg} W/kg',
+                    note: ftpNote,
+                    onNoteTap: switch ((ftpRideId, onOpenRide)) {
+                      (final id?, final open?) => () => open(id),
+                      _ => null,
+                    },
                   ),
                 if (curve.ftp case final ftp?)
                   _Estimate(
@@ -126,12 +146,16 @@ class PowerSummary extends StatelessWidget {
                     detail: ftp.method == '8min'
                         ? l10n.ftpMethod8
                         : l10n.ftpMethod20,
+                    note: ftp.method == '8min'
+                        ? l10n.ftpEstimateSource8(dateOnly(ftp.from))
+                        : l10n.ftpEstimateSource20(dateOnly(ftp.from)),
                   ),
                 if (!readOnly && vo2Max != null)
                   _Estimate(
                     label: l10n.vo2MaxEstimate,
                     value: vo2Max.value.toStringAsFixed(1),
                     detail: l10n.vo2MaxFrom5Min,
+                    note: l10n.vo2MaxSource(dateOnly(vo2Max.from)),
                   ),
               ],
             ),
@@ -180,15 +204,26 @@ class PowerSummary extends StatelessWidget {
 }
 
 class _Estimate extends StatelessWidget {
-  const _Estimate({required this.label, required this.value, this.detail});
+  const _Estimate({
+    required this.label,
+    required this.value,
+    this.detail,
+    this.note,
+    this.onNoteTap,
+  });
 
   final String label;
   final String value;
   final String? detail;
 
+  /// Where the number came from, in one line under it.
+  final String? note;
+  final VoidCallback? onNoteTap;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final note = this.note;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -201,6 +236,11 @@ class _Estimate extends StatelessWidget {
           SizedBox(
             width: AppProgress.detailWidth,
             child: Text(detail!, style: text.bodySmall),
+          ),
+        if (note != null)
+          SizedBox(
+            width: AppProgress.detailWidth,
+            child: SourceNote(note, onTap: onNoteTap),
           ),
       ],
     );

@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/source_note.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -46,6 +48,29 @@ void main() {
     expect(find.textContaining('Estimated maximum heart rate'), findsOneWidget);
     expect(field('profile-zone'), 'Europe/Rome');
     expect(find.text('Sunday'), findsOneWidget);
+  });
+
+  testWidgets('ProfileScreen_ShouldExplainTheMaxHeartRate_WhenItIsEstimated', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'ftpW': null,
+      'weightKg': null,
+      'birthYear': 1990,
+      'timeZone': null,
+      'firstDayOfWeek': 'monday',
+      'emailNotifications': true,
+      'emailAccountNotifications': true,
+      'emailTrainingNotifications': false,
+      'hasPassword': true,
+    };
+    await openProfile(tester);
+
+    final note = tester.widget<SourceNote>(
+      find.byKey(const Key('profile-max-hr-source')),
+    );
+    expect(note.text, 'Estimated from your year of birth (208 − 0.7 × age)');
   });
 
   testWidgets(

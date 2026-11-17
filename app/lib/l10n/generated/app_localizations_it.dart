@@ -2226,6 +2226,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi il tuo anno di nascita per stimarla.';
 
   @override
+  String get maxHeartRateSource =>
+      'Stimata dal tuo anno di nascita (208 − 0,7 × età)';
+
+  @override
   String get timeZone => 'Fuso orario';
 
   @override
@@ -2829,6 +2833,21 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get vo2MaxNeedsEffort =>
       'Serve uno sforzo di 5 minuti per stimare il VO2max.';
+
+  @override
+  String ftpEstimateSource20(String date) {
+    return '95 % dei tuoi migliori 20 minuti, il $date';
+  }
+
+  @override
+  String ftpEstimateSource8(String date) {
+    return '90 % dei tuoi migliori 8 minuti, il $date';
+  }
+
+  @override
+  String vo2MaxSource(String date) {
+    return 'Dai tuoi migliori 5 minuti il $date e dal tuo peso';
+  }
 
   @override
   String get coachWellbeing => 'Benessere';

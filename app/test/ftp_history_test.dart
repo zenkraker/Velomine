@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
+import 'package:velomine/core/widgets/source_note.dart';
 
 import 'fake_server.dart';
 
@@ -65,12 +66,12 @@ void main() {
           .text,
       '250',
     );
-    // The date in the rider's locale, short form.
-    final line = tester
-        .widget<Text>(find.byKey(const Key('profile-ftp-source')))
-        .data;
+    // The date in the rider's locale, short form, in the shared source note.
+    final line = tester.widget<SourceNote>(
+      find.byKey(const Key('profile-ftp-source')),
+    );
     expect(
-      line,
+      line.text,
       'Set by you on ${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
     );
   });

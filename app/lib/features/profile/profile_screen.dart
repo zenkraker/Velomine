@@ -24,6 +24,7 @@ import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/source_note.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
 import '../accounts/ftp_source_text.dart';
@@ -317,14 +318,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: l10n.name,
           ),
           _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
-          if (s.profile?.ftpSource.value case final source?)
-            Text(
-              ftpSourceText(l10n, source, s.profile?.ftpSetAt.value),
-              key: const Key('profile-ftp-source'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+          // Where the FTP came from, read from the newest row of its history.
+          if (s.profile case final profile?)
+            if (profileFtpSourceText(l10n, profile) case final note?)
+              SourceNote(note, key: const Key('profile-ftp-source')),
           _number(
             'profile-weight',
             _weight,
@@ -338,6 +335,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             l10n.birthYear,
             '',
             helper: l10n.birthYearHelper,
+          ),
+          SourceNote(
+            l10n.maxHeartRateSource,
+            key: const Key('profile-max-hr-source'),
           ),
           Text(
             _estimatedMaxHr == null

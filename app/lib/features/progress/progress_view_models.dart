@@ -161,23 +161,29 @@ class TrainingViewModel extends _$TrainingViewModel {
 class PowerCurveViewModel extends _$PowerCurveViewModel {
   int _messageId = 0;
   int _loadGeneration = 0;
+  List<FtpHistoryEntry> _history = const [];
 
   @override
   PowerState build() {
     if (ref.watch(signedInUserIdProvider) == null) return const PowerState();
     ref.watch(progressFiltersViewModelProvider.select((f) => f.powerDays));
     Future.microtask(load);
-    return const PowerState();
+    return PowerState(history: _history);
   }
 
   Future<void> load() async {
     final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
-    final result = await ref
-        .read(progressDataProvider)
-        .powerCurve(ref.read(progressFiltersViewModelProvider).powerDays);
+    // The curve and the history behind its current FTP are read together, so the card never
+    // shows a number before it knows where that number came from.
+    final data = ref.read(progressDataProvider);
+    final (result, history) = await (
+      data.powerCurve(ref.read(progressFiltersViewModelProvider).powerDays),
+      data.ftpHistory(),
+    ).wait;
     if (!ref.mounted || generation != _loadGeneration) return;
-    state = state.copyWith(load: state.load.finish(result));
+    _history = history.valueOrNull?.entries ?? const [];
+    state = state.copyWith(load: state.load.finish(result), history: _history);
   }
 
   /// Adopts the suggested FTP. Past TSS stays as it was; zones and new load use

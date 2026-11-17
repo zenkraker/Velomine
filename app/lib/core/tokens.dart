@@ -117,6 +117,12 @@ abstract final class AppLoading {
   static const double errorIcon = 18;
 }
 
+/// Where a number came from: the size of [SourceNote].
+abstract final class AppSourceNote {
+  /// The line's height: a comfortable tap target where the note opens something.
+  static const double minHeight = 24;
+}
+
 /// The floating navigation pill the shell draws over a phone's content.
 abstract final class AppNav {
   /// The collapsed rail's width: icons with labels under them.

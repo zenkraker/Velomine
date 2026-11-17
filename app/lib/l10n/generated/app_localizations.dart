@@ -3914,6 +3914,12 @@ abstract class AppLocalizations {
   /// **'Add your year of birth to estimate it.'**
   String get estimatedMaxHeartRateNone;
 
+  /// No description provided for @maxHeartRateSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated from your year of birth (208 − 0.7 × age)'**
+  String get maxHeartRateSource;
+
   /// No description provided for @timeZone.
   ///
   /// In en, this message translates to:
@@ -5005,6 +5011,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A 5-minute effort is needed to estimate VO2max.'**
   String get vo2MaxNeedsEffort;
+
+  /// No description provided for @ftpEstimateSource20.
+  ///
+  /// In en, this message translates to:
+  /// **'95 % of your best 20 minutes, on {date}'**
+  String ftpEstimateSource20(String date);
+
+  /// No description provided for @ftpEstimateSource8.
+  ///
+  /// In en, this message translates to:
+  /// **'90 % of your best 8 minutes, on {date}'**
+  String ftpEstimateSource8(String date);
+
+  /// No description provided for @vo2MaxSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From your best 5 minutes on {date} and your weight'**
+  String vo2MaxSource(String date);
 
   /// No description provided for @coachWellbeing.
   ///

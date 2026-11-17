@@ -77,20 +77,27 @@ class PowerState {
     this.load = const CommandState.idle(),
     this.action = const CommandState.idle(),
     this.messages = const [],
+    this.history = const [],
   });
 
   final CommandState<PowerCurveResponse?> load;
   final VoidCommand action;
   final List<UserMessage> messages;
 
+  /// The member's own FTP history, newest first: it says where the current FTP came from. Empty
+  /// when the history could not be read, and nothing to say is better than a wrong note.
+  final List<FtpHistoryEntry> history;
+
   PowerState copyWith({
     CommandState<PowerCurveResponse?>? load,
     VoidCommand? action,
     List<UserMessage>? messages,
+    List<FtpHistoryEntry>? history,
   }) => PowerState(
     load: load ?? this.load,
     action: action ?? this.action,
     messages: messages ?? this.messages,
+    history: history ?? this.history,
   );
 }
 

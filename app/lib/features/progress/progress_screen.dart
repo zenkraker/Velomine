@@ -2,6 +2,7 @@ import 'dart:async' show scheduleMicrotask;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
@@ -17,6 +18,8 @@ import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/stat_tile.dart';
 import '../../core/widgets/toolbar_row.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../accounts/ftp_source_text.dart';
 import '../rides/ride_type_chips.dart';
 import 'goals.dart';
 import 'ftp_history_sheet.dart';
@@ -33,6 +36,14 @@ import '../../core/units.dart';
 
 /// How many totals rows the table lists before the rest are counted.
 const _totalsShown = 8;
+
+/// Where the current FTP came from, from the newest row of the member's own history. Null when
+/// the history says nothing yet (no FTP, or the call failed): a missing note beats a wrong one.
+String? _ftpNote(AppLocalizations l10n, List<FtpHistoryEntry> history) {
+  final newest = history.firstOrNull;
+  if (newest == null) return null;
+  return ftpSourceText(l10n, newest.source_, newest.setAt);
+}
 
 /// Totals per week, month or year, goals, readiness, training, power and the
 /// daily check-in. Each source is its own ViewModel, so one failing endpoint
@@ -145,6 +156,9 @@ class ProgressScreen extends ConsumerWidget {
               .setPowerDays(days),
           onUseFtp: (watts) =>
               ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
+          ftpNote: _ftpNote(l10n, power.history),
+          ftpRideId: power.history.firstOrNull?.rideId,
+          onOpenRide: (id) => context.push('/rides/$id'),
         ),
     ];
 
