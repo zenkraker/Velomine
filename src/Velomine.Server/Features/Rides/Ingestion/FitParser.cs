@@ -160,7 +160,7 @@ public static class FitParser
         var eventList = timerEvents.ToList();
         var pauseEnd = eventList.Select(e => e.Time).DefaultIfEmpty(last).Max();
         var hasPositions = records.Any(r => r.Sample.Latitude is not null && r.Sample.Longitude is not null);
-        var dimensions = Dimensions(sport, subSport, hasPositions);
+        var dimensions = Dimensions(sport, subSport, hasPositions, device);
         var lastS = (last - first).TotalSeconds;
         var parsedLaps = (laps ?? [])
             .OrderBy(l => l.Start)
@@ -194,9 +194,10 @@ public static class FitParser
 
     /// <summary>
     /// Maps the session's sport and sub-sport onto the four dimensions. A sub-sport is the activity profile the
-    /// rider picked on the device; when it is absent, nothing about the surface is guessed.
+    /// rider picked on the device; when it is absent, nothing about the surface is guessed. A file written by Zwift is
+    /// virtual even without the virtual sub-sport: its coordinates are a virtual world laid over real places.
     /// </summary>
-    private static RideDimensions Dimensions(Sport? sport, SubSport? subSport, bool hasPositions)
+    private static RideDimensions Dimensions(Sport? sport, SubSport? subSport, bool hasPositions, string? device)
     {
         string? discipline = subSport switch
         {
@@ -218,6 +219,7 @@ public static class FitParser
         {
             SubSport.IndoorCycling or SubSport.Spin => Environments.Indoor,
             SubSport.VirtualActivity => Environments.Virtual,
+            _ when device == nameof(Manufacturer.Zwift) => Environments.Virtual,
             _ => hasPositions ? Environments.Outdoor : null,
         };
 

@@ -45,6 +45,21 @@ public sealed class ZwiftRideTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public void FitParser_ShouldReadAVirtualRide_WhenAZwiftFileHasNoVirtualSubSport()
+    {
+        var file = Fit(new FitSession(
+            Start,
+            600,
+            ManufacturerId: Manufacturer.Zwift,
+            StartLatitude: WatopiaLatitude,
+            StartLongitude: WatopiaLongitude));
+
+        var ride = Assert.Single(RideFileParser.Parse(file));
+
+        Assert.Equal("virtual", ride.Environment);
+    }
+
+    [Fact]
     public async Task UploadRide_ShouldStoreAVirtualRideWithPowerMetricsAndBests_WhenGivenAZwiftFile()
     {
         await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
