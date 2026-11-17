@@ -1079,6 +1079,13 @@ extension on FakeServer {
         'vo2Max': profile['weightKg'] == null
             ? null
             : {'value': 50.0, 'method': '5min', 'from': '2026-10-20'},
+        'criticalPower': {
+          'cpW': 250,
+          'wPrimeJ': 20000,
+          'peakW': 800,
+          'r2': 0.998,
+          'durations': [120, 300, 600, 1200],
+        },
       });
     }
 
@@ -1817,6 +1824,13 @@ extension on FakeServer {
           'wPerKg': null,
         },
         'vo2Max': null,
+        'criticalPower': {
+          'cpW': 250,
+          'wPrimeJ': 20000,
+          'peakW': 800,
+          'r2': 0.998,
+          'durations': [120, 300, 600, 1200],
+        },
       });
     }
 

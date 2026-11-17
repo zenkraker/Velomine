@@ -939,6 +939,12 @@
   "coachWellbeingEmpty": "Il benessere è condiviso, ma non ci sono ancora check-in.",
   "coachWellbeingNoNotes": "Solo punteggi e RPE. Le note restano private.",
   "coachPowerCurve": "Curva di potenza",
+  "criticalPowerRow": "Potenza critica {cp} W · W′ {wPrime} kJ · Picco {peak} W",
+  "criticalPowerSource": "Calcolata dai tuoi migliori {durations} in questo periodo",
+  "criticalPowerUnavailable": "Non ci sono abbastanza sforzi intensi da 2 a 20 minuti in questo periodo per calcolare la potenza critica.",
+  "criticalPowerMinutes": "{minutes} minuti",
+  "criticalPowerSeconds": "{seconds} secondi",
+  "criticalPowerDurationList": "{first} e {last}",
 
   "rideFilterAll": "Tutte",
   "rideFilterTitle": "Filtra le uscite",

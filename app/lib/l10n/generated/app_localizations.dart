@@ -5108,6 +5108,42 @@ abstract class AppLocalizations {
   /// **'Power curve'**
   String get coachPowerCurve;
 
+  /// No description provided for @criticalPowerRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical power {cp} W · W′ {wPrime} kJ · Peak {peak} W'**
+  String criticalPowerRow(String cp, String wPrime, String peak);
+
+  /// No description provided for @criticalPowerSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitted from your best {durations} in this range'**
+  String criticalPowerSource(String durations);
+
+  /// No description provided for @criticalPowerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough hard efforts of 2 to 20 minutes in this range to work out critical power.'**
+  String get criticalPowerUnavailable;
+
+  /// No description provided for @criticalPowerMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes'**
+  String criticalPowerMinutes(int minutes);
+
+  /// No description provided for @criticalPowerSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} seconds'**
+  String criticalPowerSeconds(int seconds);
+
+  /// No description provided for @criticalPowerDurationList.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {last}'**
+  String criticalPowerDurationList(String first, String last);
+
   /// No description provided for @rideFilterAll.
   ///
   /// In en, this message translates to:

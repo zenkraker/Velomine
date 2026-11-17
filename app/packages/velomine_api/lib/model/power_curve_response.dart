@@ -23,6 +23,7 @@ class PowerCurveResponse {
     this.points = const [],
     required this.ftp,
     required this.vo2Max,
+    required this.criticalPower,
   });
 
   final int dayCount;
@@ -45,6 +46,8 @@ class PowerCurveResponse {
 
   final Vo2MaxEstimate? vo2Max;
 
+  final CriticalPowerEstimate? criticalPower;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is PowerCurveResponse &&
     other.dayCount == dayCount &&
@@ -56,7 +59,8 @@ class PowerCurveResponse {
     other.weightKg == weightKg &&
     _deepEquality.equals(other.points, points) &&
     other.ftp == ftp &&
-    other.vo2Max == vo2Max;
+    other.vo2Max == vo2Max &&
+    other.criticalPower == criticalPower;
 
   @override
   int get hashCode =>
@@ -70,10 +74,11 @@ class PowerCurveResponse {
     (weightKg == null ? 0 : weightKg!.hashCode) +
     (points.hashCode) +
     (ftp == null ? 0 : ftp!.hashCode) +
-    (vo2Max == null ? 0 : vo2Max!.hashCode);
+    (vo2Max == null ? 0 : vo2Max!.hashCode) +
+    (criticalPower == null ? 0 : criticalPower!.hashCode);
 
   @override
-  String toString() => 'PowerCurveResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, hasPower=$hasPower, currentFtpW=$currentFtpW, weightKg=$weightKg, points=$points, ftp=$ftp, vo2Max=$vo2Max]';
+  String toString() => 'PowerCurveResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, hasPower=$hasPower, currentFtpW=$currentFtpW, weightKg=$weightKg, points=$points, ftp=$ftp, vo2Max=$vo2Max, criticalPower=$criticalPower]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -103,6 +108,11 @@ class PowerCurveResponse {
     } else {
       json[r'vo2Max'] = null;
     }
+    if (this.criticalPower != null) {
+      json[r'criticalPower'] = this.criticalPower;
+    } else {
+      json[r'criticalPower'] = null;
+    }
     return json;
   }
 
@@ -123,6 +133,8 @@ class PowerCurveResponse {
     bool ftpSetToNull = false,
     Vo2MaxEstimate? vo2Max,
     bool vo2MaxSetToNull = false,
+    CriticalPowerEstimate? criticalPower,
+    bool criticalPowerSetToNull = false,
   }) => PowerCurveResponse(
     dayCount: dayCount ?? this.dayCount,
     from: from ?? this.from,
@@ -134,6 +146,7 @@ class PowerCurveResponse {
     points: points ?? this.points,
     ftp: ftpSetToNull ? null : ftp ?? this.ftp,
     vo2Max: vo2MaxSetToNull ? null : vo2Max ?? this.vo2Max,
+    criticalPower: criticalPowerSetToNull ? null : criticalPower ?? this.criticalPower,
   );
 
   /// Returns a new [PowerCurveResponse] instance and imports its values from
@@ -163,6 +176,7 @@ class PowerCurveResponse {
         assert(json[r'points'] != null, 'Required key "PowerCurveResponse[points]" has a null value in JSON.');
         assert(json.containsKey(r'ftp'), 'Required key "PowerCurveResponse[ftp]" is missing from JSON.');
         assert(json.containsKey(r'vo2Max'), 'Required key "PowerCurveResponse[vo2Max]" is missing from JSON.');
+        assert(json.containsKey(r'criticalPower'), 'Required key "PowerCurveResponse[criticalPower]" is missing from JSON.');
         return true;
       }());
 
@@ -177,6 +191,7 @@ class PowerCurveResponse {
         points: PowerCurvePoint.listFromJson(json[r'points']),
         ftp: FtpEstimate.fromJson(json[r'ftp']),
         vo2Max: Vo2MaxEstimate.fromJson(json[r'vo2Max']),
+        criticalPower: CriticalPowerEstimate.fromJson(json[r'criticalPower']),
       );
     }
     return null;
@@ -234,6 +249,7 @@ class PowerCurveResponse {
     'points',
     'ftp',
     'vo2Max',
+    'criticalPower',
   };
 }
 

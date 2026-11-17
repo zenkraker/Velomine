@@ -2878,6 +2878,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coachPowerCurve => 'Power curve';
 
   @override
+  String criticalPowerRow(String cp, String wPrime, String peak) {
+    return 'Critical power $cp W · W′ $wPrime kJ · Peak $peak W';
+  }
+
+  @override
+  String criticalPowerSource(String durations) {
+    return 'Fitted from your best $durations in this range';
+  }
+
+  @override
+  String get criticalPowerUnavailable =>
+      'Not enough hard efforts of 2 to 20 minutes in this range to work out critical power.';
+
+  @override
+  String criticalPowerMinutes(int minutes) {
+    return '$minutes minutes';
+  }
+
+  @override
+  String criticalPowerSeconds(int seconds) {
+    return '$seconds seconds';
+  }
+
+  @override
+  String criticalPowerDurationList(String first, String last) {
+    return '$first and $last';
+  }
+
+  @override
   String get rideFilterAll => 'All';
 
   @override

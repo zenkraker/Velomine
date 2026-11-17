@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:intl/intl.dart' show NumberFormat;
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
@@ -8,6 +9,7 @@ import '../../core/l10n.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/widgets/source_note.dart';
 import '../../core/tokens.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Best efforts over a range, with an FTP suggestion and (for the member) VO2max. Under a number
 /// that Velomine worked out, a [SourceNote] says where it came from.
@@ -47,6 +49,7 @@ class PowerSummary extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final vo2Max = curve.vo2Max;
+    final criticalPower = curve.criticalPower;
     final labelStyle = (text.labelSmall ?? const TextStyle(fontSize: 11))
         .copyWith(color: scheme.onSurfaceVariant);
 
@@ -119,6 +122,28 @@ class PowerSummary extends StatelessWidget {
                     ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.md),
+              if (criticalPower != null) ...[
+                Text(
+                  l10n.criticalPowerRow(
+                    '${criticalPower.cpW}',
+                    _oneDecimal(criticalPower.wPrimeJ / 1000),
+                    '${criticalPower.peakW ?? _wattsNear(1)}',
+                  ),
+                  key: const Key('critical-power-row'),
+                  style: text.bodyMedium,
+                ),
+                SourceNote(
+                  l10n.criticalPowerSource(
+                    _durationList(l10n, criticalPower.durations),
+                  ),
+                ),
+              ] else
+                Text(
+                  l10n.criticalPowerUnavailable,
+                  key: const Key('critical-power-unavailable'),
+                  style: text.bodySmall,
+                ),
             ],
             const SizedBox(height: AppSpacing.lg),
             Wrap(
@@ -195,6 +220,24 @@ class PowerSummary extends StatelessWidget {
     }
     return best.watts;
   }
+
+  /// A fraction with one decimal in the app's language: "20.0", "20,0".
+  static String _oneDecimal(double value) => NumberFormat('0.0').format(value);
+
+  /// The used window lengths in words, as a list: "2, 5, 10 and 20 minutes".
+  static String _durationList(AppLocalizations l10n, List<int> seconds) {
+    final names = [for (final s in seconds) _durationName(l10n, s)];
+    if (names.length < 2) return names.join();
+    return l10n.criticalPowerDurationList(
+      names.sublist(0, names.length - 1).join(', '),
+      names.last,
+    );
+  }
+
+  static String _durationName(AppLocalizations l10n, int seconds) =>
+      seconds % 60 == 0
+      ? l10n.criticalPowerMinutes(seconds ~/ 60)
+      : l10n.criticalPowerSeconds(seconds);
 
   static String _shortDuration(int seconds) {
     if (seconds < 60) return '${seconds}s';

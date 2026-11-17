@@ -7,6 +7,11 @@ import 'fake_server.dart';
 
 /// Where each number on the progress power card came from (Story 2).
 void main() {
+  // The critical power note (Story 5) sits above the FTP and VO2max notes.
+  const criticalPowerNote =
+      'Fitted from your best 2 minutes, 5 minutes, 10 minutes and 20 minutes '
+      'in this range';
+
   late FakeServer server;
 
   setUp(() {
@@ -23,9 +28,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Every note on the power card, in order: current FTP, estimate, VO2max.
+  /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max.
   List<SourceNote> notes(WidgetTester tester) =>
       tester.widgetList<SourceNote>(find.byType(SourceNote)).toList();
+
+  /// The same, without the critical power note that sits above them.
+  List<SourceNote> estimateNotes(WidgetTester tester) =>
+      notes(tester).where((note) => note.text != criticalPowerNote).toList();
 
   void giveFtp(int watts) => server.profiles['rider@example.com'] = {
     'displayName': 'Ada',
@@ -55,7 +64,7 @@ void main() {
       await openProgress(tester);
 
       expect(
-        notes(tester).first.text,
+        estimateNotes(tester).first.text,
         'Set by you on ${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
       );
     },
@@ -76,7 +85,7 @@ void main() {
     ];
     await openProgress(tester);
 
-    final note = notes(tester).first;
+    final note = estimateNotes(tester).first;
     expect(
       note.text,
       'From your ride on '
@@ -98,7 +107,7 @@ void main() {
 
     // The rider has no FTP of their own, so the estimate's note is the first.
     expect(
-      notes(tester).first.text,
+      estimateNotes(tester).first.text,
       '95 % of your best 20 minutes, on '
       '${DateFormat.yMMMd().format(DateTime(2026, 10, 20))}',
     );
@@ -122,7 +131,7 @@ void main() {
     await openProgress(tester);
 
     expect(
-      notes(tester).last.text,
+      estimateNotes(tester).last.text,
       'From your best 5 minutes on '
       '${DateFormat.yMMMd().format(DateTime(2026, 10, 20))} and your weight',
     );

@@ -261,6 +261,8 @@ class ApiClient {
           return CreateServiceEntryRequest.fromJson(value);
         case 'CreateTemplateRequest':
           return CreateTemplateRequest.fromJson(value);
+        case 'CriticalPowerEstimate':
+          return CriticalPowerEstimate.fromJson(value);
         case 'DeleteMyAccountRequest':
           return DeleteMyAccountRequest.fromJson(value);
         case 'EnableTwoFactorRequest':

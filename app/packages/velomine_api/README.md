@@ -277,6 +277,7 @@ Class | Method | HTTP request | Description
  - [CreateRouteRequest](doc//CreateRouteRequest.md)
  - [CreateServiceEntryRequest](doc//CreateServiceEntryRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
+ - [CriticalPowerEstimate](doc//CriticalPowerEstimate.md)
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)

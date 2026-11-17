@@ -2900,6 +2900,35 @@ class AppLocalizationsIt extends AppLocalizations {
   String get coachPowerCurve => 'Curva di potenza';
 
   @override
+  String criticalPowerRow(String cp, String wPrime, String peak) {
+    return 'Potenza critica $cp W · W′ $wPrime kJ · Picco $peak W';
+  }
+
+  @override
+  String criticalPowerSource(String durations) {
+    return 'Calcolata dai tuoi migliori $durations in questo periodo';
+  }
+
+  @override
+  String get criticalPowerUnavailable =>
+      'Non ci sono abbastanza sforzi intensi da 2 a 20 minuti in questo periodo per calcolare la potenza critica.';
+
+  @override
+  String criticalPowerMinutes(int minutes) {
+    return '$minutes minuti';
+  }
+
+  @override
+  String criticalPowerSeconds(int seconds) {
+    return '$seconds secondi';
+  }
+
+  @override
+  String criticalPowerDurationList(String first, String last) {
+    return '$first e $last';
+  }
+
+  @override
   String get rideFilterAll => 'Tutte';
 
   @override
