@@ -25,7 +25,8 @@ CREATE OR REPLACE FUNCTION pg_temp.demo_seed_ride(
     p_base_speed float8,
     p_ftp int,
     p_max_hr int,
-    p_seed int
+    p_seed int,
+    p_power_profile boolean DEFAULT true
 ) RETURNS void LANGUAGE plpgsql AS $ride$
 DECLARE
     v_n int;
@@ -54,6 +55,11 @@ DECLARE
     v_max_power int := 0;
     v_sum_hr float8 := 0;
     v_max_hr_actual int := 0;
+    v_cp float8;
+    v_wprime float8;
+    v_window float8;
+    v_target float8;
+    v_smooth float8[];
     v_sum_cad float8 := 0;
     v_max_speed float8 := 0;
     v_window_sum float8;
@@ -86,6 +92,9 @@ DECLARE
     v_lap_ref float8;
     v_lap_distance float8;
     v_ride_id uuid;
+    v_kept int := 0;
+    v_half int;
+    v_first_p float8; v_first_h float8; v_second_p float8; v_second_h float8;
     v_time double precision[];
     v_lat double precision[];
     v_lon double precision[];
@@ -109,7 +118,12 @@ BEGIN
     v_speed := array_fill(0::real, ARRAY[v_n]);
     v_dist := array_fill(0::real, ARRAY[v_n]);
     v_hr := array_fill(0::smallint, ARRAY[v_n]);
-    v_power := array_fill(0::smallint, ARRAY[v_n]);
+    IF p_power_profile THEN
+        v_power := array_fill(0::smallint, ARRAY[v_n]);
+    ELSE
+        v_power := NULL;
+    END IF;
+    v_smooth := array_fill(0::float8, ARRAY[v_n]);
     v_cadence := array_fill(0::smallint, ARRAY[v_n]);
     v_temp := array_fill(0::smallint, ARRAY[v_n]);
     IF p_gps THEN
@@ -149,7 +163,7 @@ BEGIN
                        + 0.03 * sin(v_seconds / 47.0 + p_seed * 0.3);
         v_power_w := v_p0 * v_effort * (0.94 + 0.12 * v_terrain) + (random() - 0.5) * 8;
         v_power_w := greatest(30, least(v_power_w, p_ftp * 1.75));
-        v_power[v_i] := round(v_power_w)::smallint;
+        IF p_power_profile THEN v_power[v_i] := round(v_power_w)::smallint; END IF;
 
         v_ratio := v_power_w / v_p0;
         v_speed_ms := p_base_speed * power(v_ratio, 0.32) * (0.98 + 0.04 * sin(v_seconds / 97.0));
@@ -193,6 +207,43 @@ BEGIN
         END IF;
     END LOOP;
 
+    -- An aerobic ride of half an hour or more holds its heart rate: what is left of the slow climb is taken out, so
+    -- the drift the efficiency panel reports is the signal's own noise rather than the warm-up model's. TRIMP above
+    -- keeps the climb, which is the load the warm-up really cost.
+    IF p_minutes >= 30 THEN
+        FOR v_i IN 1..v_n LOOP
+            v_hr[v_i] := greatest(60, least(v_hr[v_i] + (p_max_hr - 55) * 0.2, p_max_hr + 2))::smallint;
+        END LOOP;
+    END IF;
+
+    -- A steady power ride runs on the model CP + W' / t: that is what puts CP inside the believable range and ties
+    -- the 2, 5, 10 and 20-minute bests to where the total work can come from. Every other power ride stays below
+    -- 0.9 x CP, so no other ride breaks the curve the model describes. The target is smoothed over two minutes, so
+    -- the VI stays low, and the ripple is kept under the decoupling filter's 50 W coasting threshold.
+    IF p_power_profile THEN
+        v_cp := 0.80 * p_ftp;
+        v_wprime := 30.0 * p_ftp;
+        -- One minute is enough to keep VI low while letting interval work stand above FTP; the 60 min best still
+        -- stays a little under CP, so only the 2 to 20-minute windows decide the fit.
+        v_window := CASE WHEN p_kind = 'intervals' THEN 60 ELSE 120 END;
+        v_window_sum := 0;
+        FOR v_i IN 1..v_n LOOP
+            v_target := CASE
+                WHEN p_kind = 'steady'
+                    THEN v_cp + v_wprime / (greatest(v_i - 1, 1)::float8 + 4 * v_wprime / v_cp)
+                         + (random() - 0.5) * 0.02 * v_cp
+                WHEN p_kind = 'intervals'
+                    THEN CASE WHEN (v_i - 1) % 300 < 180 THEN 1.25 * p_ftp ELSE 0.55 * p_ftp END
+                         + (random() - 0.5) * 0.02 * v_cp
+                ELSE least(v_power[v_i], 0.9 * v_cp)
+            END;
+            v_window_sum := v_window_sum + v_target;
+            IF v_i > v_window THEN v_window_sum := v_window_sum - v_smooth[v_i - v_window]; END IF;
+            v_smooth[v_i] := v_target;
+            v_power[v_i] := round(v_window_sum / least(v_i, v_window))::smallint;
+        END LOOP;
+    END IF;
+
     v_loop_len := v_distance_total / greatest(p_laps, 1);
     v_radius := v_loop_len / (2 * pi());
     IF p_discipline = 'gravel' THEN
@@ -227,14 +278,16 @@ BEGIN
     END LOOP;
 
     v_window_sum := 0;
-    FOR v_i IN 1..v_n LOOP
-        v_window_sum := v_window_sum + v_power[v_i];
-        IF v_i > 30 THEN v_window_sum := v_window_sum - v_power[v_i - 30]; END IF;
-        IF v_i >= 30 THEN
-            v_fourth_sum := v_fourth_sum + power(v_window_sum / 30.0, 4);
-            v_windows := v_windows + 1;
-        END IF;
-    END LOOP;
+    IF p_power_profile THEN
+        FOR v_i IN 1..v_n LOOP
+            v_window_sum := v_window_sum + v_power[v_i];
+            IF v_i > 30 THEN v_window_sum := v_window_sum - v_power[v_i - 30]; END IF;
+            IF v_i >= 30 THEN
+                v_fourth_sum := v_fourth_sum + power(v_window_sum / 30.0, 4);
+                v_windows := v_windows + 1;
+            END IF;
+        END LOOP;
+    END IF;
     v_np := CASE WHEN v_windows > 0 THEN round(power(v_fourth_sum / v_windows, 0.25)) ELSE 0 END;
     IF p_ftp > 0 AND v_np > 0 THEN
         v_if := round(v_np::numeric / p_ftp, 2);
@@ -258,16 +311,17 @@ BEGIN
              WHEN p_seed % 2 = 0 THEN 'Garmin Edge 840' ELSE 'Wahoo ELEMNT ROAM' END,
         v_distance_total, v_n - 1, v_n - 1, v_gain, v_loss,
         v_distance_total / (v_n - 1), v_max_speed, 'Device',
-        round(v_sum_power / v_n), v_max_power, v_np, round(v_sum_hr / v_n), v_max_hr_actual,
+        round(v_sum_power / v_n), CASE WHEN p_power_profile THEN v_max_power END, CASE WHEN p_power_profile THEN v_np END,
+        round(v_sum_hr / v_n), v_max_hr_actual,
         round(v_sum_cad / v_n), p_bike, v_if, v_trimp, v_tss,
-        'none', p_kind = 'commute', p_discipline, p_environment, now());
+        'none', p_kind = 'commute', p_discipline, p_environment, NULL);
 
     INSERT INTO rides.ride_streams (
         ride_id, time, latitude, longitude, altitude, speed, distance, heart_rate, power, cadence, temperature)
     VALUES (v_ride_id, v_time, v_lat, v_lon, v_alt, v_speed, v_dist, v_hr, v_power, v_cadence, v_temp);
 
     FOREACH v_d IN ARRAY v_durations LOOP
-        IF v_n >= v_d THEN
+        IF p_power_profile AND v_n >= v_d THEN
             v_window_sum := 0;
             v_best := 0;
             FOR v_i IN 1..v_n LOOP
@@ -284,6 +338,9 @@ BEGIN
         END IF;
     END LOOP;
 
+    -- The bests above are this ride's own, so the startup backfill has nothing to add; the marker says so.
+    UPDATE rides.rides SET power_bests_backfilled_at = now() WHERE id = v_ride_id;
+
     FOR v_lap IN 1..greatest(p_laps, 1) LOOP
         v_lap_start := 1 + ((v_lap - 1) * (v_n - 1)) / greatest(p_laps, 1);
         v_lap_end := 1 + (v_lap * (v_n - 1)) / greatest(p_laps, 1);
@@ -291,7 +348,7 @@ BEGIN
         v_lap_power := 0;
         v_lap_hr := 0;
         v_lap_cad := 0;
-        v_lap_max_power := 0;
+        v_lap_max_power := NULL;
         v_lap_max_hr := 0;
         v_lap_max_speed := 0;
         v_lap_gain := 0;
@@ -319,6 +376,46 @@ BEGIN
             round(v_lap_power / v_lap_count), v_lap_max_power, round(v_lap_hr / v_lap_count), v_lap_max_hr,
             round(v_lap_cad / v_lap_count), v_lap_gain);
     END LOOP;
+
+    -- Aerobic decoupling and efficiency factor (Friel), as RideMetrics.Efficiency works them out on import: the
+    -- seconds with a believable heart rate and a pedalling power, after a 15-minute warm-up, split in two halves.
+    -- Each half is its mean power over its mean heart rate, which leaves out the normalized power the reader uses.
+    -- A ride that is not steady stores its efficiency factor and no decoupling, exactly like a read one.
+    v_kept := 0;
+    v_first_p := 0; v_first_h := 0; v_second_p := 0; v_second_h := 0;
+    IF p_power_profile THEN
+        -- How many kept seconds there are decides where the halves meet; the warm-up is the first 900 of them.
+        FOR v_i IN 1..v_n LOOP
+            IF v_hr[v_i] >= 60 AND v_hr[v_i] <= 220 AND v_power[v_i] >= 50 AND v_power[v_i] <= 2500 THEN
+                v_kept := v_kept + 1;
+            END IF;
+        END LOOP;
+        v_half := 900 + (v_kept - 900) / 2; -- the first half ends here: an odd count leaves the second shorter
+        v_kept := 0;
+        FOR v_i IN 1..v_n LOOP
+            IF v_hr[v_i] >= 60 AND v_hr[v_i] <= 220 AND v_power[v_i] >= 50 AND v_power[v_i] <= 2500 THEN
+                v_kept := v_kept + 1;
+                IF v_kept > 900 AND v_kept <= v_half THEN
+                    v_first_p := v_first_p + v_power[v_i]; v_first_h := v_first_h + v_hr[v_i];
+                ELSIF v_kept > v_half THEN
+                    v_second_p := v_second_p + v_power[v_i]; v_second_h := v_second_h + v_hr[v_i];
+                END IF;
+            END IF;
+        END LOOP;
+    END IF;
+
+    IF v_kept >= 3000 THEN
+        v_first_p := v_first_p / (v_half - 900);
+        v_second_p := v_second_p / (v_kept - v_half);
+        v_first_h := v_first_h / (v_half - 900);
+        v_second_h := v_second_h / (v_kept - v_half);
+        UPDATE rides.rides
+        SET efficiency_factor = round((v_first_p / v_first_h)::numeric, 2),
+            steady = true,
+            decoupling_pct = round((((v_first_p / v_first_h) - (v_second_p / v_second_h))
+                                   / (v_first_p / v_first_h) * 100)::numeric, 1)
+        WHERE id = v_ride_id;
+    END IF;
 END
 $ride$;
 
@@ -569,6 +666,7 @@ BEGIN
         kind text PRIMARY KEY, minutes int, intensity float8, discipline text,
         environment text, laps int, gps boolean, base_speed float8) ON COMMIT DROP;
     INSERT INTO demo_kinds VALUES
+        ('steady', 60, 0.78, 'road', 'outdoor', 2, true, 8.0),
         ('intervals', 65, 0.78, 'road', 'outdoor', 2, true, 8.1),
         ('endurance', 95, 0.66, 'road', 'outdoor', 2, true, 7.4),
         ('long', 155, 0.68, 'road', 'outdoor', 3, true, 7.5),
@@ -592,7 +690,7 @@ BEGIN
         FOR i IN 0..v_count - 1 LOOP
             v_kind := CASE (i + m.n) % 6
                 WHEN 0 THEN 'endurance'
-                WHEN 1 THEN 'tempo'
+                WHEN 1 THEN 'steady'
                 WHEN 2 THEN 'intervals'
                 WHEN 3 THEN 'long'
                 WHEN 4 THEN 'gravel'
@@ -615,11 +713,25 @@ BEGIN
             v_bike := CASE WHEN k.discipline = 'gravel' THEN m.gravel_bike ELSE m.road_bike END;
             v_max_hr := round(208 - 0.7 * (extract(year FROM v_today) - m.birth_year))::int;
 
+            -- The newest ride of the demo rider that is not a steady one is read without a power stream (a power
+            -- meter that was not on that day), so the intensity card also has heart-rate-only time in its week.
             PERFORM pg_temp.demo_seed_ride(
                 m.user_id, v_bike, v_start, v_offset, v_kind, k.minutes, k.intensity, k.discipline,
-                k.environment, k.laps, k.gps, k.base_speed, m.ftp_w, v_max_hr, (m.n * 1000 + i)::int);
+                k.environment, k.laps, k.gps, k.base_speed, m.ftp_w, v_max_hr, (m.n * 1000 + i)::int,
+                NOT (m.n = 3 AND i = 0 AND v_kind <> 'steady'));
         END LOOP;
     END LOOP;
+
+    -- FTP history: the number each member had before history was kept, then one they set by hand a month ago. The
+    -- newest row is the current FTP, so the older one comes first.
+    INSERT INTO accounts.ftp_history (id, user_id, watts, set_at, source, ride_id)
+    SELECT gen_random_uuid(), u.id, h.watts, h.set_at, h.source, NULL
+    FROM accounts.users u
+    JOIN demo_members dm ON dm.user_id = u.id
+    CROSS JOIN LATERAL (VALUES
+        (u.ftp_w - 15, v_now - interval '120 days', 'earlier'),
+        (u.ftp_w, v_now - interval '30 days', 'manual')
+    ) AS h(watts, set_at, source);
 
     -- Goals.
     INSERT INTO analytics.goals (id, user_id, period, metric, target, created_at)

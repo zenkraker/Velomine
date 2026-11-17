@@ -140,7 +140,10 @@ public sealed class DemoData(
             buffer.Position = 0;
             var sha = await files.SaveAsync(buffer, ct);
             await db.Rides.Where(r => r.Id == ride.Id).ExecuteUpdateAsync(
-                u => u.SetProperty(r => r.FileSha256, sha).SetProperty(r => r.ParserVersion, RideParserVersion.Current),
+                u => u.SetProperty(r => r.FileSha256, sha)
+                    .SetProperty(r => r.ParserVersion, RideParserVersion.Current)
+                    // The seed already stored the bests the file would give, so the startup backfill leaves it alone.
+                    .SetProperty(r => r.PowerBestsBackfilledAt, time.GetUtcNow()),
                 ct);
         }
     }

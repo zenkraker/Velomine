@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Admin;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Demo;
 using Velomine.Server.Features.Notifications;
@@ -355,4 +356,139 @@ public sealed class DemoTests(PostgresFixture postgres)
     [InlineData("2026-11-13T23:30:00+02:00", "2026-11-13T03:00:00Z")]
     public void LastBoundary_ShouldBeTheLatestThreeInTheMorningUtc_WhenGivenAnInstant(string now, string expected) =>
         Assert.Equal(DateTimeOffset.Parse(expected), DemoResetService.LastBoundary(DateTimeOffset.Parse(now)));
+
+    /// <summary>The demo rider, signed in, on a demo that has just been reset: every ride is there to be read.</summary>
+    private async Task<(TestApi Api, HttpClient Rider)> StartResetRiderAsync()
+    {
+        var api = await StartDemoAsync();
+        await ResetAsync(api);
+        return (api, await api.SignedInClientAsync(Rider, DemoData.Password));
+    }
+
+    private static async Task<PowerCurveResponse> PowerCurveAsync(HttpClient rider) =>
+        (await rider.GetFromJsonAsync<PowerCurveResponse>("/api/v1/analytics/power-curve?days=90", Ct))!;
+
+    private static async Task<TrainingResponse> TrainingAsync(HttpClient rider) =>
+        (await rider.GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=90", Ct))!;
+
+    private static async Task<RideResponse[]> RidesAsync(HttpClient rider) =>
+        (await rider.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?limit=200", Ct))!.Rides;
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderACriticalPowerFit_WhenTheDemoIsReset()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        var curve = await PowerCurveAsync(rider);
+
+        Assert.True(curve.HasPower);
+        Assert.NotNull(curve.CriticalPower);
+        var fit = curve.CriticalPower!;
+        Assert.InRange(fit.CpW, 50, 600);
+        Assert.InRange(fit.WPrimeJ, 3_000, 50_000);
+        Assert.True(fit.R2 >= 0.90, $"R² was {fit.R2}");
+        // The 2, 5, 10 and 20-minute windows are all there, which is what a fit needs.
+        Assert.Equal([120, 300, 600, 1200], fit.Durations);
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderAWPprimeBalance_WhenTheDemoIsReset()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        // The balance is on the ride's own page, where the app draws it.
+        var details = new List<RideResponse>();
+        foreach (var ride in (await RidesAsync(rider)).Take(3))
+            details.Add((await rider.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!);
+        var withBalance = details.Where(r => r.WPrimeJ is not null).ToArray();
+
+        Assert.NotEmpty(withBalance);
+        Assert.All(withBalance, r => Assert.InRange(r.WPrimeJ!.Value, 3_000, 50_000));
+        Assert.All(withBalance, r => Assert.NotNull(r.MinWPrimeBalanceJ));
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderSteadyRidesWithDecoupling_WhenTheDemoIsReset()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        var rides = await RidesAsync(rider);
+        var steady = rides.Where(r => r.Steady == true && r.DecouplingPct is not null).ToArray();
+
+        Assert.True(steady.Length >= 2, $"only {steady.Length} steady rides");
+        Assert.All(steady, r => Assert.NotNull(r.EfficiencyFactor));
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderAWeeklyEfficiencyTrend_WhenTheDemoIsReset()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        var training = await TrainingAsync(rider);
+
+        Assert.True(training.Efficiency.Length >= 2, $"only {training.Efficiency.Length} weeks with a steady ride");
+        Assert.All(training.Efficiency, w => Assert.True(w.EfficiencyFactor > 0));
+        Assert.All(training.Efficiency, w => Assert.True(w.Rides >= 1));
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderAnIntensityDistribution_WhenTheDemoIsReset()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        var training = await TrainingAsync(rider);
+
+        Assert.NotNull(training.Intensity);
+        var intensity = training.Intensity!;
+        Assert.True(intensity.Rides > 0);
+        Assert.True(intensity.ModerateS > 0);
+        Assert.True(intensity.HardS > 0);
+        Assert.Equal(100, intensity.EasyPct + intensity.ModeratePct + intensity.HardPct, 1);
+        Assert.Contains(intensity.Label, Labels.All);
+        Assert.NotEmpty(training.IntensityWeeks);
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderAPowerRecord_WhenALaterRideBeatsAnEarlierBest()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        var rides = await RidesAsync(rider);
+
+        // Records are worked out per ride: the ride page of the ride that set one lists it.
+        var withRecords = new List<(RideResponse Ride, PowerRecord[] Records)>();
+        foreach (var ride in rides)
+        {
+            var detail = (await rider.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!;
+            if (detail.PowerRecords is { Length: > 0 }) withRecords.Add((detail, detail.PowerRecords));
+        }
+
+        Assert.NotEmpty(withRecords);
+        var (record, records) = withRecords.OrderByDescending(r => r.Ride.StartTime).First();
+        // A record only exists when an earlier ride was already there and this one beat it.
+        Assert.All(records, r => Assert.Contains(r.Kind, new[] { PowerRecords.AllTime, PowerRecords.NinetyDays }));
+        Assert.All(records, r => Assert.True(r.Watts > 0));
+        Assert.NotNull(record.StartTime);
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveTheRiderAnFtpHistory_WhenTheDemoIsReset()
+    {
+        var (api, rider) = await StartResetRiderAsync();
+        await using var _ = api;
+
+        var history = (await rider.GetFromJsonAsync<FtpHistoryResponse>("/api/v1/accounts/me/ftp-history", Ct))!;
+
+        Assert.True(history.Entries.Count >= 2, $"only {history.Entries.Count} FTP history rows");
+        Assert.Contains(history.Entries, e => e.Source == FtpSources.Earlier);
+        // The newest row is the number the rider's zones use.
+        var profile = (await rider.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct))!;
+        Assert.Equal(profile.FtpW, history.Entries[0].Watts);
+    }
 }
