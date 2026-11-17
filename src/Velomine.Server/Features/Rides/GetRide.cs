@@ -12,7 +12,7 @@ public sealed class RideIdRequest
 }
 
 /// <summary>A member's own ride. Someone else's ride looks exactly like a ride that does not exist.</summary>
-public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, RideResponse>
+public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<RideIdRequest, RideResponse>
 {
     public override void Configure() => Get("rides/{id}");
 
@@ -34,7 +34,7 @@ public sealed class GetRide(VelomineDbContext db) : Endpoint<RideIdRequest, Ride
             .Select(s => new { s.Id, s.Watts, s.Method })
             .FirstOrDefaultAsync(ct);
         await Send.OkAsync(
-            RideDetails.Build(ride) with
+            (await RideDetails.BuildAsync(db, time, ride, ct)) with
             {
                 PowerRecords = await PowerRecords.ForRideAsync(db, userId, ride.Id, ride.StartTime, ct),
                 // Only the owner sees the suggestion, and only on the ride it came from.

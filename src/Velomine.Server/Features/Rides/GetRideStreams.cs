@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -29,14 +30,15 @@ public sealed record RideStreamsResponse(
     short?[]? HeartRate,
     short?[]? Power,
     short?[]? Cadence,
-    short?[]? Temperature);
+    short?[]? Temperature,
+    int[]? WPrimeBalanceJ = null);
 
 public sealed class RideStreamsValidator : Validator<RideStreamsRequest>
 {
     public RideStreamsValidator() => RuleFor(x => x.MaxPoints).InclusiveBetween(10, 5000).When(x => x.MaxPoints.HasValue);
 }
 
-public sealed class GetRideStreams(VelomineDbContext db) : Endpoint<RideStreamsRequest, RideStreamsResponse>
+public sealed class GetRideStreams(VelomineDbContext db, TimeProvider time) : Endpoint<RideStreamsRequest, RideStreamsResponse>
 {
     public override void Configure()
     {
@@ -62,7 +64,15 @@ public sealed class GetRideStreams(VelomineDbContext db) : Endpoint<RideStreamsR
             return;
         }
 
-        var s = StreamSampling.Reduce(streams, req.MaxPoints ?? 1500);
-        await Send.OkAsync(new RideStreamsResponse(s.Time, s.Latitude, s.Longitude, s.Altitude, s.Speed, s.Distance, s.HeartRate, s.Power, s.Cadence, s.Temperature), ct);
+        var maxPoints = req.MaxPoints ?? 1500;
+        var s = StreamSampling.Reduce(streams, maxPoints);
+        var clock = await MemberClock.ForAsync(db, userId, time, ct);
+        var cp = await FitnessQueries.CriticalPowerAsync(db, clock, userId, ct);
+        var balance = WPrimeBalance.ForRide(streams, cp);
+        await Send.OkAsync(
+            new RideStreamsResponse(
+                s.Time, s.Latitude, s.Longitude, s.Altitude, s.Speed, s.Distance, s.HeartRate, s.Power, s.Cadence, s.Temperature,
+                StreamSampling.ReduceValues(balance?.PerSample, maxPoints)),
+            ct);
     }
 }

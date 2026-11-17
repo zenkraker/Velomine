@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/l10n.dart';
@@ -15,6 +17,7 @@ String seriesName(AppLocalizations l10n, Series series) => switch (series.id) {
   'power' => l10n.seriesPower,
   'heartrate' => l10n.seriesHeartRate,
   'cadence' => l10n.seriesCadence,
+  'wprime' => l10n.seriesWPrimeBalance,
   _ => series.name,
 };
 
@@ -144,7 +147,11 @@ class _ChartPainter extends CustomPainter {
     );
     if (plot.width <= 0 || time.length < 2) return;
 
-    final scale = niceScale(series.min, series.max);
+    // The balance always shows 0: going below it is what "into the red" means.
+    final scale = niceScale(
+      series.baseline ? math.min(series.min, 0) : series.min,
+      series.baseline ? math.max(series.max, 0) : series.max,
+    );
     final t0 = time.first, t1 = time.last;
     double x(double t) => plot.left + (t - t0) / (t1 - t0) * plot.width;
     double y(double v) =>
@@ -175,6 +182,17 @@ class _ChartPainter extends CustomPainter {
         alignRight: false,
         centerY: false,
         centerX: true,
+      );
+    }
+
+    // The line at 0, marked on the balance chart.
+    if (series.baseline) {
+      canvas.drawLine(
+        Offset(plot.left, y(0)),
+        Offset(plot.right, y(0)),
+        Paint()
+          ..color = gridColor
+          ..strokeWidth = 1.5,
       );
     }
 

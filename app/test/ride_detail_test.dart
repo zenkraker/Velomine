@@ -679,4 +679,34 @@ void main() {
 
     expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldChartTheWPrimeBalanceInKj_WhenTheRideHasAFit',
+    (tester) async {
+      server.rides[0]['minWPrimeBalanceJ'] = 8137;
+      server.rides[0]['wPrimeJ'] = 20037;
+      server.streams['r1'] = streamsJson(
+        wPrimeBalance: [for (var i = 0; i < 60; i++) 20000 - i * 100],
+      );
+      await open(tester);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('chart-wprime')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const Key('chart-wprime')), findsOneWidget);
+      expect(find.text('W′ balance'), findsOneWidget);
+      expect(find.text('Lowest W′ balance 8.1 kJ of 20.0 kJ'), findsOneWidget);
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldHideTheWPrimeBalance_WhenThereIsNoFit', (
+    tester,
+  ) async {
+    await open(tester);
+
+    expect(find.byKey(const Key('chart-wprime')), findsNothing);
+    expect(find.byKey(const Key('wprime-lowest')), findsNothing);
+  });
 }

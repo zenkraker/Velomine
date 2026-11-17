@@ -1591,5 +1591,7 @@
   "intensityLabelThreshold": "Molto soglia: molta bici a ritmo moderato",
   "intensityLabelHiit": "Molto intenso: molta bici a ritmo intenso",
   "intensityLabelBase": "Base: quasi tutta bici facile",
-  "intensityLabelMixed": "Misto"
+  "intensityLabelMixed": "Misto",
+  "seriesWPrimeBalance": "Bilancio W′",
+  "wPrimeLowest": "Bilancio W′ più basso: {min} kJ su {wPrime} kJ"
 }

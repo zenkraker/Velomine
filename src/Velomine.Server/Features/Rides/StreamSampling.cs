@@ -14,7 +14,7 @@ public static class StreamSampling
         var n = streams.Time.Length;
         if (n <= maxPoints) return streams;
 
-        var edges = Enumerable.Range(0, maxPoints + 1).Select(i => (int)((long)i * n / maxPoints)).ToArray();
+        var edges = Edges(n, maxPoints);
 
         IEnumerable<(int From, int To)> Slices() => Enumerable.Range(0, maxPoints).Select(i => (edges[i], edges[i + 1]));
 
@@ -39,6 +39,29 @@ public static class StreamSampling
             Temperature = Mean(streams.Temperature, d => (short)Math.Round(d)),
         };
     }
+
+    /// <summary>
+    /// A value per sample reduced with the same slices as <see cref="Reduce"/>, so an array built elsewhere (the W′
+    /// balance) lines up with the streams it is sent with. Null when there is nothing to reduce.
+    /// </summary>
+    public static int[]? ReduceValues(IReadOnlyList<int?>? values, int maxPoints)
+    {
+        if (values is null || values.Count == 0) return null;
+        if (values.Count <= maxPoints) return [.. values.Select(v => v ?? 0)];
+        var n = maxPoints;
+        var edges = Edges(values.Count, n);
+        var result = new int[n];
+        for (var i = 0; i < n; i++)
+        {
+            var slice = values.Skip(edges[i]).Take(edges[i + 1] - edges[i]).Where(v => v.HasValue).Select(v => v!.Value).ToArray();
+            result[i] = slice.Length == 0 ? 0 : (int)Math.Round(slice.Average());
+        }
+
+        return result;
+    }
+
+    private static int[] Edges(int n, int maxPoints) =>
+        [.. Enumerable.Range(0, maxPoints + 1).Select(i => (int)((long)i * n / maxPoints))];
 
     private static double? Average(IEnumerable<double?> values)
     {

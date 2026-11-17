@@ -4581,4 +4581,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get intensityLabelMixed => 'Mixed';
+
+  @override
+  String get seriesWPrimeBalance => 'W′ balance';
+
+  @override
+  String wPrimeLowest(String min, String wPrime) {
+    return 'Lowest W′ balance $min kJ of $wPrime kJ';
+  }
 }

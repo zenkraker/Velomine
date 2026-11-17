@@ -463,6 +463,15 @@ class _Stats extends ConsumerWidget {
           ),
         if (ride.speedSource == 'gps')
           Text(l10n.speedFromGps, style: text.bodySmall),
+        if (ride.minWPrimeBalanceJ.value case final low?)
+          Text(
+            l10n.wPrimeLowest(
+              (low / 1000).toStringAsFixed(1),
+              ((ride.wPrimeJ.value ?? 0) / 1000).toStringAsFixed(1),
+            ),
+            key: const Key('wprime-lowest'),
+            style: text.bodySmall,
+          ),
         if (ride.tss != null || ride.trimp != null)
           Text(l10n.loadHint, style: text.bodySmall),
       ],

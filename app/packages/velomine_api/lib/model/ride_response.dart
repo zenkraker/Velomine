@@ -53,6 +53,8 @@ class RideResponse {
     this.ftpSuggestionW = const Optional.absent(),
     this.ftpSuggestionMethod = const Optional.absent(),
     this.ftpSuggestionId = const Optional.absent(),
+    this.minWPrimeBalanceJ = const Optional.absent(),
+    this.wPrimeJ = const Optional.absent(),
   });
 
   final String id;
@@ -153,6 +155,22 @@ class RideResponse {
   ///
   final Optional<String?> ftpSuggestionId;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> minWPrimeBalanceJ;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> wPrimeJ;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -194,7 +212,9 @@ class RideResponse {
     _deepEquality.equals(other.powerRecords, powerRecords) &&
     other.ftpSuggestionW == ftpSuggestionW &&
     other.ftpSuggestionMethod == ftpSuggestionMethod &&
-    other.ftpSuggestionId == ftpSuggestionId;
+    other.ftpSuggestionId == ftpSuggestionId &&
+    other.minWPrimeBalanceJ == minWPrimeBalanceJ &&
+    other.wPrimeJ == wPrimeJ;
 
   @override
   int get hashCode =>
@@ -238,10 +258,12 @@ class RideResponse {
     (powerRecords.hashCode) +
     (ftpSuggestionW == null ? 0 : ftpSuggestionW!.hashCode) +
     (ftpSuggestionMethod == null ? 0 : ftpSuggestionMethod!.hashCode) +
-    (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode);
+    (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode) +
+    (minWPrimeBalanceJ == null ? 0 : minWPrimeBalanceJ!.hashCode) +
+    (wPrimeJ == null ? 0 : wPrimeJ!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -419,6 +441,14 @@ class RideResponse {
       final value = this.ftpSuggestionId.value;
       json[r'ftpSuggestionId'] = value;
     }
+    if (this.minWPrimeBalanceJ.isPresent) {
+      final value = this.minWPrimeBalanceJ.value;
+      json[r'minWPrimeBalanceJ'] = value;
+    }
+    if (this.wPrimeJ.isPresent) {
+      final value = this.wPrimeJ.value;
+      json[r'wPrimeJ'] = value;
+    }
     return json;
   }
 
@@ -494,6 +524,8 @@ class RideResponse {
     Optional<int?>? ftpSuggestionW,
     Optional<String?>? ftpSuggestionMethod,
     Optional<String?>? ftpSuggestionId,
+    Optional<int?>? minWPrimeBalanceJ,
+    Optional<int?>? wPrimeJ,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -535,6 +567,8 @@ class RideResponse {
     ftpSuggestionW: ftpSuggestionW ?? this.ftpSuggestionW,
     ftpSuggestionMethod: ftpSuggestionMethod ?? this.ftpSuggestionMethod,
     ftpSuggestionId: ftpSuggestionId ?? this.ftpSuggestionId,
+    minWPrimeBalanceJ: minWPrimeBalanceJ ?? this.minWPrimeBalanceJ,
+    wPrimeJ: wPrimeJ ?? this.wPrimeJ,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -631,6 +665,8 @@ class RideResponse {
         ftpSuggestionW: json.containsKey(r'ftpSuggestionW') ? Optional.present(json[r'ftpSuggestionW'] == null ? null : int.parse('${json[r'ftpSuggestionW']}')) : const Optional.absent(),
         ftpSuggestionMethod: json.containsKey(r'ftpSuggestionMethod') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionMethod')) : const Optional.absent(),
         ftpSuggestionId: json.containsKey(r'ftpSuggestionId') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionId')) : const Optional.absent(),
+        minWPrimeBalanceJ: json.containsKey(r'minWPrimeBalanceJ') ? Optional.present(json[r'minWPrimeBalanceJ'] == null ? null : int.parse('${json[r'minWPrimeBalanceJ']}')) : const Optional.absent(),
+        wPrimeJ: json.containsKey(r'wPrimeJ') ? Optional.present(json[r'wPrimeJ'] == null ? null : int.parse('${json[r'wPrimeJ']}')) : const Optional.absent(),
       );
     }
     return null;

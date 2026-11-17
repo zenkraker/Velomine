@@ -4612,4 +4612,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get intensityLabelMixed => 'Misto';
+
+  @override
+  String get seriesWPrimeBalance => 'Bilancio W′';
+
+  @override
+  String wPrimeLowest(String min, String wPrime) {
+    return 'Bilancio W′ più basso: $min kJ su $wPrime kJ';
+  }
 }

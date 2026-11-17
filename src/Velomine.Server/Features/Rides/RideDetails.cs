@@ -1,10 +1,25 @@
+using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 
 namespace Velomine.Server.Features.Rides;
 
 /// <summary>Builds the detailed ride the member and their coach both read, including load worked out on the way.</summary>
 public static class RideDetails
 {
+    /// <summary>
+    /// The detailed ride with its W′ balance, from the rider's current fit over the last 90 days as of this request.
+    /// </summary>
+    public static async Task<RideResponse> BuildAsync(VelomineDbContext db, TimeProvider time, Ride ride, CancellationToken ct)
+    {
+        var response = Build(ride);
+        if (ride.Streams is not { } streams) return response;
+
+        var clock = await MemberClock.ForAsync(db, ride.UserId, time, ct);
+        var balance = WPrimeBalance.ForRide(streams, await FitnessQueries.CriticalPowerAsync(db, clock, ride.UserId, ct));
+        return balance is null ? response : response with { MinWPrimeBalanceJ = (int?)balance.MinJ, WPrimeJ = balance.WPrimeJ };
+    }
+
     public static RideResponse Build(Ride ride)
     {
         var response = RideResponse.From(ride);

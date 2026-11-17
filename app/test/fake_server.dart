@@ -2505,6 +2505,8 @@ Map<String, Object?> rideJson(
   int? ftpSuggestionW,
   String? ftpSuggestionMethod,
   String? ftpSuggestionId,
+  int? minWPrimeBalanceJ,
+  int? wPrimeJ,
   String? discipline,
   String? assist,
   String? environment,
@@ -2555,6 +2557,8 @@ Map<String, Object?> rideJson(
   'ftpSuggestionW': ftpSuggestionW,
   'ftpSuggestionMethod': ftpSuggestionMethod,
   'ftpSuggestionId': ftpSuggestionId,
+  'minWPrimeBalanceJ': minWPrimeBalanceJ,
+  'wPrimeJ': wPrimeJ,
 };
 
 /// One personal power record as the ride detail receives it.
@@ -2791,6 +2795,7 @@ Map<String, Object?> streamsJson({
   bool cadence = false,
   bool speed = true,
   bool heartRate = true,
+  List<int>? wPrimeBalance,
 }) {
   const n = 60;
   List<T> each<T>(T Function(int i) f) => [for (var i = 0; i < n; i++) f(i)];
@@ -2805,6 +2810,7 @@ Map<String, Object?> streamsJson({
     'power': each((i) => i.isEven ? 180 : 220),
     'cadence': cadence ? each((_) => 90) : null,
     'temperature': null,
+    'wPrimeBalanceJ': wPrimeBalance,
   };
 }
 

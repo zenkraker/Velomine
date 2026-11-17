@@ -180,6 +180,8 @@ public static class PrivacyRules
         Tss = privacy.HidePower ? null : ride.Tss,
         PowerZones = privacy.HidePower ? null : ride.PowerZones,
         PowerRecords = privacy.HidePower ? null : ride.PowerRecords,
+        MinWPrimeBalanceJ = privacy.HidePower ? null : ride.MinWPrimeBalanceJ,
+        WPrimeJ = privacy.HidePower ? null : ride.WPrimeJ,
         FtpSuggestionW = null, // never shown to a coach or a share viewer
         FtpSuggestionMethod = null,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
@@ -217,6 +219,7 @@ public static class PrivacyRules
             Speed = privacy.HideSpeed ? null : streams.Speed,
             Altitude = privacy.HideElevation ? null : streams.Altitude,
             Temperature = privacy.HideTemperature ? null : streams.Temperature,
+            WPrimeBalanceJ = privacy.HidePower ? null : streams.WPrimeBalanceJ,
         };
 
         if (!showRoute) return result with { Latitude = null, Longitude = null };

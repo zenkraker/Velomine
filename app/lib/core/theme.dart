@@ -65,6 +65,7 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
       'power': ironOxide,
       'heartrate': Color(0xFFB3261E),
       'cadence': Color(0xFF7A5C00),
+      'wprime': Color(0xFF8E44AD),
     },
   );
 
@@ -80,6 +81,7 @@ class VelomineColors extends ThemeExtension<VelomineColors> {
       'power': tailLight,
       'heartrate': Color(0xFFFF6F4F),
       'cadence': Color(0xFF9CC3E6),
+      'wprime': Color(0xFFC792EA),
     },
   );
 

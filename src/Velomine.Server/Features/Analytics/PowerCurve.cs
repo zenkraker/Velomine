@@ -121,6 +121,11 @@ public static class FitnessQueries
     private const int FtpFallbackWindowS = 480;
     private const int Vo2MaxWindowS = 300;
 
+    /// <summary>The rider's current critical power and W′, over the last 90 days as of the request. Null when the fit is rejected.</summary>
+    public static async Task<CriticalPowerEstimate?> CriticalPowerAsync(
+        VelomineDbContext db, MemberClock clock, Guid userId, CancellationToken ct) =>
+        (await PowerCurveAsync(db, clock, userId, 90, includeBodyMetrics: false, ct)).CriticalPower;
+
     public static async Task<PowerCurveResponse> PowerCurveAsync(
         VelomineDbContext db,
         MemberClock clock,

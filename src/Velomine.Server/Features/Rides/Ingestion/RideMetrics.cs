@@ -294,6 +294,36 @@ public static class RideMetrics
     }
 
     /// <summary>
+    /// The same seconds, each saying which sample it came from and which stretch of samples it belongs to, so a value
+    /// per second can go back onto the stored samples, which are the ride streams.
+    /// </summary>
+    public static (int Stretch, int First, int Last, double Value)[] Seconds(
+        IReadOnlyList<Sample> samples,
+        Func<Sample, short?> pick,
+        double pauseThresholdS,
+        IReadOnlyList<PauseInterval>? pauses = null)
+    {
+        var result = new List<(int, int, int, double)>();
+        var stretch = 0;
+        for (var i = 0; i + 1 < samples.Count; i++)
+        {
+            var dt = samples[i + 1].T - samples[i].T;
+            if (dt <= 0 || dt > pauseThresholdS ||
+                CrossesPause(pauses, samples[i].T, samples[i + 1].T) ||
+                pick(samples[i]) is not { } value)
+            {
+                stretch++;
+                continue;
+            }
+
+            var seconds = Math.Max(1, (int)Math.Round(dt));
+            for (var s = 0; s < seconds; s++) result.Add((stretch, i, i + seconds - 1, value));
+        }
+
+        return [.. result];
+    }
+
+    /// <summary>
     /// Normalized power: a 30-second rolling average of the 1 Hz power, raised to the fourth power, averaged,
     /// then the fourth root. Null for less than 30 seconds of power.
     /// </summary>

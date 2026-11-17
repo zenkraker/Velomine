@@ -2538,5 +2538,17 @@
   "intensityLabelThreshold": "Threshold-heavy: a lot of moderate riding",
   "intensityLabelHiit": "High-intensity heavy: a lot of hard riding",
   "intensityLabelBase": "Base: almost all easy riding",
-  "intensityLabelMixed": "Mixed"
+  "intensityLabelMixed": "Mixed",
+  "seriesWPrimeBalance": "W′ balance",
+  "wPrimeLowest": "Lowest W′ balance {min} kJ of {wPrime} kJ",
+  "@wPrimeLowest": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "wPrime": {
+        "type": "String"
+      }
+    }
+  }
 }

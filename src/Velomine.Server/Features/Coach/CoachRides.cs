@@ -140,10 +140,10 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct, req.RideId);
         var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ride, ct);
-        // The records are analytics: without that grant the ride has none to show.
+        // The records and the W′ balance are analytics: without that grant the ride has none to show.
         await Send.OkAsync(
             PrivacyRules.ForViewer(
-                (canAnalytics ? RideDetails.Build(ride) : RideResponse.From(ride).WithoutTrainingLoad()) with
+                (canAnalytics ? await RideDetails.BuildAsync(db, time, ride, ct) : RideResponse.From(ride).WithoutTrainingLoad()) with
                 {
                     PowerRecords = canAnalytics
                         ? await PowerRecords.ForRideAsync(db, req.UserId, ride.Id, ride.StartTime, ct)
@@ -193,7 +193,9 @@ public sealed class GetCoachRideStreams(VelomineDbContext db, TimeProvider time)
 
         var showRoute = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Routes, ct);
         var privacy = await PrivacyRules.LoadAsync(db, req.UserId, found, ct);
-        var reduced = StreamSampling.Reduce(streams, req.MaxPoints ?? 1500);
+        var maxPoints = req.MaxPoints ?? 1500;
+        var reduced = StreamSampling.Reduce(streams, maxPoints);
+        var balance = await WPrimeBalance.ForCoachAsync(db, time, req.ClubId, viewerId, found.UserId, streams, ct);
         var response = new RideStreamsResponse(
             reduced.Time,
             reduced.Latitude,
@@ -204,7 +206,8 @@ public sealed class GetCoachRideStreams(VelomineDbContext db, TimeProvider time)
             reduced.HeartRate,
             reduced.Power,
             reduced.Cadence,
-            reduced.Temperature);
+            reduced.Temperature,
+            StreamSampling.ReduceValues(balance?.PerSample, maxPoints));
 
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,

@@ -13,6 +13,7 @@ class Series {
     required this.unit,
     required this.values,
     this.decimals = 0,
+    this.baseline = false,
   });
 
   final String id;
@@ -20,6 +21,9 @@ class Series {
   final String unit;
   final List<double?> values;
   final int decimals;
+
+  /// Mark 0 on the chart: the balance is the one signal where 0 itself matters.
+  final bool baseline;
 
   Iterable<double> get present => values.whereType<double>();
 
@@ -100,6 +104,10 @@ class RideSeries {
     final power = present(s.power?.map((v) => v?.toDouble()).toList());
     final heartRate = present(s.heartRate?.map((v) => v?.toDouble()).toList());
     final cadence = present(s.cadence?.map((v) => v?.toDouble()).toList());
+    // The W′ balance is in joules on the wire and reads in kJ, one decimal.
+    final balance = present(
+      s.wPrimeBalanceJ.orElse(null)?.map((v) => v / 1000).toList(),
+    );
 
     return RideSeries._(
       time,
@@ -136,6 +144,15 @@ class RideSeries {
           Series(id: 'power', name: 'Power', unit: 'W', values: power),
         if (cadence != null)
           Series(id: 'cadence', name: 'Cadence', unit: 'rpm', values: cadence),
+        if (balance != null)
+          Series(
+            id: 'wprime',
+            name: "W′ balance",
+            unit: 'kJ',
+            values: balance,
+            decimals: 1,
+            baseline: true,
+          ),
       ],
     );
   }

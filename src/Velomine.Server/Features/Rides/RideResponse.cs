@@ -50,7 +50,10 @@ public sealed record RideResponse(
     // can carry one. GetRide sets it; WithoutTrainingLoad and PrivacyRules.ForViewer clear it.
     int? FtpSuggestionW = null,
     string? FtpSuggestionMethod = null,
-    Guid? FtpSuggestionId = null)
+    Guid? FtpSuggestionId = null,
+    // Derived from power: RideDetails sets them, WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
+    int? MinWPrimeBalanceJ = null,
+    int? WPrimeJ = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -100,5 +103,7 @@ public sealed record RideResponse(
         FtpSuggestionW = null,
         FtpSuggestionMethod = null,
         FtpSuggestionId = null,
+        MinWPrimeBalanceJ = null,
+        WPrimeJ = null,
     };
 }

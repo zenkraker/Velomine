@@ -7963,6 +7963,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mixed'**
   String get intensityLabelMixed;
+
+  /// No description provided for @seriesWPrimeBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'W′ balance'**
+  String get seriesWPrimeBalance;
+
+  /// No description provided for @wPrimeLowest.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest W′ balance {min} kJ of {wPrime} kJ'**
+  String wPrimeLowest(String min, String wPrime);
 }
 
 class _AppLocalizationsDelegate
