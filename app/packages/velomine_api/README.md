@@ -287,6 +287,8 @@ Class | Method | HTTP request | Description
  - [FtpHistoryEntry](doc//FtpHistoryEntry.md)
  - [FtpHistoryResponse](doc//FtpHistoryResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
+ - [IntensityResponse](doc//IntensityResponse.md)
+ - [IntensityWeek](doc//IntensityWeek.md)
  - [JoinClubRequest](doc//JoinClubRequest.md)
  - [JoinCodeResponse](doc//JoinCodeResponse.md)
  - [JoinRequestResponse](doc//JoinRequestResponse.md)

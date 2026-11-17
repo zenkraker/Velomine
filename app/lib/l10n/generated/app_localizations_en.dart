@@ -4448,4 +4448,52 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get intensityTitle => 'Easy, moderate, hard';
+
+  @override
+  String intensityShares(String easy, String moderate, String hard) {
+    return '$easy % easy · $moderate % moderate · $hard % hard';
+  }
+
+  @override
+  String intensityEasy(String pct) {
+    return 'Easy $pct %';
+  }
+
+  @override
+  String intensityModerate(String pct) {
+    return 'Moderate $pct %';
+  }
+
+  @override
+  String intensityHard(String pct) {
+    return 'Hard $pct %';
+  }
+
+  @override
+  String get intensitySource =>
+      'From power where you have it, otherwise heart rate.';
+
+  @override
+  String get intensityLabelPolarised =>
+      'Polarised: mostly easy, a real share of hard, little in between';
+
+  @override
+  String get intensityLabelPyramidal =>
+      'Pyramidal: most easy, less moderate, least hard';
+
+  @override
+  String get intensityLabelThreshold =>
+      'Threshold-heavy: a lot of moderate riding';
+
+  @override
+  String get intensityLabelHiit => 'High-intensity heavy: a lot of hard riding';
+
+  @override
+  String get intensityLabelBase => 'Base: almost all easy riding';
+
+  @override
+  String get intensityLabelMixed => 'Mixed';
 }

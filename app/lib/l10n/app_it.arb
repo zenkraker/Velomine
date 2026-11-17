@@ -1551,5 +1551,27 @@
   "moreActions": "Altre azioni",
   "myBikes": "Le mie bici",
   "bikeCount": "{count, plural, =0{Nessuna bici} =1{1 bici} other{{count} bici}}",
-  "@bikeCount": {"placeholders": {"count": {"type": "int"}}}
+  "@bikeCount": {"placeholders": {"count": {"type": "int"}}},
+  "intensityTitle": "Facile, moderato, intenso",
+  "intensityShares": "{easy} % facile · {moderate} % moderato · {hard} % intenso",
+  "@intensityShares": {
+    "placeholders": {
+      "easy": {"type": "String"},
+      "moderate": {"type": "String"},
+      "hard": {"type": "String"}
+    }
+  },
+  "intensityEasy": "Facile {pct} %",
+  "@intensityEasy": {"placeholders": {"pct": {"type": "String"}}},
+  "intensityModerate": "Moderato {pct} %",
+  "@intensityModerate": {"placeholders": {"pct": {"type": "String"}}},
+  "intensityHard": "Intenso {pct} %",
+  "@intensityHard": {"placeholders": {"pct": {"type": "String"}}},
+  "intensitySource": "Dalla potenza dove ce l'hai, altrimenti dalla frequenza cardiaca.",
+  "intensityLabelPolarised": "Polarizzato: quasi tutto facile, una quota vera di intenso, poco in mezzo",
+  "intensityLabelPyramidal": "Piramidale: molto facile, meno moderato, poco intenso",
+  "intensityLabelThreshold": "Molto soglia: molta bici a ritmo moderato",
+  "intensityLabelHiit": "Molto intenso: molta bici a ritmo intenso",
+  "intensityLabelBase": "Base: quasi tutta bici facile",
+  "intensityLabelMixed": "Misto"
 }

@@ -1127,7 +1127,8 @@ extension on FakeServer {
           int.tryParse(request.url.queryParameters['days'] ?? '') ?? 90;
       trainingRequests.add(days);
       analyticsFilters.add(request.url.queryParameters['discipline']);
-      return json(training ?? trainingJson(days: days));
+      // The server sends a null intensity, and the client insists the key is there.
+      return json({...training ?? trainingJson(days: days)});
     }
 
     Map<String, Object?> goalJson(Map<String, Object?> g) {
@@ -2545,6 +2546,8 @@ Map<String, Object?> trainingJson({
   'elevationGainM': 600.0,
   'tss': tss,
   'trimp': trimp,
+  'intensity': null,
+  'intensityWeeks': const <Object?>[],
   'days': [
     for (var i = 0; i < 3; i++)
       {

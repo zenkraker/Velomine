@@ -23,6 +23,8 @@ class TrainingResponse {
     required this.tss,
     required this.trimp,
     this.days = const [],
+    required this.intensity,
+    this.intensityWeeks = const [],
   });
 
   final int dayCount;
@@ -45,6 +47,10 @@ class TrainingResponse {
 
   final List<TrainingDay> days;
 
+  final IntensityResponse? intensity;
+
+  final List<IntensityWeek> intensityWeeks;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is TrainingResponse &&
     other.dayCount == dayCount &&
@@ -56,7 +62,9 @@ class TrainingResponse {
     other.elevationGainM == elevationGainM &&
     other.tss == tss &&
     other.trimp == trimp &&
-    _deepEquality.equals(other.days, days);
+    _deepEquality.equals(other.days, days) &&
+    other.intensity == intensity &&
+    _deepEquality.equals(other.intensityWeeks, intensityWeeks);
 
   @override
   int get hashCode =>
@@ -70,10 +78,12 @@ class TrainingResponse {
     (elevationGainM.hashCode) +
     (tss.hashCode) +
     (trimp.hashCode) +
-    (days.hashCode);
+    (days.hashCode) +
+    (intensity == null ? 0 : intensity!.hashCode) +
+    (intensityWeeks.hashCode);
 
   @override
-  String toString() => 'TrainingResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, days=$days]';
+  String toString() => 'TrainingResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, days=$days, intensity=$intensity, intensityWeeks=$intensityWeeks]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -87,6 +97,12 @@ class TrainingResponse {
       json[r'tss'] = this.tss;
       json[r'trimp'] = this.trimp;
       json[r'days'] = this.days;
+    if (this.intensity != null) {
+      json[r'intensity'] = this.intensity;
+    } else {
+      json[r'intensity'] = null;
+    }
+      json[r'intensityWeeks'] = this.intensityWeeks;
     return json;
   }
 
@@ -103,6 +119,9 @@ class TrainingResponse {
     double? tss,
     double? trimp,
     List<TrainingDay>? days,
+    IntensityResponse? intensity,
+    bool intensitySetToNull = false,
+    List<IntensityWeek>? intensityWeeks,
   }) => TrainingResponse(
     dayCount: dayCount ?? this.dayCount,
     from: from ?? this.from,
@@ -114,6 +133,8 @@ class TrainingResponse {
     tss: tss ?? this.tss,
     trimp: trimp ?? this.trimp,
     days: days ?? this.days,
+    intensity: intensitySetToNull ? null : intensity ?? this.intensity,
+    intensityWeeks: intensityWeeks ?? this.intensityWeeks,
   );
 
   /// Returns a new [TrainingResponse] instance and imports its values from
@@ -147,6 +168,9 @@ class TrainingResponse {
         assert(json[r'trimp'] != null, 'Required key "TrainingResponse[trimp]" has a null value in JSON.');
         assert(json.containsKey(r'days'), 'Required key "TrainingResponse[days]" is missing from JSON.');
         assert(json[r'days'] != null, 'Required key "TrainingResponse[days]" has a null value in JSON.');
+        assert(json.containsKey(r'intensity'), 'Required key "TrainingResponse[intensity]" is missing from JSON.');
+        assert(json.containsKey(r'intensityWeeks'), 'Required key "TrainingResponse[intensityWeeks]" is missing from JSON.');
+        assert(json[r'intensityWeeks'] != null, 'Required key "TrainingResponse[intensityWeeks]" has a null value in JSON.');
         return true;
       }());
 
@@ -161,6 +185,8 @@ class TrainingResponse {
         tss: mapValueOfType<double>(json, r'tss')!,
         trimp: mapValueOfType<double>(json, r'trimp')!,
         days: TrainingDay.listFromJson(json[r'days']),
+        intensity: IntensityResponse.fromJson(json[r'intensity']),
+        intensityWeeks: IntensityWeek.listFromJson(json[r'intensityWeeks']),
       );
     }
     return null;
@@ -218,6 +244,8 @@ class TrainingResponse {
     'tss',
     'trimp',
     'days',
+    'intensity',
+    'intensityWeeks',
   };
 }
 

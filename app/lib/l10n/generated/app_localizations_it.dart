@@ -4479,4 +4479,52 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get intensityTitle => 'Facile, moderato, intenso';
+
+  @override
+  String intensityShares(String easy, String moderate, String hard) {
+    return '$easy % facile · $moderate % moderato · $hard % intenso';
+  }
+
+  @override
+  String intensityEasy(String pct) {
+    return 'Facile $pct %';
+  }
+
+  @override
+  String intensityModerate(String pct) {
+    return 'Moderato $pct %';
+  }
+
+  @override
+  String intensityHard(String pct) {
+    return 'Intenso $pct %';
+  }
+
+  @override
+  String get intensitySource =>
+      'Dalla potenza dove ce l\'hai, altrimenti dalla frequenza cardiaca.';
+
+  @override
+  String get intensityLabelPolarised =>
+      'Polarizzato: quasi tutto facile, una quota vera di intenso, poco in mezzo';
+
+  @override
+  String get intensityLabelPyramidal =>
+      'Piramidale: molto facile, meno moderato, poco intenso';
+
+  @override
+  String get intensityLabelThreshold =>
+      'Molto soglia: molta bici a ritmo moderato';
+
+  @override
+  String get intensityLabelHiit => 'Molto intenso: molta bici a ritmo intenso';
+
+  @override
+  String get intensityLabelBase => 'Base: quasi tutta bici facile';
+
+  @override
+  String get intensityLabelMixed => 'Misto';
 }

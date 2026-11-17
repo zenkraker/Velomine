@@ -79,6 +79,8 @@ lib/model/ftp_estimate.dart
 lib/model/ftp_history_entry.dart
 lib/model/ftp_history_response.dart
 lib/model/goal_response.dart
+lib/model/intensity_response.dart
+lib/model/intensity_week.dart
 lib/model/join_club_request.dart
 lib/model/join_code_response.dart
 lib/model/join_request_response.dart

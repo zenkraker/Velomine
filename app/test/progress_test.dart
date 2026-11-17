@@ -51,6 +51,60 @@ void main() {
   }
 
   testWidgets(
+    'ProgressScreen_ShouldSayHowTheRangeSplits_WhenThereIsIntensityData',
+    (tester) async {
+      server.training = {
+        ...trainingJson(),
+        'intensity': {
+          'easyS': 6000.0,
+          'moderateS': 3000.0,
+          'hardS': 1000.0,
+          'easyPct': 60.0,
+          'moderatePct': 30.0,
+          'hardPct': 10.0,
+          'polarisationIndex': 1.3,
+          'label': 'pyramidal',
+          'rides': 3,
+        },
+        'intensityWeeks': [
+          {
+            'weekStart': '2026-11-02',
+            'easyS': 6000.0,
+            'moderateS': 3000.0,
+            'hardS': 1000.0,
+          },
+        ],
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('intensity-card')));
+
+      expect(
+        find.text('Pyramidal: most easy, less moderate, least hard'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('60.0 % easy'),
+        findsOneWidget,
+        reason: 'the three shares, one decimal each',
+      );
+      expect(
+        find.text('From power where you have it, otherwise heart rate.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldHideTheIntensityCard_WhenNoRideHadPowerOrHeartRate',
+    (tester) async {
+      await openProgress(tester);
+
+      expect(find.byKey(const Key('intensity-card')), findsNothing);
+    },
+  );
+
+  testWidgets(
     'ProgressScreen_ShouldShowOnlyTheChosenPeriod_WhenThePeriodChangesDuringALoad',
     (tester) async {
       tester.view.physicalSize = const Size(1000, 2000);
@@ -119,6 +173,7 @@ void main() {
   ) async {
     await openProgress(tester);
 
+    await reveal(tester, find.byKey(const Key('training-tss')));
     expect(server.trainingRequests, [90]);
     expect(
       tester.widget<Text>(find.byKey(const Key('training-tss'))).data,

@@ -7783,6 +7783,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No bikes} =1{1 bike} other{{count} bikes}}'**
   String bikeCount(int count);
+
+  /// No description provided for @intensityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy, moderate, hard'**
+  String get intensityTitle;
+
+  /// No description provided for @intensityShares.
+  ///
+  /// In en, this message translates to:
+  /// **'{easy} % easy · {moderate} % moderate · {hard} % hard'**
+  String intensityShares(String easy, String moderate, String hard);
+
+  /// No description provided for @intensityEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy {pct} %'**
+  String intensityEasy(String pct);
+
+  /// No description provided for @intensityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate {pct} %'**
+  String intensityModerate(String pct);
+
+  /// No description provided for @intensityHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard {pct} %'**
+  String intensityHard(String pct);
+
+  /// No description provided for @intensitySource.
+  ///
+  /// In en, this message translates to:
+  /// **'From power where you have it, otherwise heart rate.'**
+  String get intensitySource;
+
+  /// No description provided for @intensityLabelPolarised.
+  ///
+  /// In en, this message translates to:
+  /// **'Polarised: mostly easy, a real share of hard, little in between'**
+  String get intensityLabelPolarised;
+
+  /// No description provided for @intensityLabelPyramidal.
+  ///
+  /// In en, this message translates to:
+  /// **'Pyramidal: most easy, less moderate, least hard'**
+  String get intensityLabelPyramidal;
+
+  /// No description provided for @intensityLabelThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold-heavy: a lot of moderate riding'**
+  String get intensityLabelThreshold;
+
+  /// No description provided for @intensityLabelHiit.
+  ///
+  /// In en, this message translates to:
+  /// **'High-intensity heavy: a lot of hard riding'**
+  String get intensityLabelHiit;
+
+  /// No description provided for @intensityLabelBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base: almost all easy riding'**
+  String get intensityLabelBase;
+
+  /// No description provided for @intensityLabelMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed'**
+  String get intensityLabelMixed;
 }
 
 class _AppLocalizationsDelegate

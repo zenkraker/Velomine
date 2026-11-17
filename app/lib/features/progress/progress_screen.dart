@@ -23,6 +23,7 @@ import '../accounts/ftp_source_text.dart';
 import '../rides/ride_type_chips.dart';
 import 'goals.dart';
 import 'ftp_history_sheet.dart';
+import 'intensity_card.dart';
 import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
 import 'progress_data.dart';
@@ -166,6 +167,12 @@ class ProgressScreen extends ConsumerWidget {
               .read(progressFiltersViewModelProvider.notifier)
               .setTrainingDays(days),
         ),
+      if (training.load.value case final trainingData?)
+        if (trainingData.intensity case final intensity?)
+          IntensityCard(
+            intensity: intensity,
+            weeks: trainingData.intensityWeeks,
+          ),
       if (power.load.value case final curve?)
         PowerSummary(
           curve: curve,

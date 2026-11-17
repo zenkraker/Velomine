@@ -281,6 +281,10 @@ class ApiClient {
           return FtpHistoryResponse.fromJson(value);
         case 'GoalResponse':
           return GoalResponse.fromJson(value);
+        case 'IntensityResponse':
+          return IntensityResponse.fromJson(value);
+        case 'IntensityWeek':
+          return IntensityWeek.fromJson(value);
         case 'JoinClubRequest':
           return JoinClubRequest.fromJson(value);
         case 'JoinCodeResponse':
