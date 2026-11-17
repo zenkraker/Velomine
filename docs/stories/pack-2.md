@@ -215,19 +215,22 @@ Depends on: Story 1.
    - heart rate outside 40–230 bpm is skipped;
    - `threshold` is the threshold heart rate **in use at the ride's first read** (Story 1, including the estimate).
    Rounded to one decimal; null without heart rate or without a threshold.
-2. A ride's **effort score** for fitness, fatigue, form and readiness is the first that exists: TSS (power) → hrTSS → estimated TSS (Story 6) → 0.
-3. Coaches: the daily effort reaches a coach's training view under the same rule TSS follows today.
+2. New **feel score**, from the rider's own 1–10 rating of the ride (`RideFeel.Rpe`, Foster's session RPE put on the TSS scale; a Velomine choice: an hour that feels 7/10 is an hour at threshold):
+   feel score = moving minutes / 60 × (RPE / 7)² × 100, one decimal.
+   Computed **on read** (the rating can be given or changed after the ride is read), never stored.
+3. A ride's **effort score** for fitness, fatigue, form and readiness is the first that exists: TSS (power) → hrTSS → feel score → estimated TSS (Story 6) → 0.
+4. Coaches: the daily effort reaches a coach's training view under the same rule TSS follows today, except the feel score: the rating is wellbeing data, so a coach's view uses it only with the wellbeing grant and otherwise falls through to the next score.
 
 ### Server
 
 1. `Ride` gains `HrTss double?` and `LoadThresholdHeartRate int?` (stamped at first read next to `LoadMaxHeartRate`; on a re-read, kept; when null on a re-read, the threshold in use now is stamped). Raise `RideParserVersion.Current`.
 2. `RideDays` / `TrainingRange`: each day gains `Load` (the sum of the rides' effort scores per rule 2); fitness and fatigue use `Load`. The existing `Tss` and `Trimp` fields stay as they are. `GetReadiness`'s recent load uses `Load`.
-3. `RideResponse` gains `HrTss` and `EffortScore` + `EffortSource` (`power`, `heart_rate`, `estimated`).
-4. `AGENTS.md`, *Data*: hrTSS is stored at read from the threshold of the ride's first read; fitness and fatigue use the effort score with the order of rule 2.
+3. `RideResponse` gains `HrTss` and `EffortScore` + `EffortSource` (`power`, `heart_rate`, `feel`, `estimated`).
+4. `AGENTS.md`, *Data*: hrTSS is stored at read from the threshold of the ride's first read; the feel score is computed on read; fitness and fatigue use the effort score with the order of rule 3.
 
 ### App
 
-1. Ride detail: "Effort score 64" with `SourceNote` "From your heart rate" / "From your power" / "From estimated watts".
+1. Ride detail: "Effort score 64" with `SourceNote` "From your heart rate" / "From your power" / "From how hard it felt" / "From estimated watts".
 2. Progress, fitness chart: when some rides in the range were scored from heart rate, a `SourceNote` "Includes rides scored from heart rate."
 3. The empty state that says "Set your FTP… to see training load" now also accepts heart rate: "Set your FTP or wear a heart-rate strap…".
 
@@ -237,6 +240,11 @@ Depends on: Story 1.
 - `HrTss_ShouldBe64_WhenOneHourAt80PercentOfThreshold` (128 bpm → 64.0)
 - `HrTss_ShouldBe62Point5_WhenHalfAtThresholdAndHalfAtHalf` (1,800 s at 160 + 1,800 s at 80 → 62.5)
 - `HrTss_ShouldSkipTheGap_WhenSamplesAreMoreThan30SecondsApart`
+- `FeelScore_ShouldBe100_WhenAnHourFeltSeven` (60 min, RPE 7 → 100.0)
+- `FeelScore_ShouldBe49_WhenNinetyMinutesFeltFour` (90 min, RPE 4 → 49.0)
+- `FeelScore_ShouldBe102_WhenHalfAnHourFeltTen` (30 min, RPE 10 → 102.0)
+- `Training_ShouldUseTheFeelScore_WhenARideHasNoPowerAndNoHeartRate` and `…_ShouldPreferHeartRate_WhenARideHasBoth`
+- `CoachTraining_ShouldSkipTheFeelScore_WhenThereIsNoWellbeingGrant`
 - `Training_ShouldCountHeartRateRides_WhenThereIsNoPower` (a heart-rate-only rider: fitness above 0 after a week of rides)
 - `Training_ShouldPreferPower_WhenARideHasBoth` (effort = TSS, not hrTSS)
 - `Readiness_ShouldUseTheEffortScore_WhenTheRiderHasNoPowerMeter`
@@ -271,7 +279,7 @@ Depends on: Story 5.
      | other, no bike | 0.006 | 0.40 | 11 |
    - P below 0 (coasting, braking, descending) is 0; stopped (speed < 0.5 m/s) is 0; capped at 2,000 W.
 3. **Estimated watts never feed** power bests, the power curve, FTP estimates or suggestions, records, critical power, W′ balance, decoupling, efficiency or power zones. They are only shown, and used for the estimated TSS.
-4. **Estimated TSS** = the usual TSS formula with the estimated NP and the FTP at first read. **Without an FTP there is no estimated TSS**; the ride still counts in hours, distance and climbing.
+4. **Estimated TSS** = the usual TSS formula with the estimated NP and the FTP at first read. **Without an FTP**, a stand-in FTP of round(2.5 W/kg × the rider's weight at read) is used (a Velomine choice: a typical value for a recreational rider). The stand-in is never stored as the rider's FTP and never shown as one. It only matters when the ride has no power, no heart rate and no 1–10 rating (Story 5, rule 3).
 
 ### Server
 
@@ -295,7 +303,7 @@ Depends on: Story 5.
 - `EstimatedPower_ShouldBeLower_WhenTheAirIsThinner` (the 5 % climb at 1,500 m → 184.2 → 184)
 - `EstimatedPower_ShouldNotBeComputed_WhenTheRideHasPower` / `…_WhenItIsAnEbikeRide` / `…_WhenItIsIndoors` / `…_WhenTheRiderHasNoWeight`
 - `EstimatedPower_ShouldNotChangeThePowerCurve_WhenARideHasOnlyEstimatedWatts`
-- `EstimatedTss_ShouldBeNull_WhenTheRiderHasNoFtp`
+- `EstimatedTss_ShouldUseTwoAndAHalfWattsPerKilo_WhenTheRiderHasNoFtp` (70 kg → stand-in 175 W; the rider's FTP stays null)
 - `CoachRide_ShouldHideEstimatedPower_WhenTheRideHidesSpeed`
 
 ---
