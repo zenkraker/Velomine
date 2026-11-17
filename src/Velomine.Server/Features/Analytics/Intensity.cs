@@ -72,11 +72,9 @@ public static class Intensity
         var totals = new Dictionary<DateOnly, IntensityTotals>();
         foreach (var ride in rides)
         {
-            var start = ride.StartTime!.Value;
-            var date = clock.LocalDateOf(start, ride.UtcOffsetMinutes);
-            // The training range reads two days either side to find its exact local cut; the split only ever counts
-            // the range itself, which is what the caller sums TSS over.
-            // Totals and the split count the same rides, so they always add up.
+            // Read two days either side for the exact local cut: the split counts the same rides the totals do, so
+            // they always add up.
+            var date = clock.LocalDateOf(ride.StartTime!.Value, ride.UtcOffsetMinutes);
             if (date < from || date >= to) continue;
 
             // A coach sees a ride through its privacy snapshot: power hidden falls back to heart rate, and both
@@ -140,8 +138,7 @@ public static class Intensity
     public static IntensityTotals? FromHeartRate(IReadOnlyList<short?>? heartRate, IReadOnlyList<double> time, int? maxHeartRate)
     {
         if (heartRate is null || maxHeartRate is not { } max || max <= 0) return null;
-        // Heart-rate zones count from 1 bpm, so anything below 50 % of maximum (resting) is in zone 1. It is not
-        // training time: an easy minute would otherwise be exactly as easy as sitting still.
+        // Heart-rate zones count from 1 bpm, so a resting beat would land in zone 1 and be counted as easy time.
         var zones = TrainingLoad.ZoneSeconds(heartRate, time, max, 0, TrainingLoad.HeartRateBounds);
         return zones.Sum() > 0
             ? new IntensityTotals(zones[0] + zones[1] + zones[2], zones[3], zones[4], 1)

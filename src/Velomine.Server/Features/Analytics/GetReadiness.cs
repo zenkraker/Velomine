@@ -38,7 +38,6 @@ public sealed class GetReadiness(VelomineDbContext db, TimeProvider time)
     {
         var userId = User.UserId();
         var clock = await MemberClock.ForAsync(db, userId, time, ct);
-        // Readiness needs the load only: the split it would also work out is thrown away.
         var training = await TrainingRange.LoadAsync(db, userId, clock, time, 8, ct);
         var today = training.Days[^1];
         var weekAgo = training.Days[0];
