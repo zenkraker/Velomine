@@ -94,6 +94,20 @@ void main() {
       }
     });
 
+    test('IsRideFileName_ShouldRejectZwiftInProgressFile_WhenTheNameIsInAnyCaseOrFolder', () {
+      for (final name in [
+        'inProgressActivity.fit',
+        'INPROGRESSACTIVITY.FIT',
+        'Zwift/Activities/inProgressActivity.fit',
+        r'Zwift\Activities\inProgressActivity.fit',
+        'inProgressActivity.fit.gz',
+      ]) {
+        expect(isRideFileName(name), isFalse, reason: name);
+      }
+      expect(isRideFileName('2026-11-02-08-15-00.fit'), isTrue);
+      expect(isRideFileName('myInProgressActivity.fit'), isTrue);
+    });
+
     test('SelectRideFiles_ShouldKeepOnlyRideFilesAndCountTheRest_WhenAFolderHasOtherThings', () {
       final chosen = selectRideFiles([
         _MemoryFile('Activities/2026/ride.fit'),
@@ -295,5 +309,51 @@ void main() {
         hasLength(1),
       );
     });
+
+    testWidgets(
+      'RidesScreen_ShouldExplainZwiftAndReadTheFolder_WhenThereAreNoRidesYet',
+      (tester) async {
+        tester.view.physicalSize = const Size(1000, 2000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final server = FakeServer();
+        server.signInBrowser(server.add('rider@example.com'));
+        final source = _FakeDropSource(
+          files: [
+            _MemoryFile('Activities/2026-11-02-08-15-00.fit'),
+            _MemoryFile('Activities/inProgressActivity.fit'),
+          ],
+        );
+
+        await startApp(
+          tester,
+          server.session(useCookies: true),
+          overrides: [
+            dropSourceProvider.overrideWithValue(source),
+            bulkRunnerProvider.overrideWithValue(
+              BulkUploadRunner(wait: (_) async {}),
+            ),
+          ],
+        );
+
+        expect(find.text('From Zwift'), findsOneWidget);
+        expect(
+          find.textContaining('Documents/Zwift/Activities'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('zwift-folder')));
+        for (var i = 0; i < 30; i++) {
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+
+        expect(find.text('1 new ride'), findsOneWidget);
+        expect(find.byKey(const Key('bulk-skipped')), findsOneWidget);
+        expect(
+          server.requests.where((r) => r == 'POST /api/v1/rides/uploads'),
+          hasLength(1),
+        );
+      },
+    );
   });
 }

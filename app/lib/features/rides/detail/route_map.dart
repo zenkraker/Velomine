@@ -23,6 +23,7 @@ class RouteMap extends StatefulWidget {
     this.tileUrl,
     this.attribution,
     this.elevationGainM,
+    this.virtualWorld = false,
   });
 
   final RideSeries data;
@@ -33,6 +34,13 @@ class RouteMap extends StatefulWidget {
 
   /// The ride's climbing, when the caller knows it; the full map reads it out.
   final double? elevationGainM;
+
+  /// A ride in a virtual world such as Zwift: its coordinates are not a place on Earth, so the line is drawn
+  /// without map tiles and a caption says why.
+  final bool virtualWorld;
+
+  /// The tile address actually used: none for a virtual world.
+  String? get _tileUrl => virtualWorld ? null : tileUrl;
 
   @override
   State<RouteMap> createState() => _RouteMapState();
@@ -84,8 +92,8 @@ class _RouteMapState extends State<RouteMap> {
                       color: scheme.surfaceContainerHighest,
                       child: Stack(
                         children: [
-                          if (widget.tileUrl != null)
-                            for (final tile in view.tiles(widget.tileUrl!))
+                          if (widget._tileUrl != null)
+                            for (final tile in view.tiles(widget._tileUrl!))
                               Positioned(
                                 left: tile.left,
                                 top: tile.top,
@@ -116,7 +124,7 @@ class _RouteMapState extends State<RouteMap> {
                               ),
                             ),
                           ),
-                          if (widget.tileUrl != null &&
+                          if (widget._tileUrl != null &&
                               widget.attribution != null &&
                               widget.attribution!.isNotEmpty)
                             Positioned(
@@ -141,7 +149,7 @@ class _RouteMapState extends State<RouteMap> {
                                     data: widget.data,
                                     selected: widget.selected,
                                     selectedLap: widget.selectedLap,
-                                    tileUrl: widget.tileUrl,
+                                    tileUrl: widget._tileUrl,
                                     attribution: widget.attribution,
                                   ),
                                 ),
@@ -157,6 +165,15 @@ class _RouteMapState extends State<RouteMap> {
             ),
           ),
         ),
+        if (widget.virtualWorld)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              l10n.mapVirtualWorld,
+              key: const Key('map-virtual-caption'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         if (showHeartRate)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -179,7 +196,7 @@ class _RouteMapState extends State<RouteMap> {
           data: widget.data,
           selected: widget.selected,
           selectedLap: widget.selectedLap,
-          tileUrl: widget.tileUrl,
+          tileUrl: widget._tileUrl,
           attribution: widget.attribution,
           elevationGainM: widget.elevationGainM,
         ),

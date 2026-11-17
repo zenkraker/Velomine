@@ -415,6 +415,27 @@ void main() {
     );
   });
 
+  testWidgets(
+    'RouteMap_ShouldDrawTheLineWithoutTilesAndSayWhy_WhenTheRideIsVirtual',
+    (tester) async {
+      server.rides.add(
+        rideJson('v1', 'ready', distanceM: 20000, environment: 'virtual'),
+      );
+      server.streams['v1'] = streamsJson();
+      await open(tester, id: 'v1');
+
+      expect(find.byKey(const Key('route-map')), findsOneWidget);
+      expect(find.byKey(const Key('map-virtual-caption')), findsOneWidget);
+      expect(find.byKey(const Key('map-attribution')), findsNothing);
+      final tiles = find.byWidgetPredicate(
+        (w) =>
+            w.key is ValueKey<String> &&
+            (w.key! as ValueKey<String>).value.startsWith('tile-'),
+      );
+      expect(tiles, findsNothing);
+    },
+  );
+
   testWidgets('RouteMap_ShouldOpenFullScreenAndClose_WhenTheMapIsTapped', (
     tester,
   ) async {

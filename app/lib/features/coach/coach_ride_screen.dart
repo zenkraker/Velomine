@@ -120,6 +120,7 @@ class CoachRideScreen extends ConsumerWidget {
               selectedLap: selection.selectedLap,
               tileUrl: tileUrl,
               attribution: attribution,
+              virtualWorld: ride.environment == 'virtual',
             )
           else if (c.data != null)
             Text(

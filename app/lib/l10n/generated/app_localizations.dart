@@ -1988,6 +1988,18 @@ abstract class AppLocalizations {
   /// **'Choose files'**
   String get bulkChooseFiles;
 
+  /// No description provided for @zwiftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From Zwift'**
+  String get zwiftTitle;
+
+  /// No description provided for @zwiftHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Zwift keeps every ride as a FIT file in Documents/Zwift/Activities. Choose that folder to bring them all in.'**
+  String get zwiftHint;
+
   /// No description provided for @bulkDropTitle.
   ///
   /// In en, this message translates to:
@@ -2371,6 +2383,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map of the route'**
   String get mapOfRoute;
+
+  /// No description provided for @mapVirtualWorld.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual world: the line is drawn without a map.'**
+  String get mapVirtualWorld;
 
   /// No description provided for @heartRateOnMap.
   ///

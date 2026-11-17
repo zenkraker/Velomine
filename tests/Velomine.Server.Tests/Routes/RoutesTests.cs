@@ -10,6 +10,7 @@ using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Routes;
+using static Velomine.Server.Tests.Rides.TestRideFiles;
 using static Velomine.Server.Tests.Routes.RoutesTestKit;
 
 namespace Velomine.Server.Tests.Routes;
@@ -17,6 +18,25 @@ namespace Velomine.Server.Tests.Routes;
 public sealed class RoutesTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task CreateRoute_ShouldRefuseTheRide_WhenTheRideIsInAVirtualWorld()
+    {
+        await using var api = await StartAsync(postgres);
+        var world = await NewWorldAsync(api);
+        var rideId = await UploadAndWaitAsync(world.Rider.Client, Fit(new FitSession(
+            DateTime.UtcNow.AddDays(-1), 600, SubSport: Dynastream.Fit.SubSport.VirtualActivity,
+            ManufacturerId: Dynastream.Fit.Manufacturer.Zwift, StartLatitude: -11.64, StartLongitude: 166.95)));
+
+        var response = await world.Rider.Client.PostAsJsonAsync(
+            "/api/v1/routes", new CreateRouteRequest { RideId = rideId, Name = "Watopia", Surface = "road" }, Ct);
+        var draft = await world.Rider.Client.GetAsync($"/api/v1/rides/{rideId}/route-draft", Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("virtual world", await response.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(HttpStatusCode.BadRequest, draft.StatusCode);
+        Assert.Empty((await world.Rider.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct))!.Routes);
+    }
 
     [Fact]
     public async Task CreateRoute_ShouldLeaveOutThePrivacyZone_WhenTheRouteComesFromARide()

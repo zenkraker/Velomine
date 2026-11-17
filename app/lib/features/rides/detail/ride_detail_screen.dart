@@ -261,6 +261,7 @@ class RideDetailScreen extends ConsumerWidget {
             tileUrl: tileUrl,
             attribution: attribution,
             elevationGainM: ride.elevationGainM,
+            virtualWorld: ride.environment == 'virtual',
           ),
         _Stats(ride: ride),
         if (s.laps.isNotEmpty)

@@ -1050,6 +1050,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bulkChooseFiles => 'Scegli i file';
 
   @override
+  String get zwiftTitle => 'Da Zwift';
+
+  @override
+  String get zwiftHint =>
+      'Zwift conserva ogni uscita come file FIT in Documents/Zwift/Activities. Scegli quella cartella per portarle dentro tutte.';
+
+  @override
   String get bulkDropTitle => 'Rilascia per aggiungere le tue uscite';
 
   @override
@@ -1334,6 +1341,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mapOfRoute => 'Mappa del percorso';
+
+  @override
+  String get mapVirtualWorld =>
+      'Mondo virtuale: la linea è disegnata senza mappa.';
 
   @override
   String get heartRateOnMap => 'Mostra la frequenza cardiaca sulla mappa';

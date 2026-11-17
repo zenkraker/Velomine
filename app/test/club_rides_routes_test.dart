@@ -276,6 +276,25 @@ void main() {
     expect(server.routeLibrary.single['ownerId'], rider.id);
   });
 
+  testWidgets('AddRouteScreen_ShouldLeaveOutVirtualRides_WhenRidesAreListed', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.rides.add(rideJson('ride-1', 'ready', distanceM: 48000));
+    server.rides.add(
+      rideJson('zwift-1', 'ready', distanceM: 30000, environment: 'virtual'),
+    );
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('add-route-from-club'));
+
+    expect(find.byKey(const Key('route-ride-ride-1')), findsOneWidget);
+    expect(find.byKey(const Key('route-ride-zwift-1')), findsNothing);
+  });
+
   testWidgets('ClubRidesScreen_ShouldLetAMemberJoin_WhenTheRideHasPlaces', (
     tester,
   ) async {

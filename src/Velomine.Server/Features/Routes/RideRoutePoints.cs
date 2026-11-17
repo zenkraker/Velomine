@@ -11,6 +11,7 @@ public enum RideRouteProblem
     NotFound,
     NoMap,
     NothingLeft,
+    Virtual,
 }
 
 public sealed record RideRoute(RideRouteProblem Problem, string FileName, IReadOnlyList<RoutePoint> Points);
@@ -23,12 +24,18 @@ public sealed record RideRoute(RideRouteProblem Problem, string FileName, IReadO
 /// </summary>
 public static class RideRoutePoints
 {
+    /// <summary>A virtual ride is the member's mistake to fix (400); the other problems are about the ride's state (409).</summary>
+    public static int StatusCode(RideRouteProblem problem) => problem == RideRouteProblem.Virtual ? 400 : 409;
+
     public static async Task<RideRoute> LoadAsync(VelomineDbContext db, Guid userId, Guid rideId, CancellationToken ct)
     {
         var ride = await db.Rides.AsNoTracking()
             .Where(r => r.Id == rideId && r.UserId == userId)
             .FirstOrDefaultAsync(ct);
         if (ride is null) return new RideRoute(RideRouteProblem.NotFound, "", []);
+
+        // A virtual world's coordinates land on real places that are not where the rider went.
+        if (ride.Environment == Rides.Environments.Virtual) return new RideRoute(RideRouteProblem.Virtual, ride.FileName, []);
 
         var streams = ride.Status == RideStatus.Ready
             ? await db.RideStreams.AsNoTracking().FirstOrDefaultAsync(s => s.RideId == rideId, ct)
@@ -59,6 +66,7 @@ public static class RideRoutePoints
 
     public static string Message(RideRouteProblem problem) => problem switch
     {
+        RideRouteProblem.Virtual => "A ride in a virtual world cannot become a club route.",
         RideRouteProblem.NoMap => "This ride has no map: it is still being read, or it was recorded without GPS.",
         _ => "Nothing is left of this ride to share once your privacy settings are applied.",
     };

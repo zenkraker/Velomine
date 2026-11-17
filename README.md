@@ -39,7 +39,7 @@ The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/
 | ![Progress: weekly distance, readiness, fitness and fatigue, and the power curve](docs/images/progress.webp) | ![A bike with its parts and how worn each one is](docs/images/bike.webp) |
 | **Progress:** weekly and monthly totals, training load, fitness and fatigue, the power curve and FTP, and a daily readiness score. | **Bikes and parts:** every component with its wear, service reminders and a service log. |
 
-- **Rides:** FIT, GPX and TCX files, whole folders at once, or your full Strava export; map, charts, laps, heart-rate and power zones.
+- **Rides:** FIT, GPX and TCX files, whole folders at once (Zwift's Activities folder too), or your full Strava export; map, charts, laps, heart-rate and power zones.
 - **Clubs and coaches:** join with a code, a coach sees only what each rider shares, planned club rides with a meeting point and a route, and a shared route library.
 - **Android app** that records with the screen off and connects to a heart-rate sensor; the APK is attached to every [release](https://github.com/zenkraker/Velomine/releases/latest). On an iPhone, the web app works in the browser.
 - **Wellbeing check-in** and readiness, as health data with explicit consent.

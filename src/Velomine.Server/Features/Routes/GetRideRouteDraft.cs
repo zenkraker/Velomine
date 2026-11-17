@@ -19,7 +19,7 @@ public sealed class GetRideRouteDraft(VelomineDbContext db) : Endpoint<RideRoute
     public override void Configure()
     {
         Get("rides/{id}/route-draft");
-        Description(d => d.Produces<RouteDraftResponse>(200).Produces(401).Produces(404).ProducesProblem(409), clearDefaults: true);
+        Description(d => d.Produces<RouteDraftResponse>(200).ProducesProblem(400).Produces(401).Produces(404).ProducesProblem(409), clearDefaults: true);
     }
 
     public override async Task HandleAsync(RideRouteDraftRequest req, CancellationToken ct)
@@ -42,7 +42,7 @@ public sealed class GetRideRouteDraft(VelomineDbContext db) : Endpoint<RideRoute
         if (ride.Problem != RideRouteProblem.None)
         {
             AddError(RideRoutePoints.Message(ride.Problem));
-            await Send.ErrorsAsync(409, ct);
+            await Send.ErrorsAsync(RideRoutePoints.StatusCode(ride.Problem), ct);
             return;
         }
 

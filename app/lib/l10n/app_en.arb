@@ -446,6 +446,8 @@
   "uploading": "Uploading…",
   "bulkChooseFolder": "Choose a folder",
   "bulkChooseFiles": "Choose files",
+  "zwiftTitle": "From Zwift",
+  "zwiftHint": "Zwift keeps every ride as a FIT file in Documents/Zwift/Activities. Choose that folder to bring them all in.",
   "bulkDropTitle": "Drop to add your rides",
   "bulkDropHint": "Files or a whole folder: .fit, .gpx and .tcx files are read, also zipped (.gz).",
   "bulkTitle": "Adding rides from files",
@@ -643,6 +645,7 @@
   "bike": "Bike",
   "noBike": "No bike",
   "mapOfRoute": "Map of the route",
+  "mapVirtualWorld": "Virtual world: the line is drawn without a map.",
   "heartRateOnMap": "Show heart rate on the map",
   "mapHeartRateHint": "Route colour shows heart rate from {min} to {max} bpm",
   "@mapHeartRateHint": {

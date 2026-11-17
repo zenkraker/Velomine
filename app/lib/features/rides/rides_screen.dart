@@ -17,6 +17,7 @@ import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_tile.dart';
 import '../../core/widgets/toolbar_row.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -312,6 +313,30 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
               // Wide has the ways in on its page already.
               action: wide ? null : emptyActions,
             ),
+        if (s.rides.isEmpty && !s.load.running && !s.filtered && bulkSupported)
+          SectionCard(
+            title: l10n.zwiftTitle,
+            description: l10n.zwiftHint,
+            children: [
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  OutlinedButton.icon(
+                    key: const Key('zwift-folder'),
+                    onPressed: bulkBusy ? null : bulk.chooseFolder,
+                    icon: const Icon(Icons.folder_open_outlined),
+                    label: Text(l10n.bulkChooseFolder),
+                  ),
+                  TextButton(
+                    key: const Key('zwift-files'),
+                    onPressed: bulkBusy ? null : bulk.chooseFiles,
+                    child: Text(l10n.bulkChooseFiles),
+                  ),
+                ],
+              ),
+            ],
+          ),
         CardGrid(
           children: [
             for (final ride in s.rides)

@@ -21,7 +21,10 @@ public static class TestRideFiles
         SubSport SubSport = SubSport.Generic,
         IReadOnlyList<int>? LapSeconds = null,
         bool NoPosition = false,
-        string? WorkoutName = null);
+        string? WorkoutName = null,
+        ushort ManufacturerId = Manufacturer.Garmin,
+        double StartLatitude = 46.0,
+        double StartLongitude = 11.0);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -32,7 +35,7 @@ public static class TestRideFiles
 
         var fileId = new FileIdMesg();
         fileId.SetType(Dynastream.Fit.File.Activity);
-        fileId.SetManufacturer(Manufacturer.Garmin);
+        fileId.SetManufacturer(sessions[0].ManufacturerId);
         fileId.SetProduct(1);
         fileId.SetSerialNumber(1234);
         encode.Write(fileId);
@@ -59,8 +62,8 @@ public static class TestRideFiles
                 record.SetTimestamp(new Dynastream.Fit.DateTime(session.Start.AddSeconds(s)));
                 if (!session.NoPosition)
                 {
-                    record.SetPositionLat((int)((46.0 + s * 8 / 111_195.0) * (2147483648.0 / 180.0)));
-                    record.SetPositionLong((int)(11.0 * (2147483648.0 / 180.0)));
+                    record.SetPositionLat((int)((session.StartLatitude + s * 8 / 111_195.0) * (2147483648.0 / 180.0)));
+                    record.SetPositionLong((int)(session.StartLongitude * (2147483648.0 / 180.0)));
                 }
                 record.SetAltitude(300 + s * 0.1f);
                 record.SetSpeed(8);
