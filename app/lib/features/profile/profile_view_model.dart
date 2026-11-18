@@ -28,6 +28,26 @@ class ProfileViewModel extends _$ProfileViewModel {
   Future<DateTime?> rideStart(String id) =>
       ref.read(profileDataProvider).rideStart(id);
 
+  /// Sets one heart-rate number, or sends null to go back to the estimate. The answer is the whole profile.
+  Future<bool> setHeartRate(String kind, int? bpm) async {
+    if (state.heartRate.running) return false;
+    state = state.copyWith(heartRate: state.heartRate.start());
+    final data = ref.read(profileDataProvider);
+    final result = await (bpm == null
+        ? data.clearHeartRate(kind)
+        : data.setHeartRate(kind, bpm));
+    if (!ref.mounted) return false;
+    state = state.copyWith(
+      heartRate: state.heartRate.finish(result),
+      profile: result.valueOrNull ?? state.profile,
+    );
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+    return true;
+  }
+
   Future<void> load() async {
     if (state.load.running) return;
     state = state.copyWith(load: state.load.start());

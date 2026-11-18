@@ -29,7 +29,7 @@ public sealed class DownloadExport(ExportTokens tokens, AccountExport export, Ti
         // complete before the first byte goes out.
         var path = Path.Combine(Path.GetTempPath(), "velomine-export-" + Guid.NewGuid().ToString("N"));
         await using var temp = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 81920, FileOptions.DeleteOnClose | FileOptions.Asynchronous);
-        await export.WriteAsync(userId, temp, ct);
+        await export.WriteAsync(userId, temp, time, ct);
         temp.Position = 0;
         await Send.StreamAsync(temp, $"velomine-data-{time.GetUtcNow():yyyy-MM-dd}.zip", temp.Length, "application/zip", cancellation: ct);
     }

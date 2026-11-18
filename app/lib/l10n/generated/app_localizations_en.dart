@@ -2220,8 +2220,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add your year of birth to estimate it.';
 
   @override
-  String get maxHeartRateSource =>
-      'Estimated from your year of birth (208 − 0.7 × age)';
+  String estimatedThresholdHeartRate(int bpm) {
+    return 'Estimated threshold heart rate: $bpm bpm';
+  }
+
+  @override
+  String heartRateSourceManual(String date) {
+    return 'Set by you on $date';
+  }
+
+  @override
+  String heartRateSourceMeasured(String date) {
+    return 'Measured on your ride of $date';
+  }
+
+  @override
+  String get maxHeartRateField => 'Maximum heart rate';
+
+  @override
+  String get thresholdHeartRateField => 'Threshold heart rate';
+
+  @override
+  String get heartRateLeaveEmpty => 'Leave empty to estimate.';
+
+  @override
+  String get thresholdHeartRateHelp =>
+      'The highest heart rate you can hold for about an hour.';
+
+  @override
+  String get heartRateSourceMaxEstimate =>
+      'Estimated from your age (208 − 0.7 × age)';
+
+  @override
+  String get heartRateSourceThresholdEstimate =>
+      'Estimated as 89 % of your maximum';
+
+  @override
+  String get heartRateNone => 'Add your year of birth, or type it above.';
 
   @override
   String get timeZone => 'Time zone';
@@ -2288,6 +2323,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorBirthYear =>
       'Enter a year of birth between 1900 and ten years ago.';
+
+  @override
+  String get errorHeartRate =>
+      'Enter a maximum of 120–230 bpm or a threshold of 90–220 bpm, below your maximum.';
 
   @override
   String get deleteAccountTitle => 'Delete your account?';

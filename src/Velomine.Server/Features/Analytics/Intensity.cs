@@ -47,9 +47,8 @@ public static class Intensity
     {
         var profile = await db.Users.AsNoTracking()
             .Where(u => u.Id == userId)
-            .Select(u => new { u.FtpW, u.BirthYear })
             .FirstAsync(ct);
-        var maxHeartRate = User.EstimateMaxHeartRate(profile.BirthYear, time);
+        var maxHeartRate = HeartRates.For(profile, time).Max?.Bpm;
 
         // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
         var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);

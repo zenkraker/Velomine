@@ -47,7 +47,7 @@ final class ProfileViewModelProvider
   }
 }
 
-String _$profileViewModelHash() => r'23577fa92b414c23c431545635a07d7728d7b1bd';
+String _$profileViewModelHash() => r'8742dd65b82cc8414bd750e0903fff717d2874c0';
 
 /// The member's profile. Kept alive for the session; a sign-out rebuilds it
 /// empty, so the next account never sees the last one's numbers.

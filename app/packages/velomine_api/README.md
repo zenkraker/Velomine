@@ -66,6 +66,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountsApi* | [**approveUser**](doc//AccountsApi.md#approveuser) | **POST** /api/v1/accounts/users/{id}/approve | 
 *AccountsApi* | [**changePassword**](doc//AccountsApi.md#changepassword) | **PUT** /api/v1/accounts/me/password | 
+*AccountsApi* | [**clearHeartRate**](doc//AccountsApi.md#clearheartrate) | **DELETE** /api/v1/accounts/me/heart-rate/{kind} | 
 *AccountsApi* | [**createExportLink**](doc//AccountsApi.md#createexportlink) | **POST** /api/v1/accounts/me/export-link | 
 *AccountsApi* | [**deleteMyAccount**](doc//AccountsApi.md#deletemyaccount) | **POST** /api/v1/accounts/me/delete | 
 *AccountsApi* | [**disableTwoFactor**](doc//AccountsApi.md#disabletwofactor) | **POST** /api/v1/accounts/me/two-factor/disable | 
@@ -93,6 +94,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**revokeOtherSessions**](doc//AccountsApi.md#revokeothersessions) | **POST** /api/v1/accounts/me/sessions/logout-others | 
 *AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
+*AccountsApi* | [**setHeartRate**](doc//AccountsApi.md#setheartrate) | **PUT** /api/v1/accounts/me/heart-rate/{kind} | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
 *AccountsApi* | [**setMyUnits**](doc//AccountsApi.md#setmyunits) | **PUT** /api/v1/accounts/me/units | 
 *AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
@@ -368,6 +370,7 @@ Class | Method | HTTP request | Description
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
  - [SetClubPlanRequest](doc//SetClubPlanRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)
+ - [SetHeartRateRequest](doc//SetHeartRateRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
  - [SetMyUnitsRequest](doc//SetMyUnitsRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)

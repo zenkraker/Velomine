@@ -648,7 +648,7 @@ public sealed class MaintenanceTests(PostgresFixture postgres)
         await using var scope = api.Services.CreateAsyncScope();
         var export = ActivatorUtilities.CreateInstance<AccountExport>(scope.ServiceProvider);
         using var stream = new MemoryStream();
-        await export.WriteAsync(userId, stream, Ct);
+        await export.WriteAsync(userId, stream, scope.ServiceProvider.GetRequiredService<TimeProvider>(), Ct);
         stream.Position = 0;
         using var zip = new System.IO.Compression.ZipArchive(stream);
         using var reader = new StreamReader(zip.GetEntry("bikes.json")!.Open());

@@ -14,6 +14,7 @@ class ProfileState {
     this.export = const CommandState.idle(),
     this.delete = const CommandState.idle(),
     this.password = const CommandState.idle(),
+    this.heartRate = const CommandState.idle(),
     this.messages = const [],
   });
 
@@ -25,6 +26,9 @@ class ProfileState {
   final VoidCommand export;
   final VoidCommand delete;
   final VoidCommand password;
+
+  /// Setting or clearing one heart-rate number.
+  final CommandState<ProfileResponse?> heartRate;
   final List<UserMessage> messages;
 
   ProfileState copyWith({
@@ -36,6 +40,7 @@ class ProfileState {
     VoidCommand? export,
     VoidCommand? delete,
     VoidCommand? password,
+    CommandState<ProfileResponse?>? heartRate,
     List<UserMessage>? messages,
   }) => ProfileState(
     profile: profile ?? this.profile,
@@ -46,6 +51,7 @@ class ProfileState {
     export: export ?? this.export,
     delete: delete ?? this.delete,
     password: password ?? this.password,
+    heartRate: heartRate ?? this.heartRate,
     messages: messages ?? this.messages,
   );
 }

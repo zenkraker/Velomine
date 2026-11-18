@@ -12,7 +12,7 @@ public static class RideDetails
     /// </summary>
     public static async Task<RideResponse> BuildAsync(VelomineDbContext db, TimeProvider time, Ride ride, CancellationToken ct)
     {
-        var response = Build(ride);
+        var response = Build(ride, time);
         if (ride.Streams is not { } streams) return response;
 
         var clock = await MemberClock.ForAsync(db, ride.UserId, time, ct);
@@ -20,7 +20,7 @@ public static class RideDetails
         return balance is null ? response : response with { MinWPrimeBalanceJ = (int?)balance.MinJ, WPrimeJ = balance.WPrimeJ };
     }
 
-    public static RideResponse Build(Ride ride)
+    public static RideResponse Build(Ride ride, TimeProvider time)
     {
         var response = RideResponse.From(ride);
         if (ride.Streams is not { } streams || ride.Owner is not { } owner) return response;
@@ -30,7 +30,7 @@ public static class RideDetails
         if (response.Tss is null && tss is not null)
             response = response with { Tss = tss, IntensityFactor = intensityFactor };
 
-        if (owner.MaxHeartRate is { } maxHeartRate && streams.HeartRate is { } heartRate)
+        if (HeartRates.For(owner, time).Max?.Bpm is { } maxHeartRate && streams.HeartRate is { } heartRate)
         {
             var seconds = TrainingLoad.ZoneSeconds(
                 heartRate,

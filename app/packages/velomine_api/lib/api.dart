@@ -174,6 +174,7 @@ part 'model/set_club_member_role_request.dart';
 part 'model/set_club_owner_request.dart';
 part 'model/set_club_plan_request.dart';
 part 'model/set_ftp_request.dart';
+part 'model/set_heart_rate_request.dart';
 part 'model/set_my_language_request.dart';
 part 'model/set_my_units_request.dart';
 part 'model/set_ride_bike_request.dart';

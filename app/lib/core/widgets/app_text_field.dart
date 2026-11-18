@@ -17,6 +17,7 @@ class AppTextField extends StatelessWidget {
     this.enabled = true,
     this.maxLength,
     this.maxLines = 1,
+    this.onDone,
   });
 
   /// The key a test or a finder looks the field up by; it lands on the `TextField` itself.
@@ -36,6 +37,9 @@ class AppTextField extends StatelessWidget {
   /// Lines shown at once; more than one makes a text area.
   final int maxLines;
 
+  /// Called when the keyboard's done key is pressed, with the text as it is then.
+  final ValueChanged<String>? onDone;
+
   @override
   Widget build(BuildContext context) => TextField(
     key: fieldKey,
@@ -45,6 +49,7 @@ class AppTextField extends StatelessWidget {
     enabled: enabled,
     maxLength: maxLength,
     maxLines: maxLines,
+    onSubmitted: onDone,
     decoration: InputDecoration(
       labelText: label,
       hintText: hint,

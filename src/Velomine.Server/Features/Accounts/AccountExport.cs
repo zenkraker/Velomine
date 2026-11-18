@@ -22,7 +22,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
-    public async Task WriteAsync(Guid userId, Stream output, CancellationToken ct)
+    public async Task WriteAsync(Guid userId, Stream output, TimeProvider time, CancellationToken ct)
     {
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
         var bikes = await db.Bikes.AsNoTracking().Include(b => b.Components).Where(b => b.UserId == userId).OrderBy(b => b.CreatedAt).ToListAsync(ct);
@@ -67,6 +67,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
         var ftpSuggestions = await db.FtpSuggestions.AsNoTracking()
             .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
+        var heartRateHistory = await db.HeartRateHistory.AsNoTracking()
+            .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -92,7 +94,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.FtpW,
             user.WeightKg,
             user.BirthYear,
-            user.MaxHeartRate,
+            // Both numbers in use, with where each came from, so the export says what the zones used.
+            HeartRate = HeartRates.For(user, time),
             user.Language,
             user.Units,
             user.TimeZone,
@@ -165,6 +168,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         }), ct);
         await AddJsonAsync(zip, "goals.json", goals.Select(g => new { g.Id, g.Period, g.Metric, g.Target, g.CreatedAt }), ct);
         await AddJsonAsync(zip, "ftp-history.json", ftpHistory.Select(h => new { h.Watts, h.SetAt, h.Source, h.RideId }), ct);
+        await AddJsonAsync(zip, "heart-rate-history.json", heartRateHistory.Select(h => new { h.Kind, h.Bpm, h.SetAt, h.Source, h.RideId }), ct);
         await AddJsonAsync(zip, "ftp-suggestions.json", ftpSuggestions.Select(s => new
         {
             s.RideId,
@@ -302,6 +306,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         goals.json          your goals
         ftp-history.json    every FTP you have had, when you set it and how
         ftp-suggestions.json  the FTPs Velomine noticed in your rides, and what you did with each
+        heart-rate-history.json  every maximum and threshold heart rate you set, when, and how
         notifications.json  your notifications
         sessions.json       where you are signed in: the device label and the times, never an address
         imports.json        the archives you brought in from another app, and how many rides they held

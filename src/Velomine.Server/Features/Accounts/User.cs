@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
+
 namespace Velomine.Server.Features.Accounts;
 
 public sealed class User : IdentityUser<Guid>
@@ -30,10 +31,13 @@ public sealed class User : IdentityUser<Guid>
     [Column("max_heart_rate")]
     public int? LegacyMaxHeartRate { get; set; }
 
-    /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
-    [NotMapped]
-    public int? MaxHeartRate => EstimateMaxHeartRate(BirthYear, TimeProvider.System);
+    /// <summary>The maximum heart rate the rider typed or a ride measured. Null means it is estimated (see <see cref="HeartRates"/>).</summary>
+    public int? MaxHeartRateBpm { get; set; }
 
+    /// <summary>The threshold heart rate the rider typed or a ride measured. Null means 89 % of the maximum.</summary>
+    public int? ThresholdHeartRateBpm { get; set; }
+
+    /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
     public static int? EstimateMaxHeartRate(int? birthYear, TimeProvider time) =>
         birthYear is { } year
             ? (int)Math.Round(208 - 0.7 * Math.Clamp(time.GetUtcNow().Year - year, 10, 100))

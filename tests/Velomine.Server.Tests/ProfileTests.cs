@@ -69,15 +69,18 @@ public sealed class ProfileTests(PostgresFixture postgres) : IAsyncLifetime
             new UpdateProfileRequest("Ada L", 265, 68.04, 1990, "Europe/Rome", "sunday"), Ct);
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
         Assert.Equal(
-            // 183 is Tanaka for a 1990 birth year on the pinned 2026-11-13 clock; the trial ends 30 days later.
-            // Setting the FTP starts its history: the same pinned clock is when it was set, by the rider.
+            // 183 is Tanaka for a 1990 birth year on the pinned 2026-11-13 clock, and 163 is 89 % of it; the trial
+            // ends 30 days later. Setting the FTP starts its history: the same pinned clock is when it was set, by the
+            // rider.
             new ProfileResponse(
                 "Ada L", 265, 68.0, 1990, 183, "Europe/Rome", "sunday", true, true, true, false, new DateOnly(2026, 12, 13),
-                new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), "manual"),
+                new DateTimeOffset(2026, 11, 13, 12, 0, 0, TimeSpan.Zero), "manual",
+                MaxHeartRateSource: "estimate", ThresholdHeartRate: 163, ThresholdHeartRateSource: "estimate"),
             await put.Content.ReadFromJsonAsync<ProfileResponse>(Ct));
 
         await member.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada L", null, null, null, null, "monday"), Ct);
         var cleared = await member.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
+        // No birth year and no typed maximum, so neither number exists.
         Assert.Equal(
             new ProfileResponse("Ada L", null, null, null, null, null, "monday", true, true, true, false, new DateOnly(2026, 12, 13)),
             cleared);

@@ -97,6 +97,55 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'DELETE /api/v1/accounts/me/heart-rate/{kind}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  Future<Response> clearHeartRateWithHttpInfo(String kind, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/heart-rate/{kind}'
+      .replaceAll('{kind}', kind);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  Future<ProfileResponse?> clearHeartRate(String kind, { Future<void>? abortTrigger, }) async {
+    final response = await clearHeartRateWithHttpInfo(kind, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ProfileResponse',) as ProfileResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/me/export-link' operation and returns the [Response].
   Future<Response> createExportLinkWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -1254,6 +1303,59 @@ class AccountsApi {
   /// * [SetFtpRequest] setFtpRequest (required):
   Future<ProfileResponse?> setFtp(SetFtpRequest setFtpRequest, { Future<void>? abortTrigger, }) async {
     final response = await setFtpWithHttpInfo(setFtpRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ProfileResponse',) as ProfileResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/accounts/me/heart-rate/{kind}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  ///
+  /// * [SetHeartRateRequest] setHeartRateRequest (required):
+  Future<Response> setHeartRateWithHttpInfo(String kind, SetHeartRateRequest setHeartRateRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/heart-rate/{kind}'
+      .replaceAll('{kind}', kind);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setHeartRateRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] kind (required):
+  ///
+  /// * [SetHeartRateRequest] setHeartRateRequest (required):
+  Future<ProfileResponse?> setHeartRate(String kind, SetHeartRateRequest setHeartRateRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setHeartRateWithHttpInfo(kind, setHeartRateRequest, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

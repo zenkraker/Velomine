@@ -22,7 +22,7 @@ public sealed class SetFtpValidator : Validator<SetFtpRequest>
 /// TSS already stored on past rides is not recalculated; zones use the new value from now on. Every change is kept
 /// in the member's FTP history.
 /// </summary>
-public sealed class SetFtp(VelomineDbContext db, SetFtpValue setValue) : Endpoint<SetFtpRequest, ProfileResponse>
+public sealed class SetFtp(VelomineDbContext db, SetFtpValue setValue, TimeProvider time) : Endpoint<SetFtpRequest, ProfileResponse>
 {
     public override void Configure()
     {
@@ -35,6 +35,6 @@ public sealed class SetFtp(VelomineDbContext db, SetFtpValue setValue) : Endpoin
         var user = await db.Users.FirstAsync(u => u.Id == User.UserId(), ct);
         setValue.Set(user, req.FtpW, req.Source);
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, ct), ct);
+        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
     }
 }

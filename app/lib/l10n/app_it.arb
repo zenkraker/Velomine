@@ -697,7 +697,37 @@
     }
   },
   "estimatedMaxHeartRateNone": "Aggiungi il tuo anno di nascita per stimarla.",
-  "maxHeartRateSource": "Stimata dal tuo anno di nascita (208 − 0,7 × età)",
+  "estimatedThresholdHeartRate": "Frequenza cardiaca di soglia stimata: {bpm} bpm",
+  "@estimatedThresholdHeartRate": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateSourceManual": "Impostata da te il {date}",
+  "@heartRateSourceManual": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "heartRateSourceMeasured": "Misurata nella tua uscita del {date}",
+  "@heartRateSourceMeasured": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "maxHeartRateField": "Frequenza cardiaca massima",
+  "thresholdHeartRateField": "Frequenza cardiaca di soglia",
+  "heartRateLeaveEmpty": "Lascia vuoto per stimarla.",
+  "thresholdHeartRateHelp": "La frequenza cardiaca più alta che riesci a tenere per circa un'ora.",
+  "heartRateSourceMaxEstimate": "Stimata dalla tua età (208 − 0,7 × età)",
+  "heartRateSourceThresholdEstimate": "Stimata come 89 % della tua massima",
+  "heartRateNone": "Aggiungi il tuo anno di nascita, o scrivila qui sopra.",
   "timeZone": "Fuso orario",
   "timeZoneHelper": "Decide in quale giorno conta un'uscita quando il file non lo indica. Vuoto significa UTC.",
   "firstDayOfWeek": "La settimana inizia di",
@@ -717,6 +747,7 @@
   "errorFtp": "L'FTP è tra 30 e 1000 watt.",
   "errorWeight": "Inserisci un peso accettato dal server: da 20 a 300 kg (da 44 a 661 lb).",
   "errorBirthYear": "Inserisci un anno di nascita tra il 1900 e dieci anni fa.",
+  "errorHeartRate": "Inserisci una massima tra 120 e 230 bpm o una soglia tra 90 e 220 bpm, sotto la tua massima.",
   "deleteAccountTitle": "Eliminare il tuo account?",
   "deleteAccountBody": "Elimina per sempre il tuo account e tutto ciò che contiene: uscite e file, bici, obiettivi e notifiche. Scarica prima i tuoi dati se vuoi conservarli. Non si può annullare.",
   "yourPassword": "La tua password",

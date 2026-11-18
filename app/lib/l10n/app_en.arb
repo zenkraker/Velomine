@@ -1220,7 +1220,37 @@
     }
   },
   "estimatedMaxHeartRateNone": "Add your year of birth to estimate it.",
-  "maxHeartRateSource": "Estimated from your year of birth (208 − 0.7 × age)",
+  "estimatedThresholdHeartRate": "Estimated threshold heart rate: {bpm} bpm",
+  "@estimatedThresholdHeartRate": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateSourceManual": "Set by you on {date}",
+  "@heartRateSourceManual": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "heartRateSourceMeasured": "Measured on your ride of {date}",
+  "@heartRateSourceMeasured": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "maxHeartRateField": "Maximum heart rate",
+  "thresholdHeartRateField": "Threshold heart rate",
+  "heartRateLeaveEmpty": "Leave empty to estimate.",
+  "thresholdHeartRateHelp": "The highest heart rate you can hold for about an hour.",
+  "heartRateSourceMaxEstimate": "Estimated from your age (208 − 0.7 × age)",
+  "heartRateSourceThresholdEstimate": "Estimated as 89 % of your maximum",
+  "heartRateNone": "Add your year of birth, or type it above.",
   "timeZone": "Time zone",
   "timeZoneHelper": "Decides which day a ride counts on when its file does not say. Empty means UTC.",
   "firstDayOfWeek": "Weeks start on",
@@ -1240,6 +1270,7 @@
   "errorFtp": "FTP is 30 to 1000 watts.",
   "errorWeight": "Enter a weight the server accepts: 20 to 300 kg (44 to 661 lb).",
   "errorBirthYear": "Enter a year of birth between 1900 and ten years ago.",
+  "errorHeartRate": "Enter a maximum of 120–230 bpm or a threshold of 90–220 bpm, below your maximum.",
   "deleteAccountTitle": "Delete your account?",
   "deleteAccountBody": "This deletes your account and everything in it for good: your rides and the ride files, bikes, goals and notifications. Download your data first if you want to keep it. It cannot be undone.",
   "yourPassword": "Your password",

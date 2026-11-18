@@ -42,7 +42,7 @@ public sealed class GetFtpSuggestion(VelomineDbContext db) : EndpointWithoutRequ
 }
 
 /// <summary>Accepts the suggestion: the FTP becomes this number, with a <c>test</c> row in its history naming the ride.</summary>
-public sealed class AcceptFtpSuggestion(VelomineDbContext db, SetFtpValue setValue)
+public sealed class AcceptFtpSuggestion(VelomineDbContext db, SetFtpValue setValue, TimeProvider time)
     : Endpoint<AcceptFtpSuggestionRequest, ProfileResponse>
 {
     public override void Configure()
@@ -66,7 +66,7 @@ public sealed class AcceptFtpSuggestion(VelomineDbContext db, SetFtpValue setVal
         setValue.Set(user, suggestion.Watts, FtpSources.Test, suggestion.RideId);
         suggestion.Status = FtpSuggestionStatuses.Accepted;
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, ct), ct);
+        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
     }
 }
 

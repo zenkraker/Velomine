@@ -30,6 +30,7 @@ public static class AccountsSetup
         services.AddScoped<AccountDeletion>();
         services.AddScoped<AccountExport>();
         services.AddScoped<SetFtpValue>();
+        services.AddScoped<SetHeartRateValue>();
         services.AddScoped<UserSessions>();
         services.AddScoped<SessionSignIn>();
         services.AddSingleton<TwoFactorChallenges>();

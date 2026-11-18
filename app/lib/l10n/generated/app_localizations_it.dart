@@ -2232,8 +2232,44 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi il tuo anno di nascita per stimarla.';
 
   @override
-  String get maxHeartRateSource =>
-      'Stimata dal tuo anno di nascita (208 − 0,7 × età)';
+  String estimatedThresholdHeartRate(int bpm) {
+    return 'Frequenza cardiaca di soglia stimata: $bpm bpm';
+  }
+
+  @override
+  String heartRateSourceManual(String date) {
+    return 'Impostata da te il $date';
+  }
+
+  @override
+  String heartRateSourceMeasured(String date) {
+    return 'Misurata nella tua uscita del $date';
+  }
+
+  @override
+  String get maxHeartRateField => 'Frequenza cardiaca massima';
+
+  @override
+  String get thresholdHeartRateField => 'Frequenza cardiaca di soglia';
+
+  @override
+  String get heartRateLeaveEmpty => 'Lascia vuoto per stimarla.';
+
+  @override
+  String get thresholdHeartRateHelp =>
+      'La frequenza cardiaca più alta che riesci a tenere per circa un\'ora.';
+
+  @override
+  String get heartRateSourceMaxEstimate =>
+      'Stimata dalla tua età (208 − 0,7 × età)';
+
+  @override
+  String get heartRateSourceThresholdEstimate =>
+      'Stimata come 89 % della tua massima';
+
+  @override
+  String get heartRateNone =>
+      'Aggiungi il tuo anno di nascita, o scrivila qui sopra.';
 
   @override
   String get timeZone => 'Fuso orario';
@@ -2300,6 +2336,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get errorBirthYear =>
       'Inserisci un anno di nascita tra il 1900 e dieci anni fa.';
+
+  @override
+  String get errorHeartRate =>
+      'Inserisci una massima tra 120 e 230 bpm o una soglia tra 90 e 220 bpm, sotto la tua massima.';
 
   @override
   String get deleteAccountTitle => 'Eliminare il tuo account?';

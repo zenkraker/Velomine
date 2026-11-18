@@ -28,6 +28,7 @@ import '../../core/widgets/source_note.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
 import '../accounts/ftp_source_text.dart';
+import '../accounts/heart_rate_source_text.dart';
 import '../bikes/bikes_view_models.dart';
 import '../bikes/service_marker.dart';
 import '../supporter/supporter_badge.dart';
@@ -58,7 +59,7 @@ String weekDayName(AppLocalizations l10n, String day) => switch (day) {
   _ => l10n.sunday,
 };
 
-enum _ProfileProblem { name, ftp, weight, birthYear }
+enum _ProfileProblem { name, ftp, weight, birthYear, heartRate }
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({
@@ -106,12 +107,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _ftp = TextEditingController();
   final _weight = TextEditingController();
   final _birthYear = TextEditingController();
+  final _maxHr = TextEditingController();
+  final _thresholdHr = TextEditingController();
   final _zone = TextEditingController();
   String _firstDay = 'monday';
   bool _email = true;
   bool _emailAccount = true;
   bool _emailTraining = false;
-  int? _estimatedMaxHr;
   _ProfileProblem? _problem;
 
   /// When the ride a test FTP came from started: the day of the effort, which the ride itself knows.
@@ -163,7 +165,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _ftp.text = p.ftpW?.toString() ?? '';
       _weight.text = _weightText(p.weightKg);
       _birthYear.text = p.birthYear?.toString() ?? '';
-      _estimatedMaxHr = p.maxHeartRate;
+      _maxHr.text = p.maxHeartRate?.toString() ?? '';
+      _thresholdHr.text = p.thresholdHeartRate.orElse(null)?.toString() ?? '';
       _zone.text = p.timeZone ?? '';
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
@@ -175,7 +178,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void dispose() {
     _profileSub.close();
-    for (final c in [_name, _ftp, _weight, _birthYear, _zone]) {
+    for (final c in [
+      _name,
+      _ftp,
+      _weight,
+      _birthYear,
+      _maxHr,
+      _thresholdHr,
+      _zone,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -274,6 +285,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (ok) setState(() {});
   }
 
+  /// Saves one heart-rate number as soon as its field is done; an empty field goes back to the estimate. The range is
+  /// the server's, so a number outside it never leaves the phone.
+  Future<void> _saveHeartRate(
+    String kind,
+    String text,
+    int min,
+    int max,
+  ) async {
+    final typed = int.tryParse(text.trim());
+    if (typed != null && (typed < min || typed > max)) {
+      setState(() => _problem = _ProfileProblem.heartRate);
+      return;
+    }
+    setState(() => _problem = null);
+    await ref.read(profileViewModelProvider.notifier).setHeartRate(kind, typed);
+  }
+
   Future<void> _setTelemetry({required bool crash, required bool usage}) async {
     await ref
         .read(profileViewModelProvider.notifier)
@@ -287,6 +315,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String suffix, {
     String? helper,
     bool decimals = false,
+    ValueChanged<String>? onDone,
   }) => AppTextField(
     fieldKey: Key(key),
     controller: c,
@@ -299,6 +328,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     label: label,
     suffix: suffix,
     helper: helper,
+    onDone: onDone,
   );
 
   @override
@@ -324,6 +354,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _ProfileProblem.ftp => l10n.errorFtp,
       _ProfileProblem.weight => l10n.errorWeight,
       _ProfileProblem.birthYear => l10n.errorBirthYear,
+      _ProfileProblem.heartRate => l10n.errorHeartRate,
     };
     final failure = s.load.failure;
     final bikes = ref.watch(bikesSummaryProvider);
@@ -361,16 +392,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             '',
             helper: l10n.birthYearHelper,
           ),
-          SourceNote(
-            l10n.maxHeartRateSource,
-            key: const Key('profile-max-hr-source'),
+          // The maximum in use and where it came from; the same for the threshold below it, with one line of help.
+          _number(
+            'profile-max-hr',
+            _maxHr,
+            l10n.maxHeartRateField,
+            'bpm',
+            helper: l10n.heartRateLeaveEmpty,
+            onDone: (text) => _saveHeartRate('max', text, 120, 230),
           ),
-          Text(
-            _estimatedMaxHr == null
-                ? l10n.estimatedMaxHeartRateNone
-                : l10n.estimatedMaxHeartRate(_estimatedMaxHr!),
-            key: const Key('profile-max-hr-estimate'),
+          if (s.profile case final profile?)
+            if (heartRateSourceText(
+                  l10n,
+                  profile.maxHeartRateSource.orElse(null),
+                  profile.maxHeartRateSetAt.orElse(null),
+                )
+                case final note?)
+              SourceNote(note, key: const Key('profile-max-hr-source')),
+          _number(
+            'profile-threshold-hr',
+            _thresholdHr,
+            l10n.thresholdHeartRateField,
+            'bpm',
+            helper: l10n.thresholdHeartRateHelp,
+            onDone: (text) => _saveHeartRate('threshold', text, 90, 220),
           ),
+          if (s.profile case final profile?)
+            if (heartRateSourceText(
+                  l10n,
+                  profile.thresholdHeartRateSource.orElse(null),
+                  profile.thresholdHeartRateSetAt.orElse(null),
+                  threshold: true,
+                )
+                case final note?)
+              SourceNote(note, key: const Key('profile-threshold-hr-source')),
           AppTextField(
             fieldKey: const Key('profile-zone'),
             controller: _zone,

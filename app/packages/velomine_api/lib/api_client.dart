@@ -437,6 +437,8 @@ class ApiClient {
           return SetClubPlanRequest.fromJson(value);
         case 'SetFtpRequest':
           return SetFtpRequest.fromJson(value);
+        case 'SetHeartRateRequest':
+          return SetHeartRateRequest.fromJson(value);
         case 'SetMyLanguageRequest':
           return SetMyLanguageRequest.fromJson(value);
         case 'SetMyUnitsRequest':

@@ -37,6 +37,15 @@ class ProfileData {
   Future<Result<ProfileResponse?>> save(UpdateProfileRequest request) =>
       _api.updateProfile(request).guard(FailureAction.saveProfile);
 
+  /// Sets the maximum (`max`) or the threshold heart rate the rider typed.
+  Future<Result<ProfileResponse?>> setHeartRate(String kind, int bpm) => _api
+      .setHeartRate(kind, SetHeartRateRequest(bpm: bpm))
+      .guard(FailureAction.saveProfile);
+
+  /// Back to the estimate: no set value.
+  Future<Result<ProfileResponse?>> clearHeartRate(String kind) =>
+      _api.clearHeartRate(kind).guard(FailureAction.saveProfile);
+
   Future<Result<String?>> exportLink() async =>
       (await _api.createExportLink().guard(FailureAction.prepareData))
           .map((link) => link?.path);

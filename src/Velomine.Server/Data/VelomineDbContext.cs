@@ -97,6 +97,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<FtpSuggestion> FtpSuggestions => Set<FtpSuggestion>();
 
+    public DbSet<HeartRateHistory> HeartRateHistory => Set<HeartRateHistory>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -108,6 +110,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
             t.HasCheckConstraint("ck_users_weight_kg", "weight_kg BETWEEN 20 AND 300");
             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
+            t.HasCheckConstraint("ck_users_max_heart_rate_bpm", "max_heart_rate_bpm BETWEEN 120 AND 230");
+            t.HasCheckConstraint("ck_users_threshold_heart_rate_bpm", "threshold_heart_rate_bpm BETWEEN 90 AND 220");
             t.HasCheckConstraint("ck_users_birth_year", "birth_year IS NULL OR birth_year BETWEEN 1900 AND 2200");
             t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
         });

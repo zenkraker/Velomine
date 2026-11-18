@@ -3926,11 +3926,65 @@ abstract class AppLocalizations {
   /// **'Add your year of birth to estimate it.'**
   String get estimatedMaxHeartRateNone;
 
-  /// No description provided for @maxHeartRateSource.
+  /// No description provided for @estimatedThresholdHeartRate.
   ///
   /// In en, this message translates to:
-  /// **'Estimated from your year of birth (208 − 0.7 × age)'**
-  String get maxHeartRateSource;
+  /// **'Estimated threshold heart rate: {bpm} bpm'**
+  String estimatedThresholdHeartRate(int bpm);
+
+  /// No description provided for @heartRateSourceManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Set by you on {date}'**
+  String heartRateSourceManual(String date);
+
+  /// No description provided for @heartRateSourceMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured on your ride of {date}'**
+  String heartRateSourceMeasured(String date);
+
+  /// No description provided for @maxHeartRateField.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum heart rate'**
+  String get maxHeartRateField;
+
+  /// No description provided for @thresholdHeartRateField.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold heart rate'**
+  String get thresholdHeartRateField;
+
+  /// No description provided for @heartRateLeaveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to estimate.'**
+  String get heartRateLeaveEmpty;
+
+  /// No description provided for @thresholdHeartRateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The highest heart rate you can hold for about an hour.'**
+  String get thresholdHeartRateHelp;
+
+  /// No description provided for @heartRateSourceMaxEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated from your age (208 − 0.7 × age)'**
+  String get heartRateSourceMaxEstimate;
+
+  /// No description provided for @heartRateSourceThresholdEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated as 89 % of your maximum'**
+  String get heartRateSourceThresholdEstimate;
+
+  /// No description provided for @heartRateNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your year of birth, or type it above.'**
+  String get heartRateNone;
 
   /// No description provided for @timeZone.
   ///
@@ -4045,6 +4099,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a year of birth between 1900 and ten years ago.'**
   String get errorBirthYear;
+
+  /// No description provided for @errorHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a maximum of 120–230 bpm or a threshold of 90–220 bpm, below your maximum.'**
+  String get errorHeartRate;
 
   /// No description provided for @deleteAccountTitle.
   ///

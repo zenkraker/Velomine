@@ -896,6 +896,7 @@ extension on FakeServer {
     }
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/accounts/me/ftp') &&
+        !path.startsWith('/api/v1/accounts/me/heart-rate') &&
         !path.startsWith('/api/v1/accounts/me/language') &&
         !path.startsWith('/api/v1/accounts/me/units') &&
         !path.startsWith('/api/v1/accounts/me/telemetry') &&
@@ -1050,6 +1051,29 @@ extension on FakeServer {
         profile['ftpW'] = body['ftpW'];
         profile['ftpSetAt'] = history.isEmpty ? null : history.first['setAt'];
         profile['ftpSource'] = history.isEmpty ? null : history.first['source'];
+      }
+      return json(_profileWithEstimate(profile));
+    }
+
+    if (path.startsWith('/api/v1/accounts/me/heart-rate/')) {
+      final profile = profiles.putIfAbsent(
+        caller.email,
+        () => {'displayName': caller.name, 'birthYear': null},
+      );
+      final kind = path.split('/').last;
+      final key = switch (kind) {
+        'max' => 'maxHeartRate',
+        'threshold' => 'thresholdHeartRate',
+        _ => 'heartRate',
+      };
+      if (request.method == 'DELETE') {
+        profile.remove(key);
+        profile.remove('${key}Source');
+        profile.remove('${key}SetAt');
+      } else {
+        profile[key] = body['bpm'];
+        profile['${key}Source'] = 'manual';
+        profile['${key}SetAt'] = '2026-11-12T09:00:00Z';
       }
       return json(_profileWithEstimate(profile));
     }
@@ -1531,9 +1555,19 @@ extension on FakeServer {
     final age = birthYear == null
         ? null
         : (DateTime.now().year - birthYear).clamp(10, 100);
+    final maxTyped = profile['maxHeartRate'] as int?;
+    final thresholdTyped = profile['thresholdHeartRate'] as int?;
+    final max = maxTyped ?? (age == null ? null : (208 - 0.7 * age).round());
     return {
       ...profile,
-      'maxHeartRate': age == null ? null : (208 - 0.7 * age).round(),
+      'maxHeartRate': max,
+      'maxHeartRateSource': maxTyped != null
+          ? 'manual'
+          : (max == null ? null : 'estimate'),
+      'thresholdHeartRate': thresholdTyped ?? ((max ?? 0) * 0.89).round(),
+      'thresholdHeartRateSource': thresholdTyped != null
+          ? 'manual'
+          : (max == null ? null : 'estimate'),
       // Where the FTP came from; null when there is no FTP, as the server answers.
       'ftpSetAt': profile['ftpW'] == null ? null : profile['ftpSetAt'],
       'ftpSource': profile['ftpW'] == null ? null : profile['ftpSource'],

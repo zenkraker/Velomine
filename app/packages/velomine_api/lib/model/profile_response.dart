@@ -28,6 +28,13 @@ class ProfileResponse {
     this.ftpSetAt = const Optional.absent(),
     this.ftpSource = const Optional.absent(),
     this.ftpRideId = const Optional.absent(),
+    this.maxHeartRateSource = const Optional.absent(),
+    this.maxHeartRateSetAt = const Optional.absent(),
+    this.maxHeartRateRideId = const Optional.absent(),
+    this.thresholdHeartRate = const Optional.absent(),
+    this.thresholdHeartRateSource = const Optional.absent(),
+    this.thresholdHeartRateSetAt = const Optional.absent(),
+    this.thresholdHeartRateRideId = const Optional.absent(),
   });
 
   final String displayName;
@@ -78,6 +85,62 @@ class ProfileResponse {
   ///
   final Optional<String?> ftpRideId;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> maxHeartRateSource;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<DateTime?> maxHeartRateSetAt;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> maxHeartRateRideId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> thresholdHeartRate;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> thresholdHeartRateSource;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<DateTime?> thresholdHeartRateSetAt;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> thresholdHeartRateRideId;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProfileResponse &&
     other.displayName == displayName &&
@@ -94,7 +157,14 @@ class ProfileResponse {
     other.soloTrialEndsAt == soloTrialEndsAt &&
     other.ftpSetAt == ftpSetAt &&
     other.ftpSource == ftpSource &&
-    other.ftpRideId == ftpRideId;
+    other.ftpRideId == ftpRideId &&
+    other.maxHeartRateSource == maxHeartRateSource &&
+    other.maxHeartRateSetAt == maxHeartRateSetAt &&
+    other.maxHeartRateRideId == maxHeartRateRideId &&
+    other.thresholdHeartRate == thresholdHeartRate &&
+    other.thresholdHeartRateSource == thresholdHeartRateSource &&
+    other.thresholdHeartRateSetAt == thresholdHeartRateSetAt &&
+    other.thresholdHeartRateRideId == thresholdHeartRateRideId;
 
   @override
   int get hashCode =>
@@ -113,10 +183,17 @@ class ProfileResponse {
     (soloTrialEndsAt == null ? 0 : soloTrialEndsAt!.hashCode) +
     (ftpSetAt == null ? 0 : ftpSetAt!.hashCode) +
     (ftpSource == null ? 0 : ftpSource!.hashCode) +
-    (ftpRideId == null ? 0 : ftpRideId!.hashCode);
+    (ftpRideId == null ? 0 : ftpRideId!.hashCode) +
+    (maxHeartRateSource == null ? 0 : maxHeartRateSource!.hashCode) +
+    (maxHeartRateSetAt == null ? 0 : maxHeartRateSetAt!.hashCode) +
+    (maxHeartRateRideId == null ? 0 : maxHeartRateRideId!.hashCode) +
+    (thresholdHeartRate == null ? 0 : thresholdHeartRate!.hashCode) +
+    (thresholdHeartRateSource == null ? 0 : thresholdHeartRateSource!.hashCode) +
+    (thresholdHeartRateSetAt == null ? 0 : thresholdHeartRateSetAt!.hashCode) +
+    (thresholdHeartRateRideId == null ? 0 : thresholdHeartRateRideId!.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt, ftpSetAt=$ftpSetAt, ftpSource=$ftpSource, ftpRideId=$ftpRideId]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt, ftpSetAt=$ftpSetAt, ftpSource=$ftpSource, ftpRideId=$ftpRideId, maxHeartRateSource=$maxHeartRateSource, maxHeartRateSetAt=$maxHeartRateSetAt, maxHeartRateRideId=$maxHeartRateRideId, thresholdHeartRate=$thresholdHeartRate, thresholdHeartRateSource=$thresholdHeartRateSource, thresholdHeartRateSetAt=$thresholdHeartRateSetAt, thresholdHeartRateRideId=$thresholdHeartRateRideId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -168,6 +245,34 @@ class ProfileResponse {
       final value = this.ftpRideId.value;
       json[r'ftpRideId'] = value;
     }
+    if (this.maxHeartRateSource.isPresent) {
+      final value = this.maxHeartRateSource.value;
+      json[r'maxHeartRateSource'] = value;
+    }
+    if (this.maxHeartRateSetAt.isPresent) {
+      final value = this.maxHeartRateSetAt.value;
+      json[r'maxHeartRateSetAt'] = value == null ? null : value.toUtc().toIso8601String();
+    }
+    if (this.maxHeartRateRideId.isPresent) {
+      final value = this.maxHeartRateRideId.value;
+      json[r'maxHeartRateRideId'] = value;
+    }
+    if (this.thresholdHeartRate.isPresent) {
+      final value = this.thresholdHeartRate.value;
+      json[r'thresholdHeartRate'] = value;
+    }
+    if (this.thresholdHeartRateSource.isPresent) {
+      final value = this.thresholdHeartRateSource.value;
+      json[r'thresholdHeartRateSource'] = value;
+    }
+    if (this.thresholdHeartRateSetAt.isPresent) {
+      final value = this.thresholdHeartRateSetAt.value;
+      json[r'thresholdHeartRateSetAt'] = value == null ? null : value.toUtc().toIso8601String();
+    }
+    if (this.thresholdHeartRateRideId.isPresent) {
+      final value = this.thresholdHeartRateRideId.value;
+      json[r'thresholdHeartRateRideId'] = value;
+    }
     return json;
   }
 
@@ -195,6 +300,13 @@ class ProfileResponse {
     Optional<DateTime?>? ftpSetAt,
     Optional<String?>? ftpSource,
     Optional<String?>? ftpRideId,
+    Optional<String?>? maxHeartRateSource,
+    Optional<DateTime?>? maxHeartRateSetAt,
+    Optional<String?>? maxHeartRateRideId,
+    Optional<int?>? thresholdHeartRate,
+    Optional<String?>? thresholdHeartRateSource,
+    Optional<DateTime?>? thresholdHeartRateSetAt,
+    Optional<String?>? thresholdHeartRateRideId,
   }) => ProfileResponse(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -211,6 +323,13 @@ class ProfileResponse {
     ftpSetAt: ftpSetAt ?? this.ftpSetAt,
     ftpSource: ftpSource ?? this.ftpSource,
     ftpRideId: ftpRideId ?? this.ftpRideId,
+    maxHeartRateSource: maxHeartRateSource ?? this.maxHeartRateSource,
+    maxHeartRateSetAt: maxHeartRateSetAt ?? this.maxHeartRateSetAt,
+    maxHeartRateRideId: maxHeartRateRideId ?? this.maxHeartRateRideId,
+    thresholdHeartRate: thresholdHeartRate ?? this.thresholdHeartRate,
+    thresholdHeartRateSource: thresholdHeartRateSource ?? this.thresholdHeartRateSource,
+    thresholdHeartRateSetAt: thresholdHeartRateSetAt ?? this.thresholdHeartRateSetAt,
+    thresholdHeartRateRideId: thresholdHeartRateRideId ?? this.thresholdHeartRateRideId,
   );
 
   /// Returns a new [ProfileResponse] instance and imports its values from
@@ -261,6 +380,13 @@ class ProfileResponse {
         ftpSetAt: json.containsKey(r'ftpSetAt') ? Optional.present(mapDateTime(json, r'ftpSetAt', r'')) : const Optional.absent(),
         ftpSource: json.containsKey(r'ftpSource') ? Optional.present(mapValueOfType<String>(json, r'ftpSource')) : const Optional.absent(),
         ftpRideId: json.containsKey(r'ftpRideId') ? Optional.present(mapValueOfType<String>(json, r'ftpRideId')) : const Optional.absent(),
+        maxHeartRateSource: json.containsKey(r'maxHeartRateSource') ? Optional.present(mapValueOfType<String>(json, r'maxHeartRateSource')) : const Optional.absent(),
+        maxHeartRateSetAt: json.containsKey(r'maxHeartRateSetAt') ? Optional.present(mapDateTime(json, r'maxHeartRateSetAt', r'')) : const Optional.absent(),
+        maxHeartRateRideId: json.containsKey(r'maxHeartRateRideId') ? Optional.present(mapValueOfType<String>(json, r'maxHeartRateRideId')) : const Optional.absent(),
+        thresholdHeartRate: json.containsKey(r'thresholdHeartRate') ? Optional.present(json[r'thresholdHeartRate'] == null ? null : int.parse('${json[r'thresholdHeartRate']}')) : const Optional.absent(),
+        thresholdHeartRateSource: json.containsKey(r'thresholdHeartRateSource') ? Optional.present(mapValueOfType<String>(json, r'thresholdHeartRateSource')) : const Optional.absent(),
+        thresholdHeartRateSetAt: json.containsKey(r'thresholdHeartRateSetAt') ? Optional.present(mapDateTime(json, r'thresholdHeartRateSetAt', r'')) : const Optional.absent(),
+        thresholdHeartRateRideId: json.containsKey(r'thresholdHeartRateRideId') ? Optional.present(mapValueOfType<String>(json, r'thresholdHeartRateRideId')) : const Optional.absent(),
       );
     }
     return null;

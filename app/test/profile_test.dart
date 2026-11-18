@@ -45,7 +45,9 @@ void main() {
     expect(field('profile-ftp'), '250');
     expect(field('profile-weight'), '64.5');
     expect(field('profile-birth-year'), '1990');
-    expect(find.textContaining('Estimated maximum heart rate'), findsOneWidget);
+    // Born 1990: 208 − 0.7 × 36 = 183, and 89 % of it.
+    expect(field('profile-max-hr'), '183');
+    expect(field('profile-threshold-hr'), '163');
     expect(field('profile-zone'), 'Europe/Rome');
     expect(find.text('Sunday'), findsOneWidget);
   });
@@ -70,7 +72,51 @@ void main() {
     final note = tester.widget<SourceNote>(
       find.byKey(const Key('profile-max-hr-source')),
     );
-    expect(note.text, 'Estimated from your year of birth (208 − 0.7 × age)');
+    expect(note.text, 'Estimated from your age (208 − 0.7 × age)');
+    final threshold = tester.widget<SourceNote>(
+      find.byKey(const Key('profile-threshold-hr-source')),
+    );
+    expect(threshold.text, 'Estimated as 89 % of your maximum');
+    expect(
+      find.text('The highest heart rate you can hold for about an hour.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('ProfileScreen_ShouldSetTheMaxHeartRate_WhenTheFieldIsDone', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-max-hr')), '190');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(server.requests, contains('PUT /api/v1/accounts/me/heart-rate/max'));
+    expect(server.profiles['rider@example.com']!['maxHeartRate'], 190);
+  });
+
+  testWidgets('ProfileScreen_ShouldGoBackToTheEstimate_WhenTheFieldIsEmptied', (
+    tester,
+  ) async {
+    server.profiles['rider@example.com'] = {
+      'displayName': 'Ada',
+      'birthYear': 1990,
+      'maxHeartRate': 195,
+      'maxHeartRateSource': 'manual',
+      'maxHeartRateSetAt': '2026-11-12T09:00:00Z',
+    };
+    await openProfile(tester);
+
+    await tester.enterText(find.byKey(const Key('profile-max-hr')), '');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(
+      server.requests,
+      contains('DELETE /api/v1/accounts/me/heart-rate/max'),
+    );
+    expect(server.profiles['rider@example.com']!['maxHeartRate'], isNull);
   });
 
   testWidgets(
@@ -150,7 +196,10 @@ void main() {
     await openProfile(tester);
 
     expect(find.byKey(const Key('telemetry-crash')), findsOneWidget);
+    // The two heart-rate fields pushed the switch below the first screen.
     await tester.ensureVisible(find.byKey(const Key('telemetry-crash')));
+    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('telemetry-crash')));
     await tester.pumpAndSettle();
 
