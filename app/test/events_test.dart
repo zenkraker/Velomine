@@ -1,0 +1,188 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'fake_server.dart';
+
+void main() {
+  late FakeServer server;
+
+  setUp(() {
+    server = FakeServer();
+    server.signInBrowser(server.add('rider@example.com'));
+  });
+
+  /// An event that is a whole number of weeks away, so the card reads the same on any day the test runs.
+  Map<String, Object?> eventJson({
+    String id = 'event-1',
+    String name = 'Gran Fondo',
+    int daysFromToday = 10,
+    String kind = 'sportive',
+    double? distanceM = 120000,
+    String? rideId,
+  }) {
+    final date = DateUtils.dateOnly(DateTime.now())
+        .add(Duration(days: daysFromToday));
+    final day =
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+    return {
+      'id': id,
+      'name': name,
+      'date': day,
+      'kind': kind,
+      'distanceM': distanceM,
+      'elevationGainM': null,
+      'notes': null,
+      'rideId': rideId,
+      'createdAt': '2026-11-10T09:00:00Z',
+    };
+  }
+
+  Future<void> openProgress(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+  }
+
+  /// The events page, by its address.
+  Future<void> openEvents(WidgetTester tester) async {
+    await goTo(tester, '/progress/events');
+  }
+
+  Future<void> reveal(WidgetTester tester, Finder finder) async {
+    await tester.scrollUntilVisible(
+      finder,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('NextEventCard_ShouldSayHowFarAwayItIs_WhenThereIsANextEvent', (
+    tester,
+  ) async {
+    server.events.add(eventJson());
+
+    await openProgress(tester);
+    await reveal(tester, find.byKey(const Key('next-event')));
+
+    expect(find.textContaining('Gran Fondo'), findsWidgets);
+    expect(find.textContaining('in 1 week'), findsWidgets);
+  });
+
+  testWidgets('NextEventCard_ShouldSayToday_WhenTheEventIsToday', (
+    tester,
+  ) async {
+    server.events.add(eventJson(daysFromToday: 0));
+
+    await openProgress(tester);
+    await reveal(tester, find.byKey(const Key('next-event')));
+
+    expect(find.textContaining('today'), findsWidgets);
+  });
+
+  testWidgets('ProgressScreen_ShouldNotShowAnEventCard_WhenThereIsNoEvent', (
+    tester,
+  ) async {
+    await openProgress(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('next-event')), findsNothing);
+  });
+
+  testWidgets('AllEvents_ShouldOpen_WhenTheCardIsTapped', (tester) async {
+    server.events.add(eventJson());
+
+    await openProgress(tester);
+    await reveal(tester, find.byKey(const Key('all-events')));
+    await tester.tap(find.byKey(const Key('all-events')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('add-event')), findsOneWidget);
+    expect(find.text('Gran Fondo'), findsOneWidget);
+  });
+
+  testWidgets('EventsScreen_ShouldAddAnEvent_WhenTheFormIsSaved', (
+    tester,
+  ) async {
+    await openProgress(tester);
+    await openEvents(tester);
+
+    await tester.tap(find.byKey(const Key('add-event')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('event-name')),
+      'Tour of the Lakes',
+    );
+    await tester.tap(find.byKey(const Key('event-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.eventWrites.single, 'add event-1');
+    expect(find.text('Tour of the Lakes'), findsOneWidget);
+  });
+
+  testWidgets(
+    'EventsScreen_ShouldRefuseAnEventWithoutAName_WhenTheFormIsSaved',
+    (tester) async {
+      await openProgress(tester);
+      await openEvents(tester);
+
+      await tester.tap(find.byKey(const Key('add-event')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('event-save')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('event-save')), findsOneWidget);
+      expect(server.eventWrites, isEmpty);
+    },
+  );
+
+  testWidgets('EventsScreen_ShouldAskBeforeDeleting_WhenTheMenuSaysDelete', (
+    tester,
+  ) async {
+    server.events.add(eventJson());
+
+    await openProgress(tester);
+    await openEvents(tester);
+
+    await tester.tap(find.byKey(const Key('event-actions-event-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('event-delete-event-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('confirm-delete-event')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('confirm-delete-event')));
+    await tester.pumpAndSettle();
+
+    expect(server.eventWrites.single, 'delete event-1');
+    expect(find.byKey(const Key('event-event-1')), findsNothing);
+  });
+
+  testWidgets('RideDetailScreen_ShouldNameTheEvent_WhenTheRideWasOne', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.rides.add(rideJson('ride-1', 'ready', fileName: 'lake.gpx'));
+    server.events.add({
+      'id': 'event-1',
+      'name': 'Gran Fondo',
+      'date': '2026-05-10',
+      'kind': 'sportive',
+      'distanceM': 120000.0,
+      'elevationGainM': null,
+      'notes': null,
+      'rideId': 'ride-1',
+      'createdAt': '2026-11-10T09:00:00Z',
+    });
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/rides/ride-1');
+
+    expect(find.textContaining('Gran Fondo'), findsWidgets);
+    expect(find.byKey(const Key('ride-event')), findsOneWidget);
+  });
+}

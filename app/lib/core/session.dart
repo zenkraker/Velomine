@@ -79,7 +79,8 @@ class Session {
        supporter = SupporterApi(client),
        notifications = NotificationsApi(client),
        routes = RoutesApi(client),
-       server = ServerApi(client) {
+       server = ServerApi(client),
+       training = TrainingApi(client) {
     auth.onSignedOut = sessionExpired;
   }
 
@@ -107,6 +108,9 @@ class Session {
   /// The club's route library and the draft of a ride's line.
   final RoutesApi routes;
   final ServerApi server;
+
+  /// The rider's races and other events.
+  final TrainingApi training;
   final SessionAuth auth;
   final AppSso appSso;
   final bool useCookies;

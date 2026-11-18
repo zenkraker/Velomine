@@ -69,6 +69,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
         var heartRateHistory = await db.HeartRateHistory.AsNoTracking()
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ThenBy(h => h.Sequence).ToListAsync(ct);
+        var events = await db.Events.AsNoTracking()
+            .Where(e => e.UserId == userId).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -179,6 +181,18 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             s.Status,
         }), ct);
         await AddJsonAsync(zip, "notifications.json", notifications.Select(n => new { n.Id, n.Type, n.Subject, n.CreatedAt, n.ReadAt }), ct);
+        await AddJsonAsync(zip, "events.json", events.Select(e => new
+        {
+            e.Id,
+            e.Name,
+            Date = e.Date.ToString("yyyy-MM-dd"),
+            e.Kind,
+            e.DistanceM,
+            e.ElevationGainM,
+            e.Notes,
+            e.RideId,
+            e.CreatedAt,
+        }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
         await AddJsonAsync(zip, "imports.json", imports.Select(i => new
         {
@@ -308,6 +322,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         ftp-suggestions.json  the FTPs Velomine noticed in your rides, and what you did with each
         heart-rate-history.json  every maximum and threshold heart rate you set, when, and how
         notifications.json  your notifications
+        events.json         the races, sportives and tours you added, with the ride that was each one
         sessions.json       where you are signed in: the device label and the times, never an address
         imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent

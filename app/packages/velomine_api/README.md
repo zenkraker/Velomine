@@ -234,6 +234,11 @@ Class | Method | HTTP request | Description
 *SupporterApi* | [**activateSupporter**](doc//SupporterApi.md#activatesupporter) | **POST** /api/v1/supporter/activate | 
 *SupporterApi* | [**getSupporterStatus**](doc//SupporterApi.md#getsupporterstatus) | **GET** /api/v1/supporter | 
 *SupporterApi* | [**setSupporterHidden**](doc//SupporterApi.md#setsupporterhidden) | **PUT** /api/v1/supporter/hidden | 
+*TrainingApi* | [**addEvent**](doc//TrainingApi.md#addevent) | **POST** /api/v1/training/events | 
+*TrainingApi* | [**deleteEvent**](doc//TrainingApi.md#deleteevent) | **DELETE** /api/v1/training/events/{id} | 
+*TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
+*TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
+*TrainingApi* | [**updateEvent**](doc//TrainingApi.md#updateevent) | **PUT** /api/v1/training/events/{id} | 
 *WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
 *WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
 *WellbeingApi* | [**listCheckIns**](doc//WellbeingApi.md#listcheckins) | **GET** /api/v1/wellbeing/check-ins | 
@@ -286,6 +291,8 @@ Class | Method | HTTP request | Description
  - [DeleteMyAccountRequest](doc//DeleteMyAccountRequest.md)
  - [EfficiencyWeek](doc//EfficiencyWeek.md)
  - [EnableTwoFactorRequest](doc//EnableTwoFactorRequest.md)
+ - [EventRequest](doc//EventRequest.md)
+ - [EventResponse](doc//EventResponse.md)
  - [ExchangeSsoTokenRequest](doc//ExchangeSsoTokenRequest.md)
  - [ExportLinkResponse](doc//ExportLinkResponse.md)
  - [ForgotPasswordRequest](doc//ForgotPasswordRequest.md)
@@ -305,6 +312,7 @@ Class | Method | HTTP request | Description
  - [ListAdminUsersResponse](doc//ListAdminUsersResponse.md)
  - [ListBikesResponse](doc//ListBikesResponse.md)
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
+ - [ListEventsResponse](doc//ListEventsResponse.md)
  - [ListGoalsResponse](doc//ListGoalsResponse.md)
  - [ListNotificationsResponse](doc//ListNotificationsResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
@@ -369,6 +377,7 @@ Class | Method | HTTP request | Description
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
  - [SetClubPlanRequest](doc//SetClubPlanRequest.md)
+ - [SetEventRideRequest](doc//SetEventRideRequest.md)
  - [SetFtpRequest](doc//SetFtpRequest.md)
  - [SetHeartRateRequest](doc//SetHeartRateRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
@@ -403,6 +412,7 @@ Class | Method | HTTP request | Description
  - [UpdateClubRequest](doc//UpdateClubRequest.md)
  - [UpdateClubRideRequest](doc//UpdateClubRideRequest.md)
  - [UpdateComponentRequest](doc//UpdateComponentRequest.md)
+ - [UpdateEventRequest](doc//UpdateEventRequest.md)
  - [UpdateGoalRequest](doc//UpdateGoalRequest.md)
  - [UpdatePrivacyRequest](doc//UpdatePrivacyRequest.md)
  - [UpdateProfileRequest](doc//UpdateProfileRequest.md)

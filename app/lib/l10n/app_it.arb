@@ -1651,5 +1651,31 @@
       "ef": {"type": "String"},
       "count": {"type": "int"}
     }
-  }
+  },
+  "eventsTitle": "Eventi",
+  "noEvents": "Nessun evento. Aggiungi la gara, la granfondo o il giro per cui ti stai allenando; l'uscita che era si collega da sola se quel giorno è l'unica.",
+  "eventAdd": "Aggiungi un evento",
+  "eventChange": "Modifica l'evento",
+  "eventName": "Nome",
+  "eventKind": "Tipo",
+  "eventKindRace": "Gara",
+  "eventKindSportive": "Granfondo",
+  "eventKindTour": "Giro",
+  "eventKindOther": "Altro",
+  "eventDistance": "Distanza",
+  "eventClimbing": "Dislivello",
+  "eventNotes": "Note",
+  "eventNext": "Prossimo evento: {name} tra {when}",
+  "eventToday": "oggi",
+  "eventInDays": "{days, plural, =1{1 giorno} other{{days} giorni}}",
+  "eventInWeeks": "{weeks, plural, =1{1 settimana} other{{weeks} settimane}}",
+  "eventsAll": "Tutti gli eventi",
+  "eventYourRide": "Il tuo evento: {name}",
+  "eventDeleteTitle": "Eliminare questo evento?",
+  "eventDeleteBody": "«{name}» viene rimosso. L'uscita che era resta.",
+  "eventOn": "{date}",
+  "errorEventName": "Dai un nome all'evento.",
+  "actionAddEvent": "aggiungere l'evento",
+  "actionSaveEvent": "salvare l'evento",
+  "actionDeleteEvent": "eliminare l'evento"
 }

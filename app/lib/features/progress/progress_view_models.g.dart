@@ -387,6 +387,64 @@ abstract class _$ReadinessViewModel extends $Notifier<ReadinessState> {
   }
 }
 
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+
+@ProviderFor(EventsViewModel)
+final eventsViewModelProvider = EventsViewModelProvider._();
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+final class EventsViewModelProvider
+    extends $NotifierProvider<EventsViewModel, EventsState> {
+  /// The events the rider is training for. A change reloads the list, so the card and the list agree.
+  EventsViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'eventsViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventsViewModelHash();
+
+  @$internal
+  @override
+  EventsViewModel create() => EventsViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EventsState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EventsState>(value),
+    );
+  }
+}
+
+String _$eventsViewModelHash() => r'53a62a3196c9ed3133bf11e35d3709cfe5ccd3b7';
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+
+abstract class _$EventsViewModel extends $Notifier<EventsState> {
+  EventsState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<EventsState, EventsState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<EventsState, EventsState>,
+              EventsState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(WellbeingViewModel)
 final wellbeingViewModelProvider = WellbeingViewModelProvider._();
 

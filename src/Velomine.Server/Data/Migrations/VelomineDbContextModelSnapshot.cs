@@ -2657,6 +2657,74 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<double?>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<double?>("ElevationGainM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("elevation_gain_m");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_events");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_events_ride_id");
+
+                    b.HasIndex("UserId", "Date")
+                        .HasDatabaseName("ix_events_user_id_date");
+
+                    b.ToTable("events", "training", t =>
+                        {
+                            t.HasCheckConstraint("ck_events_distance_m", "distance_m IS NULL OR distance_m >= 0");
+
+                            t.HasCheckConstraint("ck_events_elevation_gain_m", "elevation_gain_m IS NULL OR elevation_gain_m >= 0");
+
+                            t.HasCheckConstraint("ck_events_kind", "kind IN ('race', 'sportive', 'tour', 'other')");
+
+                            t.HasCheckConstraint("ck_events_name_length", "length(name) BETWEEN 1 AND 100");
+
+                            t.HasCheckConstraint("ck_events_notes_length", "notes IS NULL OR length(notes) <= 500");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3256,6 +3324,22 @@ namespace Velomine.Server.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_licences_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingEvent", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_events_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_events_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>

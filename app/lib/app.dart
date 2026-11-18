@@ -58,6 +58,7 @@ import 'features/profile/sessions_screen.dart';
 import 'features/profile/two_factor_screen.dart';
 import 'features/privacy/privacy_screen.dart';
 import 'features/progress/progress_screen.dart';
+import 'features/progress/events_screen.dart';
 import 'features/recording/recording_screen.dart';
 import 'features/rides/bulk/ride_drop_area.dart';
 import 'features/rides/detail/ride_detail_screen.dart';
@@ -320,6 +321,10 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(path: '/record', builder: (_, _) => const RecordingScreen()),
           GoRoute(path: '/progress', builder: (_, _) => const ProgressScreen()),
+          GoRoute(
+            path: '/progress/events',
+            builder: (_, _) => const EventsScreen(),
+          ),
           GoRoute(
             path: '/club',
             builder: (context, _) => ClubScreen(

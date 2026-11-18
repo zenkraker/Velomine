@@ -269,6 +269,10 @@ class ApiClient {
           return EfficiencyWeek.fromJson(value);
         case 'EnableTwoFactorRequest':
           return EnableTwoFactorRequest.fromJson(value);
+        case 'EventRequest':
+          return EventRequest.fromJson(value);
+        case 'EventResponse':
+          return EventResponse.fromJson(value);
         case 'ExchangeSsoTokenRequest':
           return ExchangeSsoTokenRequest.fromJson(value);
         case 'ExportLinkResponse':
@@ -307,6 +311,8 @@ class ApiClient {
           return ListBikesResponse.fromJson(value);
         case 'ListComponentTypesResponse':
           return ListComponentTypesResponse.fromJson(value);
+        case 'ListEventsResponse':
+          return ListEventsResponse.fromJson(value);
         case 'ListGoalsResponse':
           return ListGoalsResponse.fromJson(value);
         case 'ListNotificationsResponse':
@@ -435,6 +441,8 @@ class ApiClient {
           return SetClubOwnerRequest.fromJson(value);
         case 'SetClubPlanRequest':
           return SetClubPlanRequest.fromJson(value);
+        case 'SetEventRideRequest':
+          return SetEventRideRequest.fromJson(value);
         case 'SetFtpRequest':
           return SetFtpRequest.fromJson(value);
         case 'SetHeartRateRequest':
@@ -503,6 +511,8 @@ class ApiClient {
           return UpdateClubRideRequest.fromJson(value);
         case 'UpdateComponentRequest':
           return UpdateComponentRequest.fromJson(value);
+        case 'UpdateEventRequest':
+          return UpdateEventRequest.fromJson(value);
         case 'UpdateGoalRequest':
           return UpdateGoalRequest.fromJson(value);
         case 'UpdatePrivacyRequest':

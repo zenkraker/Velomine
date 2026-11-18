@@ -2618,5 +2618,42 @@
       "ef": {"type": "String"},
       "count": {"type": "int"}
     }
-  }
+  },
+  "eventsTitle": "Events",
+  "noEvents": "No events yet. Add the race, sportive or tour you are training for; the ride that was it links itself when it is your only one that day.",
+  "eventAdd": "Add an event",
+  "eventChange": "Change the event",
+  "eventName": "Name",
+  "eventKind": "Kind",
+  "eventKindRace": "Race",
+  "eventKindSportive": "Sportive",
+  "eventKindTour": "Tour",
+  "eventKindOther": "Other",
+  "eventDistance": "Distance",
+  "eventClimbing": "Climbing",
+  "eventNotes": "Notes",
+  "eventNext": "Next event: {name} in {when}",
+  "@eventNext": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "when": {"type": "String"}
+    }
+  },
+  "eventToday": "today",
+  "eventInDays": "{days, plural, =1{1 day} other{{days} days}}",
+  "@eventInDays": {"placeholders": {"days": {"type": "int"}}},
+  "eventInWeeks": "{weeks, plural, =1{1 week} other{{weeks} weeks}}",
+  "@eventInWeeks": {"placeholders": {"weeks": {"type": "int"}}},
+  "eventsAll": "All events",
+  "eventYourRide": "Your event: {name}",
+  "@eventYourRide": {"placeholders": {"name": {"type": "String"}}},
+  "eventDeleteTitle": "Delete this event?",
+  "eventDeleteBody": "“{name}” is removed. The ride it was stays.",
+  "@eventDeleteBody": {"placeholders": {"name": {"type": "String"}}},
+  "eventOn": "{date}",
+  "@eventOn": {"placeholders": {"date": {"type": "String"}}},
+  "errorEventName": "Give the event a name.",
+  "actionAddEvent": "add the event",
+  "actionSaveEvent": "save the event",
+  "actionDeleteEvent": "delete the event"
 }

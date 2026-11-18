@@ -137,6 +137,10 @@ class FakeServer {
 
   final goals = <Map<String, Object?>>[];
 
+  /// The rider's events, as the server sends them, and the writes they made to them, in order.
+  final events = <Map<String, Object?>>[];
+  final eventWrites = <String>[];
+
   /// How far each goal metric has got this period, for goal progress.
   final goalCurrent = <String, double>{};
 
@@ -669,6 +673,8 @@ class FakeServer {
       return http.Response('', 204);
     }
 
+    final eventReply = _events(request, path, json);
+    if (eventReply != null) return eventReply;
     final bikeReply = _bikes(request, path, json);
     if (bikeReply != null) return bikeReply;
     final libraryReply = _library(request, path, caller, json);
@@ -824,6 +830,80 @@ class FakeServer {
       return found.isEmpty ? http.Response('', 404) : json(found.first);
     }
     return http.Response('', 404);
+  }
+}
+
+extension on FakeServer {
+  /// The training events: list, add, change, delete and the ride that was one.
+  http.Response? _events(
+    http.Request request,
+    String path,
+    http.Response Function(Object?, [int]) json,
+  ) {
+    if (!path.startsWith('/api/v1/training/events')) return null;
+    final body = request.body.isEmpty
+        ? <String, Object?>{}
+        : jsonDecode(request.body) as Map<String, Object?>;
+    if (path == '/api/v1/training/events' && request.method == 'GET') {
+      return json({'events': events});
+    }
+    if (path == '/api/v1/training/events' && request.method == 'POST') {
+      final name = (body['name'] as String? ?? '').trim();
+      if (name.isEmpty) {
+        return http.Response(
+          '{"errors":{"Name":["Give the event a name."]}}',
+          400,
+        );
+      }
+      final event = {
+        'id': 'event-${events.length + 1}',
+        'name': name,
+        'date': body['date'],
+        'kind': body['kind'] ?? 'race',
+        'distanceM': body['distanceM'],
+        'elevationGainM': body['elevationGainM'],
+        'notes': body['notes'],
+        'rideId': null,
+        'createdAt': '2026-11-10T09:00:00Z',
+      };
+      events.add(event);
+      final created = event['id'];
+      eventWrites.add('add $created');
+      return json(event, 201);
+    }
+    final ride = RegExp(r'^/api/v1/training/events/([^/]+)/ride$')
+        .firstMatch(path);
+    if (ride != null && request.method == 'PUT') {
+      final event = events.where((e) => e['id'] == ride.group(1)).firstOrNull;
+      if (event == null) return http.Response('', 404);
+      event['rideId'] = body['rideId'];
+      final set = event['id'];
+      eventWrites.add('ride $set');
+      return json(event);
+    }
+    final one = RegExp(r'^/api/v1/training/events/([^/]+)$').firstMatch(path);
+    if (one != null) {
+      final event = events.where((e) => e['id'] == one.group(1)).firstOrNull;
+      if (event == null) return http.Response('', 404);
+      if (request.method == 'DELETE') {
+        events.remove(event);
+        final gone = event['id'];
+        eventWrites.add('delete $gone');
+        return http.Response('', 204);
+      }
+      event.addAll({
+        'name': body['name'] ?? event['name'],
+        'date': body['date'] ?? event['date'],
+        'kind': body['kind'] ?? event['kind'],
+        'distanceM': body['distanceM'],
+        'elevationGainM': body['elevationGainM'],
+        'notes': body['notes'],
+      });
+      final changed = event['id'];
+      eventWrites.add('update $changed');
+      return json(event);
+    }
+    return null;
   }
 }
 

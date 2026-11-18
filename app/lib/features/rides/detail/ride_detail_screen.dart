@@ -17,6 +17,8 @@ import '../ride_text_sheet.dart';
 import '../ride_title.dart';
 import '../ride_type_chips.dart';
 import '../ride_type_sheet.dart';
+import '../../progress/events.dart';
+import '../../progress/progress_view_models.dart';
 import 'lap_table.dart';
 import 'power_record_chips.dart';
 import 'ride_detail_state.dart';
@@ -209,6 +211,9 @@ class RideDetailScreen extends ConsumerWidget {
       ];
     }
     final notifier = ref.read(rideDetailViewModelProvider(id).notifier);
+    // The events are read here too: this ride may be the one an event was.
+    ref.watch(eventsViewModelProvider);
+
     final heartRateZones =
         ride.heartRateZones.orElse(null) ?? const <ZoneTime>[];
     final powerZones = ride.powerZones.orElse(null) ?? const <ZoneTime>[];
@@ -235,6 +240,7 @@ class RideDetailScreen extends ConsumerWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+      EventLinkCard(rideId: ride.id),
       if (s.load.failure case final failure?)
         InlineError(failureText(l10n, failure), key: const Key('ride-error')),
       if (ride.status == 'processing')
@@ -623,6 +629,34 @@ const _powerZoneColors = [
   Color(0xFFC0392B),
   Color(0xFF8E44AD),
 ];
+
+/// The event this ride was, when one is linked to it.
+class EventLinkCard extends ConsumerWidget {
+  const EventLinkCard({super.key, required this.rideId});
+
+  final String rideId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final events = ref.watch(eventsViewModelProvider);
+    final event = events.events.where((e) => e.rideId == rideId).firstOrNull;
+    if (event == null) return const SizedBox.shrink();
+    return SectionCard(
+      key: const Key('ride-event'),
+      title: l10n.eventYourRide(event.name),
+      description: eventDetail(
+        l10n,
+        ref.watch(unitsChoiceViewModelProvider),
+        event,
+      ),
+      children: [
+        if (event.notes case final notes? when notes.isNotEmpty)
+          Text(notes, style: Theme.of(context).textTheme.bodyMedium),
+      ],
+    );
+  }
+}
 
 /// Which bike was ridden. An archived bike is only listed when this ride already uses it.
 class _BikePicker extends StatelessWidget {

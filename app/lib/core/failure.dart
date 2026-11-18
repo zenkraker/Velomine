@@ -156,6 +156,9 @@ enum FailureAction {
   loadSupporter,
   activateSupporter,
   saveSupporter,
+  addEvent,
+  saveEvent,
+  deleteEvent,
 }
 
 class Failure {
@@ -331,6 +334,9 @@ String _actionText(AppLocalizations l10n, FailureAction action) =>
       FailureAction.loadSupporter => l10n.actionLoadSupporter,
       FailureAction.activateSupporter => l10n.actionActivateSupporter,
       FailureAction.saveSupporter => l10n.actionSaveSupporter,
+      FailureAction.addEvent => l10n.actionAddEvent,
+      FailureAction.saveEvent => l10n.actionSaveEvent,
+      FailureAction.deleteEvent => l10n.actionDeleteEvent,
     };
 
 /// The sentence for a failure in the language on screen.

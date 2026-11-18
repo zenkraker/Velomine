@@ -4716,4 +4716,107 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$date: fattore di efficienza $ef su $_temp0';
   }
+
+  @override
+  String get eventsTitle => 'Eventi';
+
+  @override
+  String get noEvents =>
+      'Nessun evento. Aggiungi la gara, la granfondo o il giro per cui ti stai allenando; l\'uscita che era si collega da sola se quel giorno è l\'unica.';
+
+  @override
+  String get eventAdd => 'Aggiungi un evento';
+
+  @override
+  String get eventChange => 'Modifica l\'evento';
+
+  @override
+  String get eventName => 'Nome';
+
+  @override
+  String get eventKind => 'Tipo';
+
+  @override
+  String get eventKindRace => 'Gara';
+
+  @override
+  String get eventKindSportive => 'Granfondo';
+
+  @override
+  String get eventKindTour => 'Giro';
+
+  @override
+  String get eventKindOther => 'Altro';
+
+  @override
+  String get eventDistance => 'Distanza';
+
+  @override
+  String get eventClimbing => 'Dislivello';
+
+  @override
+  String get eventNotes => 'Note';
+
+  @override
+  String eventNext(String name, String when) {
+    return 'Prossimo evento: $name tra $when';
+  }
+
+  @override
+  String get eventToday => 'oggi';
+
+  @override
+  String eventInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days giorni',
+      one: '1 giorno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String eventInWeeks(int weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: '$weeks settimane',
+      one: '1 settimana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsAll => 'Tutti gli eventi';
+
+  @override
+  String eventYourRide(String name) {
+    return 'Il tuo evento: $name';
+  }
+
+  @override
+  String get eventDeleteTitle => 'Eliminare questo evento?';
+
+  @override
+  String eventDeleteBody(String name) {
+    return '«$name» viene rimosso. L\'uscita che era resta.';
+  }
+
+  @override
+  String eventOn(String date) {
+    return '$date';
+  }
+
+  @override
+  String get errorEventName => 'Dai un nome all\'evento.';
+
+  @override
+  String get actionAddEvent => 'aggiungere l\'evento';
+
+  @override
+  String get actionSaveEvent => 'salvare l\'evento';
+
+  @override
+  String get actionDeleteEvent => 'eliminare l\'evento';
 }

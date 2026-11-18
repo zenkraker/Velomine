@@ -4684,4 +4684,107 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$date: efficiency factor $ef over $_temp0';
   }
+
+  @override
+  String get eventsTitle => 'Events';
+
+  @override
+  String get noEvents =>
+      'No events yet. Add the race, sportive or tour you are training for; the ride that was it links itself when it is your only one that day.';
+
+  @override
+  String get eventAdd => 'Add an event';
+
+  @override
+  String get eventChange => 'Change the event';
+
+  @override
+  String get eventName => 'Name';
+
+  @override
+  String get eventKind => 'Kind';
+
+  @override
+  String get eventKindRace => 'Race';
+
+  @override
+  String get eventKindSportive => 'Sportive';
+
+  @override
+  String get eventKindTour => 'Tour';
+
+  @override
+  String get eventKindOther => 'Other';
+
+  @override
+  String get eventDistance => 'Distance';
+
+  @override
+  String get eventClimbing => 'Climbing';
+
+  @override
+  String get eventNotes => 'Notes';
+
+  @override
+  String eventNext(String name, String when) {
+    return 'Next event: $name in $when';
+  }
+
+  @override
+  String get eventToday => 'today';
+
+  @override
+  String eventInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String eventInWeeks(int weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: '$weeks weeks',
+      one: '1 week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsAll => 'All events';
+
+  @override
+  String eventYourRide(String name) {
+    return 'Your event: $name';
+  }
+
+  @override
+  String get eventDeleteTitle => 'Delete this event?';
+
+  @override
+  String eventDeleteBody(String name) {
+    return '“$name” is removed. The ride it was stays.';
+  }
+
+  @override
+  String eventOn(String date) {
+    return '$date';
+  }
+
+  @override
+  String get errorEventName => 'Give the event a name.';
+
+  @override
+  String get actionAddEvent => 'add the event';
+
+  @override
+  String get actionSaveEvent => 'save the event';
+
+  @override
+  String get actionDeleteEvent => 'delete the event';
 }

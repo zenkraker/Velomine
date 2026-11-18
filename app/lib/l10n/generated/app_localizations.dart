@@ -8113,6 +8113,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date}: efficiency factor {ef} over {count, plural, =1{1 ride} other{{count} rides}}'**
   String efficiencyWeekSemantics(String date, String ef, int count);
+
+  /// No description provided for @eventsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get eventsTitle;
+
+  /// No description provided for @noEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet. Add the race, sportive or tour you are training for; the ride that was it links itself when it is your only one that day.'**
+  String get noEvents;
+
+  /// No description provided for @eventAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an event'**
+  String get eventAdd;
+
+  /// No description provided for @eventChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the event'**
+  String get eventChange;
+
+  /// No description provided for @eventName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get eventName;
+
+  /// No description provided for @eventKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get eventKind;
+
+  /// No description provided for @eventKindRace.
+  ///
+  /// In en, this message translates to:
+  /// **'Race'**
+  String get eventKindRace;
+
+  /// No description provided for @eventKindSportive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sportive'**
+  String get eventKindSportive;
+
+  /// No description provided for @eventKindTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour'**
+  String get eventKindTour;
+
+  /// No description provided for @eventKindOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get eventKindOther;
+
+  /// No description provided for @eventDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get eventDistance;
+
+  /// No description provided for @eventClimbing.
+  ///
+  /// In en, this message translates to:
+  /// **'Climbing'**
+  String get eventClimbing;
+
+  /// No description provided for @eventNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get eventNotes;
+
+  /// No description provided for @eventNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next event: {name} in {when}'**
+  String eventNext(String name, String when);
+
+  /// No description provided for @eventToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get eventToday;
+
+  /// No description provided for @eventInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}}'**
+  String eventInDays(int days);
+
+  /// No description provided for @eventInWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks, plural, =1{1 week} other{{weeks} weeks}}'**
+  String eventInWeeks(int weeks);
+
+  /// No description provided for @eventsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All events'**
+  String get eventsAll;
+
+  /// No description provided for @eventYourRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event: {name}'**
+  String eventYourRide(String name);
+
+  /// No description provided for @eventDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this event?'**
+  String get eventDeleteTitle;
+
+  /// No description provided for @eventDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” is removed. The ride it was stays.'**
+  String eventDeleteBody(String name);
+
+  /// No description provided for @eventOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}'**
+  String eventOn(String date);
+
+  /// No description provided for @errorEventName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the event a name.'**
+  String get errorEventName;
+
+  /// No description provided for @actionAddEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'add the event'**
+  String get actionAddEvent;
+
+  /// No description provided for @actionSaveEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'save the event'**
+  String get actionSaveEvent;
+
+  /// No description provided for @actionDeleteEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'delete the event'**
+  String get actionDeleteEvent;
 }
 
 class _AppLocalizationsDelegate

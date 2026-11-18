@@ -7,6 +7,7 @@ import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/user_message.dart';
 import 'progress_data.dart';
+import 'events_data.dart';
 import 'progress_state.dart';
 
 part 'progress_view_models.g.dart';
@@ -351,6 +352,64 @@ class ReadinessViewModel extends _$ReadinessViewModel {
     if (!ref.mounted || generation != _loadGeneration) return;
     state = ReadinessState(load: state.load.finish(result));
   }
+}
+
+/// The events the rider is training for. A change reloads the list, so the card and the list agree.
+@Riverpod(keepAlive: true)
+class EventsViewModel extends _$EventsViewModel {
+  int _messageId = 0;
+  int _loadGeneration = 0;
+
+  @override
+  EventsState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const EventsState();
+    Future.microtask(load);
+    return const EventsState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    state = state.copyWith(load: state.load.start());
+    final result = await ref.read(eventsDataProvider).list();
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = state.copyWith(
+      load: state.load.finish(result),
+      events: result.valueOrNull ?? const [],
+    );
+  }
+
+  Future<void> add(EventRequest event) =>
+      _run(() => ref.read(eventsDataProvider).add(event));
+
+  Future<void> update(String id, UpdateEventRequest event) =>
+      _run(() => ref.read(eventsDataProvider).update(id, event));
+
+  Future<void> delete(String id) =>
+      _run(() => ref.read(eventsDataProvider).delete(id));
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+
+  Future<void> _run(Future<Result<Object?>> Function() call) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    await load();
+  }
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
 }
 
 @Riverpod(keepAlive: true)

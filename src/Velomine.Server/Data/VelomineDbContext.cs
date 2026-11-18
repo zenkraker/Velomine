@@ -14,6 +14,7 @@ using Velomine.Server.Features.Rides.Import;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Sharing;
 using Velomine.Server.Features.Supporter;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Features.Wellbeing;
 
 namespace Velomine.Server.Data;
@@ -98,6 +99,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
     public DbSet<FtpSuggestion> FtpSuggestions => Set<FtpSuggestion>();
 
     public DbSet<HeartRateHistory> HeartRateHistory => Set<HeartRateHistory>();
+
+    public DbSet<TrainingEvent> Events => Set<TrainingEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

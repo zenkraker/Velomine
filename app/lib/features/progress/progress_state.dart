@@ -1,3 +1,4 @@
+import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/command.dart';
@@ -135,6 +136,39 @@ class ReadinessState {
   const ReadinessState({this.load = const CommandState.idle()});
 
   final CommandState<ReadinessResponse?> load;
+}
+
+/// The rider's races and other events, next first.
+class EventsState {
+  const EventsState({
+    this.events = const [],
+    this.load = const CommandState.idle(),
+    this.action = const CommandState.idle(),
+    this.messages = const [],
+  });
+
+  final List<EventResponse> events;
+  final CommandState<List<EventResponse>> load;
+  final VoidCommand action;
+  final List<UserMessage> messages;
+
+  /// The next one that has not happened yet, or null when there is none.
+  EventResponse? get next {
+    final today = DateUtils.dateOnly(DateTime.now());
+    return events.where((e) => !e.date.isBefore(today)).firstOrNull;
+  }
+
+  EventsState copyWith({
+    List<EventResponse>? events,
+    CommandState<List<EventResponse>>? load,
+    VoidCommand? action,
+    List<UserMessage>? messages,
+  }) => EventsState(
+    events: events ?? this.events,
+    load: load ?? this.load,
+    action: action ?? this.action,
+    messages: messages ?? this.messages,
+  );
 }
 
 class WellbeingState {

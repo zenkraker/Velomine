@@ -7,6 +7,7 @@ using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Privacy;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Rides.Ingestion;
@@ -199,6 +200,10 @@ public sealed class RideIngestionService(
         if (clock is not null)
             foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
                 await FtpSuggestionDetection.AddAsync(db, time, clock, r, profile.FtpW, ct);
+        // A ride that was the rider's only one that day becomes the event of that date, if one is waiting for it.
+        if (clock is not null)
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+                await EventRideLink.AddAsync(db, clock, r, ct);
 
         foreach (var r in read.Where(r => r.NotifiesMember)) Notify.RideRead(db, time, r);
 

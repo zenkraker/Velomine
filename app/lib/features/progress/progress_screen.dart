@@ -25,6 +25,7 @@ import '../rides/ride_type_chips.dart';
 import 'goals.dart';
 import 'ftp_history_sheet.dart';
 import 'efficiency_card.dart';
+import 'events.dart';
 import 'intensity_card.dart';
 import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
@@ -92,6 +93,7 @@ class ProgressScreen extends ConsumerWidget {
     final readiness = ref.watch(readinessViewModelProvider);
     final wellbeing = ref.watch(wellbeingViewModelProvider);
     final reminder = ref.watch(ftpReminderViewModelProvider);
+    final events = ref.watch(eventsViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
 
     listenUserMessages(
@@ -117,6 +119,12 @@ class ProgressScreen extends ConsumerWidget {
       context,
       ftpReminderViewModelProvider.select((s) => s.messages),
       ref.read(ftpReminderViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      eventsViewModelProvider.select((s) => s.messages),
+      ref.read(eventsViewModelProvider.notifier).messageShown,
     );
 
     final failures = [
@@ -175,6 +183,11 @@ class ProgressScreen extends ConsumerWidget {
         ),
       if (readiness.load.value case final readinessData?)
         ReadinessCard(readiness: readinessData),
+      if (events.next case final EventResponse next)
+        NextEventCard(
+          next: next,
+          onAll: () => context.push('/progress/events'),
+        ),
       if (totals.load.value case final totalsData?)
         _TotalsTable(totals: totalsData),
       if (training.load.value case final trainingData?)
