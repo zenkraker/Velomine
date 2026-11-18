@@ -68,7 +68,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var ftpSuggestions = await db.FtpSuggestions.AsNoTracking()
             .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
         var heartRateHistory = await db.HeartRateHistory.AsNoTracking()
-            .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
+            .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ThenBy(h => h.Sequence).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 

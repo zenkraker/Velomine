@@ -251,6 +251,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("ride_id");
 
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
                     b.Property<DateTimeOffset>("SetAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("set_at");
@@ -270,9 +274,9 @@ namespace Velomine.Server.Data.Migrations
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_heart_rate_history_ride_id");
 
-                    b.HasIndex("UserId", "Kind", "SetAt")
-                        .IsDescending(false, false, true)
-                        .HasDatabaseName("ix_heart_rate_history_user_id_kind_set_at");
+                    b.HasIndex("UserId", "Kind", "SetAt", "Sequence")
+                        .IsDescending(false, false, true, true)
+                        .HasDatabaseName("ix_heart_rate_history_user_id_kind_set_at_sequence");
 
                     b.ToTable("heart_rate_history", "accounts", t =>
                         {

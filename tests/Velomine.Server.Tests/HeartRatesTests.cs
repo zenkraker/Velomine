@@ -54,7 +54,7 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
         return await db.HeartRateHistory.AsNoTracking()
             .Where(h => h.UserId == userId)
-            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Id.ToString())
+            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Sequence)
             .ToListAsync(Ct);
     }
 
@@ -112,9 +112,11 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
 
         Assert.Equal(HttpStatusCode.OK, (await SetAsync(member.Client, "max", 194)).StatusCode);
 
-        // The newest row is the one written last, even when the fixed clock does not tick between the two.
+        // The newest row is the one written last, even when the fixed clock does not tick between the two: the row
+        // keeps its place among those written on the same instant.
         var rows = await HistoryAsync(api, member.Id);
         Assert.Equal(new[] { 194, 190 }, rows.Select(r => r.Bpm));
+        Assert.Equal(new[] { 1, 0 }, rows.Select(r => r.Sequence));
         Assert.All(rows, r => Assert.Equal((HeartRateKinds.Max, HeartRateSources.Manual), (r.Kind, r.Source)));
     }
 
@@ -128,6 +130,32 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.OK, (await SetAsync(member.Client, "max", 190)).StatusCode);
 
         Assert.Single(await HistoryAsync(api, member.Id));
+    }
+
+    /// <summary>A clock that ticks a second per read, so the two writes have instants of their own.</summary>
+    private sealed class TickingTime(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now = now.AddSeconds(1);
+    }
+
+    [Fact]
+    public async Task SetHeartRate_ShouldKeepTheOrder_WhenTheClockTicksBetweenTwoWrites()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new TickingTime(Now)));
+        });
+        var member = await api.NewMemberAsync();
+
+        await SetAsync(member.Client, "max", 190);
+        await SetAsync(member.Client, "max", 194);
+
+        var rows = await HistoryAsync(api, member.Id);
+        Assert.Equal(new[] { 194, 190 }, rows.Select(r => r.Bpm));
+        // Each row keeps its own instant and its first place, because the clock moved on.
+        Assert.Equal(new[] { 0, 0 }, rows.Select(r => r.Sequence));
+        Assert.True(rows[0].SetAt > rows[1].SetAt);
     }
 
     [Fact]
@@ -245,7 +273,13 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
     [Fact]
     public async Task AccountExport_ShouldContainTheHeartRateHistory_WhenTheMemberHasIt()
     {
-        await using var api = await StartAsync();
+        // A clock near the real one: a data-protection token's own expiry uses the system clock, so a clock far in
+        // the past would make the export link look expired the moment it was made.
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new OffsetTime(DateTimeOffset.UtcNow)));
+        });
         var me = await api.NewMemberAsync("Ada");
         var other = await api.NewMemberAsync("Grace");
         await SetAsync(me.Client, "max", 190);

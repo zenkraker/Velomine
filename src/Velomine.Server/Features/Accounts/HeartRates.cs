@@ -82,6 +82,9 @@ public sealed class HeartRateHistory
 
     public DateTimeOffset SetAt { get; set; }
 
+    /// <summary>Position among the rows of one kind at the same <see cref="SetAt"/>, so the order is total.</summary>
+    public int Sequence { get; set; }
+
     /// <summary><see cref="HeartRateSources.Manual"/>, <see cref="HeartRateSources.Measured"/> or <see cref="HeartRateSources.Cleared"/>.</summary>
     public string Source { get; set; } = HeartRateSources.Manual;
 
@@ -102,7 +105,9 @@ public sealed class HeartRateHistoryConfiguration : IEntityTypeConfiguration<Hea
             t.HasCheckConstraint("ck_heart_rate_history_ride", "ride_id IS NULL OR source = 'measured'");
         });
         b.HasKey(h => h.Id);
-        b.HasIndex(h => new { h.UserId, h.Kind, h.SetAt }).IsDescending(false, false, true);
+        // The newest row is the current one, so the order is total. PostgreSQL keeps microseconds, and a clock that
+        // does not tick writes new rows on the same instant, so set_at alone cannot separate two writes.
+        b.HasIndex(h => new { h.UserId, h.Kind, h.SetAt, h.Sequence }).IsDescending(false, false, true, true);
         b.HasOne<User>().WithMany().HasForeignKey(h => h.UserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<Ride>().WithMany().HasForeignKey(h => h.RideId).OnDelete(DeleteBehavior.SetNull);
     }
@@ -140,24 +145,30 @@ public sealed class SetHeartRateValue(VelomineDbContext db, TimeProvider time)
     }
 
     /// <summary>
-    /// The row of one change. Written after every earlier one of the same kind, so the newest row is the truth even
-    /// when the clock does not tick between two writes (a fixed clock in a test, or a coarse one).
+    /// The row of one change, after every earlier one of the same kind: a new row on the same instant takes the next
+    /// place, so the newest row is the truth even when the clock does not tick between two writes.
     /// </summary>
     private async Task AddAsync(User user, string kind, int bpm, string source, Guid? rideId, CancellationToken ct)
     {
         var setAt = time.GetUtcNow();
         var previous = await db.HeartRateHistory.AsNoTracking()
             .Where(h => h.UserId == user.Id && h.Kind == kind && h.SetAt >= setAt)
-            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Id)
-            .Select(h => (DateTimeOffset?)h.SetAt)
+            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Sequence)
+            .Select(h => new { h.SetAt, h.Sequence })
             .FirstOrDefaultAsync(ct);
+        var sequence = 0;
+        if (previous?.SetAt == setAt) sequence = previous.Sequence + 1;
+        // A single tick is 100 ns and the column keeps microseconds: stepping by one would come back to the same
+        // instant, so a changed time steps a microsecond.
+        else if (previous is not null) setAt = previous.SetAt.AddTicks(10);
         db.HeartRateHistory.Add(new HeartRateHistory
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Kind = kind,
             Bpm = bpm,
-            SetAt = previous?.AddTicks(1) ?? setAt,
+            SetAt = setAt,
+            Sequence = sequence,
             Source = source,
             RideId = rideId,
         });
