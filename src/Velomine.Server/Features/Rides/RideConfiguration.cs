@@ -31,6 +31,7 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         ride.Property(r => r.Discipline).HasMaxLength(16);
         ride.Property(r => r.Assist).HasMaxLength(16);
         ride.Property(r => r.Environment).HasMaxLength(16);
+        ride.Property(r => r.HeartRateNote).HasMaxLength(32);
         ride.Property(r => r.Version).IsRowVersion();
         ride.Ignore(r => r.Privacy);
 

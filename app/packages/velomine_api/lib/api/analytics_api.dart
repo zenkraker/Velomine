@@ -65,6 +65,55 @@ class AnalyticsApi {
     return null;
   }
 
+  /// Performs an HTTP 'POST /api/v1/analytics/heart-rate-suggestions/{suggestionId}/accept' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<Response> acceptHeartRateSuggestionWithHttpInfo(String suggestionId, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/heart-rate-suggestions/{suggestionId}/accept'
+      .replaceAll('{suggestionId}', suggestionId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<ProfileResponse?> acceptHeartRateSuggestion(String suggestionId, { Future<void>? abortTrigger, }) async {
+    final response = await acceptHeartRateSuggestionWithHttpInfo(suggestionId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ProfileResponse',) as ProfileResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/analytics/goals' operation and returns the [Response].
   /// Parameters:
   ///
@@ -190,6 +239,47 @@ class AnalyticsApi {
   /// * [String] suggestionId (required):
   Future<void> dismissFtpSuggestion(String suggestionId, { Future<void>? abortTrigger, }) async {
     final response = await dismissFtpSuggestionWithHttpInfo(suggestionId, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'POST /api/v1/analytics/heart-rate-suggestions/{suggestionId}/dismiss' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<Response> dismissHeartRateSuggestionWithHttpInfo(String suggestionId, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/heart-rate-suggestions/{suggestionId}/dismiss'
+      .replaceAll('{suggestionId}', suggestionId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] suggestionId (required):
+  Future<void> dismissHeartRateSuggestion(String suggestionId, { Future<void>? abortTrigger, }) async {
+    final response = await dismissHeartRateSuggestionWithHttpInfo(suggestionId, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -575,6 +665,48 @@ class AnalyticsApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListGoalsResponse',) as ListGoalsResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'GET /api/v1/analytics/heart-rate-suggestions' operation and returns the [Response].
+  Future<Response> listHeartRateSuggestionsWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/heart-rate-suggestions';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<ListHeartRateSuggestionsResponse?> listHeartRateSuggestions({ Future<void>? abortTrigger, }) async {
+    final response = await listHeartRateSuggestionsWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ListHeartRateSuggestionsResponse',) as ListHeartRateSuggestionsResponse;
     
     }
     return null;

@@ -38,7 +38,11 @@ public sealed class RideIngestionService(
             try
             {
                 await using var scope = services.CreateAsyncScope();
-                await ProcessAsync(scope.ServiceProvider.GetRequiredService<VelomineDbContext>(), id, stoppingToken);
+                await ProcessAsync(
+                    scope.ServiceProvider.GetRequiredService<VelomineDbContext>(),
+                    scope.ServiceProvider.GetRequiredService<SetHeartRateValue>(),
+                    id,
+                    stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -61,12 +65,12 @@ public sealed class RideIngestionService(
         }
     }
 
-    private async Task ProcessAsync(VelomineDbContext db, Guid id, CancellationToken ct)
+    private async Task ProcessAsync(VelomineDbContext db, SetHeartRateValue setHeartRate, Guid id, CancellationToken ct)
     {
         var started = Stopwatch.GetTimestamp();
         try
         {
-            await ProcessCoreAsync(db, id, ct);
+            await ProcessCoreAsync(db, setHeartRate, id, ct);
         }
         finally
         {
@@ -74,7 +78,7 @@ public sealed class RideIngestionService(
         }
     }
 
-    private async Task ProcessCoreAsync(VelomineDbContext db, Guid id, CancellationToken ct)
+    private async Task ProcessCoreAsync(VelomineDbContext db, SetHeartRateValue setHeartRate, Guid id, CancellationToken ct)
     {
         var ride = await db.Rides.Include(r => r.Laps).FirstOrDefaultAsync(r => r.Id == id && r.Status == RideStatus.Processing, ct);
         if (ride is null) return;
@@ -96,7 +100,8 @@ public sealed class RideIngestionService(
         }
 
         // One file can hold several rides: the first fills the row made at upload, the others get rows of their own.
-        var profile = await db.Users.AsNoTracking()
+        // Tracked, because a ride that measures this member's heart rate changes the same row in the same save.
+        var profile = await db.Users
             .Where(u => u.Id == ride.UserId)
             .FirstAsync(ct);
         var maxHeartRate = HeartRates.For(profile, time).Max?.Bpm;
@@ -110,6 +115,8 @@ public sealed class RideIngestionService(
             .ToListAsync(ct);
         var used = false;
         var read = new List<Ride>();
+        // Each ride's own samples, by id: the duplicate check compares what is stored, not the parsed activity.
+        var sources = new Dictionary<Guid, ParsedRide>();
         string? lastError = null;
         foreach (var file in parsed)
         {
@@ -149,6 +156,7 @@ public sealed class RideIngestionService(
             if (used) db.Rides.Add(target);
             used = true;
             read.Add(target);
+            sources[target.Id] = file;
 
             target.StartTime = file.StartTime;
             target.UtcOffsetMinutes = file.UtcOffsetMinutes
@@ -200,6 +208,16 @@ public sealed class RideIngestionService(
         if (clock is not null)
             foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
                 await FtpSuggestionDetection.AddAsync(db, time, clock, r, profile.FtpW, ct);
+        // Nor do they learn a heart rate: the number a ride showed is asked about once, when it is first read.
+        if (clock is not null)
+        {
+            foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
+            {
+                var file = sources[r.Id];
+                r.HeartRateNote = await HeartRateDetection.AddAsync(
+                    db, time, clock, profile, r, file.Samples, file.Pauses, setHeartRate, ct);
+            }
+        }
         // A ride that was the rider's only one that day becomes the event of that date, if one is waiting for it.
         if (clock is not null)
             foreach (var r in read.Where(r => r.Status == RideStatus.Ready))

@@ -15,6 +15,7 @@ import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/ftp_suggestion_card.dart';
+import '../../core/widgets/heart_rate_note_card.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/stat_tile.dart';
@@ -93,6 +94,7 @@ class ProgressScreen extends ConsumerWidget {
     final readiness = ref.watch(readinessViewModelProvider);
     final wellbeing = ref.watch(wellbeingViewModelProvider);
     final reminder = ref.watch(ftpReminderViewModelProvider);
+    final heartRate = ref.watch(heartRateSuggestionViewModelProvider);
     final events = ref.watch(eventsViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
 
@@ -119,6 +121,12 @@ class ProgressScreen extends ConsumerWidget {
       context,
       ftpReminderViewModelProvider.select((s) => s.messages),
       ref.read(ftpReminderViewModelProvider.notifier).messageShown,
+    );
+    listenUserMessages(
+      ref,
+      context,
+      heartRateSuggestionViewModelProvider.select((s) => s.messages),
+      ref.read(heartRateSuggestionViewModelProvider.notifier).messageShown,
     );
     listenUserMessages(
       ref,
@@ -154,6 +162,23 @@ class ProgressScreen extends ConsumerWidget {
           onDismiss: ref
               .read(ftpReminderViewModelProvider.notifier)
               .dismissSuggestion,
+        ),
+      // A heart-rate number the rider typed that a ride beat is the same kind of question, answered here.
+      for (final suggestion in heartRate.suggestions)
+        HeartRateNoteCard(
+          kind: suggestion.kind,
+          bpm: suggestion.bpm,
+          currentBpm: suggestion.kind == 'max'
+              ? heartRate.profile?.maxHeartRate
+              : heartRate.profile?.thresholdHeartRate.orElse(null),
+          suggestionId: suggestion.id,
+          busy: heartRate.action.running,
+          onAccept: ref
+              .read(heartRateSuggestionViewModelProvider.notifier)
+              .accept,
+          onDismiss: ref
+              .read(heartRateSuggestionViewModelProvider.notifier)
+              .dismiss,
         ),
       // A wrong FTP makes every zone and TSS below it wrong, so the reminder leads the analysis.
       if (reminder.check?.reason != null && reminder.suggestion == null)

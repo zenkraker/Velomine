@@ -105,6 +105,23 @@ class ProgressData {
 
   Future<Result<void>> dismissFtpSuggestion(String id) =>
       _api.dismissFtpSuggestion(id).guard(FailureAction.setFtp);
+
+  /// The member's open heart-rate suggestions, one per number at most.
+  Future<Result<List<HeartRateSuggestionResponse>>>
+  heartRateSuggestions() async => (await _api.listHeartRateSuggestions().guard(
+    FailureAction.loadProgress,
+  )).map((list) => list?.suggestions ?? const <HeartRateSuggestionResponse>[]);
+
+  /// The member's profile, for the value a heart-rate suggestion is above.
+  Future<Result<ProfileResponse?>> profile() =>
+      _accounts.getProfile().guard(FailureAction.loadProgress);
+
+  /// Adopts a ride's heart-rate suggestion: the number becomes measured, from that ride.
+  Future<Result<ProfileResponse?>> acceptHeartRateSuggestion(String id) =>
+      _api.acceptHeartRateSuggestion(id).guard(FailureAction.saveProfile);
+
+  Future<Result<void>> dismissHeartRateSuggestion(String id) =>
+      _api.dismissHeartRateSuggestion(id).guard(FailureAction.saveProfile);
 }
 
 @Riverpod(keepAlive: true)

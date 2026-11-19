@@ -28,7 +28,9 @@ public static class TestRideFiles
         /// <summary>Power per second, when the test needs a shape other than the steady 200 W.</summary>
         Func<int, short>? Power = null,
         /// <summary>Heart rate per second, when the test needs a shape other than the steady 150 bpm.</summary>
-        Func<int, short>? HeartRate = null);
+        Func<int, short>? HeartRate = null,
+        /// <summary>Leaves the heart rate out, so a ride does not teach the member a maximum heart rate.</summary>
+        bool NoHeartRate = false);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -72,7 +74,8 @@ public static class TestRideFiles
                 record.SetAltitude(300 + s * 0.1f);
                 record.SetSpeed(8);
                 record.SetDistance(s * 8f);
-                record.SetHeartRate((byte)(session.HeartRate?.Invoke(s) ?? 150));
+                if (!session.NoHeartRate)
+                    record.SetHeartRate((byte)(session.HeartRate?.Invoke(s) ?? 150));
                 record.SetPower((ushort)(session.Power?.Invoke(s) ?? 200));
                 record.SetCadence(90);
                 record.SetTemperature(18);

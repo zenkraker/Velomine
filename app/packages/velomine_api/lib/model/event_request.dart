@@ -15,10 +15,10 @@ class EventRequest {
   EventRequest({
     required this.name,
     required this.date,
-    this.kind = const Optional.present("race"),
-    this.distanceM = const Optional.present(null),
-    this.elevationGainM = const Optional.present(null),
-    this.notes = const Optional.present(null),
+    this.kind = const Optional.absent(),
+    this.distanceM = const Optional.absent(),
+    this.elevationGainM = const Optional.absent(),
+    this.notes = const Optional.absent(),
   });
 
   final String name;

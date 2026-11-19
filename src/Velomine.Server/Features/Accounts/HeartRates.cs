@@ -63,6 +63,22 @@ public static class HeartRates
                 : null;
         return (max, threshold);
     }
+
+    /// <summary>
+    /// Where a set number came from and from which ride: the newest history row that set it (<c>manual</c> or
+    /// <c>measured</c>). A number that is only estimated keeps its estimate source.
+    /// </summary>
+    public static async Task<HeartRate?> LatestAsync(
+        VelomineDbContext db, Guid userId, string kind, HeartRate? number, CancellationToken ct)
+    {
+        if (number is not { Source: not FtpSources.Estimate } set) return number;
+        var newest = await db.HeartRateHistory.AsNoTracking()
+            .Where(h => h.UserId == userId && h.Kind == kind)
+            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Sequence)
+            .Select(h => new { h.Source, h.RideId })
+            .FirstOrDefaultAsync(ct);
+        return newest is null ? set : set with { Source = newest.Source, RideId = newest.RideId };
+    }
 }
 
 /// <summary>

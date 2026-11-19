@@ -53,6 +53,7 @@ class RideResponse {
     this.ftpSuggestionW = const Optional.absent(),
     this.ftpSuggestionMethod = const Optional.absent(),
     this.ftpSuggestionId = const Optional.absent(),
+    this.heartRateNote = const Optional.absent(),
     this.minWPrimeBalanceJ = const Optional.absent(),
     this.wPrimeJ = const Optional.absent(),
     this.efficiencyFactor = const Optional.absent(),
@@ -164,6 +165,14 @@ class RideResponse {
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
+  final Optional<String?> heartRateNote;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
   final Optional<int?> minWPrimeBalanceJ;
 
   ///
@@ -240,6 +249,7 @@ class RideResponse {
     other.ftpSuggestionW == ftpSuggestionW &&
     other.ftpSuggestionMethod == ftpSuggestionMethod &&
     other.ftpSuggestionId == ftpSuggestionId &&
+    other.heartRateNote == heartRateNote &&
     other.minWPrimeBalanceJ == minWPrimeBalanceJ &&
     other.wPrimeJ == wPrimeJ &&
     other.efficiencyFactor == efficiencyFactor &&
@@ -289,6 +299,7 @@ class RideResponse {
     (ftpSuggestionW == null ? 0 : ftpSuggestionW!.hashCode) +
     (ftpSuggestionMethod == null ? 0 : ftpSuggestionMethod!.hashCode) +
     (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode) +
+    (heartRateNote == null ? 0 : heartRateNote!.hashCode) +
     (minWPrimeBalanceJ == null ? 0 : minWPrimeBalanceJ!.hashCode) +
     (wPrimeJ == null ? 0 : wPrimeJ!.hashCode) +
     (efficiencyFactor == null ? 0 : efficiencyFactor!.hashCode) +
@@ -296,7 +307,7 @@ class RideResponse {
     (steady == null ? 0 : steady!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -474,6 +485,10 @@ class RideResponse {
       final value = this.ftpSuggestionId.value;
       json[r'ftpSuggestionId'] = value;
     }
+    if (this.heartRateNote.isPresent) {
+      final value = this.heartRateNote.value;
+      json[r'heartRateNote'] = value;
+    }
     if (this.minWPrimeBalanceJ.isPresent) {
       final value = this.minWPrimeBalanceJ.value;
       json[r'minWPrimeBalanceJ'] = value;
@@ -569,6 +584,7 @@ class RideResponse {
     Optional<int?>? ftpSuggestionW,
     Optional<String?>? ftpSuggestionMethod,
     Optional<String?>? ftpSuggestionId,
+    Optional<String?>? heartRateNote,
     Optional<int?>? minWPrimeBalanceJ,
     Optional<int?>? wPrimeJ,
     Optional<double?>? efficiencyFactor,
@@ -615,6 +631,7 @@ class RideResponse {
     ftpSuggestionW: ftpSuggestionW ?? this.ftpSuggestionW,
     ftpSuggestionMethod: ftpSuggestionMethod ?? this.ftpSuggestionMethod,
     ftpSuggestionId: ftpSuggestionId ?? this.ftpSuggestionId,
+    heartRateNote: heartRateNote ?? this.heartRateNote,
     minWPrimeBalanceJ: minWPrimeBalanceJ ?? this.minWPrimeBalanceJ,
     wPrimeJ: wPrimeJ ?? this.wPrimeJ,
     efficiencyFactor: efficiencyFactor ?? this.efficiencyFactor,
@@ -716,6 +733,7 @@ class RideResponse {
         ftpSuggestionW: json.containsKey(r'ftpSuggestionW') ? Optional.present(json[r'ftpSuggestionW'] == null ? null : int.parse('${json[r'ftpSuggestionW']}')) : const Optional.absent(),
         ftpSuggestionMethod: json.containsKey(r'ftpSuggestionMethod') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionMethod')) : const Optional.absent(),
         ftpSuggestionId: json.containsKey(r'ftpSuggestionId') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionId')) : const Optional.absent(),
+        heartRateNote: json.containsKey(r'heartRateNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateNote')) : const Optional.absent(),
         minWPrimeBalanceJ: json.containsKey(r'minWPrimeBalanceJ') ? Optional.present(json[r'minWPrimeBalanceJ'] == null ? null : int.parse('${json[r'minWPrimeBalanceJ']}')) : const Optional.absent(),
         wPrimeJ: json.containsKey(r'wPrimeJ') ? Optional.present(json[r'wPrimeJ'] == null ? null : int.parse('${json[r'wPrimeJ']}')) : const Optional.absent(),
         efficiencyFactor: json.containsKey(r'efficiencyFactor') ? Optional.present(mapValueOfType<double>(json, r'efficiencyFactor')) : const Optional.absent(),

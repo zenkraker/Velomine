@@ -118,4 +118,10 @@
   <data name="FtpSuggested" xml:space="preserve">
     <value>Un'uscita suggerisce un FTP di {0}.</value>
   </data>
+  <data name="HeartRateMeasured" xml:space="preserve">
+    <value>Un'uscita ha misurato un nuovo valore di frequenza cardiaca: {0}. Le tue zone ora lo usano.</value>
+  </data>
+  <data name="HeartRateSuggested" xml:space="preserve">
+    <value>Un'uscita mostra un valore di frequenza cardiaca più alto di quello che hai impostato: {0}. Scegli se usarlo.</value>
+  </data>
 </root>

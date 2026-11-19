@@ -138,6 +138,33 @@ class ReadinessState {
   final CommandState<ReadinessResponse?> load;
 }
 
+/// The member's open heart-rate suggestions, with the profile that says what each is above.
+class HeartRateSuggestionState {
+  const HeartRateSuggestionState({
+    this.suggestions = const [],
+    this.profile,
+    this.action = const CommandState.idle(),
+    this.messages = const [],
+  });
+
+  final List<HeartRateSuggestionResponse> suggestions;
+  final ProfileResponse? profile;
+  final VoidCommand action;
+  final List<UserMessage> messages;
+
+  HeartRateSuggestionState copyWith({
+    List<HeartRateSuggestionResponse>? suggestions,
+    ProfileResponse? profile,
+    VoidCommand? action,
+    List<UserMessage>? messages,
+  }) => HeartRateSuggestionState(
+    suggestions: suggestions ?? this.suggestions,
+    profile: profile ?? this.profile,
+    action: action ?? this.action,
+    messages: messages ?? this.messages,
+  );
+}
+
 /// The rider's races and other events, next first.
 class EventsState {
   const EventsState({

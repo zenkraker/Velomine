@@ -2259,6 +2259,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heartRateNone => 'Add your year of birth, or type it above.';
 
   @override
+  String heartRateMaxMeasured(int bpm) {
+    return 'New maximum heart rate: $bpm bpm. Your zones now use it.';
+  }
+
+  @override
+  String heartRateThresholdMeasured(int bpm) {
+    return 'New threshold heart rate: $bpm bpm. Your zones now use it.';
+  }
+
+  @override
+  String heartRateSuggested(int bpm, int current) {
+    return 'This ride reached $bpm bpm, above the $current you set. Use $bpm?';
+  }
+
+  @override
+  String heartRateSuggestionUse(int bpm) {
+    return 'Use $bpm';
+  }
+
+  @override
+  String heartRateSuggestionKeep(int current) {
+    return 'Keep $current';
+  }
+
+  @override
   String get timeZone => 'Time zone';
 
   @override

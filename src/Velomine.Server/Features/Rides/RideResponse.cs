@@ -51,6 +51,9 @@ public sealed record RideResponse(
     int? FtpSuggestionW = null,
     string? FtpSuggestionMethod = null,
     Guid? FtpSuggestionId = null,
+    // What this ride did to a heart-rate number when it was first read: one of Analytics.HeartRateNotes, owner only.
+    // Copied by hand like an FTP suggestion, so WithoutTrainingLoad clears it and no other response carries it.
+    string? HeartRateNote = null,
     // Derived from power: RideDetails sets them, WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
     int? MinWPrimeBalanceJ = null,
     int? WPrimeJ = null,
@@ -95,6 +98,7 @@ public sealed record RideResponse(
         r.Title,
         r.Description,
         r.Version,
+        HeartRateNote: r.HeartRateNote,
         EfficiencyFactor: r.EfficiencyFactor,
         DecouplingPct: r.DecouplingPct,
         Steady: r.Steady);
@@ -111,6 +115,7 @@ public sealed record RideResponse(
         FtpSuggestionW = null,
         FtpSuggestionMethod = null,
         FtpSuggestionId = null,
+        HeartRateNote = null,
         MinWPrimeBalanceJ = null,
         WPrimeJ = null,
         EfficiencyFactor = null,

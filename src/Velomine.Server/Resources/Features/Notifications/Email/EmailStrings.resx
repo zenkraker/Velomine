@@ -118,4 +118,10 @@
   <data name="FtpSuggested" xml:space="preserve">
     <value>A ride suggests an FTP of {0}.</value>
   </data>
+  <data name="HeartRateMeasured" xml:space="preserve">
+    <value>A ride measured a new heart-rate number: {0}. Your zones now use it.</value>
+  </data>
+  <data name="HeartRateSuggested" xml:space="preserve">
+    <value>A ride shows a higher heart-rate number than the one you set: {0}. Choose whether to use it.</value>
+  </data>
 </root>

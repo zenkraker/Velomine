@@ -2272,6 +2272,31 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi il tuo anno di nascita, o scrivila qui sopra.';
 
   @override
+  String heartRateMaxMeasured(int bpm) {
+    return 'Nuova frequenza cardiaca massima: $bpm bpm. Le tue zone ora la usano.';
+  }
+
+  @override
+  String heartRateThresholdMeasured(int bpm) {
+    return 'Nuova frequenza cardiaca di soglia: $bpm bpm. Le tue zone ora la usano.';
+  }
+
+  @override
+  String heartRateSuggested(int bpm, int current) {
+    return 'Questa uscita ha raggiunto $bpm bpm, oltre i $current che hai impostato. Usare $bpm?';
+  }
+
+  @override
+  String heartRateSuggestionUse(int bpm) {
+    return 'Usa $bpm';
+  }
+
+  @override
+  String heartRateSuggestionKeep(int current) {
+    return 'Mantieni $current';
+  }
+
+  @override
   String get timeZone => 'Fuso orario';
 
   @override

@@ -291,6 +291,8 @@ class ApiClient {
           return FtpSuggestionResponse.fromJson(value);
         case 'GoalResponse':
           return GoalResponse.fromJson(value);
+        case 'HeartRateSuggestionResponse':
+          return HeartRateSuggestionResponse.fromJson(value);
         case 'IntensityResponse':
           return IntensityResponse.fromJson(value);
         case 'IntensityWeek':
@@ -315,6 +317,8 @@ class ApiClient {
           return ListEventsResponse.fromJson(value);
         case 'ListGoalsResponse':
           return ListGoalsResponse.fromJson(value);
+        case 'ListHeartRateSuggestionsResponse':
+          return ListHeartRateSuggestionsResponse.fromJson(value);
         case 'ListNotificationsResponse':
           return ListNotificationsResponse.fromJson(value);
         case 'ListRidesResponse':

@@ -9,6 +9,7 @@ import '../../core/user_message.dart';
 import 'progress_data.dart';
 import 'events_data.dart';
 import 'progress_state.dart';
+import '../profile/profile_view_model.dart';
 
 part 'progress_view_models.g.dart';
 
@@ -352,6 +353,74 @@ class ReadinessViewModel extends _$ReadinessViewModel {
     if (!ref.mounted || generation != _loadGeneration) return;
     state = ReadinessState(load: state.load.finish(result));
   }
+}
+
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+@Riverpod(keepAlive: true)
+class HeartRateSuggestionViewModel extends _$HeartRateSuggestionViewModel {
+  int _messageId = 0;
+
+  @override
+  HeartRateSuggestionState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const HeartRateSuggestionState();
+    }
+    Future.microtask(load);
+    return const HeartRateSuggestionState();
+  }
+
+  Future<void> load() async {
+    final data = ref.read(progressDataProvider);
+    final (suggestions, profile) = await (
+      data.heartRateSuggestions(),
+      data.profile(),
+    ).wait;
+    if (!ref.mounted) return;
+    state = state.copyWith(
+      suggestions: suggestions.valueOrNull ?? const [],
+      profile: profile.valueOrNull,
+    );
+  }
+
+  /// Adopts a ride's suggestion: the number becomes measured, from that ride.
+  Future<void> accept(String suggestionId) => _answer(
+    () =>
+        ref.read(progressDataProvider).acceptHeartRateSuggestion(suggestionId),
+    invalidateProfile: true,
+  );
+
+  Future<void> dismiss(String suggestionId) => _answer(
+    () =>
+        ref.read(progressDataProvider).dismissHeartRateSuggestion(suggestionId),
+  );
+
+  Future<void> _answer(
+    Future<Result<Object?>> Function() call, {
+    bool invalidateProfile = false,
+  }) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    if (invalidateProfile) ref.invalidate(profileViewModelProvider);
+    await load();
+  }
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
 }
 
 /// The events the rider is training for. A change reloads the list, so the card and the list agree.

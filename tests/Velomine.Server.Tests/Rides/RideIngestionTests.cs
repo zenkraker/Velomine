@@ -266,7 +266,7 @@ public sealed class RideIngestionTests(PostgresFixture postgres)
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
 
-        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 90)));
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 90, NoHeartRate: true)));
 
         var notifications = await member.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct);
         Assert.Single(notifications!.Notifications);

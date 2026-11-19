@@ -29,8 +29,8 @@ public sealed class NotificationsTests(PostgresFixture postgres)
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
 
-        var ready = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)), "morning.fit");
-        var duplicate = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)), "again.fit");
+        var ready = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120, NoHeartRate: true)), "morning.fit");
+        var duplicate = await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120, NoHeartRate: true)), "again.fit");
         var failed = await UploadAndWaitAsync(member, Bytes("not a ride"), "broken.fit");
 
         var list = await ListAsync(member);
@@ -51,8 +51,8 @@ public sealed class NotificationsTests(PostgresFixture postgres)
         await using var api = await StartAsync();
         var member = await NewMemberAsync(api);
         var other = await NewMemberAsync(api);
-        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120)));
-        await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddHours(3), 120)));
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start, 120, NoHeartRate: true)));
+        await UploadAndWaitAsync(member, Fit(new FitSession(Start.AddHours(3), 120, NoHeartRate: true)));
         var first = (await ListAsync(member)).Notifications[^1];
 
         Assert.Empty((await ListAsync(other)).Notifications);

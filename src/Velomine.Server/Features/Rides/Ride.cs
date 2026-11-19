@@ -99,6 +99,12 @@ public sealed class Ride
     /// <summary>The member's own words about the ride, up to <see cref="RideText.MaxDescription"/> characters; null when none.</summary>
     public string? Description { get; set; }
 
+    /// <summary>
+    /// Why this ride changed a heart-rate number, when it was first read: one of <see cref="Analytics.HeartRateNotes"/>,
+    /// or null. Shown on the ride's page once; the history and the suggestions hold the truth beyond it.
+    /// </summary>
+    public string? HeartRateNote { get; set; }
+
     /// <summary>road, gravel, mountain or track; null when the file and the member have not said.</summary>
     public string? Discipline { get; set; }
 

@@ -24,6 +24,8 @@ public static class NotificationText
         NotificationTypes.ClubRideCancelled => EmailStrings.Format("ClubRideCancelled", n.Subject),
         NotificationTypes.PowerRecord => EmailStrings.Format("PowerRecord", n.Subject),
         NotificationTypes.FtpSuggested => EmailStrings.Format("FtpSuggested", n.Subject),
+        NotificationTypes.HeartRateMeasured => EmailStrings.Format("HeartRateMeasured", n.Subject),
+        NotificationTypes.HeartRateSuggested => EmailStrings.Format("HeartRateSuggested", n.Subject),
         _ => n.Subject,
     };
 

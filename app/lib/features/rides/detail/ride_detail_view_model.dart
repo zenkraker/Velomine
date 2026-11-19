@@ -79,6 +79,9 @@ class RideDetailViewModel extends _$RideDetailViewModel {
     final bikes = (await data.bikes()).valueOrNull ?? const [];
     final feel = (await data.feel(id)).valueOrNull;
     final views = (await data.views(id)).valueOrNull;
+    final profile = (await data.profile()).valueOrNull;
+    final heartRateSuggestions =
+        (await data.heartRateSuggestions()).valueOrNull ?? const [];
     if (!ref.mounted) return;
     state = RideDetailState(
       ride: ride,
@@ -87,6 +90,8 @@ class RideDetailViewModel extends _$RideDetailViewModel {
       bikes: bikes,
       feel: feel,
       views: views,
+      profile: profile,
+      heartRateSuggestions: heartRateSuggestions,
       load: state.load.finish(Ok(ride)),
       messages: state.messages,
     );
@@ -169,6 +174,46 @@ class RideDetailViewModel extends _$RideDetailViewModel {
   Future<void> dismissSuggestion(String suggestionId) => _suggestion(
     () => ref.read(rideDetailDataProvider).dismissFtpSuggestion(suggestionId),
   );
+
+  /// Adopts the ride's heart-rate suggestion: the number becomes measured, from this ride.
+  Future<void> acceptHeartRateSuggestion(String suggestionId) =>
+      _heartRateSuggestion(
+        () => ref
+            .read(rideDetailDataProvider)
+            .acceptHeartRateSuggestion(suggestionId),
+      );
+
+  Future<void> dismissHeartRateSuggestion(String suggestionId) =>
+      _heartRateSuggestion(
+        () => ref
+            .read(rideDetailDataProvider)
+            .dismissHeartRateSuggestion(suggestionId),
+      );
+
+  /// Both answers clear the open suggestion and change the profile; a failure keeps the card and says why.
+  Future<void> _heartRateSuggestion(
+    Future<Result<Object?>> Function() call,
+  ) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    final data = ref.read(rideDetailDataProvider);
+    final profile = (await data.profile()).valueOrNull;
+    final suggestions =
+        (await data.heartRateSuggestions()).valueOrNull ?? const [];
+    if (ref.mounted) {
+      state = state.copyWith(
+        profile: profile,
+        heartRateSuggestions: suggestions,
+      );
+    }
+  }
 
   /// Both answers leave no suggestion on the ride; a failure keeps the card and says why.
   Future<void> _suggestion(Future<Result<Object?>> Function() call) async {

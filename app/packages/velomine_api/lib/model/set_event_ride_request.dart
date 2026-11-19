@@ -13,7 +13,7 @@ part of velomine_api;
 class SetEventRideRequest {
   /// Returns a new [SetEventRideRequest] instance.
   SetEventRideRequest({
-    this.rideId = const Optional.present(null),
+    this.rideId = const Optional.absent(),
   });
 
   ///

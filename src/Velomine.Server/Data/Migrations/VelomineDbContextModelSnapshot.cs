@@ -692,6 +692,63 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.HeartRateSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Bpm")
+                        .HasColumnType("integer")
+                        .HasColumnName("bpm");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_heart_rate_suggestions");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_heart_rate_suggestions_ride_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_heart_rate_suggestions_user_id");
+
+                    b.HasIndex("UserId", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ux_heart_rate_suggestions_open_user_kind")
+                        .HasFilter("status = 'open'");
+
+                    b.ToTable("heart_rate_suggestions", "analytics", t =>
+                        {
+                            t.HasCheckConstraint("ck_heart_rate_suggestions_bpm", "bpm BETWEEN 80 AND 230");
+
+                            t.HasCheckConstraint("ck_heart_rate_suggestions_kind", "kind IN ('max', 'threshold')");
+
+                            t.HasCheckConstraint("ck_heart_rate_suggestions_status", "status IN ('open', 'accepted', 'dismissed', 'replaced')");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2065,6 +2122,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("file_sha256");
 
+                    b.Property<string>("HeartRateNote")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("heart_rate_note");
+
                     b.Property<bool?>("HideCadence")
                         .HasColumnType("boolean")
                         .HasColumnName("hide_cadence");
@@ -2945,6 +3007,23 @@ namespace Velomine.Server.Data.Migrations
                         .HasConstraintName("fk_goals_users_user_id");
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Analytics.HeartRateSuggestion", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_heart_rate_suggestions_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_heart_rate_suggestions_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Bikes.Bike", b =>

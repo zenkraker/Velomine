@@ -120,9 +120,11 @@ Class | Method | HTTP request | Description
 *AdminApi* | [**unlockUser**](doc//AdminApi.md#unlockuser) | **POST** /api/v1/admin/users/{id}/unlock | 
 *AdminApi* | [**updateSettings**](doc//AdminApi.md#updatesettings) | **PUT** /api/v1/admin/settings | 
 *AnalyticsApi* | [**acceptFtpSuggestion**](doc//AnalyticsApi.md#acceptftpsuggestion) | **POST** /api/v1/analytics/ftp-suggestion/{suggestionId}/accept | 
+*AnalyticsApi* | [**acceptHeartRateSuggestion**](doc//AnalyticsApi.md#acceptheartratesuggestion) | **POST** /api/v1/analytics/heart-rate-suggestions/{suggestionId}/accept | 
 *AnalyticsApi* | [**createGoal**](doc//AnalyticsApi.md#creategoal) | **POST** /api/v1/analytics/goals | 
 *AnalyticsApi* | [**deleteGoal**](doc//AnalyticsApi.md#deletegoal) | **DELETE** /api/v1/analytics/goals/{id} | 
 *AnalyticsApi* | [**dismissFtpSuggestion**](doc//AnalyticsApi.md#dismissftpsuggestion) | **POST** /api/v1/analytics/ftp-suggestion/{suggestionId}/dismiss | 
+*AnalyticsApi* | [**dismissHeartRateSuggestion**](doc//AnalyticsApi.md#dismissheartratesuggestion) | **POST** /api/v1/analytics/heart-rate-suggestions/{suggestionId}/dismiss | 
 *AnalyticsApi* | [**getFtpCheck**](doc//AnalyticsApi.md#getftpcheck) | **GET** /api/v1/analytics/ftp-check | 
 *AnalyticsApi* | [**getFtpSuggestion**](doc//AnalyticsApi.md#getftpsuggestion) | **GET** /api/v1/analytics/ftp-suggestion | 
 *AnalyticsApi* | [**getPowerCurve**](doc//AnalyticsApi.md#getpowercurve) | **GET** /api/v1/analytics/power-curve | 
@@ -130,6 +132,7 @@ Class | Method | HTTP request | Description
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
 *AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
+*AnalyticsApi* | [**listHeartRateSuggestions**](doc//AnalyticsApi.md#listheartratesuggestions) | **GET** /api/v1/analytics/heart-rate-suggestions | 
 *AnalyticsApi* | [**snoozeFtpCheck**](doc//AnalyticsApi.md#snoozeftpcheck) | **POST** /api/v1/analytics/ftp-check/snooze | 
 *AnalyticsApi* | [**updateGoal**](doc//AnalyticsApi.md#updategoal) | **PUT** /api/v1/analytics/goals/{id} | 
 *BikesApi* | [**applyTemplate**](doc//BikesApi.md#applytemplate) | **POST** /api/v1/bikes/{bikeId}/templates/{id} | 
@@ -302,6 +305,7 @@ Class | Method | HTTP request | Description
  - [FtpHistoryResponse](doc//FtpHistoryResponse.md)
  - [FtpSuggestionResponse](doc//FtpSuggestionResponse.md)
  - [GoalResponse](doc//GoalResponse.md)
+ - [HeartRateSuggestionResponse](doc//HeartRateSuggestionResponse.md)
  - [IntensityResponse](doc//IntensityResponse.md)
  - [IntensityWeek](doc//IntensityWeek.md)
  - [JoinClubRequest](doc//JoinClubRequest.md)
@@ -314,6 +318,7 @@ Class | Method | HTTP request | Description
  - [ListComponentTypesResponse](doc//ListComponentTypesResponse.md)
  - [ListEventsResponse](doc//ListEventsResponse.md)
  - [ListGoalsResponse](doc//ListGoalsResponse.md)
+ - [ListHeartRateSuggestionsResponse](doc//ListHeartRateSuggestionsResponse.md)
  - [ListNotificationsResponse](doc//ListNotificationsResponse.md)
  - [ListRidesResponse](doc//ListRidesResponse.md)
  - [ListServiceEntriesResponse](doc//ListServiceEntriesResponse.md)

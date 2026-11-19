@@ -3986,6 +3986,36 @@ abstract class AppLocalizations {
   /// **'Add your year of birth, or type it above.'**
   String get heartRateNone;
 
+  /// No description provided for @heartRateMaxMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'New maximum heart rate: {bpm} bpm. Your zones now use it.'**
+  String heartRateMaxMeasured(int bpm);
+
+  /// No description provided for @heartRateThresholdMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'New threshold heart rate: {bpm} bpm. Your zones now use it.'**
+  String heartRateThresholdMeasured(int bpm);
+
+  /// No description provided for @heartRateSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride reached {bpm} bpm, above the {current} you set. Use {bpm}?'**
+  String heartRateSuggested(int bpm, int current);
+
+  /// No description provided for @heartRateSuggestionUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {bpm}'**
+  String heartRateSuggestionUse(int bpm);
+
+  /// No description provided for @heartRateSuggestionKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep {current}'**
+  String heartRateSuggestionKeep(int current);
+
   /// No description provided for @timeZone.
   ///
   /// In en, this message translates to:

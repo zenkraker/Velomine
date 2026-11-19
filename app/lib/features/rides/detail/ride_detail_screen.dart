@@ -32,6 +32,7 @@ import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/ftp_suggestion_card.dart';
+import '../../../core/widgets/heart_rate_note_card.dart';
 import '../../../core/widgets/inline_error.dart';
 import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
@@ -270,6 +271,8 @@ class RideDetailScreen extends ConsumerWidget {
             onAccept: notifier.acceptSuggestion,
             onDismiss: notifier.dismissSuggestion,
           ),
+        if (ride.heartRateNote.orElse(null) case final note?)
+          ..._heartRateNoteCard(s, ride, note, notifier),
         if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
         PowerRecordChips(
           records: ride.powerRecords.orElse(const []) ?? const [],
@@ -365,6 +368,41 @@ class RideDetailScreen extends ConsumerWidget {
       clock(data.time[index]),
       distance == null ? '' : ' · ${km(units, distance)}',
     );
+  }
+
+  /// The card for what this ride did to a heart-rate number, when it caused one: a measured value is a note,
+  /// a suggestion is the question. A suggestion already answered, or a value the profile cannot yet say, is
+  /// nothing.
+  List<Widget> _heartRateNoteCard(
+    RideDetailState s,
+    RideResponse ride,
+    String note,
+    RideDetailViewModel notifier,
+  ) {
+    final isMax = note.startsWith('max');
+    final kind = isMax ? 'max' : 'threshold';
+    final current = isMax
+        ? s.profile?.maxHeartRate
+        : s.profile?.thresholdHeartRate.orElse(null);
+    if (note.endsWith('suggested')) {
+      final suggestion = s.heartRateSuggestions
+          .where((x) => x.rideId == ride.id && x.kind == kind)
+          .firstOrNull;
+      if (suggestion == null) return const [];
+      return [
+        HeartRateNoteCard(
+          kind: kind,
+          bpm: suggestion.bpm,
+          currentBpm: current,
+          suggestionId: suggestion.id,
+          busy: s.action.running,
+          onAccept: notifier.acceptHeartRateSuggestion,
+          onDismiss: notifier.dismissHeartRateSuggestion,
+        ),
+      ];
+    }
+    if (current == null) return const [];
+    return [HeartRateNoteCard(kind: kind, bpm: current)];
   }
 }
 

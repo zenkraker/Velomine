@@ -64,6 +64,12 @@ public static class NotificationTypes
 
     /// <summary>A ride suggests a higher FTP. Refers to the ride; the subject is the suggested watts, "266 W".</summary>
     public const string FtpSuggested = "ftp_suggested";
+
+    /// <summary>A ride measured a higher maximum or threshold heart rate, which is now in use. The subject is "Maximum 192 bpm".</summary>
+    public const string HeartRateMeasured = "heart_rate_measured";
+
+    /// <summary>A ride shows a higher maximum or threshold heart rate than the rider typed. The subject is "Threshold 171 bpm".</summary>
+    public const string HeartRateSuggested = "heart_rate_suggested";
 }
 
 /// <summary>
@@ -102,6 +108,8 @@ public static class NotificationKinds
         NotificationTypes.ReminderDue,
         NotificationTypes.PowerRecord,
         NotificationTypes.FtpSuggested,
+        NotificationTypes.HeartRateMeasured,
+        NotificationTypes.HeartRateSuggested,
     ];
 
     /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>

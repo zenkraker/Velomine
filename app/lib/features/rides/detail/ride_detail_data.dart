@@ -11,12 +11,19 @@ part 'ride_detail_data.g.dart';
 
 /// The ride detail endpoints as values: the ViewModel never sees an exception.
 class RideDetailData {
-  RideDetailData(this._rides, this._bikes, this._sharing, this._analytics);
+  RideDetailData(
+    this._rides,
+    this._bikes,
+    this._sharing,
+    this._analytics,
+    this._accounts,
+  );
 
   final RidesApi _rides;
   final BikesApi _bikes;
   final SharingApi _sharing;
   final AnalyticsApi _analytics;
+  final AccountsApi _accounts;
 
   Future<Result<RideResponse?>> ride(String id) =>
       _rides.getRide(id).guard(FailureAction.loadRide);
@@ -111,6 +118,26 @@ class RideDetailData {
 
   Future<Result<void>> dismissFtpSuggestion(String id) =>
       _analytics.dismissFtpSuggestion(id).guard(FailureAction.setFtp);
+
+  /// The member's profile, for the value a heart-rate note measured or the one a suggestion is above.
+  Future<Result<ProfileResponse?>> profile() =>
+      _accounts.getProfile().guard(FailureAction.loadRide);
+
+  /// The member's open heart-rate suggestions, to find the one this ride caused.
+  Future<Result<List<HeartRateSuggestionResponse>>>
+  heartRateSuggestions() async =>
+      (await _analytics.listHeartRateSuggestions().guard(
+        FailureAction.loadRide,
+      )).map(
+        (list) => list?.suggestions ?? const <HeartRateSuggestionResponse>[],
+      );
+
+  Future<Result<ProfileResponse?>> acceptHeartRateSuggestion(String id) =>
+      _analytics.acceptHeartRateSuggestion(id).guard(FailureAction.saveProfile);
+
+  Future<Result<void>> dismissHeartRateSuggestion(String id) => _analytics
+      .dismissHeartRateSuggestion(id)
+      .guard(FailureAction.saveProfile);
 }
 
 @Riverpod(keepAlive: true)
@@ -121,5 +148,6 @@ RideDetailData rideDetailData(Ref ref) {
     session.bikes,
     session.sharing,
     session.analytics,
+    session.accounts,
   );
 }

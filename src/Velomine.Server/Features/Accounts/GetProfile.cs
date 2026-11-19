@@ -45,7 +45,7 @@ public sealed class GetProfile(VelomineDbContext db, TimeProvider time) : Endpoi
     {
         var userId = User.UserId();
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
-        await Send.OkAsync(await ProfileOfAsync(db, user, time, ct), ct);
+        await Send.OkAsync(await ProfileWithSourcesAsync(db, user, time, ct), ct);
     }
 
     /// <summary>
@@ -79,6 +79,24 @@ public sealed class GetProfile(VelomineDbContext db, TimeProvider time) : Endpoi
             ThresholdHeartRateSource = threshold?.Source,
             ThresholdHeartRateSetAt = threshold is { Source: not FtpSources.Estimate } ? setTimes.GetValueOrDefault(HeartRateKinds.Threshold) : null,
             ThresholdHeartRateRideId = threshold?.RideId,
+        };
+    }
+
+    /// <summary>
+    /// Where each set number came from: the newest history row says whether the rider typed it or a ride measured it,
+    /// and which ride. An estimate keeps its source.
+    /// </summary>
+    public static async Task<ProfileResponse> ProfileWithSourcesAsync(
+        VelomineDbContext db, User user, TimeProvider time, CancellationToken ct)
+    {
+        var profile = await ProfileOfAsync(db, user, time, ct);
+        var (max, threshold) = HeartRates.For(user, time);
+        var maxNow = await HeartRates.LatestAsync(db, user.Id, HeartRateKinds.Max, max, ct);
+        var thresholdNow = await HeartRates.LatestAsync(db, user.Id, HeartRateKinds.Threshold, threshold, ct);
+        return profile with
+        {
+            MaxHeartRateSource = maxNow?.Source,
+            ThresholdHeartRateSource = thresholdNow?.Source,
         };
     }
 

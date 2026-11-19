@@ -13,6 +13,8 @@ class RideDetailState {
     this.series,
     this.feel,
     this.views,
+    this.profile,
+    this.heartRateSuggestions = const [],
     this.notFound = false,
     this.load = const CommandState.idle(),
     this.action = const CommandState.idle(),
@@ -37,6 +39,12 @@ class RideDetailState {
   /// Who looked at this ride, most recent first; null when it could not be loaded.
   final List<ShareViewResponse>? views;
 
+  /// The member's profile, for the value a heart-rate note measured or the one a suggestion is above.
+  final ProfileResponse? profile;
+
+  /// The member's open heart-rate suggestions, to find the one this ride caused.
+  final List<HeartRateSuggestionResponse> heartRateSuggestions;
+
   final bool notFound;
   final CommandState<RideResponse?> load;
 
@@ -55,6 +63,8 @@ class RideDetailState {
     RideSeries? series,
     RideFeelResponse? feel,
     List<ShareViewResponse>? views,
+    ProfileResponse? profile,
+    List<HeartRateSuggestionResponse>? heartRateSuggestions,
     bool? notFound,
     CommandState<RideResponse?>? load,
     VoidCommand? action,
@@ -67,6 +77,8 @@ class RideDetailState {
     series: series ?? this.series,
     feel: feel ?? this.feel,
     views: views ?? this.views,
+    profile: profile ?? this.profile,
+    heartRateSuggestions: heartRateSuggestions ?? this.heartRateSuggestions,
     notFound: notFound ?? this.notFound,
     load: load ?? this.load,
     action: action ?? this.action,

@@ -98,6 +98,8 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<FtpSuggestion> FtpSuggestions => Set<FtpSuggestion>();
 
+    public DbSet<HeartRateSuggestion> HeartRateSuggestions => Set<HeartRateSuggestion>();
+
     public DbSet<HeartRateHistory> HeartRateHistory => Set<HeartRateHistory>();
 
     public DbSet<TrainingEvent> Events => Set<TrainingEvent>();

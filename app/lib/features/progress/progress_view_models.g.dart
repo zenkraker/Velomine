@@ -387,6 +387,72 @@ abstract class _$ReadinessViewModel extends $Notifier<ReadinessState> {
   }
 }
 
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+
+@ProviderFor(HeartRateSuggestionViewModel)
+final heartRateSuggestionViewModelProvider =
+    HeartRateSuggestionViewModelProvider._();
+
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+final class HeartRateSuggestionViewModelProvider
+    extends
+        $NotifierProvider<
+          HeartRateSuggestionViewModel,
+          HeartRateSuggestionState
+        > {
+  /// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+  HeartRateSuggestionViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'heartRateSuggestionViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$heartRateSuggestionViewModelHash();
+
+  @$internal
+  @override
+  HeartRateSuggestionViewModel create() => HeartRateSuggestionViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(HeartRateSuggestionState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<HeartRateSuggestionState>(value),
+    );
+  }
+}
+
+String _$heartRateSuggestionViewModelHash() =>
+    r'18dfe400e4b5c970971c1088e7eae3e9547e32e9';
+
+/// The open heart-rate suggestions, each above the value the rider typed. The profile says what each is above.
+
+abstract class _$HeartRateSuggestionViewModel
+    extends $Notifier<HeartRateSuggestionState> {
+  HeartRateSuggestionState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref as $Ref<HeartRateSuggestionState, HeartRateSuggestionState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<HeartRateSuggestionState, HeartRateSuggestionState>,
+              HeartRateSuggestionState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// The events the rider is training for. A change reloads the list, so the card and the list agree.
 
 @ProviderFor(EventsViewModel)

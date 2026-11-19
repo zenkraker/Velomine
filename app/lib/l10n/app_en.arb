@@ -1251,6 +1251,49 @@
   "heartRateSourceMaxEstimate": "Estimated from your age (208 − 0.7 × age)",
   "heartRateSourceThresholdEstimate": "Estimated as 89 % of your maximum",
   "heartRateNone": "Add your year of birth, or type it above.",
+  "heartRateMaxMeasured": "New maximum heart rate: {bpm} bpm. Your zones now use it.",
+  "@heartRateMaxMeasured": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateThresholdMeasured": "New threshold heart rate: {bpm} bpm. Your zones now use it.",
+  "@heartRateThresholdMeasured": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateSuggested": "This ride reached {bpm} bpm, above the {current} you set. Use {bpm}?",
+  "@heartRateSuggested": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      },
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateSuggestionUse": "Use {bpm}",
+  "@heartRateSuggestionUse": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "heartRateSuggestionKeep": "Keep {current}",
+  "@heartRateSuggestionKeep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
   "timeZone": "Time zone",
   "timeZoneHelper": "Decides which day a ride counts on when its file does not say. Empty means UTC.",
   "firstDayOfWeek": "Weeks start on",

@@ -67,6 +67,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ToListAsync(ct);
         var ftpSuggestions = await db.FtpSuggestions.AsNoTracking()
             .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
+        var heartRateSuggestions = await db.HeartRateSuggestions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.CreatedAt).ToListAsync(ct);
         var heartRateHistory = await db.HeartRateHistory.AsNoTracking()
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ThenBy(h => h.Sequence).ToListAsync(ct);
         var events = await db.Events.AsNoTracking()
@@ -177,6 +179,14 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             s.Watts,
             s.Method,
             s.EffortWatts,
+            s.CreatedAt,
+            s.Status,
+        }), ct);
+        await AddJsonAsync(zip, "heart-rate-suggestions.json", heartRateSuggestions.Select(s => new
+        {
+            s.RideId,
+            s.Kind,
+            s.Bpm,
             s.CreatedAt,
             s.Status,
         }), ct);
@@ -321,6 +331,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         ftp-history.json    every FTP you have had, when you set it and how
         ftp-suggestions.json  the FTPs Velomine noticed in your rides, and what you did with each
         heart-rate-history.json  every maximum and threshold heart rate you set, when, and how
+        heart-rate-suggestions.json  the heart-rate numbers Velomine noticed in your rides, and what you did with each
         notifications.json  your notifications
         events.json         the races, sportives and tours you added, with the ride that was each one
         sessions.json       where you are signed in: the device label and the times, never an address

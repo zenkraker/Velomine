@@ -73,6 +73,6 @@ public sealed class UpdateProfile(VelomineDbContext db, SetFtpValue setFtp, SetH
         else if (req.MaxHeartRate is not null) await setHeartRate.ClearAsync(user, HeartRateKinds.Threshold, ct);
         await db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
+        await Send.OkAsync(await GetProfile.ProfileWithSourcesAsync(db, user, time, ct), ct);
     }
 }
