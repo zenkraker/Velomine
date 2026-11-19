@@ -140,6 +140,8 @@ herdr
 
 Open a pane per agent and start `claude` or `opencode` in it as usual; herdr recognises both. For exact status (working, waiting for you, done) instead of reading the screen, run once per agent: `herdr integration install claude` and `herdr integration install opencode`. These write hooks into each agent's own user settings (`~/.claude/`, `~/.config/opencode/`), never into the repository; don't commit them. herdr only runs the agents: the rules still come from `AGENTS.md`, `CLAUDE.md` and `opencode.json`.
 
+The product owner flow (`just po`) runs inside the herdr desktop, whose CLI is `hc`: the PO starts the architect and dev with `hc run --bg --name <role> --outlive-parent just <role>` (`just architect`, `just dev`), and talks to them with `hc send`, `hc wait` and `hc read`. Each helper is a terminal of its own in the desktop: you see its status and can type to it at any time. Start `just po` from a desktop terminal with the dev shell loaded.
+
 herdr keeps its config and logs in `~/.config/herdr/`. By default it checks herdr.dev in the background for new versions and agent-detection updates. The flake pins the version, so you can turn both off in `~/.config/herdr/config.toml`:
 
 ```toml
