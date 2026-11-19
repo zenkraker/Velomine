@@ -6,6 +6,7 @@ import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/telemetry.dart';
 import '../../core/user_message.dart';
+import '../accounts/heart_rate_source_text.dart';
 import 'profile_data.dart';
 import 'profile_state.dart';
 
@@ -27,6 +28,33 @@ class ProfileViewModel extends _$ProfileViewModel {
   /// When the ride a test FTP came from started, for the note under the FTP field.
   Future<DateTime?> rideStart(String id) =>
       ref.read(profileDataProvider).rideStart(id);
+
+  /// The local date of the ride a measured heart rate came from, for the line under its field.
+  Future<DateTime?> rideLocalDate(String id) =>
+      ref.read(profileDataProvider).rideLocalDate(id);
+
+  /// One heart-rate field left: a number that is not what is set is saved as the rider's own, an emptied field goes
+  /// back to the estimate, and a field still holding the set value (or only showing the estimate as its hint) writes
+  /// nothing.
+  Future<bool> commitHeartRate(String kind, String text) async {
+    final profile = state.profile;
+    final isMax = kind == 'max';
+    // The server fills both numbers with the value in use, estimate included: only a set source makes that value the
+    // rider's or a ride's, so a typed estimate is a rider's own number and is saved.
+    final source = isMax
+        ? profile?.maxHeartRateSource.orElse(null)
+        : profile?.thresholdHeartRateSource.orElse(null);
+    final set = heartRateIsSet(source)
+        ? (isMax
+              ? profile?.maxHeartRate
+              : profile?.thresholdHeartRate.orElse(null))
+        : null;
+    final typed = int.tryParse(text.trim());
+    if (typed == null) {
+      return heartRateIsSet(source) && await setHeartRate(kind, null);
+    }
+    return typed != set && await setHeartRate(kind, typed);
+  }
 
   /// Sets one heart-rate number, or sends null to go back to the estimate. The answer is the whole profile.
   Future<bool> setHeartRate(String kind, int? bpm) async {

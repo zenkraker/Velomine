@@ -60,12 +60,9 @@ public sealed class AcceptHeartRateSuggestion(VelomineDbContext db, SetHeartRate
 
         var user = await db.Users.FirstAsync(u => u.Id == suggestion.UserId, ct);
         // A suggestion is only made below the maximum in use; a maximum lowered since then keeps the rule.
-        if (suggestion.Kind == HeartRateKinds.Threshold
-            && HeartRates.For(user, time).Max?.Bpm is { } max && suggestion.Bpm >= max)
+        if (HeartRates.ThresholdProblem(suggestion.Kind, suggestion.Bpm, HeartRates.For(user, time).Max) is { } problem)
         {
-            await Send.ResultAsync(TypedResults.Problem(
-                $"The threshold must be below the maximum in use ({max} bpm).",
-                statusCode: StatusCodes.Status400BadRequest));
+            await Send.ResultAsync(TypedResults.Problem(problem, statusCode: StatusCodes.Status400BadRequest));
             return;
         }
 

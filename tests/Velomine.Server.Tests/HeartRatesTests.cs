@@ -160,6 +160,54 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task UpdateProfile_ShouldKeepTheMax_WhenOnlyAThresholdIsSent()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        await SetAsync(member.Client, "max", 190);
+
+        var saved = await member.Client.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Test Rider", null, null, null, null, "monday", ThresholdHeartRate: 170), Ct);
+
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var profile = (await saved.Content.ReadFromJsonAsync<ProfileResponse>(Ct))!;
+        Assert.Equal((190, 170), (profile.MaxHeartRate, profile.ThresholdHeartRate));
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ShouldKeepTheThreshold_WhenOnlyTheMaxIsSent()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        await SetAsync(member.Client, "max", 190);
+        await SetAsync(member.Client, "threshold", 170);
+
+        var saved = await member.Client.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Test Rider", null, null, null, null, "monday", MaxHeartRate: 195), Ct);
+
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var profile = (await saved.Content.ReadFromJsonAsync<ProfileResponse>(Ct))!;
+        Assert.Equal((195, 170), (profile.MaxHeartRate, profile.ThresholdHeartRate));
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ShouldRefuse_WhenTheThresholdIsNotBelowTheMax()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+
+        // Both arrive together: the maximum is applied first, so 180 is the maximum the threshold is judged against.
+        var refused = await member.Client.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Test Rider", null, null, null, null, "monday",
+                MaxHeartRate: 180, ThresholdHeartRate: 180), Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        var profile = await member.Client.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
+        Assert.Null(profile!.MaxHeartRate);
+        Assert.Empty(await HistoryAsync(api, member.Id));
+    }
+
+    [Fact]
     public async Task SetHeartRate_ShouldRefuse_WhenTheThresholdIsNotBelowTheMax()
     {
         await using var api = await StartAsync();
@@ -366,6 +414,29 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task HeartRateHistory_ShouldAgreeWithTheColumns_WhenTheProfileIsSaved()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+
+        var saved = await member.Client.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Test Rider", null, null, null, null, "monday",
+                MaxHeartRate: 190, ThresholdHeartRate: 170), Ct);
+        saved.EnsureSuccessStatusCode();
+
+        var user = await UserAsync(api, member.Id);
+        Assert.Equal((190, HeartRateSources.Manual, (Guid?)null),
+            (user.MaxHeartRateBpm, user.MaxHeartRateSource, user.MaxHeartRateRideId));
+        Assert.Equal((170, HeartRateSources.Manual, (Guid?)null),
+            (user.ThresholdHeartRateBpm, user.ThresholdHeartRateSource, user.ThresholdHeartRateRideId));
+        var rows = await HistoryAsync(api, member.Id);
+        var max = rows.First(h => h.Kind == HeartRateKinds.Max);
+        var threshold = rows.First(h => h.Kind == HeartRateKinds.Threshold);
+        Assert.Equal((190, HeartRateSources.Manual, (Guid?)null), (max.Bpm, max.Source, max.RideId));
+        Assert.Equal((170, HeartRateSources.Manual, (Guid?)null), (threshold.Bpm, threshold.Source, threshold.RideId));
+    }
+
+    [Fact]
     public async Task HeartRate_ShouldStayMeasured_WhenTheRideWasDeleted()
     {
         await using var api = await StartAsync();
@@ -392,6 +463,12 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
             "/api/v1/accounts/me/delete", new DeleteMyAccountRequest(TestApi.MemberPassword, null), Ct);
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        // The number, its history and the account itself are gone, not only answered 204.
+        Assert.False(await db.Users.AnyAsync(u => u.Id == member.Id, Ct));
+        Assert.False(await db.HeartRateHistory.AnyAsync(h => h.UserId == member.Id, Ct));
+        Assert.False(await db.Rides.AnyAsync(r => r.UserId == member.Id, Ct));
     }
 
     private static async Task<User> UserAsync(TestApi api, Guid userId)
