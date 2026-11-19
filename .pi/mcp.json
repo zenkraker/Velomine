@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "codegraph",
+      "args": ["serve", "--mcp"],
+      "exposure": "direct",
+      "description": "Velomine's indexed code graph: source, call paths and blast radius in one call"
+    },
+    "dart": {
+      "command": "dart",
+      "args": ["mcp-server"],
+      "env": { "AGENT_PLUGIN": "pi" },
+      "exposure": "deferred",
+      "description": "Dart and Flutter analysis, tests, pub, and a running app (hot reload, widget tree)"
+    },
+    "sentry": {
+      "command": "sentry-mcp",
+      "exposure": "deferred",
+      "description": "Read-only Sentry: production errors, traces and logs"
+    },
+    "scaleway": {
+      "command": "scw-mcp",
+      "exposure": "deferred",
+      "description": "Read-only Scaleway: the hosting resources"
+    }
+  }
+}

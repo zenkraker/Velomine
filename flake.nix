@@ -13,11 +13,34 @@
   outputs =
     { nixpkgs, opencode, ... }:
     let
+      # x86_64 Linux only: the Claude Code manifest and extension hashes below are linux-x64.
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
         config = {
-          allowUnfree = true;
+          # Only the unfree packages the shell and `vscode` use, so a new one never slips in
+          # unnoticed. androidenv names each Android part twice (`android-sdk-ndk` and `ndk`).
+          allowUnfreePredicate =
+            pkg:
+            let
+              name = nixpkgs.lib.getName pkg;
+            in
+            builtins.elem name [
+              "claude-code"
+              "vscode"
+              "vscode-extension-anthropic-claude-code"
+              "vscode-extension-ms-dotnettools-csdevkit"
+              "build-tools"
+              "cmake"
+              "cmdline-tools"
+              "emulator"
+              "ndk"
+              "platforms"
+              "platform-tools"
+              "tools"
+            ]
+            || nixpkgs.lib.hasPrefix "android-sdk-" name
+            || nixpkgs.lib.hasPrefix "system-image-" name;
           android_sdk.accept_license = true;
         };
       };
@@ -32,7 +55,13 @@
 
       # Versions Flutter 3.50's Gradle plugin asks for (compileSdk 36, NDK 28.2). Platform 35 is for the jni
       # package (dart.dev, used by shared_preferences on Android), which compiles against it.
+      # androidenv pulls a system image for every platform; only the emulator's (36, see the
+      # justfile) is kept, so the unused API 35 image is never downloaded.
+      androidRepo = nixpkgs.lib.importJSON "${pkgs.path}/pkgs/development/mobile/androidenv/repo.json";
       android = pkgs.androidenv.composeAndroidPackages {
+        repo = androidRepo // {
+          images = nixpkgs.lib.filterAttrs (api: _: api == "36") androidRepo.images;
+        };
         platformVersions = [
           "35"
           "36"
@@ -49,6 +78,7 @@
       };
       androidSdk = "${android.androidsdk}/libexec/android-sdk";
       dotnet = pkgs.dotnetCorePackages.sdk_10_0;
+      nodejs = pkgs.nodejs_24; # ponytail hooks and sentry-mcp; pinned so an LTS bump is a deliberate change
 
       # The OpenCode desktop app is installed on the host, not here. It connects to
       # this CLI's background service, which gets a fixed port and password once:
@@ -91,13 +121,13 @@
 
       # The VS Code extension at the same version as the CLI above (it bundles its own binary).
       # Update both together; the hash is the Marketplace VSIX for linux-x64.
-      claudeCodeExtension = pkgs.vscode-extensions.anthropic.claude-code.overrideAttrs (_: rec {
-        version = claudeCode.version;
+      claudeCodeExtension = pkgs.vscode-extensions.anthropic.claude-code.overrideAttrs (_: {
+        inherit (claudeCode) version;
         src = pkgs.vscode-utils.fetchVsixFromVscodeMarketplace {
           name = "claude-code";
           publisher = "anthropic";
           arch = "linux-x64";
-          inherit version;
+          inherit (claudeCode) version;
           hash = "sha256-5y+nUr4ZNdkzOXwYvbqDrj1KZ+x2zeWoQuh+Wh1aHPQ=";
         };
       });
@@ -109,7 +139,7 @@
       sentryMcpVersion = "0.49.0";
       sentryMcp = pkgs.writeShellApplication {
         name = "sentry-mcp";
-        runtimeInputs = [ pkgs.nodejs ];
+        runtimeInputs = [ nodejs ];
         text = ''
           export MCP_SKILLS="''${MCP_SKILLS:-inspect,triage}"
           exec npx --yes @sentry/mcp-server@${sentryMcpVersion} "$@"
@@ -131,7 +161,7 @@
       };
 
       # OpenCode V2 is not in nixpkgs' extension set yet.
-      opencodeV2Extension = pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+      opencodeV2Extensions = pkgs.vscode-utils.extensionsFromVscodeMarketplace [
         {
           name = "opencode-v2";
           publisher = "sst-dev";
@@ -151,7 +181,7 @@
           pkgs.vscode-extensions.mkhl.direnv
           pkgs.vscode-extensions.ms-dotnettools.csdevkit
         ]
-        ++ opencodeV2Extension;
+        ++ opencodeV2Extensions;
       };
     in
     {
@@ -184,7 +214,7 @@
           # .mcp.json and opencode.json). Install them per agent; see
           # docs/development.md.
           claudeCode # the only Claude Code install: no host copy, no self-update
-          pkgs.nodejs # ponytail's Claude Code hooks
+          nodejs # ponytail's Claude Code hooks
           pkgs.codegraph
           pkgs.sentry-cli # releases and debug-symbol uploads
           sentryMcp # local stdio Sentry MCP (hosted OAuth is broken in OpenCode 2)
@@ -192,6 +222,7 @@
           scalewayMcp # read-only Scaleway MCP (see above)
           opencodeCli # alternative to Claude Code
           pkgs.herdr # terminal workspace above both agents: panes, status, sessions that survive a closed window
+          pkgs.pi-coding-agent # Pi: the PO, architect and dev roles (`just po`, `just architect`, `just dev`; .pi/)
 
           # Flutter's own command-line needs, plus helpers
           pkgs.git
@@ -234,13 +265,18 @@
             mkdir -p "$FLUTTER_DIR"
             tar -xJf ${flutterTarball} -C "$FLUTTER_DIR" --strip-components=1
           fi
+          # Remove Flutter releases left behind by an earlier pin.
+          for old in "$DEV"/flutter-*; do
+            if [ -d "$old" ] && [ "$old" != "$FLUTTER_DIR" ]; then
+              echo "velomine: removing $(basename "$old") from .dev/"
+              rm -rf "$old"
+            fi
+          done
           export FLUTTER_ROOT="$FLUTTER_DIR"
           export PATH="$FLUTTER_DIR/bin:$PUB_CACHE/bin:$PATH"
 
           # Flutter web debugging uses the browser installed on your host.
           export CHROME_EXECUTABLE="$(command -v chromium || command -v google-chrome-stable || command -v google-chrome || true)"
-
-          (cd "$REPO" && dotnet tool restore > /dev/null 2>&1) || true
         '';
       };
     };

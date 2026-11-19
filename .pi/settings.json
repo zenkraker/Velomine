@@ -1,0 +1,11 @@
+{
+  "packages": [
+    "git:github.com/DietrichGebert/ponytail@v5.3.3",
+    "npm:pi-claude-tether@0.12.1",
+    "npm:pi-advisor-flow@0.16.0",
+    "npm:pi-subagents@0.89.1"
+  ],
+  "subagents": {
+    "disableBuiltins": true
+  }
+}

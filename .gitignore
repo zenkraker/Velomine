@@ -11,3 +11,7 @@ src/Velomine.Server/wwwroot/
 
 # Local compose and app secrets (.env.example is the committed template)
 .env
+
+# Pi downloads its packages here (.pi/settings.json lists them)
+.pi/git/
+.pi/npm/

@@ -30,5 +30,37 @@
         "scw-mcp"
       ]
     }
+  },
+  "agents": {
+    "po": {
+      "mode": "primary",
+      "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
+      "permission": {
+        "skill": {
+          "codegraph": "deny",
+          "ponytail": "deny"
+        }
+      }
+    },
+    "architect": {
+      "mode": "primary",
+      "model": "openrouter/poolside/laguna-s-2.1:free",
+      "permission": {
+        "skill": {
+          "codegraph": "allow",
+          "ponytail": "ask"
+        }
+      }
+    },
+    "developer": {
+      "mode": "primary",
+      "model": "openrouter/poolside/laguna-s-2.1:free",
+      "permission": {
+        "skill": {
+          "codegraph": "allow",
+          "ponytail": "allow"
+        }
+      }
+    }
   }
 }

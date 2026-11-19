@@ -234,7 +234,7 @@ From the repository folder:
 direnv allow
 ```
 
-direnv refuses to run an `.envrc` until you allow it, because `.envrc` is a shell script. `direnv allow` marks this one as trusted. Run it again after anyone changes `.envrc`. Nix then reads `flake.nix` and downloads everything: the .NET SDK, the Android SDK with its emulator image, Java, Node and the Flutter tarball. **The first run downloads several GB and can take a while.** Afterwards, the shell unpacks Flutter into `.dev/` and restores `dotnet-ef`.
+direnv refuses to run an `.envrc` until you allow it, because `.envrc` is a shell script. `direnv allow` marks this one as trusted. Run it again after anyone changes `.envrc`. Nix then reads `flake.nix` and downloads everything: the .NET SDK, the Android SDK with its emulator image, Java, Node and the Flutter tarball. **The first run downloads several GB and can take a while.** Afterwards, the shell unpacks Flutter into `.dev/`. `dotnet-ef` is restored by `just setup` and again by `just migration`, which needs it.
 
 When it is done, check:
 

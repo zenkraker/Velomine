@@ -63,6 +63,7 @@ phone address="":
 
 # add an EF Core migration: just migration AddSomething
 migration name:
+    dotnet tool restore
     dotnet ef migrations add {{name}} --project src/Velomine.Server --output-dir Data/Migrations
 
 # regenerate the Dart API client after changing an endpoint
@@ -101,3 +102,10 @@ check:
     dotnet test --solution Velomine.slnx
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
+
+# the PO's model; the helpers' are in .pi/agents/; `pi --list-models` shows the names
+pi_planner := "pi-claude-tether/claude-sonnet-5-5"
+
+# Pi: talk to the PO; it writes the stories, discusses them with the architect helper, and starts the dev helper on your go
+po *args:
+    PONYTAIL_DEFAULT_MODE=full pi --approve --name po --model {{pi_planner}} --thinking high --exclude-tools bash --append-system-prompt .pi/po.md {{args}}
