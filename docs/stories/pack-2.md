@@ -57,9 +57,9 @@ Depends on: nothing.
 
 ### Server
 
-1. `User` gains `MaxHeartRateBpm int?` and `ThresholdHeartRateBpm int?` (the set values; null = estimated). Do **not** reuse `LegacyMaxHeartRate`, which stays unread until it is dropped.
+1. `User` gains `MaxHeartRateBpm int?` and `ThresholdHeartRateBpm int?` (the set values; null = estimated), and with each a source (`MaxHeartRateSource`, `ThresholdHeartRateSource`: `manual` or `measured`, set exactly when its bpm is) and the ride that measured it (`MaxHeartRateRideId`, `ThresholdHeartRateRideId`, only when the source is `measured`, emptied when the ride is deleted). Do **not** reuse `LegacyMaxHeartRate`, which stays unread until it is dropped.
 2. New table `accounts.heart_rate_history`: `id uuid`, `user_id uuid not null` (cascade), `kind text not null` (`max`, `threshold`), `bpm integer not null` (80–230), `set_at timestamptz not null`, `source text not null` (`manual`, `measured`, `cleared`), `ride_id uuid null` (→ rides, `on delete set null`, only for `measured`). Index (`user_id`, `kind`, `set_at` desc). A row is written in the same `SaveChanges` as every change of a set value; `cleared` (with the old bpm) when the rider goes back to the estimate.
-3. One helper, `HeartRates.For(user, time)` in `Features/Accounts/HeartRates.cs`, returns `(Max, MaxSource, Threshold, ThresholdSource)`. **Every** place that reads `User.EstimateMaxHeartRate` today (ride ingestion, `Intensity.cs`, the profile, zones) uses it instead; `User.MaxHeartRate` is removed or made to call it.
+3. One helper, `HeartRates.For(user, time)` in `Features/Accounts/HeartRates.cs`, returns `(HeartRate? Max, HeartRate? Threshold)`; each `HeartRate(Bpm, Source, RideId)` carries the truth read from those columns: `manual` or `measured` and the ride, or `estimate` for a number the rider never set. **Every** place that reads `User.EstimateMaxHeartRate` today (ride ingestion, `Intensity.cs`, the profile, zones) uses it instead; `User.MaxHeartRate` is removed or made to call it.
 4. `PUT /api/v1/accounts/me/heart-rate/{kind}` (`max` or `threshold`), body `{ bpm }`, operation `setHeartRate`: sets it with source `manual`. `DELETE` on the same path, operation `clearHeartRate`: back to the estimate. Both return `ProfileResponse`.
 5. `ProfileResponse` keeps `MaxHeartRate` (now the value in use) and gains `MaxHeartRateSource`, `MaxHeartRateSetAt`, `ThresholdHeartRate`, `ThresholdHeartRateSource`, `ThresholdHeartRateSetAt`.
 6. Export: `heart-rate-history.json`. Deletion: rows go with the account.
@@ -113,7 +113,7 @@ Runs **once per ride**, when it becomes `ready` for the first time (never on a r
 
 ### Server
 
-1. Automatic use: set `MaxHeartRateBpm` / `ThresholdHeartRateBpm`, write a `measured` history row with the ride id, and create a notification `heart_rate_measured` (training group, subject e.g. "Maximum 192 bpm") unless the ride is quiet.
+1. Automatic use: set `MaxHeartRateBpm` / `ThresholdHeartRateBpm` with its source `measured` and the ride on the account, write a `measured` history row with the same ride id, and create a notification `heart_rate_measured` (training group, subject e.g. "Maximum 192 bpm") unless the ride is quiet.
 2. Suggestion: new table `analytics.heart_rate_suggestions` with the shape of `ftp_suggestions` (`kind`, `bpm`, `ride_id`, `created_at`, `status` open/accepted/dismissed/replaced; one open row per user **and kind**). Notification `heart_rate_suggested`. Endpoints `GET /api/v1/analytics/heart-rate-suggestions` (open ones, possibly empty), `POST …/{id}/accept` (sets the value as `measured` with the ride, returns `ProfileResponse`), `POST …/{id}/dismiss`.
 3. `RideResponse` gains `HeartRateNote` (`string?`, owner only): `max_measured`, `threshold_measured`, `max_suggested` or `threshold_suggested` when this ride caused one.
 4. Export: `heart-rate-suggestions.json`. Deletion with the account and the ride.
