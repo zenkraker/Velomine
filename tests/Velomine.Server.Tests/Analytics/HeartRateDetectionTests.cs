@@ -145,6 +145,28 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task HeartRateDetection_ShouldUseTheMeasuredThresholdAutomatically_WhenARideBeatsIt()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // A ceiling above both efforts and below them by more than the 89 % estimate (160 bpm of 180), so the first
+        // ride measures the threshold and the second one beats it.
+        (await SetAsync(member.Client, "max", 180)).EnsureSuccessStatusCode();
+        await UploadAsync(member.Client, Yesterday, s => (short)(s < 600 ? 150 : 165));
+        var measured = await ProfileAsync(member.Client);
+        Assert.Equal((165, HeartRateSources.Measured), (measured.ThresholdHeartRate, measured.ThresholdHeartRateSource));
+
+        // A measured number is not the rider's own: a higher effort is used, never only suggested.
+        var ride = await UploadAsync(member.Client, Yesterday.AddDays(-1), s => (short)(s < 600 ? 150 : 175));
+
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((175, HeartRateSources.Measured), (profile.ThresholdHeartRate, profile.ThresholdHeartRateSource));
+        Assert.Equal(ride.Id, profile.ThresholdHeartRateRideId);
+        Assert.Equal(HeartRateNotes.ThresholdMeasured, ride.HeartRateNote);
+        Assert.DoesNotContain(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Threshold);
+    }
+
+    [Fact]
     public async Task ThresholdHeartRate_ShouldNotBeLowered_WhenARideIsEasier()
     {
         await using var api = await StartAsync();
@@ -158,6 +180,82 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
         Assert.DoesNotContain(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Threshold);
         Assert.NotEqual(HeartRateNotes.ThresholdMeasured, ride.HeartRateNote);
         Assert.NotEqual(HeartRateNotes.ThresholdSuggested, ride.HeartRateNote);
+    }
+
+    [Fact]
+    public async Task ThresholdHeartRate_ShouldSkipTheWindow_WhenItHasAPause()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // The half hour at 170 holds the best mean, but a minute of pause sits inside it. The next best window starts
+        // when the pause ends and runs into the 150 after the effort: its last 20 minutes average 159 bpm.
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(
+            Yesterday.UtcDateTime, 3600, SubSport: SubSport.Road, Pauses: [(1200, 1260)],
+            HeartRate: s => (short)(s < 600 || s >= 2400 ? 150 : 170))));
+
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((159, HeartRateSources.Measured), (profile.ThresholdHeartRate, profile.ThresholdHeartRateSource));
+        Assert.Equal(HeartRateNotes.ThresholdMeasured, ride.HeartRateNote);
+    }
+
+    [Fact]
+    public async Task ThresholdHeartRate_ShouldCountTheEffort_WhenTheStoredMovingTimeIsShorterThanTheSeries()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // The timer ran for 1,700 s over 1,800 s of records with no pause: the window is wall-clock, not moving time.
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(
+            Yesterday.UtcDateTime, 1800, SubSport: SubSport.Road, TimerSeconds: 1700,
+            HeartRate: s => (short)(s < 600 ? 150 : 165))));
+
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((165, HeartRateSources.Measured), (profile.ThresholdHeartRate, profile.ThresholdHeartRateSource));
+        Assert.Equal(HeartRateNotes.ThresholdMeasured, ride.HeartRateNote);
+    }
+
+    [Fact]
+    public void ThresholdHeartRate_ShouldSkipTheWindow_WhenTheHeartRateCoversLessThan90Percent()
+    {
+        // 1,619 seconds of heart rate in the 30-minute window: under the 1,620 the rule asks for.
+        var series = new HeartRateSeries(
+            [.. Enumerable.Range(0, 1800).Select(s => s < 1619 ? (double?)160 : null)], new bool[1800]);
+
+        Assert.Null(HeartRateDetection.ThresholdCandidate(series));
+    }
+
+    [Fact]
+    public void ThresholdHeartRate_ShouldUseTheWindow_WhenTheHeartRateCoversExactly90Percent()
+    {
+        var series = new HeartRateSeries(
+            [.. Enumerable.Range(0, 1800).Select(s => s < 1620 ? (double?)160 : null)], new bool[1800]);
+
+        Assert.Equal(160, HeartRateDetection.ThresholdCandidate(series));
+    }
+
+    [Theory]
+    [InlineData(1741, null)]
+    [InlineData(1799, null)]
+    [InlineData(1800, 160)]
+    public void ThresholdHeartRate_ShouldNeedTheWindow_WhenTheSeriesIsShorter(int seconds, int? expected)
+    {
+        var series = new HeartRateSeries([.. Enumerable.Repeat<double?>(160, seconds)], new bool[seconds]);
+
+        Assert.Equal(expected, HeartRateDetection.ThresholdCandidate(series));
+    }
+
+    [Fact]
+    public void ThresholdHeartRate_ShouldBeThirtyRealMinutes_WhenTheRideIsSampledFasterThanOnceASecond()
+    {
+        // Two samples a second for an hour: one value per second means the 30-minute window is real minutes, and its
+        // last 20 minutes are 300 s at 150 and 900 s at 170.
+        var samples = Enumerable.Range(0, 3600)
+            .Select(i => new Sample(i * 0.5, HeartRate: (short)(i * 0.5 < 900 ? 150 : 170))).ToList();
+
+        var series = HeartRateDetection.Smoothed(samples, []);
+
+        Assert.NotNull(series);
+        Assert.Equal(1800, series!.Values.Length);
+        Assert.Equal(165, HeartRateDetection.ThresholdCandidate(series));
     }
 
     [Fact]

@@ -71,6 +71,12 @@ public sealed class HeartRateSuggestionConfiguration : IEntityTypeConfiguration<
 }
 
 /// <summary>
+/// A heart rate held once per wall-clock second: the value of the last sample at or before that second, and whether the
+/// second was paused. A missing signal and a pause are different facts, so a window can tell them apart.
+/// </summary>
+public sealed record HeartRateSeries(double?[] Values, bool[] Paused);
+
+/// <summary>
 /// Looks at a ride that was just read for the first time and uses, or suggests, a higher maximum and threshold heart
 /// rate (Friel's 30-minute test for the threshold). Runs only from <see cref="RideIngestionService"/>: a re-read and a
 /// duplicate never get here. Everything it writes joins the caller's SaveChanges.
@@ -88,41 +94,69 @@ public static class HeartRateDetection
     private const int ThresholdStepS = 60;
     private const int ThresholdLastPartS = 20 * 60;
     private const double MinPresentShare = 0.90;
+    // shortcut: a ride spanning more than a day holds no effort worth scanning, and keeps the series small; lift it if
+    // a longer record ever matters.
+    private const int MaxSeriesSeconds = 24 * 60 * 60;
 
     /// <summary>
-    /// The smoothed heart rate at 1 Hz over moving time, or null when the ride holds none: a gap the pause threshold
-    /// makes a pause, or a second whose sample has no heart rate, is left out rather than counted.
+    /// The smoothed heart rate at 1 Hz by wall-clock second, or null when the ride holds none: a sample holds until the
+    /// next one, a second in a pause or in a gap the pause threshold makes a pause is marked paused, and a second whose
+    /// sample has no heart rate stays empty.
     /// </summary>
-    public static double[]? Smoothed(IReadOnlyList<Sample> samples, IReadOnlyList<PauseInterval> pauses)
+    public static HeartRateSeries? Smoothed(IReadOnlyList<Sample> samples, IReadOnlyList<PauseInterval> pauses)
     {
+        // A sample at or before the one before it says nothing about the next second.
+        var ordered = new List<Sample>(samples.Count);
+        foreach (var sample in samples)
+            if (ordered.Count == 0 || sample.T > ordered[^1].T) ordered.Add(sample);
+        if (ordered.Count == 0) return null;
+
         var pause = RideMetrics.PauseThresholdS(samples);
-        var result = new List<double>();
-        for (var i = 0; i + 1 < samples.Count; i++)
+        var first = Math.Floor(ordered[0].T);
+        var span = Math.Min(Math.Floor(ordered[^1].T - first), MaxSeriesSeconds);
+        var values = new double?[(int)span + 1];
+        var paused = new bool[values.Length];
+        var held = 0;
+        for (var s = 0; s < values.Length; s++)
         {
-            var dt = samples[i + 1].T - samples[i].T;
-            if (dt <= 0 || dt > pause || pauses.Any(p => p.StartS < samples[i + 1].T && p.EndS > samples[i].T)) continue;
-            if (samples[i].HeartRate is not { } bpm) continue;
-            // At least the second the sample lasted, so a sub-second record still holds one.
-            var seconds = Math.Max((int)Math.Round(dt), 1);
-            for (var s = 0; s < seconds; s++) result.Add(bpm);
+            var second = first + s;
+            while (held + 1 < ordered.Count && ordered[held + 1].T <= second) held++;
+            var sample = ordered[held];
+            var gap = held + 1 < ordered.Count ? ordered[held + 1].T - sample.T : 0;
+            if (gap > pause || pauses.Any(p => p.StartS < second + 1 && p.EndS > second))
+            {
+                paused[s] = true;
+                continue;
+            }
+
+            values[s] = sample.HeartRate;
         }
 
-        if (result.Count == 0) return null;
-
-        // A 5-second rolling median: one sample a strap lost contact for disappears; a held value stays.
-        var smoothed = new double[result.Count];
+        // A 5-second rolling median over the present neighbours: one sample a strap lost contact for disappears; a held
+        // value stays.
+        var smoothed = new double?[values.Length];
         var half = MedianWindowS / 2;
-        for (var i = 0; i < result.Count; i++)
-            smoothed[i] = Median(result[Math.Max(0, i - half)..Math.Min(result.Count, i + half + 1)]);
-        return smoothed;
+        for (var i = 0; i < values.Length; i++)
+        {
+            var window = new List<double>(MedianWindowS);
+            for (var j = Math.Max(0, i - half); j <= Math.Min(values.Length - 1, i + half); j++)
+                if (values[j] is { } value) window.Add(value);
+            if (window.Count > 0) smoothed[i] = Median(window);
+        }
+
+        return Array.Exists(smoothed, v => v is not null) ? new HeartRateSeries(smoothed, paused) : null;
     }
 
     /// <summary>The highest smoothed value, when it is plausible: in range and not a jump a heart cannot make.</summary>
-    public static int? MaxCandidate(double[] smoothed)
+    public static int? MaxCandidate(HeartRateSeries series)
     {
-        if (smoothed.Length == 0) return null;
+        // A paused second holds no effort, and its smoothed value only repeats its neighbours.
+        var smoothed = new List<double>(series.Values.Length);
+        for (var i = 0; i < series.Values.Length; i++)
+            if (!series.Paused[i] && series.Values[i] is { } value) smoothed.Add(value);
+        if (smoothed.Count == 0) return null;
         var peak = 0;
-        for (var i = 1; i < smoothed.Length; i++)
+        for (var i = 1; i < smoothed.Count; i++)
             if (smoothed[i] > smoothed[peak]) peak = i;
 
         var bpm = (int)Math.Round(smoothed[peak]);
@@ -135,23 +169,43 @@ public static class HeartRateDetection
 
     /// <summary>
     /// Friel's 30-minute test on any ride: the 30-minute window with the highest mean smoothed heart rate, of which the
-    /// last 20 minutes are averaged. A window under the 90 % heart rate coverage gives way to the next best.
+    /// last 20 minutes are averaged. A window with a pause in it, or under the 90 % heart rate coverage, gives way to the
+    /// next best.
     /// </summary>
-    public static int? ThresholdCandidate(double[] smoothed)
+    public static int? ThresholdCandidate(HeartRateSeries series)
     {
+        var values = series.Values;
+        if (values.Length < ThresholdWindowS) return null;
+        // Every window that fits, counted up front: the last one ends on the final second.
+        var windows = (values.Length - ThresholdWindowS) / ThresholdStepS + 1;
+
+        // Prefix sums and counts keep one pass over a long ride linear.
+        var sum = new double[values.Length + 1];
+        var present = new int[values.Length + 1];
+        var pauses = new int[values.Length + 1];
+        for (var i = 0; i < values.Length; i++)
+        {
+            sum[i + 1] = sum[i] + (values[i] ?? 0);
+            present[i + 1] = present[i] + (values[i] is null ? 0 : 1);
+            pauses[i + 1] = pauses[i] + (series.Paused[i] ? 1 : 0);
+        }
+
         var enough = (int)Math.Ceiling(ThresholdWindowS * MinPresentShare);
         int? best = null;
         double bestMean = 0;
-        // Every window that fits, counted up front: the last one ends on the final second.
-        var windows = (smoothed.Length - ThresholdWindowS) / ThresholdStepS + 1;
         for (var i = 0; i < windows; i++)
         {
             var start = i * ThresholdStepS;
-            var window = smoothed.Skip(start).Take(ThresholdWindowS).ToList();
-            if (window.Count < enough) continue;
-            var mean = window.Average();
+            var end = start + ThresholdWindowS;
+            if (pauses[end] - pauses[start] > 0) continue;
+            var count = present[end] - present[start];
+            if (count < enough) continue;
+            var mean = (sum[end] - sum[start]) / count;
             if (best is not null && mean <= bestMean) continue;
-            best = (int)Math.Round(smoothed.Skip(start + ThresholdWindowS - ThresholdLastPartS).Take(ThresholdLastPartS).Average());
+            var lastPart = end - ThresholdLastPartS;
+            var lastCount = present[end] - present[lastPart];
+            if (lastCount == 0) continue;
+            best = (int)Math.Round((sum[end] - sum[lastPart]) / lastCount);
             bestMean = mean;
         }
 
@@ -167,26 +221,25 @@ public static class HeartRateDetection
         IReadOnlyList<Sample> samples, IReadOnlyList<PauseInterval> pauses, SetHeartRateValue setValue, CancellationToken ct)
     {
         if (ride.Status != RideStatus.Ready || ride.StartTime is not { } start) return null;
-        if (Smoothed(samples, pauses) is not { } smoothed) return null;
+        if (Smoothed(samples, pauses) is not { } series) return null;
 
         var today = clock.Today;
         var localDate = clock.LocalDateOf(start, ride.UtcOffsetMinutes);
-        return await StepMaxAsync(db, time, user, ride, smoothed, today, localDate, setValue, ct)
-            ?? await StepThresholdAsync(db, time, user, ride, smoothed, today, localDate, setValue, ct);
+        return await StepMaxAsync(db, time, user, ride, series, today, localDate, setValue, ct)
+            ?? await StepThresholdAsync(db, time, user, ride, series, today, localDate, setValue, ct);
     }
 
     private static async Task<string?> StepMaxAsync(
-        VelomineDbContext db, TimeProvider time, User user, Ride ride, double[] smoothed,
+        VelomineDbContext db, TimeProvider time, User user, Ride ride, HeartRateSeries series,
         DateOnly today, DateOnly localDate, SetHeartRateValue setValue, CancellationToken ct)
     {
         if (localDate < today.AddDays(-MaxAgeDaysMax)) return null;
-        if (MaxCandidate(smoothed) is not { } candidate) return null;
+        if (MaxCandidate(series) is not { } candidate) return null;
         var (max, _) = HeartRates.For(user, time);
-        var maxNow = await HeartRates.LatestAsync(db, user.Id, HeartRateKinds.Max, max, ct);
         // A lower number never replaces anything; with no number in use, any ride in range is news.
-        if (maxNow?.Bpm is { } inUse && candidate < inUse + 1) return null;
+        if (max?.Bpm is { } inUse && candidate < inUse + 1) return null;
 
-        if (maxNow?.Source == HeartRateSources.Manual)
+        if (max?.Source == HeartRateSources.Manual)
             return await SuggestAsync(db, time, ride, HeartRateKinds.Max, candidate, ct) ? HeartRateNotes.MaxSuggested : null;
 
         await setValue.SetAsync(user, HeartRateKinds.Max, candidate, HeartRateSources.Measured, ride.Id, ct);
@@ -196,15 +249,14 @@ public static class HeartRateDetection
     }
 
     private static async Task<string?> StepThresholdAsync(
-        VelomineDbContext db, TimeProvider time, User user, Ride ride, double[] smoothed,
+        VelomineDbContext db, TimeProvider time, User user, Ride ride, HeartRateSeries series,
         DateOnly today, DateOnly localDate, SetHeartRateValue setValue, CancellationToken ct)
     {
         if (localDate < today.AddDays(-MaxAgeDaysThreshold)) return null;
-        if (ThresholdCandidate(smoothed) is not { } candidate) return null;
+        if (ThresholdCandidate(series) is not { } candidate) return null;
         var (max, threshold) = HeartRates.For(user, time);
-        var maxNow = await HeartRates.LatestAsync(db, user.Id, HeartRateKinds.Max, max, ct);
         // The threshold is always below the maximum, after this ride's own step has run.
-        if (maxNow?.Bpm is { } maxBpm && candidate >= maxBpm) return null;
+        if (max?.Bpm is { } maxBpm && candidate >= maxBpm) return null;
         if (threshold?.Bpm is { } inUse && candidate < inUse + 1) return null;
 
         if (threshold?.Source == HeartRateSources.Manual)
