@@ -63,6 +63,10 @@ public sealed class EventTests(PostgresFixture postgres)
     private static Task<HttpResponseMessage> AddAsync(HttpClient client, string name, DateOnly date, string kind = "race") =>
         client.PostAsJsonAsync("/api/v1/training/events", new { Name = name, Date = date.ToString("yyyy-MM-dd"), Kind = kind }, Ct);
 
+    private static Task<HttpResponseMessage> UpdateAsync(HttpClient client, Guid id, string name, DateOnly date) =>
+        client.PutAsJsonAsync($"/api/v1/training/events/{id}",
+            new { Name = name, Date = date.ToString("yyyy-MM-dd"), Kind = "race" }, Ct);
+
     private static async Task<ListEventsResponse> ListAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<ListEventsResponse>("/api/v1/training/events", Ct))!;
 
@@ -199,6 +203,130 @@ public sealed class EventTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Event_ShouldNotLink_WhenTwoEventsShareTheDate()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var first = await (await AddAsync(member.Client, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        var second = await (await AddAsync(member.Client, "The club ride", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        // Two events of the day cannot both have the one ride: neither takes it, and the rider picks.
+        await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+
+        var events = (await ListAsync(member.Client)).Events;
+        Assert.Null(Assert.Single(events, e => e.Id == first!.Id).RideId);
+        Assert.Null(Assert.Single(events, e => e.Id == second!.Id).RideId);
+    }
+
+    [Fact]
+    public async Task Event_ShouldLinkTheRide_WhenAnEventIsAddedOnTheDayOfOneRide()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+
+        var created = await (await AddAsync(member.Client, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        Assert.Equal(ride.Id, created!.RideId);
+        Assert.Equal(ride.Id, Assert.Single((await ListAsync(member.Client)).Events).RideId);
+    }
+
+    [Fact]
+    public async Task Event_ShouldLinkTheRide_WhenTheDateIsChangedToTheDayOfOneRide()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+        var created = await (await AddAsync(member.Client, "Local race", day.AddDays(1))).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        Assert.Null(created!.RideId);
+
+        var changed = await (await UpdateAsync(member.Client, created.Id, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        Assert.Equal(ride.Id, changed!.RideId);
+    }
+
+    [Fact]
+    public async Task Event_ShouldNotLink_WhenTheNewEventIsNotTheOnlyUnlinkedOne()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        // Two events of the day are already waiting for a ride, so a third one is not the day's only choice.
+        await AddAsync(member.Client, "Local race", day);
+        await AddAsync(member.Client, "The club ride", day);
+        await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+
+        var created = await (await AddAsync(member.Client, "Another race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        Assert.Null(created!.RideId);
+    }
+
+    [Fact]
+    public async Task UpdateEvent_ShouldDropTheLink_WhenTheDateMovesAwayFromTheRide()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+        var created = await (await AddAsync(member.Client, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        Assert.Equal(ride.Id, created!.RideId);
+
+        var changed = await (await UpdateAsync(member.Client, created.Id, created.Name, day.AddDays(1))).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        Assert.Null(changed!.RideId);
+    }
+
+    [Fact]
+    public async Task UpdateEvent_ShouldNotRelink_WhenOnlyTheNameChanges()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+        var created = await (await AddAsync(member.Client, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        await member.Client.PutAsJsonAsync($"/api/v1/training/events/{created!.Id}/ride", new { RideId = (Guid?)null }, Ct);
+
+        var changed = await (await UpdateAsync(member.Client, created.Id, "Another name", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        Assert.Null(changed!.RideId);
+    }
+
+    [Fact]
+    public async Task SetEventRide_ShouldRefuse_WhenTheRideIsOnAnotherDate()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var created = await (await AddAsync(member.Client, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        var other = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(From.AddDays(1).UtcDateTime, 600)));
+
+        var set = await member.Client.PutAsJsonAsync($"/api/v1/training/events/{created!.Id}/ride", new { RideId = other.Id }, Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, set.StatusCode);
+        Assert.Null(Assert.Single((await ListAsync(member.Client)).Events).RideId);
+    }
+
+    [Fact]
+    public async Task SetEventRide_ShouldAccept_WhenTheRideIsOnTheEventDayButAnotherUtcDay()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        // The file says UTC+2, so a ride starting at 22:00 UTC was ridden on the next day where the rider was.
+        var start = new DateTime(2026, 10, 3, 22, 0, 0, DateTimeKind.Utc);
+        var day = new DateOnly(2026, 10, 4);
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(new FitSession(start, 600)));
+        var created = await (await AddAsync(member.Client, "Local race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        var set = await member.Client.PutAsJsonAsync($"/api/v1/training/events/{created!.Id}/ride", new { RideId = ride.Id }, Ct);
+
+        Assert.Equal(HttpStatusCode.OK, set.StatusCode);
+        Assert.Equal(ride.Id, (await set.Content.ReadFromJsonAsync<EventResponse>(Ct))!.RideId);
+    }
+
+    [Fact]
     public async Task SetEventRide_ShouldPickOneOfTheDaySRides_WhenTheRiderChooses()
     {
         await using var api = await StartAsync();
@@ -243,6 +371,56 @@ public sealed class EventTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.NotFound, (await other.Client.PutAsJsonAsync(
             $"/api/v1/training/events/{created!.Id}/ride", new { RideId = theirs.Id }, Ct)).StatusCode);
         Assert.Null(Assert.Single((await ListAsync(other.Client)).Events).RideId);
+    }
+
+    [Fact]
+    public async Task SetEventRide_ShouldReturn404_WhenTheEventBelongsToAnotherRider()
+    {
+        await using var api = await StartAsync();
+        var owner = await NewMemberAsync(api, "Ada");
+        var other = await NewMemberAsync(api, "Grace");
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var theirs = await (await AddAsync(owner.Client, "Race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        var mine = await TestApi.UploadAndWaitAsync(other.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+
+        Assert.Equal(HttpStatusCode.NotFound, (await other.Client.PutAsJsonAsync(
+            $"/api/v1/training/events/{theirs!.Id}/ride", new { RideId = mine.Id }, Ct)).StatusCode);
+        Assert.Null(Assert.Single((await ListAsync(owner.Client)).Events).RideId);
+    }
+
+    [Fact]
+    public async Task Event_ShouldLinkItsOwnRide_WhenAnotherMemberHasARideAndAnEventThatDate()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api, "Ada");
+        var other = await NewMemberAsync(api, "Grace");
+        var day = DateOnly.FromDateTime(From.UtcDateTime);
+        var theirs = await (await AddAsync(other.Client, "Their race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+        var theirRide = await TestApi.UploadAndWaitAsync(other.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+        await WaitForTheLinkAsync(other.Client, theirs!.Id);
+
+        var mine = await TestApi.UploadAndWaitAsync(me.Client, Fit(new FitSession(From.UtcDateTime, 600)));
+        var created = await (await AddAsync(me.Client, "My race", day)).Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        // Neither the other member's ride nor their event of that date is counted for mine.
+        Assert.Equal(mine.Id, created!.RideId);
+        Assert.Equal(theirRide.Id, Assert.Single((await ListAsync(other.Client)).Events).RideId);
+    }
+
+    [Fact]
+    public async Task Event_ShouldLinkTheRide_WhenTheRideIsOnTheEventDayAtALargeOffset()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        // At UTC+14, 16:00 UTC on the 3rd was 06:00 on the 4th where the rider was: a day before in UTC, the same day
+        // locally as the event.
+        var ride = await TestApi.UploadAndWaitAsync(member.Client,
+            Fit(new FitSession(new DateTime(2026, 10, 3, 16, 0, 0, DateTimeKind.Utc), 600, UtcOffsetHours: 14)));
+
+        var created = await (await AddAsync(member.Client, "Local race", new DateOnly(2026, 10, 4)))
+            .Content.ReadFromJsonAsync<EventResponse>(Ct);
+
+        Assert.Equal(ride.Id, created!.RideId);
     }
 
     [Fact]

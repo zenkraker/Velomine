@@ -69,6 +69,24 @@ class EventsScreen extends ConsumerWidget {
     if (ok) await ref.read(eventsViewModelProvider.notifier).delete(event.id);
   }
 
+  /// The event's day's rides, so the rider picks the one that was it.
+  Future<void> _linkRide(
+    BuildContext context,
+    WidgetRef ref,
+    EventResponse event,
+  ) async {
+    final notifier = ref.read(eventsViewModelProvider.notifier);
+    final rides = await notifier.ridesOn(event.date);
+    if (!context.mounted || rides == null) return;
+    final picked = await showRidePicker(
+      context,
+      rides: rides,
+      units: ref.read(unitsChoiceViewModelProvider),
+    );
+    if (picked == null) return;
+    await notifier.linkRide(event.id, picked.id);
+  }
+
   /// The sheet or dialog opens after the menu has closed, so the two never fight for the tap.
   void _later(BuildContext context, VoidCallback open) => scheduleMicrotask(() {
     if (context.mounted) open();
@@ -119,6 +137,9 @@ class EventsScreen extends ConsumerWidget {
               event: event,
               units: units,
               onEdit: () => _later(context, () => _edit(context, ref, event)),
+              onLinkRide: () =>
+                  _later(context, () => _linkRide(context, ref, event)),
+              onUnlinkRide: () => notifier.unlinkRide(event.id),
               onDelete: () =>
                   _later(context, () => _delete(context, ref, event)),
             ),
@@ -132,12 +153,16 @@ class _EventCard extends StatelessWidget {
     required this.event,
     required this.units,
     required this.onEdit,
+    required this.onLinkRide,
+    required this.onUnlinkRide,
     required this.onDelete,
   });
 
   final EventResponse event;
   final Units units;
   final VoidCallback onEdit;
+  final VoidCallback onLinkRide;
+  final VoidCallback onUnlinkRide;
   final VoidCallback onDelete;
 
   @override
@@ -158,6 +183,20 @@ class _EventCard extends StatelessWidget {
             icon: Icons.edit_outlined,
             onSelected: onEdit,
           ),
+          if (event.rideId == null)
+            PageMenuEntry(
+              key: Key('event-link-${event.id}'),
+              label: l10n.eventLinkRide,
+              icon: Icons.directions_bike_outlined,
+              onSelected: onLinkRide,
+            )
+          else
+            PageMenuEntry(
+              key: Key('event-unlink-${event.id}'),
+              label: l10n.eventUnlinkRide,
+              icon: Icons.link_off,
+              onSelected: onUnlinkRide,
+            ),
           PageMenuEntry(
             key: Key('event-delete-${event.id}'),
             label: l10n.delete,

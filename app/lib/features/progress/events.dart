@@ -6,9 +6,11 @@ import 'package:velomine_api/api.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../rides/ride_title.dart';
 
 const eventKindIds = ['race', 'sportive', 'tour', 'other'];
 
@@ -229,6 +231,45 @@ class _EventFormSheetState extends ConsumerState<EventFormSheet> {
     decoration: InputDecoration(labelText: label, suffixText: unit),
   );
 }
+
+/// Picks one of the rider's rides of an event's day. Returns null when the rider dismisses it.
+Future<RideResponse?> showRidePicker(
+  BuildContext context, {
+  required List<RideResponse> rides,
+  required Units units,
+}) => showSheet<RideResponse>(
+  context,
+  builder: (context) {
+    final l10n = context.l10n;
+    return SheetFrame(
+      title: l10n.eventLinkRide,
+      children: [
+        if (rides.isEmpty)
+          EmptyState(
+            key: const Key('no-rides-that-day'),
+            message: l10n.eventNoRidesThatDay,
+            icon: Icons.directions_bike_outlined,
+          )
+        else
+          for (final ride in rides)
+            ListTile(
+              key: Key('pick-ride-${ride.id}'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(rideTitle(l10n, ride)),
+              subtitle: Text(
+                [
+                  if (ride.distanceM case final distance? when distance > 0)
+                    km(units, distance),
+                  if (ride.movingS case final moving? when moving > 0)
+                    duration(moving),
+                ].join(' · '),
+              ),
+              onTap: () => Navigator.pop(context, ride),
+            ),
+      ],
+    );
+  },
+);
 
 /// The next event as a card: its name, how far away it is, and the way to the whole list.
 class NextEventCard extends ConsumerWidget {

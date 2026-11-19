@@ -278,6 +278,9 @@ class FakeServer {
   /// Paths that answer 401, to prove every failed call ends the session.
   final unauthorized = <String>{};
 
+  /// Paths that answer 500, to prove a failed read never looks like an empty one.
+  final broken = <String>{};
+
   /// Holds the next answer to [path] until the returned completer completes.
   Completer<void> delayNext(String path) {
     final gate = Completer<void>();
@@ -368,6 +371,7 @@ class FakeServer {
     final path = request.url.path;
     requests.add('${request.method} $path');
     if (unauthorized.contains(path)) return http.Response('', 401);
+    if (broken.contains(path)) return http.Response('', 500);
     final waiting = _replyGates[path];
     if (waiting != null && waiting.isNotEmpty) {
       await waiting.removeAt(0).future;
@@ -709,7 +713,17 @@ class FakeServer {
         }
         return true;
       }).toList();
-      return json({'rides': found, 'next': null});
+      // Paged like the server: 50 at a time, the cursor naming the last ride of the page before.
+      final limit = int.tryParse(params['limit'] ?? '') ?? 50;
+      final cursor = params['cursor'];
+      final start = cursor == null
+          ? 0
+          : found.indexWhere((r) => r['id'] == cursor) + 1;
+      final page = found.skip(start).take(limit).toList();
+      final next = page.isNotEmpty && start + page.length < found.length
+          ? page.last['id']
+          : null;
+      return json({'rides': page, 'next': next});
     }
     if (path == '/api/v1/rides/uploads') {
       rides.insert(
@@ -1641,13 +1655,15 @@ extension on FakeServer {
     return {
       ...profile,
       'maxHeartRate': max,
-      'maxHeartRateSource': maxTyped != null
-          ? 'manual'
-          : (max == null ? null : 'estimate'),
+      'maxHeartRateSource':
+          profile['maxHeartRateSource'] ??
+          (maxTyped != null ? 'manual' : (max == null ? null : 'estimate')),
       'thresholdHeartRate': thresholdTyped ?? ((max ?? 0) * 0.89).round(),
-      'thresholdHeartRateSource': thresholdTyped != null
-          ? 'manual'
-          : (max == null ? null : 'estimate'),
+      'thresholdHeartRateSource':
+          profile['thresholdHeartRateSource'] ??
+          (thresholdTyped != null
+              ? 'manual'
+              : (max == null ? null : 'estimate')),
       // Where the FTP came from; null when there is no FTP, as the server answers.
       'ftpSetAt': profile['ftpW'] == null ? null : profile['ftpSetAt'],
       'ftpSource': profile['ftpW'] == null ? null : profile['ftpSource'],
@@ -2624,6 +2640,8 @@ Map<String, Object?> rideJson(
   double? efficiencyFactor,
   double? decouplingPct,
   bool? steady,
+  String? heartRateMaxNote,
+  String? heartRateThresholdNote,
   String? discipline,
   String? assist,
   String? environment,
@@ -2679,6 +2697,8 @@ Map<String, Object?> rideJson(
   'decouplingPct': decouplingPct,
   'steady': steady,
   'wPrimeJ': wPrimeJ,
+  'heartRateMaxNote': heartRateMaxNote,
+  'heartRateThresholdNote': heartRateThresholdNote,
 };
 
 /// One personal power record as the ride detail receives it.

@@ -61,7 +61,7 @@ Depends on: nothing.
 2. New table `accounts.heart_rate_history`: `id uuid`, `user_id uuid not null` (cascade), `kind text not null` (`max`, `threshold`), `bpm integer not null` (80–230), `set_at timestamptz not null`, `source text not null` (`manual`, `measured`, `cleared`), `ride_id uuid null` (→ rides, `on delete set null`, only for `measured`). Index (`user_id`, `kind`, `set_at` desc). A row is written in the same `SaveChanges` as every change of a set value; `cleared` (with the old bpm) when the rider goes back to the estimate.
 3. One helper, `HeartRates.For(user, time)` in `Features/Accounts/HeartRates.cs`, returns `(HeartRate? Max, HeartRate? Threshold)`; each `HeartRate(Bpm, Source, RideId)` carries the truth read from those columns: `manual` or `measured` and the ride, or `estimate` for a number the rider never set. **Every** place that reads `User.EstimateMaxHeartRate` today (ride ingestion, `Intensity.cs`, the profile, zones) uses it instead; `User.MaxHeartRate` is removed or made to call it.
 4. `PUT /api/v1/accounts/me/heart-rate/{kind}` (`max` or `threshold`), body `{ bpm }`, operation `setHeartRate`: sets it with source `manual`. `DELETE` on the same path, operation `clearHeartRate`: back to the estimate. Both return `ProfileResponse`.
-5. `ProfileResponse` keeps `MaxHeartRate` (now the value in use) and gains `MaxHeartRateSource`, `MaxHeartRateSetAt`, `ThresholdHeartRate`, `ThresholdHeartRateSource`, `ThresholdHeartRateSetAt`.
+5. `ProfileResponse` keeps `MaxHeartRate` (now the value in use) and gains `MaxHeartRateSource`, `MaxHeartRateSetAt`, `MaxHeartRateRideId`, `ThresholdHeartRate`, `ThresholdHeartRateSource`, `ThresholdHeartRateSetAt`, `ThresholdHeartRateRideId`.
 6. Export: `heart-rate-history.json`. Deletion: rows go with the account.
 7. `AGENTS.md`, *Ride processing → Zones*: say the maximum is the member's own (typed or measured) or the Tanaka estimate, and name the threshold estimate.
 
@@ -317,13 +317,13 @@ Depends on: nothing.
 ### Rules
 
 1. An event: name (1–100 characters), date (local), kind (`race`, `sportive`, `tour`, `other`), optional distance (km) and climbing (m), optional notes (≤ 500 characters).
-2. After its date, an event can be linked to the ride that was it: automatically when the rider has **exactly one** ride on that local date, otherwise the rider picks one of that day's rides.
+2. After its date, an event can be linked to the ride that was it: automatically when the rider has **exactly one** ride on that local date and it is the only unlinked event of that date, otherwise the rider picks one of that day's rides. Only a ride on the event's own local date can be linked, and a moved date drops a link that no longer fits.
 
 ### Server
 
 1. New table `training.events`: `id uuid`, `user_id uuid not null` (cascade), `name text not null`, `date date not null`, `kind text not null` (check), `distance_m double precision null`, `elevation_gain_m double precision null`, `notes text null`, `ride_id uuid null` (→ rides, `on delete set null`), `created_at timestamptz not null`. Index (`user_id`, `date`).
-2. `GET /api/v1/training/events` (`listEvents`, upcoming first, then past, at most 100), `POST` (`addEvent`), `PUT /{id}` (`updateEvent`), `DELETE /{id}` (`deleteEvent`), `PUT /{id}/ride` with `{ rideId }` or null (`setEventRide`). 404 for another rider's event or ride.
-3. Automatic link: when a ride becomes ready for the first time, link it to an unlinked event of the same local date if it is that date's only ride.
+2. `GET /api/v1/training/events` (`listEvents`, upcoming first, then past, at most 100), `POST` (`addEvent`), `PUT /{id}` (`updateEvent`), `DELETE /{id}` (`deleteEvent`), `PUT /{id}/ride` with `{ rideId }` or null (`setEventRide`). 404 for another rider's event or ride; 400 when the ride is not on the event's local date.
+3. Automatic link: when a ride becomes ready for the first time, link it to an unlinked event of the same local date if it is that date's only ride **and it is the only unlinked event of that date**. Adding an event or moving it to another date does the same from the event's side: exactly one ready ride of the member on that date, not already another event's ride. A moved date drops a link to a ride that is not on the new date first; changing only the name never re-links an event the rider unlinked. Manual linking may still pick a ride another event uses.
 4. Export: `events.json`. Deletion with the account.
 
 ### App
