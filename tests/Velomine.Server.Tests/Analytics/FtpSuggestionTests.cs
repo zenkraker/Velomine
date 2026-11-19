@@ -14,6 +14,7 @@ using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Sharing;
+using static Velomine.Server.Tests.Rides.TestRideFiles;
 
 namespace Velomine.Server.Tests.Analytics;
 
@@ -296,7 +297,10 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
-        await UploadAsync(member.Client, 24 * 43, (1500, 280));
+        // Midday UTC, 43 days ago: the fixture's fixed UTC+2 offset then cannot move the ride to another local date,
+        // whatever hour of the day the suite runs at.
+        var start = Now.UtcDateTime.Date.AddDays(-43).AddHours(12);
+        await UploadAsync(member.Client, (Now.UtcDateTime - start).TotalHours, (1500, 280));
 
         Assert.Null(await SuggestionAsync(member.Client));
     }
@@ -370,6 +374,27 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
         Assert.Equal(ride.Id, notification.RideId);
         Assert.Equal("266 W", notification.Subject);
         Assert.Equal(NotificationKinds.Training, NotificationKinds.Of(notification.Type));
+    }
+
+    [Fact]
+    public async Task Profile_ShouldSayMeasured_WhenTheFtpSuggestionIsAccepted()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        await SetFtpAsync(member.Client, 150);
+        // Half an hour of 200 W at 150 bpm: a 190 W FTP suggestion, and the ride measures the maximum.
+        var ride = await TestApi.UploadAndWaitAsync(member.Client, Fit(
+            new FitSession(Now.AddHours(-24).UtcDateTime, 1800)));
+        var suggestion = await SuggestionAsync(member.Client);
+
+        var accepted = await member.Client.PostAsync(
+            $"/api/v1/analytics/ftp-suggestion/{suggestion!.Id}/accept", null, Ct);
+
+        Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        // The ride also measured a heart rate: answering the FTP question carries it, with the ride it came from.
+        var profile = (await accepted.Content.ReadFromJsonAsync<ProfileResponse>(Ct))!;
+        Assert.Equal((190, 150, HeartRateSources.Measured, (Guid?)ride.Id),
+            (profile.FtpW, profile.MaxHeartRate, profile.MaxHeartRateSource, profile.MaxHeartRateRideId));
     }
 
     [Fact]
