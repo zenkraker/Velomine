@@ -2235,6 +2235,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get heartRateSourceMeasuredDeleted => 'Measured on a ride you deleted';
+
+  @override
   String get maxHeartRateField => 'Maximum heart rate';
 
   @override
@@ -2246,6 +2249,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get thresholdHeartRateHelp =>
       'The highest heart rate you can hold for about an hour.';
+
+  @override
+  String thresholdAboveMax(int max) {
+    return 'Above the maximum in use ($max bpm). Your zones still follow the maximum.';
+  }
 
   @override
   String get heartRateSourceMaxEstimate =>
@@ -4787,6 +4795,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String eventYourRide(String name) {
     return 'Your event: $name';
   }
+
+  @override
+  String get eventLinkRide => 'Link a ride';
+
+  @override
+  String get eventUnlinkRide => 'Unlink';
+
+  @override
+  String get eventNoRidesThatDay => 'No ready rides on that day.';
 
   @override
   String get eventDeleteTitle => 'Delete this event?';

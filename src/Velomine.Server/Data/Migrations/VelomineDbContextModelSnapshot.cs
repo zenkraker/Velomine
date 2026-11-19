@@ -2161,6 +2161,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("heart_rate_note");
 
+                    b.Property<string>("HeartRateThresholdNote")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("heart_rate_threshold_note");
+
                     b.Property<bool?>("HideCadence")
                         .HasColumnType("boolean")
                         .HasColumnName("hide_cadence");

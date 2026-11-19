@@ -1,3 +1,4 @@
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 
@@ -152,6 +153,26 @@ public sealed class PrivacyRulesTests
         Assert.Equal(2000, noSpeed.DistanceM);
         Assert.Equal(2000, noCadence.DistanceM);
         Assert.Equal(2000, noClimb.DistanceM);
+    }
+
+    [Fact]
+    public void ForViewer_ShouldClearTheRidersOwnAnswers_WhenTheRideIsShared()
+    {
+        // What the ride did to the rider's numbers, and their own question about it, are never a viewer's to read.
+        var ride = Ride(Guid.NewGuid()) with
+        {
+            HeartRateNote = HeartRateNotes.MaxMeasured,
+            HeartRateMaxNote = HeartRateNotes.MaxMeasured,
+            HeartRateThresholdNote = HeartRateNotes.ThresholdMeasured,
+            FtpSuggestionId = Guid.NewGuid(),
+        };
+
+        var hidden = PrivacyRules.ForViewer(ride, Hiding());
+
+        Assert.Null(hidden.HeartRateNote);
+        Assert.Null(hidden.HeartRateMaxNote);
+        Assert.Null(hidden.HeartRateThresholdNote);
+        Assert.Null(hidden.FtpSuggestionId);
     }
 
     [Fact]

@@ -1244,10 +1244,19 @@
       }
     }
   },
+  "heartRateSourceMeasuredDeleted": "Measured on a ride you deleted",
   "maxHeartRateField": "Maximum heart rate",
   "thresholdHeartRateField": "Threshold heart rate",
   "heartRateLeaveEmpty": "Leave empty to estimate.",
   "thresholdHeartRateHelp": "The highest heart rate you can hold for about an hour.",
+  "thresholdAboveMax": "Above the maximum in use ({max} bpm). Your zones still follow the maximum.",
+  "@thresholdAboveMax": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "heartRateSourceMaxEstimate": "Estimated from your age (208 − 0.7 × age)",
   "heartRateSourceThresholdEstimate": "Estimated as 89 % of your maximum",
   "heartRateNone": "Add your year of birth, or type it above.",
@@ -2690,6 +2699,9 @@
   "eventsAll": "All events",
   "eventYourRide": "Your event: {name}",
   "@eventYourRide": {"placeholders": {"name": {"type": "String"}}},
+  "eventLinkRide": "Link a ride",
+  "eventUnlinkRide": "Unlink",
+  "eventNoRidesThatDay": "No ready rides on that day.",
   "eventDeleteTitle": "Delete this event?",
   "eventDeleteBody": "“{name}” is removed. The ride it was stays.",
   "@eventDeleteBody": {"placeholders": {"name": {"type": "String"}}},

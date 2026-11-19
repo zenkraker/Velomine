@@ -24,6 +24,12 @@ public static class HeartRateNotes
     public const string ThresholdMeasured = "threshold_measured";
     public const string MaxSuggested = "max_suggested";
     public const string ThresholdSuggested = "threshold_suggested";
+
+    /// <summary>
+    /// Whether the legacy column holds the maximum's note: it keeps the maximum first, and only falls back to the
+    /// threshold's when the ride moved nothing else.
+    /// </summary>
+    public static bool IsMax(string? note) => note?.StartsWith("max_", StringComparison.Ordinal) == true;
 }
 
 /// <summary>
@@ -93,7 +99,8 @@ public static class HeartRateDetection
     private const int ThresholdWindowS = 30 * 60;
     private const int ThresholdStepS = 60;
     private const int ThresholdLastPartS = 20 * 60;
-    private const double MinPresentShare = 0.90;
+    // 90 % of the window, in whole seconds: 1,620 of 1,800.
+    private const int MinimumPresentS = ThresholdWindowS * 9 / 10;
     // shortcut: a ride spanning more than a day holds no effort worth scanning, and keeps the series small; lift it if
     // a longer record ever matters.
     private const int MaxSeriesSeconds = 24 * 60 * 60;
@@ -190,7 +197,6 @@ public static class HeartRateDetection
             pauses[i + 1] = pauses[i] + (series.Paused[i] ? 1 : 0);
         }
 
-        var enough = (int)Math.Ceiling(ThresholdWindowS * MinPresentShare);
         int? best = null;
         double bestMean = 0;
         for (var i = 0; i < windows; i++)
@@ -199,7 +205,7 @@ public static class HeartRateDetection
             var end = start + ThresholdWindowS;
             if (pauses[end] - pauses[start] > 0) continue;
             var count = present[end] - present[start];
-            if (count < enough) continue;
+            if (count < MinimumPresentS) continue;
             var mean = (sum[end] - sum[start]) / count;
             if (best is not null && mean <= bestMean) continue;
             var lastPart = end - ThresholdLastPartS;
@@ -213,20 +219,23 @@ public static class HeartRateDetection
     }
 
     /// <summary>
-    /// Uses what the ride shows, or stages the question, without saving. Only a higher number counts; a typed number is
-    /// never replaced, only suggested. Returns the note the ride carries.
+    /// Uses what the ride shows for both numbers, or stages the question for each, without saving. Only a higher
+    /// number counts; a typed number is never replaced, only suggested. The threshold is judged against the maximum
+    /// this same ride leaves in use, so a maximum that was only suggested has not moved it. Returns the note for each
+    /// number, in that order.
     /// </summary>
-    public static async Task<string?> AddAsync(
+    public static async Task<(string? Max, string? Threshold)> AddAsync(
         VelomineDbContext db, TimeProvider time, MemberClock clock, User user, Ride ride,
         IReadOnlyList<Sample> samples, IReadOnlyList<PauseInterval> pauses, SetHeartRateValue setValue, CancellationToken ct)
     {
-        if (ride.Status != RideStatus.Ready || ride.StartTime is not { } start) return null;
-        if (Smoothed(samples, pauses) is not { } series) return null;
+        if (ride.Status != RideStatus.Ready || ride.StartTime is not { } start) return (null, null);
+        if (Smoothed(samples, pauses) is not { } series) return (null, null);
 
         var today = clock.Today;
         var localDate = clock.LocalDateOf(start, ride.UtcOffsetMinutes);
-        return await StepMaxAsync(db, time, user, ride, series, today, localDate, setValue, ct)
-            ?? await StepThresholdAsync(db, time, user, ride, series, today, localDate, setValue, ct);
+        var max = await StepMaxAsync(db, time, user, ride, series, today, localDate, setValue, ct);
+        var threshold = await StepThresholdAsync(db, time, user, ride, series, today, localDate, setValue, ct);
+        return (max, threshold);
     }
 
     private static async Task<string?> StepMaxAsync(
