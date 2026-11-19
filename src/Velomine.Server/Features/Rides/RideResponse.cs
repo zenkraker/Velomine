@@ -61,7 +61,11 @@ public sealed record RideResponse(
     // it hides either signal.
     double? EfficiencyFactor = null,
     double? DecouplingPct = null,
-    bool? Steady = null)
+    bool? Steady = null,
+    // The three heart-rate notes, owner only: the legacy one (the maximum's first, then the threshold's), the
+    // maximum's and the threshold's own. Set by RideResponse.From, cleared like an FTP suggestion.
+    string? HeartRateMaxNote = null,
+    string? HeartRateThresholdNote = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -101,7 +105,9 @@ public sealed record RideResponse(
         HeartRateNote: r.HeartRateNote,
         EfficiencyFactor: r.EfficiencyFactor,
         DecouplingPct: r.DecouplingPct,
-        Steady: r.Steady);
+        Steady: r.Steady,
+        HeartRateMaxNote: Analytics.HeartRateNotes.IsMax(r.HeartRateNote) ? r.HeartRateNote : null,
+        HeartRateThresholdNote: r.HeartRateThresholdNote);
 
     /// <summary>The same ride without training load, for a viewer allowed to see rides but not analytics.</summary>
     public RideResponse WithoutTrainingLoad() => this with
@@ -116,6 +122,8 @@ public sealed record RideResponse(
         FtpSuggestionMethod = null,
         FtpSuggestionId = null,
         HeartRateNote = null,
+        HeartRateMaxNote = null,
+        HeartRateThresholdNote = null,
         MinWPrimeBalanceJ = null,
         WPrimeJ = null,
         EfficiencyFactor = null,

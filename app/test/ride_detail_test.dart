@@ -144,6 +144,83 @@ void main() {
     expect(find.textContaining('TSS uses your FTP'), findsOneWidget);
   });
 
+  testWidgets(
+    'RideDetailScreen_ShouldShowTwoCards_WhenTheRideMovedBothHeartRateNumbers',
+    (tester) async {
+      // A ride raised both numbers: one card each, in the rider's language.
+      server.rides.first['heartRateMaxNote'] = 'max_measured';
+      server.rides.first['heartRateThresholdNote'] = 'threshold_measured';
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 192,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r1',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(find.byKey(const Key('heart-rate-note-max')), findsOneWidget);
+      expect(
+        find.byKey(const Key('heart-rate-note-threshold')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('New maximum heart rate: 192 bpm. Your zones now use it.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('New threshold heart rate: 165 bpm. Your zones now use it.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldHideTheMeasuredCard_WhenTheNumberCameFromAnotherRide',
+    (tester) async {
+      // The profile carries the ride that set the number: this ride moved the maximum, but a later ride now holds it,
+      // so calling this ride's number "measured" here would name a number this ride no longer set.
+      server.rides.first['heartRateMaxNote'] = 'max_measured';
+      server.rides.first['heartRateThresholdNote'] = 'threshold_measured';
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 195,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r2',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(find.byKey(const Key('heart-rate-note-max')), findsNothing);
+      expect(
+        find.byKey(const Key('heart-rate-note-threshold')),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldShowMilesAndFeet_WhenUnitsAreImperial', (
     tester,
   ) async {

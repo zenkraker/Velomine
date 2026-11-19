@@ -188,6 +188,11 @@ public static class PrivacyRules
         Steady = privacy.HidesPowerOrHeartRate ? null : ride.Steady,
         FtpSuggestionW = null, // never shown to a coach or a share viewer
         FtpSuggestionMethod = null,
+        FtpSuggestionId = null,
+        // The rider's own answer and what their ride did to their numbers: theirs only.
+        HeartRateNote = null,
+        HeartRateMaxNote = null,
+        HeartRateThresholdNote = null,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
         AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
         MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,

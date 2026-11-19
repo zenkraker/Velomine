@@ -214,8 +214,11 @@ public sealed class RideIngestionService(
             foreach (var r in read.Where(r => r.Status == RideStatus.Ready))
             {
                 var file = sources[r.Id];
-                r.HeartRateNote = await HeartRateDetection.AddAsync(
+                var (maxNote, thresholdNote) = await HeartRateDetection.AddAsync(
                     db, time, clock, profile, r, file.Samples, file.Pauses, setHeartRate, ct);
+                // The legacy column keeps the maximum first, so an app without the threshold's own field still sees a note.
+                r.HeartRateNote = maxNote ?? thresholdNote;
+                r.HeartRateThresholdNote = thresholdNote;
             }
         }
         // A ride that was the rider's only one that day becomes the event of that date, if one is waiting for it.

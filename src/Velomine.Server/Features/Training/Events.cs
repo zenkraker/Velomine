@@ -98,9 +98,13 @@ public sealed class AddEvent(VelomineDbContext db, TimeProvider time) : Endpoint
 
     public override async Task HandleAsync(EventRequest req, CancellationToken ct)
     {
-        var e = new TrainingEvent { Id = Guid.CreateVersion7(), UserId = User.UserId(), CreatedAt = time.GetUtcNow() };
+        var userId = User.UserId();
+        var e = new TrainingEvent { Id = Guid.CreateVersion7(), UserId = userId, CreatedAt = time.GetUtcNow() };
         Apply(e, req);
         db.Events.Add(e);
+        // The rider's only ride of that day fills the event by itself; another event of the day leaves the choice
+        // to them.
+        await EventRideLink.ForEventAsync(db, await MemberClock.ForAsync(db, userId, time, ct), e, ct);
         await db.SaveChangesAsync(ct);
         await Send.ResponseAsync(EventResponse.From(e), 201, ct);
     }

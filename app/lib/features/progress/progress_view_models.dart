@@ -450,6 +450,23 @@ class EventsViewModel extends _$EventsViewModel {
   Future<void> add(EventRequest event) =>
       _run(() => ref.read(eventsDataProvider).add(event));
 
+  /// The ride that was this event, or null to unlink it.
+  Future<void> linkRide(String id, String? rideId) =>
+      _run(() => ref.read(eventsDataProvider).setRide(id, rideId));
+
+  Future<void> unlinkRide(String id) => linkRide(id, null);
+
+  /// The rides of one day, for the picker that links an event's ride; null with a message when they cannot be read,
+  /// so the picker never opens saying the day is empty.
+  Future<List<RideResponse>?> ridesOn(DateTime day) async {
+    final result = await ref.read(eventsDataProvider).ridesOn(day);
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return null;
+    }
+    return result.valueOrNull ?? const [];
+  }
+
   Future<void> update(String id, UpdateEventRequest event) =>
       _run(() => ref.read(eventsDataProvider).update(id, event));
 

@@ -42,4 +42,34 @@ public static class EventRideLink
         // fails and its rows are detached.
         await db.Events.Where(e => e.Id == links[0]).ExecuteUpdateAsync(e => e.SetProperty(x => x.RideId, ride.Id), ct);
     }
+
+    /// <summary>
+    /// Links an event that was just added, or moved to another date, to the ride it was: exactly one ready ride of the
+    /// member on that local date, not already another event's ride, and the event is the only unlinked one of that
+    /// date. Another unlinked event of the day leaves the choice to the rider.
+    /// </summary>
+    public static async Task ForEventAsync(VelomineDbContext db, MemberClock clock, TrainingEvent e, CancellationToken ct)
+    {
+        var events = await db.Events.AsNoTracking()
+            .Where(o => o.UserId == e.UserId && o.Id != e.Id)
+            .Select(o => new { o.Date, o.RideId })
+            .ToListAsync(ct);
+        if (events.Any(o => o.Date == e.Date && o.RideId is null)) return;
+        var taken = events.Where(o => o.RideId is not null).Select(o => o.RideId!.Value).ToHashSet();
+
+        // A local date is at most 14 hours from UTC, so a day either side catches every ride of it; the exact cut is
+        // made below, the same way ListRides decides which day a ride counts on.
+        var from = new DateTimeOffset(e.Date.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var until = new DateTimeOffset(e.Date.AddDays(2).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var rides = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == e.UserId && r.Status == RideStatus.Ready && r.StartTime != null
+                && r.StartTime >= from && r.StartTime < until)
+            .Select(r => new { r.Id, r.StartTime, r.UtcOffsetMinutes })
+            .ToListAsync(ct);
+        var onDay = rides
+            .Where(r => clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes) == e.Date)
+            .Select(r => r.Id)
+            .ToList();
+        if (onDay.Count == 1 && !taken.Contains(onDay[0])) e.RideId = onDay[0];
+    }
 }

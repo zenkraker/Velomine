@@ -59,6 +59,8 @@ class RideResponse {
     this.efficiencyFactor = const Optional.absent(),
     this.decouplingPct = const Optional.absent(),
     this.steady = const Optional.absent(),
+    this.heartRateMaxNote = const Optional.absent(),
+    this.heartRateThresholdNote = const Optional.absent(),
   });
 
   final String id;
@@ -207,6 +209,22 @@ class RideResponse {
   ///
   final Optional<bool?> steady;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateMaxNote;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateThresholdNote;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -254,7 +272,9 @@ class RideResponse {
     other.wPrimeJ == wPrimeJ &&
     other.efficiencyFactor == efficiencyFactor &&
     other.decouplingPct == decouplingPct &&
-    other.steady == steady;
+    other.steady == steady &&
+    other.heartRateMaxNote == heartRateMaxNote &&
+    other.heartRateThresholdNote == heartRateThresholdNote;
 
   @override
   int get hashCode =>
@@ -304,10 +324,12 @@ class RideResponse {
     (wPrimeJ == null ? 0 : wPrimeJ!.hashCode) +
     (efficiencyFactor == null ? 0 : efficiencyFactor!.hashCode) +
     (decouplingPct == null ? 0 : decouplingPct!.hashCode) +
-    (steady == null ? 0 : steady!.hashCode);
+    (steady == null ? 0 : steady!.hashCode) +
+    (heartRateMaxNote == null ? 0 : heartRateMaxNote!.hashCode) +
+    (heartRateThresholdNote == null ? 0 : heartRateThresholdNote!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -509,6 +531,14 @@ class RideResponse {
       final value = this.steady.value;
       json[r'steady'] = value;
     }
+    if (this.heartRateMaxNote.isPresent) {
+      final value = this.heartRateMaxNote.value;
+      json[r'heartRateMaxNote'] = value;
+    }
+    if (this.heartRateThresholdNote.isPresent) {
+      final value = this.heartRateThresholdNote.value;
+      json[r'heartRateThresholdNote'] = value;
+    }
     return json;
   }
 
@@ -590,6 +620,8 @@ class RideResponse {
     Optional<double?>? efficiencyFactor,
     Optional<double?>? decouplingPct,
     Optional<bool?>? steady,
+    Optional<String?>? heartRateMaxNote,
+    Optional<String?>? heartRateThresholdNote,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -637,6 +669,8 @@ class RideResponse {
     efficiencyFactor: efficiencyFactor ?? this.efficiencyFactor,
     decouplingPct: decouplingPct ?? this.decouplingPct,
     steady: steady ?? this.steady,
+    heartRateMaxNote: heartRateMaxNote ?? this.heartRateMaxNote,
+    heartRateThresholdNote: heartRateThresholdNote ?? this.heartRateThresholdNote,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -739,6 +773,8 @@ class RideResponse {
         efficiencyFactor: json.containsKey(r'efficiencyFactor') ? Optional.present(mapValueOfType<double>(json, r'efficiencyFactor')) : const Optional.absent(),
         decouplingPct: json.containsKey(r'decouplingPct') ? Optional.present(mapValueOfType<double>(json, r'decouplingPct')) : const Optional.absent(),
         steady: json.containsKey(r'steady') ? Optional.present(mapValueOfType<bool>(json, r'steady')) : const Optional.absent(),
+        heartRateMaxNote: json.containsKey(r'heartRateMaxNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateMaxNote')) : const Optional.absent(),
+        heartRateThresholdNote: json.containsKey(r'heartRateThresholdNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateThresholdNote')) : const Optional.absent(),
       );
     }
     return null;

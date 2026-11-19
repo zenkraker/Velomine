@@ -101,9 +101,17 @@ public sealed class Ride
 
     /// <summary>
     /// Why this ride changed a heart-rate number, when it was first read: one of <see cref="Analytics.HeartRateNotes"/>,
-    /// or null. Shown on the ride's page once; the history and the suggestions hold the truth beyond it.
+    /// or null. The maximum's note first, then the threshold's. Shown on the ride's page once; the history and the
+    /// suggestions hold the truth beyond it.
     /// </summary>
     public string? HeartRateNote { get; set; }
+
+    /// <summary>
+    /// The threshold's note from the same read, when the ride moved both numbers: one of
+    /// <see cref="Analytics.HeartRateNotes"/>, or null. <see cref="HeartRateNote"/> keeps the maximum first for a rider
+    /// whose app predates this column.
+    /// </summary>
+    public string? HeartRateThresholdNote { get; set; }
 
     /// <summary>road, gravel, mountain or track; null when the file and the member have not said.</summary>
     public string? Discipline { get; set; }

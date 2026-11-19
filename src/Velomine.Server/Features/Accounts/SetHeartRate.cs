@@ -51,13 +51,9 @@ public sealed class SetHeartRate(VelomineDbContext db, SetHeartRateValue setValu
 
         var userId = User.UserId();
         var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
-        if (kind == HeartRateKinds.Threshold
-            && HeartRates.For(user, time).Max?.Bpm is { } max
-            && req.Bpm >= max)
+        if (HeartRates.ThresholdProblem(kind, req.Bpm, HeartRates.For(user, time).Max) is { } problem)
         {
-            await Send.ResultAsync(TypedResults.Problem(
-                $"The threshold must be below the maximum in use ({max} bpm).",
-                statusCode: StatusCodes.Status400BadRequest));
+            await Send.ResultAsync(TypedResults.Problem(problem, statusCode: StatusCodes.Status400BadRequest));
             return;
         }
 

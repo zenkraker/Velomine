@@ -161,6 +161,137 @@ void main() {
     expect(find.byKey(const Key('event-event-1')), findsNothing);
   });
 
+  testWidgets('EventsScreen_ShouldLinkTheRide_WhenOneIsPicked', (tester) async {
+    final event = eventJson();
+    server.events.add(event);
+    server.rides.add(
+      rideJson(
+        'ride-1',
+        'ready',
+        startTime: '${event['date']}T09:00:00Z',
+        utcOffsetMinutes: 0,
+        distanceM: 30000,
+        movingS: 3600,
+      ),
+    );
+    await openProgress(tester);
+    await openEvents(tester);
+
+    await tester.tap(find.byKey(const Key('event-actions-event-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('event-link-event-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pick-ride-ride-1')));
+    await tester.pumpAndSettle();
+
+    expect(server.eventWrites, contains('ride event-1'));
+    expect(server.events.single['rideId'], 'ride-1');
+  });
+
+  testWidgets(
+    'EventsScreen_ShouldOfferTheLastPageRide_WhenTheDayHasMoreRidesThanOnePage',
+    (tester) async {
+      final event = eventJson();
+      server.events.add(event);
+      // More than the first page of the day's rides: the 51st is only on the second one.
+      for (var i = 1; i <= 51; i++) {
+        server.rides.add(
+          rideJson(
+            'ride-$i',
+            'ready',
+            startTime: '${event['date']}T09:00:00Z',
+            utcOffsetMinutes: 0,
+          ),
+        );
+      }
+      await openProgress(tester);
+      await openEvents(tester);
+
+      await tester.tap(find.byKey(const Key('event-actions-event-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('event-link-event-1')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('pick-ride-ride-51')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('pick-ride-ride-51')));
+      await tester.pumpAndSettle();
+
+      expect(server.events.single['rideId'], 'ride-51');
+    },
+  );
+
+  testWidgets(
+    "EventsScreen_ShouldNotOpenThePicker_WhenTheDay'sRidesCannotBeRead",
+    (tester) async {
+      server.events.add(eventJson());
+      await openProgress(tester);
+      await openEvents(tester);
+
+      server.broken.add('/api/v1/rides');
+      addTearDown(() => server.broken.clear());
+      await tester.tap(find.byKey(const Key('event-actions-event-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('event-link-event-1')));
+      await tester.pumpAndSettle();
+
+      // The failure is said, and the picker never opens claiming the day has no rides.
+      expect(find.byKey(const Key('no-rides-that-day')), findsNothing);
+      expect(
+        find.text('Could not load your rides (500). Try again.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('EventsScreen_ShouldUnlinkTheRide_WhenTheMenuSaysUnlink', (
+    tester,
+  ) async {
+    server.events.add(eventJson(rideId: 'ride-1'));
+    await openProgress(tester);
+    await openEvents(tester);
+
+    await tester.tap(find.byKey(const Key('event-actions-event-1')));
+    await tester.pumpAndSettle();
+    // Unlinking is not destructive: it says what it does and does it.
+    await tester.tap(find.byKey(const Key('event-unlink-event-1')));
+    await tester.pumpAndSettle();
+
+    expect(server.eventWrites, contains('ride event-1'));
+    expect(server.events.single['rideId'], isNull);
+  });
+
+  testWidgets('EventsScreen_ShouldPickTheRide_WhenTheLanguageIsItalian', (
+    tester,
+  ) async {
+    tester.platformDispatcher.localesTestValue = [const Locale('it')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    final event = eventJson();
+    server.events.add(event);
+    server.rides.add(
+      rideJson(
+        'ride-1',
+        'ready',
+        startTime: '${event['date']}T09:00:00Z',
+        utcOffsetMinutes: 0,
+      ),
+    );
+    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await openEvents(tester);
+
+    await tester.tap(find.byKey(const Key('event-actions-event-1')));
+    await tester.pumpAndSettle();
+    expect(find.text("Collega un'uscita"), findsOneWidget);
+    await tester.tap(find.byKey(const Key('event-link-event-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pick-ride-ride-1')));
+    await tester.pumpAndSettle();
+
+    expect(server.events.single['rideId'], 'ride-1');
+  });
+
   testWidgets('RideDetailScreen_ShouldNameTheEvent_WhenTheRideWasOne', (
     tester,
   ) async {

@@ -48,4 +48,4 @@ final class EventsDataProvider
   }
 }
 
-String _$eventsDataHash() => r'b98001bf659a4533d5b0a2aaa5b0c9e7a1098d10';
+String _$eventsDataHash() => r'e19dc2f7afb277857be2eff967d0e58da05ac64e';

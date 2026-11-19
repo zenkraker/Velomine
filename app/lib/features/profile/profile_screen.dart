@@ -118,6 +118,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   /// When the ride a test FTP came from started: the day of the effort, which the ride itself knows.
   DateTime? _ftpSourceRideStart;
+
+  /// The local dates of the rides a measured maximum and threshold came from.
+  DateTime? _maxHrRideDate;
+  DateTime? _thresholdHrRideDate;
   late final ProviderSubscription<ProfileState> _profileSub;
 
   @override
@@ -128,8 +132,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (profile == null) return;
       _fill(profile);
       _readFtpSourceRide(profile);
+      _readHeartRateRides(profile);
     }, fireImmediately: true);
   }
+
+  /// The rides a measured number came from, for the line under each field.
+  Future<void> _readHeartRateRides(ProfileResponse profile) async {
+    final max = await _measuredRideDate(
+      profile.maxHeartRateSource.orElse(null),
+      profile.maxHeartRateRideId.orElse(null),
+    );
+    final threshold = await _measuredRideDate(
+      profile.thresholdHeartRateSource.orElse(null),
+      profile.thresholdHeartRateRideId.orElse(null),
+    );
+    if (!mounted) return;
+    setState(() {
+      _maxHrRideDate = max;
+      _thresholdHrRideDate = threshold;
+    });
+  }
+
+  Future<DateTime?> _measuredRideDate(String? source, String? rideId) async {
+    if (source != 'measured' || rideId == null) return null;
+    return ref.read(profileViewModelProvider.notifier).rideLocalDate(rideId);
+  }
+
+  /// Opens the ride a measured number came from; nothing to open when it was typed or the ride is gone.
+  VoidCallback? _rideLink(String? source, String? rideId) =>
+      source == 'measured' && rideId != null
+      ? () => context.push('/rides/$rideId')
+      : null;
 
   Future<void> _readFtpSourceRide(ProfileResponse profile) async {
     final id = profile.ftpRideId.orElse(null);
@@ -165,8 +198,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _ftp.text = p.ftpW?.toString() ?? '';
       _weight.text = _weightText(p.weightKg);
       _birthYear.text = p.birthYear?.toString() ?? '';
-      _maxHr.text = p.maxHeartRate?.toString() ?? '';
-      _thresholdHr.text = p.thresholdHeartRate.orElse(null)?.toString() ?? '';
+      // Only a number the rider or a ride set is written in the field; an estimate is its hint text, so leaving the
+      // field alone saves nothing.
+      _maxHr.text = heartRateIsSet(p.maxHeartRateSource.orElse(null))
+          ? p.maxHeartRate?.toString() ?? ''
+          : '';
+      _thresholdHr.text =
+          heartRateIsSet(p.thresholdHeartRateSource.orElse(null))
+          ? p.thresholdHeartRate.orElse(null)?.toString() ?? ''
+          : '';
       _zone.text = p.timeZone ?? '';
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
@@ -174,6 +214,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _emailTraining = p.emailTrainingNotifications;
     });
   }
+
+  /// The estimate a field shows as its hint, and nothing for a number the rider has.
+  static String? _estimate(int? bpm, String? source) =>
+      heartRateIsSet(source) ? null : bpm?.toString();
 
   @override
   void dispose() {
@@ -285,8 +329,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (ok) setState(() {});
   }
 
-  /// Saves one heart-rate number as soon as its field is done; an empty field goes back to the estimate. The range is
-  /// the server's, so a number outside it never leaves the phone.
+  /// Saves one heart-rate number as soon as its field is done. The range is the server's, so a number outside it never
+  /// leaves the phone; what the field holds decides whether anything is written at all.
   Future<void> _saveHeartRate(
     String kind,
     String text,
@@ -299,7 +343,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
     setState(() => _problem = null);
-    await ref.read(profileViewModelProvider.notifier).setHeartRate(kind, typed);
+    await ref
+        .read(profileViewModelProvider.notifier)
+        .commitHeartRate(kind, text);
   }
 
   Future<void> _setTelemetry({required bool crash, required bool usage}) async {
@@ -314,11 +360,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String label,
     String suffix, {
     String? helper,
+    String? hint,
     bool decimals = false,
     ValueChanged<String>? onDone,
   }) => AppTextField(
     fieldKey: Key(key),
     controller: c,
+    hint: hint,
     keyboardType: TextInputType.numberWithOptions(decimal: decimals),
     inputFormatters: [
       FilteringTextInputFormatter.allow(
@@ -399,6 +447,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             l10n.maxHeartRateField,
             'bpm',
             helper: l10n.heartRateLeaveEmpty,
+            hint: _estimate(
+              s.profile?.maxHeartRate,
+              s.profile?.maxHeartRateSource.orElse(null),
+            ),
             onDone: (text) => _saveHeartRate('max', text, 120, 230),
           ),
           if (s.profile case final profile?)
@@ -406,15 +458,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   l10n,
                   profile.maxHeartRateSource.orElse(null),
                   profile.maxHeartRateSetAt.orElse(null),
+                  rideId: profile.maxHeartRateRideId.orElse(null),
+                  rideDate: _maxHrRideDate,
                 )
                 case final note?)
-              SourceNote(note, key: const Key('profile-max-hr-source')),
+              SourceNote(
+                note,
+                key: const Key('profile-max-hr-source'),
+                onTap: _rideLink(
+                  profile.maxHeartRateSource.orElse(null),
+                  profile.maxHeartRateRideId.orElse(null),
+                ),
+              ),
           _number(
             'profile-threshold-hr',
             _thresholdHr,
             l10n.thresholdHeartRateField,
             'bpm',
             helper: l10n.thresholdHeartRateHelp,
+            hint: _estimate(
+              s.profile?.thresholdHeartRate.orElse(null),
+              s.profile?.thresholdHeartRateSource.orElse(null),
+            ),
             onDone: (text) => _saveHeartRate('threshold', text, 90, 220),
           ),
           if (s.profile case final profile?)
@@ -423,9 +488,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   profile.thresholdHeartRateSource.orElse(null),
                   profile.thresholdHeartRateSetAt.orElse(null),
                   threshold: true,
+                  rideId: profile.thresholdHeartRateRideId.orElse(null),
+                  rideDate: _thresholdHrRideDate,
                 )
                 case final note?)
-              SourceNote(note, key: const Key('profile-threshold-hr-source')),
+              SourceNote(
+                note,
+                key: const Key('profile-threshold-hr-source'),
+                onTap: _rideLink(
+                  profile.thresholdHeartRateSource.orElse(null),
+                  profile.thresholdHeartRateRideId.orElse(null),
+                ),
+              ),
+          // A maximum lowered below a set threshold afterwards is allowed, so the profile says which number zones use.
+          if (s.profile?.maxHeartRate case final max?)
+            if (s.profile?.thresholdHeartRate.orElse(null) case final threshold?
+                when threshold > max)
+              SourceNote(
+                l10n.thresholdAboveMax(max),
+                key: const Key('profile-threshold-hr-above-max'),
+              ),
           AppTextField(
             fieldKey: const Key('profile-zone'),
             controller: _zone,

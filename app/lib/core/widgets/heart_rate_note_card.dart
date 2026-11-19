@@ -46,7 +46,7 @@ class HeartRateNoteCard extends StatelessWidget {
         ? l10n.heartRateMaxMeasured(bpm)
         : l10n.heartRateThresholdMeasured(bpm);
     return Card(
-      key: const Key('heart-rate-note'),
+      key: Key('heart-rate-note-$kind'),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(

@@ -489,7 +489,7 @@ final class EventsViewModelProvider
   }
 }
 
-String _$eventsViewModelHash() => r'53a62a3196c9ed3133bf11e35d3709cfe5ccd3b7';
+String _$eventsViewModelHash() => r'764f419610793f23fe3753035a65d8a745461ae7';
 
 /// The events the rider is training for. A change reloads the list, so the card and the list agree.
 

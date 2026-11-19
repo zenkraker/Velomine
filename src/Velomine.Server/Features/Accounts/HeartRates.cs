@@ -50,6 +50,15 @@ public static class HeartRates
     public const int MaxThreshold = 220;
 
     /// <summary>
+    /// The one rule a threshold keeps against the maximum: it stays below the maximum in use, or the caller answers
+    /// 400 with this reason. A maximum lowered below a threshold afterwards is the rider's own business.
+    /// </summary>
+    public static string? ThresholdProblem(string kind, int bpm, HeartRate? max) =>
+        kind == HeartRateKinds.Threshold && max?.Bpm is { } maxBpm && bpm >= maxBpm
+            ? $"The threshold must be below the maximum in use ({maxBpm} bpm)."
+            : null;
+
+    /// <summary>
     /// The two numbers with where each came from and which ride measured it, read from the account's own columns: no
     /// history lookup. A value whose source column is null reads as typed, which is what the backfill left set.
     /// </summary>

@@ -3944,6 +3944,12 @@ abstract class AppLocalizations {
   /// **'Measured on your ride of {date}'**
   String heartRateSourceMeasured(String date);
 
+  /// No description provided for @heartRateSourceMeasuredDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured on a ride you deleted'**
+  String get heartRateSourceMeasuredDeleted;
+
   /// No description provided for @maxHeartRateField.
   ///
   /// In en, this message translates to:
@@ -3967,6 +3973,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The highest heart rate you can hold for about an hour.'**
   String get thresholdHeartRateHelp;
+
+  /// No description provided for @thresholdAboveMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Above the maximum in use ({max} bpm). Your zones still follow the maximum.'**
+  String thresholdAboveMax(int max);
 
   /// No description provided for @heartRateSourceMaxEstimate.
   ///
@@ -8257,6 +8269,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your event: {name}'**
   String eventYourRide(String name);
+
+  /// No description provided for @eventLinkRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Link a ride'**
+  String get eventLinkRide;
+
+  /// No description provided for @eventUnlinkRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink'**
+  String get eventUnlinkRide;
+
+  /// No description provided for @eventNoRidesThatDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No ready rides on that day.'**
+  String get eventNoRidesThatDay;
 
   /// No description provided for @eventDeleteTitle.
   ///

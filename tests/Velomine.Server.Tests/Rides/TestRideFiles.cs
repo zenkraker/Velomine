@@ -30,7 +30,9 @@ public static class TestRideFiles
         /// <summary>Heart rate per second, when the test needs a shape other than the steady 150 bpm.</summary>
         Func<int, short>? HeartRate = null,
         /// <summary>Leaves the heart rate out, so a ride does not teach the member a maximum heart rate.</summary>
-        bool NoHeartRate = false);
+        bool NoHeartRate = false,
+        /// <summary>The offset the file's activity claims, so a ride can be on another local date.</summary>
+        int UtcOffsetHours = 2);
 
     /// <summary>A FIT file with 1 Hz records: 150 bpm, 200 W, 90 rpm, 8 m/s north, climbing 0.1 m/s.</summary>
     public static byte[] Fit(params FitSession[] sessions)
@@ -114,7 +116,7 @@ public static class TestRideFiles
         var last = sessions[^1].Start.AddSeconds(sessions[^1].Seconds);
         var activity = new ActivityMesg();
         activity.SetTimestamp(new Dynastream.Fit.DateTime(last));
-        activity.SetLocalTimestamp(new Dynastream.Fit.DateTime(last.AddHours(2)).GetTimeStamp()); // UTC+2
+        activity.SetLocalTimestamp(new Dynastream.Fit.DateTime(last.AddHours(sessions[^1].UtcOffsetHours)).GetTimeStamp());
         activity.SetNumSessions((ushort)sessions.Length);
         encode.Write(activity);
 

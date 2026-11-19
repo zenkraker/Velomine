@@ -24,6 +24,17 @@ class ProfileData {
     return ride.valueOrNull?.startTime;
   }
 
+  /// A ride's own local date: its start plus the offset it recorded, not the phone's zone. Null when it cannot be
+  /// read.
+  Future<DateTime?> rideLocalDate(String id) async {
+    final ride = (await _rides.getRide(id).guard(FailureAction.loadProfile))
+        .valueOrNull;
+    if (ride?.startTime case final start?) {
+      return start.add(Duration(minutes: ride!.utcOffsetMinutes ?? 0));
+    }
+    return null;
+  }
+
   Future<Result<TelemetryResponse?>> telemetry() =>
       _api.getTelemetry().guard(FailureAction.loadProfile);
 

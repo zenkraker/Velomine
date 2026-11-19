@@ -12,6 +12,7 @@ using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
+using Velomine.Server.Features.Sharing;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
 using SubSport = Dynastream.Fit.SubSport;
 
@@ -20,6 +21,7 @@ namespace Velomine.Server.Tests.Analytics;
 /// <summary>
 /// A ride that shows a higher heart rate teaches Velomine the number, once, when the ride is first read: a number the
 /// rider typed is only suggested, a number that was estimated or measured before is used. A lower one never counts.
+/// One ride can move both numbers, and its notes are the rider's own.
 /// </summary>
 public sealed class HeartRateDetectionTests(PostgresFixture postgres)
 {
@@ -182,6 +184,148 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
         Assert.NotEqual(HeartRateNotes.ThresholdSuggested, ride.HeartRateNote);
     }
 
+    /// <summary>An hour that earns both numbers: a maximum of 200 bpm and a threshold of 188.</summary>
+    private static short BothNumbers(int s) => (short)(s < 600 ? 150 : s < 1175 ? 175 : s < 1200 ? 175 + (s - 1174) : 200);
+
+    /// <summary>An hour with a short 200 bpm peak over a 170 bpm base: a maximum of 200 and a threshold of 171.</summary>
+    private static short PeakOverBase(int s) =>
+        (short)(s < 600 ? 150 : s < 1300 ? 170 : s < 1330 ? 170 + (s - 1299) : s < 1360 ? 200 : 170);
+
+    [Fact]
+    public async Task HeartRateDetection_ShouldUpdateBoth_WhenARideRaisesTheMaxAndHoldsAThresholdEffort()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        var ride = await UploadAsync(member.Client, Yesterday, BothNumbers);
+
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((200, HeartRateSources.Measured), (profile.MaxHeartRate, profile.MaxHeartRateSource));
+        Assert.Equal((188, HeartRateSources.Measured), (profile.ThresholdHeartRate, profile.ThresholdHeartRateSource));
+        Assert.Equal((ride.Id, ride.Id), (profile.MaxHeartRateRideId, profile.ThresholdHeartRateRideId));
+        Assert.Equal((HeartRateNotes.MaxMeasured, HeartRateNotes.ThresholdMeasured),
+            (ride.HeartRateMaxNote, ride.HeartRateThresholdNote));
+        // Both numbers moved, so both say so: two notifications for one ride.
+        var list = await TestApi.WaitForNotificationAsync(member.Client, NotificationTypes.HeartRateMeasured);
+        var measured = list.Notifications.Where(n => n.Type == NotificationTypes.HeartRateMeasured).ToArray();
+        Assert.Equal(2, measured.Length);
+        Assert.Equal(
+            ["Maximum 200 bpm", "Threshold 188 bpm"],
+            measured.Select(n => n.Subject).Order().ToArray());
+    }
+
+    [Fact]
+    public async Task HeartRateDetection_ShouldSuggestBoth_WhenBothNumbersWereTyped()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await SetAsync(member.Client, "max", 185)).EnsureSuccessStatusCode();
+        (await SetAsync(member.Client, "threshold", 165)).EnsureSuccessStatusCode();
+        var ride = await UploadAsync(member.Client, Yesterday, PeakOverBase);
+
+        var suggestions = await SuggestionsAsync(member.Client);
+        Assert.Equal(200, suggestions.Single(s => s.Kind == HeartRateKinds.Max).Bpm);
+        Assert.Equal(171, suggestions.Single(s => s.Kind == HeartRateKinds.Threshold).Bpm);
+        Assert.Equal((HeartRateNotes.MaxSuggested, HeartRateNotes.ThresholdSuggested),
+            (ride.HeartRateMaxNote, ride.HeartRateThresholdNote));
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((185, HeartRateSources.Manual), (profile.MaxHeartRate, profile.MaxHeartRateSource));
+        Assert.Equal((165, HeartRateSources.Manual), (profile.ThresholdHeartRate, profile.ThresholdHeartRateSource));
+    }
+
+    [Fact]
+    public async Task HeartRateDetection_ShouldMeasureTheThreshold_WhenTheMaxWasOnlySuggested()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await SetAsync(member.Client, "max", 185)).EnsureSuccessStatusCode();
+        var ride = await UploadAsync(member.Client, Yesterday, PeakOverBase);
+
+        // The maximum stayed where the rider put it, so the threshold is below it and is used as it is.
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((185, HeartRateSources.Manual), (profile.MaxHeartRate, profile.MaxHeartRateSource));
+        Assert.Equal((171, HeartRateSources.Measured), (profile.ThresholdHeartRate, profile.ThresholdHeartRateSource));
+        Assert.Equal((HeartRateNotes.MaxSuggested, HeartRateNotes.ThresholdMeasured),
+            (ride.HeartRateMaxNote, ride.HeartRateThresholdNote));
+        Assert.DoesNotContain(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Threshold);
+    }
+
+    [Fact]
+    public async Task HeartRateDetection_ShouldNotSetTheThreshold_WhenItIsNotBelowTheNewMax()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // Every second at the same rate: the maximum moves to 200, and the threshold cannot sit at it.
+        var ride = await UploadAsync(member.Client, Yesterday, Flat(200));
+
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((200, HeartRateSources.Measured), (profile.MaxHeartRate, profile.MaxHeartRateSource));
+        Assert.NotEqual(HeartRateSources.Measured, profile.ThresholdHeartRateSource);
+        Assert.Equal(HeartRateNotes.MaxMeasured, ride.HeartRateMaxNote);
+        Assert.Null(ride.HeartRateThresholdNote);
+    }
+
+    [Fact]
+    public async Task HeartRateDetection_ShouldKeepTheLegacyNote_WhenBothHappen()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        var ride = await UploadAsync(member.Client, Yesterday, BothNumbers);
+
+        // The column an app without the threshold's own field reads keeps the maximum's note.
+        Assert.Equal(HeartRateNotes.MaxMeasured, ride.HeartRateNote);
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var stored = await db.Rides.AsNoTracking().SingleAsync(r => r.Id == ride.Id, Ct);
+        Assert.Equal((HeartRateNotes.MaxMeasured, HeartRateNotes.ThresholdMeasured),
+            (stored.HeartRateNote, stored.HeartRateThresholdNote));
+    }
+
+    [Fact]
+    public async Task CoachRide_ShouldNotCarryTheHeartRateNotes_WhenTheCoachViewsTheRide()
+    {
+        await using var api = await StartAsync();
+        var coachEmail = TestApi.NewEmail();
+        (await api.RegisterAsync(coachEmail, name: "Coach Rina")).EnsureSuccessStatusCode();
+        var coach = await api.SignedInClientAsync(coachEmail, TestApi.MemberPassword);
+        var club = await TestClubs.CreateAsync(api, coachEmail);
+        var athlete = await api.NewMemberAsync("Athlete Luca");
+        await TestClubs.JoinAsync(athlete, club);
+        (await athlete.Client.PutAsJsonAsync("/api/v1/sharing",
+            new UpdateSharingRequest { Rides = "coaches", Analytics = "coaches", Routes = "none", Wellbeing = "none" }, Ct))
+            .EnsureSuccessStatusCode();
+        var ride = await UploadAsync(athlete.Client, Yesterday, BothNumbers);
+        Assert.Equal(HeartRateNotes.ThresholdMeasured, ride.HeartRateThresholdNote);
+
+        var shared = await coach.GetFromJsonAsync<RideResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
+        Assert.Null(shared!.HeartRateNote);
+        Assert.Null(shared.HeartRateMaxNote);
+        Assert.Null(shared.HeartRateThresholdNote);
+        Assert.Null(shared.FtpSuggestionId);
+
+        // Without the analytics grant the ride answers through WithoutTrainingLoad: the notes are gone there too.
+        (await athlete.Client.PutAsJsonAsync("/api/v1/sharing",
+            new UpdateSharingRequest { Rides = "coaches", Analytics = "none", Routes = "none", Wellbeing = "none" }, Ct))
+            .EnsureSuccessStatusCode();
+        var withoutAnalytics = await coach.GetFromJsonAsync<RideResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
+        Assert.Null(withoutAnalytics!.HeartRateNote);
+        Assert.Null(withoutAnalytics.HeartRateMaxNote);
+        Assert.Null(withoutAnalytics.HeartRateThresholdNote);
+        Assert.Null(withoutAnalytics.FtpSuggestionId);
+    }
+
+    [Fact]
+    public async Task Ride_ShouldNotCarryTheHeartRateNotes_WhenAnotherMemberAsks()
+    {
+        await using var api = await StartAsync();
+        var owner = await api.NewMemberAsync("Ada");
+        var ride = await UploadAsync(owner.Client, Yesterday, BothNumbers);
+        var other = await api.NewMemberAsync("Grace");
+
+        Assert.Equal(HttpStatusCode.NotFound, (await other.Client.GetAsync($"/api/v1/rides/{ride.Id}", Ct)).StatusCode);
+    }
+
     [Fact]
     public async Task ThresholdHeartRate_ShouldSkipTheWindow_WhenItHasAPause()
     {
@@ -255,6 +399,56 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
 
         Assert.NotNull(series);
         Assert.Equal(1800, series!.Values.Length);
+        Assert.Equal(165, HeartRateDetection.ThresholdCandidate(series));
+    }
+
+    [Fact]
+    public void MaxHeartRate_ShouldNotChange_WhenTheRideIsSampledAt2Hz()
+    {
+        // The same effort at one and at two samples a second: one value per wall-clock second, so the peak is the same.
+        static short Ramp(double second) => (short)(second < 300 ? 150 : 150 + Math.Min(42, (second - 300) / 2));
+        var once = Enumerable.Range(0, 600).Select(s => new Sample(s, HeartRate: Ramp(s))).ToList();
+        var twice = Enumerable.Range(0, 1200).Select(i => new Sample(i * 0.5, HeartRate: Ramp(i * 0.5))).ToList();
+
+        var at1Hz = HeartRateDetection.Smoothed(once, []);
+        var at2Hz = HeartRateDetection.Smoothed(twice, []);
+
+        Assert.NotNull(at1Hz);
+        Assert.NotNull(at2Hz);
+        Assert.Equal(600, at2Hz!.Values.Length);
+        Assert.Equal(HeartRateDetection.MaxCandidate(at1Hz!), HeartRateDetection.MaxCandidate(at2Hz));
+        Assert.Equal(192, HeartRateDetection.MaxCandidate(at2Hz));
+    }
+
+    [Fact]
+    public void HeartRateDetection_ShouldDropDuplicateAndOutOfOrderSamples_WhenTheSeriesIsBuilt()
+    {
+        var samples = new List<Sample>
+        {
+            new(0, HeartRate: 140),
+            new(10, HeartRate: 150),
+            new(10, HeartRate: 200), // the same instant again says nothing about the next second
+            new(5, HeartRate: 210),  // and neither does a sample older than the one before it
+            new(20, HeartRate: 160),
+        };
+
+        var series = HeartRateDetection.Smoothed(samples, []);
+
+        Assert.NotNull(series);
+        Assert.Equal(21, series!.Values.Length);
+        Assert.Equal(140, series.Values[0]);
+        Assert.Equal(150, series.Values[10]);
+        // The two samples the order rule dropped never reach the series.
+        Assert.DoesNotContain(series.Values, v => v >= 200);
+    }
+
+    [Fact]
+    public void ThresholdHeartRate_ShouldStillCount_WhenSecondsHaveNoSignalButNoPause()
+    {
+        // Ten seconds without a value: under the 10 % the window may miss, and no second is paused.
+        var series = new HeartRateSeries(
+            [.. Enumerable.Range(0, 1800).Select(s => s is >= 600 and < 610 ? (double?)null : 165)], new bool[1800]);
+
         Assert.Equal(165, HeartRateDetection.ThresholdCandidate(series));
     }
 
@@ -362,6 +556,32 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
         Assert.Equal((MaxCandidate, ride.Id), (row.Bpm, row.RideId!.Value));
         Assert.Equal(HeartRateSuggestionStatuses.Accepted,
             (await db.HeartRateSuggestions.AsNoTracking().SingleAsync(s => s.Id == suggestion.Id, Ct)).Status);
+    }
+
+    [Fact]
+    public async Task HeartRateHistory_ShouldAgreeWithTheColumns_WhenTheSuggestionIsAccepted()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await SetAsync(member.Client, "max", 185)).EnsureSuccessStatusCode();
+        var ride = await UploadAsync(member.Client, Yesterday, Flat(MaxCandidate));
+        var suggestion = Assert.Single(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Max);
+
+        var accepted = await member.Client.PostAsync(
+            $"/api/v1/analytics/heart-rate-suggestions/{suggestion.Id}/accept", null, Ct);
+        Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var user = await db.Users.AsNoTracking().SingleAsync(u => u.Id == member.Id, Ct);
+        Assert.Equal((MaxCandidate, HeartRateSources.Measured, (Guid?)ride.Id),
+            (user.MaxHeartRateBpm, user.MaxHeartRateSource, user.MaxHeartRateRideId));
+        var row = await db.HeartRateHistory.AsNoTracking()
+            .Where(h => h.UserId == member.Id && h.Kind == HeartRateKinds.Max)
+            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Sequence)
+            .FirstAsync(Ct);
+        Assert.Equal((MaxCandidate, HeartRateSources.Measured, (Guid?)ride.Id),
+            (row.Bpm, row.Source, row.RideId));
     }
 
     [Fact]

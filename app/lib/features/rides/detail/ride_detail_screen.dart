@@ -271,8 +271,12 @@ class RideDetailScreen extends ConsumerWidget {
             onAccept: notifier.acceptSuggestion,
             onDismiss: notifier.dismissSuggestion,
           ),
-        if (ride.heartRateNote.orElse(null) case final note?)
-          ..._heartRateNoteCard(s, ride, note, notifier),
+        // One card per number this ride moved: one ride can raise the maximum and the threshold.
+        for (final note in [
+          ride.heartRateMaxNote.orElse(null),
+          ride.heartRateThresholdNote.orElse(null),
+        ])
+          if (note != null) ..._heartRateNoteCard(s, ride, note, notifier),
         if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
         PowerRecordChips(
           records: ride.powerRecords.orElse(const []) ?? const [],
@@ -401,7 +405,12 @@ class RideDetailScreen extends ConsumerWidget {
         ),
       ];
     }
-    if (current == null) return const [];
+    // The profile carries the number in use and the ride that measured it: the card is this ride's only while the
+    // number still came from it, never after another ride or the rider changed it.
+    final measuredOn = isMax
+        ? s.profile?.maxHeartRateRideId.orElse(null)
+        : s.profile?.thresholdHeartRateRideId.orElse(null);
+    if (current == null || measuredOn != ride.id) return const [];
     return [HeartRateNoteCard(kind: kind, bpm: current)];
   }
 }

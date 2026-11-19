@@ -5,7 +5,10 @@ using Velomine.Server.Data;
 
 namespace Velomine.Server.Features.Accounts;
 
-/// <summary>Changing the profile: all fields are sent each time; null clears a value. EmailNotifications is kept when left out.</summary>
+/// <summary>
+/// Changing the profile: every field is sent each time except the two heart rates, which are only set when they arrive.
+/// Null clears a profile value as it always did; clearing a heart rate goes through its DELETE endpoint.
+/// </summary>
 public sealed record UpdateProfileRequest(
     string DisplayName,
     int? FtpW,
@@ -16,9 +19,9 @@ public sealed record UpdateProfileRequest(
     bool? EmailNotifications = null,
     bool? EmailAccountNotifications = null,
     bool? EmailTrainingNotifications = null,
-    /// <summary>Left out keeps the current maximum; null goes back to the estimate.</summary>
+    /// <summary>Left out or null keeps the current maximum.</summary>
     int? MaxHeartRate = null,
-    /// <summary>Left out keeps the current threshold; null goes back to 89 % of the maximum.</summary>
+    /// <summary>Left out or null keeps the current threshold.</summary>
     int? ThresholdHeartRate = null);
 
 public sealed class UpdateProfileValidator : Validator<UpdateProfileRequest>
@@ -66,11 +69,19 @@ public sealed class UpdateProfile(VelomineDbContext db, SetFtpValue setFtp, SetH
         user.EmailNotifications = req.EmailNotifications ?? user.EmailNotifications;
         user.EmailAccountNotifications = req.EmailAccountNotifications ?? user.EmailAccountNotifications;
         user.EmailTrainingNotifications = req.EmailTrainingNotifications ?? user.EmailTrainingNotifications;
-        // The heart-rate fields are left out by an older app, which stays with what is set; a null goes to the estimate.
+        // The two heart rates are set only: a released app does not send them at all, and saving its profile must not
+        // wipe a number it cannot see. Clearing goes through DELETE /accounts/me/heart-rate/{kind}.
         if (req.MaxHeartRate is { } maxHr) await setHeartRate.SetAsync(user, HeartRateKinds.Max, maxHr, HeartRateSources.Manual, null, ct);
-        else if (req.ThresholdHeartRate is not null) await setHeartRate.ClearAsync(user, HeartRateKinds.Max, ct);
-        if (req.ThresholdHeartRate is { } thresholdHr) await setHeartRate.SetAsync(user, HeartRateKinds.Threshold, thresholdHr, HeartRateSources.Manual, null, ct);
-        else if (req.MaxHeartRate is not null) await setHeartRate.ClearAsync(user, HeartRateKinds.Threshold, ct);
+        if (req.ThresholdHeartRate is { } thresholdHr)
+        {
+            // The maximum is applied first, so two numbers arriving together are judged in the order they are read.
+            if (HeartRates.ThresholdProblem(HeartRateKinds.Threshold, thresholdHr, HeartRates.For(user, time).Max) is { } problem)
+            {
+                await Send.ResultAsync(TypedResults.Problem(problem, statusCode: StatusCodes.Status400BadRequest));
+                return;
+            }
+            await setHeartRate.SetAsync(user, HeartRateKinds.Threshold, thresholdHr, HeartRateSources.Manual, null, ct);
+        }
         await db.SaveChangesAsync(ct);
 
         await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
