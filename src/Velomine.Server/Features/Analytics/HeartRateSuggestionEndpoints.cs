@@ -72,7 +72,7 @@ public sealed class AcceptHeartRateSuggestion(VelomineDbContext db, SetHeartRate
         await setValue.SetAsync(user, suggestion.Kind, suggestion.Bpm, HeartRateSources.Measured, suggestion.RideId, ct);
         suggestion.Status = HeartRateSuggestionStatuses.Accepted;
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await GetProfile.ProfileWithSourcesAsync(db, user, time, ct), ct);
+        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
     }
 }
 

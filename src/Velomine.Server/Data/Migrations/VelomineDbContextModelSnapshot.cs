@@ -377,6 +377,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("max_heart_rate_bpm");
 
+                    b.Property<Guid?>("MaxHeartRateRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("max_heart_rate_ride_id");
+
+                    b.Property<string>("MaxHeartRateSource")
+                        .HasColumnType("text")
+                        .HasColumnName("max_heart_rate_source");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)")
@@ -427,6 +435,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("threshold_heart_rate_bpm");
 
+                    b.Property<Guid?>("ThresholdHeartRateRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("threshold_heart_rate_ride_id");
+
+                    b.Property<string>("ThresholdHeartRateSource")
+                        .HasColumnType("text")
+                        .HasColumnName("threshold_heart_rate_source");
+
                     b.Property<string>("TimeZone")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
@@ -464,12 +480,18 @@ namespace Velomine.Server.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
+                    b.HasIndex("MaxHeartRateRideId")
+                        .HasDatabaseName("ix_users_max_heart_rate_ride_id");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("email_index");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("user_name_index");
+
+                    b.HasIndex("ThresholdHeartRateRideId")
+                        .HasDatabaseName("ix_users_threshold_heart_rate_ride_id");
 
                     b.ToTable("users", "accounts", t =>
                         {
@@ -483,7 +505,19 @@ namespace Velomine.Server.Data.Migrations
 
                             t.HasCheckConstraint("ck_users_max_heart_rate_bpm", "max_heart_rate_bpm BETWEEN 120 AND 230");
 
+                            t.HasCheckConstraint("ck_users_max_heart_rate_ride", "max_heart_rate_ride_id IS NULL OR max_heart_rate_source = 'measured'");
+
+                            t.HasCheckConstraint("ck_users_max_heart_rate_source", "(max_heart_rate_bpm IS NULL) = (max_heart_rate_source IS NULL)");
+
+                            t.HasCheckConstraint("ck_users_max_heart_rate_source_value", "max_heart_rate_source IN ('manual', 'measured')");
+
                             t.HasCheckConstraint("ck_users_threshold_heart_rate_bpm", "threshold_heart_rate_bpm BETWEEN 90 AND 220");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_ride", "threshold_heart_rate_ride_id IS NULL OR threshold_heart_rate_source = 'measured'");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_source", "(threshold_heart_rate_bpm IS NULL) = (threshold_heart_rate_source IS NULL)");
+
+                            t.HasCheckConstraint("ck_users_threshold_heart_rate_source_value", "threshold_heart_rate_source IN ('manual', 'measured')");
 
                             t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
 
@@ -2966,6 +3000,21 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_heart_rate_history_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Accounts.User", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("MaxHeartRateRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_users_rides_max_heart_rate_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("ThresholdHeartRateRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_users_rides_threshold_heart_rate_ride_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Accounts.UserSession", b =>

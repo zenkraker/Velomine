@@ -90,6 +90,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             fileNames[ride.FileSha256] = entryName;
         }
 
+        var heartRates = HeartRates.For(user, time);
         await AddJsonAsync(zip, "profile.json", new
         {
             user.Email,
@@ -98,8 +99,9 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             user.FtpW,
             user.WeightKg,
             user.BirthYear,
-            // Both numbers in use, with where each came from, so the export says what the zones used.
-            HeartRate = HeartRates.For(user, time),
+            // Both numbers in use, with where each came from and the ride that measured it, so the export says what
+            // the zones used. Written out one by one: a tuple's fields are not serialized at all.
+            HeartRate = new { Max = heartRates.Max, Threshold = heartRates.Threshold },
             user.Language,
             user.Units,
             user.TimeZone,

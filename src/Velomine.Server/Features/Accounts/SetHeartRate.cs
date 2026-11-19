@@ -63,7 +63,7 @@ public sealed class SetHeartRate(VelomineDbContext db, SetHeartRateValue setValu
 
         await setValue.SetAsync(user, kind, req.Bpm, HeartRateSources.Manual, null, ct);
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await GetProfile.ProfileWithSourcesAsync(db, user, time, ct), ct);
+        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
     }
 }
 
@@ -89,6 +89,6 @@ public sealed class ClearHeartRate(VelomineDbContext db, SetHeartRateValue setVa
         var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
         await setValue.ClearAsync(user, kind, ct);
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(await GetProfile.ProfileWithSourcesAsync(db, user, time, ct), ct);
+        await Send.OkAsync(await GetProfile.ProfileOfAsync(db, user, time, ct), ct);
     }
 }

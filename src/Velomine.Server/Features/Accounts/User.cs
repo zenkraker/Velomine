@@ -34,8 +34,20 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>The maximum heart rate the rider typed or a ride measured. Null means it is estimated (see <see cref="HeartRates"/>).</summary>
     public int? MaxHeartRateBpm { get; set; }
 
+    /// <summary>How <see cref="MaxHeartRateBpm"/> was set: <c>manual</c> or <c>measured</c>. Null when no value is set.</summary>
+    public string? MaxHeartRateSource { get; set; }
+
+    /// <summary>The ride that measured the maximum, null for a typed number and for a ride since deleted.</summary>
+    public Guid? MaxHeartRateRideId { get; set; }
+
     /// <summary>The threshold heart rate the rider typed or a ride measured. Null means 89 % of the maximum.</summary>
     public int? ThresholdHeartRateBpm { get; set; }
+
+    /// <summary>How <see cref="ThresholdHeartRateBpm"/> was set: <c>manual</c> or <c>measured</c>. Null when no value is set.</summary>
+    public string? ThresholdHeartRateSource { get; set; }
+
+    /// <summary>The ride that measured the threshold, null for a typed number and for a ride since deleted.</summary>
+    public Guid? ThresholdHeartRateRideId { get; set; }
 
     /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
     public static int? EstimateMaxHeartRate(int? birthYear, TimeProvider time) =>

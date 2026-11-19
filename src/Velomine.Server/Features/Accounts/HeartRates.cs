@@ -49,35 +49,23 @@ public static class HeartRates
     public const int MinThreshold = 90;
     public const int MaxThreshold = 220;
 
+    /// <summary>
+    /// The two numbers with where each came from and which ride measured it, read from the account's own columns: no
+    /// history lookup. A value whose source column is null reads as typed, which is what the backfill left set.
+    /// </summary>
     public static (HeartRate? Max, HeartRate? Threshold) For(User user, TimeProvider time)
     {
         var max = user.MaxHeartRateBpm is { } typed
-            ? new HeartRate(typed, HeartRateSources.Manual)
+            ? new HeartRate(typed, user.MaxHeartRateSource ?? HeartRateSources.Manual, user.MaxHeartRateRideId)
             : User.EstimateMaxHeartRate(user.BirthYear, time) is { } estimated
                 ? new HeartRate(estimated, FtpSources.Estimate)
                 : null;
         var threshold = user.ThresholdHeartRateBpm is { } set
-            ? new HeartRate(set, HeartRateSources.Manual)
+            ? new HeartRate(set, user.ThresholdHeartRateSource ?? HeartRateSources.Manual, user.ThresholdHeartRateRideId)
             : max?.Bpm is { } m
                 ? new HeartRate((int)Math.Round(m * 0.89), FtpSources.Estimate)
                 : null;
         return (max, threshold);
-    }
-
-    /// <summary>
-    /// Where a set number came from and from which ride: the newest history row that set it (<c>manual</c> or
-    /// <c>measured</c>). A number that is only estimated keeps its estimate source.
-    /// </summary>
-    public static async Task<HeartRate?> LatestAsync(
-        VelomineDbContext db, Guid userId, string kind, HeartRate? number, CancellationToken ct)
-    {
-        if (number is not { Source: not FtpSources.Estimate } set) return number;
-        var newest = await db.HeartRateHistory.AsNoTracking()
-            .Where(h => h.UserId == userId && h.Kind == kind)
-            .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Sequence)
-            .Select(h => new { h.Source, h.RideId })
-            .FirstOrDefaultAsync(ct);
-        return newest is null ? set : set with { Source = newest.Source, RideId = newest.RideId };
     }
 }
 
@@ -139,7 +127,7 @@ public sealed class SetHeartRateValue(VelomineDbContext db, TimeProvider time)
     public async Task SetAsync(User user, string kind, int bpm, string source, Guid? rideId, CancellationToken ct)
     {
         if (Current(user, kind) == bpm) return;
-        Assign(user, kind, bpm);
+        Assign(user, kind, bpm, source, rideId);
         await AddAsync(user, kind, bpm, source, rideId, ct);
     }
 
@@ -147,17 +135,28 @@ public sealed class SetHeartRateValue(VelomineDbContext db, TimeProvider time)
     public async Task ClearAsync(User user, string kind, CancellationToken ct)
     {
         if (Current(user, kind) is not { } was) return;
-        Assign(user, kind, null);
+        Assign(user, kind, null, null, null);
         await AddAsync(user, kind, was, HeartRateSources.Cleared, null, ct);
     }
 
     private static int? Current(User user, string kind) =>
         kind == HeartRateKinds.Max ? user.MaxHeartRateBpm : user.ThresholdHeartRateBpm;
 
-    private static void Assign(User user, string kind, int? bpm)
+    /// <summary>The value, its source and the ride that measured it move together, so the three never disagree.</summary>
+    private static void Assign(User user, string kind, int? bpm, string? source, Guid? rideId)
     {
-        if (kind == HeartRateKinds.Max) user.MaxHeartRateBpm = bpm;
-        else user.ThresholdHeartRateBpm = bpm;
+        if (kind == HeartRateKinds.Max)
+        {
+            user.MaxHeartRateBpm = bpm;
+            user.MaxHeartRateSource = source;
+            user.MaxHeartRateRideId = rideId;
+        }
+        else
+        {
+            user.ThresholdHeartRateBpm = bpm;
+            user.ThresholdHeartRateSource = source;
+            user.ThresholdHeartRateRideId = rideId;
+        }
     }
 
     /// <summary>

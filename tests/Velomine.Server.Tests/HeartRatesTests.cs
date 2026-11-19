@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides;
@@ -302,6 +303,105 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public void HeartRates_ShouldReturnMeasuredAndTheRide_WhenARideSetTheNumber()
+    {
+        var ride = Guid.NewGuid();
+        var rider = Rider(maxBpm: 192, thresholdBpm: 171);
+        rider.MaxHeartRateSource = HeartRateSources.Measured;
+        rider.MaxHeartRateRideId = ride;
+        rider.ThresholdHeartRateSource = HeartRateSources.Measured;
+        rider.ThresholdHeartRateRideId = ride;
+
+        var (max, threshold) = HeartRates.For(rider, new FixedTime(Now));
+
+        Assert.Equal((192, HeartRateSources.Measured, ride), (max!.Bpm, max.Source, max.RideId));
+        Assert.Equal((171, HeartRateSources.Measured, ride), (threshold!.Bpm, threshold.Source, threshold.RideId));
+    }
+
+    [Fact]
+    public async Task Profile_ShouldSayMeasured_WhenTheHeartRateCameFromARide()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // A steady 150 bpm is the only number there is, so this ride measures the maximum.
+        var ride = await UploadAndWaitAsync(member.Client, Fit(new FitSession(Start, 600)));
+
+        var profile = await member.Client.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
+        Assert.Equal((150, HeartRateSources.Measured, ride.Id),
+            (profile!.MaxHeartRate, profile.MaxHeartRateSource, profile.MaxHeartRateRideId));
+
+        // Every answer that carries the profile says the same, not only getProfile.
+        var setFtp = await member.Client.PutAsJsonAsync("/api/v1/accounts/me/ftp", new SetFtpRequest(250), Ct);
+        var afterFtp = (await setFtp.Content.ReadFromJsonAsync<ProfileResponse>(Ct))!;
+        Assert.Equal((150, HeartRateSources.Measured, ride.Id),
+            (afterFtp.MaxHeartRate, afterFtp.MaxHeartRateSource, afterFtp.MaxHeartRateRideId));
+    }
+
+    [Fact]
+    public async Task HeartRateHistory_ShouldAgreeWithTheColumns_WhenTheNumberChanges()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+
+        await SetAsync(member.Client, "max", 190);
+        var typed = await UserAsync(api, member.Id);
+        Assert.Equal((190, HeartRateSources.Manual, (Guid?)null),
+            (typed.MaxHeartRateBpm, typed.MaxHeartRateSource, typed.MaxHeartRateRideId));
+        var rows = await HistoryAsync(api, member.Id);
+        Assert.Equal((190, HeartRateSources.Manual, (Guid?)null), (rows[0].Bpm, rows[0].Source, rows[0].RideId));
+
+        await ClearAsync(member.Client, "max");
+        var cleared = await UserAsync(api, member.Id);
+        Assert.Equal((null, null, null), (cleared.MaxHeartRateBpm, cleared.MaxHeartRateSource, cleared.MaxHeartRateRideId));
+        rows = await HistoryAsync(api, member.Id);
+        Assert.Equal((190, HeartRateSources.Cleared), (rows[0].Bpm, rows[0].Source));
+
+        // A ride measures it: the value, its source and the ride move together.
+        var ride = await UploadAndWaitAsync(member.Client, Fit(new FitSession(Start, 600)));
+        var measured = await UserAsync(api, member.Id);
+        Assert.Equal((150, HeartRateSources.Measured, (Guid?)ride.Id),
+            (measured.MaxHeartRateBpm, measured.MaxHeartRateSource, measured.MaxHeartRateRideId));
+        rows = await HistoryAsync(api, member.Id);
+        Assert.Equal((150, HeartRateSources.Measured, (Guid?)ride.Id), (rows[0].Bpm, rows[0].Source, rows[0].RideId));
+    }
+
+    [Fact]
+    public async Task HeartRate_ShouldStayMeasured_WhenTheRideWasDeleted()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        var ride = await UploadAndWaitAsync(member.Client, Fit(new FitSession(Start, 600)));
+
+        Assert.Equal(HttpStatusCode.NoContent,
+            (await member.Client.DeleteAsync($"/api/v1/rides/{ride.Id}", Ct)).StatusCode);
+
+        var profile = await member.Client.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct);
+        Assert.Equal((150, HeartRateSources.Measured), (profile!.MaxHeartRate, profile.MaxHeartRateSource));
+        Assert.Null(profile.MaxHeartRateRideId);
+    }
+
+    [Fact]
+    public async Task AccountDeletion_ShouldDeleteAMember_WhenTheHeartRateCameFromARide()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        await UploadAndWaitAsync(member.Client, Fit(new FitSession(Start, 600)));
+        Assert.Equal(HeartRateSources.Measured, (await UserAsync(api, member.Id)).MaxHeartRateSource);
+
+        var deleted = await member.Client.PostAsJsonAsync(
+            "/api/v1/accounts/me/delete", new DeleteMyAccountRequest(TestApi.MemberPassword, null), Ct);
+
+        Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+    }
+
+    private static async Task<User> UserAsync(TestApi api, Guid userId)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        return await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, Ct);
+    }
+
+    [Fact]
     public async Task AccountDeletion_ShouldRemoveTheHeartRateHistory_WhenTheAccountIsDeleted()
     {
         await using var api = await StartAsync();
@@ -315,5 +415,114 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
         Assert.False(await db.HeartRateHistory.AnyAsync(h => h.UserId == me.Id, Ct));
+    }
+
+    [Fact]
+    public async Task AccountExport_ShouldShowTheSourceAndTheRide_WhenARideMeasuredTheHeartRate()
+    {
+        // A clock near the real one: a data-protection token's own expiry uses the system clock.
+        await using var api = await TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new OffsetTime(DateTimeOffset.UtcNow)));
+        });
+        var me = await api.NewMemberAsync("Ada");
+        var yesterday = new DateTimeOffset(DateTimeOffset.UtcNow.Date.AddDays(-1).AddHours(10), TimeSpan.Zero);
+        var ride = await UploadAndWaitAsync(me.Client, Fit(new FitSession(yesterday.UtcDateTime, 600)));
+        Assert.Equal(HeartRateSources.Measured, (await UserAsync(api, me.Id)).MaxHeartRateSource);
+
+        var requested = await me.Client.PostAsync("/api/v1/accounts/me/export-link", null, Ct);
+        Assert.Equal(HttpStatusCode.OK, requested.StatusCode);
+        var link = (await requested.Content.ReadFromJsonAsync<ExportLinkResponse>(Ct))!.Path;
+        var download = await api.CreateClient().GetAsync(link, Ct);
+        download.EnsureSuccessStatusCode();
+
+        using var zip = new ZipArchive(await download.Content.ReadAsStreamAsync(Ct), ZipArchiveMode.Read);
+        using var stream = zip.GetEntry("profile.json")!.Open();
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: Ct);
+        var max = document.RootElement.GetProperty("heartRate").GetProperty("max");
+        Assert.Equal(150, max.GetProperty("bpm").GetInt32());
+        Assert.Equal(HeartRateSources.Measured, max.GetProperty("source").GetString());
+        Assert.Equal(ride.Id, max.GetProperty("rideId").GetGuid());
+    }
+
+    [Fact]
+    public async Task HeartRateSourceMigration_ShouldBackfillTheSource_WhenTheNewestRowMatchesTheNumber()
+    {
+        var connection = await postgres.CreateDatabaseAsync();
+        static VelomineDbContext Db(string connection) =>
+            new(new DbContextOptionsBuilder<VelomineDbContext>().UseNpgsql(connection).Options);
+
+        // The database as it was before this migration: four members, their numbers and the history of each.
+        const string insertUser = """
+            INSERT INTO accounts.users (id, display_name, user_name, is_approved, email_confirmed,
+                phone_number_confirmed, two_factor_enabled, lockout_enabled, access_failed_count, created_at,
+                max_heart_rate_bpm, threshold_heart_rate_bpm)
+            VALUES ({0}, {1}, {2}, true, true, false, false, true, 0, now(),
+                NULLIF({3}, '')::integer, NULLIF({4}, '')::integer)
+            """;
+        const string insertRide = """
+            INSERT INTO rides.rides (id, user_id, status, file_sha256, file_name, uploaded_at, parser_version)
+            VALUES ({0}, {1}, 'Ready', repeat('a', 64), 'ride.fit', now(), 1)
+            """;
+        const string insertMeasured = """
+            INSERT INTO accounts.heart_rate_history (id, user_id, kind, bpm, set_at, sequence, source, ride_id)
+            VALUES (gen_random_uuid(), {0}, {1}, {2}, {3}, 0, 'measured', {4})
+            """;
+        const string insertCleared = """
+            INSERT INTO accounts.heart_rate_history (id, user_id, kind, bpm, set_at, sequence, source, ride_id)
+            VALUES (gen_random_uuid(), {0}, {1}, {2}, {3}, 0, 'cleared', NULL)
+            """;
+
+        var ada = Guid.NewGuid();
+        var grace = Guid.NewGuid();
+        var linus = Guid.NewGuid();
+        var barbara = Guid.NewGuid();
+        var adaRide = Guid.NewGuid();
+        var graceRide = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        await using (var before = Db(connection))
+        {
+            await before.Database.MigrateAsync("20261118201454_LearnHeartRateFromRides", Ct);
+            await before.Database.ExecuteSqlRawAsync(insertUser, [ada, "Ada", "ada@test.local", "195", ""], Ct);
+            await before.Database.ExecuteSqlRawAsync(insertUser, [grace, "Grace", "grace@test.local", "190", ""], Ct);
+            await before.Database.ExecuteSqlRawAsync(insertUser, [linus, "Linus", "linus@test.local", "", "170"], Ct);
+            await before.Database.ExecuteSqlRawAsync(insertUser, [barbara, "Barbara", "barbara@test.local", "188", ""], Ct);
+            await before.Database.ExecuteSqlRawAsync(insertRide, [adaRide, ada], Ct);
+            await before.Database.ExecuteSqlRawAsync(insertRide, [graceRide, grace], Ct);
+
+            // Ada's newest row matches her number and came from a ride; the cleared row before it does not count.
+            await before.Database.ExecuteSqlRawAsync(insertCleared,
+                [ada, HeartRateKinds.Max, 180, now.AddDays(-10)], Ct);
+            await before.Database.ExecuteSqlRawAsync(insertMeasured,
+                [ada, HeartRateKinds.Max, 195, now.AddDays(-2), adaRide], Ct);
+            // Grace's measured row holds a number she no longer has.
+            await before.Database.ExecuteSqlRawAsync(insertMeasured,
+                [grace, HeartRateKinds.Max, 185, now.AddDays(-1), graceRide], Ct);
+            // Linus cleared his threshold, so it is typed now; Barbara never had a history row at all.
+            await before.Database.ExecuteSqlRawAsync(insertCleared,
+                [linus, HeartRateKinds.Threshold, 170, now.AddDays(-1)], Ct);
+        }
+
+        NpgsqlConnection.ClearAllPools();
+        await using (var after = Db(connection))
+        {
+            await after.Database.MigrateAsync(Ct);
+            var users = await after.Users.AsNoTracking().ToDictionaryAsync(u => u.DisplayName, Ct);
+
+            Assert.Equal((195, HeartRateSources.Measured, (Guid?)adaRide),
+                (users["Ada"].MaxHeartRateBpm, users["Ada"].MaxHeartRateSource, users["Ada"].MaxHeartRateRideId));
+            Assert.Equal((190, HeartRateSources.Manual, (Guid?)null),
+                (users["Grace"].MaxHeartRateBpm, users["Grace"].MaxHeartRateSource, users["Grace"].MaxHeartRateRideId));
+            Assert.Equal((170, HeartRateSources.Manual, (Guid?)null),
+                (users["Linus"].ThresholdHeartRateBpm, users["Linus"].ThresholdHeartRateSource, users["Linus"].ThresholdHeartRateRideId));
+            Assert.Equal((188, HeartRateSources.Manual, (Guid?)null),
+                (users["Barbara"].MaxHeartRateBpm, users["Barbara"].MaxHeartRateSource, users["Barbara"].MaxHeartRateRideId));
+            Assert.Null(users["Ada"].ThresholdHeartRateSource);
+            Assert.Null(users["Grace"].ThresholdHeartRateSource);
+            Assert.Null(users["Barbara"].ThresholdHeartRateSource);
+            Assert.Null(users["Linus"].MaxHeartRateSource);
+        }
     }
 }
