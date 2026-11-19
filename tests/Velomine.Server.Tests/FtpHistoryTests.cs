@@ -221,5 +221,7 @@ public sealed class FtpHistoryTests(PostgresFixture postgres)
             Assert.Null(row.RideId);
             Assert.True(row.SetAt > DateTimeOffset.UtcNow.AddDays(-1)); // the migration's own time, not an invented date
         }
+
+        await postgres.DropDatabaseAsync(connection);
     }
 }

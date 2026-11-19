@@ -601,5 +601,7 @@ public sealed class HeartRatesTests(PostgresFixture postgres)
             Assert.Null(users["Barbara"].ThresholdHeartRateSource);
             Assert.Null(users["Linus"].MaxHeartRateSource);
         }
+
+        await postgres.DropDatabaseAsync(connection);
     }
 }

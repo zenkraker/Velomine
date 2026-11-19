@@ -69,6 +69,17 @@ public sealed class PostgresFixture : IAsyncLifetime
         return connection.ConnectionString;
     }
 
+    /// <summary>
+    /// Removes a database made by <see cref="CreateDatabaseAsync"/> as soon as its test is done. The data directory is
+    /// in memory, so clones left until the end of the run would fill it.
+    /// </summary>
+    public async Task DropDatabaseAsync(string connectionString)
+    {
+        var name = new NpgsqlConnectionStringBuilder(connectionString).Database!;
+        using (var connection = new NpgsqlConnection(connectionString)) NpgsqlConnection.ClearPool(connection);
+        await ExecuteAsync($"DROP DATABASE IF EXISTS {name} WITH (FORCE)");
+    }
+
     private async Task ExecuteAsync(string sql)
     {
         await using var admin = new NpgsqlConnection(ServerConnection);

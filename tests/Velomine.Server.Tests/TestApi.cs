@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Rides;
@@ -23,9 +22,11 @@ public sealed class TestApi : IAsyncDisposable
     public const string MemberPassword = "Member-password-1";
 
     private readonly WebApplicationFactory<Program> factory;
+    private readonly PostgresFixture postgres;
 
-    private TestApi(WebApplicationFactory<Program> factory, string connectionString, string filesPath)
+    private TestApi(PostgresFixture postgres, WebApplicationFactory<Program> factory, string connectionString, string filesPath)
     {
+        this.postgres = postgres;
         this.factory = factory;
         ConnectionString = connectionString;
         FilesPath = filesPath;
@@ -59,7 +60,7 @@ public sealed class TestApi : IAsyncDisposable
             builder.ConfigureTestServices(services => TestHost.RemoveJobs(services));
             configure?.Invoke(builder);
         });
-        return new TestApi(factory, connection, filesPath);
+        return new TestApi(postgres, factory, connection, filesPath);
     }
 
     /// <summary>A client that keeps cookies and does not follow redirects.</summary>
@@ -150,7 +151,8 @@ public sealed class TestApi : IAsyncDisposable
         await factory.DisposeAsync();
         // Every test has its own database, so its pooled connections are never reused: close them now, or a long run
         // reaches PostgreSQL's connection limit.
-        await using (var connection = new NpgsqlConnection(ConnectionString)) NpgsqlConnection.ClearPool(connection);
+        // The database goes too: the server's data directory is in memory and clones would fill it.
+        await postgres.DropDatabaseAsync(ConnectionString);
         if (Directory.Exists(FilesPath)) Directory.Delete(FilesPath, recursive: true);
     }
 }
