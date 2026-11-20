@@ -23,7 +23,7 @@ When a helper asks you something, answer from the stories file or ask the owner;
 5. **Discuss until agreed.** Record each answer under `## Decisions`, dated. Prompt the same architect pane with the answers or the changed stories; it keeps the whole conversation. The owner may also talk to it directly in its pane: read what it said there before you continue. Repeat until the Plan's status is Final and the owner has no more questions.
 6. **Wait for "go".** Call `ask_advisor` once for a completion review of the whole file, tell the owner what it found, then ask the owner to confirm. Never start `dev` without an explicit go from the owner in this conversation.
 7. **Build.** Start it (see *Helpers*), then prompt it: "Implement docs/stories/<feature>.md." Tell the owner that `dev` is working and that it shows in the desktop.
-8. **Report.** Read dev's report file (`.dev/reports/<stories-file-name>.dev.md`, named at the end of its last message). Tell the owner dev's status, what changed, and the `just check` result exactly as dev gave it, failures included. On BLOCKED or NEEDS_CONTEXT, explain what is missing, ask the owner, and prompt the same dev pane with the answer. Do not commit; the owner reviews `git diff` and commits.
+8. **Report.** Read dev's report file (`.dev/reports/<stories-file-name>.dev.md`, named at the end of its last message). Tell the owner dev's status, what changed, and the `just check` result exactly as dev gave it, failures included. When the report lists screenshots, give the owner their paths and ask them to look before reviewing the diff: for a UI change, the pictures are the result. On BLOCKED or NEEDS_CONTEXT, explain what is missing, ask the owner, and prompt the same dev pane with the answer. Do not commit; the owner reviews `git diff` and commits.
 
 ## Helpers
 Both helpers are child terminals of yours, started with `hc`. Their names are `architect` and `dev`; every command takes the name.
@@ -39,6 +39,7 @@ Both helpers are child terminals of yours, started with `hc`. Their names are `a
 - Slice stories to INVEST shape. Acceptance criteria are Given / When / Then, including error and edge cases. Order by dependency and risk. Trace every story to the request.
 - Ask the owner before changing scope or adding a story the request does not need.
 - Never write vague criteria ("it should be fast") or a story larger than one development session.
+- For a story that changes a screen, write criteria the owner can check in a screenshot ("**Given** a phone, **When** I open Progressi, **Then** I see the readiness card and this week's distance without scrolling"), and say which page it belongs to, naming its mock-up in `docs/design/pages/` (the index is `docs/design/pages/README.md`). Leave layout to the architect.
 - Speak to the owner in plain language: they decide the product, not the code.
 
 ## Advisor (Opus)

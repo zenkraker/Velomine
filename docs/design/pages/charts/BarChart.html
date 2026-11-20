@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- BarChart: Distance per week: rounded, faded bars; only the current and the peak carry a value. Guideline: BarChart.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Bar chart</title>
+<style>
+  .wrap { padding: var(--space-xl); max-width: 760px; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .val { fill: var(--ink-muted); font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .val.now { fill: var(--ink); }
+  .s-now { stop-color: var(--accent-strong); }
+  .s-past { stop-color: var(--bar-muted); }
+  svg { display: block; width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<article class="vm-card">
+  <div class="vm-card-head">
+    <h3 class="vm-card-title card-title">Distance per week</h3>
+    <div class="vm-seg" role="group" aria-label="Period"><button aria-pressed="true">Weeks</button><button aria-pressed="false">Months</button><button aria-pressed="false">Years</button></div>
+  </div>
+  <svg viewBox="0 0 640 214" role="img" aria-label="Distance per week for 12 weeks. Peak 101 km in the week of 19 October; this week 69.7 km.">
+    <defs>
+      <linearGradient id="gNow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-now"/><stop offset="1" class="s-now" stop-opacity="0.55"/></linearGradient>
+      <linearGradient id="gPast" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-past"/><stop offset="1" class="s-past" stop-opacity="0.55"/></linearGradient>
+      <clipPath id="plot"><rect x="0" y="0" width="640" height="184"/></clipPath>
+    </defs>
+    <g class="grid"><line x1="36" y1="16" x2="636" y2="16"/><line x1="36" y1="72" x2="636" y2="72"/><line x1="36" y1="128" x2="636" y2="128"/><line x1="36" y1="184" x2="636" y2="184"/></g>
+    <text class="ylab" x="28" y="20">120</text><text class="ylab" x="28" y="76">80</text><text class="ylab" x="28" y="132">40</text><text class="ylab" x="28" y="188">0</text>
+    <g clip-path="url(#plot)" fill="url(#gPast)">
+      <rect x="47.8" y="79" width="26" height="113" rx="8"/>
+      <rect x="97.5" y="158.8" width="26" height="33.2" rx="8"/>
+      <rect x="147.2" y="97.2" width="26" height="94.8" rx="8"/>
+      <rect x="196.8" y="143.4" width="26" height="48.6" rx="8"/>
+      <rect x="246.5" y="143.7" width="26" height="48.3" rx="8"/>
+      <rect x="296.2" y="141" width="26" height="51" rx="8"/>
+      <rect x="345.9" y="127" width="26" height="65" rx="8"/>
+      <rect x="395.5" y="42.6" width="26" height="149.4" rx="8"/>
+      <rect x="445.2" y="143.7" width="26" height="48.3" rx="8"/>
+      <rect x="494.9" y="124.9" width="26" height="67.1" rx="8"/>
+      <rect x="544.5" y="159.4" width="26" height="32.6" rx="8"/>
+      <rect x="594.2" y="86.4" width="26" height="105.6" rx="8" fill="url(#gNow)"/>
+    </g>
+    <text class="val" x="408.5" y="34">101 km</text>
+    <text class="val now" x="607.2" y="78">69.7 km</text>
+    <text class="xlab" x="60.8" y="206">31 Aug</text>
+    <text class="xlab" x="160.2" y="206">14 Sep</text>
+    <text class="xlab" x="259.5" y="206">28 Sep</text>
+    <text class="xlab" x="358.9" y="206">12 Oct</text>
+    <text class="xlab" x="458.2" y="206">26 Oct</text>
+    <text class="xlab" x="557.5" y="206">9 Nov</text>
+  </svg>
+</article>
+</div>
+</body>
+</html>

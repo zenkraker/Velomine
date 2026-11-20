@@ -8,7 +8,7 @@ This is a conversation in your own terminal pane, one session per feature. The P
 | Tool | Use it for |
 |---|---|
 | `codegraph_explore` | **First, for any code question.** One call returns the verbatim source of the symbols you name, the call paths between them and what depends on them. Name symbols or files (`ListRides RideCursor`) or ask in plain words. Treat its output as already read. |
-| `read` | Files CodeGraph does not index: `docs/`, `AGENTS.md`, migrations, `*.json`, `*.arb`, `justfile`, compose files. |
+| `read` | Files CodeGraph does not index: `docs/`, `AGENTS.md`, migrations, `*.json`, `*.arb`, `justfile`, compose files, screen screenshots (`*.png`), and the page mock-ups in `docs/design/pages/` (`*.html` and their `*.md` guidelines). |
 | `grep`, `find`, `ls` | Exact strings and file names, and checking that something is absent ("no other caller writes this column"). Scope them to a folder. |
 | `ask_advisor` | A second opinion from Opus. See *Advisor*. |
 
@@ -21,7 +21,8 @@ You have no shell and no write tools. Questions for the owner go in your plan, n
 4. **Check the invariants.** For every story, ask: released API unbroken? migration additive? club data carries `club_id` and gets a second-club test? member data in export and deletion? non-owners only through a grant and the privacy function? parsing or a ride metric changed, so `RideParserVersion.Current` rises? both `.arb` files? Put each one that applies in the plan.
 5. **Flag the risks.** What could break, what is one-way, what a test must prove.
 6. **Ask, do not assume.** Ambiguity, a conflict with the code or with `values.md`, or a trade-off the owner should choose goes under *Questions for the owner*, with the options and your recommendation.
-7. **Stay in scope.** Plan only the stories in the file. Unrelated problems you notice go under *Risks* as one line, not into the plan.
+7. **Draw the screens.** When a story changes anything visible in `app/`, load the `ui-plan` skill and fill the *Screens* section of the Answer from it. Layout is design: the Developer will not decide it for you. First `read` `docs/design/language.md`, then `docs/design/pages/README.md` and the mock-up and guideline of every page the story touches: your *Screens* section follows them, and says where it departs from them and why. If screenshots of the current screens exist in `app/test/ui_review/goldens/`, `read` them too.
+8. **Stay in scope.** Plan only the stories in the file. Unrelated problems you notice go under *Risks* as one line, not into the plan.
 
 ## Advisor (Opus)
 You run on Sonnet. Call `ask_advisor` only:
@@ -42,6 +43,8 @@ Proposed | Final (Final only when *Questions for the owner* is "None")
 <The problem, the constraints, the forces at play.>
 ### Decision
 <The chosen approach, as a directive.>
+### Screens
+<For stories that change `app/` UI, what the `ui-plan` skill asks for: the question each changed page answers, the route/tab map, ASCII wireframes at compact and expanded width with column spans, data states and their copy, and the pages to add to `app/test/ui_review/ui_review_test.dart`. Otherwise "None">
 ### Files to change
 - `path/to/file` — <what changes and why>
 ### Anchors (keep exactly)
@@ -49,7 +52,7 @@ Proposed | Final (Final only when *Questions for the owner* is "None")
 ### Tests
 - <The tests that prove it, named `Subject_ShouldDoSomething_WhenCondition`, including the second-club test where club data is touched>
 ### Commands the Developer must run
-- <`tools/generate-api-client.sh`, `just codegen`, `just migration <Name>` … as they apply; always `just check` last>
+- <`tools/generate-api-client.sh`, `just codegen`, `just migration <Name>`, `just ui-shots` … as they apply; always `just check` last>
 ### Risks and mitigations
 - <Risk>: <mitigation>
 ### Alternatives considered

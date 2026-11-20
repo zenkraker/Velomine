@@ -10,6 +10,8 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `.claude/skills/*/SKILL.md` | Practical guidance per stack. Always loaded by both agents (see *AI coding agents*) |
 | `docs/architecture.md` | System shape: deployment, tenancy, data ownership, background work, security model, decisions |
 | `docs/design/values.md` | Product values, scope, non-goals and decision tests |
+| `docs/design/language.md`, `docs/design/tokens.json` | The visual language: principles, colour, type, layout, charts, navigation, page structures, and their values |
+| `docs/design/pages/` | A mock-up and a guideline for every screen of the app, with its route and Flutter file: the target design of each page |
 | `docs/design/v2.md` | Inter-club ideas, not committed |
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/demo.md` | How the public demo is deployed, checked and backed up |
@@ -111,13 +113,16 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 ### Screens and layout
 
+- **The visual language is `docs/design/language.md`.** Its values live in `docs/design/tokens.json`; `lib/core/theme.dart` (`ColorScheme`, `VelomineColors`, `VelomineText`) and `lib/core/tokens.dart` implement them, and `test/design_tokens_test.dart` fails when they differ. A colour, size or spacing changes in `tokens.json` and the theme in the same change; widgets never use a literal colour or text size. Every screen has a mock-up and a guideline in `docs/design/pages/`; a change to a screen follows its mock-up, and a change to the design updates the mock-up first.
 - **Every routed screen is a `PageScaffold`** (`lib/core/widgets/`), inside the shell or pushed over it with `onBack`. A screen stays bespoke only when `PageScaffold` cannot give what it needs.
 - **One main action per screen**, as `primaryAction` in the header, in the same place at every width. A new screen never adds a `FloatingActionButton`.
 - **Rare and destructive actions go in a `PageMenu`** of `PageMenuEntry`; destructive entries come last, after a divider, in the error colour. Every destructive action is confirmed with `confirmDestructive`, whose button names the action. A destructive action is never a visible button.
 - **Short tasks open in a sheet** through `showSheet`: `FormSheet` for a form (full-width Save pinned, dismissing is cancel), `SheetFrame` for a picker or filters. A full page is for a long flow.
 - **A full-page form puts its submit on `PageScaffold.bottomAction`** (`BottomActionBar`); Cancel is the back arrow.
 - **States:** a first load is `LoadingState`, a failed load is `ErrorState` with a retry, an empty list is `EmptyState`, and an error under a form or section is `InlineError`.
-- **Navigation shell** (`home_shell.dart`): three tabs (Rides, Progress, Club) in a `FloatingNavPill` on the phone, one rail from 600 dp (collapsed to icons with labels, expanded from 1200 dp with the brand, club and privacy note); recording and bikes are pushed screens.
+- **The shared widgets say what a thing is:** a fact is a `StatCard`; a card in the page flow is an `AppCard` or a `SectionCard`; a total per period is a `BarChart`; one value over time is an `AreaChart`; every segmented choice is a `SegmentedControl`; uppercase eyebrow text does not exist.
+- **Navigation shell** (`home_shell.dart`): four destinations, in this order at every width — Rides, Progress, Goals, Club. On the phone a `FloatingNavPill`; from 600 dp a collapsed rail of icons with labels; from 1200 dp the `NavSidebar`: the wordmark, Rides, Progress and the rider's club as sections that open and close with their pages under them, Goals as one plain link, and the privacy note, profile and account at the foot. A screen pushed over the shell lights no destination; recording and bikes are pushed screens.
+- **Progress is one overview and four sub-pages** (`/progress`, `/progress/fitness`, `/progress/power`, `/progress/totals`, `/progress/wellbeing`), each a page of its own reached from the sidebar's Progress section and from the `ProgressTabs` chip row every Progress page carries. The overview answers one question and links to the page that answers the next; no sub-page's chart sits on the overview.
 
 ### State and events
 

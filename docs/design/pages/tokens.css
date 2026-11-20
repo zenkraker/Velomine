@@ -1,0 +1,119 @@
+/* Generated from docs/design/tokens.json. Change the tokens, not this file. Fonts: Geist and Instrument Serif when installed, otherwise the fallbacks. */
+:root {
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-xxxl: 48px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --blur-glass: 20px;
+  --font-sans: Geist, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --canvas: #0e0f0c;
+  --card: #22241f;
+  --card-raised: #2c2f28;
+  --glass: rgba(34, 36, 31, 0.82);
+  --hairline: #3a3d34;
+  --track: #2c2f28;
+  --ink: #e9ebe4;
+  --ink-muted: #a6aa9e;
+  --accent: #d4f23a;
+  --on-accent: #0e0f0c;
+  --accent-strong: #d4f23a;
+  --accent-soft: #3a3d34;
+  --on-accent-soft: #d4f23a;
+  --bar-muted: #6e7f25;
+  --signal: #ff7a3d;
+  --signal-soft: #3d2416;
+  --warning: #ffc94d;
+  --danger: #ff6f4f;
+  --map-ground: #15170f;
+  --map-road: #2e3128;
+  --route-glow: rgba(212, 242, 58, 0.45);
+  --series-elevation: #a6aa9e;
+  --series-speed: #d4f23a;
+  --series-power: #ff7a3d;
+  --series-heartrate: #ff6f4f;
+  --series-cadence: #9cc3e6;
+  --series-wprime: #c792ea;
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --canvas: #f0eee9;
+    --card: #ffffff;
+    --card-raised: #f7f5f1;
+    --glass: rgba(255, 255, 255, 0.78);
+    --hairline: #e0ddd5;
+    --track: #eceae4;
+    --ink: #18201e;
+    --ink-muted: #5c625e;
+    --accent: #d4f23a;
+    --on-accent: #0e0f0c;
+    --accent-strong: #4e6300;
+    --accent-soft: #eef6cc;
+    --on-accent-soft: #2e3a00;
+    --bar-muted: #8a9a55;
+    --signal: #b24a22;
+    --signal-soft: #fbe6dc;
+    --warning: #7a5c00;
+    --danger: #b3261e;
+    --map-ground: #e4e1d9;
+    --map-road: #ffffff;
+    --route-glow: rgba(212, 242, 58, 0.85);
+    --series-elevation: #6b7a7c;
+    --series-speed: #0f4c4a;
+    --series-power: #b24a22;
+    --series-heartrate: #b3261e;
+    --series-cadence: #7a5c00;
+    --series-wprime: #8e44ad;
+    --shadow-float: 0 12px 32px rgba(24, 32, 30, 0.12);
+  }
+}
+:root[data-theme="light"] {
+  --canvas: #f0eee9;
+  --card: #ffffff;
+  --card-raised: #f7f5f1;
+  --glass: rgba(255, 255, 255, 0.78);
+  --hairline: #e0ddd5;
+  --track: #eceae4;
+  --ink: #18201e;
+  --ink-muted: #5c625e;
+  --accent: #d4f23a;
+  --on-accent: #0e0f0c;
+  --accent-strong: #4e6300;
+  --accent-soft: #eef6cc;
+  --on-accent-soft: #2e3a00;
+  --bar-muted: #8a9a55;
+  --signal: #b24a22;
+  --signal-soft: #fbe6dc;
+  --warning: #7a5c00;
+  --danger: #b3261e;
+  --map-ground: #e4e1d9;
+  --map-road: #ffffff;
+  --route-glow: rgba(212, 242, 58, 0.85);
+  --series-elevation: #6b7a7c;
+  --series-speed: #0f4c4a;
+  --series-power: #b24a22;
+  --series-heartrate: #b3261e;
+  --series-cadence: #7a5c00;
+  --series-wprime: #8e44ad;
+  --shadow-float: 0 12px 32px rgba(24, 32, 30, 0.12);
+}
+.page-title { font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 400; }
+.brand { font-family: var(--font-display); font-size: 26px; line-height: 28px; font-weight: 400; }
+.kpi { font-family: var(--font-sans); font-size: 40px; line-height: 44px; font-weight: 400; letter-spacing: -0.02em; }
+.stat { font-family: var(--font-sans); font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.01em; }
+.card-title { font-family: var(--font-sans); font-size: 17px; line-height: 24px; font-weight: 600; }
+.body { font-family: var(--font-sans); font-size: 15px; line-height: 22px; font-weight: 400; }
+.body-strong { font-family: var(--font-sans); font-size: 15px; line-height: 22px; font-weight: 600; }
+.nav-label { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 500; }
+.button-label { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 700; }
+.caption { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 400; }
+.axis { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; }
