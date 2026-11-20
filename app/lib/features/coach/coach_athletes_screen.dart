@@ -11,6 +11,7 @@ import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/app_card.dart';
 
 /// The athletes in this club who share rides or training.
 class CoachAthletesScreen extends ConsumerWidget {
@@ -28,7 +29,6 @@ class CoachAthletesScreen extends ConsumerWidget {
     final s = ref.watch(coachAthletesViewModelProvider(clubId));
     final l10n = context.l10n;
     return PageScaffold(
-      eyebrow: l10n.navGroupClub,
       title: l10n.athletesTitle,
       subtitle: l10n.athletesSubtitle,
       children: [
@@ -51,8 +51,9 @@ class CoachAthletesScreen extends ConsumerWidget {
         CardGrid(
           children: [
             for (final athlete in s.athletes)
-              Card(
+              AppCard(
                 key: Key('athlete-${athlete.userId}'),
+                padding: EdgeInsets.zero,
                 child: ListTile(
                   leading: const Icon(Icons.person_outline),
                   title: Text(athlete.displayName),

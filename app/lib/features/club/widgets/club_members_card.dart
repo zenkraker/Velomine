@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/l10n.dart';
+import '../../../core/widgets/app_card.dart';
 import 'club_labels.dart';
 
 /// Everyone in the club, with the owner's way to change a role.
@@ -20,7 +21,8 @@ class ClubMembersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Card(
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -12,6 +12,7 @@ import '../progress/power_summary.dart';
 import '../progress/training_summary.dart';
 import 'coach_athlete_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -38,7 +39,6 @@ class CoachAthleteScreen extends ConsumerWidget {
     final units = ref.watch(unitsChoiceViewModelProvider);
     final summary = c.summary;
     return PageScaffold(
-      eyebrow: l10n.athletesTitle,
       title: summary?.displayName ?? l10n.athletesTitle,
       subtitle: l10n.coachReadOnly,
       children: [
@@ -67,7 +67,7 @@ class CoachAthleteScreen extends ConsumerWidget {
               message: failureText(l10n, failure),
               actionKey: const Key('coach-athlete-error'),
             ),
-          if (c.training case final training?)
+          if (c.training case final training?) ...[
             TrainingSummary(
               training: training,
               days: c.days,
@@ -75,6 +75,9 @@ class CoachAthleteScreen extends ConsumerWidget {
                   .read(coachAthleteViewModelProvider(clubId, userId).notifier)
                   .setDays(days),
             ),
+            DailyLoadCard(training: training),
+            TrainingLoadCard(training: training),
+          ],
           if (c.powerCurve case final curve?)
             PowerSummary(
               curve: curve,
@@ -95,7 +98,8 @@ class CoachAthleteScreen extends ConsumerWidget {
                 icon: Icons.directions_bike,
               )
             else
-              Card(
+              AppCard(
+                padding: EdgeInsets.zero,
                 child: Column(
                   children: [
                     for (final ride in c.rides)
@@ -135,43 +139,41 @@ class _CoachWellbeingCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     String date(DateTime value) => DateFormat.MMMd(locale).format(value);
 
-    return Card(
+    return AppCard(
       key: const Key('coach-wellbeing'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionHeading(title: l10n.coachWellbeing),
-            const SizedBox(height: AppSpacing.xs),
-            Text(l10n.coachWellbeingNoNotes, style: text.bodySmall),
-            if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
-            ],
-            for (final checkIn in wellbeing.checkIns)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: Text(
-                  '${date(checkIn.date)} · '
-                  '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
-                  '${l10n.wellbeingShortSoreness} ${checkIn.soreness} · '
-                  '${l10n.wellbeingShortMood} ${checkIn.mood} · '
-                  '${l10n.wellbeingShortStress} ${checkIn.stress} · '
-                  '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
-                  style: text.bodySmall,
-                ),
-              ),
-            for (final ride in wellbeing.rides)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xs),
-                child: Text(
-                  '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
-                  style: text.bodySmall,
-                ),
-              ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(title: l10n.coachWellbeing),
+          const SizedBox(height: AppSpacing.xs),
+          Text(l10n.coachWellbeingNoNotes, style: text.bodySmall),
+          if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
           ],
-        ),
+          for (final checkIn in wellbeing.checkIns)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                '${date(checkIn.date)} · '
+                '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
+                '${l10n.wellbeingShortSoreness} ${checkIn.soreness} · '
+                '${l10n.wellbeingShortMood} ${checkIn.mood} · '
+                '${l10n.wellbeingShortStress} ${checkIn.stress} · '
+                '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+                style: text.bodySmall,
+              ),
+            ),
+          for (final ride in wellbeing.rides)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
+                style: text.bodySmall,
+              ),
+            ),
+        ],
       ),
     );
   }

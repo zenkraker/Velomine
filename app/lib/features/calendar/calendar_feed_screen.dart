@@ -9,6 +9,7 @@ import '../../core/format.dart';
 import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
@@ -35,7 +36,6 @@ class CalendarFeedScreen extends ConsumerWidget {
 
     final busy = s.action.running;
     return PageScaffold(
-      eyebrow: l10n.clubRidesEyebrow,
       title: l10n.calendarTitle,
       subtitle: l10n.calendarHelp,
       maxWidth: AppLayout.contentNarrow,
@@ -67,7 +67,8 @@ class CalendarFeedScreen extends ConsumerWidget {
             )
           : null,
       children: [
-        Card(
+        AppCard(
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(

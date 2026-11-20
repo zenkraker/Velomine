@@ -17,7 +17,7 @@ import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/stat_card.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
 class CoachRideScreen extends ConsumerWidget {
@@ -47,7 +47,6 @@ class CoachRideScreen extends ConsumerWidget {
     final units = ref.watch(unitsChoiceViewModelProvider);
     final ride = c.ride;
     return PageScaffold(
-      eyebrow: l10n.athletesTitle,
       title: ride == null
           ? l10n.rideDetailTitle
           : dateTime(ride.startTime ?? ride.uploadedAt),
@@ -67,40 +66,40 @@ class CoachRideScreen extends ConsumerWidget {
             spacing: AppSpacing.xl,
             runSpacing: AppSpacing.md,
             children: [
-              StatTile(
+              StatFigure(
                 label: l10n.statDistance,
                 value: km(units, ride.distanceM),
               ),
-              StatTile(
+              StatFigure(
                 label: l10n.statMovingTime,
                 value: duration(ride.movingS),
               ),
-              StatTile(
+              StatFigure(
                 label: l10n.statAverageSpeed,
                 value: kmh(units, ride.avgSpeedMs),
               ),
               if (ride.avgPowerW != null)
-                StatTile(
+                StatFigure(
                   label: l10n.statAveragePower,
                   value: '${ride.avgPowerW} W',
                 ),
               if (ride.normalizedPowerW != null)
-                StatTile(
+                StatFigure(
                   label: l10n.statNormalizedPower,
                   value: '${ride.normalizedPowerW} W',
                 ),
               if (ride.avgHeartRate != null)
-                StatTile(
+                StatFigure(
                   label: l10n.statAverageHeartRate,
                   value: '${ride.avgHeartRate} bpm',
                 ),
               if (ride.tss != null)
-                StatTile(
+                StatFigure(
                   label: l10n.statTss,
                   value: ride.tss!.round().toString(),
                 ),
               if (ride.trimp != null)
-                StatTile(
+                StatFigure(
                   label: l10n.statTrimp,
                   value: ride.trimp!.round().toString(),
                 ),

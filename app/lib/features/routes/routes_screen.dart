@@ -8,6 +8,7 @@ import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
@@ -74,7 +75,6 @@ class RoutesScreen extends ConsumerWidget {
     ];
 
     final page = PageScaffold(
-      eyebrow: l10n.routesEyebrow,
       title: l10n.clubRoutesTitle,
       subtitle: l10n.routesSubtitle,
       primaryAction: wide
@@ -137,8 +137,9 @@ class _RouteCard extends ConsumerWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final units = ref.watch(unitsChoiceViewModelProvider);
-    return Card(
+    return AppCard(
       key: Key('route-${route.id}'),
+      padding: EdgeInsets.zero,
       child: ListTile(
         onTap: () => onOpen(route.id),
         leading: const Icon(Icons.route),

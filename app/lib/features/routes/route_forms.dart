@@ -75,7 +75,6 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
 
     final draft = s.draft;
     return PageScaffold(
-      eyebrow: l10n.routesEyebrow,
       title: l10n.addRouteTitle,
       subtitle: l10n.addRouteHelp,
       maxWidth: AppLayout.contentNarrow,
@@ -285,7 +284,6 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
     }
 
     return PageScaffold(
-      eyebrow: l10n.routesEyebrow,
       title: l10n.editRouteTitle,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(

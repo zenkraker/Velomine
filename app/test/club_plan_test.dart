@@ -244,6 +244,8 @@ void main() {
     expect(find.text('1 of 25 members'), findsOneWidget);
     expect(find.byKey(const Key('club-paid-until-club-1')), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('club-menu-club-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('edit-plan-club-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('plan-limit')));
