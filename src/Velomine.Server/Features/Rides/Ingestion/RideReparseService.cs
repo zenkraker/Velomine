@@ -225,12 +225,22 @@ public sealed class RideReparseService(
             var hrKnown = ride.LoadMaxHeartRate is not null;
             int? maxHr = ride.LoadMaxHeartRate is > 0 ? ride.LoadMaxHeartRate : null;
 
+            // The threshold the ride's heart-rate load came from: kept when it was recorded, and filled in now for a
+            // ride read before the column existed.
+            var thresholdKnown = ride.LoadThresholdHeartRate is not null;
+            int? thresholdHr = ride.LoadThresholdHeartRate is > 0 ? ride.LoadThresholdHeartRate : null;
+            if (!thresholdKnown)
+            {
+                var owner = await db.Users.AsNoTracking().FirstAsync(u => u.Id == ride.UserId, ct);
+                thresholdHr = HeartRates.For(owner, time).Threshold?.Bpm;
+            }
+
             RideMetricValues metrics;
             try
             {
                 metrics = RideMetrics.Compute(
                     file.Samples, file.DeviceNormalizedPowerW, file.DeviceElapsedS, file.DeviceMovingS, file.Pauses,
-                    ftpW: ftp, maxHeartRate: maxHr);
+                    ftpW: ftp, maxHeartRate: maxHr, thresholdHeartRate: thresholdHr);
             }
             catch (RideParseException ex)
             {
@@ -242,6 +252,8 @@ public sealed class RideReparseService(
             if (!ftpKnown) (ride.IntensityFactor, ride.Tss) = (storedIntensity, storedTss);
             if (!hrKnown) ride.Trimp = storedTrimp;
             if (ftpKnown) ride.LoadFtpW = ftp ?? 0;
+            // A ride read before the threshold was recorded gets the one in use now, so its hrTSS is filled in.
+            if (!thresholdKnown) ride.LoadThresholdHeartRate = thresholdHr ?? 0;
 
             ride.StartTime = file.StartTime;
             ride.UtcOffsetMinutes = file.UtcOffsetMinutes ?? ride.UtcOffsetMinutes ?? await ZoneOffsetAsync(db, ride, file, ct);

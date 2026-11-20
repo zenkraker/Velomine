@@ -40,6 +40,7 @@ import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/source_note.dart';
+import '../../accounts/effort_source_text.dart';
 import '../../../core/widgets/stat_tile.dart';
 
 class RideDetailScreen extends ConsumerWidget {
@@ -504,6 +505,9 @@ class _Stats extends ConsumerWidget {
           ride.intensityFactor!.toStringAsFixed(2),
         ),
       if (ride.tss != null) ('tss', l10n.statTss, ride.tss!.round().toString()),
+      // The effort score the dashboard uses for this ride, and where it came from.
+      if (ride.effortScore.value case final score?)
+        ('effort-score', l10n.statEffortScore, score.round().toString()),
       if (ride.efficiencyFactor.value case final efficiency?)
         ('efficiency', l10n.statEfficiency, efficiency.toStringAsFixed(2)),
       if (ride.decouplingPct.value case final decoupling?
@@ -551,6 +555,10 @@ class _Stats extends ConsumerWidget {
           ),
         if (ride.tss != null || ride.trimp != null)
           Text(l10n.loadHint, style: text.bodySmall),
+        if (ride.effortScore.value != null)
+          if (effortSourceText(l10n, ride.effortSource.orElse(null))
+              case final note?)
+            SourceNote(note, key: const Key('effort-source')),
         if (ride.efficiencyFactor.value != null) ...[
           if (ride.decouplingPct.value case final decoupling?
               when ride.steady.value == true)

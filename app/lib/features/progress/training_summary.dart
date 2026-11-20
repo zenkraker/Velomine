@@ -10,6 +10,7 @@ import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/source_note.dart';
 import '../../core/widgets/stat_tile.dart';
 
 /// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
@@ -144,6 +145,15 @@ class TrainingSummary extends ConsumerWidget {
                 ),
               ),
             ),
+            // Some rides in the range had no power: their effort came from heart rate.
+            if ((training.heartRateLoadRides.orElse(0) ?? 0) > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: SourceNote(
+                  l10n.fitnessHeartRateLoad,
+                  key: const Key('fitness-heart-rate-note'),
+                ),
+              ),
             const SizedBox(height: AppSpacing.lg),
             Text(l10n.dailyLoad, style: text.titleSmall),
             const SizedBox(height: AppSpacing.sm),

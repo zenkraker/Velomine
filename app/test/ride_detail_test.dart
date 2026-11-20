@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
+import 'package:velomine/core/widgets/stat_tile.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
@@ -809,6 +810,39 @@ void main() {
         find.text('Zones from your threshold heart rate (160 bpm)'),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldShowTheEffortScore_WhenTheRideHasOne', (
+    tester,
+  ) async {
+    server.rides[0] = {
+      ...server.rides[0],
+      'hrTss': 64.0,
+      'effortScore': 64.0,
+      'effortSource': 'heart_rate',
+    };
+    await open(tester);
+
+    expect(find.byKey(const Key('stat-effort-score')), findsOneWidget);
+    expect(
+      tester.widget<StatTile>(find.byKey(const Key('stat-effort-score'))).value,
+      '64',
+    );
+    expect(find.text('From your heart rate'), findsOneWidget);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldSayTheEffortCameFromTheFeel_WhenTheRiderRatedTheRide',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'effortScore': 75.0,
+        'effortSource': 'feel',
+      };
+      await open(tester);
+
+      expect(find.text('From how hard it felt'), findsOneWidget);
     },
   );
 }

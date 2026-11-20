@@ -56,7 +56,7 @@ public sealed class GetReadiness(VelomineDbContext db, TimeProvider time)
         var rampEffect = RampPoints(ramp);
         factors.Add(new ReadinessFactor("ramp", Math.Round(ramp, 1), Math.Round(rampEffect, 1)));
 
-        var recentLoad = today.Tss + (training.Days.Length > 1 ? training.Days[^2].Tss : 0);
+        var recentLoad = today.Load + (training.Days.Length > 1 ? training.Days[^2].Load : 0);
         var recentEffect = recentLoad > 200 ? -5.0 : 0.0;
         factors.Add(new ReadinessFactor("recentLoad", Math.Round(recentLoad, 1), recentEffect));
 

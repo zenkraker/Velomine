@@ -33,6 +33,15 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
             .Where(s => s.RideId == ride.Id && s.Status == FtpSuggestionStatuses.Open)
             .Select(s => new { s.Id, s.Watts, s.Method })
             .FirstOrDefaultAsync(ct);
+        // The effort score is the owner's, and how hard the ride felt can be rated after it was read.
+        var rpe = await db.RideFeels.AsNoTracking()
+            .Where(f => f.RideId == ride.Id)
+            .Select(f => (int?)f.Rpe)
+            .FirstOrDefaultAsync(ct);
+        var (effortScore, effortSource) = TrainingLoad.Effort(
+            ride.Tss,
+            ride.HrTss,
+            TrainingLoad.FeelScore(ride.MovingS, rpe));
         await Send.OkAsync(
             (await RideDetails.BuildAsync(db, time, ride, ct)) with
             {
@@ -41,6 +50,8 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
                 FtpSuggestionW = suggestion?.Watts,
                 FtpSuggestionMethod = suggestion?.Method,
                 FtpSuggestionId = suggestion?.Id,
+                EffortScore = effortScore,
+                EffortSource = effortSource,
             },
             ct);
     }

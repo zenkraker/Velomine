@@ -1352,6 +1352,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statTrimp => 'TRIMP';
 
   @override
+  String get statEffortScore => 'Effort score';
+
+  @override
+  String get effortFromPower => 'From your power';
+
+  @override
+  String get effortFromHeartRate => 'From your heart rate';
+
+  @override
+  String get effortFromFeel => 'From how hard it felt';
+
+  @override
   String get statEfficiency => 'Efficiency factor';
 
   @override
@@ -2057,7 +2069,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trainingLoadHint =>
-      'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.';
+      'Set your FTP or wear a heart-rate strap, then upload a ride to see training load.';
+
+  @override
+  String get fitnessHeartRateLoad => 'Includes rides scored from heart rate.';
 
   @override
   String get fitnessFatigueForm => 'Fitness, fatigue and form';

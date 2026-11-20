@@ -40,6 +40,8 @@ public sealed record TrainingDay(
     double ElevationGainM,
     double Tss,
     double Trimp,
+    /// <summary>The rides' effort scores: TSS, else hrTSS, else how hard they felt. Fitness and fatigue follow it.</summary>
+    double Load,
     double Fitness,
     double Fatigue,
     double Form);
@@ -59,7 +61,9 @@ public sealed record TrainingResponse(
     IntensityResponse? Intensity,
     IntensityWeek[] IntensityWeeks,
     /// <summary>The mean efficiency factor of each week's steady rides; a week without one is left out.</summary>
-    EfficiencyWeek[] Efficiency);
+    EfficiencyWeek[] Efficiency,
+    /// <summary>How many rides in the range were scored from heart rate, for the note under the fitness chart.</summary>
+    int HeartRateLoadRides = 0);
 
 public sealed class TrainingValidator : Validator<TrainingRequest>
 {

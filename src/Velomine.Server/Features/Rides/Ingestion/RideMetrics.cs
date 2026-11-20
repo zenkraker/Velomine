@@ -20,6 +20,7 @@ public sealed record RideMetricValues(
     double? IntensityFactor = null,
     double? Tss = null,
     double? Trimp = null,
+    double? HrTss = null,
     int[]? PowerBests = null,
     double? EfficiencyFactor = null,
     double? DecouplingPct = null,
@@ -46,7 +47,8 @@ public static class RideMetrics
         double? deviceMovingS = null,
         IReadOnlyList<PauseInterval>? pauses = null,
         int? ftpW = null,
-        int? maxHeartRate = null)
+        int? maxHeartRate = null,
+        int? thresholdHeartRate = null)
     {
         if (samples.Count < 2) throw new RideParseException("too_short", "The ride has fewer than two samples.");
 
@@ -93,6 +95,7 @@ public static class RideMetrics
             intensityFactor,
             tss,
             TrainingLoad.Trimp(heartRateZones),
+            TrainingLoad.HrTss(samples, thresholdHeartRate, paused),
             PowerBests.ComputeFromSamples(samples, pause, paused),
             efficiencyFactor,
             decoupling,

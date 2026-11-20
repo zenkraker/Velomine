@@ -197,6 +197,10 @@ public static class PrivacyRules
         HeartRateNote = null,
         HeartRateMaxNote = null,
         HeartRateThresholdNote = null,
+        // The effort score is the owner's: a coach or a share viewer reads the ride's load, not its effort.
+        HrTss = null,
+        EffortScore = null,
+        EffortSource = null,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
         AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
         MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,

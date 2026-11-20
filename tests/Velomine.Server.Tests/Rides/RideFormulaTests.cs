@@ -85,6 +85,52 @@ public sealed class RideFormulaTests
     public void PowerLoad_ShouldBeNull_WhenThereIsNoPowerOrNoFtp() =>
         Assert.Equal((null, null), TrainingLoad.PowerLoad(null, 3600, 200));
 
+    /// <summary>A ride at one heart rate for the given seconds, one sample a second.</summary>
+    private static List<Sample> Beats(int seconds, short bpm) =>
+        [.. Enumerable.Range(0, seconds + 1).Select(i => new Sample(i, HeartRate: bpm))];
+
+    [Fact]
+    public void HrTss_ShouldBe100_WhenOneHourAtThreshold() =>
+        // An hour at the threshold itself: (160 / 160)^2 for every second of 3,600, which is 100 on the TSS scale.
+        Assert.Equal(100.0, TrainingLoad.HrTss(Beats(3600, 160), 160));
+
+    [Fact]
+    public void HrTss_ShouldBe64_WhenOneHourAt80PercentOfThreshold() =>
+        // 80 % of the threshold squared is 0.64, so an hour there is 64.
+        Assert.Equal(64.0, TrainingLoad.HrTss(Beats(3600, 128), 160));
+
+    [Fact]
+    public void HrTss_ShouldBe62Point5_WhenHalfAtThresholdAndHalfAtHalf()
+    {
+        // Half an hour at the threshold (1.00) and half at half of it (0.25): 1,800 x 1 + 1,800 x 0.25 over 3,600.
+        List<Sample> samples = [.. Beats(1800, 160), .. Beats(1800, 80).Select(s => s with { T = s.T + 1801 })];
+        Assert.Equal(62.5, TrainingLoad.HrTss(samples, 160));
+    }
+
+    [Fact]
+    public void HrTss_ShouldSkipTheGap_WhenSamplesAreMoreThan30SecondsApart()
+    {
+        // Two seconds of riding either side of a minute and a half with no samples: only the two seconds count.
+        List<Sample> samples = [new(0, HeartRate: 160), new(1, HeartRate: 160), new(100, HeartRate: 160), new(101, HeartRate: 160)];
+
+        Assert.Equal(0.1, TrainingLoad.HrTss(samples, 160));
+    }
+
+    [Fact]
+    public void FeelScore_ShouldBe100_WhenAnHourFeltSeven() =>
+        // An hour rated 7 of 10 is an hour at the threshold: 1 x (7 / 7)^2 x 100.
+        Assert.Equal(100.0, TrainingLoad.FeelScore(3600, 7));
+
+    [Fact]
+    public void FeelScore_ShouldBe49_WhenNinetyMinutesFeltFour() =>
+        // 1.5 hours x (4 / 7)^2 x 100 = 48.98.
+        Assert.Equal(49.0, TrainingLoad.FeelScore(5400, 4));
+
+    [Fact]
+    public void FeelScore_ShouldBe102_WhenHalfAnHourFeltTen() =>
+        // 0.5 hours x (10 / 7)^2 x 100 = 102.04.
+        Assert.Equal(102.0, TrainingLoad.FeelScore(1800, 10));
+
     [Fact]
     public void PauseThreshold_ShouldStayAtThirtySeconds_WhenSamplesAreTenSecondsApart()
     {

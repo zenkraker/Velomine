@@ -70,7 +70,12 @@ public sealed record RideResponse(
     // sees them too (they are the rider's zones), hidden by the heart-rate privacy switch.
     string? HeartRateZoneModel = null,
     int? HeartRateZoneReferenceBpm = null,
-    string? HeartRateZoneReferenceSource = null)
+    string? HeartRateZoneReferenceSource = null,
+    // The heart-rate effort score stored at read, and the effort score the dashboard uses with where it came from.
+    // Set here and in GetRide; WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
+    double? HrTss = null,
+    double? EffortScore = null,
+    string? EffortSource = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -112,7 +117,8 @@ public sealed record RideResponse(
         DecouplingPct: r.DecouplingPct,
         Steady: r.Steady,
         HeartRateMaxNote: Analytics.HeartRateNotes.IsMax(r.HeartRateNote) ? r.HeartRateNote : null,
-        HeartRateThresholdNote: r.HeartRateThresholdNote);
+        HeartRateThresholdNote: r.HeartRateThresholdNote,
+        HrTss: r.HrTss);
 
     /// <summary>The same ride without training load, for a viewer allowed to see rides but not analytics.</summary>
     public RideResponse WithoutTrainingLoad() => this with
@@ -137,5 +143,6 @@ public sealed record RideResponse(
         EfficiencyFactor = null,
         DecouplingPct = null,
         Steady = null,
+        HrTss = null,
     };
 }

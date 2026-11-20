@@ -26,6 +26,7 @@ class TrainingResponse {
     required this.intensity,
     this.intensityWeeks = const [],
     this.efficiency = const [],
+    this.heartRateLoadRides = const Optional.present(0),
   });
 
   final int dayCount;
@@ -54,6 +55,8 @@ class TrainingResponse {
 
   final List<EfficiencyWeek> efficiency;
 
+  final Optional<int?> heartRateLoadRides;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is TrainingResponse &&
     other.dayCount == dayCount &&
@@ -68,7 +71,8 @@ class TrainingResponse {
     _deepEquality.equals(other.days, days) &&
     other.intensity == intensity &&
     _deepEquality.equals(other.intensityWeeks, intensityWeeks) &&
-    _deepEquality.equals(other.efficiency, efficiency);
+    _deepEquality.equals(other.efficiency, efficiency) &&
+    other.heartRateLoadRides == heartRateLoadRides;
 
   @override
   int get hashCode =>
@@ -85,10 +89,11 @@ class TrainingResponse {
     (days.hashCode) +
     (intensity == null ? 0 : intensity!.hashCode) +
     (intensityWeeks.hashCode) +
-    (efficiency.hashCode);
+    (efficiency.hashCode) +
+    (heartRateLoadRides.hashCode);
 
   @override
-  String toString() => 'TrainingResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, days=$days, intensity=$intensity, intensityWeeks=$intensityWeeks, efficiency=$efficiency]';
+  String toString() => 'TrainingResponse[dayCount=$dayCount, from=$from, to=$to, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, days=$days, intensity=$intensity, intensityWeeks=$intensityWeeks, efficiency=$efficiency, heartRateLoadRides=$heartRateLoadRides]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -109,6 +114,10 @@ class TrainingResponse {
     }
       json[r'intensityWeeks'] = this.intensityWeeks;
       json[r'efficiency'] = this.efficiency;
+    if (this.heartRateLoadRides.isPresent) {
+      final value = this.heartRateLoadRides.value;
+      json[r'heartRateLoadRides'] = value;
+    }
     return json;
   }
 
@@ -129,6 +138,7 @@ class TrainingResponse {
     bool intensitySetToNull = false,
     List<IntensityWeek>? intensityWeeks,
     List<EfficiencyWeek>? efficiency,
+    Optional<int?>? heartRateLoadRides,
   }) => TrainingResponse(
     dayCount: dayCount ?? this.dayCount,
     from: from ?? this.from,
@@ -143,6 +153,7 @@ class TrainingResponse {
     intensity: intensitySetToNull ? null : intensity ?? this.intensity,
     intensityWeeks: intensityWeeks ?? this.intensityWeeks,
     efficiency: efficiency ?? this.efficiency,
+    heartRateLoadRides: heartRateLoadRides ?? this.heartRateLoadRides,
   );
 
   /// Returns a new [TrainingResponse] instance and imports its values from
@@ -198,6 +209,7 @@ class TrainingResponse {
         intensity: IntensityResponse.fromJson(json[r'intensity']),
         intensityWeeks: IntensityWeek.listFromJson(json[r'intensityWeeks']),
         efficiency: EfficiencyWeek.listFromJson(json[r'efficiency']),
+        heartRateLoadRides: json.containsKey(r'heartRateLoadRides') ? Optional.present(json[r'heartRateLoadRides'] == null ? null : int.parse('${json[r'heartRateLoadRides']}')) : const Optional.absent(),
       );
     }
     return null;

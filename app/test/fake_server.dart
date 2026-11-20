@@ -2733,6 +2733,9 @@ Map<String, Object?> rideJson(
   double? intensityFactor,
   double? tss,
   double? trimp,
+  double? hrTss,
+  double? effortScore,
+  String? effortSource,
   List<Map<String, Object?>> heartRateZones = const [],
   List<Map<String, Object?>> powerZones = const [],
   List<Map<String, Object?>> powerRecords = const [],
@@ -2789,6 +2792,9 @@ Map<String, Object?> rideJson(
   'intensityFactor': intensityFactor,
   'tss': tss,
   'trimp': trimp,
+  'hrTss': hrTss,
+  'effortScore': effortScore,
+  'effortSource': effortSource,
   'avgHeartRate': avgHeartRate,
   'maxHeartRate': null,
   'avgCadence': avgCadence,
@@ -2859,6 +2865,7 @@ Map<String, Object?> trainingJson({
   double trimp = 180,
   int rides = 3,
   double distanceM = 80000,
+  int heartRateLoadRides = 0,
 }) => {
   'dayCount': days,
   'from': '2026-08-07',
@@ -2872,6 +2879,7 @@ Map<String, Object?> trainingJson({
   'intensity': null,
   'intensityWeeks': const <Object?>[],
   'efficiency': const <Object?>[],
+  'heartRateLoadRides': heartRateLoadRides,
   'days': [
     for (var i = 0; i < 3; i++)
       {
@@ -2882,6 +2890,7 @@ Map<String, Object?> trainingJson({
         'elevationGainM': i == 2 ? 200.0 : 0.0,
         'tss': i == 2 ? 60.0 : 0.0,
         'trimp': i == 2 ? 45.0 : 0.0,
+        'load': i == 2 ? 60.0 : 0.0,
         'fitness': 40.0 + i,
         'fatigue': 30.0 + i,
         'form': 10.0,

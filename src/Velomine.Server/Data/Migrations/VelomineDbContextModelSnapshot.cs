@@ -2208,6 +2208,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("hide_temperature");
 
+                    b.Property<double?>("HrTss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("hr_tss");
+
                     b.Property<string>("IdempotencyKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -2228,6 +2232,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<int?>("LoadMaxHeartRate")
                         .HasColumnType("integer")
                         .HasColumnName("load_max_heart_rate");
+
+                    b.Property<int?>("LoadThresholdHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("load_threshold_heart_rate");
 
                     b.Property<int?>("MaxHeartRate")
                         .HasColumnType("integer")

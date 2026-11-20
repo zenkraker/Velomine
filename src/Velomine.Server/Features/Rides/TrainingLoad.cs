@@ -13,6 +13,16 @@ public static class HeartRateZoneModels
     public const string Threshold = "threshold";
 }
 
+/// <summary>What a ride's effort score was worked out from, named as the API returns it.</summary>
+public static class EffortSources
+{
+    public const string Power = "power";
+
+    public const string HeartRate = "heart_rate";
+
+    public const string Feel = "feel";
+}
+
 /// <summary>
 /// The model a rider's heart-rate zones are read against: the reference bpm, where it came from, and its bounds.
 /// </summary>
@@ -152,4 +162,50 @@ public static class TrainingLoad
         }
         return total > 0 ? Math.Round(weighted / 60.0, 1) : null;
     }
+
+    /// <summary>
+    /// The heart-rate effort score, on the TSS scale: one hour at the threshold is 100. The threshold is the one in use
+    /// when the ride was first read. A gap of more than 30 s, paused time and a heart rate outside 40–230 bpm are left
+    /// out. Null without heart rate or without a threshold.
+    /// </summary>
+    public static double? HrTss(
+        IReadOnlyList<Sample> samples,
+        int? thresholdHeartRate,
+        IReadOnlyList<PauseInterval>? pauses = null)
+    {
+        if (thresholdHeartRate is not { } threshold || threshold <= 0) return null;
+        var paused = pauses ?? [];
+        double total = 0;
+        var present = false;
+        for (var i = 0; i + 1 < samples.Count; i++)
+        {
+            if (samples[i].HeartRate is not { } bpm || bpm is < 40 or > 230) continue;
+            present = true;
+            var dt = samples[i + 1].T - samples[i].T;
+            if (dt <= 0 || dt > MaxSampleGapS) continue;
+            if (paused.Any(p => p.StartS < samples[i + 1].T && p.EndS > samples[i].T)) continue;
+            total += Math.Pow(bpm / (double)threshold, 2) * dt / 3600 * 100;
+        }
+        return present ? Math.Round(total, 1) : null;
+    }
+
+    /// <summary>
+    /// Foster's session RPE on the TSS scale: an hour that felt 7 of 10 is an hour at the threshold. Worked out on
+    /// read, never stored, because the rider can rate the ride after it was read.
+    /// </summary>
+    public static double? FeelScore(double? movingS, int? rpe)
+    {
+        if (movingS is not { } seconds || seconds <= 0 || rpe is not { } rating || rating <= 0) return null;
+        return Math.Round(seconds / 60 / 60 * Math.Pow(rating / 7.0, 2) * 100, 1);
+    }
+
+    /// <summary>
+    /// A ride's effort score for fitness, fatigue and form: the first that exists, from power, then heart rate, then how
+    /// hard it felt. Null when the ride has none of them.
+    /// </summary>
+    public static (double? Score, string? Source) Effort(double? tss, double? hrTss, double? feelScore) =>
+        tss is { } power ? (power, EffortSources.Power)
+        : hrTss is { } heartRate ? (heartRate, EffortSources.HeartRate)
+        : feelScore is { } feel ? (feel, EffortSources.Feel)
+        : (null, null);
 }

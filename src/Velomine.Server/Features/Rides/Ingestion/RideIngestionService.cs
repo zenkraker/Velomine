@@ -104,7 +104,9 @@ public sealed class RideIngestionService(
         var profile = await db.Users
             .Where(u => u.Id == ride.UserId)
             .FirstAsync(ct);
-        var maxHeartRate = HeartRates.For(profile, time).Max?.Bpm;
+        var heartRates = HeartRates.For(profile, time);
+        var maxHeartRate = heartRates.Max?.Bpm;
+        var thresholdHeartRate = heartRates.Threshold?.Bpm;
         // Copied once, onto the ride row made at upload: the activities of a multi-activity file inherit it below, and
         // a re-read from the original file leaves the columns alone because it assigns only what it derives.
         ride.Privacy ??= PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking()
@@ -130,7 +132,8 @@ public sealed class RideIngestionService(
                     file.DeviceMovingS,
                     file.Pauses,
                     ftpW: profile.FtpW,
-                    maxHeartRate: maxHeartRate);
+                    maxHeartRate: maxHeartRate,
+                    thresholdHeartRate: thresholdHeartRate);
             }
             catch (RideParseException ex)
             {
@@ -174,7 +177,7 @@ public sealed class RideIngestionService(
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
             Apply(target, metrics);
-            target.StampRead(profile.FtpW, maxHeartRate);
+            target.StampRead(profile.FtpW, maxHeartRate, thresholdHeartRate);
 
             if (await FindOriginalAsync(db, target, ct) is { } original)
             {
@@ -330,6 +333,7 @@ public sealed class RideIngestionService(
         ride.IntensityFactor = m.IntensityFactor;
         ride.Tss = m.Tss;
         ride.Trimp = m.Trimp;
+        ride.HrTss = m.HrTss;
         ride.AvgHeartRate = m.AvgHeartRate;
         ride.MaxHeartRate = m.MaxHeartRate;
         ride.AvgCadence = m.AvgCadence;

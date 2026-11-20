@@ -175,6 +175,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         await AddJsonAsync(zip, "rides.json", rides.Select(r => new
         {
             Ride = RideResponse.From(r),
+            // The threshold the stored heart-rate effort came from, so the export says what it was read with.
+            r.LoadThresholdHeartRate,
             // Where the original file is in this ZIP; null when the file was not on disk.
             File = fileNames.GetValueOrDefault(r.FileSha256),
             r.FileSha256,

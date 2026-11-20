@@ -64,6 +64,9 @@ class RideResponse {
     this.heartRateZoneModel = const Optional.absent(),
     this.heartRateZoneReferenceBpm = const Optional.absent(),
     this.heartRateZoneReferenceSource = const Optional.absent(),
+    this.hrTss = const Optional.absent(),
+    this.effortScore = const Optional.absent(),
+    this.effortSource = const Optional.absent(),
   });
 
   final String id;
@@ -252,6 +255,30 @@ class RideResponse {
   ///
   final Optional<String?> heartRateZoneReferenceSource;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> hrTss;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> effortScore;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> effortSource;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -304,7 +331,10 @@ class RideResponse {
     other.heartRateThresholdNote == heartRateThresholdNote &&
     other.heartRateZoneModel == heartRateZoneModel &&
     other.heartRateZoneReferenceBpm == heartRateZoneReferenceBpm &&
-    other.heartRateZoneReferenceSource == heartRateZoneReferenceSource;
+    other.heartRateZoneReferenceSource == heartRateZoneReferenceSource &&
+    other.hrTss == hrTss &&
+    other.effortScore == effortScore &&
+    other.effortSource == effortSource;
 
   @override
   int get hashCode =>
@@ -359,10 +389,13 @@ class RideResponse {
     (heartRateThresholdNote == null ? 0 : heartRateThresholdNote!.hashCode) +
     (heartRateZoneModel == null ? 0 : heartRateZoneModel!.hashCode) +
     (heartRateZoneReferenceBpm == null ? 0 : heartRateZoneReferenceBpm!.hashCode) +
-    (heartRateZoneReferenceSource == null ? 0 : heartRateZoneReferenceSource!.hashCode);
+    (heartRateZoneReferenceSource == null ? 0 : heartRateZoneReferenceSource!.hashCode) +
+    (hrTss == null ? 0 : hrTss!.hashCode) +
+    (effortScore == null ? 0 : effortScore!.hashCode) +
+    (effortSource == null ? 0 : effortSource!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource, hrTss=$hrTss, effortScore=$effortScore, effortSource=$effortSource]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -584,6 +617,18 @@ class RideResponse {
       final value = this.heartRateZoneReferenceSource.value;
       json[r'heartRateZoneReferenceSource'] = value;
     }
+    if (this.hrTss.isPresent) {
+      final value = this.hrTss.value;
+      json[r'hrTss'] = value;
+    }
+    if (this.effortScore.isPresent) {
+      final value = this.effortScore.value;
+      json[r'effortScore'] = value;
+    }
+    if (this.effortSource.isPresent) {
+      final value = this.effortSource.value;
+      json[r'effortSource'] = value;
+    }
     return json;
   }
 
@@ -670,6 +715,9 @@ class RideResponse {
     Optional<String?>? heartRateZoneModel,
     Optional<int?>? heartRateZoneReferenceBpm,
     Optional<String?>? heartRateZoneReferenceSource,
+    Optional<double?>? hrTss,
+    Optional<double?>? effortScore,
+    Optional<String?>? effortSource,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -722,6 +770,9 @@ class RideResponse {
     heartRateZoneModel: heartRateZoneModel ?? this.heartRateZoneModel,
     heartRateZoneReferenceBpm: heartRateZoneReferenceBpm ?? this.heartRateZoneReferenceBpm,
     heartRateZoneReferenceSource: heartRateZoneReferenceSource ?? this.heartRateZoneReferenceSource,
+    hrTss: hrTss ?? this.hrTss,
+    effortScore: effortScore ?? this.effortScore,
+    effortSource: effortSource ?? this.effortSource,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -829,6 +880,9 @@ class RideResponse {
         heartRateZoneModel: json.containsKey(r'heartRateZoneModel') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneModel')) : const Optional.absent(),
         heartRateZoneReferenceBpm: json.containsKey(r'heartRateZoneReferenceBpm') ? Optional.present(json[r'heartRateZoneReferenceBpm'] == null ? null : int.parse('${json[r'heartRateZoneReferenceBpm']}')) : const Optional.absent(),
         heartRateZoneReferenceSource: json.containsKey(r'heartRateZoneReferenceSource') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneReferenceSource')) : const Optional.absent(),
+        hrTss: json.containsKey(r'hrTss') ? Optional.present(mapValueOfType<double>(json, r'hrTss')) : const Optional.absent(),
+        effortScore: json.containsKey(r'effortScore') ? Optional.present(mapValueOfType<double>(json, r'effortScore')) : const Optional.absent(),
+        effortSource: json.containsKey(r'effortSource') ? Optional.present(mapValueOfType<String>(json, r'effortSource')) : const Optional.absent(),
       );
     }
     return null;

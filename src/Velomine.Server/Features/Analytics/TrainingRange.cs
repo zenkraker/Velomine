@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Privacy;
+using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Analytics;
 
@@ -19,7 +20,8 @@ public static class TrainingRange
         int days,
         CancellationToken ct,
         RideFilter filter = default,
-        PrivacyProfile? viewer = null)
+        PrivacyProfile? viewer = null,
+        bool includeFeel = true)
     {
         var to = clock.Today;
         var from = to.AddDays(-(days - 1));
@@ -29,7 +31,8 @@ public static class TrainingRange
             .Where(u => u.Id == userId)
             .Select(u => u.FtpW)
             .FirstAsync(ct);
-        var rides = await RideDays.LoadAsync(db, userId, clock, warmup, to.AddDays(1), ct, ftpW: ftpW, filter: filter);
+        var rides = await RideDays.LoadAsync(db, userId, clock, warmup, to.AddDays(1), ct, ftpW: ftpW, filter: filter, includeFeel: includeFeel);
+        // Fitness, fatigue and form follow each ride's effort score: power, else heart rate, else how hard it felt.
         var byDate = rides
             .GroupBy(r => r.LocalDate)
             .ToDictionary(
@@ -40,15 +43,16 @@ public static class TrainingRange
                     g.Sum(r => r.MovingS),
                     g.Sum(r => r.ElevationGainM),
                     g.Sum(r => r.Tss),
-                    g.Sum(r => r.Trimp)));
+                    g.Sum(r => r.Trimp),
+                    g.Sum(r => r.Load)));
 
         double fitness = 0, fatigue = 0;
         var result = new List<TrainingDay>(days);
         for (var date = warmup; date <= to; date = date.AddDays(1))
         {
             var day = byDate.GetValueOrDefault(date);
-            fitness += (day.Tss - fitness) * (1 - Math.Exp(-1.0 / FitnessDays));
-            fatigue += (day.Tss - fatigue) * (1 - Math.Exp(-1.0 / FatigueDays));
+            fitness += (day.Load - fitness) * (1 - Math.Exp(-1.0 / FitnessDays));
+            fatigue += (day.Load - fatigue) * (1 - Math.Exp(-1.0 / FatigueDays));
             if (date < from) continue;
 
             result.Add(new TrainingDay(
@@ -59,6 +63,7 @@ public static class TrainingRange
                 day.ElevationGainM,
                 Math.Round(day.Tss, 1),
                 Math.Round(day.Trimp, 1),
+                Math.Round(day.Load, 1),
                 Math.Round(fitness, 1),
                 Math.Round(fatigue, 1),
                 Math.Round(fitness - fatigue, 1)));
@@ -80,7 +85,9 @@ public static class TrainingRange
             [.. result],
             intensity,
             weeks,
-            efficiency);
+            efficiency,
+            // What the progress page says when some rides in the range were scored from heart rate.
+            rides.Count(r => r.LocalDate >= from && r.LoadSource == EffortSources.HeartRate));
     }
 
     private readonly record struct DayTotals(
@@ -89,5 +96,6 @@ public static class TrainingRange
         double MovingS,
         double ElevationGainM,
         double Tss,
-        double Trimp);
+        double Trimp,
+        double Load);
 }

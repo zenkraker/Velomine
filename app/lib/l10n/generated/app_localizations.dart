@@ -2408,6 +2408,30 @@ abstract class AppLocalizations {
   /// **'TRIMP'**
   String get statTrimp;
 
+  /// No description provided for @statEffortScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Effort score'**
+  String get statEffortScore;
+
+  /// No description provided for @effortFromPower.
+  ///
+  /// In en, this message translates to:
+  /// **'From your power'**
+  String get effortFromPower;
+
+  /// No description provided for @effortFromHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'From your heart rate'**
+  String get effortFromHeartRate;
+
+  /// No description provided for @effortFromFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'From how hard it felt'**
+  String get effortFromFeel;
+
   /// No description provided for @statEfficiency.
   ///
   /// In en, this message translates to:
@@ -3641,8 +3665,14 @@ abstract class AppLocalizations {
   /// No description provided for @trainingLoadHint.
   ///
   /// In en, this message translates to:
-  /// **'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.'**
+  /// **'Set your FTP or wear a heart-rate strap, then upload a ride to see training load.'**
   String get trainingLoadHint;
+
+  /// No description provided for @fitnessHeartRateLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes rides scored from heart rate.'**
+  String get fitnessHeartRateLoad;
 
   /// No description provided for @fitnessFatigueForm.
   ///

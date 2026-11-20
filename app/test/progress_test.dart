@@ -623,4 +623,30 @@ void main() {
       expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
     },
   );
+
+  testWidgets(
+    'ProgressScreen_ShouldNoteTheHeartRateRides_WhenSomeWereScoredFromIt',
+    (tester) async {
+      server.training = {...trainingJson(), 'heartRateLoadRides': 2};
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('fitness-chart')));
+
+      expect(
+        find.text('Includes rides scored from heart rate.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldStayQuietAboutHeartRate_WhenEveryRideHadPower',
+    (tester) async {
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('fitness-chart')));
+
+      expect(find.text('Includes rides scored from heart rate.'), findsNothing);
+    },
+  );
 }

@@ -85,6 +85,12 @@ public sealed class Ride
     /// <summary>The maximum heart rate behind the heart-rate load, recorded like <see cref="LoadFtpW"/>.</summary>
     public int? LoadMaxHeartRate { get; set; }
 
+    /// <summary>
+    /// The threshold heart rate the stored <see cref="HrTss"/> was worked out from, recorded like <see cref="LoadFtpW"/>;
+    /// 0 means the member had none at the first read. Null on a ride read before it was recorded.
+    /// </summary>
+    public int? LoadThresholdHeartRate { get; set; }
+
     /// <summary>Always UTC.</summary>
     public DateTimeOffset? StartTime { get; set; }
 
@@ -155,6 +161,12 @@ public sealed class Ride
 
     /// <summary>Zone-weighted heart-rate load in points: one per minute in Z1, five in Z5.</summary>
     public double? Trimp { get; set; }
+
+    /// <summary>
+    /// The heart-rate effort score, on the TSS scale, worked out when the ride was read from the threshold heart rate in
+    /// use then (one hour at the threshold is 100). Null without heart rate or without a threshold.
+    /// </summary>
+    public double? HrTss { get; set; }
 
     public int? AvgHeartRate { get; set; }
 

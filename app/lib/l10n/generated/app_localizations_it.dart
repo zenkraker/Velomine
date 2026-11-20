@@ -1360,6 +1360,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statTrimp => 'TRIMP';
 
   @override
+  String get statEffortScore => 'Punteggio di sforzo';
+
+  @override
+  String get effortFromPower => 'Dalla tua potenza';
+
+  @override
+  String get effortFromHeartRate => 'Dalla tua frequenza cardiaca';
+
+  @override
+  String get effortFromFeel => 'Da quanto è sembrata dura';
+
+  @override
   String get statEfficiency => 'Fattore di efficienza';
 
   @override
@@ -2069,7 +2081,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get trainingLoadHint =>
-      'Imposta FTP (e frequenza cardiaca massima) nel profilo, poi carica un\'uscita per vedere il carico di allenamento.';
+      'Imposta il tuo FTP o indossa una fascia cardiaca, poi carica un\'uscita per vedere il carico di allenamento.';
+
+  @override
+  String get fitnessHeartRateLoad =>
+      'Include uscite valutate dalla frequenza cardiaca.';
 
   @override
   String get fitnessFatigueForm => 'Fitness, fatica e forma';
