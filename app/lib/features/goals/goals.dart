@@ -7,6 +7,9 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/goal_gauge.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/units.dart';
 
@@ -191,7 +194,8 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
   }
 }
 
-/// One goal with a progress bar: "Weekly distance · 40 km of 100 km".
+/// One goal on one card: its name, a half-circle gauge with the percentage, the value against the target
+/// and one sentence that says what is left — or, when it is reached, by how much.
 class GoalCard extends ConsumerWidget {
   const GoalCard({
     super.key,
@@ -215,67 +219,88 @@ class GoalCard extends ConsumerWidget {
       goalPeriodName(l10n, goal.period),
       metric.toLowerCase(),
     );
-    return Card(
+    final progress = (goal.percent / 100).clamp(0.0, 1.0).toDouble();
+    // The gauge stops at the target; the sentence carries what is left, or what the goal went past it by.
+    final difference = (goal.current - goal.target).abs();
+    final sentence = goal.reached
+        ? l10n.goalReachedBy(goalValue(l10n, units, goal.metric, difference))
+        : l10n.goalLeft(goalValue(l10n, units, goal.metric, difference));
+
+    return AppCard(
       key: Key('goal-${goal.id}'),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.xs,
-          AppSpacing.lg,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title.isEmpty
-                        ? title
-                        : title[0].toUpperCase() + title.substring(1),
-                    style: text.titleMedium,
-                  ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.xl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title.isEmpty
+                      ? title
+                      : title[0].toUpperCase() + title.substring(1),
+                  style: text.titleMedium,
                 ),
-                if (goal.reached)
-                  Chip(
-                    label: Text(l10n.goalReached),
-                    backgroundColor: scheme.primaryContainer,
-                  ),
-                IconButton(
-                  key: Key('goal-edit-${goal.id}'),
-                  tooltip: l10n.goalChangeTarget,
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: onEdit,
-                ),
-                IconButton(
-                  key: Key('goal-delete-${goal.id}'),
-                  tooltip: l10n.goalDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: onDelete,
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.md),
-              child: LinearProgressIndicator(
-                value: (goal.percent / 100).clamp(0, 1).toDouble(),
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
-                semanticsLabel: l10n.goalSemantics(metric),
               ),
-            ),
-            Text(
-              l10n.goalProgress(
-                goalValue(l10n, units, goal.metric, goal.current),
-                goalValue(l10n, units, goal.metric, goal.target),
-                goal.percent,
+              if (goal.reached)
+                Chip(
+                  key: Key('goal-reached-${goal.id}'),
+                  label: Text(l10n.goalReached),
+                  backgroundColor: scheme.primaryContainer,
+                  side: BorderSide.none,
+                ),
+              PageMenu(
+                buttonKey: Key('goal-menu-${goal.id}'),
+                entries: [
+                  PageMenuEntry(
+                    key: Key('goal-edit-${goal.id}'),
+                    icon: Icons.edit_outlined,
+                    label: l10n.goalChangeTarget,
+                    onSelected: onEdit,
+                  ),
+                  PageMenuEntry(
+                    key: Key('goal-delete-${goal.id}'),
+                    icon: Icons.delete_outline,
+                    label: l10n.goalDelete,
+                    destructive: true,
+                    onSelected: onDelete,
+                  ),
+                ],
               ),
-              key: Key('goal-progress-${goal.id}'),
+            ],
+          ),
+          Center(
+            child: GoalGauge(
+              gaugeKey: Key('goal-gauge-${goal.id}'),
+              progress: progress,
+              height: AppGauge.height,
             ),
-          ],
-        ),
+          ),
+          Text(
+            l10n.goalProgress(
+              goalValue(l10n, units, goal.metric, goal.current),
+              goalValue(l10n, units, goal.metric, goal.target),
+              goal.percent,
+            ),
+            key: Key('goal-progress-${goal.id}'),
+            style: text.bodySmall,
+          ),
+          Text(
+            sentence,
+            key: Key('goal-remaining-${goal.id}'),
+            style: text.bodyLarge?.copyWith(color: scheme.onSurface),
+          ),
+          Semantics(
+            label: l10n.goalSemantics(metric),
+            child: const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }

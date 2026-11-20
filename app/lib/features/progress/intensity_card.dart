@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/source_note.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -39,44 +40,41 @@ class IntensityCard extends StatelessWidget {
       '${intensity.hardPct}',
     );
 
-    return Card(
+    return AppCard(
       key: const Key('intensity-card'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(l10n.intensityTitle, style: text.titleMedium),
-            Semantics(
-              container: true,
-              label: label == null ? shares : '$label. $shares',
-              child: ExcludeSemantics(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: AppSpacing.xs,
-                  children: [
-                    if (label != null) Text(label, style: text.bodyMedium),
-                    _Bar(
-                      easyPct: intensity.easyPct,
-                      moderatePct: intensity.moderatePct,
-                      hardPct: intensity.hardPct,
-                      colors: colors,
-                      height: AppSpacing.sm,
-                    ),
-                    Text(shares, style: text.bodySmall),
-                  ],
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(l10n.intensityTitle, style: text.titleMedium),
+          Semantics(
+            container: true,
+            label: label == null ? shares : '$label. $shares',
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpacing.xs,
+                children: [
+                  if (label != null) Text(label, style: text.bodyMedium),
+                  _Bar(
+                    easyPct: intensity.easyPct,
+                    moderatePct: intensity.moderatePct,
+                    hardPct: intensity.hardPct,
+                    colors: colors,
+                    height: AppSpacing.sm,
+                  ),
+                  Text(shares, style: text.bodySmall),
+                ],
               ),
             ),
-            if (weeks.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.xs),
-              for (final week in weeks)
-                _WeekBar(week: week, colors: colors, style: small),
-            ],
-            SourceNote(l10n.intensitySource),
+          ),
+          if (weeks.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            for (final week in weeks)
+              _WeekBar(week: week, colors: colors, style: small),
           ],
-        ),
+          SourceNote(l10n.intensitySource),
+        ],
       ),
     );
   }

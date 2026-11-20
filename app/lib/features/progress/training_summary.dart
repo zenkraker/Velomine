@@ -7,12 +7,17 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
-import '../../core/units.dart';
-import '../../core/widgets/range_selector.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/units.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bar_chart.dart';
+import '../../core/widgets/chart_chrome.dart';
+import '../../core/widgets/nice_ticks.dart';
+import '../../core/widgets/range_selector.dart';
+import '../../core/widgets/stat_card.dart';
 
-/// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
+/// Load over a date range: fitness, fatigue and form, the totals behind them and the daily TSS.
 class TrainingSummary extends ConsumerWidget {
   const TrainingSummary({
     super.key,
@@ -28,187 +33,268 @@ class TrainingSummary extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final colors = [
-      scheme.primary,
-      const Color(0xFFE07A3F),
-      const Color(0xFF8E44AD),
-    ];
-    final labelStyle = (text.labelSmall ?? const TextStyle(fontSize: 11))
-        .copyWith(color: scheme.onSurfaceVariant);
+    final palette = VelomineColors.of(context);
+    final fitnessColor = palette.accentStrong;
+    final fatigueColor = palette.series['power']!;
+    // One sentence, and only what the chart already shows: the last fitness value against the first.
+    final trend = training.days.length < 2
+        ? null
+        : training.days.last.fitness > training.days.first.fitness
+        ? l10n.fitnessTrendRising
+        : training.days.last.fitness < training.days.first.fitness
+        ? l10n.fitnessTrendFalling
+        : null;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            RangeSelector<int>(
-              title: l10n.trainingLoad,
-              segmentKey: const Key('training-range'),
-              segments: [
-                ButtonSegment(value: 30, label: Text(l10n.range30Days)),
-                ButtonSegment(value: 90, label: Text(l10n.range90Days)),
-                ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
-              ],
-              selected: days,
-              onChanged: onDays,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.xl,
-              runSpacing: 8,
-              children: [
-                StatTile(
-                  label: 'TSS',
-                  value: training.tss.round().toString(),
-                  valueKey: const Key('training-tss'),
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RangeSelector<int>(
+            title: l10n.fitnessFatigueForm,
+            segmentKey: const Key('training-range'),
+            segments: [
+              ButtonSegment(value: 30, label: Text(l10n.range30Days)),
+              ButtonSegment(value: 90, label: Text(l10n.range90Days)),
+              ButtonSegment(value: 365, label: Text(l10n.rangeOneYear)),
+            ],
+            selected: days,
+            onChanged: onDays,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // The range control above already names the chart; this row says the dates and the colours.
+          Row(
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: AppSpacing.lg,
+                  runSpacing: 6,
+                  children: [
+                    _LegendDot(color: fitnessColor, label: l10n.fitness),
+                    _LegendDot(color: fatigueColor, label: l10n.fatigue),
+                    _LegendDot(
+                      color: fitnessColor,
+                      below: palette.signal,
+                      label: l10n.form,
+                    ),
+                  ],
                 ),
-                StatTile(
-                  label: 'TRIMP',
-                  value: training.trimp.round().toString(),
-                  valueKey: const Key('training-trimp'),
-                ),
-                StatTile(
-                  label: l10n.statRides,
-                  value: training.rides.toString(),
-                  valueKey: const Key('training-rides'),
-                ),
-                StatTile(
-                  label: l10n.statDistance,
-                  value: km(
-                    ref.watch(unitsChoiceViewModelProvider),
-                    training.distanceM,
-                  ),
-                  valueKey: const Key('training-distance'),
-                ),
-              ],
-            ),
-            if (training.tss == 0 && training.rides > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
+              ),
+              // Twice the text does not fit beside the legend; it wraps instead of overflowing.
+              Flexible(
                 child: Text(
-                  l10n.trainingLoadHint,
-                  key: const Key('training-hint'),
-                  style: text.bodySmall,
+                  '${DateFormat.MMMd(locale).format(training.from)} – '
+                  '${DateFormat.MMMd(locale).format(training.to)}',
+                  style: text.labelSmall,
+                  textAlign: TextAlign.end,
                 ),
               ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(l10n.fitnessFatigueForm, style: text.titleSmall),
-                ),
-                // Twice the text does not fit beside the title; it wraps instead of overflowing.
-                Flexible(
-                  child: Text(
-                    '${DateFormat.MMMd().format(training.from)} – '
-                    '${DateFormat.MMMd().format(training.to)}',
-                    style: text.labelSmall,
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            label: l10n.fitnessSemantics(
+              training.days.isEmpty ? 0 : training.days.last.fitness.round(),
+              training.days.isEmpty ? 0 : training.days.last.fatigue.round(),
+              training.days.isEmpty ? 0 : training.days.last.form.round(),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.lg,
-              runSpacing: 6,
-              children: [
-                _LegendDot(color: colors[0], label: l10n.fitness),
-                _LegendDot(color: colors[1], label: l10n.fatigue),
-                _LegendDot(color: colors[2], label: l10n.form),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Semantics(
-              label: l10n.fitnessSemantics(
-                training.days.isEmpty ? 0 : training.days.last.fitness.round(),
-                training.days.isEmpty ? 0 : training.days.last.fatigue.round(),
-                training.days.isEmpty ? 0 : training.days.last.form.round(),
-              ),
-              child: SizedBox(
-                height: AppProgress.fitnessChartHeight,
-                child: CustomPaint(
-                  key: const Key('fitness-chart'),
-                  size: Size.infinite,
-                  painter: _FitnessPainter(
-                    days: training.days,
-                    grid: scheme.outlineVariant,
-                    labelStyle: labelStyle,
-                    colors: colors,
-                    locale: locale,
-                  ),
+            child: SizedBox(
+              height: AppProgress.fitnessChartHeight,
+              child: CustomPaint(
+                key: const Key('fitness-chart'),
+                size: Size.infinite,
+                painter: _FitnessPainter(
+                  days: training.days,
+                  grid: Theme.of(context).colorScheme.outlineVariant,
+                  labelStyle: chartLabelStyle(context),
+                  ink: Theme.of(context).colorScheme.onSurface,
+                  muted: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fitness: fitnessColor,
+                  fatigue: fatigueColor,
+                  formAbove: palette.accentStrong,
+                  formBelow: palette.signal,
+                  locale: locale,
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(l10n.dailyLoad, style: text.titleSmall),
-            const SizedBox(height: AppSpacing.sm),
-            Semantics(
-              label: l10n.dailyLoadSemantics(training.dayCount),
-              child: SizedBox(
-                height: AppProgress.loadChartHeight,
-                child: CustomPaint(
-                  key: const Key('tss-chart'),
-                  size: Size.infinite,
-                  painter: _LoadPainter(
-                    days: training.days,
-                    bar: scheme.primary.withValues(alpha: 0.55),
-                    peak: scheme.primary,
-                    labelStyle: labelStyle,
-                    locale: locale,
-                  ),
-                ),
+          ),
+          if (trend != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Text(
+                trend,
+                key: const Key('fitness-trend'),
+                style: text.bodySmall,
               ),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(l10n.trainingLoadHelp, style: text.bodySmall),
-          ],
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Load over the range: TSS, TRIMP, rides and distance, with the hint when TSS could not be counted.
+class TrainingLoadCard extends ConsumerWidget {
+  const TrainingLoadCard({super.key, required this.training});
+
+  final TrainingResponse training;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.trainingLoad, style: text.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xl,
+            runSpacing: 8,
+            children: [
+              StatFigure(
+                label: 'TSS',
+                value: training.tss.round().toString(),
+                valueKey: const Key('training-tss'),
+              ),
+              StatFigure(
+                label: 'TRIMP',
+                value: training.trimp.round().toString(),
+                valueKey: const Key('training-trimp'),
+              ),
+              StatFigure(
+                label: l10n.statRides,
+                value: training.rides.toString(),
+                valueKey: const Key('training-rides'),
+              ),
+              StatFigure(
+                label: l10n.statDistance,
+                value: km(
+                  ref.watch(unitsChoiceViewModelProvider),
+                  training.distanceM,
+                ),
+                valueKey: const Key('training-distance'),
+              ),
+            ],
+          ),
+          if (training.tss == 0 && training.rides > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Text(
+                l10n.trainingLoadHint,
+                key: const Key('training-hint'),
+                style: text.bodySmall,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The daily training load as bars, the latest in the accent colour.
+class DailyLoadCard extends StatelessWidget {
+  const DailyLoadCard({super.key, required this.training});
+
+  final TrainingResponse training;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.dailyLoad, style: text.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          BarChart(
+            paintKey: const Key('tss-chart'),
+            values: [for (final day in training.days) day.tss],
+            labels: [
+              for (final day in training.days)
+                DateFormat.MMMd(locale).format(day.date),
+            ],
+            format: (value) => value.round().toString(),
+            semanticLabel: l10n.dailyLoadSemantics(training.dayCount),
+            emptyMessage: l10n.dailyLoadEmpty,
+            height: AppProgress.loadChartHeight,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(l10n.trainingLoadHelp, style: text.bodySmall),
+        ],
       ),
     );
   }
 }
 
 class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
+  const _LegendDot({required this.color, required this.label, this.below});
 
   final Color color;
+
+  /// The colour of the same series on the other side of the zero line, for bars that change with it.
+  final Color? below;
   final String label;
 
   @override
   Widget build(BuildContext context) {
+    final below = this.below;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 9,
           height: 9,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            // A two-tone series shows both of its colours, top to bottom.
+            gradient: below == null
+                ? null
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [color, below],
+                  ),
+          ),
         ),
         const SizedBox(width: AppSpacing.xs),
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
+        Flexible(
+          child: Text(label, style: Theme.of(context).textTheme.labelSmall),
+        ),
       ],
     );
   }
 }
 
+/// Fitness as a line with a fading area, fatigue as a dashed line, and form as bars round a zero line.
 class _FitnessPainter extends CustomPainter {
   _FitnessPainter({
     required this.days,
     required this.grid,
     required this.labelStyle,
-    required this.colors,
+    required this.ink,
+    required this.muted,
+    required this.fitness,
+    required this.fatigue,
+    required this.formAbove,
+    required this.formBelow,
     required this.locale,
   });
 
   final List<TrainingDay> days;
   final Color grid;
   final TextStyle labelStyle;
-  final List<Color> colors;
+  final Color ink;
+  final Color muted;
+  final Color fitness;
+  final Color fatigue;
+  final Color formAbove;
+  final Color formBelow;
   final String locale;
 
   static const _left = 34.0, _right = 8.0, _top = 8.0, _bottom = 18.0;
@@ -237,34 +323,56 @@ class _FitnessPainter extends CustomPainter {
     double y(double value) =>
         plot.bottom - (value - min) / (max - min) * plot.height;
 
-    final line = Paint()
+    final hairline = Paint()
       ..color = grid
       ..strokeWidth = 1;
-    for (final value in [min, (min + max) / 2, max]) {
+    final ticks = niceTicks(min, max);
+    for (final tick in ticks) {
       canvas.drawLine(
-        Offset(plot.left, y(value)),
-        Offset(plot.right, y(value)),
-        line,
+        Offset(plot.left, y(tick)),
+        Offset(plot.right, y(tick)),
+        hairline,
       );
       _label(
         canvas,
-        value.round().toString(),
-        Offset(plot.left - 4, y(value)),
+        tick.round().toString(),
+        Offset(plot.left - 4, y(tick)),
         alignRight: true,
         centerY: true,
       );
     }
-    if (min < 0 && max > 0) {
-      canvas.drawLine(
-        Offset(plot.left, y(0)),
-        Offset(plot.right, y(0)),
+
+    final zero = y(0);
+    canvas.drawLine(
+      Offset(plot.left, zero),
+      Offset(plot.right, zero),
+      Paint()
+        ..color = grid
+        ..strokeWidth = 1.5,
+    );
+
+    // Form: bars hanging off the zero line, up in the accent and down in the signal colour.
+    final slot = plot.width / days.length;
+    final barWidth = slot * 0.5;
+    for (var i = 0; i < days.length; i++) {
+      final value = days[i].form;
+      if (value == 0) continue;
+      final top = math.min(y(value), zero);
+      final height = math.max((y(value) - zero).abs(), 1.0);
+      final rect = Rect.fromLTWH(
+        plot.left + i * slot + (slot - barWidth) / 2,
+        top,
+        barWidth,
+        height,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(AppRadius.small)),
         Paint()
-          ..color = grid
-          ..strokeWidth = 1.5,
+          ..color = (value > 0 ? formAbove : formBelow).withValues(alpha: 0.55),
       );
     }
 
-    void draw(double Function(TrainingDay day) pick, Color color) {
+    Path line(double Function(TrainingDay day) pick) {
       final path = Path();
       for (var i = 0; i < days.length; i++) {
         final point = Offset(x(i), y(pick(days[i])));
@@ -274,19 +382,69 @@ class _FitnessPainter extends CustomPainter {
           path.lineTo(point.dx, point.dy);
         }
       }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.8
-          ..strokeJoin = StrokeJoin.round,
-      );
+      return path;
     }
 
-    draw((day) => day.form, colors[2]);
-    draw((day) => day.fatigue, colors[1]);
-    draw((day) => day.fitness, colors[0]);
+    // Fitness: the line with a fading area under it.
+    final fitnessPath = line((day) => day.fitness);
+    final area = Path.from(fitnessPath)
+      ..lineTo(plot.right, plot.bottom)
+      ..lineTo(plot.left, plot.bottom)
+      ..close();
+    canvas.drawPath(
+      area,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            fitness.withValues(alpha: 0.35),
+            fitness.withValues(alpha: 0),
+          ],
+        ).createShader(plot),
+    );
+    canvas.drawPath(
+      fitnessPath,
+      Paint()
+        ..color = fitness
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // Fatigue: dashed, so the eye never mistakes it for fitness.
+    _drawDashed(
+      canvas,
+      line((day) => day.fatigue),
+      Paint()
+        ..color = fatigue
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // The two lines say their latest number beside their last point.
+    _label(
+      canvas,
+      days.last.fitness.round().toString(),
+      Offset(plot.right, y(days.last.fitness) - 14),
+      alignRight: true,
+      centerY: true,
+      color: fitness,
+    );
+    _label(
+      canvas,
+      days.last.fatigue.round().toString(),
+      Offset(plot.right, y(days.last.fatigue) + 2),
+      alignRight: true,
+      centerY: true,
+      color: fatigue,
+    );
+    canvas.drawCircle(
+      Offset(plot.right, y(days.last.fitness)),
+      3,
+      Paint()..color = ink,
+    );
 
     for (final index in [0, days.length ~/ 2, days.length - 1]) {
       _label(
@@ -300,6 +458,18 @@ class _FitnessPainter extends CustomPainter {
     }
   }
 
+  void _drawDashed(Canvas canvas, Path path, Paint paint) {
+    const dash = 5.0, gap = 4.0;
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + dash, metric.length);
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance = end + gap;
+      }
+    }
+  }
+
   void _label(
     Canvas canvas,
     String text,
@@ -307,9 +477,13 @@ class _FitnessPainter extends CustomPainter {
     required bool alignRight,
     required bool centerY,
     bool centerX = false,
+    Color? color,
   }) {
     final painter = TextPainter(
-      text: TextSpan(text: text, style: labelStyle),
+      text: TextSpan(
+        text: text,
+        style: color == null ? labelStyle : labelStyle.copyWith(color: color),
+      ),
       textDirection: TextDirection.ltr,
     )..layout();
     final dx = alignRight
@@ -326,77 +500,7 @@ class _FitnessPainter extends CustomPainter {
       old.days != days ||
       old.grid != grid ||
       old.labelStyle != labelStyle ||
-      old.colors != colors ||
-      old.locale != locale;
-}
-
-class _LoadPainter extends CustomPainter {
-  _LoadPainter({
-    required this.days,
-    required this.bar,
-    required this.peak,
-    required this.labelStyle,
-    required this.locale,
-  });
-
-  final List<TrainingDay> days;
-  final Color bar;
-  final Color peak;
-  final TextStyle labelStyle;
-  final String locale;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (days.isEmpty) return;
-    const labelHeight = 16.0;
-    final top = days.fold<double>(0, (m, day) => math.max(m, day.tss));
-    final slot = size.width / days.length;
-    final chartHeight = size.height - labelHeight;
-    final every = (60 / slot).ceil().clamp(1, days.length);
-
-    for (var i = 0; i < days.length; i++) {
-      final value = days[i].tss;
-      if (value > 0) {
-        final height = top <= 0 ? 0.0 : value / top * chartHeight;
-        final rect = Rect.fromLTWH(
-          i * slot + slot * 0.15,
-          chartHeight - height,
-          math.max(slot * 0.7, 1),
-          math.max(height, 2),
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndCorners(
-            rect,
-            topLeft: const Radius.circular(2),
-            topRight: const Radius.circular(2),
-          ),
-          Paint()..color = value == top ? peak : bar,
-        );
-      }
-      if ((days.length - 1 - i) % every == 0) {
-        final painter = TextPainter(
-          text: TextSpan(
-            text: DateFormat.MMMd(locale).format(days[i].date),
-            style: labelStyle,
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        painter.paint(
-          canvas,
-          Offset(
-            i * slot + slot / 2 - painter.width / 2,
-            size.height - labelHeight + 2,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_LoadPainter old) =>
-      old.days != days ||
-      old.bar != bar ||
-      old.peak != peak ||
-      old.labelStyle != labelStyle ||
+      old.fitness != fitness ||
+      old.fatigue != fatigue ||
       old.locale != locale;
 }

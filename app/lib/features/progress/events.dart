@@ -249,6 +249,7 @@ Future<RideResponse?> showRidePicker(
             key: const Key('no-rides-that-day'),
             message: l10n.eventNoRidesThatDay,
             icon: Icons.directions_bike_outlined,
+            framed: false,
           )
         else
           for (final ride in rides)

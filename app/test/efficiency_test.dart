@@ -11,13 +11,12 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
   });
 
-  Future<void> openProgress(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2000);
+  Future<void> openFitness(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/progress/fitness');
   }
 
   Future<void> openRide(WidgetTester tester) async {
@@ -114,7 +113,7 @@ void main() {
   );
 
   testWidgets(
-    'ProgressScreen_ShouldShowEfficiencyInWords_WhenSteadyRidesExist',
+    'FitnessScreen_ShouldShowEfficiencyInWords_WhenSteadyRidesExist',
     (tester) async {
       server.training = {
         ...trainingJson(),
@@ -124,7 +123,7 @@ void main() {
         ],
       };
 
-      await openProgress(tester);
+      await openFitness(tester);
 
       await tester.scrollUntilVisible(
         find.byKey(const Key('efficiency-card')),
@@ -141,10 +140,10 @@ void main() {
     },
   );
 
-  testWidgets('ProgressScreen_ShouldSayWhatIsMissing_WhenThereIsNoSteadyRide', (
+  testWidgets('FitnessScreen_ShouldSayWhatIsMissing_WhenThereIsNoSteadyRide', (
     tester,
   ) async {
-    await openProgress(tester);
+    await openFitness(tester);
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('efficiency-card')),
