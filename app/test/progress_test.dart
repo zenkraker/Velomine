@@ -105,6 +105,37 @@ void main() {
   );
 
   testWidgets(
+    'ProgressScreen_ShouldSayTheZonesComeFromTheEstimatedMaximum_WhenOnlyHeartRateRidesWereCounted',
+    (tester) async {
+      server.training = {
+        ...trainingJson(),
+        'intensity': {
+          'easyS': 6000.0,
+          'moderateS': 3000.0,
+          'hardS': 1000.0,
+          'easyPct': 60.0,
+          'moderatePct': 30.0,
+          'hardPct': 10.0,
+          'polarisationIndex': 1.3,
+          'label': 'pyramidal',
+          'rides': 3,
+          'heartRateZoneModel': 'max',
+          'heartRateZoneReferenceBpm': 180,
+          'heartRateZoneReferenceSource': 'estimate',
+        },
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('intensity-card')));
+
+      expect(
+        find.text('Zones from your maximum heart rate (180 bpm, estimated)'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'ProgressScreen_ShouldShowOnlyTheChosenPeriod_WhenThePeriodChangesDuringALoad',
     (tester) async {
       tester.view.physicalSize = const Size(1000, 2000);
@@ -592,4 +623,89 @@ void main() {
       expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
     },
   );
+
+  testWidgets(
+    'ProgressScreen_ShouldNoteTheHeartRateRides_WhenSomeWereScoredFromIt',
+    (tester) async {
+      server.training = {...trainingJson(), 'heartRateLoadRides': 2};
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('fitness-chart')));
+
+      expect(
+        find.text('Includes rides scored from heart rate.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldStayQuietAboutHeartRate_WhenEveryRideHadPower',
+    (tester) async {
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('fitness-chart')));
+
+      expect(find.text('Includes rides scored from heart rate.'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldWarnAboutEveryDay_WhenTheWeekHasNoEasyDay',
+    (tester) async {
+      server.training = {
+        ...trainingJson(monotony: 2.27, strain: 817.2, monotonous: true),
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('training-monotonous')));
+
+      expect(
+        find.text(
+          'Every day was about as hard this week. An easy day helps you adapt.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('training-heavy-week')), findsNothing);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldWarnAboutAHeavyWeek_WhenStrainIsHigh', (
+    tester,
+  ) async {
+    server.training = {
+      ...trainingJson(monotony: 0.94, strain: 451.2, heavyWeek: true),
+    };
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('training-heavy-week')));
+
+    expect(find.text('This week was much heavier than usual.'), findsOneWidget);
+    expect(find.byKey(const Key('training-monotonous')), findsNothing);
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldShowTheMonotonyAndStrain_WhenTheWeekHasLoad',
+    (tester) async {
+      server.training = {
+        ...trainingJson(monotony: 2.27, strain: 817.2, strainUsual: 428.0),
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('training-strain')));
+
+      expect(find.text('Monotony 2.27 · Strain 817'), findsOneWidget);
+      expect(find.byKey(const Key('training-monotonous')), findsNothing);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldHideTheNumbers_WhenTheWeekHasNoLoad', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('fitness-chart')));
+
+    expect(find.byKey(const Key('training-strain')), findsNothing);
+  });
 }

@@ -173,6 +173,10 @@ public static class PrivacyRules
         MaxHeartRate = privacy.HideHeartRate ? null : ride.MaxHeartRate,
         Trimp = privacy.HideHeartRate ? null : ride.Trimp,
         HeartRateZones = privacy.HideHeartRate ? null : ride.HeartRateZones,
+        // The model and its reference are part of the zones, so the heart-rate switch hides them too.
+        HeartRateZoneModel = privacy.HideHeartRate ? null : ride.HeartRateZoneModel,
+        HeartRateZoneReferenceBpm = privacy.HideHeartRate ? null : ride.HeartRateZoneReferenceBpm,
+        HeartRateZoneReferenceSource = privacy.HideHeartRate ? null : ride.HeartRateZoneReferenceSource,
         AvgPowerW = privacy.HidePower ? null : ride.AvgPowerW,
         MaxPowerW = privacy.HidePower ? null : ride.MaxPowerW,
         NormalizedPowerW = privacy.HidePower ? null : ride.NormalizedPowerW,
@@ -193,6 +197,12 @@ public static class PrivacyRules
         HeartRateNote = null,
         HeartRateMaxNote = null,
         HeartRateThresholdNote = null,
+        // The effort score is the owner's: a coach or a share viewer reads the ride's load, not its effort.
+        HrTss = null,
+        EffortScore = null,
+        EffortSource = null,
+        // Estimated watts are made of speed, slope and elevation: hiding any of them hides the estimate too.
+        EstimatedAvgPowerW = privacy.HidePower || privacy.HideSpeed || privacy.HideElevation ? null : ride.EstimatedAvgPowerW,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
         AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
         MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,
@@ -229,6 +239,8 @@ public static class PrivacyRules
             Altitude = privacy.HideElevation ? null : streams.Altitude,
             Temperature = privacy.HideTemperature ? null : streams.Temperature,
             WPrimeBalanceJ = privacy.HidePower ? null : streams.WPrimeBalanceJ,
+            // The estimate is the owner's: it is made from the member's own weight and bike.
+            EstimatedPower = null,
         };
 
         if (!showRoute) return result with { Latitude = null, Longitude = null };

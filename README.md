@@ -8,7 +8,7 @@
 
 ![A ride in Velomine: the route on the map, with distance, power, heart rate, training load and laps](docs/images/ride.webp)
 
-Velomine reads your rides from a bike computer, the Android app or a Strava export, and turns them into the analysis a cyclist and a coach need. Clubs get coaches, a ride calendar and a route library, and each rider decides exactly what their coach may see.
+Velomine reads your rides from a bike computer, the Android app or a Strava export, and turns them into the analysis a cyclist and a coach need — with a power meter or without one: heart rate builds the load when there is no power, and the watts are estimated from speed, slope and weight when there is no power meter either. Clubs get coaches, a ride calendar and a route library, and each rider decides exactly what their coach may see.
 
 ## Quick start
 
@@ -37,12 +37,15 @@ The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/
 | | |
 |---|---|
 | ![Progress: weekly distance, readiness, fitness and fatigue, and the power curve](docs/images/progress.webp) | ![A bike with its parts and how worn each one is](docs/images/bike.webp) |
-| **Progress:** weekly and monthly totals, training load, fitness and fatigue, the power curve and FTP, and a daily readiness score. | **Bikes and parts:** every component with its wear, service reminders and a service log. |
+| **Progress:** the rider card, weekly and monthly totals, training load, fitness and fatigue, the power curve and FTP, and a daily readiness score. | **Bikes and parts:** every component with its wear, service reminders and a service log. |
 
 - **Rides:** FIT, GPX and TCX files, whole folders at once (Zwift's Activities folder too), or your full Strava export; map, charts, laps, heart-rate and power zones.
 - **Clubs and coaches:** join with a code, a coach sees only what each rider shares, planned club rides with a meeting point and a route, and a shared route library.
 - **Android app** that records with the screen off and connects to a heart-rate sensor; the APK is attached to every [release](https://github.com/zenkraker/Velomine/releases/latest). On an iPhone, the web app works in the browser.
 - **Power and endurance analysis:** FTP history with where each value came from, a reminder when the FTP is out of date and a suggestion when a ride shows a higher one, critical power, W′ and peak power, W′ balance through a ride, aerobic decoupling and efficiency factor, easy/moderate/hard time with the polarisation index, and personal power records.
+- **Riders without a power meter:** an effort score on every ride, from power, otherwise from heart rate, otherwise from how hard it felt, so a strap alone builds the fitness chart; heart-rate zones from your threshold, both zone sets adjustable by hand; maximum and threshold heart rate typed by you, measured on a ride or estimated, each with where it came from; watts estimated from speed, slope and weight, always marked as estimated; and a caution when every day was about as hard or the week was much heavier than usual.
+- **One rider card** at the top of Progress: FTP and W/kg, critical power, W′ and peak power, your best 5 seconds to 20 minutes (each opening its ride), maximum and threshold heart rate, the efficiency trend of the last eight weeks, the last 90 days of riding, today's fitness and form, and the next event — each with a line saying where it came from.
+- **Events you train for:** a date, a distance and climbing, the days to go, and the ride that turned out to be it.
 - **Wellbeing check-in** and readiness, as health data with explicit consent.
 - **Accounts:** optional two-factor sign-in, single sign-on, a list of signed-in devices; English and Italian.
 

@@ -127,6 +127,10 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
             t.HasCheckConstraint("ck_users_birth_year", "birth_year IS NULL OR birth_year BETWEEN 1900 AND 2200");
             t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
             t.HasCheckConstraint("ck_users_rider_mode", "rider_mode IS NULL OR rider_mode IN ('just_riding', 'with_goals', 'training')");
+            // Custom bounds are all there or none: six of the FTP, four of a heart-rate reference.
+            t.HasCheckConstraint("ck_users_power_zone_bounds", "power_zone_bounds IS NULL OR cardinality(power_zone_bounds) = 6");
+            t.HasCheckConstraint("ck_users_heart_rate_max_zone_bounds", "heart_rate_max_zone_bounds IS NULL OR cardinality(heart_rate_max_zone_bounds) = 4");
+            t.HasCheckConstraint("ck_users_heart_rate_threshold_zone_bounds", "heart_rate_threshold_zone_bounds IS NULL OR cardinality(heart_rate_threshold_zone_bounds) = 4");
         });
         builder.Entity<User>().Property(u => u.TimeZone).HasMaxLength(64);
         builder.Entity<User>().Property(u => u.Language).HasMaxLength(8);

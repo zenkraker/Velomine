@@ -352,6 +352,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("ftp_w");
 
+                    b.PrimitiveCollection<double[]>("HeartRateMaxZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("heart_rate_max_zone_bounds");
+
+                    b.PrimitiveCollection<double[]>("HeartRateThresholdZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("heart_rate_threshold_zone_bounds");
+
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean")
                         .HasColumnName("is_approved");
@@ -406,6 +414,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
+
+                    b.PrimitiveCollection<double[]>("PowerZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("power_zone_bounds");
 
                     b.Property<string>("RiderMode")
                         .HasMaxLength(16)
@@ -506,6 +518,10 @@ namespace Velomine.Server.Data.Migrations
 
                             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
 
+                            t.HasCheckConstraint("ck_users_heart_rate_max_zone_bounds", "heart_rate_max_zone_bounds IS NULL OR cardinality(heart_rate_max_zone_bounds) = 4");
+
+                            t.HasCheckConstraint("ck_users_heart_rate_threshold_zone_bounds", "heart_rate_threshold_zone_bounds IS NULL OR cardinality(heart_rate_threshold_zone_bounds) = 4");
+
                             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
 
                             t.HasCheckConstraint("ck_users_max_heart_rate_bpm", "max_heart_rate_bpm BETWEEN 120 AND 230");
@@ -515,6 +531,8 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_users_max_heart_rate_source", "(max_heart_rate_bpm IS NULL) = (max_heart_rate_source IS NULL)");
 
                             t.HasCheckConstraint("ck_users_max_heart_rate_source_value", "max_heart_rate_source IN ('manual', 'measured')");
+
+                            t.HasCheckConstraint("ck_users_power_zone_bounds", "power_zone_bounds IS NULL OR cardinality(power_zone_bounds) = 6");
 
                             t.HasCheckConstraint("ck_users_rider_mode", "rider_mode IS NULL OR rider_mode IN ('just_riding', 'with_goals', 'training')");
 
@@ -862,6 +880,10 @@ namespace Velomine.Server.Data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
+
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight_kg");
 
                     b.Property<int>("WheelCircumferenceMm")
                         .HasColumnType("integer")
@@ -2151,6 +2173,18 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("error");
 
+                    b.Property<int?>("EstimatedAvgPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_avg_power_w");
+
+                    b.Property<int?>("EstimatedNormalizedPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_normalized_power_w");
+
+                    b.Property<double?>("EstimatedTss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("estimated_tss");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -2197,6 +2231,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("hide_temperature");
 
+                    b.Property<double?>("HrTss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("hr_tss");
+
                     b.Property<string>("IdempotencyKey")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
@@ -2217,6 +2255,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<int?>("LoadMaxHeartRate")
                         .HasColumnType("integer")
                         .HasColumnName("load_max_heart_rate");
+
+                    b.Property<int?>("LoadThresholdHeartRate")
+                        .HasColumnType("integer")
+                        .HasColumnName("load_threshold_heart_rate");
 
                     b.Property<int?>("MaxHeartRate")
                         .HasColumnType("integer")
@@ -2475,6 +2517,10 @@ namespace Velomine.Server.Data.Migrations
                     b.PrimitiveCollection<float?[]>("Distance")
                         .HasColumnType("real[]")
                         .HasColumnName("distance");
+
+                    b.PrimitiveCollection<short?[]>("EstimatedPower")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("estimated_power");
 
                     b.PrimitiveCollection<short?[]>("HeartRate")
                         .HasColumnType("smallint[]")

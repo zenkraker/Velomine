@@ -176,7 +176,10 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Training, ct);
-        await Send.OkAsync(await TrainingRange.LoadAsync(db, req.UserId, clock, time, req.Days ?? 90, ct, viewer: privacy), ct);
+        // The daily load counts hrTSS like TSS; only the feel score needs the wellbeing grant.
+        var includeFeel = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Wellbeing, ct);
+        await Send.OkAsync(await TrainingRange.LoadAsync(
+            db, req.UserId, clock, time, req.Days ?? 90, ct, viewer: privacy, includeFeel: includeFeel), ct);
     }
 }
 
@@ -206,7 +209,19 @@ public static class CoachQueries
         var rides = await db.Rides.AsNoTracking()
             .Where(r => ids.Contains(r.UserId) && r.Status == RideStatus.Ready
                 && r.StartTime >= fromUtc && r.StartTime < toUtc)
-            .Select(r => new { r.UserId, r.StartTime, r.UtcOffsetMinutes, r.DistanceM, r.MovingS, r.ElevationGainM, r.NormalizedPowerW, r.Tss })
+            .Select(r => new
+            {
+                r.UserId,
+                r.StartTime,
+                r.UtcOffsetMinutes,
+                r.DistanceM,
+                r.MovingS,
+                r.ElevationGainM,
+                r.NormalizedPowerW,
+                r.Tss,
+                r.HrTss,
+                Rpe = db.RideFeels.Where(f => f.RideId == r.Id).Select(f => (int?)f.Rpe).FirstOrDefault(),
+            })
             .ToListAsync(ct);
 
         var rideSharerIds = members
@@ -233,16 +248,24 @@ public static class CoachQueries
             var clock = MemberClock.For(member.User.TimeZone, member.User.FirstDayOfWeek, time);
             var from = clock.Today.AddDays(-41);
             var to = clock.Today.AddDays(1);
-            var memberRides = rides
+            IReadOnlyList<RideDay> memberRides = [.. rides
                 .Where(r => r.UserId == member.UserId)
-                .Select(r => new RideDay(
-                    clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
-                    r.DistanceM ?? 0,
-                    r.MovingS ?? 0,
-                    r.ElevationGainM ?? 0,
-                    r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, member.User.FtpW).Tss ?? 0))
-                .Where(r => r.LocalDate >= from && r.LocalDate < to)
-                .ToList();
+                .Select(r =>
+                {
+                    var tss = r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, member.User.FtpW).Tss;
+                    // The rating is wellbeing data: without its grant the feel score is not used.
+                    var feelScore = sharesWellbeing ? TrainingLoad.FeelScore(r.MovingS, r.Rpe) : null;
+                    var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore);
+                    return new RideDay(
+                        clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
+                        r.DistanceM ?? 0,
+                        r.MovingS ?? 0,
+                        r.ElevationGainM ?? 0,
+                        tss ?? 0,
+                        Load: load ?? 0,
+                        LoadSource: source);
+                })
+                .Where(r => r.LocalDate >= from && r.LocalDate < to)];
             var week = memberRides.Where(r => r.LocalDate >= clock.Today.AddDays(-6)).ToList();
 
             result.Add(new CoachAthleteResponse(
@@ -255,8 +278,8 @@ public static class CoachQueries
                 sharesRides && lastRideTimes.TryGetValue(member.UserId, out var last) ? last : null,
                 sharesRides ? memberRides.Count : null,
                 sharesRides ? memberRides.Sum(r => r.DistanceM) : null,
-                sharesAnalytics ? Math.Round(week.Sum(r => r.Tss), 1) : null,
-                sharesAnalytics ? Math.Round(memberRides.Sum(r => r.Tss), 1) : null));
+                sharesAnalytics ? Math.Round(week.Sum(r => r.Load), 1) : null,
+                sharesAnalytics ? Math.Round(memberRides.Sum(r => r.Load), 1) : null));
         }
 
         return result;

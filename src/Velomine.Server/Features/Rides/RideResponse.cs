@@ -65,7 +65,20 @@ public sealed record RideResponse(
     // The three heart-rate notes, owner only: the legacy one (the maximum's first, then the threshold's), the
     // maximum's and the threshold's own. Set by RideResponse.From, cleared like an FTP suggestion.
     string? HeartRateMaxNote = null,
-    string? HeartRateThresholdNote = null)
+    string? HeartRateThresholdNote = null,
+    // Which model the heart-rate zones came from and the reference they are fractions of: a coach or a share viewer
+    // sees them too (they are the rider's zones), hidden by the heart-rate privacy switch.
+    string? HeartRateZoneModel = null,
+    int? HeartRateZoneReferenceBpm = null,
+    string? HeartRateZoneReferenceSource = null,
+    // The heart-rate effort score stored at read, and the effort score the dashboard uses with where it came from.
+    // Set here and in GetRide; WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
+    double? HrTss = null,
+    double? EffortScore = null,
+    string? EffortSource = null,
+    // Watts estimated from speed, slope and weight when the ride has no power at all. Hidden from a viewer when the
+    // ride hides power, speed or elevation, since all three go into it.
+    int? EstimatedAvgPowerW = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -107,7 +120,9 @@ public sealed record RideResponse(
         DecouplingPct: r.DecouplingPct,
         Steady: r.Steady,
         HeartRateMaxNote: Analytics.HeartRateNotes.IsMax(r.HeartRateNote) ? r.HeartRateNote : null,
-        HeartRateThresholdNote: r.HeartRateThresholdNote);
+        HeartRateThresholdNote: r.HeartRateThresholdNote,
+        HrTss: r.HrTss,
+        EstimatedAvgPowerW: r.EstimatedAvgPowerW);
 
     /// <summary>The same ride without training load, for a viewer allowed to see rides but not analytics.</summary>
     public RideResponse WithoutTrainingLoad() => this with
@@ -124,10 +139,14 @@ public sealed record RideResponse(
         HeartRateNote = null,
         HeartRateMaxNote = null,
         HeartRateThresholdNote = null,
+        HeartRateZoneModel = null,
+        HeartRateZoneReferenceBpm = null,
+        HeartRateZoneReferenceSource = null,
         MinWPrimeBalanceJ = null,
         WPrimeJ = null,
         EfficiencyFactor = null,
         DecouplingPct = null,
         Steady = null,
+        HrTss = null,
     };
 }

@@ -27,11 +27,13 @@ CREATE OR REPLACE FUNCTION pg_temp.demo_seed_ride(
     p_ftp int,
     p_max_hr int,
     p_seed int,
-    p_power_profile boolean DEFAULT true
+    p_power_profile boolean DEFAULT true,
+    p_sensors boolean DEFAULT true
 ) RETURNS void LANGUAGE plpgsql AS $ride$
 DECLARE
     v_n int;
     v_i int;
+    v_ftp int;
     v_seconds int;
     v_p0 float8;
     v_effort float8;
@@ -105,7 +107,9 @@ DECLARE
     v_temp smallint[];
 BEGIN
     v_n := p_minutes * 60 + 1;
-    v_p0 := p_ftp * p_intensity;
+    -- A rider with no power meter and no FTP still rides; the script's own model is what the samples come from.
+    v_ftp := COALESCE(p_ftp, 220);
+    v_p0 := v_ftp * p_intensity;
     v_ride_id := gen_random_uuid();
 
     -- A deterministic stream per ride: the same seed gives the same ride.
@@ -160,7 +164,7 @@ BEGIN
         v_terrain := 1 + 0.06 * sin(v_seconds / 300.0 + p_seed)
                        + 0.03 * sin(v_seconds / 47.0 + p_seed * 0.3);
         v_power_w := v_p0 * v_effort * (0.94 + 0.12 * v_terrain) + (random() - 0.5) * 8;
-        v_power_w := greatest(30, least(v_power_w, p_ftp * 1.75));
+        v_power_w := greatest(30, least(v_power_w, v_ftp * 1.75));
         IF p_power_profile THEN v_power[v_i] := round(v_power_w)::smallint; END IF;
 
         v_ratio := v_power_w / v_p0;
@@ -171,7 +175,7 @@ BEGIN
         v_dist[v_i] := v_distance_total::real;
         IF v_speed_ms > v_max_speed THEN v_max_speed := v_speed_ms; END IF;
 
-        v_target_hr := 55 + (p_max_hr - 55) * least(1.0, v_power_w / (p_ftp * 1.15));
+        v_target_hr := 55 + (p_max_hr - 55) * least(1.0, v_power_w / (v_ftp * 1.15));
         IF v_prev_hr IS NULL THEN v_prev_hr := v_target_hr * 0.8; END IF;
         v_hr_val := v_prev_hr + (v_target_hr - v_prev_hr) * 0.06;
         IF v_seconds > 3600 THEN v_hr_val := v_hr_val + 0.02; END IF;
@@ -219,8 +223,8 @@ BEGIN
     -- 0.9 x CP, so no other ride breaks the curve the model describes. The target is smoothed over two minutes, so
     -- the VI stays low, and the ripple is kept under the decoupling filter's 50 W coasting threshold.
     IF p_power_profile THEN
-        v_cp := 0.80 * p_ftp;
-        v_wprime := 30.0 * p_ftp;
+        v_cp := 0.80 * v_ftp;
+        v_wprime := 30.0 * v_ftp;
         -- One minute is enough to keep VI low while letting interval work stand above FTP; the 60 min best still
         -- stays a little under CP, so only the 2 to 20-minute windows decide the fit.
         v_window := CASE WHEN p_kind = 'intervals' THEN 60 ELSE 120 END;
@@ -231,7 +235,7 @@ BEGIN
                     THEN v_cp + v_wprime / (greatest(v_i - 1, 1)::float8 + 4 * v_wprime / v_cp)
                          + (random() - 0.5) * 0.02 * v_cp
                 WHEN p_kind = 'intervals'
-                    THEN CASE WHEN (v_i - 1) % 300 < 180 THEN 1.25 * p_ftp ELSE 0.55 * p_ftp END
+                    THEN CASE WHEN (v_i - 1) % 300 < 180 THEN 1.25 * v_ftp ELSE 0.55 * v_ftp END
                          + (random() - 0.5) * 0.02 * v_cp
                 ELSE least(v_power[v_i], 0.9 * v_cp)
             END;
@@ -309,14 +313,17 @@ BEGIN
              WHEN p_seed % 2 = 0 THEN 'Garmin Edge 840' ELSE 'Wahoo ELEMNT ROAM' END,
         v_distance_total, v_n - 1, v_n - 1, v_gain, v_loss,
         v_distance_total / (v_n - 1), v_max_speed, 'Device',
-        round(v_sum_power / v_n), CASE WHEN p_power_profile THEN v_max_power END, CASE WHEN p_power_profile THEN v_np END,
-        round(v_sum_hr / v_n), v_max_hr_actual,
-        round(v_sum_cad / v_n), p_bike, v_if, v_trimp, v_tss,
+        CASE WHEN p_power_profile THEN round(v_sum_power / v_n) END,
+        CASE WHEN p_power_profile THEN v_max_power END, CASE WHEN p_power_profile THEN v_np END,
+        CASE WHEN p_sensors THEN round(v_sum_hr / v_n) END, CASE WHEN p_sensors THEN v_max_hr_actual END,
+        CASE WHEN p_sensors THEN round(v_sum_cad / v_n) END, p_bike, v_if,
+        CASE WHEN p_sensors THEN v_trimp END, v_tss,
         'none', p_kind = 'commute', p_discipline, p_environment, NULL);
 
     INSERT INTO rides.ride_streams (
         ride_id, time, latitude, longitude, altitude, speed, distance, heart_rate, power, cadence, temperature)
-    VALUES (v_ride_id, v_time, v_lat, v_lon, v_alt, v_speed, v_dist, v_hr, v_power, v_cadence, v_temp);
+    VALUES (v_ride_id, v_time, v_lat, v_lon, v_alt, v_speed, v_dist,
+            CASE WHEN p_sensors THEN v_hr END, v_power, CASE WHEN p_sensors THEN v_cadence END, v_temp);
 
     FOREACH v_d IN ARRAY v_durations LOOP
         IF p_power_profile AND v_n >= v_d THEN
@@ -371,8 +378,10 @@ BEGIN
         VALUES (
             v_ride_id, v_lap, v_lap_start - 1, v_lap_end - 1, v_lap_count - 1, v_lap_count - 1,
             v_lap_distance, v_lap_distance / greatest(v_lap_count - 1, 1), v_lap_max_speed,
-            round(v_lap_power / v_lap_count), v_lap_max_power, round(v_lap_hr / v_lap_count), v_lap_max_hr,
-            round(v_lap_cad / v_lap_count), v_lap_gain);
+            CASE WHEN p_power_profile THEN round(v_lap_power / v_lap_count) END,
+            CASE WHEN p_power_profile THEN v_lap_max_power END,
+            CASE WHEN p_sensors THEN round(v_lap_hr / v_lap_count) END, CASE WHEN p_sensors THEN v_lap_max_hr END,
+            CASE WHEN p_sensors THEN round(v_lap_cad / v_lap_count) END, v_lap_gain);
     END LOOP;
 
 END
@@ -525,8 +534,11 @@ BEGIN
     SELECT display_name INTO v_coach_name FROM accounts.users WHERE id = v_coach;
 
     -- Profiles: the rides and the analytics need FTP, weight, birth year and a time zone.
+    -- Members 4 and 5 ride without a power meter (4 with a heart-rate strap, 5 with no sensors at all), so they have
+    -- no FTP to set TSS against: their load comes from heart rate and from how hard the ride felt.
     UPDATE accounts.users u
     SET ftp_w = COALESCE(u.ftp_w, CASE
+            WHEN dm.n >= 4 THEN NULL
             WHEN dm.role IN ('owner', 'coach') THEN 280
             WHEN dm.n % 3 = 0 THEN 225
             WHEN dm.n % 3 = 1 THEN 275
@@ -655,7 +667,8 @@ BEGIN
                 WHEN 4 THEN 'gravel'
                 ELSE 'recovery'
             END;
-            IF i % 9 = 7 THEN v_kind := 'virtual'; END IF;
+            -- A rider without a power meter has no trainer either: their rides stay outdoors.
+            IF i % 9 = 7 AND m.n <= 3 THEN v_kind := 'virtual'; END IF;
             IF i % 11 = 9 THEN v_kind := 'commute'; END IF;
 
             SELECT * INTO k FROM demo_kinds WHERE kind = v_kind;
@@ -674,10 +687,12 @@ BEGIN
 
             -- The newest ride of the demo rider that is not a steady one is read without a power stream (a power
             -- meter that was not on that day), so the intensity card also has heart-rate-only time in its week.
+            -- Members 4 and 5 have no power meter at all; member 5 has no heart-rate strap or cadence sensor either.
             PERFORM pg_temp.demo_seed_ride(
                 m.user_id, v_bike, v_start, v_offset, v_kind, k.minutes, k.intensity, k.discipline,
                 k.environment, k.laps, k.gps, k.base_speed, m.ftp_w, v_max_hr, (m.n * 1000 + i)::int,
-                NOT (m.n = 3 AND i = 0 AND v_kind <> 'steady'));
+                m.n <= 3 AND NOT (m.n = 3 AND i = 0 AND v_kind <> 'steady'),
+                m.n <= 4);
         END LOOP;
     END LOOP;
 
@@ -690,7 +705,8 @@ BEGIN
     CROSS JOIN LATERAL (VALUES
         (u.ftp_w - 15, v_now - interval '120 days', 'earlier'),
         (u.ftp_w, v_now - interval '30 days', 'manual')
-    ) AS h(watts, set_at, source);
+    ) AS h(watts, set_at, source)
+    WHERE u.ftp_w IS NOT NULL;
 
     -- Goals.
     INSERT INTO analytics.goals (id, user_id, period, metric, target, created_at)

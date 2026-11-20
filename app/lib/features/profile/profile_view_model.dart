@@ -76,17 +76,44 @@ class ProfileViewModel extends _$ProfileViewModel {
     return true;
   }
 
+  /// The zones in use: every set's bounds, and the heart-rate model they are read against.
+  ZonesResponse? get zones => state.zones;
+
+  /// Saves the rider's own bounds for one set. Null on success, or the failure for the sheet to word.
+  Future<Failure?> setZones(String set, List<double> bounds) =>
+      _saveZones((data) => data.setZones(set, bounds));
+
+  /// Back to the standard bounds for one set.
+  Future<Failure?> resetZones(String set) =>
+      _saveZones((data) => data.resetZones(set));
+
+  Future<Failure?> _saveZones(
+    Future<Result<ZonesResponse?>> Function(ProfileData data) call,
+  ) async {
+    if (state.zonesSave.running) return const Failure(FailureKind.failed);
+    state = state.copyWith(zonesSave: state.zonesSave.start());
+    final result = await call(ref.read(profileDataProvider));
+    if (!ref.mounted) return const Failure(FailureKind.failed);
+    state = state.copyWith(
+      zonesSave: state.zonesSave.finish(result),
+      zones: result.valueOrNull ?? state.zones,
+    );
+    return result.failureOrNull;
+  }
+
   Future<void> load() async {
     if (state.load.running) return;
     state = state.copyWith(load: state.load.start());
     final profileResult = await ref.read(profileDataProvider).profile();
     final telemetryResult = await ref.read(profileDataProvider).telemetry();
+    final zonesResult = await ref.read(profileDataProvider).zones();
     if (!ref.mounted) return;
     state = switch (profileResult) {
       Ok(:final value) => state.copyWith(
         load: state.load.finish(profileResult),
         profile: value,
         telemetry: telemetryResult.valueOrNull ?? state.telemetry,
+        zones: zonesResult.valueOrNull ?? state.zones,
       ),
       Failed() => state.copyWith(load: state.load.finish(profileResult)),
     };

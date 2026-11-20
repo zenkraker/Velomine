@@ -49,6 +49,18 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>The ride that measured the threshold, null for a typed number and for a ride since deleted.</summary>
     public Guid? ThresholdHeartRateRideId { get; set; }
 
+    /// <summary>
+    /// The rider's own upper bounds for the seven power zones, as fractions of the FTP (six bounds, the top zone is
+    /// open). Null means the standard bounds.
+    /// </summary>
+    public double[]? PowerZoneBounds { get; set; }
+
+    /// <summary>The rider's own upper bounds for the five zones of the maximum model (four bounds). Null means standard.</summary>
+    public double[]? HeartRateMaxZoneBounds { get; set; }
+
+    /// <summary>The rider's own upper bounds for the five zones of the threshold model (four bounds). Null means standard.</summary>
+    public double[]? HeartRateThresholdZoneBounds { get; set; }
+
     /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
     public static int? EstimateMaxHeartRate(int? birthYear, TimeProvider time) =>
         birthYear is { } year

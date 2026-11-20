@@ -82,6 +82,7 @@ public sealed class RideConfiguration : IEntityTypeConfiguration<Ride>, IEntityT
         streams.Property(s => s.Distance).HasColumnType("real[]");
         streams.Property(s => s.HeartRate).HasColumnType("smallint[]");
         streams.Property(s => s.Power).HasColumnType("smallint[]");
+        streams.Property(s => s.EstimatedPower).HasColumnType("smallint[]");
         streams.Property(s => s.Cadence).HasColumnType("smallint[]");
         streams.Property(s => s.Temperature).HasColumnType("smallint[]");
     }

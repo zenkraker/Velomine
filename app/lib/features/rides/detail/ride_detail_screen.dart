@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
+import '../../../core/heart_rate_zones.dart';
 import '../../../core/placeholder_block.dart';
 import '../../../core/confirm.dart';
 import '../../../core/l10n.dart';
@@ -42,6 +43,7 @@ import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/source_note.dart';
+import '../../accounts/effort_source_text.dart';
 import '../../../core/widgets/stat_tile.dart';
 
 class RideDetailScreen extends ConsumerWidget {
@@ -383,6 +385,12 @@ class RideDetailScreen extends ConsumerWidget {
             unit: 'bpm',
             zones: heartRateZones,
             colors: _heartRateZoneColors,
+            note: heartRateZonesSource(
+              l10n,
+              ride.heartRateZoneModel.orElse(null),
+              ride.heartRateZoneReferenceBpm.orElse(null),
+              ride.heartRateZoneReferenceSource.orElse(null),
+            ),
           ),
           !layout.showZonesAndCharts,
         ),
@@ -598,6 +606,12 @@ class _Stats extends ConsumerWidget {
         ('top-speed', l10n.statTopSpeed, kmh(units, ride.maxSpeedMs)),
       if (ride.avgPowerW != null)
         ('average-power', l10n.statAveragePower, '${ride.avgPowerW} W'),
+      if (ride.estimatedAvgPowerW.value case final estimate?)
+        (
+          'estimated-average-power',
+          l10n.statEstimatedAveragePower,
+          '$estimate W',
+        ),
       if (ride.normalizedPowerW != null)
         (
           'normalized-power',
@@ -613,6 +627,9 @@ class _Stats extends ConsumerWidget {
           ride.intensityFactor!.toStringAsFixed(2),
         ),
       if (ride.tss != null) ('tss', l10n.statTss, ride.tss!.round().toString()),
+      // The effort score the dashboard uses for this ride, and where it came from.
+      if (ride.effortScore.value case final score?)
+        ('effort-score', l10n.statEffortScore, score.round().toString()),
       if (ride.efficiencyFactor.value case final efficiency?)
         ('efficiency', l10n.statEfficiency, efficiency.toStringAsFixed(2)),
       if (ride.decouplingPct.value case final decoupling?
@@ -664,6 +681,15 @@ class _Stats extends ConsumerWidget {
             ),
           if (ride.tss != null || ride.trimp != null)
             Text(l10n.loadHint, style: text.bodySmall),
+          if (ride.effortScore.value != null)
+            if (effortSourceText(l10n, ride.effortSource.orElse(null))
+                case final note?)
+              SourceNote(note, key: const Key('effort-source')),
+          if (ride.estimatedAvgPowerW.value != null)
+            SourceNote(
+              l10n.estimatedPowerSource,
+              key: const Key('estimated-power-source'),
+            ),
           if (ride.efficiencyFactor.value != null) ...[
             if (ride.decouplingPct.value case final decoupling?
                 when ride.steady.value == true)
@@ -694,12 +720,16 @@ class _ZonesCard extends StatelessWidget {
     required this.unit,
     required this.zones,
     required this.colors,
+    this.note,
   });
 
   final String title;
   final String unit;
   final List<ZoneTime> zones;
   final List<Color> colors;
+
+  /// Where the zones came from, when the server says.
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -771,6 +801,10 @@ class _ZonesCard extends StatelessWidget {
               ),
               if (index < zones.length - 1)
                 const SizedBox(height: AppSpacing.xs),
+            ],
+            if (note case final note?) ...[
+              const SizedBox(height: AppSpacing.sm),
+              SourceNote(note),
             ],
           ],
         ),

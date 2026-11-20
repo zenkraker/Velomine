@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/confirm.dart';
 import '../../core/format.dart';
 import '../../core/hooks.dart';
 import '../../core/l10n.dart';
@@ -39,6 +40,7 @@ import 'profile_state.dart';
 import 'profile_view_model.dart';
 import 'rider_mode_sheet.dart';
 import 'solo_trial_badge.dart';
+import 'zones_card.dart';
 import '../../core/tokens.dart';
 
 const weekDayIds = [
@@ -356,6 +358,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         .setTelemetry(crash: crash, usage: usage);
   }
 
+  /// Back to the standard zones, after the rider says so. All three sets go, so a limit saved for the model the
+  /// rider is not on cannot come back when their model changes.
+  Future<void> _resetZones() async {
+    final l10n = context.l10n;
+    final sure = await confirmDestructive(
+      context,
+      title: l10n.zonesResetTitle,
+      body: l10n.zonesResetBody,
+      action: l10n.zonesResetAction,
+      key: const Key('confirm-zones-reset'),
+    );
+    if (!sure || !mounted) return;
+    final notifier = ref.read(profileViewModelProvider.notifier);
+    for (final set in const [
+      powerSet,
+      heartRateMaxSet,
+      heartRateThresholdSet,
+    ]) {
+      if (await notifier.resetZones(set) != null) return;
+    }
+  }
+
   Widget _number(
     String key,
     TextEditingController c,
@@ -436,6 +460,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             l10n.weight,
             _units == Units.imperial ? 'lb' : 'kg',
             decimals: true,
+            // Without a weight, a ride with no power meter has nothing to estimate watts from.
+            helper:
+                s.profile?.weightKg == null &&
+                    (s.profile?.hasRidesWithoutPower.orElse(false) ?? false)
+                ? l10n.profileWeightEstimateHint
+                : null,
           ),
           _number(
             'profile-birth-year',
@@ -617,6 +647,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
+      // The zones in use, from the numbers above: a list, with their limits editable and back to automatic.
+      if (s.zones case final zones?)
+        if (zonesInUse(zones).isNotEmpty)
+          ZonesCard(zones: zones, onReset: _resetZones),
       SectionCard(
         title: l10n.notifications,
         children: [

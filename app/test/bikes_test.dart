@@ -392,6 +392,18 @@ void main() {
     expect(bike['frameSize'], '56');
   });
 
+  testWidgets('BikesScreen_ShouldSaveTheWeight_WhenItIsFilled', (tester) async {
+    await openBikes(tester);
+    await tester.tap(find.byKey(const Key('add-bike')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('bike-name')), 'Climber');
+    await tester.enterText(find.byKey(const Key('bike-weight')), '9,4');
+    await tester.tap(find.byKey(const Key('bike-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.bikes.single['weightKg'], 9.4);
+  });
+
   testWidgets('BikeDetailScreen_ShouldKeepAPartCustom_WhenCustomIsChecked', (
     tester,
   ) async {

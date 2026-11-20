@@ -145,6 +145,8 @@ lib/model/ride_import_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
+lib/model/rider_card_best.dart
+lib/model/rider_card_response.dart
 lib/model/rider_licence_response.dart
 lib/model/route_detail_response.dart
 lib/model/route_download_link_response.dart
@@ -174,6 +176,7 @@ lib/model/set_ride_type_request.dart
 lib/model/set_supporter_hidden_request.dart
 lib/model/set_telemetry_request.dart
 lib/model/set_user_roles_request.dart
+lib/model/set_zones_request.dart
 lib/model/settings_response.dart
 lib/model/share_view_response.dart
 lib/model/share_views_response.dart
@@ -214,6 +217,8 @@ lib/model/verify_email_request.dart
 lib/model/vo2_max_estimate.dart
 lib/model/wellbeing_consent_request.dart
 lib/model/wellbeing_response.dart
+lib/model/zone_set_response.dart
 lib/model/zone_time.dart
+lib/model/zones_response.dart
 lib/optional.dart
 pubspec.yaml

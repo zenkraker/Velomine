@@ -24,8 +24,9 @@ class SourceNote extends StatelessWidget {
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(
-          height: AppSourceNote.minHeight,
+        child: ConstrainedBox(
+          // A minimum, not a fixed height: a note that wraps in a longer language keeps its second line.
+          constraints: const BoxConstraints(minHeight: AppSourceNote.minHeight),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             spacing: AppSpacing.xs,

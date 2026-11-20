@@ -73,6 +73,12 @@ class TrainingState {
   final CommandState<TrainingResponse?> load;
 }
 
+class RiderCardState {
+  const RiderCardState({this.load = const CommandState.idle()});
+
+  final CommandState<RiderCardResponse?> load;
+}
+
 class PowerState {
   const PowerState({
     this.load = const CommandState.idle(),

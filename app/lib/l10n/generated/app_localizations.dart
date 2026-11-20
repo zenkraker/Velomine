@@ -2222,11 +2222,101 @@ abstract class AppLocalizations {
   /// **'Heart rate zones'**
   String get heartRateZones;
 
+  /// No description provided for @heartRateZonesFromThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones from your threshold heart rate ({bpm} bpm)'**
+  String heartRateZonesFromThreshold(String bpm);
+
+  /// No description provided for @heartRateZonesFromMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones from your maximum heart rate ({bpm} bpm)'**
+  String heartRateZonesFromMax(String bpm);
+
+  /// No description provided for @heartRateZonesFromMaxEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones from your maximum heart rate ({bpm} bpm, estimated)'**
+  String heartRateZonesFromMaxEstimated(String bpm);
+
   /// No description provided for @powerZones.
   ///
   /// In en, this message translates to:
   /// **'Power zones'**
   String get powerZones;
+
+  /// No description provided for @zonesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones'**
+  String get zonesTitle;
+
+  /// No description provided for @zonesEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get zonesEdit;
+
+  /// No description provided for @zonesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your zones'**
+  String get zonesEditTitle;
+
+  /// No description provided for @zonesEditHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The top of each zone, in watts or beats per minute. Zones are a share of your FTP and heart rate, so they move when those change.'**
+  String get zonesEditHelp;
+
+  /// No description provided for @zonesLimitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone {zone} up to'**
+  String zonesLimitLabel(int zone);
+
+  /// No description provided for @zonesInvalidLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a whole number above zero for every zone.'**
+  String get zonesInvalidLimit;
+
+  /// No description provided for @zonesNotRising.
+  ///
+  /// In en, this message translates to:
+  /// **'Each zone\'s limit must be higher than the one before it.'**
+  String get zonesNotRising;
+
+  /// No description provided for @zonesBackToAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to automatic'**
+  String get zonesBackToAutomatic;
+
+  /// No description provided for @zonesResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the standard zones?'**
+  String get zonesResetTitle;
+
+  /// No description provided for @zonesResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own limits are removed for every zone, and the standard ones apply again.'**
+  String get zonesResetBody;
+
+  /// No description provided for @zonesResetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the standard zones'**
+  String get zonesResetAction;
+
+  /// No description provided for @zonesCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own limits'**
+  String get zonesCustom;
 
   /// No description provided for @momentHint.
   ///
@@ -2317,6 +2407,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TRIMP'**
   String get statTrimp;
+
+  /// No description provided for @statEffortScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Effort score'**
+  String get statEffortScore;
+
+  /// No description provided for @effortFromPower.
+  ///
+  /// In en, this message translates to:
+  /// **'From your power'**
+  String get effortFromPower;
+
+  /// No description provided for @effortFromHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'From your heart rate'**
+  String get effortFromHeartRate;
+
+  /// No description provided for @effortFromFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'From how hard it felt'**
+  String get effortFromFeel;
 
   /// No description provided for @statEfficiency.
   ///
@@ -3551,8 +3665,14 @@ abstract class AppLocalizations {
   /// No description provided for @trainingLoadHint.
   ///
   /// In en, this message translates to:
-  /// **'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.'**
+  /// **'Set your FTP or wear a heart-rate strap, then upload a ride to see training load.'**
   String get trainingLoadHint;
+
+  /// No description provided for @fitnessHeartRateLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes rides scored from heart rate.'**
+  String get fitnessHeartRateLoad;
 
   /// No description provided for @fitnessFatigueForm.
   ///
@@ -3601,6 +3721,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.'**
   String get trainingLoadHelp;
+
+  /// No description provided for @trainingMonotonous.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day was about as hard this week. An easy day helps you adapt.'**
+  String get trainingMonotonous;
+
+  /// No description provided for @trainingHeavyWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week was much heavier than usual.'**
+  String get trainingHeavyWeek;
+
+  /// No description provided for @trainingStrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Monotony {monotony} · Strain {strain}'**
+  String trainingStrain(String monotony, String strain);
+
+  /// No description provided for @riderCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your numbers'**
+  String get riderCardTitle;
+
+  /// No description provided for @riderCardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get riderCardMore;
+
+  /// No description provided for @riderCardPowerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitted from your best efforts of the last 90 days.'**
+  String get riderCardPowerNote;
+
+  /// No description provided for @riderCardBestsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best in the last 90 days. Tap one to open its ride.'**
+  String get riderCardBestsNote;
+
+  /// No description provided for @riderCardEfficiencyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The mean of your steady rides, by week.'**
+  String get riderCardEfficiencyNote;
+
+  /// No description provided for @riderCardTotalsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides in the last 90 days.'**
+  String get riderCardTotalsNote;
+
+  /// No description provided for @riderCardEffortNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From your effort score.'**
+  String get riderCardEffortNote;
+
+  /// No description provided for @riderCardEventNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From your calendar.'**
+  String get riderCardEventNote;
 
   /// No description provided for @accountSearch.
   ///
@@ -8329,6 +8515,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'delete the event'**
   String get actionDeleteEvent;
+
+  /// No description provided for @seriesEstimatedPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated watts'**
+  String get seriesEstimatedPower;
+
+  /// No description provided for @statEstimatedAveragePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated average power'**
+  String get statEstimatedAveragePower;
+
+  /// No description provided for @estimatedPowerSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From your speed, the slope and your weight with the bike. No wind, so it can be far off on the flat.'**
+  String get estimatedPowerSource;
+
+  /// No description provided for @bikeWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get bikeWeight;
+
+  /// No description provided for @bikeWeightHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to estimate watts on rides without a power meter.'**
+  String get bikeWeightHelper;
+
+  /// No description provided for @errorBikeWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the bike\'s weight in kilograms: 3 to 40.'**
+  String get errorBikeWeight;
+
+  /// No description provided for @profileWeightEstimateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your weight to estimate watts on rides without a power meter.'**
+  String get profileWeightEstimateHint;
 
   /// No description provided for @riderModeQuestion.
   ///

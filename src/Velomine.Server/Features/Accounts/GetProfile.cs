@@ -1,6 +1,7 @@
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Accounts;
 
@@ -31,7 +32,9 @@ public sealed record ProfileResponse(
     int? ThresholdHeartRate = null,
     string? ThresholdHeartRateSource = null,
     DateTimeOffset? ThresholdHeartRateSetAt = null,
-    Guid? ThresholdHeartRateRideId = null);
+    Guid? ThresholdHeartRateRideId = null,
+    // True when the member has a ride with no power at all, so a missing weight is worth pointing out.
+    bool HasRidesWithoutPower = false);
 
 public sealed class GetProfile(VelomineDbContext db, TimeProvider time) : EndpointWithoutRequest<ProfileResponse>
 {
@@ -80,6 +83,8 @@ public sealed class GetProfile(VelomineDbContext db, TimeProvider time) : Endpoi
             ThresholdHeartRateSource = threshold?.Source,
             ThresholdHeartRateSetAt = threshold is { Source: not FtpSources.Estimate } ? setTimes.GetValueOrDefault(HeartRateKinds.Threshold) : null,
             ThresholdHeartRateRideId = threshold?.RideId,
+            HasRidesWithoutPower = await db.Rides.AsNoTracking()
+                .AnyAsync(r => r.UserId == u.Id && r.Status == RideStatus.Ready && r.AvgPowerW == null, ct),
         };
     }
 

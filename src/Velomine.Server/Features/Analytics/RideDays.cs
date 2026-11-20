@@ -12,7 +12,10 @@ public readonly record struct RideDay(
     double MovingS,
     double ElevationGainM,
     double Tss = 0,
-    double Trimp = 0);
+    double Trimp = 0,
+    /// <summary>The effort score the fitness and fatigue charts add up, and where it came from.</summary>
+    double Load = 0,
+    string? LoadSource = null);
 
 /// <summary>Optional dimension filters for a totals or training range. Null means every ride.</summary>
 public readonly record struct RideFilter(
@@ -46,26 +49,51 @@ public static class RideDays
         DateOnly to,
         CancellationToken ct,
         int? ftpW = null,
-        RideFilter filter = default)
+        RideFilter filter = default,
+        bool includeFeel = true)
     {
         // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
         var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
         var toUtc = new DateTimeOffset(to.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
         var query = db.Rides.AsNoTracking()
             .Where(r => r.UserId == userId && r.Status == RideStatus.Ready && r.StartTime >= fromUtc && r.StartTime < toUtc);
-        var rides = await filter.Apply(query)
-            .Select(r => new { r.StartTime, r.UtcOffsetMinutes, r.DistanceM, r.MovingS, r.ElevationGainM, r.NormalizedPowerW, r.Tss, r.Trimp })
+        // The rider's own rating of the ride is wellbeing data, so only the owner and a granted coach read it.
+        var rides = await (
+                from r in filter.Apply(query)
+                join f in db.RideFeels.AsNoTracking() on r.Id equals f.RideId into feels
+                from feel in feels.DefaultIfEmpty()
+                select new
+                {
+                    r.StartTime,
+                    r.UtcOffsetMinutes,
+                    r.DistanceM,
+                    r.MovingS,
+                    r.ElevationGainM,
+                    r.NormalizedPowerW,
+                    r.Tss,
+                    r.HrTss,
+                    r.Trimp,
+                    Rpe = feel == null ? (int?)null : feel.Rpe,
+                })
             .ToListAsync(ct);
 
         return [.. rides
-            .Select(r => new RideDay(
-                clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
-                r.DistanceM ?? 0,
-                r.MovingS ?? 0,
-                r.ElevationGainM ?? 0,
+            .Select(r =>
+            {
                 // Rides read before the profile had an FTP have no stored TSS; work it out now.
-                r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, ftpW).Tss ?? 0,
-                r.Trimp ?? 0))
+                var tss = r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, ftpW).Tss;
+                var feelScore = includeFeel ? TrainingLoad.FeelScore(r.MovingS, r.Rpe) : null;
+                var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore);
+                return new RideDay(
+                    clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
+                    r.DistanceM ?? 0,
+                    r.MovingS ?? 0,
+                    r.ElevationGainM ?? 0,
+                    tss ?? 0,
+                    r.Trimp ?? 0,
+                    load ?? 0,
+                    source);
+            })
             .Where(r => r.LocalDate >= from && r.LocalDate < to)];
     }
 }

@@ -54,7 +54,7 @@ double _metresPerUnit(Units units) => units == Units.imperial ? 1609.344 : 1000;
 double? _number(String value) =>
     double.tryParse(value.trim().replaceAll(',', '.'));
 
-enum _BikeProblem { name, year, wheelRange, initialDistance }
+enum _BikeProblem { name, year, wheelRange, initialDistance, weight }
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -71,6 +71,7 @@ class BikeFormData {
     this.frameSize,
     required this.kind,
     required this.wheelMm,
+    this.weightKg,
     required this.initialKm,
     this.purchasedOn,
     this.units = Units.metric,
@@ -84,6 +85,9 @@ class BikeFormData {
   final String? frameSize;
   final String kind;
   final int wheelMm;
+
+  /// The bike's own weight in kilograms; null uses the default for its kind.
+  final double? weightKg;
 
   /// The distance the member typed, in [units].
   final double initialKm;
@@ -102,6 +106,7 @@ class BikeFormData {
     frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
+    weightKg: Optional.present(weightKg),
     initialDistanceM: initialDistanceM,
     purchasedOn: Optional.present(purchasedOn),
   );
@@ -115,6 +120,7 @@ class BikeFormData {
     frameSize: Optional.present(frameSize),
     kind: kind,
     wheelCircumferenceMm: wheelMm,
+    weightKg: Optional.present(weightKg),
     initialDistanceM: initialDistanceM,
     purchasedOn: Optional.present(purchasedOn),
     isActive: Optional.present(isActive),
@@ -156,6 +162,9 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
   late final _wheel = TextEditingController(
     text: '${widget.bike?.wheelCircumferenceMm ?? 2105}',
   );
+  late final _weight = TextEditingController(
+    text: widget.bike?.weightKg?.toString() ?? '',
+  );
   late final _initial = TextEditingController(
     text: widget.bike == null || widget.bike!.initialDistanceM == 0
         ? ''
@@ -177,12 +186,14 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
     _spec.dispose();
     _size.dispose();
     _wheel.dispose();
+    _weight.dispose();
     _initial.dispose();
     super.dispose();
   }
 
   void _submit() {
     final wheel = int.tryParse(_wheel.text.trim());
+    final weight = _weight.text.trim().isEmpty ? null : _number(_weight.text);
     final initial = _initial.text.trim().isEmpty ? 0.0 : _number(_initial.text);
     final year = _year.text.trim().isEmpty
         ? null
@@ -194,6 +205,8 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
       setState(() => _problem = _BikeProblem.year);
     } else if (wheel == null || wheel < 1000 || wheel > 2600) {
       setState(() => _problem = _BikeProblem.wheelRange);
+    } else if (weight != null && (weight < 3 || weight > 40)) {
+      setState(() => _problem = _BikeProblem.weight);
     } else if (initial == null || initial < 0) {
       setState(() => _problem = _BikeProblem.initialDistance);
     } else {
@@ -208,6 +221,7 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
           frameSize: _text(_size.text),
           kind: _kind,
           wheelMm: wheel,
+          weightKg: weight,
           initialKm: initial,
           purchasedOn: _purchased,
           units: _units,
@@ -224,6 +238,7 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
       _BikeProblem.name => l10n.errorBikeName,
       _BikeProblem.year => l10n.errorModelYear,
       _BikeProblem.wheelRange => l10n.errorWheelRange,
+      _BikeProblem.weight => l10n.errorBikeWeight,
       _BikeProblem.initialDistance => l10n.errorInitialDistance,
     };
     return FormSheet(
@@ -301,6 +316,13 @@ class _BikeFormState extends ConsumerState<_BikeForm> {
           keyboardType: TextInputType.number,
           label: l10n.wheelCircumference,
           helper: l10n.wheelHelper,
+        ),
+        AppTextField(
+          fieldKey: const Key('bike-weight'),
+          controller: _weight,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          label: l10n.bikeWeight,
+          helper: l10n.bikeWeightHelper,
         ),
         Wrap(
           spacing: AppSpacing.sm,

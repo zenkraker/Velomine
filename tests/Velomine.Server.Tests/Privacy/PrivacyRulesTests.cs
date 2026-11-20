@@ -41,7 +41,10 @@ public sealed class PrivacyRulesTests
         AvgHeartRate: 151, MaxHeartRate: 178, AvgCadence: 88, BikeId: null, Title: "Morning", Description: "Steady",
         Version: 1,
         HeartRateZones: [new ZoneTime(1, 100, 120, 60)],
-        PowerZones: [new ZoneTime(1, 110, 150, 300)]);
+        PowerZones: [new ZoneTime(1, 110, 150, 300)],
+        HeartRateZoneModel: HeartRateZoneModels.Threshold,
+        HeartRateZoneReferenceBpm: 160,
+        HeartRateZoneReferenceSource: "measured");
 
     [Fact]
     public void ForViewer_ShouldHideTheEndOfTheRide_WhenTheEndIsTrimmed()
@@ -131,6 +134,9 @@ public sealed class PrivacyRulesTests
         Assert.Null(hidden.MaxHeartRate);
         Assert.Null(hidden.Trimp); // load is the heart-rate weighted minutes
         Assert.Null(hidden.HeartRateZones);
+        Assert.Null(hidden.HeartRateZoneModel); // the model and its reference are part of the zones
+        Assert.Null(hidden.HeartRateZoneReferenceBpm);
+        Assert.Null(hidden.HeartRateZoneReferenceSource);
         Assert.Equal(210, hidden.AvgPowerW);
         Assert.Equal(95.5, hidden.Tss);
     }

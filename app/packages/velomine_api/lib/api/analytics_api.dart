@@ -463,6 +463,48 @@ class AnalyticsApi {
     return null;
   }
 
+  /// Performs an HTTP 'GET /api/v1/analytics/rider-card' operation and returns the [Response].
+  Future<Response> getRiderCardWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/analytics/rider-card';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<RiderCardResponse?> getRiderCard({ Future<void>? abortTrigger, }) async {
+    final response = await getRiderCardWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RiderCardResponse',) as RiderCardResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/analytics/totals' operation and returns the [Response].
   /// Parameters:
   ///

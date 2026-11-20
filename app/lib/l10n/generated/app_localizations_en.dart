@@ -1244,7 +1244,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heartRateZones => 'Heart rate zones';
 
   @override
+  String heartRateZonesFromThreshold(String bpm) {
+    return 'Zones from your threshold heart rate ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMax(String bpm) {
+    return 'Zones from your maximum heart rate ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMaxEstimated(String bpm) {
+    return 'Zones from your maximum heart rate ($bpm bpm, estimated)';
+  }
+
+  @override
   String get powerZones => 'Power zones';
+
+  @override
+  String get zonesTitle => 'Zones';
+
+  @override
+  String get zonesEdit => 'Edit';
+
+  @override
+  String get zonesEditTitle => 'Your zones';
+
+  @override
+  String get zonesEditHelp =>
+      'The top of each zone, in watts or beats per minute. Zones are a share of your FTP and heart rate, so they move when those change.';
+
+  @override
+  String zonesLimitLabel(int zone) {
+    return 'Zone $zone up to';
+  }
+
+  @override
+  String get zonesInvalidLimit =>
+      'Type a whole number above zero for every zone.';
+
+  @override
+  String get zonesNotRising =>
+      'Each zone\'s limit must be higher than the one before it.';
+
+  @override
+  String get zonesBackToAutomatic => 'Back to automatic';
+
+  @override
+  String get zonesResetTitle => 'Use the standard zones?';
+
+  @override
+  String get zonesResetBody =>
+      'Your own limits are removed for every zone, and the standard ones apply again.';
+
+  @override
+  String get zonesResetAction => 'Use the standard zones';
+
+  @override
+  String get zonesCustom => 'Your own limits';
 
   @override
   String get momentHint =>
@@ -1293,6 +1350,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statTrimp => 'TRIMP';
+
+  @override
+  String get statEffortScore => 'Effort score';
+
+  @override
+  String get effortFromPower => 'From your power';
+
+  @override
+  String get effortFromHeartRate => 'From your heart rate';
+
+  @override
+  String get effortFromFeel => 'From how hard it felt';
 
   @override
   String get statEfficiency => 'Efficiency factor';
@@ -2000,7 +2069,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trainingLoadHint =>
-      'Set your FTP (and maximum heart rate) in your profile, then upload a ride to see training load.';
+      'Set your FTP or wear a heart-rate strap, then upload a ride to see training load.';
+
+  @override
+  String get fitnessHeartRateLoad => 'Includes rides scored from heart rate.';
 
   @override
   String get fitnessFatigueForm => 'Fitness, fatigue and form';
@@ -2030,6 +2102,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get trainingLoadHelp =>
       'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
+
+  @override
+  String get trainingMonotonous =>
+      'Every day was about as hard this week. An easy day helps you adapt.';
+
+  @override
+  String get trainingHeavyWeek => 'This week was much heavier than usual.';
+
+  @override
+  String trainingStrain(String monotony, String strain) {
+    return 'Monotony $monotony · Strain $strain';
+  }
+
+  @override
+  String get riderCardTitle => 'Your numbers';
+
+  @override
+  String get riderCardMore => 'More';
+
+  @override
+  String get riderCardPowerNote =>
+      'Fitted from your best efforts of the last 90 days.';
+
+  @override
+  String get riderCardBestsNote =>
+      'Your best in the last 90 days. Tap one to open its ride.';
+
+  @override
+  String get riderCardEfficiencyNote =>
+      'The mean of your steady rides, by week.';
+
+  @override
+  String get riderCardTotalsNote => 'Your rides in the last 90 days.';
+
+  @override
+  String get riderCardEffortNote => 'From your effort score.';
+
+  @override
+  String get riderCardEventNote => 'From your calendar.';
 
   @override
   String get accountSearch => 'Find an account';
@@ -4829,6 +4940,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionDeleteEvent => 'delete the event';
+
+  @override
+  String get seriesEstimatedPower => 'Estimated watts';
+
+  @override
+  String get statEstimatedAveragePower => 'Estimated average power';
+
+  @override
+  String get estimatedPowerSource =>
+      'From your speed, the slope and your weight with the bike. No wind, so it can be far off on the flat.';
+
+  @override
+  String get bikeWeight => 'Weight (kg)';
+
+  @override
+  String get bikeWeightHelper =>
+      'Used to estimate watts on rides without a power meter.';
+
+  @override
+  String get errorBikeWeight =>
+      'Enter the bike\'s weight in kilograms: 3 to 40.';
+
+  @override
+  String get profileWeightEstimateHint =>
+      'Add your weight to estimate watts on rides without a power meter.';
 
   @override
   String get riderModeQuestion => 'How do you ride?';

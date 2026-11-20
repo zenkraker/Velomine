@@ -411,6 +411,10 @@ class ApiClient {
           return RideResponse.fromJson(value);
         case 'RideStreamsResponse':
           return RideStreamsResponse.fromJson(value);
+        case 'RiderCardBest':
+          return RiderCardBest.fromJson(value);
+        case 'RiderCardResponse':
+          return RiderCardResponse.fromJson(value);
         case 'RiderLicenceResponse':
           return RiderLicenceResponse.fromJson(value);
         case 'RouteDetailResponse':
@@ -469,6 +473,8 @@ class ApiClient {
           return SetTelemetryRequest.fromJson(value);
         case 'SetUserRolesRequest':
           return SetUserRolesRequest.fromJson(value);
+        case 'SetZonesRequest':
+          return SetZonesRequest.fromJson(value);
         case 'SettingsResponse':
           return SettingsResponse.fromJson(value);
         case 'ShareViewResponse':
@@ -549,8 +555,12 @@ class ApiClient {
           return WellbeingConsentRequest.fromJson(value);
         case 'WellbeingResponse':
           return WellbeingResponse.fromJson(value);
+        case 'ZoneSetResponse':
+          return ZoneSetResponse.fromJson(value);
         case 'ZoneTime':
           return ZoneTime.fromJson(value);
+        case 'ZonesResponse':
+          return ZonesResponse.fromJson(value);
         default:
           dynamic match;
           if (value is List && (match = _regList.firstMatch(targetType)?.group(1)) != null) {

@@ -334,6 +334,65 @@ abstract class _$FtpReminderViewModel extends $Notifier<FtpReminderState> {
   }
 }
 
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+
+@ProviderFor(RiderCardViewModel)
+final riderCardViewModelProvider = RiderCardViewModelProvider._();
+
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+final class RiderCardViewModelProvider
+    extends $NotifierProvider<RiderCardViewModel, RiderCardState> {
+  /// The rider card at the top of Progress: every number the member has, with where it came from.
+  RiderCardViewModelProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'riderCardViewModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$riderCardViewModelHash();
+
+  @$internal
+  @override
+  RiderCardViewModel create() => RiderCardViewModel();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RiderCardState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RiderCardState>(value),
+    );
+  }
+}
+
+String _$riderCardViewModelHash() =>
+    r'42ea02a5f6a0ae612a68acedebcc420c847398f9';
+
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+
+abstract class _$RiderCardViewModel extends $Notifier<RiderCardState> {
+  RiderCardState build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<RiderCardState, RiderCardState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<RiderCardState, RiderCardState>,
+              RiderCardState,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(ReadinessViewModel)
 final readinessViewModelProvider = ReadinessViewModelProvider._();
 

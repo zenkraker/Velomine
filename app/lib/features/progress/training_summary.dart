@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' show DateFormat;
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
@@ -10,6 +10,7 @@ import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/source_note.dart';
 import '../../core/widgets/stat_tile.dart';
 
 /// Load over a date range: totals, the daily TSS bars, and fitness/fatigue/form over time.
@@ -56,6 +57,23 @@ class TrainingSummary extends ConsumerWidget {
               selected: days,
               onChanged: onDays,
             ),
+            // A caution, not a fault: the week was the same every day, or much heavier than usual.
+            if (training.monotonous.orElse(false) ?? false)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: _CautionNote(
+                  l10n.trainingMonotonous,
+                  key: const Key('training-monotonous'),
+                ),
+              ),
+            if (training.heavyWeek.orElse(false) ?? false)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: _CautionNote(
+                  l10n.trainingHeavyWeek,
+                  key: const Key('training-heavy-week'),
+                ),
+              ),
             const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.xl,
@@ -144,6 +162,15 @@ class TrainingSummary extends ConsumerWidget {
                 ),
               ),
             ),
+            // Some rides in the range had no power: their effort came from heart rate.
+            if ((training.heartRateLoadRides.orElse(0) ?? 0) > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: SourceNote(
+                  l10n.fitnessHeartRateLoad,
+                  key: const Key('fitness-heart-rate-note'),
+                ),
+              ),
             const SizedBox(height: AppSpacing.lg),
             Text(l10n.dailyLoad, style: text.titleSmall),
             const SizedBox(height: AppSpacing.sm),
@@ -166,8 +193,56 @@ class TrainingSummary extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(l10n.trainingLoadHelp, style: text.bodySmall),
+            if (training.monotony.orElse(null) case final monotony?)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  l10n.trainingStrain(
+                    NumberFormat('0.00').format(monotony),
+                    NumberFormat('0').format(training.strain.orElse(0) ?? 0),
+                  ),
+                  key: const Key('training-strain'),
+                  style: text.bodySmall,
+                ),
+              ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A note in the theme's caution colour, laid out like the error line under a form but not one: nothing failed.
+class _CautionNote extends StatelessWidget {
+  const _CautionNote(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.tertiary;
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          ExcludeSemantics(
+            child: Icon(
+              Icons.info_outline,
+              size: AppLoading.errorIcon,
+              color: color,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(color: color),
+            ),
+          ),
+        ],
       ),
     );
   }

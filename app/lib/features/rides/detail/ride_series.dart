@@ -102,6 +102,10 @@ class RideSeries {
         ? altitude?.map((v) => v == null ? null : v * 3.280839895).toList()
         : altitude;
     final power = present(s.power?.map((v) => v?.toDouble()).toList());
+    // Estimated watts, drawn only when the ride had no power meter.
+    final estimatedPower = present(
+      s.estimatedPower.orElse(null)?.map((v) => v?.toDouble()).toList(),
+    );
     final heartRate = present(s.heartRate?.map((v) => v?.toDouble()).toList());
     final cadence = present(s.cadence?.map((v) => v?.toDouble()).toList());
     // The W′ balance is in joules on the wire and reads in kJ, one decimal.
@@ -142,6 +146,13 @@ class RideSeries {
           ),
         if (power != null)
           Series(id: 'power', name: 'Power', unit: 'W', values: power),
+        if (estimatedPower != null)
+          Series(
+            id: 'estimatedpower',
+            name: 'Estimated watts',
+            unit: 'W',
+            values: estimatedPower,
+          ),
         if (cadence != null)
           Series(id: 'cadence', name: 'Cadence', unit: 'rpm', values: cadence),
         if (balance != null)

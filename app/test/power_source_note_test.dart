@@ -93,6 +93,8 @@ void main() {
     );
 
     // The note is a way back to the ride it names.
+    await tester.ensureVisible(find.text(note.text));
+    await tester.pumpAndSettle();
     await tester.tap(find.text(note.text));
     await tester.pumpAndSettle();
 
