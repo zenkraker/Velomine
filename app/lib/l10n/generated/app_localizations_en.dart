@@ -2116,6 +2116,33 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get riderCardTitle => 'Your numbers';
+
+  @override
+  String get riderCardMore => 'More';
+
+  @override
+  String get riderCardPowerNote =>
+      'Fitted from your best efforts of the last 90 days.';
+
+  @override
+  String get riderCardBestsNote =>
+      'Your best in the last 90 days. Tap one to open its ride.';
+
+  @override
+  String get riderCardEfficiencyNote =>
+      'The mean of your steady rides, by week.';
+
+  @override
+  String get riderCardTotalsNote => 'Your rides in the last 90 days.';
+
+  @override
+  String get riderCardEffortNote => 'From your effort score.';
+
+  @override
+  String get riderCardEventNote => 'From your calendar.';
+
+  @override
   String get accountSearch => 'Find an account';
 
   @override

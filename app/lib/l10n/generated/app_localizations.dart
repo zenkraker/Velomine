@@ -3740,6 +3740,54 @@ abstract class AppLocalizations {
   /// **'Monotony {monotony} · Strain {strain}'**
   String trainingStrain(String monotony, String strain);
 
+  /// No description provided for @riderCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your numbers'**
+  String get riderCardTitle;
+
+  /// No description provided for @riderCardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get riderCardMore;
+
+  /// No description provided for @riderCardPowerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitted from your best efforts of the last 90 days.'**
+  String get riderCardPowerNote;
+
+  /// No description provided for @riderCardBestsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best in the last 90 days. Tap one to open its ride.'**
+  String get riderCardBestsNote;
+
+  /// No description provided for @riderCardEfficiencyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The mean of your steady rides, by week.'**
+  String get riderCardEfficiencyNote;
+
+  /// No description provided for @riderCardTotalsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides in the last 90 days.'**
+  String get riderCardTotalsNote;
+
+  /// No description provided for @riderCardEffortNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From your effort score.'**
+  String get riderCardEffortNote;
+
+  /// No description provided for @riderCardEventNote.
+  ///
+  /// In en, this message translates to:
+  /// **'From your calendar.'**
+  String get riderCardEventNote;
+
   /// No description provided for @accountSearch.
   ///
   /// In en, this message translates to:

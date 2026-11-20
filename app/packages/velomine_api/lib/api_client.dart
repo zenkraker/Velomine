@@ -411,6 +411,10 @@ class ApiClient {
           return RideResponse.fromJson(value);
         case 'RideStreamsResponse':
           return RideStreamsResponse.fromJson(value);
+        case 'RiderCardBest':
+          return RiderCardBest.fromJson(value);
+        case 'RiderCardResponse':
+          return RiderCardResponse.fromJson(value);
         case 'RiderLicenceResponse':
           return RiderLicenceResponse.fromJson(value);
         case 'RouteDetailResponse':

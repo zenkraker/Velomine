@@ -333,6 +333,29 @@ class FtpReminderViewModel extends _$FtpReminderViewModel {
   );
 }
 
+/// The rider card at the top of Progress: every number the member has, with where it came from.
+@Riverpod(keepAlive: true)
+class RiderCardViewModel extends _$RiderCardViewModel {
+  int _loadGeneration = 0;
+
+  @override
+  RiderCardState build() {
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return const RiderCardState();
+    }
+    Future.microtask(load);
+    return const RiderCardState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    state = RiderCardState(load: state.load.start());
+    final result = await ref.read(progressDataProvider).riderCard();
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = RiderCardState(load: state.load.finish(result));
+  }
+}
+
 @Riverpod(keepAlive: true)
 class ReadinessViewModel extends _$ReadinessViewModel {
   int _loadGeneration = 0;

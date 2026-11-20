@@ -1151,6 +1151,14 @@
       }
     }
   },
+  "riderCardTitle": "Your numbers",
+  "riderCardMore": "More",
+  "riderCardPowerNote": "Fitted from your best efforts of the last 90 days.",
+  "riderCardBestsNote": "Your best in the last 90 days. Tap one to open its ride.",
+  "riderCardEfficiencyNote": "The mean of your steady rides, by week.",
+  "riderCardTotalsNote": "Your rides in the last 90 days.",
+  "riderCardEffortNote": "From your effort score.",
+  "riderCardEventNote": "From your calendar.",
 
   "accountSearch": "Find an account",
   "clearSearch": "Clear the search",

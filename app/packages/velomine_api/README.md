@@ -132,6 +132,7 @@ Class | Method | HTTP request | Description
 *AnalyticsApi* | [**getFtpSuggestion**](doc//AnalyticsApi.md#getftpsuggestion) | **GET** /api/v1/analytics/ftp-suggestion | 
 *AnalyticsApi* | [**getPowerCurve**](doc//AnalyticsApi.md#getpowercurve) | **GET** /api/v1/analytics/power-curve | 
 *AnalyticsApi* | [**getReadiness**](doc//AnalyticsApi.md#getreadiness) | **GET** /api/v1/analytics/readiness | 
+*AnalyticsApi* | [**getRiderCard**](doc//AnalyticsApi.md#getridercard) | **GET** /api/v1/analytics/rider-card | 
 *AnalyticsApi* | [**getTotals**](doc//AnalyticsApi.md#gettotals) | **GET** /api/v1/analytics/totals | 
 *AnalyticsApi* | [**getTraining**](doc//AnalyticsApi.md#gettraining) | **GET** /api/v1/analytics/training | 
 *AnalyticsApi* | [**listGoals**](doc//AnalyticsApi.md#listgoals) | **GET** /api/v1/analytics/goals | 
@@ -368,6 +369,8 @@ Class | Method | HTTP request | Description
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)
  - [RideStreamsResponse](doc//RideStreamsResponse.md)
+ - [RiderCardBest](doc//RiderCardBest.md)
+ - [RiderCardResponse](doc//RiderCardResponse.md)
  - [RiderLicenceResponse](doc//RiderLicenceResponse.md)
  - [RouteDetailResponse](doc//RouteDetailResponse.md)
  - [RouteDownloadLinkResponse](doc//RouteDownloadLinkResponse.md)

@@ -162,6 +162,8 @@ part 'model/ride_import_response.dart';
 part 'model/ride_laps_response.dart';
 part 'model/ride_response.dart';
 part 'model/ride_streams_response.dart';
+part 'model/rider_card_best.dart';
+part 'model/rider_card_response.dart';
 part 'model/rider_licence_response.dart';
 part 'model/route_detail_response.dart';
 part 'model/route_download_link_response.dart';

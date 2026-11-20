@@ -132,6 +132,9 @@ class FakeServer {
   /// What GET /analytics/training answers; null uses [trainingJson].
   Map<String, Object?>? training;
 
+  /// What GET /analytics/rider-card answers; null uses [riderCardJson].
+  Map<String, Object?>? riderCard;
+
   /// The day counts asked for by GET /analytics/training, in order.
   final trainingRequests = <int>[];
 
@@ -1313,6 +1316,10 @@ extension on FakeServer {
       ftpCheck[caller.email] = {...?ftpCheck[caller.email], 'reason': null};
       snoozeRequests++;
       return http.Response('', 204);
+    }
+
+    if (path == '/api/v1/analytics/rider-card') {
+      return json(riderCard ?? riderCardJson());
     }
 
     if (path == '/api/v1/analytics/training') {
@@ -2911,6 +2918,66 @@ Map<String, Object?> trainingJson({
         'form': 10.0,
       },
   ],
+};
+
+/// What GET /analytics/rider-card answers by default: a rider with power, two heart rates and no event.
+Map<String, Object?> riderCardJson({
+  int? ftpW = 250,
+  double? weightKg = 70,
+  double? wattsPerKg = 3.6,
+  int? criticalPowerW = 250,
+  int? wPrimeJ = 20000,
+  int? peakPowerW = 900,
+  int? maxHeartRate = 187,
+  int? thresholdHeartRate = 165,
+  double? fitness = 42,
+  double? fatigue = 34,
+  double? form = 8,
+  List<Map<String, Object?>> bests = const [],
+  Map<String, Object?>? nextEvent,
+}) => {
+  'ftpW': ftpW,
+  'weightKg': weightKg,
+  'wattsPerKg': wattsPerKg,
+  'ftpSource': ftpW == null ? null : 'manual',
+  'ftpSetAt': ftpW == null ? null : '2026-11-01T09:00:00Z',
+  'ftpRideId': null,
+  'ftpRideDate': null,
+  'criticalPowerW': criticalPowerW,
+  'wPrimeJ': wPrimeJ,
+  'peakPowerW': peakPowerW,
+  'bests': bests.isEmpty
+      ? [
+          for (final (seconds, watts) in [
+            (5, 900),
+            (60, 450),
+            (300, 317),
+            (1200, 267),
+          ])
+            {'seconds': seconds, 'watts': watts, 'rideId': null, 'date': null},
+        ]
+      : bests,
+  'maxHeartRate': maxHeartRate,
+  'maxHeartRateSource': maxHeartRate == null ? null : 'estimate',
+  'maxHeartRateSetAt': null,
+  'maxHeartRateRideId': null,
+  'maxHeartRateRideDate': null,
+  'thresholdHeartRate': thresholdHeartRate,
+  'thresholdHeartRateSource': thresholdHeartRate == null ? null : 'manual',
+  'thresholdHeartRateSetAt': thresholdHeartRate == null
+      ? null
+      : '2026-11-01T09:00:00Z',
+  'thresholdHeartRateRideId': null,
+  'thresholdHeartRateRideDate': null,
+  'efficiency': const <Object?>[],
+  'rides': 12,
+  'distanceM': 850000.0,
+  'movingS': 123600.0,
+  'elevationGainM': 7200.0,
+  'fitness': fitness,
+  'fatigue': fatigue,
+  'form': form,
+  'nextEvent': nextEvent,
 };
 
 /// Starts the app the way main.dart does, with the session restored first.

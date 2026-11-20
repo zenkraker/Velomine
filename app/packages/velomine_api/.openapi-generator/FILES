@@ -145,6 +145,8 @@ lib/model/ride_import_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart
 lib/model/ride_streams_response.dart
+lib/model/rider_card_best.dart
+lib/model/rider_card_response.dart
 lib/model/rider_licence_response.dart
 lib/model/route_detail_response.dart
 lib/model/route_download_link_response.dart

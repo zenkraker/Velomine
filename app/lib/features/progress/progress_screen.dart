@@ -30,6 +30,7 @@ import 'events.dart';
 import 'intensity_card.dart';
 import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
+import 'rider_card.dart';
 import 'progress_data.dart';
 import 'progress_view_models.dart';
 import 'readiness_card.dart';
@@ -90,6 +91,7 @@ class ProgressScreen extends ConsumerWidget {
     final totals = ref.watch(totalsViewModelProvider);
     final goals = ref.watch(goalsViewModelProvider);
     final training = ref.watch(trainingViewModelProvider);
+    final riderCard = ref.watch(riderCardViewModelProvider);
     final power = ref.watch(powerCurveViewModelProvider);
     final readiness = ref.watch(readinessViewModelProvider);
     final wellbeing = ref.watch(wellbeingViewModelProvider);
@@ -137,6 +139,7 @@ class ProgressScreen extends ConsumerWidget {
 
     final failures = [
       totals.load.failure,
+      riderCard.load.failure,
       goals.load.failure,
       training.load.failure,
       power.load.failure,
@@ -147,6 +150,9 @@ class ProgressScreen extends ConsumerWidget {
     // The analysis: the totals chart leads, then each source that explains it. The check-in follows,
     // because it is the member's own input rather than an answer.
     final analysis = <Widget>[
+      // The rider's own numbers lead: they say where they stand before any one chart explains why.
+      if (riderCard.load.value case final card?)
+        RiderCard(card: card, onMore: () => showRiderCard(context, card)),
       // A ride that shows a higher FTP is the strongest answer there is, so it leads; while it is open the
       // reminder stays quiet, because it would only ask about the number the same FTP is about to replace.
       if (reminder.suggestion case final suggestion?)

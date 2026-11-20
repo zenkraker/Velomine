@@ -2130,6 +2130,33 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get riderCardTitle => 'I tuoi numeri';
+
+  @override
+  String get riderCardMore => 'Altro';
+
+  @override
+  String get riderCardPowerNote =>
+      'Calcolata dai tuoi migliori sforzi degli ultimi 90 giorni.';
+
+  @override
+  String get riderCardBestsNote =>
+      'I tuoi migliori sforzi degli ultimi 90 giorni. Tocca uno per aprire l\'uscita.';
+
+  @override
+  String get riderCardEfficiencyNote =>
+      'La media delle tue uscite costanti, per settimana.';
+
+  @override
+  String get riderCardTotalsNote => 'Le tue uscite degli ultimi 90 giorni.';
+
+  @override
+  String get riderCardEffortNote => 'Dal tuo punteggio di sforzo.';
+
+  @override
+  String get riderCardEventNote => 'Dal tuo calendario.';
+
+  @override
   String get accountSearch => 'Cerca un account';
 
   @override
