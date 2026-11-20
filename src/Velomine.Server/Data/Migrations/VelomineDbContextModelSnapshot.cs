@@ -352,6 +352,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("ftp_w");
 
+                    b.PrimitiveCollection<double[]>("HeartRateMaxZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("heart_rate_max_zone_bounds");
+
+                    b.PrimitiveCollection<double[]>("HeartRateThresholdZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("heart_rate_threshold_zone_bounds");
+
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean")
                         .HasColumnName("is_approved");
@@ -406,6 +414,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
+
+                    b.PrimitiveCollection<double[]>("PowerZoneBounds")
+                        .HasColumnType("double precision[]")
+                        .HasColumnName("power_zone_bounds");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
@@ -501,6 +513,10 @@ namespace Velomine.Server.Data.Migrations
 
                             t.HasCheckConstraint("ck_users_ftp_w", "ftp_w BETWEEN 30 AND 1000");
 
+                            t.HasCheckConstraint("ck_users_heart_rate_max_zone_bounds", "heart_rate_max_zone_bounds IS NULL OR cardinality(heart_rate_max_zone_bounds) = 4");
+
+                            t.HasCheckConstraint("ck_users_heart_rate_threshold_zone_bounds", "heart_rate_threshold_zone_bounds IS NULL OR cardinality(heart_rate_threshold_zone_bounds) = 4");
+
                             t.HasCheckConstraint("ck_users_max_heart_rate", "max_heart_rate BETWEEN 100 AND 240");
 
                             t.HasCheckConstraint("ck_users_max_heart_rate_bpm", "max_heart_rate_bpm BETWEEN 120 AND 230");
@@ -510,6 +526,8 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_users_max_heart_rate_source", "(max_heart_rate_bpm IS NULL) = (max_heart_rate_source IS NULL)");
 
                             t.HasCheckConstraint("ck_users_max_heart_rate_source_value", "max_heart_rate_source IN ('manual', 'measured')");
+
+                            t.HasCheckConstraint("ck_users_power_zone_bounds", "power_zone_bounds IS NULL OR cardinality(power_zone_bounds) = 6");
 
                             t.HasCheckConstraint("ck_users_threshold_heart_rate_bpm", "threshold_heart_rate_bpm BETWEEN 90 AND 220");
 

@@ -1270,6 +1270,48 @@ class AppLocalizationsIt extends AppLocalizations {
   String get powerZones => 'Zone di potenza';
 
   @override
+  String get zonesTitle => 'Zone';
+
+  @override
+  String get zonesEdit => 'Modifica';
+
+  @override
+  String get zonesEditTitle => 'Le tue zone';
+
+  @override
+  String get zonesEditHelp =>
+      'Il limite superiore di ogni zona, in watt o battiti al minuto. Le zone sono una quota del tuo FTP e della tua frequenza cardiaca, quindi si spostano quando cambiano.';
+
+  @override
+  String zonesLimitLabel(int zone) {
+    return 'Zona $zone fino a';
+  }
+
+  @override
+  String get zonesInvalidLimit =>
+      'Inserisci un numero intero maggiore di zero per ogni zona.';
+
+  @override
+  String get zonesNotRising =>
+      'Il limite di ogni zona deve essere più alto del precedente.';
+
+  @override
+  String get zonesBackToAutomatic => 'Torna all\'automatico';
+
+  @override
+  String get zonesResetTitle => 'Usare le zone standard?';
+
+  @override
+  String get zonesResetBody =>
+      'I tuoi limiti vengono rimossi da tutte le zone e tornano quelli standard.';
+
+  @override
+  String get zonesResetAction => 'Usa le zone standard';
+
+  @override
+  String get zonesCustom => 'Limiti tuoi';
+
+  @override
   String get momentHint =>
       'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo l\'uscita.';
 

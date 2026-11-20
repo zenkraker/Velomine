@@ -38,15 +38,20 @@ public static class TrainingLoad
 
     /// <summary>
     /// The model a rider is on: the threshold when they set one (typed or measured), else the maximum. An estimated
-    /// threshold is only 89 % of the maximum, so it would add nothing new. Null when the rider has neither.
+    /// threshold is only 89 % of the maximum, so it would add nothing new. Null when the rider has neither. The bounds
+    /// are the rider's own when they set some (`null` means the standard bounds above).
     /// </summary>
-    public static HeartRateZoneReference? HeartRateZoneFor(HeartRate? max, HeartRate? threshold)
+    public static HeartRateZoneReference? HeartRateZoneFor(
+        HeartRate? max,
+        HeartRate? threshold,
+        double[]? maxBounds = null,
+        double[]? thresholdBounds = null)
     {
         if (threshold is { Bpm: { } thresholdBpm, Source: { } thresholdSource } &&
             thresholdSource is HeartRateSources.Manual or HeartRateSources.Measured)
-            return new(HeartRateZoneModels.Threshold, thresholdBpm, thresholdSource, ThresholdHeartRateBounds);
+            return new(HeartRateZoneModels.Threshold, thresholdBpm, thresholdSource, thresholdBounds ?? ThresholdHeartRateBounds);
         return max is { Bpm: { } maxBpm, Source: { } maxSource }
-            ? new(HeartRateZoneModels.Max, maxBpm, maxSource, HeartRateBounds)
+            ? new(HeartRateZoneModels.Max, maxBpm, maxSource, maxBounds ?? HeartRateBounds)
             : null;
     }
 

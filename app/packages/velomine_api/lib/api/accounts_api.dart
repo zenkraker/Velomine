@@ -741,6 +741,48 @@ class AccountsApi {
     return null;
   }
 
+  /// Performs an HTTP 'GET /api/v1/accounts/me/zones' operation and returns the [Response].
+  Future<Response> getZonesWithHttpInfo({ Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/zones';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  Future<ZonesResponse?> getZones({ Future<void>? abortTrigger, }) async {
+    final response = await getZonesWithHttpInfo(abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ZonesResponse',) as ZonesResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'GET /api/v1/accounts/me/sessions' operation and returns the [Response].
   Future<Response> listSessionsWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -1193,6 +1235,55 @@ class AccountsApi {
     }
   }
 
+  /// Performs an HTTP 'DELETE /api/v1/accounts/me/zones/{set}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  Future<Response> resetZonesWithHttpInfo(String set_, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/zones/{set}'
+      .replaceAll('{set}', set_);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  Future<ZonesResponse?> resetZones(String set_, { Future<void>? abortTrigger, }) async {
+    final response = await resetZonesWithHttpInfo(set_, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ZonesResponse',) as ZonesResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/accounts/me/sessions/logout-others' operation and returns the [Response].
   Future<Response> revokeOtherSessionsWithHttpInfo({ Future<void>? abortTrigger, }) async {
     // ignore: prefer_const_declarations
@@ -1508,6 +1599,59 @@ class AccountsApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TelemetryResponse',) as TelemetryResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'PUT /api/v1/accounts/me/zones/{set}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  ///
+  /// * [SetZonesRequest] setZonesRequest (required):
+  Future<Response> setZonesWithHttpInfo(String set_, SetZonesRequest setZonesRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/accounts/me/zones/{set}'
+      .replaceAll('{set}', set_);
+
+    // ignore: prefer_final_locals
+    Object? postBody = setZonesRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] set_ (required):
+  ///
+  /// * [SetZonesRequest] setZonesRequest (required):
+  Future<ZonesResponse?> setZones(String set_, SetZonesRequest setZonesRequest, { Future<void>? abortTrigger, }) async {
+    final response = await setZonesWithHttpInfo(set_, setZonesRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'ZonesResponse',) as ZonesResponse;
     
     }
     return null;

@@ -81,6 +81,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**getSsoInfo**](doc//AccountsApi.md#getssoinfo) | **GET** /api/v1/accounts/sso | 
 *AccountsApi* | [**getTelemetry**](doc//AccountsApi.md#gettelemetry) | **GET** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**getTwoFactor**](doc//AccountsApi.md#gettwofactor) | **GET** /api/v1/accounts/me/two-factor | 
+*AccountsApi* | [**getZones**](doc//AccountsApi.md#getzones) | **GET** /api/v1/accounts/me/zones | 
 *AccountsApi* | [**listSessions**](doc//AccountsApi.md#listsessions) | **GET** /api/v1/accounts/me/sessions | 
 *AccountsApi* | [**listUsers**](doc//AccountsApi.md#listusers) | **GET** /api/v1/accounts/users | 
 *AccountsApi* | [**login**](doc//AccountsApi.md#login) | **POST** /api/v1/accounts/login | 
@@ -91,6 +92,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**register**](doc//AccountsApi.md#register) | **POST** /api/v1/accounts/register | 
 *AccountsApi* | [**resendVerification**](doc//AccountsApi.md#resendverification) | **POST** /api/v1/accounts/email/resend | 
 *AccountsApi* | [**resetPassword**](doc//AccountsApi.md#resetpassword) | **POST** /api/v1/accounts/password/reset | 
+*AccountsApi* | [**resetZones**](doc//AccountsApi.md#resetzones) | **DELETE** /api/v1/accounts/me/zones/{set} | 
 *AccountsApi* | [**revokeOtherSessions**](doc//AccountsApi.md#revokeothersessions) | **POST** /api/v1/accounts/me/sessions/logout-others | 
 *AccountsApi* | [**revokeSession**](doc//AccountsApi.md#revokesession) | **DELETE** /api/v1/accounts/me/sessions/{id} | 
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
@@ -98,6 +100,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
 *AccountsApi* | [**setMyUnits**](doc//AccountsApi.md#setmyunits) | **PUT** /api/v1/accounts/me/units | 
 *AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
+*AccountsApi* | [**setZones**](doc//AccountsApi.md#setzones) | **PUT** /api/v1/accounts/me/zones/{set} | 
 *AccountsApi* | [**startSso**](doc//AccountsApi.md#startsso) | **GET** /api/v1/accounts/sso/login | 
 *AccountsApi* | [**startTwoFactorEnrollment**](doc//AccountsApi.md#starttwofactorenrollment) | **POST** /api/v1/accounts/me/two-factor/start | 
 *AccountsApi* | [**updateProfile**](doc//AccountsApi.md#updateprofile) | **PUT** /api/v1/accounts/me/profile | 
@@ -393,6 +396,7 @@ Class | Method | HTTP request | Description
  - [SetSupporterHiddenRequest](doc//SetSupporterHiddenRequest.md)
  - [SetTelemetryRequest](doc//SetTelemetryRequest.md)
  - [SetUserRolesRequest](doc//SetUserRolesRequest.md)
+ - [SetZonesRequest](doc//SetZonesRequest.md)
  - [SettingsResponse](doc//SettingsResponse.md)
  - [ShareViewResponse](doc//ShareViewResponse.md)
  - [ShareViewsResponse](doc//ShareViewsResponse.md)
@@ -433,7 +437,9 @@ Class | Method | HTTP request | Description
  - [Vo2MaxEstimate](doc//Vo2MaxEstimate.md)
  - [WellbeingConsentRequest](doc//WellbeingConsentRequest.md)
  - [WellbeingResponse](doc//WellbeingResponse.md)
+ - [ZoneSetResponse](doc//ZoneSetResponse.md)
  - [ZoneTime](doc//ZoneTime.md)
+ - [ZonesResponse](doc//ZonesResponse.md)
 
 
 ## Documentation For Authorization

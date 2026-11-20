@@ -597,6 +597,25 @@
     }
   },
   "powerZones": "Power zones",
+  "zonesTitle": "Zones",
+  "zonesEdit": "Edit",
+  "zonesEditTitle": "Your zones",
+  "zonesEditHelp": "The top of each zone, in watts or beats per minute. Zones are a share of your FTP and heart rate, so they move when those change.",
+  "zonesLimitLabel": "Zone {zone} up to",
+  "@zonesLimitLabel": {
+    "placeholders": {
+      "zone": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesInvalidLimit": "Type a whole number above zero for every zone.",
+  "zonesNotRising": "Each zone's limit must be higher than the one before it.",
+  "zonesBackToAutomatic": "Back to automatic",
+  "zonesResetTitle": "Use the standard zones?",
+  "zonesResetBody": "Your own limits are removed for every zone, and the standard ones apply again.",
+  "zonesResetAction": "Use the standard zones",
+  "zonesCustom": "Your own limits",
   "momentHint": "Move over a chart, or touch and drag, to see the values along the ride.",
   "momentAt": "At {time}{distance}",
   "@momentAt": {

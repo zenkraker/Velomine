@@ -107,6 +107,9 @@ class FakeServer {
   /// Profiles by email; a missing one is the default (nothing set, weeks from Monday).
   final profiles = <String, Map<String, Object?>>{};
 
+  /// The rider's own zone bounds by email and set, as fractions of the reference.
+  final zoneBounds = <String, Map<String, List<double>>>{};
+
   /// FTP history entries by email, newest first, as the server keeps them.
   final ftpHistory = <String, List<Map<String, Object?>>>{};
 
@@ -991,6 +994,7 @@ extension on FakeServer {
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/accounts/me/ftp') &&
         !path.startsWith('/api/v1/accounts/me/heart-rate') &&
+        !path.startsWith('/api/v1/accounts/me/zones') &&
         !path.startsWith('/api/v1/accounts/me/language') &&
         !path.startsWith('/api/v1/accounts/me/units') &&
         !path.startsWith('/api/v1/accounts/me/telemetry') &&
@@ -1170,6 +1174,30 @@ extension on FakeServer {
         profile['${key}SetAt'] = '2026-11-12T09:00:00Z';
       }
       return json(_profileWithEstimate(profile));
+    }
+
+    if (path.startsWith('/api/v1/accounts/me/zones') &&
+        request.method != 'GET') {
+      final set = path.split('/').last;
+      if (!_zoneSetNames.contains(set)) {
+        return http.Response('{"detail":"unknown set"}', 404);
+      }
+      final mine = zoneBounds.putIfAbsent(caller.email, () => {});
+      if (request.method == 'DELETE') {
+        mine.remove(set);
+      } else {
+        final bounds = (body['bounds'] as List)
+            .map((v) => (v as num).toDouble())
+            .toList();
+        if (bounds.length != (set == 'power' ? 6 : 4)) {
+          return http.Response('{"detail":"wrong count"}', 400);
+        }
+        mine[set] = bounds;
+      }
+    }
+    if (path.startsWith('/api/v1/accounts/me/zones')) {
+      final profile = profiles[caller.email] ?? const <String, Object?>{};
+      return json(_zonesJson(profile, zoneBounds[caller.email] ?? const {}));
     }
 
     if (path == '/api/v1/accounts/me/ftp-history') {
@@ -1667,6 +1695,82 @@ extension on FakeServer {
       // Where the FTP came from; null when there is no FTP, as the server answers.
       'ftpSetAt': profile['ftpW'] == null ? null : profile['ftpSetAt'],
       'ftpSource': profile['ftpW'] == null ? null : profile['ftpSource'],
+    };
+  }
+
+  static const _zoneSetNames = [
+    'power',
+    'heart-rate-max',
+    'heart-rate-threshold',
+  ];
+
+  /// The standard bounds of each set, and the sets the zones are read against.
+  static const _standardBounds = {
+    'power': [0.55, 0.75, 0.90, 1.05, 1.20, 1.50],
+    'heart-rate-max': [0.60, 0.70, 0.80, 0.90],
+    'heart-rate-threshold': [0.81, 0.90, 0.94, 1.00],
+  };
+
+  /// The zones in use, the way the server answers them: bounds, whether they are the rider's own, the reference
+  /// they are fractions of and the ranges they give today.
+  static Map<String, Object?> _zonesJson(
+    Map<String, Object?> profile,
+    Map<String, List<double>> custom,
+  ) {
+    final withEstimate = _profileWithEstimate(profile);
+    final thresholdSet =
+        withEstimate['thresholdHeartRateSource'] == 'manual' ||
+        withEstimate['thresholdHeartRateSource'] == 'measured';
+    final reference = {
+      'power': profile['ftpW'] as int?,
+      'heart-rate-max': withEstimate['maxHeartRate'] as int?,
+      'heart-rate-threshold': withEstimate['thresholdHeartRate'] as int?,
+    };
+    final source = {
+      'power': null,
+      'heart-rate-max': withEstimate['maxHeartRateSource'] as String?,
+      'heart-rate-threshold':
+          withEstimate['thresholdHeartRateSource'] as String?,
+    };
+    return {
+      'sets': [
+        for (final set in _zoneSetNames)
+          () {
+            final bounds = custom[set] ?? _standardBounds[set]!;
+            final bpm = reference[set]!;
+            // The top of a bound, as the server places it: rounded watts or bpm, minus one for the zone below.
+            int top(int index) => (bpm * bounds[index]).round();
+            return {
+              'set': set,
+              'bounds': bounds,
+              'custom': custom.containsKey(set),
+              'reference': reference[set],
+              'referenceSource': source[set],
+              'zones': [
+                if (reference[set] != null)
+                  for (var index = 0; index < bounds.length; index++)
+                    {
+                      'zone': index + 1,
+                      'from': index == 0 ? 0 : top(index - 1),
+                      'to': top(index) - 1,
+                      'seconds': 0.0,
+                    },
+                if (reference[set] != null)
+                  {
+                    'zone': bounds.length + 1,
+                    'from': top(bounds.length - 1),
+                    'to': null,
+                    'seconds': 0.0,
+                  },
+              ],
+            };
+          }(),
+      ],
+      'heartRateModel': thresholdSet
+          ? 'threshold'
+          : withEstimate['maxHeartRate'] == null
+          ? null
+          : 'max',
     };
   }
 

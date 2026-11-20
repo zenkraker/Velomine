@@ -45,8 +45,8 @@ public static class RideDetails
                 response = response with { Trimp = response.Trimp ?? TrainingLoad.Trimp(trimpSeconds) };
             }
 
-            // The chart starts at 0: a beat below the floor is easy time, not nothing.
-            if (TrainingLoad.HeartRateZoneFor(maxHeartRate, thresholdHeartRate) is { } zoneModel)
+            // Neither model has a chart floor: a beat below the first bound is zone 1, counted from 0.
+            if (TrainingLoad.HeartRateZoneFor(maxHeartRate, thresholdHeartRate, owner.HeartRateMaxZoneBounds, owner.HeartRateThresholdZoneBounds) is { } zoneModel)
             {
                 response = response with
                 {
@@ -62,7 +62,7 @@ public static class RideDetails
         {
             response = response with
             {
-                PowerZones = TrainingLoad.Zones(power, streams.Time, ftpW, 0, TrainingLoad.PowerBounds),
+                PowerZones = TrainingLoad.Zones(power, streams.Time, ftpW, 0, owner.PowerZoneBounds ?? TrainingLoad.PowerBounds),
             };
         }
 

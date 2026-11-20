@@ -53,7 +53,11 @@ public static class Intensity
             .Where(u => u.Id == userId)
             .FirstAsync(ct);
         var (maxHeartRate, thresholdHeartRate) = HeartRates.For(profile, time);
-        var heartRateZones = TrainingLoad.HeartRateZoneFor(maxHeartRate, thresholdHeartRate);
+        var heartRateZones = TrainingLoad.HeartRateZoneFor(
+            maxHeartRate,
+            thresholdHeartRate,
+            profile.HeartRateMaxZoneBounds,
+            profile.HeartRateThresholdZoneBounds);
 
         // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
         var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
@@ -89,7 +93,7 @@ public static class Intensity
             var power = hidePower ? null : ride.Power;
             var heartRate = hideHeartRate ? null : ride.HeartRate;
 
-            var split = FromPower(power, ride.Time, profile.FtpW);
+            var split = FromPower(power, ride.Time, profile.FtpW, profile.PowerZoneBounds);
             if (split is null && heartRateZones is not null &&
                 FromHeartRate(heartRate, ride.Time, heartRateZones) is { } fromHeartRate)
             {
@@ -134,14 +138,18 @@ public static class Intensity
 
     /// <summary>
     /// Easy is below 75 % of FTP, moderate from 75 % to below 105 %, hard from 105 %. Null without both. The rows are
-    /// the stored 1 Hz streams, whose times leave out pauses.
+    /// the stored 1 Hz streams, whose times leave out pauses. Custom bounds are the rider's, when they set some.
     /// </summary>
-    public static IntensityTotals? FromPower(IReadOnlyList<short?>? power, IReadOnlyList<double> time, int? ftpW)
+    public static IntensityTotals? FromPower(
+        IReadOnlyList<short?>? power,
+        IReadOnlyList<double> time,
+        int? ftpW,
+        double[]? bounds = null)
     {
         if (power is null || ftpW is not { } ftp || ftp <= 0) return null;
         // A ride whose power never rises above 0 W has no training time to split.
         if (!power.Any(p => p is > 0)) return null;
-        var zones = TrainingLoad.ZoneSeconds(power, time, ftp, 0, TrainingLoad.PowerBounds);
+        var zones = TrainingLoad.ZoneSeconds(power, time, ftp, 0, bounds ?? TrainingLoad.PowerBounds);
         return zones.Sum() > 0
             ? new IntensityTotals(zones[0] + zones[1], zones[2] + zones[3], zones[4] + zones[5] + zones[6], 1)
             : null;
@@ -157,7 +165,7 @@ public static class Intensity
         HeartRateZoneReference zones)
     {
         if (heartRate is null) return null;
-        // The chart starts at 0: a beat below the model's floor counts as easy time.
+        // Neither model has a chart floor: a beat below the first bound counts as easy time.
         var seconds = TrainingLoad.ZoneSeconds(heartRate, time, zones.Bpm, 0, zones.Bounds);
         if (seconds.Sum() <= 0) return null;
         return zones.Model == HeartRateZoneModels.Threshold

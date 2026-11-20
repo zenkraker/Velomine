@@ -57,6 +57,20 @@ class ProfileData {
   Future<Result<ProfileResponse?>> clearHeartRate(String kind) =>
       _api.clearHeartRate(kind).guard(FailureAction.saveProfile);
 
+  /// The zones in use: the bounds of each set, whether they are the rider's own, and the watts or bpm they give.
+  Future<Result<ZonesResponse?>> zones() =>
+      _api.getZones().guard(FailureAction.loadProfile);
+
+  /// The rider's own bounds for one set, as fractions of the reference; the answer is every set again.
+  Future<Result<ZonesResponse?>> setZones(String set, List<double> bounds) =>
+      _api
+          .setZones(set, SetZonesRequest(bounds: bounds))
+          .guard(FailureAction.saveProfile);
+
+  /// Back to the standard bounds for one set.
+  Future<Result<ZonesResponse?>> resetZones(String set) =>
+      _api.resetZones(set).guard(FailureAction.saveProfile);
+
   Future<Result<String?>> exportLink() async =>
       (await _api.createExportLink().guard(FailureAction.prepareData))
           .map((link) => link?.path);

@@ -102,6 +102,13 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             // Both numbers in use, with where each came from and the ride that measured it, so the export says what
             // the zones used. Written out one by one: a tuple's fields are not serialized at all.
             HeartRate = new { Max = heartRates.Max, Threshold = heartRates.Threshold },
+            // The rider's own zone bounds, as fractions of the reference; null where the standard bounds apply.
+            ZoneBounds = new
+            {
+                Power = user.PowerZoneBounds,
+                HeartRateMax = user.HeartRateMaxZoneBounds,
+                HeartRateThreshold = user.HeartRateThresholdZoneBounds,
+            },
             user.Language,
             user.Units,
             user.TimeZone,

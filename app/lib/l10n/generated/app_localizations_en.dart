@@ -1262,6 +1262,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get powerZones => 'Power zones';
 
   @override
+  String get zonesTitle => 'Zones';
+
+  @override
+  String get zonesEdit => 'Edit';
+
+  @override
+  String get zonesEditTitle => 'Your zones';
+
+  @override
+  String get zonesEditHelp =>
+      'The top of each zone, in watts or beats per minute. Zones are a share of your FTP and heart rate, so they move when those change.';
+
+  @override
+  String zonesLimitLabel(int zone) {
+    return 'Zone $zone up to';
+  }
+
+  @override
+  String get zonesInvalidLimit =>
+      'Type a whole number above zero for every zone.';
+
+  @override
+  String get zonesNotRising =>
+      'Each zone\'s limit must be higher than the one before it.';
+
+  @override
+  String get zonesBackToAutomatic => 'Back to automatic';
+
+  @override
+  String get zonesResetTitle => 'Use the standard zones?';
+
+  @override
+  String get zonesResetBody =>
+      'Your own limits are removed for every zone, and the standard ones apply again.';
+
+  @override
+  String get zonesResetAction => 'Use the standard zones';
+
+  @override
+  String get zonesCustom => 'Your own limits';
+
+  @override
   String get momentHint =>
       'Move over a chart, or touch and drag, to see the values along the ride.';
 

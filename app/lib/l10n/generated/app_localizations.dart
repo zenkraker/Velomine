@@ -2246,6 +2246,78 @@ abstract class AppLocalizations {
   /// **'Power zones'**
   String get powerZones;
 
+  /// No description provided for @zonesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones'**
+  String get zonesTitle;
+
+  /// No description provided for @zonesEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get zonesEdit;
+
+  /// No description provided for @zonesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your zones'**
+  String get zonesEditTitle;
+
+  /// No description provided for @zonesEditHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The top of each zone, in watts or beats per minute. Zones are a share of your FTP and heart rate, so they move when those change.'**
+  String get zonesEditHelp;
+
+  /// No description provided for @zonesLimitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone {zone} up to'**
+  String zonesLimitLabel(int zone);
+
+  /// No description provided for @zonesInvalidLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a whole number above zero for every zone.'**
+  String get zonesInvalidLimit;
+
+  /// No description provided for @zonesNotRising.
+  ///
+  /// In en, this message translates to:
+  /// **'Each zone\'s limit must be higher than the one before it.'**
+  String get zonesNotRising;
+
+  /// No description provided for @zonesBackToAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to automatic'**
+  String get zonesBackToAutomatic;
+
+  /// No description provided for @zonesResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the standard zones?'**
+  String get zonesResetTitle;
+
+  /// No description provided for @zonesResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own limits are removed for every zone, and the standard ones apply again.'**
+  String get zonesResetBody;
+
+  /// No description provided for @zonesResetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the standard zones'**
+  String get zonesResetAction;
+
+  /// No description provided for @zonesCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own limits'**
+  String get zonesCustom;
+
   /// No description provided for @momentHint.
   ///
   /// In en, this message translates to:
