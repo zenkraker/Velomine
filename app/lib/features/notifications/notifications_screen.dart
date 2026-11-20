@@ -6,10 +6,10 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/tokens.dart';
 import '../../core/widgets/section_heading.dart';
 import 'notifications_text.dart';
 import 'notifications_view_model.dart';
@@ -41,9 +41,15 @@ class NotificationsScreen extends ConsumerWidget {
       ref.read(notificationsViewModelProvider.notifier).messageShown,
     );
 
-    // Grouped by what they are about, so a wear warning is not lost between two ride results.
+    // Unread first, then grouped by what they are about, so a wear warning is not lost between two
+    // ride results and nothing waiting to be read sits below something already read.
+    final sorted = [...s.items]
+      ..sort((a, b) {
+        if (a.isRead != b.isRead) return a.isRead ? 1 : -1;
+        return b.createdAt.compareTo(a.createdAt);
+      });
     final groups = <String, List<NotificationResponse>>{};
-    for (final n in s.items) {
+    for (final n in sorted) {
       groups.putIfAbsent(_groupOf(n.type), () => []).add(n);
     }
     String groupTitle(String group) => switch (group) {
@@ -53,28 +59,20 @@ class NotificationsScreen extends ConsumerWidget {
       _ => l10n.notificationGroupAccount,
     };
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     final markAllAction = s.markAll.running
         ? null
         : ref.read(notificationsViewModelProvider.notifier).markAllRead;
+    // The main action is a filled pill with its words at every width: an icon alone would not say what
+    // it does.
     final markAll = s.unread > 0
-        ? (wide
-              ? FilledButton.icon(
-                  key: const Key('notifications-read-all'),
-                  onPressed: markAllAction,
-                  icon: const Icon(Icons.done_all),
-                  label: Text(l10n.markAllRead),
-                )
-              // The phone header row is tight: a filled icon, its tooltip names it.
-              : IconButton.filled(
-                  key: const Key('notifications-read-all'),
-                  tooltip: l10n.markAllRead,
-                  onPressed: markAllAction,
-                  icon: const Icon(Icons.done_all),
-                ))
+        ? FilledButton.icon(
+            key: const Key('notifications-read-all'),
+            onPressed: markAllAction,
+            icon: const Icon(Icons.done_all),
+            label: Text(l10n.markAllRead),
+          )
         : null;
     return PageScaffold(
-      eyebrow: l10n.notificationsEyebrow,
       title: l10n.notifications,
       subtitle: l10n.notificationsSubtitle,
       primaryAction: markAll,
@@ -146,9 +144,9 @@ class _NotificationTile extends StatelessWidget {
     final n = notification;
     final scheme = Theme.of(context).colorScheme;
     final warning = n.type == 'ride_failed' || n.type == 'part_worn';
-    return Card(
+    return AppCard(
       key: Key('notification-${n.id}'),
-      color: n.isRead ? null : scheme.primaryContainer.withValues(alpha: 0.5),
+      padding: EdgeInsets.zero,
       child: ListTile(
         onTap: onTap,
         leading: Icon(_icon(n.type), color: warning ? scheme.error : null),

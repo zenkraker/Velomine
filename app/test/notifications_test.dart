@@ -163,4 +163,56 @@ void main() {
 
     expect(find.byKey(const Key('no-notifications')), findsOneWidget);
   });
+
+  testWidgets(
+    'NotificationsScreen_ShouldGroupByArea_WhenNotificationsSpanTwoAreas',
+    (tester) async {
+      await openNotifications(tester);
+
+      // Each area has its own heading, and its rows sit under it.
+      expect(find.text('Rides'), findsWidgets);
+      expect(find.text('Bikes'), findsWidgets);
+      final bikesHeading = tester.getTopLeft(find.text('Bikes').last).dy;
+      final ridesHeading = tester.getTopLeft(find.text('Rides').last).dy;
+      final bikeRow = tester
+          .getTopLeft(find.byKey(const Key('notification-n-3')))
+          .dy;
+      final rideRow = tester
+          .getTopLeft(find.byKey(const Key('notification-n-2')))
+          .dy;
+      // Each row sits under its own area's heading.
+      expect(bikesHeading, lessThan(bikeRow));
+      expect(ridesHeading, lessThan(rideRow));
+    },
+  );
+
+  testWidgets('NotificationsScreen_ShouldOpenTheTarget_WhenARowIsTapped', (
+    tester,
+  ) async {
+    await openNotifications(tester);
+
+    await tester.tap(find.byKey(const Key('notification-n-3')));
+    await tester.pumpAndSettle();
+
+    // A bike warning opens that bike.
+    expect(find.byKey(const Key('bike-title')), findsOneWidget);
+    expect(server.requests, contains('POST /api/v1/notifications/n-3/read'));
+  });
+
+  for (final width in [390.0, 600.0, 1300.0]) {
+    testWidgets(
+      'NotificationsScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(tester, server.session(useCookies: true));
+        await tester.tap(find.byKey(const Key('open-notifications')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('notification-n-3')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }
