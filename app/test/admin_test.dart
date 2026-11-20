@@ -23,6 +23,9 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
     await openAccount(tester, 'admin');
     await tester.pumpAndSettle();
+    // Admin opens on the overview; most of these tests are about the accounts.
+    await tester.tap(find.byKey(const Key('tab-accounts')));
+    await tester.pumpAndSettle();
   }
 
   Future<void> menu(WidgetTester tester, FakeAccount a, String item) async {
@@ -123,26 +126,25 @@ void main() {
     expect(find.text('Locked'), findsNothing);
   });
 
-  testWidgets(
-    'AccountsTab_ShouldAskBeforeDeletingAndKeepAccount_WhenCancelled',
-    (tester) async {
-      final rider = server.add('rider@example.com', name: 'Rider');
-      await openAdmin(tester);
+  testWidgets('AccountsTab_ShouldConfirmBeforeDeleting_WhenDeleteIsPicked', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', name: 'Rider');
+    await openAdmin(tester);
 
-      await menu(tester, rider, 'delete');
-      expect(find.text('Delete Rider?'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(server.accounts, contains('rider@example.com'));
+    await menu(tester, rider, 'delete');
+    expect(find.text('Delete Rider?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(server.accounts, contains('rider@example.com'));
 
-      await menu(tester, rider, 'delete');
-      await tester.tap(find.byKey(const Key('confirm-delete')));
-      await tester.pumpAndSettle();
+    await menu(tester, rider, 'delete');
+    await tester.tap(find.byKey(const Key('confirm-delete')));
+    await tester.pumpAndSettle();
 
-      expect(server.accounts, isNot(contains('rider@example.com')));
-      expect(find.text('Rider'), findsNothing);
-    },
-  );
+    expect(server.accounts, isNot(contains('rider@example.com')));
+    expect(find.text('Rider'), findsNothing);
+  });
 
   testWidgets('AccountsTab_ShouldListDeleteLastAndInRed_WhenRowMenuOpens', (
     tester,
@@ -288,11 +290,37 @@ void main() {
     expect(value('overview-not-reread'), '2');
   });
 
+  testWidgets('AdminScreen_ShouldRefuse_WhenTheRiderIsNotAnAdmin', (
+    tester,
+  ) async {
+    server.signInBrowser(server.add('rider@example.com'));
+    await startApp(tester, server.session(useCookies: true));
+
+    await goTo(tester, '/admin');
+
+    expect(find.byKey(const Key('tab-overview')), findsNothing);
+    expect(find.byKey(const Key('rides-actions')), findsOneWidget);
+  });
+
   testWidgets('AdminScreen_ShouldBeHidden_WhenNotAdmin', (tester) async {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 
     await openAccountMenu(tester);
     expect(find.byKey(const Key('account-admin')), findsNothing);
+  });
+
+  testWidgets('AdminScreen_ShouldKeepTheFourTabs_WhenOpenedByAnAdmin', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+
+    for (final key in ['overview', 'accounts', 'clubs', 'settings']) {
+      expect(find.byKey(Key('tab-$key')), findsOneWidget);
+    }
+
+    await tester.tap(find.byKey(const Key('tab-overview')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('overview-accounts')), findsOneWidget);
   });
 }

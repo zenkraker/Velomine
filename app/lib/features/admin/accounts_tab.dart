@@ -13,6 +13,7 @@ import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/inline_error.dart';
@@ -176,13 +177,30 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
             alignment: Alignment.centerLeft,
             child: Text(l10n.nonePending, key: const Key('none-pending')),
           ),
-        for (final user in waiting) _tile(context, ref, user, myId),
+        // Each list is one card of rows, as the mock-up draws it.
+        if (waiting.isNotEmpty)
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (final user in waiting) _tile(context, ref, user, myId),
+              ],
+            ),
+          ),
         const SizedBox(height: AppSpacing.lg),
         Text(
           l10n.adminAccounts,
           style: Theme.of(context).textTheme.titleMedium,
         ),
-        for (final user in rest) _tile(context, ref, user, myId),
+        if (rest.isNotEmpty)
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (final user in rest) _tile(context, ref, user, myId),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -195,86 +213,84 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
   ) {
     final l10n = context.l10n;
     final mine = user.id == myId;
-    return Card(
+    return ListTile(
       key: Key('user-${user.id}'),
-      child: ListTile(
-        title: Wrap(
-          spacing: AppSpacing.sm,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(user.displayName),
-            if (mine) Chip(label: Text(l10n.you)),
-            if (user.isLockedOut) Chip(label: Text(l10n.locked)),
-            for (final role in user.roles)
-              if (role != 'member') Chip(label: Text(_roleName(l10n, role))),
-          ],
-        ),
-        subtitle: Text('${user.email} · ${dateTime(user.createdAt)}'),
-        trailing: !user.isApproved
-            ? FilledButton(
-                key: Key('approve-${user.id}'),
-                onPressed: () => ref
-                    .read(adminAccountsViewModelProvider.notifier)
-                    .approve(user),
-                child: Text(l10n.approve),
-              )
-            : mine
-            ? null
-            : PageMenu(
-                buttonKey: Key('user-menu-${user.id}'),
-                entries: [
-                  PageMenuEntry(
-                    key: Key('roles-${user.id}'),
-                    icon: Icons.admin_panel_settings_outlined,
-                    label: l10n.changeRoles,
-                    onSelected: () =>
-                        _later(context, () => _roles(context, ref, user)),
-                  ),
-                  if (user.isLockedOut)
-                    PageMenuEntry(
-                      key: Key('unlock-${user.id}'),
-                      icon: Icons.lock_open_outlined,
-                      label: l10n.unlockAccount,
-                      onSelected: () => ref
-                          .read(adminAccountsViewModelProvider.notifier)
-                          .unlock(user),
-                    )
-                  else
-                    PageMenuEntry(
-                      key: Key('lock-${user.id}'),
-                      icon: Icons.lock_outline,
-                      label: l10n.lockAccount,
-                      onSelected: () => ref
-                          .read(adminAccountsViewModelProvider.notifier)
-                          .lock(user),
-                    ),
-                  PageMenuEntry(
-                    key: Key('reset-password-${user.id}'),
-                    icon: Icons.link,
-                    label: l10n.resetPasswordLink,
-                    onSelected: () =>
-                        _later(context, () => _resetLink(context, ref, user)),
-                  ),
-                  PageMenuEntry(
-                    key: Key('reset-two-factor-${user.id}'),
-                    icon: Icons.phonelink_lock_outlined,
-                    label: l10n.resetTwoFactor,
-                    onSelected: () => _later(
-                      context,
-                      () => _resetTwoFactor(context, ref, user),
-                    ),
-                  ),
-                  PageMenuEntry(
-                    key: Key('delete-${user.id}'),
-                    icon: Icons.delete_outline,
-                    label: l10n.deleteAccountAction,
-                    destructive: true,
-                    onSelected: () =>
-                        _later(context, () => _delete(context, ref, user)),
-                  ),
-                ],
-              ),
+      title: Wrap(
+        spacing: AppSpacing.sm,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(user.displayName),
+          if (mine) Chip(label: Text(l10n.you)),
+          if (user.isLockedOut) Chip(label: Text(l10n.locked)),
+          for (final role in user.roles)
+            if (role != 'member') Chip(label: Text(_roleName(l10n, role))),
+        ],
       ),
+      subtitle: Text('${user.email} · ${dateTime(user.createdAt)}'),
+      trailing: !user.isApproved
+          ? FilledButton(
+              key: Key('approve-${user.id}'),
+              onPressed: () => ref
+                  .read(adminAccountsViewModelProvider.notifier)
+                  .approve(user),
+              child: Text(l10n.approve),
+            )
+          : mine
+          ? null
+          : PageMenu(
+              buttonKey: Key('user-menu-${user.id}'),
+              entries: [
+                PageMenuEntry(
+                  key: Key('roles-${user.id}'),
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: l10n.changeRoles,
+                  onSelected: () =>
+                      _later(context, () => _roles(context, ref, user)),
+                ),
+                if (user.isLockedOut)
+                  PageMenuEntry(
+                    key: Key('unlock-${user.id}'),
+                    icon: Icons.lock_open_outlined,
+                    label: l10n.unlockAccount,
+                    onSelected: () => ref
+                        .read(adminAccountsViewModelProvider.notifier)
+                        .unlock(user),
+                  )
+                else
+                  PageMenuEntry(
+                    key: Key('lock-${user.id}'),
+                    icon: Icons.lock_outline,
+                    label: l10n.lockAccount,
+                    onSelected: () => ref
+                        .read(adminAccountsViewModelProvider.notifier)
+                        .lock(user),
+                  ),
+                PageMenuEntry(
+                  key: Key('reset-password-${user.id}'),
+                  icon: Icons.link,
+                  label: l10n.resetPasswordLink,
+                  onSelected: () =>
+                      _later(context, () => _resetLink(context, ref, user)),
+                ),
+                PageMenuEntry(
+                  key: Key('reset-two-factor-${user.id}'),
+                  icon: Icons.phonelink_lock_outlined,
+                  label: l10n.resetTwoFactor,
+                  onSelected: () => _later(
+                    context,
+                    () => _resetTwoFactor(context, ref, user),
+                  ),
+                ),
+                PageMenuEntry(
+                  key: Key('delete-${user.id}'),
+                  icon: Icons.delete_outline,
+                  label: l10n.deleteAccountAction,
+                  destructive: true,
+                  onSelected: () =>
+                      _later(context, () => _delete(context, ref, user)),
+                ),
+              ],
+            ),
     );
   }
 }
