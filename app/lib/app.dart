@@ -57,7 +57,12 @@ import 'features/profile/profile_screen.dart';
 import 'features/profile/sessions_screen.dart';
 import 'features/profile/two_factor_screen.dart';
 import 'features/privacy/privacy_screen.dart';
+import 'features/goals/goals_screen.dart';
+import 'features/progress/fitness_screen.dart';
+import 'features/progress/power_screen.dart';
 import 'features/progress/progress_screen.dart';
+import 'features/progress/totals_screen.dart';
+import 'features/progress/wellbeing_screen.dart';
 import 'features/progress/events_screen.dart';
 import 'features/recording/recording_screen.dart';
 import 'features/rides/bulk/ride_drop_area.dart';
@@ -321,6 +326,23 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(path: '/record', builder: (_, _) => const RecordingScreen()),
           GoRoute(path: '/progress', builder: (_, _) => const ProgressScreen()),
+          GoRoute(
+            path: '/progress/fitness',
+            builder: (_, _) => const FitnessScreen(),
+          ),
+          GoRoute(
+            path: '/progress/power',
+            builder: (_, _) => const PowerScreen(),
+          ),
+          GoRoute(
+            path: '/progress/totals',
+            builder: (_, _) => const TotalsScreen(),
+          ),
+          GoRoute(
+            path: '/progress/wellbeing',
+            builder: (_, _) => const WellbeingScreen(),
+          ),
+          GoRoute(path: '/goals', builder: (_, _) => const GoalsScreen()),
           GoRoute(
             path: '/progress/events',
             builder: (_, _) => const EventsScreen(),

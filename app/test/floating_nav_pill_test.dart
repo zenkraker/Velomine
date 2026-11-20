@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:velomine/core/theme.dart';
 import 'package:velomine/core/tokens.dart';
 import 'package:velomine/core/widgets/floating_nav_pill.dart';
 
@@ -76,4 +77,61 @@ void main() {
     expect(find.byType(BackdropFilter), findsNothing);
     expect(find.text('One'), findsOneWidget);
   });
+
+  testWidgets(
+    'FloatingNavPill_ShouldPaintSelectedItemOnAccentSoft_WhenSelected',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: nightTheme(),
+          home: Scaffold(
+            body: Stack(
+              children: [
+                FloatingNavPill(
+                  items: const [
+                    (
+                      key: Key('one'),
+                      icon: Icon(Icons.flag_outlined),
+                      selectedIcon: Icon(Icons.flag),
+                      label: 'One',
+                    ),
+                    (
+                      key: Key('two'),
+                      icon: Icon(Icons.groups_outlined),
+                      selectedIcon: Icon(Icons.groups),
+                      label: 'Two',
+                    ),
+                  ],
+                  selected: 0,
+                  onSelected: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final scheme = Theme.of(tester.element(find.byType(FloatingNavPill)))
+          .colorScheme;
+      ShapeDecoration decorationOf(String key) =>
+          tester
+                  .widget<AnimatedContainer>(
+                    find.descendant(
+                      of: find.byKey(Key(key)),
+                      matching: find.byType(AnimatedContainer),
+                    ),
+                  )
+                  .decoration!
+              as ShapeDecoration;
+
+      expect(decorationOf('one').color, scheme.primaryContainer);
+      expect(decorationOf('two').color, Colors.transparent);
+      // The chosen one is filled, the other outlined.
+      expect(find.byIcon(Icons.flag), findsOneWidget);
+      expect(find.byIcon(Icons.flag_outlined), findsNothing);
+      expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+    },
+  );
 }
