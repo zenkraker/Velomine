@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine/core/theme.dart';
-import 'package:velomine/core/widgets/eyebrow.dart';
 import 'package:velomine/core/widgets/page_scaffold.dart';
 
 Future<void> pumpPage(
@@ -12,7 +11,8 @@ Future<void> pumpPage(
   Widget? primaryAction,
   Widget? menu,
   Widget? actions,
-  String? eyebrow,
+  String? parent,
+  String title = 'Garage',
   Key? titleKey,
 }) async {
   tester.view.physicalSize = Size(width, 900);
@@ -25,9 +25,9 @@ Future<void> pumpPage(
         showOnPhone: showOnPhone,
         child: Scaffold(
           body: PageScaffold(
-            title: 'Garage',
+            title: title,
             titleKey: titleKey,
-            eyebrow: eyebrow,
+            parent: parent,
             subtitle: 'Everything you ride',
             onBack: onBack,
             primaryAction: primaryAction,
@@ -127,13 +127,25 @@ void main() {
     expect(find.byKey(const Key('page-title')), findsOneWidget);
   });
 
-  testWidgets('Eyebrow_ShouldUppercaseText_WhenBuilt', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: dayTheme(),
-        home: const Scaffold(body: Eyebrow('your bikes')),
-      ),
-    );
-    expect(find.text('YOUR BIKES'), findsOneWidget);
+  testWidgets(
+    'PageScaffold_ShouldShowParentCaptionAboveTitle_WhenParentGiven',
+    (tester) async {
+      await pumpPage(tester, width: 1000, parent: 'Progress');
+
+      expect(find.text('Progress'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Progress')).dy,
+        lessThan(tester.getTopLeft(find.text('Garage')).dy),
+      );
+    },
+  );
+
+  testWidgets('PageScaffold_ShouldKeepTitleInSentenceCase_WhenTitleGiven', (
+    tester,
+  ) async {
+    await pumpPage(tester, width: 1000, title: 'your bikes');
+
+    expect(find.text('your bikes'), findsOneWidget);
+    expect(find.text('YOUR BIKES'), findsNothing);
   });
 }

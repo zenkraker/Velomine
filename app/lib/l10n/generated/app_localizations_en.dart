@@ -13,13 +13,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRides => 'Rides';
 
   @override
+  String get navAllRides => 'All rides';
+
+  @override
+  String get navGoals => 'Goals';
+
+  @override
+  String get navOverview => 'Overview';
+
+  @override
+  String get navClubRides => 'Club rides';
+
+  @override
+  String get navSharing => 'Sharing';
+
+  @override
+  String get navTotals => 'Totals';
+
+  @override
+  String get navGoalsAndEvents => 'Goals and events';
+
+  @override
+  String get nextEvent => 'Next event';
+
+  @override
+  String get dayUnit => 'day';
+
+  @override
+  String get daysUnit => 'days';
+
+  @override
   String get navGroupClub => 'Club';
 
   @override
   String get navNoClub => 'No club';
-
-  @override
-  String get eyebrowRides => 'Your rides';
 
   @override
   String get privacyCardTitle => 'Your data is yours.';
@@ -139,21 +166,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pressBackAgain => 'Press back again to exit';
-
-  @override
-  String get authEyebrowSignIn => 'Welcome back';
-
-  @override
-  String get authEyebrowRegister => 'New account';
-
-  @override
-  String get authEyebrowForgot => 'Password help';
-
-  @override
-  String get authEyebrowReset => 'New password';
-
-  @override
-  String get authEyebrowServer => 'Server';
 
   @override
   String get signInHelp => 'Sign in to see your rides and your form.';
@@ -683,9 +695,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubNoneSubtitle => 'Ride on your own, or with a club.';
-
-  @override
-  String get eyebrowClub => 'Your club';
 
   @override
   String get clubSubtitle => 'Your club, its rides and the people in it.';
@@ -1381,9 +1390,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addBike => 'Add bike';
 
   @override
-  String get eyebrowBikes => 'Your bikes';
-
-  @override
   String get bikesSubtitle => 'Every bike you ride and what it needs.';
 
   @override
@@ -1440,11 +1446,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get metricPower => 'Power';
-
-  @override
-  String metricThisPeriod(String period) {
-    return 'This $period';
-  }
 
   @override
   String get statRides => 'Rides';
@@ -1949,8 +1950,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalDelete => 'Delete goal';
 
   @override
+  String get goalDeleteTitle => 'Delete this goal?';
+
+  @override
+  String get goalDeleteBody =>
+      'The goal and its target are removed. Your rides stay exactly as they are.';
+
+  @override
   String goalSemantics(String metric) {
     return '$metric goal';
+  }
+
+  @override
+  String goalPercent(int percent) {
+    return '$percent %';
   }
 
   @override
@@ -1959,12 +1972,77 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String goalLeft(Object value) {
+    return '$value to go';
+  }
+
+  @override
+  String goalReachedBy(Object value) {
+    return 'Reached by $value';
+  }
+
+  @override
+  String goalsSummary(num reached, num running) {
+    String _temp0 = intl.Intl.pluralLogic(
+      running,
+      locale: localeName,
+      other: '$running goals running.',
+      one: 'One goal running.',
+      zero: 'No goals running.',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      reached,
+      locale: localeName,
+      other: '$reached reached.',
+      one: 'One reached.',
+      zero: '',
+    );
+    return '$_temp0 $_temp1';
+  }
+
+  @override
   String totalsSemantics(String period, String distance) {
     return 'Distance per $period. This $period: $distance.';
   }
 
   @override
-  String get eyebrowProgress => 'Your progress';
+  String chartAverage(String value) {
+    return 'Average $value';
+  }
+
+  @override
+  String totalsSemanticsMeasure(String measure, String period, String value) {
+    return '$measure per $period. This $period: $value.';
+  }
+
+  @override
+  String get fitnessTrendRising => 'Your fitness is rising.';
+
+  @override
+  String get fitnessTrendFalling => 'Your fitness is falling.';
+
+  @override
+  String formFitnessFatigue(int fitness, int fatigue) {
+    return 'Fitness $fitness, fatigue $fatigue.';
+  }
+
+  @override
+  String weekAgainstAverage(String trend, String average) {
+    String _temp0 = intl.Intl.selectLogic(trend, {
+      'above': 'Above your 12-week average of $average.',
+      'below': 'Below your 12-week average of $average.',
+      'other': 'Level with your 12-week average of $average.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get noEventPlanned =>
+      'No event planned. Add one to see the days to go.';
+
+  @override
+  String get totalsEmpty =>
+      'No rides yet. Upload or record a ride to see your totals.';
 
   @override
   String get progressSubtitle => 'Your form over the period you choose.';
@@ -1985,6 +2063,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String totalsMore(int count) {
     return '$count older periods not listed';
   }
+
+  @override
+  String get totalsShowEarlier => 'Show earlier';
 
   @override
   String get trainingLoad => 'Training load';
@@ -2028,6 +2109,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get dailyLoadEmpty =>
+      'No training load in this range. Rides with power or heart rate add to it.';
+
+  @override
   String get trainingLoadHelp =>
       'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
 
@@ -2044,7 +2129,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSettings => 'Settings';
 
   @override
+  String get authOr => 'or';
+
+  @override
   String get adminOverview => 'Overview';
+
+  @override
+  String get adminOverviewSubtitle => 'This server at a glance.';
+
+  @override
+  String get adminAccountsSubtitle => 'Accounts on this server.';
+
+  @override
+  String get adminClubsSubtitle => 'Clubs on this server.';
+
+  @override
+  String get adminSettingsSubtitle => 'How this server works.';
 
   @override
   String deleteUserTitle(String name) {
@@ -2397,9 +2497,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunday => 'Sunday';
-
-  @override
-  String get notificationsEyebrow => 'Your inbox';
 
   @override
   String get notificationsSubtitle => 'What the server told you, newest first.';
@@ -2769,6 +2866,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingHistory => 'Last 30 days';
 
   @override
+  String get wellbeingHistory14 => 'Last 14 days';
+
+  @override
+  String get wellbeingCheckIn => 'Check in';
+
+  @override
+  String get wellbeingHowYouFeel => 'How you feel';
+
+  @override
+  String get wellbeingNoToday =>
+      'No check-in today. Your readiness is measured from your rides alone.';
+
+  @override
+  String get wellbeingPrivate =>
+      'Only you see this. Readiness and notes never reach a coach.';
+
+  @override
   String get wellbeingNoHistory => 'No check-ins yet.';
 
   @override
@@ -2820,6 +2934,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get powerBestEfforts => 'Best efforts';
+
+  @override
+  String powerCurveSentence(Object days) {
+    return 'Your best power for every duration in the last $days days.';
+  }
+
+  @override
+  String get bestEffortsDuration => 'Duration';
+
+  @override
+  String get bestEffortsPower => 'Power';
+
+  @override
+  String get bestEffortsWPerKg => 'W/kg';
+
+  @override
+  String get criticalPowerExplain =>
+      'The power you can hold for a long time, and the reserve above it for short attacks.';
+
+  @override
+  String get criticalPowerTitle => 'Critical power';
+
+  @override
+  String criticalPowerPeak(Object peak) {
+    return 'Peak $peak W';
+  }
+
+  @override
+  String ftpValue(Object watts) {
+    return 'FTP $watts W';
+  }
+
+  @override
+  String ftpEstimateToday(int watts, String method) {
+    return 'Estimate today: $watts W, $method.';
+  }
 
   @override
   String get ftpEstimate => 'Estimated FTP';
@@ -4164,17 +4314,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routesFilterAll => 'All surfaces';
 
   @override
-  String get routesEyebrow => 'Club routes';
-
-  @override
   String get routesSubtitle =>
       'The lines the club rides, with their distance and climbing.';
 
   @override
   String get routesEmptyCta => 'Add the first route';
-
-  @override
-  String get clubRidesEyebrow => 'Club calendar';
 
   @override
   String get clubRidesSubtitle =>

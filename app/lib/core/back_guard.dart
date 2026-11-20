@@ -84,6 +84,10 @@ String? backParentOf(String location) {
     return '/club';
   }
   if (path == '/club/athletes') return '/club';
+  // The Progress sub-pages are destinations of Progress: back leads to the overview, not out of the app.
+  if (path.startsWith('/progress/') && path != '/progress/events') {
+    return '/progress';
+  }
   final coachedRide = RegExp(r'^/club/athletes/([^/]+)/rides/[^/]+$')
       .firstMatch(path);
   if (coachedRide != null) return '/club/athletes/${coachedRide.group(1)}';

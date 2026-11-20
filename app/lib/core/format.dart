@@ -14,19 +14,30 @@ const _poundsPerKg = 2.2046226218;
 /// 1609.344: the exact definition of a statute mile. Screens that type or check a
 /// length in the member's unit convert with it.
 const metresPerMile = _metresPerMile;
+const metresPerFoot = 1 / _feetPerMetre;
 
 /// 2.2046226218: the exact definition of a pound, for the weight field.
 const poundsPerKg = _poundsPerKg;
 
 /// Distances, durations and speeds for display. The server always sends metres, seconds and metres per second.
+/// A distance in the member's unit: a number and its unit, for a card that draws them at different sizes.
+({String value, String? unit}) distanceParts(Units units, double? metres) {
+  if (metres == null) return (value: '–', unit: null);
+  final value = distanceIn(units, metres);
+  return (
+    value: _decimal(value, value >= 100 ? 0 : 1),
+    unit: distanceUnit(units),
+  );
+}
+
+/// A distance in the display unit: kilometres, or miles for an imperial member.
+double distanceIn(Units units, double metres) =>
+    units == Units.imperial ? metres / _metresPerMile : metres / 1000;
+
 /// A distance: "42.3 km" or "26.3 mi".
 String km(Units units, double? metres) {
-  if (metres == null) return '–';
-  if (units == Units.imperial) {
-    final miles = metres / _metresPerMile;
-    return '${_decimal(miles, miles >= 100 ? 0 : 1)} mi';
-  }
-  return '${_decimal(metres / 1000, metres >= 100000 ? 0 : 1)} km';
+  final parts = distanceParts(units, metres);
+  return parts.unit == null ? parts.value : '${parts.value} ${parts.unit}';
 }
 
 /// A speed: "28.1 km/h" or "17.5 mph".
@@ -45,6 +56,10 @@ String elevation(Units units, double? metres, {bool up = false}) {
       : '${metres.round()} m';
   return up ? '$value ↑' : value;
 }
+
+/// A climb in the display unit: metres, or feet for an imperial member.
+double elevationIn(Units units, double metres) =>
+    units == Units.imperial ? metres * _feetPerMetre : metres;
 
 /// The symbol a distance is shown in: "km" or "mi". For strings that put the
 /// unit after a number the app builds itself.

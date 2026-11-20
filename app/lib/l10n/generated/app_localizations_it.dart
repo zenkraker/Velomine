@@ -10,7 +10,37 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
-  String get navRides => 'Uscite';
+  String get navRides => 'Giri';
+
+  @override
+  String get navAllRides => 'Tutti i giri';
+
+  @override
+  String get navGoals => 'Obiettivi';
+
+  @override
+  String get navOverview => 'Panoramica';
+
+  @override
+  String get navClubRides => 'Giri del club';
+
+  @override
+  String get navSharing => 'Condivisioni';
+
+  @override
+  String get navTotals => 'Totali';
+
+  @override
+  String get navGoalsAndEvents => 'Obiettivi ed eventi';
+
+  @override
+  String get nextEvent => 'Prossimo evento';
+
+  @override
+  String get dayUnit => 'giorno';
+
+  @override
+  String get daysUnit => 'giorni';
 
   @override
   String get navGroupClub => 'Club';
@@ -19,25 +49,22 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navNoClub => 'Nessun club';
 
   @override
-  String get eyebrowRides => 'Le tue uscite';
-
-  @override
   String get privacyCardTitle => 'I tuoi dati sono tuoi.';
 
   @override
   String get privacyCardBody => 'Privati finché non li condividi.';
 
   @override
-  String get ridesSubtitle => 'Le tue uscite e le tue gare.';
+  String get ridesSubtitle => 'I tuoi giri e le tue gare.';
 
   @override
-  String get ridesImportMenu => 'Aggiungi uscite';
+  String get ridesImportMenu => 'Aggiungi giri';
 
   @override
-  String get rideDetailTitle => 'Uscita';
+  String get rideDetailTitle => 'Giro';
 
   @override
-  String get startRide => 'Inizia uscita';
+  String get startRide => 'Inizia giro';
 
   @override
   String get navRecord => 'Registra';
@@ -141,22 +168,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pressBackAgain => 'Premi di nuovo indietro per uscire';
 
   @override
-  String get authEyebrowSignIn => 'Bentornato';
-
-  @override
-  String get authEyebrowRegister => 'Nuovo account';
-
-  @override
-  String get authEyebrowForgot => 'Aiuto password';
-
-  @override
-  String get authEyebrowReset => 'Nuova password';
-
-  @override
-  String get authEyebrowServer => 'Server';
-
-  @override
-  String get signInHelp => 'Accedi per vedere le tue uscite e la tua forma.';
+  String get signInHelp => 'Accedi per vedere i tuoi giri e la tua forma.';
 
   @override
   String get signIn => 'Accedi';
@@ -496,19 +508,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionGeneral => 'farlo';
 
   @override
-  String get actionLoadRides => 'caricare le tue uscite';
+  String get actionLoadRides => 'caricare i tuoi giri';
 
   @override
   String get actionUploadRide => 'caricare questo file';
 
   @override
-  String get actionLoadRide => 'caricare questa uscita';
+  String get actionLoadRide => 'caricare questo giro';
 
   @override
   String get actionChangeRideBike => 'cambiare la bici';
 
   @override
-  String get actionDeleteRide => 'eliminare l\'uscita';
+  String get actionDeleteRide => 'eliminare il giro';
 
   @override
   String get actionLoadBikes => 'caricare le tue bici';
@@ -646,7 +658,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionLoadAthlete => 'caricare l\'atleta';
 
   @override
-  String get actionLoadCoachRide => 'caricare questa uscita';
+  String get actionLoadCoachRide => 'caricare questo giro';
 
   @override
   String get navClub => 'Club';
@@ -688,11 +700,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubNoneSubtitle => 'Esci da solo, oppure in un club.';
 
   @override
-  String get eyebrowClub => 'Il tuo club';
-
-  @override
   String get clubSubtitle =>
-      'Il tuo club, le sue uscite e le persone che ne fanno parte.';
+      'Il tuo club, i suoi giri e le persone che ne fanno parte.';
 
   @override
   String get clubInactive =>
@@ -743,7 +752,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get clubLeaveBody =>
-      'Puoi rientrare con un nuovo codice. Le tue uscite restano tue.';
+      'Puoi rientrare con un nuovo codice. I tuoi giri restano tuoi.';
 
   @override
   String get clubOwnerCannotLeave =>
@@ -769,7 +778,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Esce dal tuo account solo ciò che attivi. Il club vede sempre il tuo nome e il tuo posto nella lista.';
 
   @override
-  String get shareRides => 'Uscite';
+  String get shareRides => 'Giri';
 
   @override
   String get shareAnalytics => 'Allenamento';
@@ -785,17 +794,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get routesNeedRides =>
-      'Attiva prima le uscite; i percorsi aggiungono la mappa.';
+      'Attiva prima i giri; i percorsi aggiungono la mappa.';
 
   @override
-  String get privacyTitle => 'Privacy delle uscite';
+  String get privacyTitle => 'Privacy dei giri';
 
   @override
   String get privacyHelp =>
-      'Cosa vedono gli altri quando condividi un\'uscita o quando il club può vederla. Tu vedi sempre tutto.';
+      'Cosa vedono gli altri quando condividi un giro o quando il club può vederlo. Tu vedi sempre tutto.';
 
   @override
-  String get privacyOthersSee => 'Cosa vedono gli altri di ogni uscita';
+  String get privacyOthersSee => 'Cosa vedono gli altri di ogni giro';
 
   @override
   String get privacyHideHeartRate => 'Frequenza cardiaca';
@@ -826,14 +835,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get privacyTrimHelp =>
-      'Metri nascosti all\'inizio e alla fine di ogni uscita. 0 tiene tutto.';
+      'Metri nascosti all\'inizio e alla fine di ogni giro. 0 tiene tutto.';
 
   @override
   String get privacyZonesTitle => 'Luoghi salvati';
 
   @override
   String get privacyZonesHelp =>
-      'Ogni uscita nasconde fino a un miglio intorno a questi luoghi, e la linea del percorso si interrompe lì. Al massimo dieci luoghi.';
+      'Ogni giro nasconde fino a un miglio intorno a questi luoghi, e la linea del percorso si interrompe lì. Al massimo dieci luoghi.';
 
   @override
   String get privacyZonesEmpty => 'Nessun luogo salvato.';
@@ -868,7 +877,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Scegli da 0 a 5000 metri per ogni estremo (da 0 a 3,1 miglia).';
 
   @override
-  String get privacyRidePrivacy => 'Privacy delle uscite';
+  String get privacyRidePrivacy => 'Privacy dei giri';
 
   @override
   String get privacyRidePrivacyHelp =>
@@ -887,10 +896,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get viewTraining => 'Allenamento';
 
   @override
-  String get viewRide => 'Uscita';
+  String get viewRide => 'Giro';
 
   @override
-  String get viewRides => 'Elenco uscite';
+  String get viewRides => 'Elenco giri';
 
   @override
   String get viewRoute => 'Percorso';
@@ -903,7 +912,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get athletesSubtitle =>
-      'I membri che condividono con te le uscite o gli allenamenti.';
+      'I membri che condividono con te i giri o gli allenamenti.';
 
   @override
   String get athletesEmpty =>
@@ -911,7 +920,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String lastRideOn(String date) {
-    return 'Ultima uscita $date';
+    return 'Ultimo giro $date';
   }
 
   @override
@@ -921,7 +930,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get days42 => '42 giorni';
 
   @override
-  String get sharesRides => 'Uscite';
+  String get sharesRides => 'Giri';
 
   @override
   String get sharesTraining => 'Allenamento';
@@ -933,13 +942,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get coachAthleteNotFound => 'Questo atleta non condivide con te.';
 
   @override
-  String get coachRideNotFound => 'Questa uscita non è condivisa con te.';
+  String get coachRideNotFound => 'Questo giro non è condiviso con te.';
 
   @override
   String get coachReadOnly => 'Condivisa dall\'atleta, sola lettura.';
 
   @override
-  String get coachNoRides => 'Nessuna uscita condivisa.';
+  String get coachNoRides => 'Nessun giro condiviso.';
 
   @override
   String get routeNotShared => 'L\'atleta non ha condiviso il percorso.';
@@ -983,7 +992,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String notificationRideReady(String subject) {
-    return 'La tua uscita $subject è pronta.';
+    return 'Il tuo giro $subject è pronto.';
   }
 
   @override
@@ -1015,7 +1024,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideErrorCorrupt => 'Il file è danneggiato o incompleto.';
 
   @override
-  String get rideErrorInvalid => 'Questo non è un file di un\'uscita.';
+  String get rideErrorInvalid => 'Questo non è un file di un giro.';
 
   @override
   String get rideErrorUnsupported =>
@@ -1038,7 +1047,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il server non è riuscito a leggere questo file.';
 
   @override
-  String get uploadRide => 'Carica uscita';
+  String get uploadRide => 'Carica giro';
 
   @override
   String get uploading => 'Caricamento…';
@@ -1054,17 +1063,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get zwiftHint =>
-      'Zwift conserva ogni uscita come file FIT in Documents/Zwift/Activities. Scegli quella cartella per portarle dentro tutte.';
+      'Zwift conserva ogni giro come file FIT in Documents/Zwift/Activities. Scegli quella cartella per portarli dentro tutti.';
 
   @override
-  String get bulkDropTitle => 'Rilascia per aggiungere le tue uscite';
+  String get bulkDropTitle => 'Rilascia per aggiungere i tuoi giri';
 
   @override
   String get bulkDropHint =>
       'File o una cartella intera: vengono letti i file .fit, .gpx e .tcx, anche compressi (.gz).';
 
   @override
-  String get bulkTitle => 'Aggiunta di uscite da file';
+  String get bulkTitle => 'Aggiunta di giri da file';
 
   @override
   String get bulkScanning => 'Sto guardando i file…';
@@ -1091,9 +1100,9 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite nuove',
-      one: '1 uscita nuova',
-      zero: 'Nessuna uscita nuova',
+      other: '$count giri nuovi',
+      one: '1 giro nuovo',
+      zero: 'Nessun giro nuovo',
     );
     return '$_temp0';
   }
@@ -1103,8 +1112,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite erano già qui',
-      one: '1 uscita era già qui',
+      other: '$count giri erano già qui',
+      one: '1 giro era già qui',
     );
     return '$_temp0';
   }
@@ -1125,8 +1134,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count file saltati: non sono file di uscita',
-      one: '1 file saltato: non è un file di uscita',
+      other: '$count file saltati: non sono file di giro',
+      one: '1 file saltato: non è un file di giro',
     );
     return '$_temp0';
   }
@@ -1152,11 +1161,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bulkSignedOut =>
-      'Accedi prima, poi aggiungi di nuovo le tue uscite.';
+      'Accedi prima, poi aggiungi di nuovo i tuoi giri.';
 
   @override
   String get bulkNothing =>
-      'Nessun file di uscita trovato. Velomine legge i file .fit, .gpx e .tcx, anche compressi (.gz).';
+      'Nessun file di giro trovato. Velomine legge i file .fit, .gpx e .tcx, anche compressi (.gz).';
 
   @override
   String get bulkWaiting => 'Attendo un momento, il server è occupato…';
@@ -1166,8 +1175,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite aggiunte. Verranno caricate in background.',
-      one: '1 uscita aggiunta. Verrà caricata in background.',
+      other: '$count giri aggiunti. Verranno caricati in background.',
+      one: '1 giro aggiunto. Verrà caricato in background.',
     );
     return '$_temp0';
   }
@@ -1177,15 +1186,15 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite erano già qui.',
-      one: '1 uscita era già qui.',
+      other: '$count giri erano già qui.',
+      one: '1 giro era già qui.',
     );
     return '$_temp0';
   }
 
   @override
   String incomingRejectedOne(String name) {
-    return '$name non è un file di uscita ed è stato saltato.';
+    return '$name non è un file di giro ed è stato saltato.';
   }
 
   @override
@@ -1193,8 +1202,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count file non sono file di uscita e sono stati saltati.',
-      one: '1 file non è un file di uscita ed è stato saltato.',
+      other: '$count file non sono file di giro e sono stati saltati.',
+      one: '1 file non è un file di giro ed è stato saltato.',
     );
     return '$_temp0';
   }
@@ -1204,17 +1213,17 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite sono state tenute. Accedi e verranno caricate.',
-      one: '1 uscita è stata tenuta. Accedi e verrà caricata.',
+      other: '$count giri sono stati tenuti. Accedi e verranno caricati.',
+      one: '1 giro è stato tenuto. Accedi e verrà caricato.',
     );
     return '$_temp0';
   }
 
   @override
-  String get incomingOpen => 'Elenco uscite';
+  String get incomingOpen => 'Elenco giri';
 
   @override
-  String get noRides => 'Nessuna uscita. Carica un file FIT, GPX o TCX.';
+  String get noRides => 'Nessun giro. Carica un file FIT, GPX o TCX.';
 
   @override
   String get loadMore => 'Carica altre';
@@ -1226,23 +1235,23 @@ class AppLocalizationsIt extends AppLocalizations {
   String get delete => 'Elimina';
 
   @override
-  String get rideActions => 'Azioni uscita';
+  String get rideActions => 'Azioni giro';
 
   @override
-  String get deleteRideTitle => 'Eliminare questa uscita?';
+  String get deleteRideTitle => 'Eliminare questo giro?';
 
   @override
   String get deleteRideBody =>
-      'L\'uscita, i suoi grafici e il file caricato vengono rimossi. Non si può annullare.';
+      'Il giro, i suoi grafici e il file caricato vengono rimossi. Non si può annullare.';
 
   @override
   String get keepIt => 'Mantienila';
 
   @override
-  String get rideNotFound => 'Questa uscita non esiste, oppure non è tua.';
+  String get rideNotFound => 'Questo giro non esiste, oppure non è tuo.';
 
   @override
-  String get couldNotLoadRide => 'Impossibile caricare questa uscita.';
+  String get couldNotLoadRide => 'Impossibile caricare questo giro.';
 
   @override
   String get trainingHint =>
@@ -1256,7 +1265,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get momentHint =>
-      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo l\'uscita.';
+      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo il giro.';
 
   @override
   String momentAt(String time, String distance) {
@@ -1389,14 +1398,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get addBike => 'Aggiungi bici';
 
   @override
-  String get eyebrowBikes => 'Le tue bici';
-
-  @override
   String get bikesSubtitle => 'Tutte le bici che usi e ciò che serve loro.';
 
   @override
   String get noBikes =>
-      'Nessuna bici. Aggiungine una per tenere traccia dei chilometri e dell\'usura dei componenti. Le nuove uscite ricevono la bici predefinita.';
+      'Nessuna bici. Aggiungine una per tenere traccia dei chilometri e dell\'usura dei componenti. I nuovi giri ricevono la bici predefinita.';
 
   @override
   String get defaultBike => 'Predefinita';
@@ -1409,9 +1415,9 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite',
-      one: '1 uscita',
-      zero: 'Nessuna uscita',
+      other: '$count giri',
+      one: '1 giro',
+      zero: 'Nessun giro',
     );
     return '$_temp0';
   }
@@ -1421,7 +1427,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deleteBikeBody =>
-      'La bici e i suoi componenti vengono rimossi. Le uscite restano, ma non indicheranno più quale bici hai usato. Per conservare la storia, archivia la bici.';
+      'La bici e i suoi componenti vengono rimossi. I giri restano, ma non indicheranno più quale bici hai usato. Per conservare la storia, archivia la bici.';
 
   @override
   String removePartTitle(String name) {
@@ -1450,12 +1456,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get metricPower => 'Potenza';
 
   @override
-  String metricThisPeriod(String period) {
-    return 'Questo $period';
-  }
-
-  @override
-  String get statRides => 'Uscite';
+  String get statRides => 'Giri';
 
   @override
   String get edit => 'Modifica';
@@ -1866,9 +1867,9 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite',
-      one: '1 uscita',
-      zero: 'Nessuna uscita',
+      other: '$count giri',
+      one: '1 giro',
+      zero: 'Nessun giro',
     );
     return '$_temp0 · $duration · $elevation di dislivello';
   }
@@ -1881,7 +1882,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get noGoals =>
-      'Nessun obiettivo. Imposta un traguardo per ogni settimana, mese o anno: distanza, dislivello, tempo in bici o numero di uscite.';
+      'Nessun obiettivo. Imposta un traguardo per ogni settimana, mese o anno: distanza, dislivello, tempo in bici o numero di giri.';
 
   @override
   String get goalWeekly => 'settimanale';
@@ -1902,19 +1903,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get goalMetricTime => 'Tempo in bici';
 
   @override
-  String get goalMetricRides => 'Uscite';
+  String get goalMetricRides => 'Giri';
 
   @override
-  String get goalUnitRides => 'uscite';
+  String get goalUnitRides => 'giri';
 
   @override
   String goalRideCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite',
-      one: '1 uscita',
-      zero: 'Nessuna uscita',
+      other: '$count giri',
+      one: '1 giro',
+      zero: 'Nessun giro',
     );
     return '$_temp0';
   }
@@ -1961,8 +1962,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get goalDelete => 'Elimina obiettivo';
 
   @override
+  String get goalDeleteTitle => 'Eliminare questo obiettivo?';
+
+  @override
+  String get goalDeleteBody =>
+      'L\'obiettivo e il suo traguardo vengono rimossi. I tuoi giri restano come sono.';
+
+  @override
   String goalSemantics(String metric) {
     return 'Obiettivo: $metric';
+  }
+
+  @override
+  String goalPercent(int percent) {
+    return '$percent %';
   }
 
   @override
@@ -1971,12 +1984,77 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String goalLeft(Object value) {
+    return '$value per arrivare';
+  }
+
+  @override
+  String goalReachedBy(Object value) {
+    return 'Superato di $value';
+  }
+
+  @override
+  String goalsSummary(num reached, num running) {
+    String _temp0 = intl.Intl.pluralLogic(
+      running,
+      locale: localeName,
+      other: '$running obiettivi in corso.',
+      one: 'Un obiettivo in corso.',
+      zero: 'Nessun obiettivo in corso.',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      reached,
+      locale: localeName,
+      other: '$reached raggiunti.',
+      one: 'Uno raggiunto.',
+      zero: '',
+    );
+    return '$_temp0 $_temp1';
+  }
+
+  @override
   String totalsSemantics(String period, String distance) {
     return 'Distanza per $period. Questo periodo: $distance.';
   }
 
   @override
-  String get eyebrowProgress => 'I tuoi progressi';
+  String chartAverage(String value) {
+    return 'Media $value';
+  }
+
+  @override
+  String totalsSemanticsMeasure(String measure, String period, String value) {
+    return '$measure per $period. Questo periodo: $value.';
+  }
+
+  @override
+  String get fitnessTrendRising => 'La tua forma sta salendo.';
+
+  @override
+  String get fitnessTrendFalling => 'La tua forma sta scendendo.';
+
+  @override
+  String formFitnessFatigue(int fitness, int fatigue) {
+    return 'Forma $fitness, fatica $fatigue.';
+  }
+
+  @override
+  String weekAgainstAverage(String trend, String average) {
+    String _temp0 = intl.Intl.selectLogic(trend, {
+      'above': 'Sopra la tua media di 12 settimane di $average.',
+      'below': 'Sotto la tua media di 12 settimane di $average.',
+      'other': 'In linea con la tua media di 12 settimane di $average.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get noEventPlanned =>
+      'Nessun evento in programma. Aggiungine uno per vedere i giorni che mancano.';
+
+  @override
+  String get totalsEmpty =>
+      'Ancora nessun giro. Carica o registra un giro per vedere i tuoi totali.';
 
   @override
   String get progressSubtitle => 'La tua forma nel periodo che scegli.';
@@ -1999,6 +2077,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get totalsShowEarlier => 'Mostra precedenti';
+
+  @override
   String get trainingLoad => 'Carico di allenamento';
 
   @override
@@ -2012,7 +2093,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get trainingLoadHint =>
-      'Imposta FTP (e frequenza cardiaca massima) nel profilo, poi carica un\'uscita per vedere il carico di allenamento.';
+      'Imposta FTP (e frequenza cardiaca massima) nel profilo, poi carica un giro per vedere il carico di allenamento.';
 
   @override
   String get fitnessFatigueForm => 'Fitness, fatica e forma';
@@ -2040,6 +2121,10 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get dailyLoadEmpty =>
+      'Nessun carico di allenamento in questo periodo. I giri con potenza o frequenza cardiaca lo aumentano.';
+
+  @override
   String get trainingLoadHelp =>
       'La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.';
 
@@ -2056,7 +2141,22 @@ class AppLocalizationsIt extends AppLocalizations {
   String get adminSettings => 'Impostazioni';
 
   @override
+  String get authOr => 'oppure';
+
+  @override
   String get adminOverview => 'Panoramica';
+
+  @override
+  String get adminOverviewSubtitle => 'Questo server in sintesi.';
+
+  @override
+  String get adminAccountsSubtitle => 'Gli account su questo server.';
+
+  @override
+  String get adminClubsSubtitle => 'I club su questo server.';
+
+  @override
+  String get adminSettingsSubtitle => 'Come funziona questo server.';
 
   @override
   String deleteUserTitle(String name) {
@@ -2065,7 +2165,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String deleteUserBody(String email) {
-    return 'L\'account di $email viene eliminato per sempre: uscite, bici, obiettivi e file delle uscite. Non si può annullare.';
+    return 'L\'account di $email viene eliminato per sempre: giri, bici, obiettivi e file dei giri. Non si può annullare.';
   }
 
   @override
@@ -2191,19 +2291,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get noSettings => 'Nessuna impostazione.';
 
   @override
-  String get rideFilesOnDisk => 'File delle uscite su disco';
+  String get rideFilesOnDisk => 'File dei giri su disco';
 
   @override
   String get serverVersion => 'Versione del server';
 
   @override
-  String get rideReaderVersion => 'Versione del lettore delle uscite';
+  String get rideReaderVersion => 'Versione del lettore dei giri';
 
   @override
-  String get ridesToReread => 'Uscite in attesa di essere rilette';
+  String get ridesToReread => 'Giri in attesa di essere riletti';
 
   @override
-  String get ridesNotReread => 'Uscite che non è stato possibile rileggere';
+  String get ridesNotReread => 'Giri che non è stato possibile rileggere';
 
   @override
   String get profileTitle => 'Profilo';
@@ -2243,12 +2343,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String heartRateSourceMeasured(String date) {
-    return 'Misurata nella tua uscita del $date';
+    return 'Misurata nel tuo giro del $date';
   }
 
   @override
   String get heartRateSourceMeasuredDeleted =>
-      'Misurata in un\'uscita che hai eliminato';
+      'Misurata in un giro che hai eliminato';
 
   @override
   String get maxHeartRateField => 'Frequenza cardiaca massima';
@@ -2292,7 +2392,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String heartRateSuggested(int bpm, int current) {
-    return 'Questa uscita ha raggiunto $bpm bpm, oltre i $current che hai impostato. Usare $bpm?';
+    return 'Questo giro ha raggiunto $bpm bpm, oltre i $current che hai impostato. Usare $bpm?';
   }
 
   @override
@@ -2310,7 +2410,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get timeZoneHelper =>
-      'Decide in quale giorno conta un\'uscita quando il file non lo indica. Vuoto significa UTC.';
+      'Decide in quale giorno conta un giro quando il file non lo indica. Vuoto significa UTC.';
 
   @override
   String get firstDayOfWeek => 'La settimana inizia di';
@@ -2320,7 +2420,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get emailAvailableHelp =>
-      'Un\'uscita letta, un componente usurato e così via.';
+      'Un giro letto, un componente usurato e così via.';
 
   @override
   String get emailUnavailableHelp =>
@@ -2334,18 +2434,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'Richieste di iscrizione e approvazioni, e nuove registrazioni in attesa.';
 
   @override
-  String get emailTrainingNotifications => 'Email per uscite e componenti';
+  String get emailTrainingNotifications => 'Email per giri e componenti';
 
   @override
   String get emailTrainingNotificationsHelp =>
-      'Uscite lette o non leggibili, e componenti usurati. Raggruppate in una sola email.';
+      'Giri letti o non leggibili, e componenti usurati. Raggruppati in una sola email.';
 
   @override
   String get yourData => 'I tuoi dati';
 
   @override
   String get yourDataHelp =>
-      'Sono tuoi. Scarica tutto ciò che Velomine conserva su di te: i tuoi dati, le bici, gli obiettivi e le uscite, con ogni file esattamente come l\'hai caricato.';
+      'Sono tuoi. Scarica tutto ciò che Velomine conserva su di te: i tuoi dati, le bici, gli obiettivi e i giri, con ogni file esattamente come l\'hai caricato.';
 
   @override
   String get downloadMyData => 'Scarica i miei dati';
@@ -2380,7 +2480,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'Elimina per sempre il tuo account e tutto ciò che contiene: uscite e file, bici, obiettivi e notifiche. Scarica prima i tuoi dati se vuoi conservarli. Non si può annullare.';
+      'Elimina per sempre il tuo account e tutto ciò che contiene: giri e file, bici, obiettivi e notifiche. Scarica prima i tuoi dati se vuoi conservarli. Non si può annullare.';
 
   @override
   String get yourPassword => 'La tua password';
@@ -2413,14 +2513,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sunday => 'Domenica';
 
   @override
-  String get notificationsEyebrow => 'La tua posta';
-
-  @override
   String get notificationsSubtitle =>
       'Ciò che il server ti ha detto, dal più recente.';
 
   @override
-  String get notificationGroupRides => 'Uscite';
+  String get notificationGroupRides => 'Giri';
 
   @override
   String get notificationGroupClub => 'Club';
@@ -2436,17 +2533,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get noNotifications =>
-      'Ancora nulla. Qui vedrai quando un\'uscita è stata letta o un componente della bici è quasi usurato.';
+      'Ancora nulla. Qui vedrai quando un giro è stato letto o un componente della bici è quasi usurato.';
 
   @override
   String get unread => 'Non letta';
 
   @override
-  String get recordRide => 'Registra un\'uscita';
+  String get recordRide => 'Registra un giro';
 
   @override
   String get recordIntro =>
-      'Il telefono continua a registrare anche con lo schermo spento. L\'uscita viene salvata prima su questo telefono; poi si aggiunge il caricamento.';
+      'Il telefono continua a registrare anche con lo schermo spento. Il giro viene salvato prima su questo telefono; poi si aggiunge il caricamento.';
 
   @override
   String get starting => 'Avvio…';
@@ -2466,7 +2563,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nonePaired =>
-      'Nessuna abbinata. Facoltativa: la frequenza cardiaca viene salvata con l\'uscita.';
+      'Nessuna abbinata. Facoltativa: la frequenza cardiaca viene salvata con il giro.';
 
   @override
   String get forget => 'Dimentica';
@@ -2487,7 +2584,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sensorDeniedState => 'Dispositivi nelle vicinanze non consentiti';
 
   @override
-  String get sensorConnectsOnStart => 'Si connette quando inizi un\'uscita';
+  String get sensorConnectsOnStart => 'Si connette quando inizi un giro';
 
   @override
   String get autoPaused => 'In pausa automatica';
@@ -2520,7 +2617,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get onThisPhone => 'Su questo telefono';
 
   @override
-  String get noLocalRides => 'Nessuna uscita registrata su questo telefono.';
+  String get noLocalRides => 'Nessun giro registrato su questo telefono.';
 
   @override
   String get uploaded => 'Caricata';
@@ -2548,7 +2645,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get interruptedHelp =>
-      'La registrazione si è fermata inaspettatamente. Completa per conservare l\'uscita.';
+      'La registrazione si è fermata inaspettatamente. Completa per conservare il giro.';
 
   @override
   String get finish => 'Completa';
@@ -2560,25 +2657,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get upload => 'Carica';
 
   @override
-  String get deleteFromPhone => 'Elimina questa uscita dal telefono';
+  String get deleteFromPhone => 'Elimina questo giro dal telefono';
 
   @override
-  String get deleteLocalRideTitle => 'Eliminare questa uscita dal telefono?';
+  String get deleteLocalRideTitle => 'Eliminare questo giro dal telefono?';
 
   @override
   String get deleteLocalRideBodyUploaded =>
-      'L\'uscita è già sul server. Viene rimossa solo la copia su questo telefono.';
+      'Il giro è già sul server. Viene rimossa solo la copia su questo telefono.';
 
   @override
   String get deleteLocalRideBodyNotUploaded =>
-      'Questa uscita non è stata caricata. Se la elimini dal telefono è persa per sempre.';
+      'Questo giro non è stato caricato. Se lo elimini dal telefono è perso per sempre.';
 
   @override
   String get pairStrapTitle => 'Abbina una fascia cardio';
 
   @override
   String get pairStrapHelp =>
-      'Indossa la fascia perché si attivi, poi sceglila qui sotto. Verrà ricordata per le prossime uscite.';
+      'Indossa la fascia perché si attivi, poi sceglila qui sotto. Verrà ricordata per i prossimi giri.';
 
   @override
   String get searchingStraps => 'Ricerca delle fasce…';
@@ -2592,11 +2689,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get recorderPermission =>
-      'Consenti la posizione precisa, e le notifiche se richieste, così l\'uscita può continuare a registrare.';
+      'Consenti la posizione precisa, e le notifiche se richieste, così il giro può continuare a registrare.';
 
   @override
   String get recorderGpsOff =>
-      'Attiva la posizione (GPS) per registrare un\'uscita.';
+      'Attiva la posizione (GPS) per registrare un giro.';
 
   @override
   String get recorderLocationFailed =>
@@ -2607,18 +2704,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'La registrazione è disponibile solo sul telefono.';
 
   @override
-  String get recorderTooShort =>
-      'L\'uscita era troppo breve per essere salvata.';
+  String get recorderTooShort => 'Il giro era troppo breve per essere salvato.';
 
   @override
-  String get recorderFitFailed => 'Non è stato possibile salvare l\'uscita.';
+  String get recorderFitFailed => 'Non è stato possibile salvare il giro.';
 
   @override
-  String get recorderStillRecording => 'Ferma l\'uscita prima di completarla.';
+  String get recorderStillRecording => 'Ferma il giro prima di completarlo.';
 
   @override
-  String get recorderRideNotFound =>
-      'Quell\'uscita non è più su questo telefono.';
+  String get recorderRideNotFound => 'Quel giro non è più su questo telefono.';
 
   @override
   String get recorderBluetoothOff =>
@@ -2650,11 +2745,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get uploadTimeout =>
-      'Il server ha impiegato troppo tempo a leggere l\'uscita.';
+      'Il server ha impiegato troppo tempo a leggere il giro.';
 
   @override
   String get uploadServerFailed =>
-      'Il server non è riuscito a leggere questa uscita.';
+      'Il server non è riuscito a leggere questo giro.';
 
   @override
   String uploadHttpRefused(String code) {
@@ -2668,7 +2763,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get readiness => 'Prontezza';
 
   @override
-  String get readinessHard => 'Pronto per un\'uscita dura';
+  String get readinessHard => 'Pronto per un giro duro';
 
   @override
   String get readinessNormal => 'Allenati normalmente';
@@ -2696,7 +2791,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Riposa o muoviti molto piano. Hai molta fatica accumulata.';
 
   @override
-  String get readinessNoData => 'Registra un\'uscita per vedere la prontezza.';
+  String get readinessNoData => 'Registra un giro per vedere la prontezza.';
 
   @override
   String get readinessLoadOnly =>
@@ -2722,7 +2817,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get readinessFactorWellbeing => 'Come ti senti';
 
   @override
-  String get readinessFactorRpe => 'RPE ultima uscita';
+  String get readinessFactorRpe => 'RPE ultimo giro';
 
   @override
   String get wellbeing => 'Benessere';
@@ -2732,7 +2827,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wellbeingConsentBody =>
-      'Velomine conserva un breve check-in giornaliero e l\'RPE che aggiungi alle uscite. Sono dati sulla salute: nessun altro li vede se non li condividi con i tuoi allenatori, e puoi esportarli o eliminarli in qualsiasi momento. Non sono consigli medici.';
+      'Velomine conserva un breve check-in giornaliero e l\'RPE che aggiungi ai giri. Sono dati sulla salute: nessun altro li vede se non li condividi con i tuoi allenatori, e puoi esportarli o eliminarli in qualsiasi momento. Non sono consigli medici.';
 
   @override
   String get wellbeingConsentAction => 'Accetto';
@@ -2793,6 +2888,23 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingHistory => 'Ultimi 30 giorni';
 
   @override
+  String get wellbeingHistory14 => 'Ultimi 14 giorni';
+
+  @override
+  String get wellbeingCheckIn => 'Check-in';
+
+  @override
+  String get wellbeingHowYouFeel => 'Come ti senti';
+
+  @override
+  String get wellbeingNoToday =>
+      'Nessun check-in oggi. La prontezza viene misurata solo sui tuoi giri.';
+
+  @override
+  String get wellbeingPrivate =>
+      'Lo vedi solo tu. Prontezza e note non arrivano mai a un coach.';
+
+  @override
   String get wellbeingNoHistory => 'Nessun check-in.';
 
   @override
@@ -2817,14 +2929,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wellbeingConsentNeeded =>
-      'Attiva il benessere in Progressi per aggiungere come è andata un\'uscita.';
+      'Attiva il benessere in Progressi per aggiungere come è andato un giro.';
 
   @override
   String get shareWellbeing => 'Benessere';
 
   @override
   String get shareWellbeingHelper =>
-      'Punteggi del check-in e RPE delle uscite; le note restano private.';
+      'Punteggi del check-in e RPE dei giri; le note restano private.';
 
   @override
   String get sharesWellbeing => 'Benessere';
@@ -2840,10 +2952,46 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get powerCurveEmpty =>
-      'Nessun dato di potenza in questo periodo. Carica un\'uscita con un misuratore di potenza.';
+      'Nessun dato di potenza in questo periodo. Carica un giro con un misuratore di potenza.';
 
   @override
   String get powerBestEfforts => 'Migliori sforzi';
+
+  @override
+  String powerCurveSentence(Object days) {
+    return 'La tua migliore potenza per ogni durata negli ultimi $days giorni.';
+  }
+
+  @override
+  String get bestEffortsDuration => 'Durata';
+
+  @override
+  String get bestEffortsPower => 'Potenza';
+
+  @override
+  String get bestEffortsWPerKg => 'W/kg';
+
+  @override
+  String get criticalPowerExplain =>
+      'La potenza che riesci a tenere a lungo, e la riserva sopra di essa per gli scatti.';
+
+  @override
+  String get criticalPowerTitle => 'Potenza critica';
+
+  @override
+  String criticalPowerPeak(Object peak) {
+    return 'Picco $peak W';
+  }
+
+  @override
+  String ftpValue(Object watts) {
+    return 'FTP $watts W';
+  }
+
+  @override
+  String ftpEstimateToday(int watts, String method) {
+    return 'Stima di oggi: $watts W, $method.';
+  }
 
   @override
   String get ftpEstimate => 'FTP stimato';
@@ -2910,7 +3058,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String ftpSourceTest(String date) {
-    return 'Dalla tua uscita del $date';
+    return 'Dal tuo giro del $date';
   }
 
   @override
@@ -2932,14 +3080,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get ftpFromTheEstimate => 'Dalla stima';
 
   @override
-  String get ftpFromYourRide => 'Dalla tua uscita';
+  String get ftpFromYourRide => 'Dal tuo giro';
 
   @override
   String get ftpBeforeHistory => 'Prima che tenessimo la storia';
 
   @override
   String ftpSuggestionTitle(String watts) {
-    return 'Questa uscita suggerisce un FTP di $watts W';
+    return 'Questo giro suggerisce un FTP di $watts W';
   }
 
   @override
@@ -2965,7 +3113,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String notificationFtpSuggested(String record) {
-    return 'Un\'uscita suggerisce un FTP di $record.';
+    return 'Un giro suggerisce un FTP di $record.';
   }
 
   @override
@@ -3048,10 +3196,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideFilterAll => 'Tutte';
 
   @override
-  String get rideFilterTitle => 'Filtra le uscite';
+  String get rideFilterTitle => 'Filtra i giri';
 
   @override
-  String get rideFilterSearch => 'Cerca uscite';
+  String get rideFilterSearch => 'Cerca giri';
 
   @override
   String get rideFilterSearchHint => 'Cerca nei titoli e nelle descrizioni';
@@ -3069,7 +3217,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideFilterClear => 'Azzera i filtri';
 
   @override
-  String get noRidesMatch => 'Nessuna uscita corrisponde.';
+  String get noRidesMatch => 'Nessun giro corrisponde.';
 
   @override
   String rideDateRange(String from, String to) {
@@ -3080,14 +3228,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String rideDefaultTitle(String period, String kind) {
     String _temp0 = intl.Intl.selectLogic(kind, {
       'commute': 'Tragitto casa-lavoro',
-      'virtual': 'Uscita virtuale',
-      'indoor': 'Uscita indoor',
-      'road': 'Uscita su strada',
-      'gravel': 'Uscita gravel',
-      'mountain': 'Uscita in mountain bike',
-      'track': 'Uscita in pista',
-      'ebike': 'Uscita in e-bike',
-      'other': 'Uscita in bici',
+      'virtual': 'Giro virtuale',
+      'indoor': 'Giro indoor',
+      'road': 'Giro su strada',
+      'gravel': 'Giro gravel',
+      'mountain': 'Giro in mountain bike',
+      'track': 'Giro in pista',
+      'ebike': 'Giro in e-bike',
+      'other': 'Giro in bici',
     });
     String _temp1 = intl.Intl.selectLogic(period, {
       'morning': 'del mattino',
@@ -3102,18 +3250,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideTextEdit => 'Modifica titolo e descrizione';
 
   @override
-  String get rideTextSheetTitle => 'Dai un nome all\'uscita';
+  String get rideTextSheetTitle => 'Dai un nome al giro';
 
   @override
   String get rideTextHelp =>
-      'Parole tue. Gli allenatori con cui condividi le uscite possono leggerle.';
+      'Parole tue. Gli allenatori con cui condividi i giri possono leggerle.';
 
   @override
   String get rideTextTitle => 'Titolo';
 
   @override
   String get rideTextTitleHelper =>
-      'Lascia vuoto per un nome ricavato da orario e tipo di uscita.';
+      'Lascia vuoto per un nome ricavato da orario e tipo di giro.';
 
   @override
   String get rideTextDescription => 'Descrizione';
@@ -3130,13 +3278,13 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get rideViewsEmpty => 'Nessun altro ha guardato questa uscita.';
+  String get rideViewsEmpty => 'Nessun altro ha guardato questo giro.';
 
   @override
-  String get rideTypeTitle => 'Dettagli uscita';
+  String get rideTypeTitle => 'Dettagli giro';
 
   @override
-  String get rideTypeHelp => 'Che tipo di uscita era? Tutto è facoltativo.';
+  String get rideTypeHelp => 'Che tipo di giro era? Tutto è facoltativo.';
 
   @override
   String get rideTypeDiscipline => 'Superficie';
@@ -3172,7 +3320,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideTypeVirtual => 'Virtuale';
 
   @override
-  String get actionChangeRideType => 'cambiare i dettagli di questa uscita';
+  String get actionChangeRideType => 'cambiare i dettagli di questo giro';
 
   @override
   String get yes => 'Sì';
@@ -3187,7 +3335,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get lap => 'Giro';
 
   @override
-  String get recorderRideType => 'Tipo di uscita';
+  String get recorderRideType => 'Tipo di giro';
 
   @override
   String get done => 'Fatto';
@@ -3401,7 +3549,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nearbyIntro =>
-      'Pedala al tuo ritmo. Entra in un club quando vuoi: puoi uscire quando vuoi e le tue uscite restano tue.';
+      'Pedala al tuo ritmo. Entra in un club quando vuoi: puoi uscire quando vuoi e i tuoi giri restano tuoi.';
 
   @override
   String get nearbyLocating => 'Sto cercando la tua posizione…';
@@ -3512,7 +3660,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get joinRequestApproveBody =>
-      'Diventa un corridore. Le tue uscite restano tue; la condivisione resta una sua scelta.';
+      'Diventa un corridore. I tuoi giri restano tuoi; la condivisione resta una sua scelta.';
 
   @override
   String joinRequestDeclineTitle(String name) {
@@ -3671,7 +3819,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get usageDataHelp =>
-      'Schermate lente e funzioni usate, senza le tue uscite o dati di salute.';
+      'Schermate lente e funzioni usate, senza i tuoi giri o dati di salute.';
 
   @override
   String get telemetryUnavailable => 'Questo server non raccoglie telemetria.';
@@ -3729,8 +3877,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite importate',
-      one: '1 uscita importata',
+      other: '$count giri importati',
+      one: '1 giro importato',
     );
     return '$_temp0';
   }
@@ -3740,8 +3888,8 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite erano già qui',
-      one: '1 uscita era già qui',
+      other: '$count giri erano già qui',
+      one: '1 giro era già qui',
     );
     return '$_temp0';
   }
@@ -3762,14 +3910,14 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attività saltate, non sono uscite o non hanno un file',
-      one: '1 attività saltata, non è un\'uscita o non ha un file',
+      other: '$count attività saltate, non sono giri o non hanno un file',
+      one: '1 attività saltata, non è un giro o non ha un file',
     );
     return '$_temp0';
   }
 
   @override
-  String get importBackToRides => 'Torna alle uscite';
+  String get importBackToRides => 'Torna ai giri';
 
   @override
   String get importErrorNotStrava =>
@@ -3783,7 +3931,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get importErrorUnknown => 'Non è stato possibile leggere l\'archivio.';
 
   @override
-  String get actionImportRides => 'importare le tue uscite';
+  String get actionImportRides => 'importare i tuoi giri';
 
   @override
   String get actionLoadImport => 'controllare l\'importazione';
@@ -4139,16 +4287,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionDeleteRoute => 'eliminare la rotta';
 
   @override
-  String get actionLoadClubRides => 'caricare le uscite del club';
+  String get actionLoadClubRides => 'caricare i giri del club';
 
   @override
-  String get actionLoadClubRide => 'caricare questa uscita del club';
+  String get actionLoadClubRide => 'caricare questo giro del club';
 
   @override
-  String get actionSaveClubRide => 'salvare l\'uscita del club';
+  String get actionSaveClubRide => 'salvare il giro del club';
 
   @override
-  String get actionCancelClubRide => 'annullare l\'uscita del club';
+  String get actionCancelClubRide => 'annullare il giro del club';
 
   @override
   String get actionJoinClubRide => 'confermare la tua presenza';
@@ -4163,16 +4311,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get actionSaveCalendarFeed => 'modificare l\'indirizzo del calendario';
 
   @override
-  String get clubRidesTitle => 'Uscite';
+  String get clubRidesTitle => 'Giri';
 
   @override
-  String get clubRidesHelp => 'Le prossime uscite del club e chi c\'è.';
+  String get clubRidesHelp => 'I prossimi giri del club e chi c\'è.';
 
   @override
-  String get clubRidesSeeAll => 'Vedi tutte le uscite';
+  String get clubRidesSeeAll => 'Vedi tutti i giri';
 
   @override
-  String get clubPlanRide => 'Programma un\'uscita';
+  String get clubPlanRide => 'Programma un giro';
 
   @override
   String get clubRoutesTitle => 'Rotte';
@@ -4189,13 +4337,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get clubRoutesEmpty =>
-      'Ancora nessuna rotta. Aggiungine una dalle tue uscite o da un file GPX.';
+      'Ancora nessuna rotta. Aggiungine una dai tuoi giri o da un file GPX.';
 
   @override
   String get routesFilterAll => 'Tutti i fondi';
-
-  @override
-  String get routesEyebrow => 'Percorsi del club';
 
   @override
   String get routesSubtitle =>
@@ -4205,11 +4350,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get routesEmptyCta => 'Aggiungi il primo percorso';
 
   @override
-  String get clubRidesEyebrow => 'Calendario del club';
-
-  @override
   String get clubRidesSubtitle =>
-      'Le prossime uscite del club e quelle appena passate.';
+      'I prossimi giri del club e quelli appena passati.';
 
   @override
   String get routesSortNewest => 'Più recenti';
@@ -4268,7 +4410,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get routeDeleteConfirmBody =>
-      'La linea sparisce per sempre. Le uscite del club che l\'avevano scelta mantengono i loro dettagli.';
+      'La linea sparisce per sempre. I giri del club che l\'avevano scelta mantengono i loro dettagli.';
 
   @override
   String get routeOwnerOnly => 'Solo chi ha aggiunto la rotta può modificarla.';
@@ -4281,7 +4423,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Una rotta è una linea sulla mappa con un nome. Niente di come l\'hai percorsa viene condiviso.';
 
   @override
-  String get addRouteFromRide => 'Da una delle mie uscite';
+  String get addRouteFromRide => 'Da uno dei miei giri';
 
   @override
   String get addRouteFromFile => 'Da un file GPX';
@@ -4291,7 +4433,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get addRouteNoRides =>
-      'Non hai ancora uscite con una mappa. Importa un\'uscita e torna qui.';
+      'Non hai ancora giri con una mappa. Importa un giro e torna qui.';
 
   @override
   String get addRoutePreview => 'Questa è la linea che vedrà il club';
@@ -4320,7 +4462,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get ridesEmpty =>
-      'Ancora nessuna uscita programmata. Un coach può programmare la prossima.';
+      'Ancora nessun giro programmato. Un coach può programmare il prossimo.';
 
   @override
   String get ridesUpcoming => 'In arrivo';
@@ -4386,32 +4528,32 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideImOut => 'Non vengo più';
 
   @override
-  String get rideEdit => 'Modifica l\'uscita';
+  String get rideEdit => 'Modifica il giro';
 
   @override
-  String get rideCancel => 'Annulla l\'uscita';
+  String get rideCancel => 'Annulla il giro';
 
   @override
-  String get rideCancelConfirmTitle => 'Annullare questa uscita?';
+  String get rideCancelConfirmTitle => 'Annullare questo giro?';
 
   @override
   String get rideCancelConfirmBody =>
-      'Chi è iscritto riceve una notifica. L\'uscita resta sul calendario, annullata.';
+      'Chi è iscritto riceve una notifica. Il giro resta sul calendario, annullato.';
 
   @override
-  String get rideCancelledReason => 'Questa uscita è annullata.';
+  String get rideCancelledReason => 'Questo giro è annullato.';
 
   @override
-  String get rideFullReason => 'Questa uscita è completa.';
+  String get rideFullReason => 'Questo giro è completo.';
 
   @override
-  String get rideStartedReason => 'Questa uscita è già iniziata.';
+  String get rideStartedReason => 'Questo giro è già iniziato.';
 
   @override
-  String get planRideTitle => 'Programma un\'uscita';
+  String get planRideTitle => 'Programma un giro';
 
   @override
-  String get editRideTitle => 'Modifica l\'uscita';
+  String get editRideTitle => 'Modifica il giro';
 
   @override
   String get rideFormTitle => 'Titolo';
@@ -4442,10 +4584,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Numero massimo di partecipanti (facoltativo)';
 
   @override
-  String get rideFormSave => 'Salva l\'uscita';
+  String get rideFormSave => 'Salva il giro';
 
   @override
-  String get rideFormNeedTitle => 'Dai un titolo all\'uscita.';
+  String get rideFormNeedTitle => 'Dai un titolo al giro.';
 
   @override
   String get rideFormNeedMeeting => 'Dai un nome al punto di ritrovo.';
@@ -4465,7 +4607,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get calendarHelp =>
-      'Abbona il calendario del telefono o del computer alle uscite del club. L\'indirizzo è privato: chi lo ha vede le uscite del club, mai chi partecipa.';
+      'Abbona il calendario del telefono o del computer ai giri del club. L\'indirizzo è privato: chi lo ha vede i giri del club, mai chi partecipa.';
 
   @override
   String get calendarInactive => 'Nessun indirizzo del calendario.';
@@ -4510,7 +4652,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String notificationClubRidePlanned(String ride) {
-    return '$ride: il club ha programmato un\'uscita.';
+    return '$ride: il club ha programmato un giro.';
   }
 
   @override
@@ -4520,7 +4662,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String notificationClubRideCancelled(String ride) {
-    return '$ride: l\'uscita è annullata.';
+    return '$ride: il giro è annullato.';
   }
 
   @override
@@ -4738,15 +4880,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get efficiencyEmpty =>
-      'Servono uscite costanti di circa un\'ora con potenza e frequenza cardiaca.';
+      'Servono giri costanti di circa un\'ora con potenza e frequenza cardiaca.';
 
   @override
   String efficiencyWeekSemantics(String date, String ef, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count uscite',
-      one: '1 uscita',
+      other: '$count giri',
+      one: '1 giro',
     );
     return '$date: fattore di efficienza $ef su $_temp0';
   }
@@ -4756,7 +4898,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get noEvents =>
-      'Nessun evento. Aggiungi la gara, la granfondo o il giro per cui ti stai allenando; l\'uscita che era si collega da sola se quel giorno è l\'unica.';
+      'Nessun evento. Aggiungi la gara, la granfondo o il giro per cui ti stai allenando; il giro che era si collega da solo se quel giorno è l\'unico.';
 
   @override
   String get eventAdd => 'Aggiungi un evento';
@@ -4830,20 +4972,20 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get eventLinkRide => 'Collega un\'uscita';
+  String get eventLinkRide => 'Collega un giro';
 
   @override
   String get eventUnlinkRide => 'Scollega';
 
   @override
-  String get eventNoRidesThatDay => 'Nessuna uscita pronta in quel giorno.';
+  String get eventNoRidesThatDay => 'Nessun giro pronto in quel giorno.';
 
   @override
   String get eventDeleteTitle => 'Eliminare questo evento?';
 
   @override
   String eventDeleteBody(String name) {
-    return '«$name» viene rimosso. L\'uscita che era resta.';
+    return '«$name» viene rimosso. Il giro che era resta.';
   }
 
   @override

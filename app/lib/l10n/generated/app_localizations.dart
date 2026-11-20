@@ -104,6 +104,66 @@ abstract class AppLocalizations {
   /// **'Rides'**
   String get navRides;
 
+  /// No description provided for @navAllRides.
+  ///
+  /// In en, this message translates to:
+  /// **'All rides'**
+  String get navAllRides;
+
+  /// No description provided for @navGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get navGoals;
+
+  /// No description provided for @navOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get navOverview;
+
+  /// No description provided for @navClubRides.
+  ///
+  /// In en, this message translates to:
+  /// **'Club rides'**
+  String get navClubRides;
+
+  /// No description provided for @navSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing'**
+  String get navSharing;
+
+  /// No description provided for @navTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get navTotals;
+
+  /// No description provided for @navGoalsAndEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals and events'**
+  String get navGoalsAndEvents;
+
+  /// No description provided for @nextEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Next event'**
+  String get nextEvent;
+
+  /// No description provided for @dayUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'day'**
+  String get dayUnit;
+
+  /// No description provided for @daysUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get daysUnit;
+
   /// No description provided for @navGroupClub.
   ///
   /// In en, this message translates to:
@@ -115,12 +175,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No club'**
   String get navNoClub;
-
-  /// No description provided for @eyebrowRides.
-  ///
-  /// In en, this message translates to:
-  /// **'Your rides'**
-  String get eyebrowRides;
 
   /// No description provided for @privacyCardTitle.
   ///
@@ -349,36 +403,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Press back again to exit'**
   String get pressBackAgain;
-
-  /// No description provided for @authEyebrowSignIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome back'**
-  String get authEyebrowSignIn;
-
-  /// No description provided for @authEyebrowRegister.
-  ///
-  /// In en, this message translates to:
-  /// **'New account'**
-  String get authEyebrowRegister;
-
-  /// No description provided for @authEyebrowForgot.
-  ///
-  /// In en, this message translates to:
-  /// **'Password help'**
-  String get authEyebrowForgot;
-
-  /// No description provided for @authEyebrowReset.
-  ///
-  /// In en, this message translates to:
-  /// **'New password'**
-  String get authEyebrowReset;
-
-  /// No description provided for @authEyebrowServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Server'**
-  String get authEyebrowServer;
 
   /// No description provided for @signInHelp.
   ///
@@ -1351,12 +1375,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ride on your own, or with a club.'**
   String get clubNoneSubtitle;
-
-  /// No description provided for @eyebrowClub.
-  ///
-  /// In en, this message translates to:
-  /// **'Your club'**
-  String get eyebrowClub;
 
   /// No description provided for @clubSubtitle.
   ///
@@ -2462,12 +2480,6 @@ abstract class AppLocalizations {
   /// **'Add bike'**
   String get addBike;
 
-  /// No description provided for @eyebrowBikes.
-  ///
-  /// In en, this message translates to:
-  /// **'Your bikes'**
-  String get eyebrowBikes;
-
   /// No description provided for @bikesSubtitle.
   ///
   /// In en, this message translates to:
@@ -2551,12 +2563,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Power'**
   String get metricPower;
-
-  /// No description provided for @metricThisPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'This {period}'**
-  String metricThisPeriod(String period);
 
   /// No description provided for @statRides.
   ///
@@ -3464,11 +3470,29 @@ abstract class AppLocalizations {
   /// **'Delete goal'**
   String get goalDelete;
 
+  /// No description provided for @goalDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this goal?'**
+  String get goalDeleteTitle;
+
+  /// No description provided for @goalDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The goal and its target are removed. Your rides stay exactly as they are.'**
+  String get goalDeleteBody;
+
   /// No description provided for @goalSemantics.
   ///
   /// In en, this message translates to:
   /// **'{metric} goal'**
   String goalSemantics(String metric);
+
+  /// The share of a goal reached, in the middle of its gauge.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} %'**
+  String goalPercent(int percent);
 
   /// No description provided for @goalProgress.
   ///
@@ -3476,17 +3500,77 @@ abstract class AppLocalizations {
   /// **'{current} of {target} · {percent} %'**
   String goalProgress(String current, String target, int percent);
 
+  /// No description provided for @goalLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} to go'**
+  String goalLeft(Object value);
+
+  /// No description provided for @goalReachedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached by {value}'**
+  String goalReachedBy(Object value);
+
+  /// No description provided for @goalsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{running, plural, =0{No goals running.} =1{One goal running.} other{{running} goals running.}} {reached, plural, =0{} =1{One reached.} other{{reached} reached.}}'**
+  String goalsSummary(num reached, num running);
+
   /// No description provided for @totalsSemantics.
   ///
   /// In en, this message translates to:
   /// **'Distance per {period}. This {period}: {distance}.'**
   String totalsSemantics(String period, String distance);
 
-  /// No description provided for @eyebrowProgress.
+  /// No description provided for @chartAverage.
   ///
   /// In en, this message translates to:
-  /// **'Your progress'**
-  String get eyebrowProgress;
+  /// **'Average {value}'**
+  String chartAverage(String value);
+
+  /// No description provided for @totalsSemanticsMeasure.
+  ///
+  /// In en, this message translates to:
+  /// **'{measure} per {period}. This {period}: {value}.'**
+  String totalsSemanticsMeasure(String measure, String period, String value);
+
+  /// No description provided for @fitnessTrendRising.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fitness is rising.'**
+  String get fitnessTrendRising;
+
+  /// No description provided for @fitnessTrendFalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fitness is falling.'**
+  String get fitnessTrendFalling;
+
+  /// No description provided for @formFitnessFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness {fitness}, fatigue {fatigue}.'**
+  String formFitnessFatigue(int fitness, int fatigue);
+
+  /// No description provided for @weekAgainstAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'{trend, select, above{Above your 12-week average of {average}.} below{Below your 12-week average of {average}.} other{Level with your 12-week average of {average}.}}'**
+  String weekAgainstAverage(String trend, String average);
+
+  /// No description provided for @noEventPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'No event planned. Add one to see the days to go.'**
+  String get noEventPlanned;
+
+  /// No description provided for @totalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No rides yet. Upload or record a ride to see your totals.'**
+  String get totalsEmpty;
 
   /// No description provided for @progressSubtitle.
   ///
@@ -3523,6 +3607,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} older periods not listed'**
   String totalsMore(int count);
+
+  /// No description provided for @totalsShowEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Show earlier'**
+  String get totalsShowEarlier;
 
   /// No description provided for @trainingLoad.
   ///
@@ -3596,6 +3686,12 @@ abstract class AppLocalizations {
   /// **'Daily training stress score for the last {days} days.'**
   String dailyLoadSemantics(int days);
 
+  /// No description provided for @dailyLoadEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No training load in this range. Rides with power or heart rate add to it.'**
+  String get dailyLoadEmpty;
+
   /// No description provided for @trainingLoadHelp.
   ///
   /// In en, this message translates to:
@@ -3626,11 +3722,41 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get adminSettings;
 
+  /// No description provided for @authOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get authOr;
+
   /// No description provided for @adminOverview.
   ///
   /// In en, this message translates to:
   /// **'Overview'**
   String get adminOverview;
+
+  /// No description provided for @adminOverviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This server at a glance.'**
+  String get adminOverviewSubtitle;
+
+  /// No description provided for @adminAccountsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts on this server.'**
+  String get adminAccountsSubtitle;
+
+  /// No description provided for @adminClubsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs on this server.'**
+  String get adminClubsSubtitle;
+
+  /// No description provided for @adminSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How this server works.'**
+  String get adminSettingsSubtitle;
 
   /// No description provided for @deleteUserTitle.
   ///
@@ -4219,12 +4345,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sunday'**
   String get sunday;
-
-  /// No description provided for @notificationsEyebrow.
-  ///
-  /// In en, this message translates to:
-  /// **'Your inbox'**
-  String get notificationsEyebrow;
 
   /// No description provided for @notificationsSubtitle.
   ///
@@ -4916,6 +5036,36 @@ abstract class AppLocalizations {
   /// **'Last 30 days'**
   String get wellbeingHistory;
 
+  /// No description provided for @wellbeingHistory14.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 14 days'**
+  String get wellbeingHistory14;
+
+  /// No description provided for @wellbeingCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in'**
+  String get wellbeingCheckIn;
+
+  /// No description provided for @wellbeingHowYouFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'How you feel'**
+  String get wellbeingHowYouFeel;
+
+  /// No description provided for @wellbeingNoToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-in today. Your readiness is measured from your rides alone.'**
+  String get wellbeingNoToday;
+
+  /// No description provided for @wellbeingPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you see this. Readiness and notes never reach a coach.'**
+  String get wellbeingPrivate;
+
   /// No description provided for @wellbeingNoHistory.
   ///
   /// In en, this message translates to:
@@ -5011,6 +5161,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Best efforts'**
   String get powerBestEfforts;
+
+  /// No description provided for @powerCurveSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your best power for every duration in the last {days} days.'**
+  String powerCurveSentence(Object days);
+
+  /// No description provided for @bestEffortsDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get bestEffortsDuration;
+
+  /// No description provided for @bestEffortsPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get bestEffortsPower;
+
+  /// No description provided for @bestEffortsWPerKg.
+  ///
+  /// In en, this message translates to:
+  /// **'W/kg'**
+  String get bestEffortsWPerKg;
+
+  /// No description provided for @criticalPowerExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'The power you can hold for a long time, and the reserve above it for short attacks.'**
+  String get criticalPowerExplain;
+
+  /// No description provided for @criticalPowerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical power'**
+  String get criticalPowerTitle;
+
+  /// No description provided for @criticalPowerPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak {peak} W'**
+  String criticalPowerPeak(Object peak);
+
+  /// No description provided for @ftpValue.
+  ///
+  /// In en, this message translates to:
+  /// **'FTP {watts} W'**
+  String ftpValue(Object watts);
+
+  /// No description provided for @ftpEstimateToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate today: {watts} W, {method}.'**
+  String ftpEstimateToday(int watts, String method);
 
   /// No description provided for @ftpEstimate.
   ///
@@ -7226,12 +7430,6 @@ abstract class AppLocalizations {
   /// **'All surfaces'**
   String get routesFilterAll;
 
-  /// No description provided for @routesEyebrow.
-  ///
-  /// In en, this message translates to:
-  /// **'Club routes'**
-  String get routesEyebrow;
-
   /// No description provided for @routesSubtitle.
   ///
   /// In en, this message translates to:
@@ -7243,12 +7441,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add the first route'**
   String get routesEmptyCta;
-
-  /// No description provided for @clubRidesEyebrow.
-  ///
-  /// In en, this message translates to:
-  /// **'Club calendar'**
-  String get clubRidesEyebrow;
 
   /// No description provided for @clubRidesSubtitle.
   ///

@@ -57,7 +57,7 @@ void main() {
     expect(store.value, 'dark');
 
     await choose(tester, 'theme-light');
-    expect(current(tester).colorScheme.primary, deepTeal);
+    expect(current(tester).colorScheme.primary, olive);
     expect(store.value, 'light');
   });
 
@@ -117,5 +117,57 @@ void main() {
 
     expect(find.byKey(const Key('route-map')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('ChoiceChip_ShouldUseSoftAccentGround_WhenSelected', (
+    tester,
+  ) async {
+    final theme = nightTheme();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          body: Row(
+            children: [
+              ChoiceChip(
+                label: const Text('All'),
+                selected: false,
+                onSelected: (_) {},
+              ),
+              ChoiceChip(
+                label: const Text('Road'),
+                selected: true,
+                onSelected: (_) {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    TextStyle labelStyle(String label) =>
+        DefaultTextStyle.of(tester.element(find.text(label))).style;
+
+    expect(labelStyle('All').color, theme.colorScheme.onSurfaceVariant);
+    expect(labelStyle('Road').color, theme.colorScheme.onPrimaryContainer);
+    Color? ground(String label) =>
+        (tester
+                    .widget<Ink>(
+                      find
+                          .descendant(
+                            of: find.ancestor(
+                              of: find.text(label),
+                              matching: find.byType(ChoiceChip),
+                            ),
+                            matching: find.byType(Ink),
+                          )
+                          .first,
+                    )
+                    .decoration
+                as ShapeDecoration?)
+            ?.color;
+    expect(ground('All') ?? Colors.transparent, Colors.transparent);
+    expect(ground('Road'), theme.colorScheme.primaryContainer);
   });
 }

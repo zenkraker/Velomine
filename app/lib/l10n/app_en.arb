@@ -2,9 +2,18 @@
   "@@locale": "en",
 
   "navRides": "Rides",
+  "navAllRides": "All rides",
+  "navGoals": "Goals",
+  "navOverview": "Overview",
+  "navClubRides": "Club rides",
+  "navSharing": "Sharing",
+  "navTotals": "Totals",
+  "navGoalsAndEvents": "Goals and events",
+  "nextEvent": "Next event",
+  "dayUnit": "day",
+  "daysUnit": "days",
   "navGroupClub": "Club",
   "navNoClub": "No club",
-  "eyebrowRides": "Your rides",
   "privacyCardTitle": "Your data is yours.",
   "privacyCardBody": "Private unless you share it.",
   "ridesSubtitle": "Your rides and races.",
@@ -61,11 +70,6 @@
   "hidePassword": "Hide password",
   "staySignedIn": "Stay logged in",
   "pressBackAgain": "Press back again to exit",
-  "authEyebrowSignIn": "Welcome back",
-  "authEyebrowRegister": "New account",
-  "authEyebrowForgot": "Password help",
-  "authEyebrowReset": "New password",
-  "authEyebrowServer": "Server",
   "signInHelp": "Sign in to see your rides and your form.",
   "signIn": "Sign in",
   "change": "Change",
@@ -270,7 +274,6 @@
   "clubNoneBody": "Velomine works on your own too. Join a club when you want to ride with a group and share with its coaches.",
   "clubNoneTitleShort": "Your club",
   "clubNoneSubtitle": "Ride on your own, or with a club.",
-    "eyebrowClub": "Your club",
 "clubSubtitle": "Your club, its rides and the people in it.",
   "clubInactive": "This club is not active. Joining is closed.",
   "clubOwner": "Owner",
@@ -695,7 +698,6 @@
   },
 
   "addBike": "Add bike",
-    "eyebrowBikes": "Your bikes",
 "bikesSubtitle": "Every bike you ride and what it needs.",
   "noBikes": "No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.",
   "defaultBike": "Default",
@@ -731,14 +733,6 @@
   },
   "metricTrainingLoad": "Training load",
   "metricPower": "Power",
-  "metricThisPeriod": "This {period}",
-  "@metricThisPeriod": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      }
-    }
-  },
   "statRides": "Rides",
   "edit": "Edit",
   "makeDefault": "Make default",
@@ -1010,6 +1004,8 @@
   "goalReached": "Reached",
   "goalChangeTarget": "Change target",
   "goalDelete": "Delete goal",
+  "goalDeleteTitle": "Delete this goal?",
+  "goalDeleteBody": "The goal and its target are removed. Your rides stay exactly as they are.",
   "goalSemantics": "{metric} goal",
   "@goalSemantics": {
     "placeholders": {
@@ -1018,7 +1014,19 @@
       }
     }
   },
+  "goalPercent": "{percent} %",
+  "@goalPercent": {
+    "description": "The share of a goal reached, in the middle of its gauge.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "goalProgress": "{current} of {target} · {percent} %",
+  "goalLeft": "{value} to go",
+  "goalReachedBy": "Reached by {value}",
+  "goalsSummary": "{running, plural, =0{No goals running.} =1{One goal running.} other{{running} goals running.}} {reached, plural, =0{} =1{One reached.} other{{reached} reached.}}",
   "@goalProgress": {
     "placeholders": {
       "current": {
@@ -1033,13 +1041,61 @@
     }
   },
   "totalsSemantics": "Distance per {period}. This {period}: {distance}.",
-    "eyebrowProgress": "Your progress",
+  "chartAverage": "Average {value}",
+  "totalsSemanticsMeasure": "{measure} per {period}. This {period}: {value}.",
+  "@totalsSemanticsMeasure": {
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@chartAverage": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fitnessTrendRising": "Your fitness is rising.",
+  "fitnessTrendFalling": "Your fitness is falling.",
+  "formFitnessFatigue": "Fitness {fitness}, fatigue {fatigue}.",
+  "@formFitnessFatigue": {
+    "placeholders": {
+      "fitness": {
+        "type": "int"
+      },
+      "fatigue": {
+        "type": "int"
+      }
+    }
+  },
+  "weekAgainstAverage": "{trend, select, above{Above your 12-week average of {average}.} below{Below your 12-week average of {average}.} other{Level with your 12-week average of {average}.}}",
+  "@weekAgainstAverage": {
+    "placeholders": {
+      "trend": {
+        "type": "String"
+      },
+      "average": {
+        "type": "String"
+      }
+    }
+  },
+  "noEventPlanned": "No event planned. Add one to see the days to go.",
+  "totalsEmpty": "No rides yet. Upload or record a ride to see your totals.",
 "progressSubtitle": "Your form over the period you choose.",
   "progressFilterTitle": "Filter progress",
   "totalsTitleWeekly": "Distance per week",
   "totalsTitleMonthly": "Distance per month",
   "totalsTitleYearly": "Distance per year",
   "totalsMore": "{count} older periods not listed",
+  "totalsShowEarlier": "Show earlier",
   "@totalsMore": {
     "placeholders": {
       "count": {
@@ -1082,6 +1138,7 @@
   },
   "dailyLoad": "Daily load (TSS)",
   "dailyLoadSemantics": "Daily training stress score for the last {days} days.",
+  "dailyLoadEmpty": "No training load in this range. Rides with power or heart rate add to it.",
   "@dailyLoadSemantics": {
     "placeholders": {
       "days": {
@@ -1095,7 +1152,12 @@
   "clearSearch": "Clear the search",
   "adminAccounts": "Accounts",
   "adminSettings": "Settings",
+  "authOr": "or",
   "adminOverview": "Overview",
+  "adminOverviewSubtitle": "This server at a glance.",
+  "adminAccountsSubtitle": "Accounts on this server.",
+  "adminClubsSubtitle": "Clubs on this server.",
+  "adminSettingsSubtitle": "How this server works.",
   "deleteUserTitle": "Delete {name}?",
   "@deleteUserTitle": {
     "placeholders": {
@@ -1337,7 +1399,6 @@
   "saturday": "Saturday",
   "sunday": "Sunday",
 
-  "notificationsEyebrow": "Your inbox",
   "notificationsSubtitle": "What the server told you, newest first.",
   "notificationGroupRides": "Rides",
   "notificationGroupClub": "Club",
@@ -1463,6 +1524,11 @@
   "wellbeingShortStress": "Str",
   "wellbeingShortMotivation": "Mot",
   "wellbeingHistory": "Last 30 days",
+  "wellbeingHistory14": "Last 14 days",
+  "wellbeingCheckIn": "Check in",
+  "wellbeingHowYouFeel": "How you feel",
+  "wellbeingNoToday": "No check-in today. Your readiness is measured from your rides alone.",
+  "wellbeingPrivate": "Only you see this. Readiness and notes never reach a coach.",
   "wellbeingNoHistory": "No check-ins yet.",
   "wellbeingRpe": "How hard was it?",
   "wellbeingRpeHint": "1 easy, 10 maximal",
@@ -1488,6 +1554,25 @@
   "powerCurve": "Power curve",
   "powerCurveEmpty": "No power data in this range. Upload a ride with a power meter.",
   "powerBestEfforts": "Best efforts",
+  "powerCurveSentence": "Your best power for every duration in the last {days} days.",
+  "bestEffortsDuration": "Duration",
+  "bestEffortsPower": "Power",
+  "bestEffortsWPerKg": "W/kg",
+  "criticalPowerExplain": "The power you can hold for a long time, and the reserve above it for short attacks.",
+  "criticalPowerTitle": "Critical power",
+  "criticalPowerPeak": "Peak {peak} W",
+  "ftpValue": "FTP {watts} W",
+  "ftpEstimateToday": "Estimate today: {watts} W, {method}.",
+  "@ftpEstimateToday": {
+    "placeholders": {
+      "watts": {
+        "type": "int"
+      },
+      "method": {
+        "type": "String"
+      }
+    }
+  },
   "ftpEstimate": "Estimated FTP",
   "ftpCurrent": "Current FTP",
   "ftpMethod20": "95 % of your best 20-minute power",
@@ -2369,10 +2454,8 @@
   "clubAddRoute": "Add a route",
   "clubRoutesEmpty": "No routes yet. Add one from one of your rides or from a GPX file.",
   "routesFilterAll": "All surfaces",
-  "routesEyebrow": "Club routes",
   "routesSubtitle": "The lines the club rides, with their distance and climbing.",
   "routesEmptyCta": "Add the first route",
-  "clubRidesEyebrow": "Club calendar",
   "clubRidesSubtitle": "The club's next rides and the ones just gone.",
 
   "routesSortNewest": "Newest",

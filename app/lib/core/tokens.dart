@@ -1,7 +1,8 @@
 import 'package:flutter/animation.dart' show Cubic, Curve;
 
 /// Layout constants shared by every screen, so a gap or a corner is the same number everywhere.
-/// Colours and type come from the theme; these are the numbers the theme does not carry.
+/// Colours and type come from the theme; these are the numbers the theme does not carry. Spacing and radii are
+/// the `space-*` and `radius-*` tokens of docs/design/tokens.json (test/design_tokens_test.dart checks them).
 abstract final class AppSpacing {
   static const double xs = 4;
   static const double sm = 8;
@@ -22,6 +23,9 @@ abstract final class AppRadius {
 
   /// A card that needs to stand out of the page, for an overlay or a selected state.
   static const double xlarge = 32;
+
+  /// A pill: buttons, chips, segmented controls, the nav pill.
+  static const double pill = 999;
 }
 
 /// Where the layout changes shape: a phone, a tablet, a desktop window.
@@ -67,6 +71,10 @@ abstract final class AppHeader {
 
   /// How many lines of subtitle the large block reserves room for.
   static const int subtitleLines = 2;
+
+  /// The most the toolbar's buttons grow with the text scale: the row is one fixed height, so a button
+  /// that grew with it would not fit beside the title.
+  static const double maxToolbarTextScale = 1.3;
 
   /// A subtitle longer than this many characters may wrap, so the block reserves [subtitleLines].
   static const int longSubtitle = 60;
@@ -169,6 +177,15 @@ abstract final class AppNav {
 }
 
 /// The fixed sizes inside the Progress cards: chart heights and the label columns of their rows.
+/// The goal gauge: a half circle on a goal card.
+abstract final class AppGauge {
+  /// The arc's thickness, as the mock-up draws it.
+  static const double thickness = 14;
+
+  /// The height of the half circle, room for the percentage included.
+  static const double height = 96;
+}
+
 abstract final class AppProgress {
   static const double fitnessChartHeight = 170;
   static const double loadChartHeight = 120;
@@ -178,9 +195,40 @@ abstract final class AppProgress {
   static const double dateWidth = 54;
 }
 
-/// The boxed [StatTile] in a grid of numbers.
-abstract final class AppStat {
-  static const double boxWidth = 150;
+/// The sizes every chart draws with, so a chart looks the same on every page.
+abstract final class AppChart {
+  /// The height of a chart.
+  static const double height = 180;
+
+  /// A bar's width as a share of its slot; the rest is the gap between bars.
+  static const double barFraction = 0.52;
+
+  /// The most gridlines a chart draws, the bottom one included.
+  static const int maxGridLines = 4;
+
+  /// The room left of the plot for the y-axis labels.
+  static const double gutterLeft = 34;
+
+  /// The room above a bar for its value, and under a bar for its date.
+  static const double valueLabelHeight = 16;
+  static const double dateLabelHeight = 16;
+
+  /// The dot on an area chart's latest point, and the width of its line.
+  static const double dotRadius = 6;
+  static const double lineWidth = 2;
+
+  /// The width a date label needs, which sets how many bars may carry one.
+  static const double minLabelWidth = 48;
+
+  /// The label step on a phone, and from the tablet width up.
+  static const int compactLabelStep = 3;
+  static const int mediumLabelStep = 2;
+}
+
+/// The sizes inside a stat card.
+abstract final class AppStatCard {
+  /// The height of the chip after a number.
+  static const double stateHeight = 28;
 }
 
 /// The club page's cards.

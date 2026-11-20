@@ -67,7 +67,10 @@ class PageMenu extends StatelessWidget {
         icon: Badge(
           isLabelVisible: badge,
           smallSize: 8,
-          child: const Icon(Icons.more_vert),
+          child: Icon(
+            Icons.more_vert,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),

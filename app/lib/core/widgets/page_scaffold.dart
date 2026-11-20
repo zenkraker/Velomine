@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../tokens.dart';
 import 'bottom_action_bar.dart';
-import 'eyebrow.dart';
 
 /// What the shell gives every page under it: whether to draw the header on a phone, the buttons that
 /// end the header's top row, and the way back for a pushed screen.
@@ -60,7 +59,7 @@ class PageHeaderScope extends InheritedWidget {
 class PageScaffold extends StatelessWidget {
   const PageScaffold({
     super.key,
-    this.eyebrow,
+    this.parent,
     this.title,
     this.titleKey,
     this.subtitle,
@@ -77,8 +76,8 @@ class PageScaffold extends StatelessWidget {
     this.bottomAction,
   });
 
-  /// A short line above the title, saying what the page is for in two or three words.
-  final String? eyebrow;
+  /// The page this one belongs to, as a small caption above the title: "Progress" above "Power".
+  final String? parent;
 
   final String? title;
 
@@ -151,7 +150,7 @@ class PageScaffold extends StatelessWidget {
               theme: Theme.of(context),
               gutter: gutter,
               maxWidth: maxWidth,
-              eyebrow: eyebrow,
+              parent: parent,
               title: title,
               titleKey: titleKey,
               subtitle: subtitle,
@@ -215,7 +214,7 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.theme,
     required this.gutter,
     required this.maxWidth,
-    this.eyebrow,
+    this.parent,
     this.title,
     this.titleKey,
     this.subtitle,
@@ -230,7 +229,7 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
   final ThemeData theme;
   final double gutter;
   final double maxWidth;
-  final String? eyebrow;
+  final String? parent;
   final String? title;
   final Key? titleKey;
   final String? subtitle;
@@ -246,12 +245,11 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
   double get _largeBlock {
     if (title == null) return 0;
     final text = theme.textTheme;
-    var height = _line(
-      text.headlineMedium?.fontSize,
-      AppHeader.titleLineHeight,
-    );
-    if (eyebrow != null) {
-      height += AppSpacing.xs + _line(11, AppHeader.textLineHeight);
+    var height = _line(text.headlineLarge?.fontSize, AppHeader.titleLineHeight);
+    if (parent != null) {
+      height +=
+          AppSpacing.xs +
+          _line(text.bodySmall?.fontSize, AppHeader.textLineHeight);
     }
     if (subtitle != null) {
       height +=
@@ -320,12 +318,36 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
                   )
                 : const SizedBox.shrink(),
           ),
-          for (final button in trailingButtons) button,
-          if (primaryAction != null) ...[
-            const SizedBox(width: AppSpacing.sm),
-            primaryAction!,
-          ],
-          if (menu != null) ...[const SizedBox(width: AppSpacing.xs), menu!],
+          // The buttons grow only so far: the row is one fixed height, and at twice the text scale the
+          // title would be squeezed to nothing and the buttons would run off the edge. A narrow window
+          // where a labelled main action, the notifications, the account and the menu do not fit scales
+          // that cluster down rather than running past the edge.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerEnd,
+              child: Row(
+                spacing: AppSpacing.sm,
+                children: [
+                  for (final button in trailingButtons)
+                    MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: AppHeader.maxToolbarTextScale,
+                      child: button,
+                    ),
+                  if (primaryAction case final primaryAction?)
+                    MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: AppHeader.maxToolbarTextScale,
+                      child: primaryAction,
+                    ),
+                  if (menu case final menu?)
+                    MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: AppHeader.maxToolbarTextScale,
+                      child: menu,
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -347,7 +369,13 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
                       mainAxisSize: MainAxisSize.min,
                       spacing: AppSpacing.xs,
                       children: [
-                        if (eyebrow case final eyebrow?) Eyebrow(eyebrow),
+                        if (parent case final parent?)
+                          Text(
+                            parent,
+                            style: text.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
                         Semantics(
                           header: true,
                           child: Text(
@@ -355,7 +383,7 @@ class _HeaderDelegate extends SliverPersistentHeaderDelegate {
                             key: titleKey,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: text.headlineMedium,
+                            style: text.headlineLarge,
                           ),
                         ),
                         if (subtitle case final subtitle?)

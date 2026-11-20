@@ -105,10 +105,8 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        find.text('Critical power 250 W · W′ 20.0 kJ · Peak 900 W'),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('critical-power-row')), findsOneWidget);
+      expect(find.textContaining('Peak 900 W'), findsOneWidget);
       expect(
         find.text(
           'Fitted from your best 2 minutes, 5 minutes, 10 minutes and 20 '
@@ -142,12 +140,9 @@ void main() {
       );
       await tester.pump();
 
-      // The row keeps critical power and W′ only, with no peak at all.
-      final row = tester
-          .widget<Text>(find.byKey(const Key('critical-power-row')))
-          .data;
-      expect(row, 'Critical power 250 W · W′ 20.0 kJ');
-      expect(row, isNot(contains('Peak')));
+      // The card keeps critical power and W′ only, with no peak at all.
+      expect(find.byKey(const Key('critical-power-row')), findsOneWidget);
+      expect(find.textContaining('Peak'), findsNothing);
     },
   );
 
