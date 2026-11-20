@@ -1,21 +1,54 @@
 namespace Velomine.Server.Features.Rides;
 
+using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides.Ingestion;
 
+/// <summary>The two heart-rate zone models, named as the API returns them.</summary>
+public static class HeartRateZoneModels
+{
+    /// <summary>The zones as fractions of the maximum heart rate.</summary>
+    public const string Max = "max";
+
+    /// <summary>The zones as fractions of the threshold heart rate (Friel's cycling zones).</summary>
+    public const string Threshold = "threshold";
+}
+
 /// <summary>
-/// Training zones and load. Zones are fractions of a reference (maximum heart rate or FTP), the way cycling
-/// training books describe them. Power load is TSS; heart-rate load is a zone-weighted TRIMP in points.
+/// The model a rider's heart-rate zones are read against: the reference bpm, where it came from, and its bounds.
+/// </summary>
+public sealed record HeartRateZoneReference(string Model, int Bpm, string Source, double[] Bounds);
+
+/// <summary>
+/// Training zones and load. Zones are fractions of a reference (maximum heart rate, threshold heart rate or FTP), the
+/// way cycling training books describe them. Power load is TSS; heart-rate load is a zone-weighted TRIMP in points.
 /// </summary>
 public static class TrainingLoad
 {
-    /// <summary>Zone 1 starts here; time below it is not training time.</summary>
+    /// <summary>The maximum model's zone 1 starts here. Only the stored TRIMP cuts at it; the zone chart counts from 0.</summary>
     public const double HeartRateFloor = 0.50;
 
-    /// <summary>Upper bounds of heart-rate zones Z1–Z4; Z5 is open-ended. Ignored below <see cref="HeartRateFloor"/>.</summary>
+    /// <summary>Upper bounds of heart-rate zones Z1–Z4 on the maximum model; Z5 is open-ended.</summary>
     public static readonly double[] HeartRateBounds = [0.60, 0.70, 0.80, 0.90];
+
+    /// <summary>Upper bounds of heart-rate zones Z1–Z4 on the threshold model (81, 90, 94 and 100 %); Z5 is open-ended.</summary>
+    public static readonly double[] ThresholdHeartRateBounds = [0.81, 0.90, 0.94, 1.00];
 
     /// <summary>Upper bounds of power zones Z1–Z6; Z7 is open-ended. Coasting (0 W) is not training time.</summary>
     public static readonly double[] PowerBounds = [0.55, 0.75, 0.90, 1.05, 1.20, 1.50];
+
+    /// <summary>
+    /// The model a rider is on: the threshold when they set one (typed or measured), else the maximum. An estimated
+    /// threshold is only 89 % of the maximum, so it would add nothing new. Null when the rider has neither.
+    /// </summary>
+    public static HeartRateZoneReference? HeartRateZoneFor(HeartRate? max, HeartRate? threshold)
+    {
+        if (threshold is { Bpm: { } thresholdBpm, Source: { } thresholdSource } &&
+            thresholdSource is HeartRateSources.Manual or HeartRateSources.Measured)
+            return new(HeartRateZoneModels.Threshold, thresholdBpm, thresholdSource, ThresholdHeartRateBounds);
+        return max is { Bpm: { } maxBpm, Source: { } maxSource }
+            ? new(HeartRateZoneModels.Max, maxBpm, maxSource, HeartRateBounds)
+            : null;
+    }
 
     private const double MaxSampleGapS = 30;
 

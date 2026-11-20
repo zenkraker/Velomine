@@ -65,7 +65,12 @@ public sealed record RideResponse(
     // The three heart-rate notes, owner only: the legacy one (the maximum's first, then the threshold's), the
     // maximum's and the threshold's own. Set by RideResponse.From, cleared like an FTP suggestion.
     string? HeartRateMaxNote = null,
-    string? HeartRateThresholdNote = null)
+    string? HeartRateThresholdNote = null,
+    // Which model the heart-rate zones came from and the reference they are fractions of: a coach or a share viewer
+    // sees them too (they are the rider's zones), hidden by the heart-rate privacy switch.
+    string? HeartRateZoneModel = null,
+    int? HeartRateZoneReferenceBpm = null,
+    string? HeartRateZoneReferenceSource = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -124,6 +129,9 @@ public sealed record RideResponse(
         HeartRateNote = null,
         HeartRateMaxNote = null,
         HeartRateThresholdNote = null,
+        HeartRateZoneModel = null,
+        HeartRateZoneReferenceBpm = null,
+        HeartRateZoneReferenceSource = null,
         MinWPrimeBalanceJ = null,
         WPrimeJ = null,
         EfficiencyFactor = null,

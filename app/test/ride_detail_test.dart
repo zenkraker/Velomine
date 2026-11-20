@@ -786,4 +786,29 @@ void main() {
     expect(find.byKey(const Key('chart-wprime')), findsNothing);
     expect(find.byKey(const Key('wprime-lowest')), findsNothing);
   });
+
+  testWidgets(
+    'RideDetailScreen_ShouldSayTheZonesComeFromTheThreshold_WhenTheRideCarriesTheThresholdModel',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateZoneModel': 'threshold',
+        'heartRateZoneReferenceBpm': 160,
+        'heartRateZoneReferenceSource': 'measured',
+      };
+      await open(tester);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('heart-rate-zones')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Zones from your threshold heart rate (160 bpm)'),
+        findsOneWidget,
+      );
+    },
+  );
 }

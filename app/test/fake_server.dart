@@ -2642,6 +2642,9 @@ Map<String, Object?> rideJson(
   bool? steady,
   String? heartRateMaxNote,
   String? heartRateThresholdNote,
+  String? heartRateZoneModel,
+  int? heartRateZoneReferenceBpm,
+  String? heartRateZoneReferenceSource,
   String? discipline,
   String? assist,
   String? environment,
@@ -2699,6 +2702,9 @@ Map<String, Object?> rideJson(
   'wPrimeJ': wPrimeJ,
   'heartRateMaxNote': heartRateMaxNote,
   'heartRateThresholdNote': heartRateThresholdNote,
+  'heartRateZoneModel': heartRateZoneModel,
+  'heartRateZoneReferenceBpm': heartRateZoneReferenceBpm,
+  'heartRateZoneReferenceSource': heartRateZoneReferenceSource,
 };
 
 /// One personal power record as the ride detail receives it.

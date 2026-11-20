@@ -11,13 +11,15 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 
 ## Stories
 
+(DONE below means built, merged to `main` in PR #20 and checked by the architect against the code on 20 Nov 2026; delete this file once the owner confirms.)
+
 ### Story 1: Know where `main` stands (DONE)
 **Result (19 Nov):** `just check` passed twice on `1c899dd` with uncommitted tooling changes: 993 server tests, 557 app tests, analyze clean, Android unit tests built, API client and `build_runner` output with no diff.
 
 ### Story 2: Settle the two Pack 1 doubts (DONE)
 **Result (19 Nov):** Personal power records and `SourceNote` are fully present with their named tests and both `.arb` files. No change was needed. Three cosmetic differences were left as they are: the Progress FTP "test" note shows the day the FTP was set; the power-record chips sit above the map; the maximum heart-rate wording says "from your age".
 
-### Story 3: A threshold effort must be a real 30-minute effort
+### Story 3: A threshold effort must be a real 30-minute effort (DONE)
 **Priority:** High
 **Description:** As a rider, I want my threshold heart rate learned only from a steady 30-minute effort, so that a ride with a stop in it, or a ride that is too short, never sets a threshold that is too high.
 **Acceptance criteria:**
@@ -31,7 +33,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** None
 **Size:** M
 
-### Story 4: A ride can teach both numbers
+### Story 4: A ride can teach both numbers (DONE)
 **Priority:** High
 **Description:** As a rider, I want one ride to update both my maximum and my threshold when it earns both, so that my threshold does not lag behind a new maximum. As a rider, I also want my heart-rate notes hidden from my coach, because they are mine.
 **Acceptance criteria:**
@@ -44,7 +46,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** Story 3 and Story 5a
 **Size:** M
 
-### Story 5a: One truth for the source and ride of a heart-rate number
+### Story 5a: One truth for the source and ride of a heart-rate number (DONE)
 **Priority:** High
 **Description:** As a rider, I want every screen to say where my heart-rate numbers came from, so that a measured number is never called "typed by you".
 **Acceptance criteria:**
@@ -59,7 +61,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** None (runs after Story 3)
 **Size:** M
 
-### Story 5b: The profile save only sets
+### Story 5b: The profile save only sets (DONE)
 **Priority:** High
 **Description:** As a rider, I want saving my profile never to wipe a heart-rate number I did not touch.
 **Acceptance criteria:**
@@ -71,7 +73,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** Story 5a
 **Size:** S
 
-### Story 6: "Measured on your ride" opens the ride
+### Story 6: "Measured on your ride" opens the ride (DONE)
 **Priority:** Medium
 **Description:** As a rider, I want the source line of a measured heart rate to show my ride's date and open that ride.
 **Acceptance criteria:**
@@ -81,7 +83,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** Story 5a
 **Size:** S
 
-### Story 7: An estimated heart rate is never saved as typed
+### Story 7: An estimated heart rate is never saved as typed (DONE)
 **Priority:** High
 **Description:** As a rider, I want an estimated number to stay an estimate unless I type my own.
 **Acceptance criteria:**
@@ -92,7 +94,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** None (runs after Story 6)
 **Size:** S
 
-### Story 8: Two events on one day link to no ride
+### Story 8: Two events on one day link to no ride (DONE)
 **Priority:** Medium
 **Description:** As a rider, I want events linked to rides in a way I can predict.
 **Acceptance criteria:**
@@ -101,7 +103,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** None
 **Size:** S
 
-### Story 9a: Linking an event's ride, server
+### Story 9a: Linking an event's ride, server (DONE)
 **Priority:** High
 **Acceptance criteria:**
 - `PUT /training/events/{id}/ride`: a ride whose local date (start time plus stored offset, `MemberClock.LocalDateOf`) differs from the event date answers 400 (documented with `ProducesProblem(400)`); another member's ride or event, or a ride that is not ready, stays 404.
@@ -114,7 +116,7 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 **Dependencies:** Story 8
 **Size:** M
 
-### Story 9b: Linking an event's ride, app
+### Story 9b: Linking an event's ride, app (DONE)
 **Priority:** High
 **Description:** As a rider, I want to pick the ride that was my event, or remove the link.
 **Acceptance criteria:**
@@ -159,7 +161,6 @@ Who sees the data: nothing here shows member data to anyone but its owner. Heart
 - (plan Q7) `UpdateProfile` is set-only; clearing goes through `DELETE /accounts/me/heart-rate/{kind}`.
 - (plan Q8) A typed maximum below a set threshold is not refused; the dev reports how zones behave then.
 - Parser version: not raised in Stories 3 and 4 (detection runs only on a ride's first read and changes no stored metric). Only valid while `RideMetrics` is not edited.
-- Not done: the owner's go on this file.
 
 ## Plan
 Written by the architect (reviewed by the Advisor on 19 Nov); the parts the dev needs are in Stories and Anchors above.

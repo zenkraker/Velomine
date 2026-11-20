@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
+import '../../../core/heart_rate_zones.dart';
 import '../../../core/placeholder_block.dart';
 import '../../../core/confirm.dart';
 import '../../../core/l10n.dart';
@@ -309,6 +310,12 @@ class RideDetailScreen extends ConsumerWidget {
             unit: 'bpm',
             zones: heartRateZones,
             colors: _heartRateZoneColors,
+            note: heartRateZonesSource(
+              l10n,
+              ride.heartRateZoneModel.orElse(null),
+              ride.heartRateZoneReferenceBpm.orElse(null),
+              ride.heartRateZoneReferenceSource.orElse(null),
+            ),
           ),
         if (powerZones.isNotEmpty)
           _ZonesCard(
@@ -570,12 +577,16 @@ class _ZonesCard extends StatelessWidget {
     required this.unit,
     required this.zones,
     required this.colors,
+    this.note,
   });
 
   final String title;
   final String unit;
   final List<ZoneTime> zones;
   final List<Color> colors;
+
+  /// Where the zones came from, when the server says.
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -647,6 +658,10 @@ class _ZonesCard extends StatelessWidget {
               ),
               if (index < zones.length - 1)
                 const SizedBox(height: AppSpacing.xs),
+            ],
+            if (note case final note?) ...[
+              const SizedBox(height: AppSpacing.sm),
+              SourceNote(note),
             ],
           ],
         ),

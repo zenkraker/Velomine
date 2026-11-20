@@ -2222,6 +2222,24 @@ abstract class AppLocalizations {
   /// **'Heart rate zones'**
   String get heartRateZones;
 
+  /// No description provided for @heartRateZonesFromThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones from your threshold heart rate ({bpm} bpm)'**
+  String heartRateZonesFromThreshold(String bpm);
+
+  /// No description provided for @heartRateZonesFromMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones from your maximum heart rate ({bpm} bpm)'**
+  String heartRateZonesFromMax(String bpm);
+
+  /// No description provided for @heartRateZonesFromMaxEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones from your maximum heart rate ({bpm} bpm, estimated)'**
+  String heartRateZonesFromMaxEstimated(String bpm);
+
   /// No description provided for @powerZones.
   ///
   /// In en, this message translates to:

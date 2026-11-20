@@ -14,8 +14,9 @@ Prior art: [Domestique](https://github.com/platypus45/domestique) (Apache-2.0) h
 - Do the stories **in order**. Each lists what it depends on.
 - One story is one commit on `main` (or a few, if it is large). Never push; the owner pushes.
 - Before each commit: `just check` passes, and the commit message ends with the attribution line from the session.
-- "On read" means computed in the request and stored nothing. "At read" means when a ride is read from its file: store it on the ride and raise `RideParserVersion.Current` in the same change.
+- "On read" means computed in the request and stored nothing. "At read" means when a ride is read from its file: store it on the ride and raise `RideParserVersion.Current` in the same change (except Story 5: its bump is in Story 6, see its server item 1).
 - A decision not written here is not yours to invent. If something is truly ambiguous, stop and ask the owner.
+- **Status (20 Nov 2026):** Stories 1, 2 and 7 are **built and on `main`** (with the gap fixes of `pack-2-gaps.md`, PR #20). Do not redo them; where their text below differs from the code, the code and the notes under their headings win. Story 3 is built; it is committed once the owner commits it. Stories 4, 5, 6, 8 and 9 are open, in that order; Stories 5 and 6 are pushed together. Decisions taken after this text was written are in *Decisions* at the end.
 - When a story changes a rule in `AGENTS.md`, edit that rule in the same commit (each story says which).
 
 ## Rules that apply to every story
@@ -41,7 +42,9 @@ Prior art: [Domestique](https://github.com/platypus45/domestique) (Apache-2.0) h
 
 ---
 
-## Story 1: maximum and threshold heart rate, with where they came from
+## Story 1: maximum and threshold heart rate, with where they came from (DONE)
+
+**Built differently from this text:** the history index is (`user_id`, `kind`, `set_at` desc, `sequence` desc), the table has a `sequence` column. The profile save only sets; clearing goes through `DELETE /accounts/me/heart-rate/{kind}`. A typed maximum below a set threshold is **not** refused (only a threshold at or above the maximum is a 400; zones follow the maximum). An estimated field is empty with the estimate as its hint. The wording is "Estimated from your age"; a number measured on a deleted ride says "Measured on a ride you deleted".
 
 **As a rider**, I want to set my maximum and threshold heart rate, or let Velomine estimate them, and always see where each came from, **so that** my zones and effort score start from numbers I trust.
 
@@ -83,7 +86,9 @@ Depends on: nothing.
 
 ---
 
-## Story 2: Velomine learns my heart rate from my rides
+## Story 2: Velomine learns my heart rate from my rides (DONE)
+
+**Built differently from this text:** heart rate is a 1 Hz series by wall-clock second with zero-order hold, plus a paused flag per second (not "moving time, the Pack 1 Story 7 resampling"). A threshold window is exactly 1,800 s, stepped every 60 s, valid with no paused second and at least 1,620 values present; the candidate is the rounded mean of the last 1,200 s. A ride checks both numbers; the threshold is judged against the maximum this ride leaves in use. `RideResponse` carries `HeartRateNote` (the maximum's note, else the threshold's) plus `HeartRateMaxNote` and `HeartRateThresholdNote` (column `rides.rides.heart_rate_threshold_note`); all three are cleared for coaches and share viewers. A ride that changes both numbers sends two `heart_rate_measured` notifications. The new-maximum card drops "Your zones now use it" when the rider's zones come from the threshold.
 
 **As a rider without a lab test**, I want Velomine to notice a higher maximum or threshold heart rate in my rides and use it, **so that** my numbers become my own without a test.
 
@@ -138,34 +143,40 @@ Runs **once per ride**, when it becomes `ready` for the first time (never on a r
 
 ---
 
-## Story 3: heart-rate zones from the threshold
+## Story 3: heart-rate zones from the threshold (BUILT, waiting for the owner's commit)
 
 **As a rider**, I want my heart-rate zones built on my threshold when Velomine knows it, **so that** "easy" and "hard" fit my heart, not an average one.
 
-Depends on: Stories 1–2.
+Depends on: Stories 1–2 and the gap stories 3–5b of `pack-2-gaps.md` (all built).
 
 ### Rules
 
 1. Two zone models, five zones each:
-   - **From maximum** (today's): floor 50 %, upper bounds 60 / 70 / 80 / 90 % of the maximum.
-   - **From threshold** (Friel, cycling, with his zones 5a–5c merged into one): floor 68 %, upper bounds 81 / 90 / 94 / 100 % of the threshold heart rate. (Friel's Z2 is 81–89 % and Z3 90–93 %, so as half-open bounds: Z1 < 81, Z2 81–89.x, Z3 90–93.x, Z4 94–99.x, Z5 ≥ 100.)
-2. The model in use: **from threshold** when the threshold source is `manual` or `measured`; **from maximum** otherwise (an estimated threshold is only 0.89 × max, so it would add nothing).
-3. Zone seconds stay computed on every request (as today); Pack 1's easy/moderate/hard split keeps mapping Z1–Z2 / Z3 / Z4–Z5. TRIMP stays as stored at read, on the maximum model (it is a separate, older score).
+   - **From maximum** (today's; the 0.50 floor now survives only in stored TRIMP, which `RideMetrics.Compute` still computes with `TrainingLoad.HeartRateFloor`: keep that constant, the zone chart and the split use no floor, see rule 4): floor 50 %, upper bounds 60 / 70 / 80 / 90 % of the maximum.
+   - **From threshold** (Friel, cycling, with his zones 5a–5c merged into one): upper bounds 81 / 90 / 94 / 100 % of the threshold heart rate. **Neither model has a chart floor.** A beat below the first bound is Z1 from 0; the 0.50 floor survives only in stored TRIMP. (Friel's Z2 is 81–89 % and Z3 90–93 %, so as half-open bounds: Z1 < 81, Z2 81–89.x, Z3 90–93.x, Z4 94–99.x, Z5 ≥ 100.)
+2. The model in use: **from threshold** when the threshold source is `manual` (typed) or `measured` (from a ride, whether used automatically or accepted as a suggestion); **from maximum** otherwise (an estimated threshold is only 0.89 × max, so it would add nothing). A typed maximum below a set threshold is allowed; the threshold model then ignores the maximum, and the top zone is simply reached earlier.
+3. Zone seconds stay computed on every request (as today). The easy/moderate/hard split maps **per model**: maximum model Z1–Z3 / Z4 / Z5 (unchanged, as `Intensity.FromHeartRate` does today); threshold model Z1–Z2 / Z3 / Z4–Z5. TRIMP stays as stored at read, on the maximum model (it is a separate, older score).
+4. **Below the first bound** counts as easy: Z1 with `From = 0` in the ride's zone chart and in the split (drop any "time below the floor is not training time"; neither model keeps a floor). TRIMP is unchanged.
+5. **Who sees it:** coaches and share links see the same zones and `HeartRateZoneModel` as the rider, under the existing grants. This overrides rule 5 of this file for zones. The heart-rate privacy switch hides them.
 
 ### Server
 
-1. `TrainingLoad` gains the threshold model's floor and bounds; one function picks the model per rider. Every endpoint that returns heart-rate zones uses it and returns `HeartRateZoneModel` (`max` or `threshold`) with the zones.
+1. `TrainingLoad` gains the threshold model's bounds; one function picks the model per rider. Every endpoint that returns heart-rate zones uses it and returns `HeartRateZoneModel` (`max` or `threshold`) with the zones. `IntensityResponse` gains the model and the reference bpm. Parser version: not raised (nothing stored changes; only valid while `RideMetrics` is not edited).
 2. `AGENTS.md`, *Ride processing → Zones*: name both models and the rule that picks one.
 
 ### App
 
-1. Under the heart-rate zones of a ride and on Progress: `SourceNote` "Zones from your threshold heart rate (165 bpm)" or "Zones from your maximum heart rate (180 bpm, estimated)".
+1. On the ride's heart-rate zones card and on the Progress intensity card (no new chart): `SourceNote` "Zones from your threshold heart rate (165 bpm)" or "Zones from your maximum heart rate (180 bpm)", with ", estimated" added only when the maximum's source is `estimate` (so `IntensityResponse` and the zones responses carry the reference's source). On Progress it shows only when heart-rate rides were counted. The neutral wording for a coach or share viewer is deferred to Pack 3b, because no coach screen shows zones yet. The server already returns the same zones and model to them.
 
 ### Acceptance tests
 
 - `HeartRateZones_ShouldUseTheThreshold_WhenItWasMeasured` (threshold 160 → Z2 from 130 to 143, Z5 from 160)
 - `HeartRateZones_ShouldUseTheMax_WhenTheThresholdIsOnlyEstimated` (max 180 → Z2 from 108 to 125)
 - `Intensity_ShouldCountTheThresholdZones_WhenTheModelIsThreshold`
+- `HeartRateZones_ShouldUseTheThreshold_WhenItWasTyped` and `…_WhenASuggestionWasAccepted`
+- `HeartRateZones_ShouldUseTheThresholdModel_WhenACoachViewsTheRide`
+- `HeartRateZones_ShouldCountBelowTheFloorAsEasy_WhenTheRideIsEasy`
+- `HeartRateZones_ShouldFollowTheThreshold_WhenTheTypedMaximumIsBelowIt`
 
 ---
 
@@ -178,21 +189,29 @@ Depends on: Story 3.
 ### Rules
 
 1. Custom bounds are stored **as fractions of the reference**, so they move when the FTP or heart rate changes: one set for power (7 zones, 6 bounds, of FTP), one for heart rate **per model** (5 zones, 4 bounds, of max or of threshold). Null = automatic.
-2. Valid: strictly rising, the first above the floor, each between 0.30 and 2.00, two decimals. 400 otherwise.
-3. Custom bounds apply wherever zones are computed on read (ride zones, Progress, the easy/moderate/hard split). Values stored at read (TRIMP) keep the standard bounds.
+2. Valid: strictly rising, each between 0.30 and 2.00, two decimals. 400 otherwise. There is no floor check: below the first bound is Z1 (see Story 3, rule 4).
+2b. Coaches and share links see the same zones as the rider (the bounds are fractions, not member values), under the existing grants and the privacy switches.
+3. Custom bounds apply wherever zones are computed on read (ride zones, Progress, the easy/moderate/hard split). Values stored at read (TRIMP) keep the standard bounds. Dev greps every use of `TrainingLoad.PowerBounds` and `HeartRateBounds` first; `RideMetrics` keeps the standard bounds.
+3b. **Parser version: not raised in Story 4.** It adds only columns read on request; `RideMetrics` and every stored value are untouched (stored TRIMP keeps the standard bounds). If dev finds it must edit `RideMetrics`, stop and ask.
+4. Precision: two-decimal fractions can move a typed watt or bpm value by one (a typed 155 W on FTP 250 comes back as 154 W). After saving, the sheet shows the values in use.
 
 ### Server
 
-1. `User` gains `PowerZoneBounds double precision[] null`, `HeartRateMaxZoneBounds double precision[] null`, `HeartRateThresholdZoneBounds double precision[] null`.
-2. `PUT /api/v1/accounts/me/zones/{set}` (`power`, `heart-rate-max`, `heart-rate-threshold`), body `{ bounds: [..] }`, operation `setZones`; `DELETE` same path, `resetZones`. `GET /api/v1/accounts/me/zones`, operation `getZones`: for each set, the bounds in use, whether they are custom, and the absolute watts or bpm they give today.
-3. Export: the bounds are part of the profile in the export.
+1. `User` gains `PowerZoneBounds double precision[] null`, `HeartRateMaxZoneBounds double precision[] null`, `HeartRateThresholdZoneBounds double precision[] null` (columns `power_zone_bounds`, `heart_rate_max_zone_bounds`, `heart_rate_threshold_zone_bounds`), with check constraints `cardinality = 6` for power and `= 4` for each heart-rate column. "Strictly rising" is checked by the validator only (the one writer).
+2. `PUT /api/v1/accounts/me/zones/{set}` (`power`, `heart-rate-max`, `heart-rate-threshold`), body `{ bounds: [..] }`, operation `setZones`; `DELETE` same path, `resetZones`. `GET /api/v1/accounts/me/zones`, operation `getZones`: for each set, the bounds in use, whether they are custom, and the absolute watts or bpm they give today. Flat response: `ZonesResponse(ZoneSetResponse[] Sets, string? HeartRateModel)` with `ZoneSetResponse(string Set, double[] Bounds, bool Custom, int? Reference, string? ReferenceSource, ZoneTime[] Zones)`. An unknown set answers 404. Dev checks whether the FTP and heart-rate setters are in `DemoLock.Refused` and treats the zone endpoints the same way.
+3. Export: the bounds are part of the profile in the export (with a test).
 
 ### App
 
-1. Profile → "Zones": the zones in use as a list (name, from–to in W or bpm). "Edit" opens a `FormSheet` where the rider edits the **upper limit of each zone in W or bpm** (the app converts to fractions); "Back to automatic" in the `PageMenu`.
+1. Profile → "Zones": the zones in use as a list (name, from–to in W or bpm). "Edit" opens a `FormSheet` where the rider edits the **upper limit of each zone in W or bpm** (the app converts to fractions); "Back to automatic" in the `PageMenu`. The list shows power and only the heart-rate set in use; the server accepts all three sets, so a bound saved for the other model applies when the rider's model changes.
 
 ### Acceptance tests
 
+- `SetZones_ShouldRefuse_WhenABoundHasThreeDecimals`, `…_WhenBoundsAreOutOfRange`, `…_WhenTheCountIsWrong`, and `SetZones_ShouldReturn404_WhenTheSetIsUnknown`
+- `RideZones_ShouldUseCustomBounds_WhenTheRiderSetThem` and `Intensity_ShouldUseCustomBounds_WhenTheRiderSetThem`
+- `RideTrimp_ShouldKeepTheStandardBounds_WhenCustomBoundsExist`
+- `HeartRateZones_ShouldUseCustomThresholdBounds_WhenACoachViewsTheRide`
+- An export test, and an app test under the Italian locale for the sheet. No second-club test: the data is the member's own, not club data.
 - `SetZones_ShouldMoveTheZones_WhenBoundsAreValid` (FTP 250, custom first bound 0.60 → Z1 up to 149 W)
 - `SetZones_ShouldRefuse_WhenBoundsAreNotRising` (400)
 - `Zones_ShouldFollowTheFtp_WhenCustomBoundsExist` (custom 0.60 and FTP from 250 to 300 → Z1 up to 179 W)
@@ -219,13 +238,13 @@ Depends on: Story 1.
    feel score = moving minutes / 60 × (RPE / 7)² × 100, one decimal.
    Computed **on read** (the rating can be given or changed after the ride is read), never stored.
 3. A ride's **effort score** for fitness, fatigue, form and readiness is the first that exists: TSS (power) → hrTSS → feel score → estimated TSS (Story 6) → 0.
-4. Coaches: the daily effort reaches a coach's training view under the same rule TSS follows today, except the feel score: the rating is wellbeing data, so a coach's view uses it only with the wellbeing grant and otherwise falls through to the next score.
+4. Coaches: the daily effort reaches a coach's training view under the same rule TSS follows today, except the feel score: the rating is wellbeing data, so a coach's view uses it only with the wellbeing grant and otherwise falls through to the next score. `TrainingRange.LoadAsync` takes only a `PrivacyProfile?` viewer today, so the story must pass it whether the wellbeing grant exists. **The coach's daily load follows the same rule TSS follows today: hrTSS counts like TSS, and the hide switches do not redact the daily total (owner, 20 Nov).** Only the feel score needs the wellbeing grant. The coach role alone gives nothing: the daily load reaches a coach only through an active grant for that club and audience, as the training range does today.
 
 ### Server
 
-1. `Ride` gains `HrTss double?` and `LoadThresholdHeartRate int?` (stamped at first read next to `LoadMaxHeartRate`; on a re-read, kept; when null on a re-read, the threshold in use now is stamped). Raise `RideParserVersion.Current`.
-2. `RideDays` / `TrainingRange`: each day gains `Load` (the sum of the rides' effort scores per rule 2); fitness and fatigue use `Load`. The existing `Tss` and `Trimp` fields stay as they are. `GetReadiness`'s recent load uses `Load`.
-3. `RideResponse` gains `HrTss` and `EffortScore` + `EffortSource` (`power`, `heart_rate`, `feel`, `estimated`).
+1. `Ride` gains `HrTss double?` and `LoadThresholdHeartRate int?` (stamped at first read next to `LoadMaxHeartRate`; on a re-read, kept; when null on a re-read, the threshold in use now is stamped). `RideParserVersion.StampRead(ftpW, maxHeartRate)` becomes `StampRead(ftpW, maxHeartRate, thresholdHeartRate)`. **Do not raise `RideParserVersion.Current` here**: the one bump is in Story 6's commit (Q15), so push Stories 5 and 6 together; until then older rides have no hrTSS.
+2. `RideDays` / `TrainingRange`: each day gains `Load` (the sum of the rides' effort scores per rule 3); fitness and fatigue use `Load`. The existing `Tss` and `Trimp` fields stay as they are. `GetReadiness`'s recent load uses `Load`. So does the coach roster (`CoachQueries.SummariesAsync`, which reads only `Tss` today; without this a coach would see zero for a heart-rate rider). `TrainingRange.LoadAsync` gains `includeFeel`: true for the owner, and for a coach only with the wellbeing grant.
+3. `RideResponse` gains `HrTss` and `EffortScore` + `EffortSource` (`power`, `heart_rate`, `feel`, `estimated`), set in `GetRide` for the owner only; `WithoutTrainingLoad` and `ForViewer` clear them. Dev checks the ride export carries `HrTss` and `LoadThresholdHeartRate`.
 4. `AGENTS.md`, *Data*: hrTSS is stored at read from the threshold of the ride's first read; the feel score is computed on read; fitness and fatigue use the effort score with the order of rule 3.
 
 ### App
@@ -249,6 +268,12 @@ Depends on: Story 1.
 - `Training_ShouldPreferPower_WhenARideHasBoth` (effort = TSS, not hrTSS)
 - `Readiness_ShouldUseTheEffortScore_WhenTheRiderHasNoPowerMeter`
 - `RideReparse_ShouldKeepTheFirstThreshold_WhenTheRiderChangedIt`
+- `RideReparse_ShouldStampTheCurrentThreshold_WhenTheRideHadNone` (sets `ParserVersion` below `Current` by hand, since the bump comes in Story 6)
+- `CoachTraining_ShouldCountFeel_WhenTheWellbeingGrantExists`
+- `CoachRoster_ShouldUseTheEffortScore_WhenTheAthleteHasNoPower`, with a club-isolation test: a rider in another club never appears
+- `RideResponse_ShouldNotCarryTheEffortScore_WhenAViewerReadsIt`
+- `CoachTraining_ShouldCountAHiddenRidesLoad_WhenThePowerSwitchIsOff` (the owner's rule) and `…_ShouldNotCountItsFeel_WhenThereIsNoWellbeingGrant`
+- `ClubData_ShouldNotBeVisible_WhenRequestComesFromAnotherClub` for the coach training view with heart-rate-only riders
 
 ---
 
@@ -260,11 +285,13 @@ Depends on: Story 5.
 
 ### Rules
 
-1. **When.** Computed at read only when the ride has **no power** at all, has speed, distance and altitude streams, is outdoors (`Environment` not `indoor` or `virtual`), is not an e-bike ride (`Assist` ≠ `ebike`: the motor's share is unknown), and the rider has a weight.
+0. **Names checked against the code (20 Nov):** bike kinds are `road`, `gravel`, `mountain`, `ebike`, `timetrial`, `track`, `city`, `other` (`Bike.cs`); `Environment` is `outdoor`, `indoor`, `virtual` or null; `Assist` is `none`, `ebike` or null; rider weight is `User.WeightKg` (kg, 20–300). `Bike.WeightKg` does not exist yet. There is no smoothed speed series (the 5-sample median only finds the maximum speed) and the elevation-gain smoothing is private, so this story writes a new speed median and extracts the altitude smoothing into a shared function that keeps alignment with time (`ElevationChange` calls it, so gain and loss do not change). Samples are the file's own times, not a 1 Hz grid: put speed and altitude on a 1 Hz wall-clock grid with a held value, as Story 2 does for heart rate; a paused second is 0 W.
+1. **When.** Computed at read only when the ride has **no power** at all, has speed (the stored speed stream, **or speed built from the positions** the way `SpeedSeries` does, at read, not stored), has altitude, is outdoors (`Environment` is `outdoor` **or null**; not `indoor` or `virtual`), is not an e-bike ride (`Assist` is not `ebike`, null counts as not assisted; and the bike's kind is not `ebike`: the motor's share is unknown), and the rider has a weight. The distance stream is not required (positions give it).
+   **Which row:** with a bike, its kind picks the Crr, CdA and default weight; with no bike, the ride's own discipline does; the "other" row applies only when that is also unknown.
 2. **Formula** (standard cycling power model, as in Martin et al. 1998), per sample at 1 Hz:
    P = [ m·g·(Crr·cos θ + sin θ) + ½·ρ·CdA·v² + m·a ] · v / η
    - m = rider weight + bike weight; g = 9.81 m/s²; η = 0.976 (drivetrain);
-   - v = speed after the existing 5-sample median; a = its change per second, limited to ±1.5 m/s²;
+   - v = speed after a new 5-sample median pass; a = its change per second, limited to ±1.5 m/s²;
    - θ = atan(grade), grade = altitude change / distance over a 10-second window centred on the sample, limited to ±25 %, 0 when the window covers under 5 m; altitude first smoothed as the elevation-gain pipeline does;
    - ρ = 1.225 × exp(−altitude / 8434) kg/m³;
    - Crr and CdA by bike kind (Velomine's defaults, no wind):
@@ -276,7 +303,7 @@ Depends on: Story 5.
      | gravel | 0.008 | 0.36 | 9.5 |
      | mountain | 0.012 | 0.45 | 13 |
      | city | 0.008 | 0.55 | 15 |
-     | other, no bike | 0.006 | 0.40 | 11 |
+     | other, or unknown kind and discipline | 0.006 | 0.40 | 11 |
    - P below 0 (coasting, braking, descending) is 0; stopped (speed < 0.5 m/s) is 0; capped at 2,000 W.
 3. **Estimated watts never feed** power bests, the power curve, FTP estimates or suggestions, records, critical power, W′ balance, decoupling, efficiency or power zones. They are only shown, and used for the estimated TSS.
 4. **Estimated TSS** = the usual TSS formula with the estimated NP and the FTP at first read. **Without an FTP**, a stand-in FTP of round(2.5 W/kg × the rider's weight at read) is used (a Velomine choice: a typical value for a recreational rider). The stand-in is never stored as the rider's FTP and never shown as one. It only matters when the ride has no power, no heart rate and no 1–10 rating (Story 5, rule 3).
@@ -284,8 +311,9 @@ Depends on: Story 5.
 ### Server
 
 1. `Bike` gains `WeightKg double?` (3–40, one decimal), editable with the bike; null uses the table's default for its kind.
-2. `RideStreams` gains `EstimatedPower short?[]?`, aligned with the other signals. `Ride` gains `EstimatedAvgPowerW`, `EstimatedNormalizedPowerW` (the usual NP algorithm on the estimated stream) and `EstimatedTss`. Raise `RideParserVersion.Current`. A re-read uses the rider's and bike's weights at that time.
-3. Privacy: estimated watts and their stream are hidden from anyone but the owner when the ride hides power, speed **or** elevation (`PrivacyRules.ForViewer`).
+2. `RideStreams` gains `EstimatedPower short?[]?`, aligned with the other signals. `Ride` gains `EstimatedAvgPowerW`, `EstimatedNormalizedPowerW` (the usual NP algorithm on the estimated stream) and `EstimatedTss`. Raise `RideParserVersion.Current` **once, here**, for this story and Story 5's new stored fields. A re-read uses the rider's and bike's weights at that time.
+3. Privacy: estimated power is **owner only** and is not on the coach streams endpoint. The estimated summary fields are hidden from anyone but the owner when the ride hides power, speed **or** elevation (`PrivacyRules.ForViewer`).
+3b. The parser bump to `RideParserVersion.Current = 5` is in this commit only. The commit message says that old rides get the threshold in use on the day of the re-read.
 4. `AGENTS.md`, *Ride processing*: a bullet for estimated power with rule 1 and rule 3.
 
 ### App
@@ -301,14 +329,18 @@ Depends on: Story 5.
 - `EstimatedPower_ShouldBe89W_WhenRidingGravelFlatAt6MetresPerSecond` (83 kg, gravel → 88.8 → 89)
 - `EstimatedPower_ShouldBeZero_WhenDescending` (−6 %, 12 m/s → 0)
 - `EstimatedPower_ShouldBeLower_WhenTheAirIsThinner` (the 5 % climb at 1,500 m → 184.2 → 184)
+- `EstimatedPower_ShouldNotBeComputed_WhenTheBikeIsAnEbike`, `EstimatedPower_ShouldBeComputed_WhenSpeedComesFromPositions` and `EstimatedPower_ShouldBeComputed_WhenEnvironmentIsUnknown`
 - `EstimatedPower_ShouldNotBeComputed_WhenTheRideHasPower` / `…_WhenItIsAnEbikeRide` / `…_WhenItIsIndoors` / `…_WhenTheRiderHasNoWeight`
 - `EstimatedPower_ShouldNotChangeThePowerCurve_WhenARideHasOnlyEstimatedWatts`
 - `EstimatedTss_ShouldUseTwoAndAHalfWattsPerKilo_WhenTheRiderHasNoFtp` (70 kg → stand-in 175 W; the rider's FTP stays null)
 - `CoachRide_ShouldHideEstimatedPower_WhenTheRideHidesSpeed`
+- `RideReparse_ShouldEstimateWatts_WhenTheParserVersionRises`
+- `EstimatedPower_ShouldUseTheBikeWeight_WhenTheBikeHasOne`
+- `CoachStreams_ShouldNotCarryEstimatedPower_WhenACoachReadsTheRide`
 
 ---
 
-## Story 7: races and events on my calendar
+## Story 7: races and events on my calendar (DONE)
 
 **As a rider**, I want to add the events I am training for, with their date, **so that** I see how far away they are (and Pack 3 can plan toward them).
 
@@ -348,16 +380,16 @@ Depends on: Story 5 (it uses the effort score).
 
 ### Rules (Foster 1998; same as Domestique's `compute_monotony_strain` except where noted)
 
-1. Over the **last 7 local days** including today, daily load = the sum of that day's effort scores (Story 5); a day without rides is 0.
+1. Over the **last 7 local days ending today, or ending yesterday when the member has no ready ride on today's local date** (owner, 20 Nov: otherwise a rider who trains six days a week shows a warning every morning before the ride). Today is the member's local date (`MemberClock`). Daily load = the sum of that day's effort scores (Story 5); a day without rides is 0.
 2. **Monotony** = mean / sample standard deviation of the 7 loads, two decimals, capped at 7.0 (Domestique uses 7.0 only when the deviation is 0; capping also tames tiny deviations). None when the week's load is 0.
-3. **Strain** = weekly load × monotony, one decimal.
+3. **Strain** = weekly load × the monotony rounded to two decimals, one decimal. (Only this reproduces the test values: 400 × 1.07 = 428.0, 360 × 2.27 = 817.2, 480 × 0.94 = 451.2.) A standard deviation of 0 with load above 0 gives 7.0; weekly load 0 gives none; use the sample standard deviation (n − 1); never divide by zero.
 4. "Every day about as hard": monotony ≥ 2.0 (Foster's warning level).
-5. "A heavy week" (a Velomine rule): strain above 1.5 × the mean strain of the previous 8 seven-day blocks, counting only blocks with load; needs at least 4 such blocks.
+5. "A heavy week" (a Velomine rule): strain above 1.5 × the mean strain of the previous 8 seven-day blocks, counting only blocks with load; needs at least 4 such blocks. The previous 8 blocks end the day before the window starts, so they shift with the window: `MonotonyFrom`/`MonotonyTo`, the monotony, the strain and the 8 blocks all use the same window.
 6. On read, never stored.
 
 ### Server
 
-1. `TrainingResponse` gains `Monotony`, `Strain`, `StrainUsual` (the mean of rule 5, or null), `Monotonous` and `HeavyWeek` (booleans). The coach's training view gets them under the same grant as the rest of the training range.
+1. `TrainingResponse` gains `Monotony`, `Strain`, `StrainUsual` (the mean of rule 5, or null), `Monotonous` and `HeavyWeek` (booleans), plus `MonotonyFrom` and `MonotonyTo` (the window's dates). All fields are null and false under a ride filter. The range loads at least 63 days (the week plus 8 blocks), more than the 42-day warm-up gives when `days` is under 22. The coach's training view gets them under the same grant as the rest of the training range. The calculation is a pure `TrainingStrain` function in `Features/Analytics/`.
 
 ### App
 
@@ -372,6 +404,13 @@ Depends on: Story 5 (it uses the effort score).
 - `Monotony_ShouldBeNone_WhenTheWeekHasNoLoad`
 - `Monotony_ShouldBe0Point94_WhenTheWeekIsVaried` (120, 30, 0, 90, 40, 0, 200 → 0.94, strain 451.2)
 - `HeavyWeek_ShouldBeFlagged_WhenStrainIsAboveOneAndAHalfTimesUsual` and `…_ShouldNotBeFlagged_WhenThereAreFewerThanFourWeeks`
+- `Monotony_ShouldNeverBeInfinite_WhenEveryDayIsEqual`
+- `Monotony_ShouldEndYesterday_WhenThereIsNoRideToday` and `…_ShouldEndToday_WhenARideIsReady`
+- `Monotony_ShouldEndYesterday_WhenTodaysOnlyRideIsStillProcessing`
+- `Monotony_ShouldUseTheMembersLocalDate_WhenTheirTimeZoneIsAheadOfUtc` (a ride just after local midnight)
+- `Training_ShouldHaveNoMonotony_WhenAFilterIsSet`
+- `HeavyWeek_ShouldNeedSixtyThreeDays_WhenTheRangeIsShort` (a 7-day range still sees the 8 blocks)
+- `CoachTraining_ShouldCarryMonotony_WhenTheAnalyticsGrantExists`
 
 ---
 
@@ -396,7 +435,7 @@ Depends on: Stories 1–8 and Pack 1.
 
 ### Server
 
-1. `GET /api/v1/analytics/rider-card`, operation `getRiderCard`, owner only: one flat response with the rows above, all computed on read from what already exists. No new table.
+1. `GET /api/v1/analytics/rider-card`, operation `getRiderCard`, no parameters, owner only: one flat response with the rows above, all computed on read from what already exists. No new table. It reuses `ProfileOfAsync` (FTP, weight, heart-rate sources), `FitnessQueries.CriticalPowerAsync`, the power bests of the personal-records slice (5 s, 1, 5, 20 min with their ride ids), `Efficiency.LoadAsync` (8 weeks), the 90-day totals from `RideDays`, `TrainingRange.LoadAsync(days: 1)` for fitness and form, and the next event. Estimated watts feed no row. If "peak power" does not exist from Pack 1 Story 5, its row shows a dash and the PO is told.
 
 ### App
 
@@ -407,9 +446,26 @@ Depends on: Stories 1–8 and Pack 1.
 - `RiderCard_ShouldShowEveryNumberWithItsSource_WhenTheRiderHasThem`
 - `RiderCard_ShouldShowDashes_WhenTheRiderIsNew`
 - `RiderCard_ShouldNotBeVisible_WhenAnotherMemberAsks`
+- `RiderCard_ShouldNotUseEstimatedWatts_WhenARideHasOnlyEstimatedPower`
+- `RiderCard_ShouldShowMyNumbersOnly_WhenAnotherMemberAsks` (the real isolation test)
 - App: `RiderCard_ShouldOpenTheRide_WhenABestIsTapped`
 
 ---
+
+## Decisions
+
+- 2026-11-20: Story 4 has no floor check on custom bounds (valid = strictly rising, each 0.30–2.00, two decimals); coaches and share links see custom zones like the rider's, under the existing grants.
+- 2026-11-20: A typed maximum below a set threshold is not refused; the threshold model ignores the maximum (one test in Story 3).
+- 2026-11-20: The parser-version bump is in Story 6's commit only; Stories 5 and 6 are pushed together.
+- 2026-11-20: Story 6 builds speed from the positions at read when the ride has no stored speed, without storing it.
+- 2026-11-20: Story 6 treats a null `Environment` as outdoor and a null `Assist` as not assisted; a bike of kind `ebike` blocks the estimate.
+- 2026-11-20: Story 6 picks the Crr/CdA row from the bike's kind, else from the ride's discipline, else "other".
+- 2026-11-20: The coach zone-note wording ("not your") is deferred to Pack 3b; the server already returns the zones and model to coaches.
+- 2026-11-20: `ThresholdHeartRateFloor` is deleted; neither zone model has a chart floor.
+- 2026-11-20: The coach's daily load is not redacted by the hide switches (hrTSS follows the rule TSS follows today); the feel score needs the wellbeing grant.
+- 2026-11-20: Story 8's window ends yesterday when the member has no ready ride on today's local date.
+- 2026-11-20: Story 8's strain uses the monotony rounded to two decimals.
+- 2026-11-20: Story 8's fields are empty under a ride filter.
 
 ## Closing the pack
 

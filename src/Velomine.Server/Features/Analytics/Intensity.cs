@@ -19,7 +19,11 @@ public sealed record IntensityResponse(
     double HardPct,
     double? PolarisationIndex,
     string Label,
-    int Rides);
+    int Rides,
+    // The heart-rate model behind the split, and its reference. Null when no ride was counted on heart rate.
+    string? HeartRateZoneModel = null,
+    int? HeartRateZoneReferenceBpm = null,
+    string? HeartRateZoneReferenceSource = null);
 
 /// <summary>One week of the range: seconds in each zone. No label, because a week is a share, not a plan.</summary>
 public sealed record IntensityWeek(DateOnly WeekStart, double EasyS, double ModerateS, double HardS);
@@ -48,7 +52,8 @@ public static class Intensity
         var profile = await db.Users.AsNoTracking()
             .Where(u => u.Id == userId)
             .FirstAsync(ct);
-        var maxHeartRate = HeartRates.For(profile, time).Max?.Bpm;
+        var (maxHeartRate, thresholdHeartRate) = HeartRates.For(profile, time);
+        var heartRateZones = TrainingLoad.HeartRateZoneFor(maxHeartRate, thresholdHeartRate);
 
         // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
         var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
@@ -69,6 +74,7 @@ public static class Intensity
             .ToListAsync(ct);
 
         var totals = new Dictionary<DateOnly, IntensityTotals>();
+        var heartRateRides = 0;
         foreach (var ride in rides)
         {
             // Read two days either side for the exact local cut: the split counts the same rides the totals do, so
@@ -83,8 +89,13 @@ public static class Intensity
             var power = hidePower ? null : ride.Power;
             var heartRate = hideHeartRate ? null : ride.HeartRate;
 
-            var split = FromPower(power, ride.Time, profile.FtpW)
-                ?? FromHeartRate(heartRate, ride.Time, maxHeartRate);
+            var split = FromPower(power, ride.Time, profile.FtpW);
+            if (split is null && heartRateZones is not null &&
+                FromHeartRate(heartRate, ride.Time, heartRateZones) is { } fromHeartRate)
+            {
+                split = fromHeartRate;
+                heartRateRides++;
+            }
             if (split is { } zoneTime) Add(totals, date, zoneTime);
         }
 
@@ -115,7 +126,10 @@ public static class Intensity
             hardPct,
             PolarisationIndex(easyPct, moderatePct, hardPct),
             Label(easyPct, moderatePct, hardPct),
-            sum.Rides), weeks);
+            sum.Rides,
+            heartRateRides > 0 ? heartRateZones?.Model : null,
+            heartRateRides > 0 ? heartRateZones?.Bpm : null,
+            heartRateRides > 0 ? heartRateZones?.Source : null), weeks);
     }
 
     /// <summary>
@@ -133,15 +147,22 @@ public static class Intensity
             : null;
     }
 
-    /// <summary>Easy is below 80 % of maximum heart rate, moderate from 80 % to below 90 %, hard from 90 %. Null without both.</summary>
-    public static IntensityTotals? FromHeartRate(IReadOnlyList<short?>? heartRate, IReadOnlyList<double> time, int? maxHeartRate)
+    /// <summary>
+    /// The split on the rider's heart-rate model: easy below 80 % of the maximum, moderate 80–90 %, hard from 90 %;
+    /// or, from the threshold, easy below 90 % of it, moderate 90–94 %, hard from 94 %. Null without both.
+    /// </summary>
+    public static IntensityTotals? FromHeartRate(
+        IReadOnlyList<short?>? heartRate,
+        IReadOnlyList<double> time,
+        HeartRateZoneReference zones)
     {
-        if (heartRate is null || maxHeartRate is not { } max || max <= 0) return null;
-        // Heart-rate zones count from 1 bpm, so a resting beat would land in zone 1 and be counted as easy time.
-        var zones = TrainingLoad.ZoneSeconds(heartRate, time, max, 0, TrainingLoad.HeartRateBounds);
-        return zones.Sum() > 0
-            ? new IntensityTotals(zones[0] + zones[1] + zones[2], zones[3], zones[4], 1)
-            : null;
+        if (heartRate is null) return null;
+        // The chart starts at 0: a beat below the model's floor counts as easy time.
+        var seconds = TrainingLoad.ZoneSeconds(heartRate, time, zones.Bpm, 0, zones.Bounds);
+        if (seconds.Sum() <= 0) return null;
+        return zones.Model == HeartRateZoneModels.Threshold
+            ? new IntensityTotals(seconds[0] + seconds[1], seconds[2], seconds[3] + seconds[4], 1)
+            : new IntensityTotals(seconds[0] + seconds[1] + seconds[2], seconds[3], seconds[4], 1);
     }
 
     /// <summary>The three shares of the zone time, to one decimal, so they add up to 100.</summary>

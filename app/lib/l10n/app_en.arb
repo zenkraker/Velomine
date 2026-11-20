@@ -572,6 +572,30 @@
   "couldNotLoadRide": "Could not load this ride.",
   "trainingHint": "Set your maximum heart rate and FTP in your profile to see zones and training load.",
   "heartRateZones": "Heart rate zones",
+  "heartRateZonesFromThreshold": "Zones from your threshold heart rate ({bpm} bpm)",
+  "@heartRateZonesFromThreshold": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "heartRateZonesFromMax": "Zones from your maximum heart rate ({bpm} bpm)",
+  "@heartRateZonesFromMax": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
+  "heartRateZonesFromMaxEstimated": "Zones from your maximum heart rate ({bpm} bpm, estimated)",
+  "@heartRateZonesFromMaxEstimated": {
+    "placeholders": {
+      "bpm": {
+        "type": "String"
+      }
+    }
+  },
   "powerZones": "Power zones",
   "momentHint": "Move over a chart, or touch and drag, to see the values along the ride.",
   "momentAt": "At {time}{distance}",

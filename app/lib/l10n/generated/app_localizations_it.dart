@@ -1252,6 +1252,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get heartRateZones => 'Zone di frequenza cardiaca';
 
   @override
+  String heartRateZonesFromThreshold(String bpm) {
+    return 'Zone dalla tua frequenza cardiaca di soglia ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMax(String bpm) {
+    return 'Zone dalla tua frequenza cardiaca massima ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMaxEstimated(String bpm) {
+    return 'Zone dalla tua frequenza cardiaca massima ($bpm bpm, stimata)';
+  }
+
+  @override
   String get powerZones => 'Zone di potenza';
 
   @override

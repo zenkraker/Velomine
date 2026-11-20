@@ -105,6 +105,37 @@ void main() {
   );
 
   testWidgets(
+    'ProgressScreen_ShouldSayTheZonesComeFromTheEstimatedMaximum_WhenOnlyHeartRateRidesWereCounted',
+    (tester) async {
+      server.training = {
+        ...trainingJson(),
+        'intensity': {
+          'easyS': 6000.0,
+          'moderateS': 3000.0,
+          'hardS': 1000.0,
+          'easyPct': 60.0,
+          'moderatePct': 30.0,
+          'hardPct': 10.0,
+          'polarisationIndex': 1.3,
+          'label': 'pyramidal',
+          'rides': 3,
+          'heartRateZoneModel': 'max',
+          'heartRateZoneReferenceBpm': 180,
+          'heartRateZoneReferenceSource': 'estimate',
+        },
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('intensity-card')));
+
+      expect(
+        find.text('Zones from your maximum heart rate (180 bpm, estimated)'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'ProgressScreen_ShouldShowOnlyTheChosenPeriod_WhenThePeriodChangesDuringALoad',
     (tester) async {
       tester.view.physicalSize = const Size(1000, 2000);

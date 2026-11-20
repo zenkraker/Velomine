@@ -173,6 +173,10 @@ public static class PrivacyRules
         MaxHeartRate = privacy.HideHeartRate ? null : ride.MaxHeartRate,
         Trimp = privacy.HideHeartRate ? null : ride.Trimp,
         HeartRateZones = privacy.HideHeartRate ? null : ride.HeartRateZones,
+        // The model and its reference are part of the zones, so the heart-rate switch hides them too.
+        HeartRateZoneModel = privacy.HideHeartRate ? null : ride.HeartRateZoneModel,
+        HeartRateZoneReferenceBpm = privacy.HideHeartRate ? null : ride.HeartRateZoneReferenceBpm,
+        HeartRateZoneReferenceSource = privacy.HideHeartRate ? null : ride.HeartRateZoneReferenceSource,
         AvgPowerW = privacy.HidePower ? null : ride.AvgPowerW,
         MaxPowerW = privacy.HidePower ? null : ride.MaxPowerW,
         NormalizedPowerW = privacy.HidePower ? null : ride.NormalizedPowerW,

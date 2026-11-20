@@ -1244,6 +1244,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get heartRateZones => 'Heart rate zones';
 
   @override
+  String heartRateZonesFromThreshold(String bpm) {
+    return 'Zones from your threshold heart rate ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMax(String bpm) {
+    return 'Zones from your maximum heart rate ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMaxEstimated(String bpm) {
+    return 'Zones from your maximum heart rate ($bpm bpm, estimated)';
+  }
+
+  @override
   String get powerZones => 'Power zones';
 
   @override
