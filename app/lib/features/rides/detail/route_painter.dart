@@ -52,7 +52,18 @@ class RoutePainter extends CustomPainter {
         path.lineTo(point.dx, point.dy);
       }
     }
-    // A pale edge under the line keeps it readable over any tile colour.
+    // The glow under the line: wide, blurred, in the route colour, so the route is the brightest thing on
+    // a dimmed map. The pale halo under it keeps the line readable over any tile.
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = colors.routeGlow
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 14
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
     canvas.drawPath(
       path,
       Paint()

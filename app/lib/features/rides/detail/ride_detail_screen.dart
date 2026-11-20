@@ -1,5 +1,6 @@
 import 'dart:async' show scheduleMicrotask;
 
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -39,7 +40,7 @@ import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/source_note.dart';
-import '../../../core/widgets/stat_tile.dart';
+import '../../../core/widgets/stat_card.dart';
 
 class RideDetailScreen extends ConsumerWidget {
   const RideDetailScreen({
@@ -88,7 +89,6 @@ class RideDetailScreen extends ConsumerWidget {
     final menu = ride == null ? null : _menu(context, ref, ride);
 
     return PageScaffold(
-      eyebrow: l10n.eyebrowRides,
       // The title is the page's name, so a rename shows here at once.
       title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
       titleKey: const Key('ride-title'),
@@ -262,6 +262,20 @@ class RideDetailScreen extends ConsumerWidget {
           key: const Key('ride-failed'),
         )
       else ...[
+        // The route leads: the whole card opens the full map, with the ride's facts on it.
+        if (s.series?.hasRoute ?? false)
+          RouteMap(
+            data: s.series!,
+            selected: selection.selected,
+            selectedLap: selection.selectedLap,
+            tileUrl: tileUrl,
+            attribution: attribution,
+            elevationGainM: ride.elevationGainM,
+            virtualWorld: ride.environment == 'virtual',
+            title: rideTitle(l10n, ride),
+            date: _rideDate(context, ride),
+            facts: _mapFacts(context, ride),
+          ),
         if (ride.ftpSuggestionW.value case final watts?)
           FtpSuggestionCard(
             watts: watts,
@@ -281,16 +295,6 @@ class RideDetailScreen extends ConsumerWidget {
         PowerRecordChips(
           records: ride.powerRecords.orElse(const []) ?? const [],
         ),
-        if (s.series?.hasRoute ?? false)
-          RouteMap(
-            data: s.series!,
-            selected: selection.selected,
-            selectedLap: selection.selectedLap,
-            tileUrl: tileUrl,
-            attribution: attribution,
-            elevationGainM: ride.elevationGainM,
-            virtualWorld: ride.environment == 'virtual',
-          ),
         _Stats(ride: ride),
         if (s.laps.isNotEmpty)
           LapTable(laps: s.laps, selectedLap: selection.selectedLap),
@@ -525,12 +529,7 @@ class _Stats extends ConsumerWidget {
       runSpacing: 12,
       children: [
         for (final (id, label, value) in tiles)
-          StatTile(
-            key: Key('stat-$id'),
-            label: label,
-            value: value,
-            boxed: true,
-          ),
+          StatFigure(key: Key('stat-$id'), label: label, value: value),
         if (ride.speedSource == 'gps')
           Text(l10n.speedFromGps, style: text.bodySmall),
         if (ride.minWPrimeBalanceJ.value case final low?)
@@ -739,4 +738,31 @@ class _BikePicker extends StatelessWidget {
       onChanged: onChanged,
     );
   }
+}
+
+/// The ride's date as the map card says it: the day and the start time in the member's clock.
+String _rideDate(BuildContext context, RideResponse ride) {
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  final uploaded = ride.uploadedAt.toLocal();
+  final start = ride.startTime?.toLocal() ?? uploaded;
+  return '${DateFormat.yMMMEd(locale).format(start)} · '
+      '${DateFormat.Hm(locale).format(start)}';
+}
+
+/// The facts the map card has room for: distance, moving time and climbing, when the ride has them.
+List<({String label, String value})> _mapFacts(
+  BuildContext context,
+  RideResponse ride,
+) {
+  final l10n = context.l10n;
+  final units = ProviderScope.containerOf(context)
+      .read(unitsChoiceViewModelProvider);
+  return [
+    if (ride.distanceM != null && ride.distanceM! > 0)
+      (label: l10n.statDistance, value: km(units, ride.distanceM)),
+    if (ride.movingS != null && ride.movingS! > 0)
+      (label: l10n.statMovingTime, value: duration(ride.movingS)),
+    if (ride.elevationGainM != null && ride.elevationGainM! > 0)
+      (label: l10n.statClimbing, value: elevation(units, ride.elevationGainM)),
+  ];
 }
