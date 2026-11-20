@@ -17,6 +17,7 @@ public interface IBikeFields
     string? FrameSize { get; }
     string Kind { get; }
     int WheelCircumferenceMm { get; }
+    double? WeightKg { get; }
     double InitialDistanceM { get; }
     DateOnly? PurchasedOn { get; }
 }
@@ -43,6 +44,9 @@ public sealed class CreateBikeRequest : IBikeFields
 
     /// <summary>1000 to 2600 millimetres.</summary>
     public required int WheelCircumferenceMm { get; set; }
+
+    /// <summary>The bike's weight in kilograms, 3 to 40; leave out to use the default for its kind.</summary>
+    public double? WeightKg { get; set; }
 
     /// <summary>Metres the bike had done before it was added here.</summary>
     public required double InitialDistanceM { get; set; }
@@ -77,6 +81,9 @@ public sealed class UpdateBikeRequest : IBikeFields
     /// <summary>1000 to 2600 millimetres.</summary>
     public required int WheelCircumferenceMm { get; set; }
 
+    /// <summary>The bike's weight in kilograms, 3 to 40; leave out to use the default for its kind.</summary>
+    public double? WeightKg { get; set; }
+
     /// <summary>Metres the bike had done before it was added here.</summary>
     public required double InitialDistanceM { get; set; }
 
@@ -98,6 +105,7 @@ public class BikeFieldsValidator<T> : Validator<T> where T : IBikeFields
         RuleFor(x => x.FrameSize).MaximumLength(24);
         RuleFor(x => x.Kind).Must(k => BikeKinds.All.Contains(k)).WithMessage("Choose one of: " + string.Join(", ", BikeKinds.All) + ".");
         RuleFor(x => x.WheelCircumferenceMm).InclusiveBetween(1000, 2600);
+        RuleFor(x => x.WeightKg).InclusiveBetween(3, 40).When(x => x.WeightKg.HasValue);
         RuleFor(x => x.InitialDistanceM).InclusiveBetween(0, 10_000_000);
     }
 }
@@ -129,6 +137,7 @@ public sealed class CreateBike(VelomineDbContext db, TimeProvider time) : Endpoi
             FrameSize = req.FrameSize?.Trim(),
             Kind = req.Kind,
             WheelCircumferenceMm = req.WheelCircumferenceMm,
+            WeightKg = req.WeightKg is { } weightKg ? Math.Round(weightKg, 1) : null,
             InitialDistanceM = req.InitialDistanceM,
             PurchasedOn = req.PurchasedOn,
             CreatedAt = time.GetUtcNow(),
@@ -167,6 +176,7 @@ public sealed class UpdateBike(VelomineDbContext db, TimeProvider time) : Endpoi
         bike.FrameSize = req.FrameSize?.Trim();
         bike.Kind = req.Kind;
         bike.WheelCircumferenceMm = req.WheelCircumferenceMm;
+        bike.WeightKg = req.WeightKg is { } weightKg ? Math.Round(weightKg, 1) : null;
         bike.InitialDistanceM = req.InitialDistanceM;
         bike.PurchasedOn = req.PurchasedOn;
         if (req.IsActive is { } active)

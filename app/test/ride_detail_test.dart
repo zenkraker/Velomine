@@ -112,6 +112,35 @@ void main() {
     },
   );
 
+  testWidgets(
+    'RideDetailScreen_ShouldShowEstimatedWatts_WhenTheRideHasNoPowerMeter',
+    (tester) async {
+      server.rides.add(
+        rideJson(
+          'r2',
+          'ready',
+          distanceM: 30000,
+          movingS: 3600,
+          avgHeartRate: 140,
+          estimatedAvgPowerW: 142,
+          fileName: 'commute.fit',
+        ),
+      );
+      server.streams['r2'] = streamsJson(power: false, estimatedPower: true);
+      await open(tester, id: 'r2');
+
+      // Always said as an estimate, with what it was made from.
+      expect(
+        find.byKey(const Key('stat-estimated-average-power')),
+        findsOneWidget,
+      );
+      expect(find.text('142 W'), findsOneWidget);
+      expect(find.byKey(const Key('estimated-power-source')), findsOneWidget);
+      expect(find.byKey(const Key('chart-estimatedpower')), findsOneWidget);
+      expect(find.byKey(const Key('chart-power')), findsNothing);
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldShowZonesAndLoad_WhenProfileHasThem', (
     tester,
   ) async {

@@ -24,6 +24,7 @@ class RideStreamsResponse {
     this.cadence = const [],
     this.temperature = const [],
     this.wPrimeBalanceJ = const Optional.present(const []),
+    this.estimatedPower = const Optional.present(const []),
   });
 
   final List<double> time;
@@ -48,6 +49,8 @@ class RideStreamsResponse {
 
   final Optional<List<int>?> wPrimeBalanceJ;
 
+  final Optional<List<int?>?> estimatedPower;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideStreamsResponse &&
     _deepEquality.equals(other.time, time) &&
@@ -60,7 +63,8 @@ class RideStreamsResponse {
     _deepEquality.equals(other.power, power) &&
     _deepEquality.equals(other.cadence, cadence) &&
     _deepEquality.equals(other.temperature, temperature) &&
-    _deepEquality.equals(other.wPrimeBalanceJ, wPrimeBalanceJ);
+    _deepEquality.equals(other.wPrimeBalanceJ, wPrimeBalanceJ) &&
+    _deepEquality.equals(other.estimatedPower, estimatedPower);
 
   @override
   int get hashCode =>
@@ -75,10 +79,11 @@ class RideStreamsResponse {
     (power == null ? 0 : power!.hashCode) +
     (cadence == null ? 0 : cadence!.hashCode) +
     (temperature == null ? 0 : temperature!.hashCode) +
-    (wPrimeBalanceJ.hashCode);
+    (wPrimeBalanceJ.hashCode) +
+    (estimatedPower.hashCode);
 
   @override
-  String toString() => 'RideStreamsResponse[time=$time, latitude=$latitude, longitude=$longitude, altitude=$altitude, speed=$speed, distance=$distance, heartRate=$heartRate, power=$power, cadence=$cadence, temperature=$temperature, wPrimeBalanceJ=$wPrimeBalanceJ]';
+  String toString() => 'RideStreamsResponse[time=$time, latitude=$latitude, longitude=$longitude, altitude=$altitude, speed=$speed, distance=$distance, heartRate=$heartRate, power=$power, cadence=$cadence, temperature=$temperature, wPrimeBalanceJ=$wPrimeBalanceJ, estimatedPower=$estimatedPower]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -132,6 +137,10 @@ class RideStreamsResponse {
       final value = this.wPrimeBalanceJ.value;
       json[r'wPrimeBalanceJ'] = value;
     }
+    if (this.estimatedPower.isPresent) {
+      final value = this.estimatedPower.value;
+      json[r'estimatedPower'] = value;
+    }
     return json;
   }
 
@@ -158,6 +167,7 @@ class RideStreamsResponse {
     List<int?>? temperature,
     bool temperatureSetToNull = false,
     Optional<List<int>?>? wPrimeBalanceJ,
+    Optional<List<int?>?>? estimatedPower,
   }) => RideStreamsResponse(
     time: time ?? this.time,
     latitude: latitudeSetToNull ? null : latitude ?? this.latitude,
@@ -170,6 +180,7 @@ class RideStreamsResponse {
     cadence: cadenceSetToNull ? null : cadence ?? this.cadence,
     temperature: temperatureSetToNull ? null : temperature ?? this.temperature,
     wPrimeBalanceJ: wPrimeBalanceJ ?? this.wPrimeBalanceJ,
+    estimatedPower: estimatedPower ?? this.estimatedPower,
   );
 
   /// Returns a new [RideStreamsResponse] instance and imports its values from
@@ -230,6 +241,9 @@ class RideStreamsResponse {
             : const [],
         wPrimeBalanceJ: json.containsKey(r'wPrimeBalanceJ') ? Optional.present(json[r'wPrimeBalanceJ'] is Iterable
             ? (json[r'wPrimeBalanceJ'] as Iterable).cast<int>().toList(growable: false)
+            : const []) : const Optional.absent(),
+        estimatedPower: json.containsKey(r'estimatedPower') ? Optional.present(json[r'estimatedPower'] is Iterable
+            ? (json[r'estimatedPower'] as Iterable).cast<int>().toList(growable: false)
             : const []) : const Optional.absent(),
       );
     }

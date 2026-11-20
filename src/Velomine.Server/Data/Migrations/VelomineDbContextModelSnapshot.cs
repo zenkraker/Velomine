@@ -874,6 +874,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("double precision")
+                        .HasColumnName("weight_kg");
+
                     b.Property<int>("WheelCircumferenceMm")
                         .HasColumnType("integer")
                         .HasColumnName("wheel_circumference_mm");
@@ -2162,6 +2166,18 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("error");
 
+                    b.Property<int?>("EstimatedAvgPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_avg_power_w");
+
+                    b.Property<int?>("EstimatedNormalizedPowerW")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_normalized_power_w");
+
+                    b.Property<double?>("EstimatedTss")
+                        .HasColumnType("double precision")
+                        .HasColumnName("estimated_tss");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -2494,6 +2510,10 @@ namespace Velomine.Server.Data.Migrations
                     b.PrimitiveCollection<float?[]>("Distance")
                         .HasColumnType("real[]")
                         .HasColumnName("distance");
+
+                    b.PrimitiveCollection<short?[]>("EstimatedPower")
+                        .HasColumnType("smallint[]")
+                        .HasColumnName("estimated_power");
 
                     b.PrimitiveCollection<short?[]>("HeartRate")
                         .HasColumnType("smallint[]")

@@ -2758,5 +2758,12 @@
   "errorEventName": "Give the event a name.",
   "actionAddEvent": "add the event",
   "actionSaveEvent": "save the event",
-  "actionDeleteEvent": "delete the event"
+  "actionDeleteEvent": "delete the event",
+  "seriesEstimatedPower": "Estimated watts",
+  "statEstimatedAveragePower": "Estimated average power",
+  "estimatedPowerSource": "From your speed, the slope and your weight with the bike. No wind, so it can be far off on the flat.",
+  "bikeWeight": "Weight (kg)",
+  "bikeWeightHelper": "Used to estimate watts on rides without a power meter.",
+  "errorBikeWeight": "Enter the bike's weight in kilograms: 3 to 40.",
+  "profileWeightEstimateHint": "Add your weight to estimate watts on rides without a power meter."
 }

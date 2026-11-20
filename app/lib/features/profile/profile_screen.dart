@@ -456,6 +456,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             l10n.weight,
             _units == Units.imperial ? 'lb' : 'kg',
             decimals: true,
+            // Without a weight, a ride with no power meter has nothing to estimate watts from.
+            helper:
+                s.profile?.weightKg == null &&
+                    (s.profile?.hasRidesWithoutPower.orElse(false) ?? false)
+                ? l10n.profileWeightEstimateHint
+                : null,
           ),
           _number(
             'profile-birth-year',

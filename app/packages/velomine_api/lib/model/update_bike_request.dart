@@ -21,6 +21,7 @@ class UpdateBikeRequest {
     this.frameSize = const Optional.absent(),
     required this.kind,
     required this.wheelCircumferenceMm,
+    this.weightKg = const Optional.absent(),
     required this.initialDistanceM,
     this.purchasedOn = const Optional.absent(),
     this.isActive = const Optional.absent(),
@@ -76,6 +77,16 @@ class UpdateBikeRequest {
   /// Maximum value: 2600
   final int wheelCircumferenceMm;
 
+  /// Minimum value: 3
+  /// Maximum value: 40
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> weightKg;
+
   /// Minimum value: 0
   /// Maximum value: 10000000
   final double initialDistanceM;
@@ -106,6 +117,7 @@ class UpdateBikeRequest {
     other.frameSize == frameSize &&
     other.kind == kind &&
     other.wheelCircumferenceMm == wheelCircumferenceMm &&
+    other.weightKg == weightKg &&
     other.initialDistanceM == initialDistanceM &&
     other.purchasedOn == purchasedOn &&
     other.isActive == isActive;
@@ -121,12 +133,13 @@ class UpdateBikeRequest {
     (frameSize == null ? 0 : frameSize!.hashCode) +
     (kind.hashCode) +
     (wheelCircumferenceMm.hashCode) +
+    (weightKg == null ? 0 : weightKg!.hashCode) +
     (initialDistanceM.hashCode) +
     (purchasedOn == null ? 0 : purchasedOn!.hashCode) +
     (isActive == null ? 0 : isActive!.hashCode);
 
   @override
-  String toString() => 'UpdateBikeRequest[name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isActive=$isActive]';
+  String toString() => 'UpdateBikeRequest[name=$name, brand=$brand, model=$model, modelYear=$modelYear, buildSpec=$buildSpec, frameSize=$frameSize, kind=$kind, wheelCircumferenceMm=$wheelCircumferenceMm, weightKg=$weightKg, initialDistanceM=$initialDistanceM, purchasedOn=$purchasedOn, isActive=$isActive]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -153,6 +166,10 @@ class UpdateBikeRequest {
     }
       json[r'kind'] = this.kind;
       json[r'wheelCircumferenceMm'] = this.wheelCircumferenceMm;
+    if (this.weightKg.isPresent) {
+      final value = this.weightKg.value;
+      json[r'weightKg'] = value;
+    }
       json[r'initialDistanceM'] = this.initialDistanceM;
     if (this.purchasedOn.isPresent) {
       final value = this.purchasedOn.value;
@@ -176,6 +193,7 @@ class UpdateBikeRequest {
     Optional<String?>? frameSize,
     String? kind,
     int? wheelCircumferenceMm,
+    Optional<double?>? weightKg,
     double? initialDistanceM,
     Optional<DateTime?>? purchasedOn,
     Optional<bool?>? isActive,
@@ -188,6 +206,7 @@ class UpdateBikeRequest {
     frameSize: frameSize ?? this.frameSize,
     kind: kind ?? this.kind,
     wheelCircumferenceMm: wheelCircumferenceMm ?? this.wheelCircumferenceMm,
+    weightKg: weightKg ?? this.weightKg,
     initialDistanceM: initialDistanceM ?? this.initialDistanceM,
     purchasedOn: purchasedOn ?? this.purchasedOn,
     isActive: isActive ?? this.isActive,
@@ -224,6 +243,7 @@ class UpdateBikeRequest {
         frameSize: json.containsKey(r'frameSize') ? Optional.present(mapValueOfType<String>(json, r'frameSize')) : const Optional.absent(),
         kind: mapValueOfType<String>(json, r'kind')!,
         wheelCircumferenceMm: mapValueOfType<int>(json, r'wheelCircumferenceMm')!,
+        weightKg: json.containsKey(r'weightKg') ? Optional.present(mapValueOfType<double>(json, r'weightKg')) : const Optional.absent(),
         initialDistanceM: mapValueOfType<double>(json, r'initialDistanceM')!,
         purchasedOn: json.containsKey(r'purchasedOn') ? Optional.present(mapDateTime(json, r'purchasedOn', r'')) : const Optional.absent(),
         isActive: json.containsKey(r'isActive') ? Optional.present(mapValueOfType<bool>(json, r'isActive')) : const Optional.absent(),

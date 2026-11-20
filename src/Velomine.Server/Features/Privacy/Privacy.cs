@@ -201,6 +201,8 @@ public static class PrivacyRules
         HrTss = null,
         EffortScore = null,
         EffortSource = null,
+        // Estimated watts are made of speed, slope and elevation: hiding any of them hides the estimate too.
+        EstimatedAvgPowerW = privacy.HidePower || privacy.HideSpeed || privacy.HideElevation ? null : ride.EstimatedAvgPowerW,
         AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
         AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
         MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,
@@ -237,6 +239,8 @@ public static class PrivacyRules
             Altitude = privacy.HideElevation ? null : streams.Altitude,
             Temperature = privacy.HideTemperature ? null : streams.Temperature,
             WPrimeBalanceJ = privacy.HidePower ? null : streams.WPrimeBalanceJ,
+            // The estimate is the owner's: it is made from the member's own weight and bike.
+            EstimatedPower = null,
         };
 
         if (!showRoute) return result with { Latitude = null, Longitude = null };

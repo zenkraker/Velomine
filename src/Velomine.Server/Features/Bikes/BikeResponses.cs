@@ -19,6 +19,7 @@ public sealed record BikeResponse(
     string? FrameSize,
     string Kind,
     int WheelCircumferenceMm,
+    double? WeightKg,
     double InitialDistanceM,
     DateOnly? PurchasedOn,
     bool IsDefault,
@@ -70,7 +71,7 @@ public static class BikeQueries
         {
             totals.TryGetValue(b.Id, out var t);
             service.TryGetValue(b.Id, out var counts);
-            return new BikeResponse(b.Id, b.Name, b.Brand, b.Model, b.ModelYear, b.BuildSpec, b.FrameSize, b.Kind, b.WheelCircumferenceMm, b.InitialDistanceM, b.PurchasedOn,
+            return new BikeResponse(b.Id, b.Name, b.Brand, b.Model, b.ModelYear, b.BuildSpec, b.FrameSize, b.Kind, b.WheelCircumferenceMm, b.WeightKg, b.InitialDistanceM, b.PurchasedOn,
                 b.IsDefault, b.IsActive, t?.Count ?? 0, b.InitialDistanceM + (t?.Distance ?? 0), t?.Moving ?? 0, counts.Due, counts.Soon);
         })];
     }

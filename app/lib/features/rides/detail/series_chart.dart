@@ -15,6 +15,7 @@ String seriesName(AppLocalizations l10n, Series series) => switch (series.id) {
   'elevation' => l10n.seriesElevation,
   'speed' => l10n.seriesSpeed,
   'power' => l10n.seriesPower,
+  'estimatedpower' => l10n.seriesEstimatedPower,
   'heartrate' => l10n.seriesHeartRate,
   'cadence' => l10n.seriesCadence,
   'wprime' => l10n.seriesWPrimeBalance,

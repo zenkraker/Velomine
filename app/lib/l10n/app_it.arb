@@ -1752,5 +1752,12 @@
   "errorEventName": "Dai un nome all'evento.",
   "actionAddEvent": "aggiungere l'evento",
   "actionSaveEvent": "salvare l'evento",
-  "actionDeleteEvent": "eliminare l'evento"
+  "actionDeleteEvent": "eliminare l'evento",
+  "seriesEstimatedPower": "Watt stimati",
+  "statEstimatedAveragePower": "Potenza media stimata",
+  "estimatedPowerSource": "Dalla tua velocità, dalla pendenza e dal tuo peso con la bici. Senza vento, quindi sul piano può sbagliare di molto.",
+  "bikeWeight": "Peso (kg)",
+  "bikeWeightHelper": "Serve a stimare i watt sulle uscite senza misuratore di potenza.",
+  "errorBikeWeight": "Inserisci il peso della bici in chilogrammi: da 3 a 40.",
+  "profileWeightEstimateHint": "Aggiungi il tuo peso per stimare i watt sulle uscite senza misuratore di potenza."
 }

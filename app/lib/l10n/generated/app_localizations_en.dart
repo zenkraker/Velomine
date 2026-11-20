@@ -4901,4 +4901,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionDeleteEvent => 'delete the event';
+
+  @override
+  String get seriesEstimatedPower => 'Estimated watts';
+
+  @override
+  String get statEstimatedAveragePower => 'Estimated average power';
+
+  @override
+  String get estimatedPowerSource =>
+      'From your speed, the slope and your weight with the bike. No wind, so it can be far off on the flat.';
+
+  @override
+  String get bikeWeight => 'Weight (kg)';
+
+  @override
+  String get bikeWeightHelper =>
+      'Used to estimate watts on rides without a power meter.';
+
+  @override
+  String get errorBikeWeight =>
+      'Enter the bike\'s weight in kilograms: 3 to 40.';
+
+  @override
+  String get profileWeightEstimateHint =>
+      'Add your weight to estimate watts on rides without a power meter.';
 }

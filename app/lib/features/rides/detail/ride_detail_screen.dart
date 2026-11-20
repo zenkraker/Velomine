@@ -490,6 +490,12 @@ class _Stats extends ConsumerWidget {
         ('top-speed', l10n.statTopSpeed, kmh(units, ride.maxSpeedMs)),
       if (ride.avgPowerW != null)
         ('average-power', l10n.statAveragePower, '${ride.avgPowerW} W'),
+      if (ride.estimatedAvgPowerW.value case final estimate?)
+        (
+          'estimated-average-power',
+          l10n.statEstimatedAveragePower,
+          '$estimate W',
+        ),
       if (ride.normalizedPowerW != null)
         (
           'normalized-power',
@@ -559,6 +565,11 @@ class _Stats extends ConsumerWidget {
           if (effortSourceText(l10n, ride.effortSource.orElse(null))
               case final note?)
             SourceNote(note, key: const Key('effort-source')),
+        if (ride.estimatedAvgPowerW.value != null)
+          SourceNote(
+            l10n.estimatedPowerSource,
+            key: const Key('estimated-power-source'),
+          ),
         if (ride.efficiencyFactor.value != null) ...[
           if (ride.decouplingPct.value case final decoupling?
               when ride.steady.value == true)

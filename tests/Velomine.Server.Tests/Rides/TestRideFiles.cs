@@ -31,6 +31,8 @@ public static class TestRideFiles
         Func<int, short>? HeartRate = null,
         /// <summary>Leaves the heart rate out, so a ride does not teach the member a maximum heart rate.</summary>
         bool NoHeartRate = false,
+        /// <summary>Leaves the power out, for a rider with no power meter.</summary>
+        bool NoPower = false,
         /// <summary>The offset the file's activity claims, so a ride can be on another local date.</summary>
         int UtcOffsetHours = 2);
 
@@ -78,7 +80,8 @@ public static class TestRideFiles
                 record.SetDistance(s * 8f);
                 if (!session.NoHeartRate)
                     record.SetHeartRate((byte)(session.HeartRate?.Invoke(s) ?? 150));
-                record.SetPower((ushort)(session.Power?.Invoke(s) ?? 200));
+                if (!session.NoPower)
+                    record.SetPower((ushort)(session.Power?.Invoke(s) ?? 200));
                 record.SetCadence(90);
                 record.SetTemperature(18);
                 encode.Write(record);

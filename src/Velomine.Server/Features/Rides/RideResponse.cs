@@ -75,7 +75,10 @@ public sealed record RideResponse(
     // Set here and in GetRide; WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
     double? HrTss = null,
     double? EffortScore = null,
-    string? EffortSource = null)
+    string? EffortSource = null,
+    // Watts estimated from speed, slope and weight when the ride has no power at all. Hidden from a viewer when the
+    // ride hides power, speed or elevation, since all three go into it.
+    int? EstimatedAvgPowerW = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,
@@ -118,7 +121,8 @@ public sealed record RideResponse(
         Steady: r.Steady,
         HeartRateMaxNote: Analytics.HeartRateNotes.IsMax(r.HeartRateNote) ? r.HeartRateNote : null,
         HeartRateThresholdNote: r.HeartRateThresholdNote,
-        HrTss: r.HrTss);
+        HrTss: r.HrTss,
+        EstimatedAvgPowerW: r.EstimatedAvgPowerW);
 
     /// <summary>The same ride without training load, for a viewer allowed to see rides but not analytics.</summary>
     public RideResponse WithoutTrainingLoad() => this with

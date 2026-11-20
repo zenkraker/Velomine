@@ -163,6 +163,18 @@ public sealed class Ride
     public double? Trimp { get; set; }
 
     /// <summary>
+    /// Watts estimated from speed, slope and weight when the ride had no power at all; null otherwise. They are shown
+    /// and never feed power bests, the curve, FTP or the zones.
+    /// </summary>
+    public int? EstimatedAvgPowerW { get; set; }
+
+    /// <summary>The normalized power of the estimated watts.</summary>
+    public int? EstimatedNormalizedPowerW { get; set; }
+
+    /// <summary>The training stress of the estimated watts, with the FTP (or the 2.5 W/kg stand-in) at read.</summary>
+    public double? EstimatedTss { get; set; }
+
+    /// <summary>
     /// The heart-rate effort score, on the TSS scale, worked out when the ride was read from the threshold heart rate in
     /// use then (one hour at the threshold is 100). Null without heart rate or without a threshold.
     /// </summary>
@@ -286,6 +298,9 @@ public sealed class RideStreams
     public short?[]? HeartRate { get; set; }
 
     public short?[]? Power { get; set; }
+
+    /// <summary>Watts estimated from speed, slope and weight, for a ride with no power meter; owner only.</summary>
+    public short?[]? EstimatedPower { get; set; }
 
     public short?[]? Cadence { get; set; }
 

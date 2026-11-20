@@ -4935,4 +4935,29 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionDeleteEvent => 'eliminare l\'evento';
+
+  @override
+  String get seriesEstimatedPower => 'Watt stimati';
+
+  @override
+  String get statEstimatedAveragePower => 'Potenza media stimata';
+
+  @override
+  String get estimatedPowerSource =>
+      'Dalla tua velocità, dalla pendenza e dal tuo peso con la bici. Senza vento, quindi sul piano può sbagliare di molto.';
+
+  @override
+  String get bikeWeight => 'Peso (kg)';
+
+  @override
+  String get bikeWeightHelper =>
+      'Serve a stimare i watt sulle uscite senza misuratore di potenza.';
+
+  @override
+  String get errorBikeWeight =>
+      'Inserisci il peso della bici in chilogrammi: da 3 a 40.';
+
+  @override
+  String get profileWeightEstimateHint =>
+      'Aggiungi il tuo peso per stimare i watt sulle uscite senza misuratore di potenza.';
 }

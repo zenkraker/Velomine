@@ -35,6 +35,7 @@ class ProfileResponse {
     this.thresholdHeartRateSource = const Optional.absent(),
     this.thresholdHeartRateSetAt = const Optional.absent(),
     this.thresholdHeartRateRideId = const Optional.absent(),
+    this.hasRidesWithoutPower = const Optional.present(false),
   });
 
   final String displayName;
@@ -141,6 +142,8 @@ class ProfileResponse {
   ///
   final Optional<String?> thresholdHeartRateRideId;
 
+  final Optional<bool?> hasRidesWithoutPower;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ProfileResponse &&
     other.displayName == displayName &&
@@ -164,7 +167,8 @@ class ProfileResponse {
     other.thresholdHeartRate == thresholdHeartRate &&
     other.thresholdHeartRateSource == thresholdHeartRateSource &&
     other.thresholdHeartRateSetAt == thresholdHeartRateSetAt &&
-    other.thresholdHeartRateRideId == thresholdHeartRateRideId;
+    other.thresholdHeartRateRideId == thresholdHeartRateRideId &&
+    other.hasRidesWithoutPower == hasRidesWithoutPower;
 
   @override
   int get hashCode =>
@@ -190,10 +194,11 @@ class ProfileResponse {
     (thresholdHeartRate == null ? 0 : thresholdHeartRate!.hashCode) +
     (thresholdHeartRateSource == null ? 0 : thresholdHeartRateSource!.hashCode) +
     (thresholdHeartRateSetAt == null ? 0 : thresholdHeartRateSetAt!.hashCode) +
-    (thresholdHeartRateRideId == null ? 0 : thresholdHeartRateRideId!.hashCode);
+    (thresholdHeartRateRideId == null ? 0 : thresholdHeartRateRideId!.hashCode) +
+    (hasRidesWithoutPower.hashCode);
 
   @override
-  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt, ftpSetAt=$ftpSetAt, ftpSource=$ftpSource, ftpRideId=$ftpRideId, maxHeartRateSource=$maxHeartRateSource, maxHeartRateSetAt=$maxHeartRateSetAt, maxHeartRateRideId=$maxHeartRateRideId, thresholdHeartRate=$thresholdHeartRate, thresholdHeartRateSource=$thresholdHeartRateSource, thresholdHeartRateSetAt=$thresholdHeartRateSetAt, thresholdHeartRateRideId=$thresholdHeartRateRideId]';
+  String toString() => 'ProfileResponse[displayName=$displayName, ftpW=$ftpW, weightKg=$weightKg, birthYear=$birthYear, maxHeartRate=$maxHeartRate, timeZone=$timeZone, firstDayOfWeek=$firstDayOfWeek, emailNotifications=$emailNotifications, hasPassword=$hasPassword, emailAccountNotifications=$emailAccountNotifications, emailTrainingNotifications=$emailTrainingNotifications, soloTrialEndsAt=$soloTrialEndsAt, ftpSetAt=$ftpSetAt, ftpSource=$ftpSource, ftpRideId=$ftpRideId, maxHeartRateSource=$maxHeartRateSource, maxHeartRateSetAt=$maxHeartRateSetAt, maxHeartRateRideId=$maxHeartRateRideId, thresholdHeartRate=$thresholdHeartRate, thresholdHeartRateSource=$thresholdHeartRateSource, thresholdHeartRateSetAt=$thresholdHeartRateSetAt, thresholdHeartRateRideId=$thresholdHeartRateRideId, hasRidesWithoutPower=$hasRidesWithoutPower]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -273,6 +278,10 @@ class ProfileResponse {
       final value = this.thresholdHeartRateRideId.value;
       json[r'thresholdHeartRateRideId'] = value;
     }
+    if (this.hasRidesWithoutPower.isPresent) {
+      final value = this.hasRidesWithoutPower.value;
+      json[r'hasRidesWithoutPower'] = value;
+    }
     return json;
   }
 
@@ -307,6 +316,7 @@ class ProfileResponse {
     Optional<String?>? thresholdHeartRateSource,
     Optional<DateTime?>? thresholdHeartRateSetAt,
     Optional<String?>? thresholdHeartRateRideId,
+    Optional<bool?>? hasRidesWithoutPower,
   }) => ProfileResponse(
     displayName: displayName ?? this.displayName,
     ftpW: ftpWSetToNull ? null : ftpW ?? this.ftpW,
@@ -330,6 +340,7 @@ class ProfileResponse {
     thresholdHeartRateSource: thresholdHeartRateSource ?? this.thresholdHeartRateSource,
     thresholdHeartRateSetAt: thresholdHeartRateSetAt ?? this.thresholdHeartRateSetAt,
     thresholdHeartRateRideId: thresholdHeartRateRideId ?? this.thresholdHeartRateRideId,
+    hasRidesWithoutPower: hasRidesWithoutPower ?? this.hasRidesWithoutPower,
   );
 
   /// Returns a new [ProfileResponse] instance and imports its values from
@@ -387,6 +398,7 @@ class ProfileResponse {
         thresholdHeartRateSource: json.containsKey(r'thresholdHeartRateSource') ? Optional.present(mapValueOfType<String>(json, r'thresholdHeartRateSource')) : const Optional.absent(),
         thresholdHeartRateSetAt: json.containsKey(r'thresholdHeartRateSetAt') ? Optional.present(mapDateTime(json, r'thresholdHeartRateSetAt', r'')) : const Optional.absent(),
         thresholdHeartRateRideId: json.containsKey(r'thresholdHeartRateRideId') ? Optional.present(mapValueOfType<String>(json, r'thresholdHeartRateRideId')) : const Optional.absent(),
+        hasRidesWithoutPower: json.containsKey(r'hasRidesWithoutPower') ? Optional.present(mapValueOfType<bool>(json, r'hasRidesWithoutPower')) : const Optional.absent(),
       );
     }
     return null;

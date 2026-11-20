@@ -8449,6 +8449,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'delete the event'**
   String get actionDeleteEvent;
+
+  /// No description provided for @seriesEstimatedPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated watts'**
+  String get seriesEstimatedPower;
+
+  /// No description provided for @statEstimatedAveragePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated average power'**
+  String get statEstimatedAveragePower;
+
+  /// No description provided for @estimatedPowerSource.
+  ///
+  /// In en, this message translates to:
+  /// **'From your speed, the slope and your weight with the bike. No wind, so it can be far off on the flat.'**
+  String get estimatedPowerSource;
+
+  /// No description provided for @bikeWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get bikeWeight;
+
+  /// No description provided for @bikeWeightHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to estimate watts on rides without a power meter.'**
+  String get bikeWeightHelper;
+
+  /// No description provided for @errorBikeWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the bike\'s weight in kilograms: 3 to 40.'**
+  String get errorBikeWeight;
+
+  /// No description provided for @profileWeightEstimateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your weight to estimate watts on rides without a power meter.'**
+  String get profileWeightEstimateHint;
 }
 
 class _AppLocalizationsDelegate

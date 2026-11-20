@@ -229,18 +229,25 @@ public sealed class RideReparseService(
             // ride read before the column existed.
             var thresholdKnown = ride.LoadThresholdHeartRate is not null;
             int? thresholdHr = ride.LoadThresholdHeartRate is > 0 ? ride.LoadThresholdHeartRate : null;
-            if (!thresholdKnown)
-            {
-                var owner = await db.Users.AsNoTracking().FirstAsync(u => u.Id == ride.UserId, ct);
-                thresholdHr = HeartRates.For(owner, time).Threshold?.Bpm;
-            }
+            var owner = await db.Users.AsNoTracking().FirstAsync(u => u.Id == ride.UserId, ct);
+            if (!thresholdKnown) thresholdHr = HeartRates.For(owner, time).Threshold?.Bpm;
+
+            // A re-read estimates watts from the rider's and the bike's weights at this moment.
+            var bike = ride.BikeId is { } bikeId
+                ? await db.Bikes.AsNoTracking().FirstOrDefaultAsync(b => b.Id == bikeId, ct)
+                : null;
 
             RideMetricValues metrics;
             try
             {
                 metrics = RideMetrics.Compute(
                     file.Samples, file.DeviceNormalizedPowerW, file.DeviceElapsedS, file.DeviceMovingS, file.Pauses,
-                    ftpW: ftp, maxHeartRate: maxHr, thresholdHeartRate: thresholdHr);
+                    ftpW: ftp, maxHeartRate: maxHr, thresholdHeartRate: thresholdHr,
+                    estimate: new PowerEstimate(
+                        owner.WeightKg, bike?.WeightKg, bike?.Kind,
+                        ride.Discipline ?? file.Discipline,
+                        ride.Environment ?? file.Environment,
+                        ride.Assist ?? file.Assist));
             }
             catch (RideParseException ex)
             {
@@ -267,7 +274,7 @@ public sealed class RideReparseService(
             await db.RideStreams.Where(s => s.RideId == id).ExecuteDeleteAsync(ct);
             await db.RideLaps.Where(l => l.RideId == id).ExecuteDeleteAsync(ct);
             await db.RidePowerBests.Where(b => b.RideId == id).ExecuteDeleteAsync(ct);
-            ride.Streams = RideIngestionService.ToStreams(file.Samples);
+            ride.Streams = RideIngestionService.ToStreams(file.Samples, metrics.EstimatedPower);
             ride.Laps.AddRange(LapMetrics.Build(id, file.Laps, file.Samples, file.Pauses, ftp, maxHr));
             ride.PowerBests.AddRange(PowerBests.Rows(id, metrics.PowerBests));
             ride.PowerBestsBackfilledAt = time.GetUtcNow();
