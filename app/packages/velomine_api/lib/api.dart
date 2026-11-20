@@ -185,6 +185,7 @@ part 'model/set_event_ride_request.dart';
 part 'model/set_ftp_request.dart';
 part 'model/set_heart_rate_request.dart';
 part 'model/set_my_language_request.dart';
+part 'model/set_my_rider_mode_request.dart';
 part 'model/set_my_units_request.dart';
 part 'model/set_ride_bike_request.dart';
 part 'model/set_ride_details_request.dart';

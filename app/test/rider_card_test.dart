@@ -9,7 +9,10 @@ void main() {
 
   setUp(() {
     server = FakeServer();
-    server.signInBrowser(server.add('rider@example.com'));
+    // The card is part of the analysis, so the simple rider modes fold it: these tests are a settled rider's.
+    server.signInBrowser(
+      server.add('rider@example.com', riderMode: 'training'),
+    );
     server.totals['week'] = [
       totalsJson('2026-11-02', '2026-11-08', rides: 1, distanceM: 60000),
     ];

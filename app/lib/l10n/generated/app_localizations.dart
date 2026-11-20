@@ -8557,6 +8557,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your weight to estimate watts on rides without a power meter.'**
   String get profileWeightEstimateHint;
+
+  /// No description provided for @riderModeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you ride?'**
+  String get riderModeQuestion;
+
+  /// No description provided for @riderModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How I ride'**
+  String get riderModeTitle;
+
+  /// No description provided for @riderModeJustRiding.
+  ///
+  /// In en, this message translates to:
+  /// **'Just riding'**
+  String get riderModeJustRiding;
+
+  /// No description provided for @riderModeJustRidingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I ride for fun, with family or friends. I want my routes, my distance and how the ride went.'**
+  String get riderModeJustRidingBody;
+
+  /// No description provided for @riderModeWithGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Riding with goals'**
+  String get riderModeWithGoals;
+
+  /// No description provided for @riderModeWithGoalsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I ride often and like to see my progress: weekly totals, goals, and how hard I rode in plain words.'**
+  String get riderModeWithGoalsBody;
+
+  /// No description provided for @riderModeTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get riderModeTraining;
+
+  /// No description provided for @riderModeTrainingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I train or race. I want power, training load, fitness and form, and every number.'**
+  String get riderModeTrainingBody;
+
+  /// No description provided for @riderModeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide later'**
+  String get riderModeLater;
+
+  /// No description provided for @riderModeElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen on another device'**
+  String get riderModeElsewhere;
+
+  /// No description provided for @moreDetailsAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more analysis'**
+  String get moreDetailsAnalysis;
+
+  /// No description provided for @moreDetailsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all details'**
+  String get moreDetailsAll;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
+  /// No description provided for @rideEffortEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'mostly easy'**
+  String get rideEffortEasy;
+
+  /// No description provided for @rideEffortSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'steady'**
+  String get rideEffortSteady;
+
+  /// No description provided for @rideEffortHard.
+  ///
+  /// In en, this message translates to:
+  /// **'hard'**
+  String get rideEffortHard;
 }
 
 class _AppLocalizationsDelegate

@@ -419,6 +419,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("double precision[]")
                         .HasColumnName("power_zone_bounds");
 
+                    b.Property<string>("RiderMode")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("rider_mode");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
@@ -528,6 +533,8 @@ namespace Velomine.Server.Data.Migrations
                             t.HasCheckConstraint("ck_users_max_heart_rate_source_value", "max_heart_rate_source IN ('manual', 'measured')");
 
                             t.HasCheckConstraint("ck_users_power_zone_bounds", "power_zone_bounds IS NULL OR cardinality(power_zone_bounds) = 6");
+
+                            t.HasCheckConstraint("ck_users_rider_mode", "rider_mode IS NULL OR rider_mode IN ('just_riding', 'with_goals', 'training')");
 
                             t.HasCheckConstraint("ck_users_threshold_heart_rate_bpm", "threshold_heart_rate_bpm BETWEEN 90 AND 220");
 

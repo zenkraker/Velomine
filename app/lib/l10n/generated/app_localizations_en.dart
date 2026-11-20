@@ -4965,4 +4965,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get profileWeightEstimateHint =>
       'Add your weight to estimate watts on rides without a power meter.';
+
+  @override
+  String get riderModeQuestion => 'How do you ride?';
+
+  @override
+  String get riderModeTitle => 'How I ride';
+
+  @override
+  String get riderModeJustRiding => 'Just riding';
+
+  @override
+  String get riderModeJustRidingBody =>
+      'I ride for fun, with family or friends. I want my routes, my distance and how the ride went.';
+
+  @override
+  String get riderModeWithGoals => 'Riding with goals';
+
+  @override
+  String get riderModeWithGoalsBody =>
+      'I ride often and like to see my progress: weekly totals, goals, and how hard I rode in plain words.';
+
+  @override
+  String get riderModeTraining => 'Training';
+
+  @override
+  String get riderModeTrainingBody =>
+      'I train or race. I want power, training load, fitness and form, and every number.';
+
+  @override
+  String get riderModeLater => 'Decide later';
+
+  @override
+  String get riderModeElsewhere => 'Chosen on another device';
+
+  @override
+  String get moreDetailsAnalysis => 'Show more analysis';
+
+  @override
+  String get moreDetailsAll => 'Show all details';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get rideEffortEasy => 'mostly easy';
+
+  @override
+  String get rideEffortSteady => 'steady';
+
+  @override
+  String get rideEffortHard => 'hard';
 }

@@ -98,6 +98,7 @@ Class | Method | HTTP request | Description
 *AccountsApi* | [**setFtp**](doc//AccountsApi.md#setftp) | **PUT** /api/v1/accounts/me/ftp | 
 *AccountsApi* | [**setHeartRate**](doc//AccountsApi.md#setheartrate) | **PUT** /api/v1/accounts/me/heart-rate/{kind} | 
 *AccountsApi* | [**setMyLanguage**](doc//AccountsApi.md#setmylanguage) | **PUT** /api/v1/accounts/me/language | 
+*AccountsApi* | [**setMyRiderMode**](doc//AccountsApi.md#setmyridermode) | **PUT** /api/v1/accounts/me/rider-mode | 
 *AccountsApi* | [**setMyUnits**](doc//AccountsApi.md#setmyunits) | **PUT** /api/v1/accounts/me/units | 
 *AccountsApi* | [**setTelemetry**](doc//AccountsApi.md#settelemetry) | **PUT** /api/v1/accounts/me/telemetry | 
 *AccountsApi* | [**setZones**](doc//AccountsApi.md#setzones) | **PUT** /api/v1/accounts/me/zones/{set} | 
@@ -392,6 +393,7 @@ Class | Method | HTTP request | Description
  - [SetFtpRequest](doc//SetFtpRequest.md)
  - [SetHeartRateRequest](doc//SetHeartRateRequest.md)
  - [SetMyLanguageRequest](doc//SetMyLanguageRequest.md)
+ - [SetMyRiderModeRequest](doc//SetMyRiderModeRequest.md)
  - [SetMyUnitsRequest](doc//SetMyUnitsRequest.md)
  - [SetRideBikeRequest](doc//SetRideBikeRequest.md)
  - [SetRideDetailsRequest](doc//SetRideDetailsRequest.md)

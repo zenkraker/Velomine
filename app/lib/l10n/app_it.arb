@@ -1770,5 +1770,21 @@
   "bikeWeight": "Peso (kg)",
   "bikeWeightHelper": "Serve a stimare i watt sulle uscite senza misuratore di potenza.",
   "errorBikeWeight": "Inserisci il peso della bici in chilogrammi: da 3 a 40.",
-  "profileWeightEstimateHint": "Aggiungi il tuo peso per stimare i watt sulle uscite senza misuratore di potenza."
+  "profileWeightEstimateHint": "Aggiungi il tuo peso per stimare i watt sulle uscite senza misuratore di potenza.",
+  "riderModeQuestion": "Come vai in bici?",
+  "riderModeTitle": "Come vado in bici",
+  "riderModeJustRiding": "Solo per uscire",
+  "riderModeJustRidingBody": "Esco per divertirmi, con la famiglia o con gli amici. Voglio i miei percorsi, la distanza e com'è andata l'uscita.",
+  "riderModeWithGoals": "Con obiettivi",
+  "riderModeWithGoalsBody": "Esco spesso e mi piace vedere i miei progressi: totali settimanali, obiettivi e quanto è stata dura l'uscita, detto in parole semplici.",
+  "riderModeTraining": "Allenamento",
+  "riderModeTrainingBody": "Mi alleno o gareggio. Voglio potenza, carico di allenamento, forma e ogni numero.",
+  "riderModeLater": "Decido dopo",
+  "riderModeElsewhere": "Scelta su un altro dispositivo",
+  "moreDetailsAnalysis": "Mostra più analisi",
+  "moreDetailsAll": "Mostra tutti i dettagli",
+  "showLess": "Mostra meno",
+  "rideEffortEasy": "per lo più facile",
+  "rideEffortSteady": "costante",
+  "rideEffortHard": "duro"
 }

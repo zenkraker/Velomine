@@ -72,6 +72,13 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>"metric" or "imperial". Display only: every value is stored in SI units.</summary>
     public string Units { get; set; } = "metric";
+
+    /// <summary>
+    /// How the member rides (<c>just_riding</c>, <c>with_goals</c> or <c>training</c>). Display only: it decides
+    /// what the app shows first and the server never filters by it. Null means the member has not chosen yet, and
+    /// the app then shows just riding until they do.
+    /// </summary>
+    public string? RiderMode { get; set; }
     /// <summary>An IANA time zone such as "Europe/Rome". Null means UTC. Decides what "today" and "this week" are.</summary>
     public string? TimeZone { get; set; }
 

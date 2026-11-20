@@ -457,6 +457,8 @@ class ApiClient {
           return SetHeartRateRequest.fromJson(value);
         case 'SetMyLanguageRequest':
           return SetMyLanguageRequest.fromJson(value);
+        case 'SetMyRiderModeRequest':
+          return SetMyRiderModeRequest.fromJson(value);
         case 'SetMyUnitsRequest':
           return SetMyUnitsRequest.fromJson(value);
         case 'SetRideBikeRequest':

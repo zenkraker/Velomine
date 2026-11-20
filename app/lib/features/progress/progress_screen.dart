@@ -9,6 +9,8 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/placeholder_block.dart';
 import '../../core/l10n.dart';
+import '../../core/rider_mode.dart';
+import '../../core/widgets/more_details.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
@@ -87,6 +89,7 @@ class ProgressScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final layout = ref.watch(riderLayoutProvider);
     final filters = ref.watch(progressFiltersViewModelProvider);
     final totals = ref.watch(totalsViewModelProvider);
     final goals = ref.watch(goalsViewModelProvider);
@@ -137,120 +140,211 @@ class ProgressScreen extends ConsumerWidget {
       ref.read(eventsViewModelProvider.notifier).messageShown,
     );
 
+    // A source counts only when its card is on the page: a folded part says nothing until it is opened,
+    // so a failure nobody can see is not thrown at the member.
     final failures = [
       totals.load.failure,
-      riderCard.load.failure,
       goals.load.failure,
-      training.load.failure,
-      power.load.failure,
-      readiness.load.failure,
-      wellbeing.load.failure,
+      if (!layout.foldAdvanced) ...[
+        riderCard.load.failure,
+        training.load.failure,
+        power.load.failure,
+        readiness.load.failure,
+        wellbeing.load.failure,
+      ],
     ].whereType<Failure>();
+    // A source the member cannot see yet says so only once the fold is open, and its retry asks that one source
+    // again rather than reloading the whole page.
+    Widget? foldedError(String source, Failure? failure, VoidCallback reload) =>
+        failure == null
+        ? null
+        : ErrorState(
+            key: Key('progress-error-$source'),
+            message: failureText(l10n, failure),
+            actionKey: Key('progress-retry-$source'),
+            onRetry: reload,
+          );
+    final foldedErrors = [
+      foldedError(
+        'rider-card',
+        riderCard.load.failure,
+        () => ref.read(riderCardViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'training',
+        training.load.failure,
+        () => ref.read(trainingViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'power',
+        power.load.failure,
+        () => ref.read(powerCurveViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'readiness',
+        readiness.load.failure,
+        () => ref.read(readinessViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'wellbeing',
+        wellbeing.load.failure,
+        () => ref.read(wellbeingViewModelProvider.notifier).load(),
+      ),
+    ].nonNulls;
 
     // The analysis: the totals chart leads, then each source that explains it. The check-in follows,
-    // because it is the member's own input rather than an answer.
-    final analysis = <Widget>[
-      // The rider's own numbers lead: they say where they stand before any one chart explains why.
+    // because it is the member's own input rather than an answer. Each part says whether only the
+    // training view keeps it on the page; a simple mode folds those behind one button.
+    final analysis = <(Widget, bool)>[
+      // The rider's own numbers lead: they say where they stand before any one chart explains why. They are
+      // part of the analysis, so the simple modes fold them behind the same button as the rest.
       if (riderCard.load.value case final card?)
-        RiderCard(card: card, onMore: () => showRiderCard(context, card)),
+        (
+          RiderCard(card: card, onMore: () => showRiderCard(context, card)),
+          true,
+        ),
       // A ride that shows a higher FTP is the strongest answer there is, so it leads; while it is open the
       // reminder stays quiet, because it would only ask about the number the same FTP is about to replace.
       if (reminder.suggestion case final suggestion?)
-        FtpSuggestionCard(
-          watts: suggestion.watts,
-          method: suggestion.method,
-          effortWatts: suggestion.effortWatts,
-          suggestionId: suggestion.id,
-          busy: reminder.action.running,
-          onAccept: ref
-              .read(ftpReminderViewModelProvider.notifier)
-              .useSuggestion,
-          onDismiss: ref
-              .read(ftpReminderViewModelProvider.notifier)
-              .dismissSuggestion,
+        (
+          FtpSuggestionCard(
+            watts: suggestion.watts,
+            method: suggestion.method,
+            effortWatts: suggestion.effortWatts,
+            suggestionId: suggestion.id,
+            busy: reminder.action.running,
+            onAccept: ref
+                .read(ftpReminderViewModelProvider.notifier)
+                .useSuggestion,
+            onDismiss: ref
+                .read(ftpReminderViewModelProvider.notifier)
+                .dismissSuggestion,
+          ),
+          true,
         ),
       // A heart-rate number the rider typed that a ride beat is the same kind of question, answered here.
       for (final suggestion in heartRate.suggestions)
-        HeartRateNoteCard(
-          kind: suggestion.kind,
-          bpm: suggestion.bpm,
-          currentBpm: suggestion.kind == 'max'
-              ? heartRate.profile?.maxHeartRate
-              : heartRate.profile?.thresholdHeartRate.orElse(null),
-          suggestionId: suggestion.id,
-          busy: heartRate.action.running,
-          onAccept: ref
-              .read(heartRateSuggestionViewModelProvider.notifier)
-              .accept,
-          onDismiss: ref
-              .read(heartRateSuggestionViewModelProvider.notifier)
-              .dismiss,
+        (
+          HeartRateNoteCard(
+            kind: suggestion.kind,
+            bpm: suggestion.bpm,
+            currentBpm: suggestion.kind == 'max'
+                ? heartRate.profile?.maxHeartRate
+                : heartRate.profile?.thresholdHeartRate.orElse(null),
+            suggestionId: suggestion.id,
+            busy: heartRate.action.running,
+            onAccept: ref
+                .read(heartRateSuggestionViewModelProvider.notifier)
+                .accept,
+            onDismiss: ref
+                .read(heartRateSuggestionViewModelProvider.notifier)
+                .dismiss,
+          ),
+          true,
         ),
       // A wrong FTP makes every zone and TSS below it wrong, so the reminder leads the analysis.
       if (reminder.check?.reason != null && reminder.suggestion == null)
-        FtpReminderCard(
-          check: reminder.check!,
-          busy: reminder.action.running,
-          onUseEstimate: (watts) => ref
-              .read(ftpReminderViewModelProvider.notifier)
-              .useEstimate(watts),
-          onSnooze: () =>
-              ref.read(ftpReminderViewModelProvider.notifier).snooze(),
+        (
+          FtpReminderCard(
+            check: reminder.check!,
+            busy: reminder.action.running,
+            onUseEstimate: (watts) => ref
+                .read(ftpReminderViewModelProvider.notifier)
+                .useEstimate(watts),
+            onSnooze: () =>
+                ref.read(ftpReminderViewModelProvider.notifier).snooze(),
+          ),
+          true,
         ),
       if (totals.load.value case final totalsData?)
-        _TotalsCard(totals: totalsData)
+        (_TotalsCard(totals: totalsData), false)
       else if (totals.load.running)
-        Semantics(
-          liveRegion: true,
-          label: l10n.loading,
-          child: const Column(
-            key: Key('totals-loading'),
-            children: [
-              PlaceholderBlock(height: 180, radius: 16),
-              SizedBox(height: AppSpacing.md),
-              PlaceholderBlock(height: 120, radius: 16),
-            ],
+        (
+          Semantics(
+            liveRegion: true,
+            label: l10n.loading,
+            child: const Column(
+              key: Key('totals-loading'),
+              children: [
+                PlaceholderBlock(height: 180, radius: 16),
+                SizedBox(height: AppSpacing.md),
+                PlaceholderBlock(height: 120, radius: 16),
+              ],
+            ),
           ),
+          false,
         ),
       if (readiness.load.value case final readinessData?)
-        ReadinessCard(readiness: readinessData),
+        (ReadinessCard(readiness: readinessData), true),
       if (events.next case final EventResponse next)
-        NextEventCard(
-          next: next,
-          onAll: () => context.push('/progress/events'),
+        (
+          NextEventCard(
+            next: next,
+            onAll: () => context.push('/progress/events'),
+          ),
+          false,
         ),
       if (totals.load.value case final totalsData?)
-        _TotalsTable(totals: totalsData),
+        (_TotalsTable(totals: totalsData), false),
       if (training.load.value case final trainingData?)
-        TrainingSummary(
-          training: trainingData,
-          days: filters.trainingDays,
-          onDays: (days) async => ref
-              .read(progressFiltersViewModelProvider.notifier)
-              .setTrainingDays(days),
+        (
+          TrainingSummary(
+            training: trainingData,
+            days: filters.trainingDays,
+            onDays: (days) async => ref
+                .read(progressFiltersViewModelProvider.notifier)
+                .setTrainingDays(days),
+          ),
+          true,
         ),
       if (training.load.value case final trainingData?)
         if (trainingData.intensity case final intensity?)
-          IntensityCard(
-            intensity: intensity,
-            weeks: trainingData.intensityWeeks,
+          (
+            IntensityCard(
+              intensity: intensity,
+              weeks: trainingData.intensityWeeks,
+            ),
+            // Riding with goals opens with this split; just riding folds it with the rest.
+            !layout.showIntensity,
           ),
       if (training.load.value case final trainingData?)
-        EfficiencyCard(weeks: trainingData.efficiency),
+        (EfficiencyCard(weeks: trainingData.efficiency), true),
       if (power.load.value case final curve?)
-        PowerSummary(
-          curve: curve,
-          days: filters.powerDays,
-          onDays: (days) async => ref
-              .read(progressFiltersViewModelProvider.notifier)
-              .setPowerDays(days),
-          onUseFtp: (watts) =>
-              ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
-          ftpNote: _ftpNote(l10n, power.history),
-          ftpRideId: power.history.firstOrNull?.rideId,
-          onOpenRide: (id) => context.push('/rides/$id'),
+        (
+          PowerSummary(
+            curve: curve,
+            days: filters.powerDays,
+            onDays: (days) async => ref
+                .read(progressFiltersViewModelProvider.notifier)
+                .setPowerDays(days),
+            onUseFtp: (watts) =>
+                ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
+            ftpNote: _ftpNote(l10n, power.history),
+            ftpRideId: power.history.firstOrNull?.rideId,
+            onOpenRide: (id) => context.push('/rides/$id'),
+          ),
+          true,
         ),
     ];
+    final coreAnalysis = [
+      for (final (widget, advanced) in analysis)
+        if (!advanced) widget,
+    ];
+    final foldedAnalysis = [
+      for (final (widget, advanced) in analysis)
+        if (advanced) widget,
+    ];
+    final wellbeingCard = WellbeingCard(
+      wellbeing: wellbeing.today,
+      checkIns: wellbeing.checkIns,
+      saving: wellbeing.action.running,
+      onConsent: () => ref.read(wellbeingViewModelProvider.notifier).consent(),
+      onWithdraw: () =>
+          ref.read(wellbeingViewModelProvider.notifier).withdrawConsent(),
+      onSave: (fatigue, soreness, mood, stress, motivation) => ref
+          .read(wellbeingViewModelProvider.notifier)
+          .saveCheckIn(fatigue, soreness, mood, stress, motivation),
+    );
 
     // A wide window also keeps the filters on the page; every width opens them from the header menu.
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
@@ -311,32 +405,34 @@ class ProgressScreen extends ConsumerWidget {
             ),
     );
     final metrics = <Widget>[
-      if (readiness.load.value case final r?)
-        _metricCard(
-          key: const Key('metric-readiness'),
-          label: l10n.readiness,
-          value: r.score == null ? '–' : '${r.score}',
-          detail: switch (r.band) {
-            'hard' => l10n.readinessHard,
-            'easy' => l10n.readinessEasy,
-            'rest' => l10n.readinessRest,
-            _ => l10n.readinessNormal,
-          },
-        ),
-      if (training.load.value case final t?)
-        _metricCard(
-          key: const Key('metric-training'),
-          label: l10n.metricTrainingLoad,
-          value: t.tss.round().toString(),
-          detail: 'TSS · ${l10n.bikeRides(t.rides)}',
-        ),
-      if (power.load.value case final p? when p.hasPower)
-        _metricCard(
-          key: const Key('metric-power'),
-          label: l10n.metricPower,
-          value: p.currentFtpW == null ? '–' : '${p.currentFtpW} W',
-          detail: l10n.ftpCurrent,
-        ),
+      if (!layout.foldAdvanced) ...[
+        if (readiness.load.value case final r?)
+          _metricCard(
+            key: const Key('metric-readiness'),
+            label: l10n.readiness,
+            value: r.score == null ? '–' : '${r.score}',
+            detail: switch (r.band) {
+              'hard' => l10n.readinessHard,
+              'easy' => l10n.readinessEasy,
+              'rest' => l10n.readinessRest,
+              _ => l10n.readinessNormal,
+            },
+          ),
+        if (training.load.value case final t?)
+          _metricCard(
+            key: const Key('metric-training'),
+            label: l10n.metricTrainingLoad,
+            value: t.tss.round().toString(),
+            detail: 'TSS · ${l10n.bikeRides(t.rides)}',
+          ),
+        if (power.load.value case final p? when p.hasPower)
+          _metricCard(
+            key: const Key('metric-power'),
+            label: l10n.metricPower,
+            value: p.currentFtpW == null ? '–' : '${p.currentFtpW} W',
+            detail: l10n.ftpCurrent,
+          ),
+      ],
       thisPeriod,
     ];
 
@@ -382,11 +478,19 @@ class ProgressScreen extends ConsumerWidget {
             actionKey: const Key('progress-error'),
           ),
         _MetricRow(children: metrics),
-        CardGrid(
-          columns: 3,
-          hero: analysis.isEmpty ? 0 : 2,
-          children: analysis,
-        ),
+        // A simple mode folds the training lab, but never the goals: opening the fold must not push them down.
+        if (layout.foldAdvanced)
+          CardGrid(
+            columns: 3,
+            hero: coreAnalysis.isEmpty ? 0 : 2,
+            children: coreAnalysis,
+          )
+        else
+          CardGrid(
+            columns: 3,
+            hero: analysis.isEmpty ? 0 : 2,
+            children: [for (final (widget, _) in analysis) widget],
+          ),
         SectionHeading(
           title: l10n.goals,
           action: FilledButton.tonalIcon(
@@ -415,18 +519,19 @@ class ProgressScreen extends ConsumerWidget {
               ),
           ],
         ),
-        WellbeingCard(
-          wellbeing: wellbeing.today,
-          checkIns: wellbeing.checkIns,
-          saving: wellbeing.action.running,
-          onConsent: () =>
-              ref.read(wellbeingViewModelProvider.notifier).consent(),
-          onWithdraw: () =>
-              ref.read(wellbeingViewModelProvider.notifier).withdrawConsent(),
-          onSave: (fatigue, soreness, mood, stress, motivation) => ref
-              .read(wellbeingViewModelProvider.notifier)
-              .saveCheckIn(fatigue, soreness, mood, stress, motivation),
-        ),
+        if (layout.foldAdvanced)
+          MoreDetails(
+            label: l10n.moreDetailsAnalysis,
+            children: [
+              // The folded sources' own failures wait here, so opening the fold is what shows them.
+              for (final error in foldedErrors) error,
+              CardGrid(columns: 3, children: foldedAnalysis),
+              // The check-in is the member's own input, and a simple mode never opens with it.
+              wellbeingCard,
+            ],
+          )
+        else
+          wellbeingCard,
       ],
     );
     return page;
