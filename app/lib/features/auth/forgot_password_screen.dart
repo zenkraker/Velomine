@@ -44,7 +44,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final s = ref.watch(forgotPasswordViewModelProvider);
     final l10n = context.l10n;
     return AuthPage(
-      eyebrow: l10n.authEyebrowForgot,
       title: l10n.forgotPasswordTitle,
       help: l10n.forgotPasswordHelp,
       onBack: () => context.go('/sign-in'),

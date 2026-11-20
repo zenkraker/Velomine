@@ -33,7 +33,7 @@ void main() {
     expect(server.confirmedEmails, contains('new@example.com'));
   });
 
-  testWidgets('VerifyEmailScreen_ShouldExplainABadLink_WhenTheTokenIsSpent', (
+  testWidgets('VerifyEmailScreen_ShouldOfferANewLink_WhenTheLinkExpired', (
     tester,
   ) async {
     server.smtpConfigured = true;

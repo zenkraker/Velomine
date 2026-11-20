@@ -172,7 +172,7 @@ void main() {
     },
   );
 
-  testWidgets('SignInScreen_ShouldExplainWrongPassword_WhenPasswordIsWrong', (
+  testWidgets('SignInScreen_ShouldExplainWrongPassword_WhenSignInFails', (
     tester,
   ) async {
     server.add('rider@example.com');

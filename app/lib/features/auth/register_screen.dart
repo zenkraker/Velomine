@@ -63,7 +63,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final created = s.outcome != null;
     final l10n = context.l10n;
     return AuthPage(
-      eyebrow: l10n.authEyebrowRegister,
       title: l10n.createAccount,
       primaryLabel: created ? l10n.backToSignIn : l10n.createAccountAction,
       primaryKey: created ? null : const Key('register'),

@@ -61,7 +61,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final s = ref.watch(resetPasswordViewModelProvider);
     final l10n = context.l10n;
     return AuthPage(
-      eyebrow: l10n.authEyebrowReset,
       title: l10n.resetPasswordTitle,
       help: s.done ? null : l10n.resetPasswordHelp,
       onBack: () => context.go('/sign-in'),

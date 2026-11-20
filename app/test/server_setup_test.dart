@@ -8,6 +8,10 @@ import 'package:velomine/features/auth/server_setup_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine_api/api.dart';
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/root.dart';
+import 'package:velomine/core/providers.dart';
+
+import 'fake_server.dart';
 
 ServerInfoResponse info() => ServerInfoResponse(
   name: 'Velomine',
@@ -152,5 +156,28 @@ void main() {
     );
 
     expect(find.text('https://old.example'), findsOneWidget);
+  });
+
+  testWidgets('ServerSetupScreen_ShouldBeSkipped_WhenTheWindowIsTheWeb', (
+    tester,
+  ) async {
+    // The web app is served by its own server, so it never asks which one to use.
+    final server = FakeServer();
+    final session = server.session(useCookies: true);
+    await tester.runAsync(session.restore);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isWebProvider.overrideWithValue(true),
+          serverConfigStoreProvider.overrideWithValue(_MemoryStore()),
+          sessionProvider.overrideWith((ref) => session),
+        ],
+        child: const VelomineRoot(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ServerSetupScreen), findsNothing);
+    expect(find.byKey(const Key('sign-in')), findsOneWidget);
   });
 }
