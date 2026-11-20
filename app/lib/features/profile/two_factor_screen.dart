@@ -49,7 +49,6 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
     );
 
     return PageScaffold(
-      eyebrow: l10n.profileTitle,
       title: l10n.twoFactorTitle,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: !(info?.hasPassword ?? false)

@@ -71,7 +71,6 @@ class _SupporterActivationScreenState
     final loadFailure = s.load.failure;
     return PageScaffold(
       key: const Key('supporter-activation'),
-      eyebrow: l10n.profileTitle,
       title: l10n.supporterSignInTitle,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: ValueListenableBuilder(

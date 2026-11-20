@@ -94,29 +94,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'SupporterCelebrationScreen_ShouldUseTheBrandInk_WhenShownOnTheNightTheme',
-    (tester) async {
-      licence();
-      await openProfile(tester);
-      final badge = find.byKey(const Key('supporter-badge'));
-      await tester.ensureVisible(badge);
-      await tester.pumpAndSettle();
-      for (var i = 0; i < 3; i++) {
-        await tester.tap(badge);
-        await tester.pump(const Duration(milliseconds: 80));
-      }
-      await tester.pumpAndSettle();
+  testWidgets('SupporterCelebration_ShouldUseThemeColours_WhenShown', (
+    tester,
+  ) async {
+    licence();
+    await openProfile(tester);
+    final badge = find.byKey(const Key('supporter-badge'));
+    await tester.ensureVisible(badge);
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(badge);
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    await tester.pumpAndSettle();
 
-      final scaffold = tester.widget<Scaffold>(
-        find.descendant(
-          of: find.byType(SupporterCelebrationScreen),
-          matching: find.byType(Scaffold),
-        ),
-      );
-      expect(scaffold.backgroundColor, asphalt);
-    },
-  );
+    final scaffold = tester.widget<Scaffold>(
+      find.descendant(
+        of: find.byType(SupporterCelebrationScreen),
+        matching: find.byType(Scaffold),
+      ),
+    );
+    // The one bespoke screen takes its colours from the theme, not from hand-picked constants, and no
+    // text is upper-cased into an eyebrow.
+    final scheme = nightTheme().colorScheme;
+    expect(scaffold.backgroundColor, scheme.surface);
+    expect(find.text('Licence verified'.toUpperCase()), findsNothing);
+    expect(find.byKey(const Key('supporter-eyebrow')), findsOneWidget);
+    final eyebrow = tester.widget<Text>(
+      find.byKey(const Key('supporter-eyebrow')),
+    );
+    expect(eyebrow.data, isNot(eyebrow.data!.toUpperCase()));
+  });
 
   testWidgets('SupporterBadge_ShouldOpenTheCelebration_WhenTappedThreeTimes', (
     tester,
