@@ -126,10 +126,12 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
             t.HasCheckConstraint("ck_users_threshold_heart_rate_ride", "threshold_heart_rate_ride_id IS NULL OR threshold_heart_rate_source = 'measured'");
             t.HasCheckConstraint("ck_users_birth_year", "birth_year IS NULL OR birth_year BETWEEN 1900 AND 2200");
             t.HasCheckConstraint("ck_users_units", "units IN ('metric', 'imperial')");
+            t.HasCheckConstraint("ck_users_rider_mode", "rider_mode IS NULL OR rider_mode IN ('just_riding', 'with_goals', 'training')");
         });
         builder.Entity<User>().Property(u => u.TimeZone).HasMaxLength(64);
         builder.Entity<User>().Property(u => u.Language).HasMaxLength(8);
         builder.Entity<User>().Property(u => u.Units).HasMaxLength(8).HasDefaultValue("metric");
+        builder.Entity<User>().Property(u => u.RiderMode).HasMaxLength(16);
         // A ride can be deleted: the number stays measured and loses the ride that showed it.
         builder.Entity<User>().HasOne<Ride>().WithMany()
             .HasForeignKey(u => u.MaxHeartRateRideId).OnDelete(DeleteBehavior.SetNull);

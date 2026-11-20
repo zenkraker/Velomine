@@ -1732,5 +1732,21 @@
   "errorEventName": "Dai un nome all'evento.",
   "actionAddEvent": "aggiungere l'evento",
   "actionSaveEvent": "salvare l'evento",
-  "actionDeleteEvent": "eliminare l'evento"
+  "actionDeleteEvent": "eliminare l'evento",
+  "riderModeQuestion": "Come vai in bici?",
+  "riderModeTitle": "Come vado in bici",
+  "riderModeJustRiding": "Solo per uscire",
+  "riderModeJustRidingBody": "Esco per divertirmi, con la famiglia o con gli amici. Voglio i miei percorsi, la distanza e com'è andata l'uscita.",
+  "riderModeWithGoals": "Con obiettivi",
+  "riderModeWithGoalsBody": "Esco spesso e mi piace vedere i miei progressi: totali settimanali, obiettivi e quanto è stata dura l'uscita, detto in parole semplici.",
+  "riderModeTraining": "Allenamento",
+  "riderModeTrainingBody": "Mi alleno o gareggio. Voglio potenza, carico di allenamento, forma e ogni numero.",
+  "riderModeLater": "Decido dopo",
+  "riderModeElsewhere": "Scelta su un altro dispositivo",
+  "moreDetailsAnalysis": "Mostra più analisi",
+  "moreDetailsAll": "Mostra tutti i dettagli",
+  "showLess": "Mostra meno",
+  "rideEffortEasy": "per lo più facile",
+  "rideEffortSteady": "costante",
+  "rideEffortHard": "duro"
 }

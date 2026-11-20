@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Sharing;
+using Velomine.Server.Tests.Routes;
 
 namespace Velomine.Server.Tests;
 
@@ -197,6 +199,72 @@ public sealed class ProfileTests(PostgresFixture postgres) : IAsyncLifetime
         var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
 
         Assert.Equal("metric", me!.Units);
+    }
+
+    [Fact]
+    public async Task SetMyRiderMode_ShouldSaveAndReturnMode_WhenSignedInOnAnotherDevice()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
+
+        var first = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        var put = await first.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.Training), Ct);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+        Assert.Equal(RiderModes.Training, (await put.Content.ReadFromJsonAsync<MeResponse>(Ct))!.RiderMode);
+
+        // A second device signs in with the same account and sees the same choice.
+        var second = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        Assert.Equal(RiderModes.Training, (await second.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+    }
+
+    [Fact]
+    public async Task SetMyRiderMode_ShouldAnswer400AndKeepOldMode_WhenModeIsUnknown()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email, name: "Ada")).EnsureSuccessStatusCode();
+        var member = await api.SignedInClientAsync(email, TestApi.MemberPassword);
+        await member.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.WithGoals), Ct);
+
+        var refused = await member.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest("racer"), Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Equal(RiderModes.WithGoals, (await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+    }
+
+    [Fact]
+    public async Task GetMe_ShouldReturnNullRiderModeAndSupportedTrue_WhenMemberNeverChose()
+    {
+        var (api, member) = await StartAsync();
+        await using var _ = api;
+
+        var me = await member.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
+
+        Assert.Null(me!.RiderMode);
+        Assert.True(me.RiderModeSupported);
+    }
+
+    [Fact]
+    public async Task RiderMode_ShouldNotAppearInAnyOtherMembersView_WhenCoachOrClubMemberReadsTheRide()
+    {
+        await using var api = await TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
+        var world = await RoutesTestKit.NewWorldAsync(api);
+        var rideId = await RoutesTestKit.UploadRideAsync(world.Rider.Client);
+        (await world.Rider.Client.PutAsJsonAsync("/api/v1/sharing",
+            new UpdateSharingRequest { Rides = "coaches", Analytics = "coaches", Routes = "none", Wellbeing = "coaches" }, Ct)).EnsureSuccessStatusCode();
+        (await world.Rider.Client.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.Training), Ct)).EnsureSuccessStatusCode();
+
+        var athlete = $"/api/v1/clubs/{world.Club.Id}/athletes/{world.Rider.Id}";
+        foreach (var path in new[] { athlete, $"{athlete}/rides", $"{athlete}/rides/{rideId}", $"{athlete}/training", $"{athlete}/power-curve", $"{athlete}/wellbeing" })
+        {
+            var response = await world.Coach.Client.GetAsync(path, Ct);
+            Assert.True(response.IsSuccessStatusCode, $"{path} answered {(int)response.StatusCode} to the athlete's coach.");
+            Assert.DoesNotContain("riderMode", await response.Content.ReadAsStringAsync(Ct), StringComparison.OrdinalIgnoreCase);
+        }
+
+        // The coach's own account never carries the athlete's choice either.
+        Assert.Null((await world.Coach.Client.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
     }
 
 }

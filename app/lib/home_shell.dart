@@ -7,12 +7,15 @@ import 'core/hooks.dart';
 import 'core/l10n.dart';
 import 'core/motion.dart';
 import 'core/providers.dart';
+import 'core/rider_mode.dart';
 import 'core/theme_choice.dart';
 import 'core/tokens.dart';
 import 'core/widgets/floating_nav_pill.dart';
 import 'core/widgets/page_scaffold.dart';
 import 'features/club/club_view_model.dart';
 import 'features/notifications/notifications_view_model.dart';
+import 'features/profile/rider_mode_sheet.dart';
+import 'features/profile/rider_mode_view_model.dart';
 import 'features/recording/live_ride_banner.dart';
 import 'features/recording/recording_providers.dart';
 
@@ -105,7 +108,7 @@ class HomeShell extends ConsumerWidget {
           ),
         ],
       ],
-      child: child,
+      child: RiderModePrompt(child: child),
     );
 
     return BackGuard(
@@ -315,6 +318,42 @@ class _WithBanner extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// Asks "How do you ride?" once, for an account that has not chosen: on the first sign-in, and never again once
+/// the account holds a mode. It draws nothing itself: the question is a sheet over the page.
+class RiderModePrompt extends ConsumerStatefulWidget {
+  const RiderModePrompt({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<RiderModePrompt> createState() => _RiderModePromptState();
+}
+
+class _RiderModePromptState extends ConsumerState<RiderModePrompt> {
+  bool _opening = false;
+
+  Future<void> _ask() async {
+    if (!mounted) return;
+    // Handled as soon as it opens, so the question appears at most once in this session.
+    ref.read(riderModeViewModelProvider.notifier).promptShown();
+    await showRiderModeSheet(context, firstTime: true);
+    _opening = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asking =
+        ref.watch(riderModeSituationProvider).prompt &&
+        !ref.watch(riderModeViewModelProvider).promptHandled;
+    if (asking && !_opening) {
+      _opening = true;
+      // After this frame: a sheet cannot open while the shell is building.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ask());
+    }
+    return widget.child;
+  }
 }
 
 /// The notifications button with its unread count, the same in the page header and the rail.

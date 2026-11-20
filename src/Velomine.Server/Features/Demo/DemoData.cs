@@ -72,6 +72,8 @@ public sealed class DemoData(
                 DisplayName = account.DisplayName,
                 IsApproved = true,
                 CreatedAt = now,
+                // The demo shares its accounts, so they start on the full layout every night.
+                RiderMode = RiderModes.Training,
             };
             var created = await users.CreateAsync(user, Password);
             if (!created.Succeeded)

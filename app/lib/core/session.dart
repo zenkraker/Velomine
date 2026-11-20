@@ -400,6 +400,13 @@ class Session {
     }
   }
 
+  /// Applies the member the server just returned, after a setting was saved. The caller already has the answer,
+  /// so nothing is read again and a failed save never reaches here.
+  void adoptMe(MeResponse updated) {
+    me = updated;
+    _notify();
+  }
+
   /// Returns null on success, or the reason it failed. A non-null challenge means the account has a second factor:
   /// the screen asks for the code and calls [completeTwoFactor].
   Future<({AuthProblem? problem, String? challenge})> signIn(

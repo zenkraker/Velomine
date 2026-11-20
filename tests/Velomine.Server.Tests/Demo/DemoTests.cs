@@ -126,6 +126,21 @@ public sealed class DemoTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task DemoData_ShouldSeedTraining_WhenDemoIsRemadeAfterAVisitorChangedTheMode()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+        var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
+        Assert.Equal(RiderModes.Training, (await visitor.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+        (await visitor.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.JustRiding), Ct)).EnsureSuccessStatusCode();
+
+        await ResetAsync(api);
+
+        var fresh = await api.SignedInClientAsync(Rider, DemoData.Password);
+        Assert.Equal(RiderModes.Training, (await fresh.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+    }
+
+    [Fact]
     public async Task DemoData_ShouldKeepTheServerAdmin_WhenTheDemoIsReset()
     {
         await using var api = await StartDemoAsync();
