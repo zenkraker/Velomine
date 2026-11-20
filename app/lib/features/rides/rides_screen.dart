@@ -18,7 +18,7 @@ import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/toolbar_row.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'bulk/bulk_upload_card.dart';
@@ -172,19 +172,12 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
       IconData icon,
       String label,
       VoidCallback? onPressed,
-    ) => wide
-        ? FilledButton.icon(
-            key: key,
-            onPressed: onPressed,
-            icon: Icon(icon),
-            label: Text(label),
-          )
-        : IconButton.filled(
-            key: key,
-            tooltip: label,
-            onPressed: onPressed,
-            icon: Icon(icon),
-          );
+    ) => FilledButton.icon(
+      key: key,
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+    );
     final primaryAction = startRidePrimary
         ? headerButton(
             const Key('start-ride'),
@@ -271,7 +264,6 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
     );
 
     final page = PageScaffold(
-      eyebrow: l10n.eyebrowRides,
       title: l10n.navRides,
       subtitle: l10n.ridesSubtitle,
       primaryAction: primaryAction,
@@ -585,7 +577,7 @@ class RideCard extends ConsumerWidget {
                         for (final (label, value) in facts)
                           SizedBox(
                             width: math.max(width, 62),
-                            child: StatTile(label: label, value: value),
+                            child: StatFigure(label: label, value: value),
                           ),
                       ],
                     );
