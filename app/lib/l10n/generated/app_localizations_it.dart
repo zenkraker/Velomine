@@ -4862,4 +4862,55 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionDeleteEvent => 'eliminare l\'evento';
+
+  @override
+  String get riderModeQuestion => 'Come vai in bici?';
+
+  @override
+  String get riderModeTitle => 'Come vado in bici';
+
+  @override
+  String get riderModeJustRiding => 'Solo per uscire';
+
+  @override
+  String get riderModeJustRidingBody =>
+      'Esco per divertirmi, con la famiglia o con gli amici. Voglio i miei percorsi, la distanza e com\'è andata l\'uscita.';
+
+  @override
+  String get riderModeWithGoals => 'Con obiettivi';
+
+  @override
+  String get riderModeWithGoalsBody =>
+      'Esco spesso e mi piace vedere i miei progressi: totali settimanali, obiettivi e quanto è stata dura l\'uscita, detto in parole semplici.';
+
+  @override
+  String get riderModeTraining => 'Allenamento';
+
+  @override
+  String get riderModeTrainingBody =>
+      'Mi alleno o gareggio. Voglio potenza, carico di allenamento, forma e ogni numero.';
+
+  @override
+  String get riderModeLater => 'Decido dopo';
+
+  @override
+  String get riderModeElsewhere => 'Scelta su un altro dispositivo';
+
+  @override
+  String get moreDetailsAnalysis => 'Mostra più analisi';
+
+  @override
+  String get moreDetailsAll => 'Mostra tutti i dettagli';
+
+  @override
+  String get showLess => 'Mostra meno';
+
+  @override
+  String get rideEffortEasy => 'per lo più facile';
+
+  @override
+  String get rideEffortSteady => 'costante';
+
+  @override
+  String get rideEffortHard => 'duro';
 }

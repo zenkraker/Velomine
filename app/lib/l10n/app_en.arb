@@ -2710,5 +2710,21 @@
   "errorEventName": "Give the event a name.",
   "actionAddEvent": "add the event",
   "actionSaveEvent": "save the event",
-  "actionDeleteEvent": "delete the event"
+  "actionDeleteEvent": "delete the event",
+  "riderModeQuestion": "How do you ride?",
+  "riderModeTitle": "How I ride",
+  "riderModeJustRiding": "Just riding",
+  "riderModeJustRidingBody": "I ride for fun, with family or friends. I want my routes, my distance and how the ride went.",
+  "riderModeWithGoals": "Riding with goals",
+  "riderModeWithGoalsBody": "I ride often and like to see my progress: weekly totals, goals, and how hard I rode in plain words.",
+  "riderModeTraining": "Training",
+  "riderModeTrainingBody": "I train or race. I want power, training load, fitness and form, and every number.",
+  "riderModeLater": "Decide later",
+  "riderModeElsewhere": "Chosen on another device",
+  "moreDetailsAnalysis": "Show more analysis",
+  "moreDetailsAll": "Show all details",
+  "showLess": "Show less",
+  "rideEffortEasy": "mostly easy",
+  "rideEffortSteady": "steady",
+  "rideEffortHard": "hard"
 }

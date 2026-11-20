@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
+import '../../core/rider_mode.dart';
 
 part 'profile_data.g.dart';
 
@@ -47,6 +48,11 @@ class ProfileData {
 
   Future<Result<ProfileResponse?>> save(UpdateProfileRequest request) =>
       _api.updateProfile(request).guard(FailureAction.saveProfile);
+
+  /// How the member rides. The answer is the whole account, so the session can hold the saved mode at once.
+  Future<Result<MeResponse?>> setRiderMode(RiderMode mode) => _api
+      .setMyRiderMode(SetMyRiderModeRequest(riderMode: mode.slug))
+      .guard(FailureAction.saveProfile);
 
   /// Sets the maximum (`max`) or the threshold heart rate the rider typed.
   Future<Result<ProfileResponse?>> setHeartRate(String kind, int bpm) => _api
