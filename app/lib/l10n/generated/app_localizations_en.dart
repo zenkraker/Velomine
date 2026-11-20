@@ -2104,6 +2104,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.';
 
   @override
+  String get trainingMonotonous =>
+      'Every day was about as hard this week. An easy day helps you adapt.';
+
+  @override
+  String get trainingHeavyWeek => 'This week was much heavier than usual.';
+
+  @override
+  String trainingStrain(String monotony, String strain) {
+    return 'Monotony $monotony · Strain $strain';
+  }
+
+  @override
   String get accountSearch => 'Find an account';
 
   @override

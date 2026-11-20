@@ -2117,6 +2117,19 @@ class AppLocalizationsIt extends AppLocalizations {
       'La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.';
 
   @override
+  String get trainingMonotonous =>
+      'Questa settimana ogni giorno è stato impegnativo uguale. Un giorno facile ti aiuta ad assimilare.';
+
+  @override
+  String get trainingHeavyWeek =>
+      'Questa settimana è stata molto più pesante del solito.';
+
+  @override
+  String trainingStrain(String monotony, String strain) {
+    return 'Monotonia $monotony · Strain $strain';
+  }
+
+  @override
   String get accountSearch => 'Cerca un account';
 
   @override

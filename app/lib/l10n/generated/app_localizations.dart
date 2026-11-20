@@ -3722,6 +3722,24 @@ abstract class AppLocalizations {
   /// **'Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.'**
   String get trainingLoadHelp;
 
+  /// No description provided for @trainingMonotonous.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day was about as hard this week. An easy day helps you adapt.'**
+  String get trainingMonotonous;
+
+  /// No description provided for @trainingHeavyWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week was much heavier than usual.'**
+  String get trainingHeavyWeek;
+
+  /// No description provided for @trainingStrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Monotony {monotony} · Strain {strain}'**
+  String trainingStrain(String monotony, String strain);
+
   /// No description provided for @accountSearch.
   ///
   /// In en, this message translates to:

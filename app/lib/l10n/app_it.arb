@@ -654,6 +654,9 @@
   "dailyLoad": "Carico giornaliero (TSS)",
   "dailyLoadSemantics": "Training stress score giornaliero negli ultimi {days} giorni.",
   "trainingLoadHelp": "La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.",
+  "trainingMonotonous": "Questa settimana ogni giorno è stato impegnativo uguale. Un giorno facile ti aiuta ad assimilare.",
+  "trainingHeavyWeek": "Questa settimana è stata molto più pesante del solito.",
+  "trainingStrain": "Monotonia {monotony} · Strain {strain}",
 
   "accountSearch": "Cerca un account",
   "clearSearch": "Cancella la ricerca",

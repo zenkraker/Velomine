@@ -2869,6 +2869,11 @@ Map<String, Object?> trainingJson({
   int rides = 3,
   double distanceM = 80000,
   int heartRateLoadRides = 0,
+  double? monotony,
+  double? strain,
+  double? strainUsual,
+  bool monotonous = false,
+  bool heavyWeek = false,
 }) => {
   'dayCount': days,
   'from': '2026-08-07',
@@ -2883,6 +2888,13 @@ Map<String, Object?> trainingJson({
   'intensityWeeks': const <Object?>[],
   'efficiency': const <Object?>[],
   'heartRateLoadRides': heartRateLoadRides,
+  'monotony': monotony,
+  'strain': strain,
+  'strainUsual': strainUsual,
+  'monotonous': monotonous,
+  'heavyWeek': heavyWeek,
+  'monotonyFrom': monotony == null ? null : '2026-10-29',
+  'monotonyTo': monotony == null ? null : '2026-11-04',
   'days': [
     for (var i = 0; i < 3; i++)
       {

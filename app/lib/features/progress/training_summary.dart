@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' show DateFormat;
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
@@ -57,6 +57,23 @@ class TrainingSummary extends ConsumerWidget {
               selected: days,
               onChanged: onDays,
             ),
+            // A caution, not a fault: the week was the same every day, or much heavier than usual.
+            if (training.monotonous.orElse(false) ?? false)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: _CautionNote(
+                  l10n.trainingMonotonous,
+                  key: const Key('training-monotonous'),
+                ),
+              ),
+            if (training.heavyWeek.orElse(false) ?? false)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: _CautionNote(
+                  l10n.trainingHeavyWeek,
+                  key: const Key('training-heavy-week'),
+                ),
+              ),
             const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.xl,
@@ -176,8 +193,56 @@ class TrainingSummary extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(l10n.trainingLoadHelp, style: text.bodySmall),
+            if (training.monotony.orElse(null) case final monotony?)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  l10n.trainingStrain(
+                    NumberFormat('0.00').format(monotony),
+                    NumberFormat('0').format(training.strain.orElse(0) ?? 0),
+                  ),
+                  key: const Key('training-strain'),
+                  style: text.bodySmall,
+                ),
+              ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A note in the theme's caution colour, laid out like the error line under a form but not one: nothing failed.
+class _CautionNote extends StatelessWidget {
+  const _CautionNote(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.tertiary;
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          ExcludeSemantics(
+            child: Icon(
+              Icons.info_outline,
+              size: AppLoading.errorIcon,
+              color: color,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(color: color),
+            ),
+          ),
+        ],
       ),
     );
   }

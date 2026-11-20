@@ -26,12 +26,15 @@ public static class TrainingRange
         var to = clock.Today;
         var from = to.AddDays(-(days - 1));
         var warmup = from.AddDays(-FitnessDays);
+        // The strain window is a week plus the eight seven-day blocks before it, so the loads reach 63 days back.
+        var strainDays = TrainingStrain.WindowDays + TrainingStrain.PreviousBlocks * 7;
+        var loadFrom = warmup < to.AddDays(-strainDays) ? warmup : to.AddDays(-strainDays);
 
         var ftpW = await db.Users.AsNoTracking()
             .Where(u => u.Id == userId)
             .Select(u => u.FtpW)
             .FirstAsync(ct);
-        var rides = await RideDays.LoadAsync(db, userId, clock, warmup, to.AddDays(1), ct, ftpW: ftpW, filter: filter, includeFeel: includeFeel);
+        var rides = await RideDays.LoadAsync(db, userId, clock, loadFrom, to.AddDays(1), ct, ftpW: ftpW, filter: filter, includeFeel: includeFeel);
         // Fitness, fatigue and form follow each ride's effort score: power, else heart rate, else how hard it felt.
         var byDate = rides
             .GroupBy(r => r.LocalDate)
@@ -69,6 +72,13 @@ public static class TrainingRange
                 Math.Round(fitness - fatigue, 1)));
         }
 
+        // A rider who has not ridden today yet is judged on the week that ended yesterday, so a rest morning is quiet.
+        var strain = filter == default
+            ? TrainingStrain.Compute(
+                rides.Any(r => r.LocalDate == to) ? to : to.AddDays(-1),
+                rides.GroupBy(r => r.LocalDate).ToDictionary(g => g.Key, g => g.Sum(r => r.Load)))
+            : null;
+
         var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, time, from, to, ct, filter, viewer);
         var efficiency = await Efficiency.LoadAsync(db, userId, clock, from, to, ct, filter, viewer);
 
@@ -87,7 +97,14 @@ public static class TrainingRange
             weeks,
             efficiency,
             // What the progress page says when some rides in the range were scored from heart rate.
-            rides.Count(r => r.LocalDate >= from && r.LoadSource == EffortSources.HeartRate));
+            rides.Count(r => r.LocalDate >= from && r.LoadSource == EffortSources.HeartRate),
+            strain?.Monotony,
+            strain?.Strain,
+            strain?.Usual,
+            strain?.Monotonous ?? false,
+            strain?.HeavyWeek ?? false,
+            strain?.From,
+            strain?.To);
     }
 
     private readonly record struct DayTotals(

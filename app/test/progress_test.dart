@@ -649,4 +649,63 @@ void main() {
       expect(find.text('Includes rides scored from heart rate.'), findsNothing);
     },
   );
+
+  testWidgets(
+    'ProgressScreen_ShouldWarnAboutEveryDay_WhenTheWeekHasNoEasyDay',
+    (tester) async {
+      server.training = {
+        ...trainingJson(monotony: 2.27, strain: 817.2, monotonous: true),
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('training-monotonous')));
+
+      expect(
+        find.text(
+          'Every day was about as hard this week. An easy day helps you adapt.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('training-heavy-week')), findsNothing);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldWarnAboutAHeavyWeek_WhenStrainIsHigh', (
+    tester,
+  ) async {
+    server.training = {
+      ...trainingJson(monotony: 0.94, strain: 451.2, heavyWeek: true),
+    };
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('training-heavy-week')));
+
+    expect(find.text('This week was much heavier than usual.'), findsOneWidget);
+    expect(find.byKey(const Key('training-monotonous')), findsNothing);
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldShowTheMonotonyAndStrain_WhenTheWeekHasLoad',
+    (tester) async {
+      server.training = {
+        ...trainingJson(monotony: 2.27, strain: 817.2, strainUsual: 428.0),
+      };
+      await openProgress(tester);
+
+      await reveal(tester, find.byKey(const Key('training-strain')));
+
+      expect(find.text('Monotony 2.27 · Strain 817'), findsOneWidget);
+      expect(find.byKey(const Key('training-monotonous')), findsNothing);
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldHideTheNumbers_WhenTheWeekHasNoLoad', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await reveal(tester, find.byKey(const Key('fitness-chart')));
+
+    expect(find.byKey(const Key('training-strain')), findsNothing);
+  });
 }

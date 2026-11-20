@@ -1138,6 +1138,19 @@
     }
   },
   "trainingLoadHelp": "Fitness averages the last 42 days of load, fatigue the last 7. Form is fitness minus fatigue.",
+  "trainingMonotonous": "Every day was about as hard this week. An easy day helps you adapt.",
+  "trainingHeavyWeek": "This week was much heavier than usual.",
+  "trainingStrain": "Monotony {monotony} · Strain {strain}",
+  "@trainingStrain": {
+    "placeholders": {
+      "monotony": {
+        "type": "String"
+      },
+      "strain": {
+        "type": "String"
+      }
+    }
+  },
 
   "accountSearch": "Find an account",
   "clearSearch": "Clear the search",
