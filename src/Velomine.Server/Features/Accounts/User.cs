@@ -49,6 +49,18 @@ public sealed class User : IdentityUser<Guid>
     /// <summary>The ride that measured the threshold, null for a typed number and for a ride since deleted.</summary>
     public Guid? ThresholdHeartRateRideId { get; set; }
 
+    /// <summary>
+    /// The rider's own upper bounds for the seven power zones, as fractions of the FTP (six bounds, the top zone is
+    /// open). Null means the standard bounds.
+    /// </summary>
+    public double[]? PowerZoneBounds { get; set; }
+
+    /// <summary>The rider's own upper bounds for the five zones of the maximum model (four bounds). Null means standard.</summary>
+    public double[]? HeartRateMaxZoneBounds { get; set; }
+
+    /// <summary>The rider's own upper bounds for the five zones of the threshold model (four bounds). Null means standard.</summary>
+    public double[]? HeartRateThresholdZoneBounds { get; set; }
+
     /// <summary>Tanaka's estimate, 208 - 0.7 x age. Null without a birth year.</summary>
     public static int? EstimateMaxHeartRate(int? birthYear, TimeProvider time) =>
         birthYear is { } year
@@ -60,6 +72,13 @@ public sealed class User : IdentityUser<Guid>
 
     /// <summary>"metric" or "imperial". Display only: every value is stored in SI units.</summary>
     public string Units { get; set; } = "metric";
+
+    /// <summary>
+    /// How the member rides (<c>just_riding</c>, <c>with_goals</c> or <c>training</c>). Display only: it decides
+    /// what the app shows first and the server never filters by it. Null means the member has not chosen yet, and
+    /// the app then shows just riding until they do.
+    /// </summary>
+    public string? RiderMode { get; set; }
     /// <summary>An IANA time zone such as "Europe/Rome". Null means UTC. Decides what "today" and "this week" are.</summary>
     public string? TimeZone { get; set; }
 

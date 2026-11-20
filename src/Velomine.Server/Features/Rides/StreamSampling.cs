@@ -35,6 +35,7 @@ public static class StreamSampling
             Distance = streams.Distance is null ? null : [.. Slices().Select(s => LastValue(streams.Distance[s.From..s.To]))],
             HeartRate = Mean(streams.HeartRate, d => (short)Math.Round(d)),
             Power = Mean(streams.Power, d => (short)Math.Round(d)),
+            EstimatedPower = Mean(streams.EstimatedPower, d => (short)Math.Round(d)),
             Cadence = Mean(streams.Cadence, d => (short)Math.Round(d)),
             Temperature = Mean(streams.Temperature, d => (short)Math.Round(d)),
         };

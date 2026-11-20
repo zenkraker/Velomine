@@ -34,6 +34,12 @@ public sealed class Bike
     /// <summary>How far the wheel rolls in one turn. The phone recorder turns wheel sensor revolutions into distance with it.</summary>
     public int WheelCircumferenceMm { get; set; }
 
+    /// <summary>
+    /// The bike's own weight in kilograms, 3 to 40; null uses the default for its kind. Only the watt estimate of a ride
+    /// without a power meter reads it.
+    /// </summary>
+    public double? WeightKg { get; set; }
+
     /// <summary>Distance the bike had done before it was added here (a bike bought used). Counted in the bike's total.</summary>
     public double InitialDistanceM { get; set; }
 

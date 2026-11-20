@@ -20,6 +20,7 @@ class TrainingDay {
     required this.elevationGainM,
     required this.tss,
     required this.trimp,
+    required this.load,
     required this.fitness,
     required this.fatigue,
     required this.form,
@@ -39,6 +40,8 @@ class TrainingDay {
 
   final double trimp;
 
+  final double load;
+
   final double fitness;
 
   final double fatigue;
@@ -54,6 +57,7 @@ class TrainingDay {
     other.elevationGainM == elevationGainM &&
     other.tss == tss &&
     other.trimp == trimp &&
+    other.load == load &&
     other.fitness == fitness &&
     other.fatigue == fatigue &&
     other.form == form;
@@ -68,12 +72,13 @@ class TrainingDay {
     (elevationGainM.hashCode) +
     (tss.hashCode) +
     (trimp.hashCode) +
+    (load.hashCode) +
     (fitness.hashCode) +
     (fatigue.hashCode) +
     (form.hashCode);
 
   @override
-  String toString() => 'TrainingDay[date=$date, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, fitness=$fitness, fatigue=$fatigue, form=$form]';
+  String toString() => 'TrainingDay[date=$date, rides=$rides, distanceM=$distanceM, movingS=$movingS, elevationGainM=$elevationGainM, tss=$tss, trimp=$trimp, load=$load, fitness=$fitness, fatigue=$fatigue, form=$form]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -84,6 +89,7 @@ class TrainingDay {
       json[r'elevationGainM'] = this.elevationGainM;
       json[r'tss'] = this.tss;
       json[r'trimp'] = this.trimp;
+      json[r'load'] = this.load;
       json[r'fitness'] = this.fitness;
       json[r'fatigue'] = this.fatigue;
       json[r'form'] = this.form;
@@ -100,6 +106,7 @@ class TrainingDay {
     double? elevationGainM,
     double? tss,
     double? trimp,
+    double? load,
     double? fitness,
     double? fatigue,
     double? form,
@@ -111,6 +118,7 @@ class TrainingDay {
     elevationGainM: elevationGainM ?? this.elevationGainM,
     tss: tss ?? this.tss,
     trimp: trimp ?? this.trimp,
+    load: load ?? this.load,
     fitness: fitness ?? this.fitness,
     fatigue: fatigue ?? this.fatigue,
     form: form ?? this.form,
@@ -141,6 +149,8 @@ class TrainingDay {
         assert(json[r'tss'] != null, 'Required key "TrainingDay[tss]" has a null value in JSON.');
         assert(json.containsKey(r'trimp'), 'Required key "TrainingDay[trimp]" is missing from JSON.');
         assert(json[r'trimp'] != null, 'Required key "TrainingDay[trimp]" has a null value in JSON.');
+        assert(json.containsKey(r'load'), 'Required key "TrainingDay[load]" is missing from JSON.');
+        assert(json[r'load'] != null, 'Required key "TrainingDay[load]" has a null value in JSON.');
         assert(json.containsKey(r'fitness'), 'Required key "TrainingDay[fitness]" is missing from JSON.');
         assert(json[r'fitness'] != null, 'Required key "TrainingDay[fitness]" has a null value in JSON.');
         assert(json.containsKey(r'fatigue'), 'Required key "TrainingDay[fatigue]" is missing from JSON.');
@@ -158,6 +168,7 @@ class TrainingDay {
         elevationGainM: mapValueOfType<double>(json, r'elevationGainM')!,
         tss: mapValueOfType<double>(json, r'tss')!,
         trimp: mapValueOfType<double>(json, r'trimp')!,
+        load: mapValueOfType<double>(json, r'load')!,
         fitness: mapValueOfType<double>(json, r'fitness')!,
         fatigue: mapValueOfType<double>(json, r'fatigue')!,
         form: mapValueOfType<double>(json, r'form')!,
@@ -215,6 +226,7 @@ class TrainingDay {
     'elevationGainM',
     'tss',
     'trimp',
+    'load',
     'fitness',
     'fatigue',
     'form',

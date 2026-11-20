@@ -22,6 +22,9 @@ class IntensityResponse {
     required this.polarisationIndex,
     required this.label,
     required this.rides,
+    this.heartRateZoneModel = const Optional.absent(),
+    this.heartRateZoneReferenceBpm = const Optional.absent(),
+    this.heartRateZoneReferenceSource = const Optional.absent(),
   });
 
   final double easyS;
@@ -42,6 +45,30 @@ class IntensityResponse {
 
   final int rides;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateZoneModel;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> heartRateZoneReferenceBpm;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateZoneReferenceSource;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is IntensityResponse &&
     other.easyS == easyS &&
@@ -52,7 +79,10 @@ class IntensityResponse {
     other.hardPct == hardPct &&
     other.polarisationIndex == polarisationIndex &&
     other.label == label &&
-    other.rides == rides;
+    other.rides == rides &&
+    other.heartRateZoneModel == heartRateZoneModel &&
+    other.heartRateZoneReferenceBpm == heartRateZoneReferenceBpm &&
+    other.heartRateZoneReferenceSource == heartRateZoneReferenceSource;
 
   @override
   int get hashCode =>
@@ -65,10 +95,13 @@ class IntensityResponse {
     (hardPct.hashCode) +
     (polarisationIndex == null ? 0 : polarisationIndex!.hashCode) +
     (label.hashCode) +
-    (rides.hashCode);
+    (rides.hashCode) +
+    (heartRateZoneModel == null ? 0 : heartRateZoneModel!.hashCode) +
+    (heartRateZoneReferenceBpm == null ? 0 : heartRateZoneReferenceBpm!.hashCode) +
+    (heartRateZoneReferenceSource == null ? 0 : heartRateZoneReferenceSource!.hashCode);
 
   @override
-  String toString() => 'IntensityResponse[easyS=$easyS, moderateS=$moderateS, hardS=$hardS, easyPct=$easyPct, moderatePct=$moderatePct, hardPct=$hardPct, polarisationIndex=$polarisationIndex, label=$label, rides=$rides]';
+  String toString() => 'IntensityResponse[easyS=$easyS, moderateS=$moderateS, hardS=$hardS, easyPct=$easyPct, moderatePct=$moderatePct, hardPct=$hardPct, polarisationIndex=$polarisationIndex, label=$label, rides=$rides, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -85,6 +118,18 @@ class IntensityResponse {
     }
       json[r'label'] = this.label;
       json[r'rides'] = this.rides;
+    if (this.heartRateZoneModel.isPresent) {
+      final value = this.heartRateZoneModel.value;
+      json[r'heartRateZoneModel'] = value;
+    }
+    if (this.heartRateZoneReferenceBpm.isPresent) {
+      final value = this.heartRateZoneReferenceBpm.value;
+      json[r'heartRateZoneReferenceBpm'] = value;
+    }
+    if (this.heartRateZoneReferenceSource.isPresent) {
+      final value = this.heartRateZoneReferenceSource.value;
+      json[r'heartRateZoneReferenceSource'] = value;
+    }
     return json;
   }
 
@@ -101,6 +146,9 @@ class IntensityResponse {
     bool polarisationIndexSetToNull = false,
     String? label,
     int? rides,
+    Optional<String?>? heartRateZoneModel,
+    Optional<int?>? heartRateZoneReferenceBpm,
+    Optional<String?>? heartRateZoneReferenceSource,
   }) => IntensityResponse(
     easyS: easyS ?? this.easyS,
     moderateS: moderateS ?? this.moderateS,
@@ -111,6 +159,9 @@ class IntensityResponse {
     polarisationIndex: polarisationIndexSetToNull ? null : polarisationIndex ?? this.polarisationIndex,
     label: label ?? this.label,
     rides: rides ?? this.rides,
+    heartRateZoneModel: heartRateZoneModel ?? this.heartRateZoneModel,
+    heartRateZoneReferenceBpm: heartRateZoneReferenceBpm ?? this.heartRateZoneReferenceBpm,
+    heartRateZoneReferenceSource: heartRateZoneReferenceSource ?? this.heartRateZoneReferenceSource,
   );
 
   /// Returns a new [IntensityResponse] instance and imports its values from
@@ -154,6 +205,9 @@ class IntensityResponse {
         polarisationIndex: mapValueOfType<double>(json, r'polarisationIndex'),
         label: mapValueOfType<String>(json, r'label')!,
         rides: mapValueOfType<int>(json, r'rides')!,
+        heartRateZoneModel: json.containsKey(r'heartRateZoneModel') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneModel')) : const Optional.absent(),
+        heartRateZoneReferenceBpm: json.containsKey(r'heartRateZoneReferenceBpm') ? Optional.present(json[r'heartRateZoneReferenceBpm'] == null ? null : int.parse('${json[r'heartRateZoneReferenceBpm']}')) : const Optional.absent(),
+        heartRateZoneReferenceSource: json.containsKey(r'heartRateZoneReferenceSource') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneReferenceSource')) : const Optional.absent(),
       );
     }
     return null;

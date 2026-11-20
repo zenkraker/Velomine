@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Demo — Velomine</title>
-  <meta name="description" content="Try Velomine on a seeded club: three shared logins, three months of rides, a nightly reset. Upload your own GPX and see what breaks.">
+  <meta name="description" content="Try Velomine on a seeded club: five shared logins, three months of rides, a nightly reset. Upload your own GPX and see what breaks.">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#F0EEE9">
   <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
@@ -56,7 +56,7 @@
         </nav>
         <p class="eyebrow">Demo</p>
         <h1>Try the real app.</h1>
-        <p>Not a tour. A seeded club with three months of rides, three accounts, and a nightly reset. Upload your own GPX and see what breaks.</p>
+        <p>Not a tour. A seeded club with three months of rides, five accounts, and a nightly reset. Upload your own GPX and see what breaks.</p>
       </div>
     </section>
 
@@ -65,7 +65,7 @@
         <div class="split">
           <div class="split-copy">
             <h2>Sign in as anyone.</h2>
-            <p>Three accounts share one seeded club. Open the same ride from the coach side and the rider side and compare what each of them can see.</p>
+            <p>Five accounts share one seeded club. Open the same ride from the coach side and the rider side and compare what each of them can see, including two riders without a power meter.</p>
 
             <!-- Keep these in sync with the seeded demo club and the nightly reset script. -->
             <div class="logins card" aria-label="Demo accounts">
@@ -82,8 +82,16 @@
                 <span>Rider: rides, map, charts, laps, bikes, goals</span>
               </div>
               <div class="login-row">
+                <code>demo-heart-rate@velomine.eu</code>
+                <span>Rider with a heart-rate strap and no power meter: the load comes from heart rate</span>
+              </div>
+              <div class="login-row">
+                <code>demo-no-sensors@velomine.eu</code>
+                <span>Rider with no power meter and no strap: estimated watts, and how the ride felt</span>
+              </div>
+              <div class="login-row">
                 <code>Velomine-demo-1</code>
-                <span>Password, shared by all three accounts</span>
+                <span>Password, shared by all five accounts</span>
               </div>
             </div>
 
@@ -116,13 +124,14 @@
         <div class="split">
           <div class="split-copy">
             <p class="eyebrow">Five minutes in the demo</p>
-            <h2>Five things worth a look.</h2>
-            <p>Everything here is in the seeded club, so you can try each one with the three accounts above.</p>
+            <h2>A few things worth a look.</h2>
+            <p>Everything here is in the seeded club, so you can try each one with the accounts above.</p>
             <ol class="steps">
               <li><strong>Open a ride.</strong> Sign in as the rider, pick one of the rides and move over a chart: the marker follows on the map. Look at the power, heart rate, laps and zones.</li>
-              <li><strong>Check Progress.</strong> The power curve shows the best power for each duration, and training load shows fitness, fatigue and form over the weeks.</li>
+              <li><strong>Check Progress.</strong> The rider card puts your FTP, W/kg, best efforts and fitness in one place. The power curve shows the best power for each duration, and training load shows fitness, fatigue and form over the weeks.</li>
               <li><strong>Change who sees what.</strong> As the rider, open sharing and turn rides or the route off for the coach. Then sign in as the coach and see what is still there. The rider can see who looked.</li>
               <li><strong>Look at the club.</strong> Open the club’s route library and the two planned rides, and say you are in.</li>
+              <li><strong>Try a rider without a power meter.</strong> Sign in as <code>demo-heart-rate@velomine.eu</code>: the fitness chart is built from the strap alone. Then try <code>demo-no-sensors@velomine.eu</code>, whose watts are estimated from speed, slope and weight.</li>
               <li><strong>Tell me what broke.</strong> Anything wrong, slow or confusing is useful: <a href="/feedback/">send feedback</a>.</li>
             </ol>
           </div>

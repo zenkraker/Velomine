@@ -27,6 +27,7 @@ import 'ride_filters.dart';
 import 'ride_title.dart';
 import 'ride_type_chips.dart';
 import 'rides_view_model.dart';
+import '../../core/rider_mode.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/units.dart';
@@ -92,6 +93,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(ridesViewModelProvider);
+    final layout = ref.watch(riderLayoutProvider);
     final l10n = context.l10n;
     final notifier = ref.read(ridesViewModelProvider.notifier);
 
@@ -332,7 +334,11 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
         CardGrid(
           children: [
             for (final ride in s.rides)
-              RideCard(ride: ride, onTap: () => onOpen(ride.id)),
+              RideCard(
+                ride: ride,
+                layout: layout,
+                onTap: () => onOpen(ride.id),
+              ),
           ],
         ),
         if (s.next != null)
@@ -470,9 +476,18 @@ class _SoloBanner extends StatelessWidget {
 }
 
 class RideCard extends ConsumerWidget {
-  const RideCard({super.key, required this.ride, this.onTap});
+  const RideCard({
+    super.key,
+    required this.ride,
+    required this.layout,
+    this.onTap,
+  });
 
   final RideResponse ride;
+
+  /// What this rider's mode puts on a card. Required, so a card showing someone else's ride is given
+  /// [RiderModeLayout.full] explicitly instead of silently following the viewer's mode.
+  final RiderModeLayout layout;
   final VoidCallback? onTap;
 
   @override
@@ -486,28 +501,41 @@ class RideCard extends ConsumerWidget {
     final empty =
         ready && (ride.distanceM ?? 0) <= 0 && (ride.movingS ?? 0) <= 0;
     // Each number carries its name: a row of unlabelled values is a puzzle on a phone. A number the
-    // ride does not have is left out, not shown as zero.
-    final facts = <(String, String)>[
+    // ride does not have is left out, not shown as zero, and the mode decides which ones the card lists.
+    final facts = <(String, String, String)>[
       if (ready) ...[
         if ((ride.distanceM ?? 0) > 0)
-          (l10n.statDistance, km(units, ride.distanceM)),
+          ('distance', l10n.statDistance, km(units, ride.distanceM)),
         if ((ride.movingS ?? 0) > 0)
-          (l10n.statMovingTime, duration(ride.movingS)),
+          ('moving-time', l10n.statMovingTime, duration(ride.movingS)),
         if ((ride.elevationGainM ?? 0) > 0)
-          (l10n.statClimbing, elevation(units, ride.elevationGainM)),
+          (
+            'climbing',
+            l10n.statClimbing,
+            elevation(units, ride.elevationGainM),
+          ),
         if ((ride.avgSpeedMs ?? 0) > 0)
-          (l10n.statAverageSpeed, kmh(units, ride.avgSpeedMs)),
+          ('average-speed', l10n.statAverageSpeed, kmh(units, ride.avgSpeedMs)),
         if ((ride.avgPowerW ?? 0) > 0)
           (
+            'average-power',
             l10n.statAveragePower,
             '${ride.avgPowerW} W${ride.normalizedPowerW == null ? '' : ' (NP ${ride.normalizedPowerW})'}',
           ),
         if ((ride.avgHeartRate ?? 0) > 0)
-          (l10n.statAverageHeartRate, '${ride.avgHeartRate} bpm'),
+          (
+            'average-heart-rate',
+            l10n.statAverageHeartRate,
+            '${ride.avgHeartRate} bpm',
+          ),
         if ((ride.avgCadence ?? 0) > 0)
-          (l10n.statAverageCadence, '${ride.avgCadence} rpm'),
+          (
+            'average-cadence',
+            l10n.statAverageCadence,
+            '${ride.avgCadence} rpm',
+          ),
       ],
-    ];
+    ].where((fact) => layout.rideListFacts.contains(fact.$1)).toList();
     return Card(
       key: Key('ride-${ride.id}'),
       margin: EdgeInsets.zero,
@@ -574,7 +602,7 @@ class RideCard extends ConsumerWidget {
                       spacing: gap,
                       runSpacing: AppSpacing.sm,
                       children: [
-                        for (final (label, value) in facts)
+                        for (final (_, label, value) in facts)
                           SizedBox(
                             width: math.max(width, 62),
                             child: StatFigure(label: label, value: value),

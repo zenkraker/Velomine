@@ -22,6 +22,8 @@ namespace Velomine.Server.Tests.Demo;
 public sealed class DemoTests(PostgresFixture postgres)
 {
     private const string Rider = "demo-rider@velomine.eu";
+    private const string HeartRateRider = "demo-heart-rate@velomine.eu";
+    private const string NoSensorsRider = "demo-no-sensors@velomine.eu";
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -123,6 +125,21 @@ public sealed class DemoTests(PostgresFixture postgres)
         var data = check.ServiceProvider.GetRequiredService<VelomineDbContext>();
         Assert.Equal(1, await data.Clubs.CountAsync(Ct));
         Assert.Equal(DemoData.Accounts.Count, await data.ClubMemberships.CountAsync(Ct));
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldSeedTraining_WhenDemoIsRemadeAfterAVisitorChangedTheMode()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+        var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
+        Assert.Equal(RiderModes.Training, (await visitor.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+        (await visitor.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.JustRiding), Ct)).EnsureSuccessStatusCode();
+
+        await ResetAsync(api);
+
+        var fresh = await api.SignedInClientAsync(Rider, DemoData.Password);
+        Assert.Equal(RiderModes.Training, (await fresh.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
     }
 
     [Fact]
@@ -432,6 +449,17 @@ public sealed class DemoTests(PostgresFixture postgres)
     private static List<Sample> Samples(RideStreams s) =>
         [.. Enumerable.Range(0, s.Time.Length).Select(i => new Sample(s.Time[i], HeartRate: s.HeartRate?[i], Power: s.Power?[i]))];
 
+    /// <summary>The same ride with every signal the reader can use, for the watts it estimates from speed and slope.</summary>
+    private static List<Sample> FullSamples(RideStreams s) =>
+    [
+        .. Enumerable.Range(0, s.Time.Length).Select(i => new Sample(
+            s.Time[i],
+            Altitude: s.Altitude?[i],
+            Speed: s.Speed?[i],
+            HeartRate: s.HeartRate?[i],
+            Power: s.Power?[i])),
+    ];
+
     private static (double? EfficiencyFactor, double? DecouplingPct, bool? Steady) Read(List<Sample> samples) =>
         RideMetrics.Efficiency(RideMetrics.PairedSeconds(samples, RideMetrics.PauseThresholdS(samples)));
 
@@ -553,5 +581,124 @@ public sealed class DemoTests(PostgresFixture postgres)
         // The newest row is the number the rider's zones use.
         var profile = (await rider.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct))!;
         Assert.Equal(profile.FtpW, history.Entries[0].Watts);
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldStoreTheHeartRateEffortTheReaderWorksOut_WhenTheDemoIsReset()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var time = api.Services.GetRequiredService<TimeProvider>();
+        var users = (await db.Users.AsNoTracking().ToListAsync(Ct)).ToDictionary(u => u.Id);
+        var rides = await db.Rides.AsNoTracking()
+            .Select(r => new { r.Id, r.UserId, r.HrTss, r.LoadFtpW, r.LoadMaxHeartRate, r.LoadThresholdHeartRate })
+            .ToListAsync(Ct);
+        var streams = (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(s => s.RideId, s => Samples(s));
+
+        Assert.NotEmpty(rides);
+        Assert.Contains(rides, r => r.HrTss is not null && r.LoadFtpW == 0);
+        foreach (var ride in rides)
+        {
+            // The seed writes no heart-rate score of its own: the stored number is the reader's, and the profile it
+            // was read with is stamped next to it.
+            var user = users[ride.UserId];
+            var (max, threshold) = HeartRates.For(user, time);
+            Assert.Equal(TrainingLoad.HrTss(streams[ride.Id], threshold?.Bpm), ride.HrTss);
+            Assert.Equal(threshold?.Bpm ?? 0, ride.LoadThresholdHeartRate);
+            Assert.Equal(max?.Bpm ?? 0, ride.LoadMaxHeartRate);
+            Assert.Equal(user.FtpW ?? 0, ride.LoadFtpW);
+        }
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldStoreTheEstimatedWattsTheReaderWorksOut_WhenTheDemoIsReset()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var users = (await db.Users.AsNoTracking().ToListAsync(Ct)).ToDictionary(u => u.Id);
+        var bikes = (await db.Bikes.AsNoTracking().ToListAsync(Ct)).ToDictionary(b => b.Id);
+        var rides = (await db.Rides.AsNoTracking()
+            .Select(r => new
+            {
+                r.Id,
+                r.UserId,
+                r.BikeId,
+                r.Discipline,
+                r.Environment,
+                r.Assist,
+                r.MovingS,
+                r.EstimatedAvgPowerW,
+                r.EstimatedNormalizedPowerW,
+                r.EstimatedTss
+            })
+            .ToListAsync(Ct));
+        var streams = (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(s => s.RideId);
+
+        var estimated = 0;
+        foreach (var ride in rides)
+        {
+            var s = streams[ride.Id];
+            var user = users[ride.UserId];
+            var bike = ride.BikeId is { } bikeId ? bikes.GetValueOrDefault(bikeId) : null;
+            var read = s.Power is null
+                ? EstimatedPower.Compute(
+                    FullSamples(s),
+                    s.Speed ?? [],
+                    RideMetrics.PauseThresholdS(FullSamples(s)),
+                    [],
+                    new PowerEstimate(user.WeightKg, bike?.WeightKg, bike?.Kind, ride.Discipline, ride.Environment, ride.Assist),
+                    user.FtpW,
+                    ride.MovingS ?? 0)
+                : null;
+            // Every ride without a power stream stores exactly the estimate the reader makes, stream included.
+            Assert.Equal(read?.AvgPowerW, ride.EstimatedAvgPowerW);
+            Assert.Equal(read?.NormalizedPowerW, ride.EstimatedNormalizedPowerW);
+            Assert.Equal(read?.Tss, ride.EstimatedTss);
+            Assert.Equal(read?.PerSample, s.EstimatedPower);
+            if (read is not null) estimated++;
+        }
+
+        Assert.True(estimated >= 2, $"only {estimated} rides had watts to estimate");
+    }
+
+    [Fact]
+    public async Task DemoData_ShouldGiveAHeartRateOnlyRiderAndARiderWithNoSensors_WhenTheDemoIsReset()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var heartRateOnly = (await db.Users.AsNoTracking().SingleAsync(u => u.Email == HeartRateRider, Ct)).Id;
+        var noSensors = (await db.Users.AsNoTracking().SingleAsync(u => u.Email == NoSensorsRider, Ct)).Id;
+        var withStrap = await db.Rides.AsNoTracking().Where(r => r.UserId == heartRateOnly).ToListAsync(Ct);
+        var plain = await db.Rides.AsNoTracking().Where(r => r.UserId == noSensors).ToListAsync(Ct);
+
+        // One rider has a strap and no power meter, the other has neither; both ride outdoors, so both get estimates.
+        Assert.NotEmpty(withStrap);
+        Assert.NotEmpty(plain);
+        Assert.All(withStrap, r => Assert.Null(r.AvgPowerW));
+        Assert.All(plain, r => Assert.Null(r.AvgPowerW));
+        Assert.All(withStrap, r => Assert.NotNull(r.AvgHeartRate));
+        Assert.All(withStrap, r => Assert.NotNull(r.HrTss));
+        Assert.All(plain, r => Assert.Null(r.AvgHeartRate));
+        Assert.All(plain, r => Assert.Null(r.HrTss));
+        Assert.All(withStrap.Concat(plain), r => Assert.NotNull(r.EstimatedAvgPowerW));
+
+        // And the demo shows it: the strap alone builds the fitness chart, while the rider with no sensors has none
+        // from heart rate.
+        var strapCard = await (await api.SignedInClientAsync(HeartRateRider, DemoData.Password))
+            .GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=90", Ct);
+        Assert.True(strapCard!.HeartRateLoadRides > 0);
+        Assert.True(strapCard.Days[^1].Fitness > 0);
+        var plainCard = await (await api.SignedInClientAsync(NoSensorsRider, DemoData.Password))
+            .GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=90", Ct);
+        Assert.Equal(0, plainCard!.HeartRateLoadRides);
     }
 }

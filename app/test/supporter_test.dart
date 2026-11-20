@@ -69,7 +69,12 @@ void main() {
   ) async {
     licence();
     await openProfile(tester);
-    await tester.ensureVisible(find.byKey(const Key('supporter-hidden')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('supporter-hidden')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('supporter-hidden')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('supporter-badge')), findsNothing);

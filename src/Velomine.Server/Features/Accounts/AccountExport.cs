@@ -102,8 +102,16 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             // Both numbers in use, with where each came from and the ride that measured it, so the export says what
             // the zones used. Written out one by one: a tuple's fields are not serialized at all.
             HeartRate = new { Max = heartRates.Max, Threshold = heartRates.Threshold },
+            // The rider's own zone bounds, as fractions of the reference; null where the standard bounds apply.
+            ZoneBounds = new
+            {
+                Power = user.PowerZoneBounds,
+                HeartRateMax = user.HeartRateMaxZoneBounds,
+                HeartRateThreshold = user.HeartRateThresholdZoneBounds,
+            },
             user.Language,
             user.Units,
+            user.RiderMode,
             user.TimeZone,
             FirstDayOfWeek = WeekDays.Name(user.FirstDayOfWeek),
             user.EmailNotifications,
@@ -168,6 +176,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         await AddJsonAsync(zip, "rides.json", rides.Select(r => new
         {
             Ride = RideResponse.From(r),
+            // The threshold the stored heart-rate effort came from, so the export says what it was read with.
+            r.LoadThresholdHeartRate,
             // Where the original file is in this ZIP; null when the file was not on disk.
             File = fileNames.GetValueOrDefault(r.FileSha256),
             r.FileSha256,

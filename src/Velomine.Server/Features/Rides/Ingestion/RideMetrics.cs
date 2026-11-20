@@ -20,10 +20,15 @@ public sealed record RideMetricValues(
     double? IntensityFactor = null,
     double? Tss = null,
     double? Trimp = null,
+    double? HrTss = null,
     int[]? PowerBests = null,
     double? EfficiencyFactor = null,
     double? DecouplingPct = null,
-    bool? Steady = null);
+    bool? Steady = null,
+    short?[]? EstimatedPower = null,
+    int? EstimatedAvgPowerW = null,
+    int? EstimatedNormalizedPowerW = null,
+    double? EstimatedTss = null);
 
 /// <summary>
 /// The numbers shown for a ride, worked out from its samples. Pure functions, no I/O.
@@ -46,7 +51,9 @@ public static class RideMetrics
         double? deviceMovingS = null,
         IReadOnlyList<PauseInterval>? pauses = null,
         int? ftpW = null,
-        int? maxHeartRate = null)
+        int? maxHeartRate = null,
+        int? thresholdHeartRate = null,
+        PowerEstimate? estimate = null)
     {
         if (samples.Count < 2) throw new RideParseException("too_short", "The ride has fewer than two samples.");
 
@@ -74,6 +81,10 @@ public static class RideMetrics
             ? TrainingLoad.ZoneSeconds(samples, s => s.HeartRate, zoneMaxHr, TrainingLoad.HeartRateFloor, TrainingLoad.HeartRateBounds)
             : null;
         var (efficiencyFactor, decoupling, steady) = Efficiency(PairedSeconds(samples, pause, paused));
+        // Only a ride with no power at all gets estimated watts; they never feed the power numbers above.
+        var estimated = estimate is null
+            ? null
+            : EstimatedPower.Compute(samples, speeds, pause, paused, estimate, ftpW, moving);
 
         return new RideMetricValues(
             elapsed,
@@ -93,10 +104,15 @@ public static class RideMetrics
             intensityFactor,
             tss,
             TrainingLoad.Trimp(heartRateZones),
+            TrainingLoad.HrTss(samples, thresholdHeartRate, paused),
             PowerBests.ComputeFromSamples(samples, pause, paused),
             efficiencyFactor,
             decoupling,
-            steady);
+            steady,
+            estimated?.PerSample,
+            estimated?.AvgPowerW,
+            estimated?.NormalizedPowerW,
+            estimated?.Tss);
     }
 
     /// <summary>
@@ -314,15 +330,7 @@ public static class RideMetrics
         var values = altitudes.Where(a => a.HasValue).Select(a => (double)a!.Value).ToArray();
         if (values.Length < 2) return (null, null);
 
-        var half = ElevationSmoothingWindow / 2;
-        var despiked = new double[values.Length];
-        for (var i = 0; i < values.Length; i++)
-            despiked[i] = Median(values[Math.Max(0, i - half)..Math.Min(values.Length, i + half + 1)].ToList());
-
-        var smooth = new double[values.Length];
-        for (var i = 0; i < values.Length; i++)
-            smooth[i] = despiked[Math.Max(0, i - half)..Math.Min(values.Length, i + half + 1)].Average();
-
+        var smooth = SmoothAltitude(values);
         double gain = 0, loss = 0, reference = smooth[0];
         foreach (var altitude in smooth)
         {
@@ -334,6 +342,43 @@ public static class RideMetrics
         }
 
         return (gain, loss);
+    }
+
+    /// <summary>
+    /// A median filter removes spikes and a moving average smooths the rest, over the five values around each one.
+    /// Same length as the input, so the result stays aligned with the samples it came from.
+    /// </summary>
+    public static double[] SmoothAltitude(IReadOnlyList<double> values)
+    {
+        var source = values as double[] ?? [.. values];
+        var half = ElevationSmoothingWindow / 2;
+        var despiked = new double[source.Length];
+        for (var i = 0; i < source.Length; i++)
+            despiked[i] = Median(source[Math.Max(0, i - half)..Math.Min(source.Length, i + half + 1)].ToList());
+
+        var smooth = new double[source.Length];
+        for (var i = 0; i < source.Length; i++)
+            smooth[i] = despiked[Math.Max(0, i - half)..Math.Min(source.Length, i + half + 1)].Average();
+        return smooth;
+    }
+
+    /// <summary>The same smoothing over a signal with gaps: each sample's altitude, null where it has none.</summary>
+    public static double?[] SmoothedAltitudes(IReadOnlyList<float?> altitudes)
+    {
+        var positions = new List<int>(altitudes.Count);
+        var values = new List<double>(altitudes.Count);
+        for (var i = 0; i < altitudes.Count; i++)
+            if (altitudes[i] is { } altitude)
+            {
+                positions.Add(i);
+                values.Add(altitude);
+            }
+
+        var result = new double?[altitudes.Count];
+        if (values.Count < 2) return result;
+        var smooth = SmoothAltitude(values);
+        for (var i = 0; i < positions.Count; i++) result[positions[i]] = smooth[i];
+        return result;
     }
 
     /// <summary>
@@ -413,7 +458,7 @@ public static class RideMetrics
         return (int)Math.Round(Math.Pow(fourthPowers / windows, 0.25));
     }
 
-    private static double Median(List<double> values)
+    internal static double Median(List<double> values)
     {
         values.Sort();
         var middle = values.Count / 2;

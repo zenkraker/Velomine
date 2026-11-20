@@ -76,6 +76,7 @@ void main() {
               'elevationGainM': 200.0,
               'tss': 40.0 + i,
               'trimp': 30.0 + i,
+              'load': 40.0 + i,
               'fitness': 18.0 + i,
               'fatigue': 22.0 + i,
               'form': i.isEven ? 4.0 : -4.0,

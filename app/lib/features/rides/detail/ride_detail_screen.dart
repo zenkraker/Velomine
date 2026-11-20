@@ -7,9 +7,11 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
+import '../../../core/heart_rate_zones.dart';
 import '../../../core/placeholder_block.dart';
 import '../../../core/confirm.dart';
 import '../../../core/l10n.dart';
+import '../../../core/rider_mode.dart';
 import '../../../core/theme.dart';
 import '../../../core/user_message_text.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -21,6 +23,7 @@ import '../ride_type_sheet.dart';
 import '../../progress/events.dart';
 import '../../progress/progress_view_models.dart';
 import 'lap_table.dart';
+import 'effort_word.dart';
 import 'power_record_chips.dart';
 import 'ride_detail_state.dart';
 import 'ride_detail_view_model.dart';
@@ -35,23 +38,30 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/ftp_suggestion_card.dart';
 import '../../../core/widgets/heart_rate_note_card.dart';
 import '../../../core/widgets/inline_error.dart';
+import '../../../core/widgets/more_details.dart';
 import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
 import '../../../core/units.dart';
 import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/source_note.dart';
 import '../../../core/widgets/stat_card.dart';
+import '../../accounts/effort_source_text.dart';
 
 class RideDetailScreen extends ConsumerWidget {
   const RideDetailScreen({
     super.key,
     required this.id,
+    required this.layout,
     required this.onDeleted,
     this.tileUrl,
     this.attribution,
   });
 
   final String id;
+
+  /// What this rider's mode puts first. Required, so a screen showing someone else's ride is given
+  /// [RiderModeLayout.full] explicitly instead of silently following the viewer's mode.
+  final RiderModeLayout layout;
   final VoidCallback onDeleted;
   final String? tileUrl;
   final String? attribution;
@@ -261,9 +271,66 @@ class RideDetailScreen extends ConsumerWidget {
           rideErrorText(l10n, ride.error),
           key: const Key('ride-failed'),
         )
-      else ...[
-        // The route leads: the whole card opens the full map, with the ride's facts on it.
-        if (s.series?.hasRoute ?? false)
+      else
+        ..._readyBody(
+          context,
+          ref,
+          s,
+          ride,
+          selection,
+          notifier,
+          heartRateZones,
+          powerZones,
+        ),
+    ];
+  }
+
+  /// Everything the ride has to say, in the order it says it. Each part is tagged with whether only the
+  /// training view keeps it on the page: a simple mode folds the advanced parts behind one button, training
+  /// leaves them where they were.
+  List<Widget> _readyBody(
+    BuildContext context,
+    WidgetRef ref,
+    RideDetailState s,
+    RideResponse ride,
+    RideSelection selection,
+    RideDetailViewModel notifier,
+    List<ZoneTime> heartRateZones,
+    List<ZoneTime> powerZones,
+  ) {
+    final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final effort = layout.effortWord ? effortWord(heartRateZones) : null;
+    final items = <(Widget, bool)>[
+      if (ride.ftpSuggestionW.value case final watts?)
+        (
+          FtpSuggestionCard(
+            watts: watts,
+            method: ride.ftpSuggestionMethod.value ?? '20min',
+            suggestionId: ride.ftpSuggestionId.value,
+            busy: s.action.running,
+            onAccept: notifier.acceptSuggestion,
+            onDismiss: notifier.dismissSuggestion,
+          ),
+          true,
+        ),
+      // One card per number this ride moved: one ride can raise the maximum and the threshold.
+      for (final note in [
+        ride.heartRateMaxNote.orElse(null),
+        ride.heartRateThresholdNote.orElse(null),
+      ])
+        if (note != null)
+          for (final card in _heartRateNoteCard(s, ride, note, notifier))
+            (card, true),
+      if (rideTypeIsSet(ride)) (RideTypeChips(ride: ride), false),
+      (
+        PowerRecordChips(
+          records: ride.powerRecords.orElse(const []) ?? const [],
+        ),
+        true,
+      ),
+      if (s.series?.hasRoute ?? false)
+        (
           RouteMap(
             data: s.series!,
             selected: selection.selected,
@@ -276,45 +343,62 @@ class RideDetailScreen extends ConsumerWidget {
             date: _rideDate(context, ride),
             facts: _mapFacts(context, ride),
           ),
-        if (ride.ftpSuggestionW.value case final watts?)
-          FtpSuggestionCard(
-            watts: watts,
-            method: ride.ftpSuggestionMethod.value ?? '20min',
-            suggestionId: ride.ftpSuggestionId.value,
-            busy: s.action.running,
-            onAccept: notifier.acceptSuggestion,
-            onDismiss: notifier.dismissSuggestion,
-          ),
-        // One card per number this ride moved: one ride can raise the maximum and the threshold.
-        for (final note in [
-          ride.heartRateMaxNote.orElse(null),
-          ride.heartRateThresholdNote.orElse(null),
-        ])
-          if (note != null) ..._heartRateNoteCard(s, ride, note, notifier),
-        if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
-        PowerRecordChips(
-          records: ride.powerRecords.orElse(const []) ?? const [],
+          false,
         ),
-        _Stats(ride: ride),
-        if (s.laps.isNotEmpty)
-          LapTable(laps: s.laps, selectedLap: selection.selectedLap),
-        if (heartRateZones.isEmpty &&
-            powerZones.isEmpty &&
-            (ride.avgHeartRate != null || ride.avgPowerW != null))
+      (
+        _Stats(
+          ride: ride,
+          show: layout.foldAdvanced ? _StatsShow.basic : _StatsShow.all,
+        ),
+        false,
+      ),
+      if (effort case final word?)
+        (
+          Text(
+            switch (word) {
+              EffortWord.easy => l10n.rideEffortEasy,
+              EffortWord.steady => l10n.rideEffortSteady,
+              EffortWord.hard => l10n.rideEffortHard,
+            },
+            key: const Key('ride-effort'),
+            style: text.titleMedium,
+          ),
+          false,
+        ),
+      if (layout.foldAdvanced)
+        (_Stats(ride: ride, show: _StatsShow.advanced), true),
+      if (s.laps.isNotEmpty)
+        (LapTable(laps: s.laps, selectedLap: selection.selectedLap), true),
+      if (heartRateZones.isEmpty &&
+          powerZones.isEmpty &&
+          (ride.avgHeartRate != null || ride.avgPowerW != null))
+        (
           Text(
             l10n.trainingHint,
             key: const Key('training-hint'),
             style: text.bodySmall,
           ),
-        if (heartRateZones.isNotEmpty)
+          true,
+        ),
+      if (heartRateZones.isNotEmpty)
+        (
           _ZonesCard(
             key: const Key('heart-rate-zones'),
             title: l10n.heartRateZones,
             unit: 'bpm',
             zones: heartRateZones,
             colors: _heartRateZoneColors,
+            note: heartRateZonesSource(
+              l10n,
+              ride.heartRateZoneModel.orElse(null),
+              ride.heartRateZoneReferenceBpm.orElse(null),
+              ride.heartRateZoneReferenceSource.orElse(null),
+            ),
           ),
-        if (powerZones.isNotEmpty)
+          !layout.showZonesAndCharts,
+        ),
+      if (powerZones.isNotEmpty)
+        (
           _ZonesCard(
             key: const Key('power-zones'),
             title: l10n.powerZones,
@@ -322,16 +406,25 @@ class RideDetailScreen extends ConsumerWidget {
             zones: powerZones,
             colors: _powerZoneColors,
           ),
-        if (s.bikes.isNotEmpty || ride.bikeId != null)
+          true,
+        ),
+      if (s.bikes.isNotEmpty || ride.bikeId != null)
+        (
           _BikePicker(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
+          false,
+        ),
+      (
         RideFeelCard(
           feel: s.feel,
           saving: s.feelCommand.running,
           onSave: notifier.saveFeel,
           onDelete: notifier.deleteFeel,
         ),
-        if (s.views case final views?) _ViewsCard(views: views),
-        if (s.series != null && s.series!.series.isNotEmpty) ...[
+        true,
+      ),
+      if (s.views case final views?) (_ViewsCard(views: views), false),
+      if (s.series != null && s.series!.series.isNotEmpty) ...[
+        (
           ValueListenableBuilder<int?>(
             valueListenable: selection.selected,
             builder: (_, index, _) => Text(
@@ -349,7 +442,10 @@ class RideDetailScreen extends ConsumerWidget {
               ),
             ),
           ),
-          for (final series in s.series!.series)
+          layout.rideChartIds.isEmpty,
+        ),
+        for (final series in s.series!.series)
+          (
             SeriesChart(
               series: series,
               time: s.series!.time,
@@ -359,8 +455,20 @@ class RideDetailScreen extends ConsumerWidget {
                   VelomineColors.of(context).series[series.id] ??
                   Theme.of(context).colorScheme.primary,
             ),
-        ],
+            !layout.rideChartIds.contains(series.id),
+          ),
       ],
+    ];
+    if (!layout.foldAdvanced) return [for (final (widget, _) in items) widget];
+    final folded = [
+      for (final (widget, advanced) in items)
+        if (advanced) widget,
+    ];
+    return [
+      for (final (widget, advanced) in items)
+        if (!advanced) widget,
+      if (folded.isNotEmpty)
+        MoreDetails(label: l10n.moreDetailsAll, children: folded),
     ];
   }
 
@@ -456,11 +564,26 @@ class _ViewsCard extends StatelessWidget {
   }
 }
 
-/// The ride's numbers as small tiles: only the ones the ride has.
+/// The ride's numbers as small tiles: only the ones the ride has, and only the ones this view shows.
+///
+/// The basic tiles answer "how was the ride" (how far, how long, how hard the heart worked); everything else
+/// is training analysis and a simple mode folds it away.
 class _Stats extends ConsumerWidget {
-  const _Stats({required this.ride});
+  const _Stats({required this.ride, required this.show});
 
   final RideResponse ride;
+  final _StatsShow show;
+
+  /// The tiles a simple rider keeps, by the id the tile is tagged with.
+  static const _basic = {
+    'distance',
+    'moving-time',
+    'elapsed-time',
+    'climbing',
+    'average-speed',
+    'average-heart-rate',
+    'max-heart-rate',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -486,6 +609,12 @@ class _Stats extends ConsumerWidget {
         ('top-speed', l10n.statTopSpeed, kmh(units, ride.maxSpeedMs)),
       if (ride.avgPowerW != null)
         ('average-power', l10n.statAveragePower, '${ride.avgPowerW} W'),
+      if (ride.estimatedAvgPowerW.value case final estimate?)
+        (
+          'estimated-average-power',
+          l10n.statEstimatedAveragePower,
+          '$estimate W',
+        ),
       if (ride.normalizedPowerW != null)
         (
           'normalized-power',
@@ -501,6 +630,9 @@ class _Stats extends ConsumerWidget {
           ride.intensityFactor!.toStringAsFixed(2),
         ),
       if (ride.tss != null) ('tss', l10n.statTss, ride.tss!.round().toString()),
+      // The effort score the dashboard uses for this ride, and where it came from.
+      if (ride.effortScore.value case final score?)
+        ('effort-score', l10n.statEffortScore, score.round().toString()),
       if (ride.efficiencyFactor.value case final efficiency?)
         ('efficiency', l10n.statEfficiency, efficiency.toStringAsFixed(2)),
       if (ride.decouplingPct.value case final decoupling?
@@ -524,42 +656,59 @@ class _Stats extends ConsumerWidget {
         ('average-cadence', l10n.statAverageCadence, '${ride.avgCadence} rpm'),
     ];
     final text = Theme.of(context).textTheme;
+    final basic = show == _StatsShow.all || show == _StatsShow.basic;
     return Wrap(
       spacing: AppSpacing.md,
       runSpacing: 12,
       children: [
         for (final (id, label, value) in tiles)
-          StatFigure(key: Key('stat-$id'), label: label, value: value),
-        if (ride.speedSource == 'gps')
+          if (show == _StatsShow.all ||
+              (show == _StatsShow.basic) == _basic.contains(id))
+            StatFigure(key: Key('stat-$id'), label: label, value: value),
+        if (basic && ride.speedSource == 'gps')
           Text(l10n.speedFromGps, style: text.bodySmall),
-        if (ride.minWPrimeBalanceJ.value case final low?)
-          Text(
-            l10n.wPrimeLowest(
-              (low / 1000).toStringAsFixed(1),
-              ((ride.wPrimeJ.value ?? 0) / 1000).toStringAsFixed(1),
-            ),
-            key: const Key('wprime-lowest'),
-            style: text.bodySmall,
-          ),
-        if (ride.tss != null || ride.trimp != null)
-          Text(l10n.loadHint, style: text.bodySmall),
-        if (ride.efficiencyFactor.value != null) ...[
-          if (ride.decouplingPct.value case final decoupling?
-              when ride.steady.value == true)
+        if (show != _StatsShow.basic) ...[
+          if (ride.minWPrimeBalanceJ.value case final low?)
             Text(
-              l10n.decoupling(
-                decoupling.toStringAsFixed(1),
-                decouplingWord(l10n, decoupling),
+              l10n.wPrimeLowest(
+                (low / 1000).toStringAsFixed(1),
+                ((ride.wPrimeJ.value ?? 0) / 1000).toStringAsFixed(1),
               ),
-              key: const Key('decoupling'),
-              style: text.bodyMedium,
+              key: const Key('wprime-lowest'),
+              style: text.bodySmall,
             ),
-          SourceNote(l10n.decouplingSource),
+          if (ride.tss != null || ride.trimp != null)
+            Text(l10n.loadHint, style: text.bodySmall),
+          if (ride.effortScore.value != null)
+            if (effortSourceText(l10n, ride.effortSource.orElse(null))
+                case final note?)
+              SourceNote(note, key: const Key('effort-source')),
+          if (ride.estimatedAvgPowerW.value != null)
+            SourceNote(
+              l10n.estimatedPowerSource,
+              key: const Key('estimated-power-source'),
+            ),
+          if (ride.efficiencyFactor.value != null) ...[
+            if (ride.decouplingPct.value case final decoupling?
+                when ride.steady.value == true)
+              Text(
+                l10n.decoupling(
+                  decoupling.toStringAsFixed(1),
+                  decouplingWord(l10n, decoupling),
+                ),
+                key: const Key('decoupling'),
+                style: text.bodyMedium,
+              ),
+            SourceNote(l10n.decouplingSource),
+          ],
         ],
       ],
     );
   }
 }
+
+/// Which of the ride's tiles this view draws.
+enum _StatsShow { all, basic, advanced }
 
 /// Time in each training zone, as a bar per zone.
 class _ZonesCard extends StatelessWidget {
@@ -569,12 +718,16 @@ class _ZonesCard extends StatelessWidget {
     required this.unit,
     required this.zones,
     required this.colors,
+    this.note,
   });
 
   final String title;
   final String unit;
   final List<ZoneTime> zones;
   final List<Color> colors;
+
+  /// Where the zones came from, when the server says.
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -646,6 +799,10 @@ class _ZonesCard extends StatelessWidget {
               ),
               if (index < zones.length - 1)
                 const SizedBox(height: AppSpacing.xs),
+            ],
+            if (note case final note?) ...[
+              const SizedBox(height: AppSpacing.sm),
+              SourceNote(note),
             ],
           ],
         ),

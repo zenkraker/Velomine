@@ -94,6 +94,34 @@ void main() {
     );
   });
 
+  testWidgets(
+    'ProfileScreen_ShouldSuggestAddingWeight_WhenRidesHaveNoPowerAndNoWeight',
+    (tester) async {
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Ada',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': 1990,
+        'timeZone': null,
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'hasRidesWithoutPower': true,
+      };
+      await openProfile(tester);
+
+      final weight = tester.widget<TextField>(
+        find.byKey(const Key('profile-weight')),
+      );
+      expect(
+        weight.decoration!.helperText,
+        'Add your weight to estimate watts on rides without a power meter.',
+      );
+    },
+  );
+
   testWidgets('ProfileScreen_ShouldOpenTheRide_WhenAMeasuredHeartRateIsTapped', (
     tester,
   ) async {

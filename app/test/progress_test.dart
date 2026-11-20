@@ -43,37 +43,39 @@ void main() {
     await goTo(tester, '/progress');
   }
 
-  testWidgets(
-    'ProgressScreen_ShouldShowFourStatCardsAndNoDeepCards_WhenOpened',
-    (tester) async {
-      await openProgress(tester);
+  testWidgets('ProgressScreen_ShouldShowFourStatCards_WhenTheRiderJustRides', (
+    tester,
+  ) async {
+    // A rider who just rides sees the four numbers; the analysis waits behind one button.
+    server.accounts['rider@example.com']!.riderMode = 'just_riding';
+    await openProgress(tester);
 
-      for (final key in [
-        'metric-readiness',
-        'metric-form',
-        'metric-period',
-        'metric-next-event',
-      ]) {
-        expect(find.byKey(Key(key)), findsOneWidget, reason: key);
-      }
-      // The deep charts answer their own question on their own page.
-      for (final key in [
-        'training-tss',
-        'tss-chart',
-        'fitness-chart',
-        'power-curve-card',
-        'intensity-card',
-        'efficiency-card',
-        'readiness-card',
-        'wellbeing-card',
-        'goal-goal-1',
-      ]) {
-        expect(find.byKey(Key(key)), findsNothing, reason: key);
-      }
-      // The overview still shows the totals chart and its period control.
-      expect(find.byKey(const Key('progress-period')), findsOneWidget);
-    },
-  );
+    for (final key in [
+      'metric-readiness',
+      'metric-form',
+      'metric-period',
+      'metric-next-event',
+    ]) {
+      expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+    }
+    // The deep charts answer their own question on their own page, or behind the fold.
+    for (final key in [
+      'training-tss',
+      'tss-chart',
+      'fitness-chart',
+      'power-curve-card',
+      'intensity-card',
+      'efficiency-card',
+      'readiness-card',
+      'wellbeing-card',
+      'goal-goal-1',
+    ]) {
+      expect(find.byKey(Key(key)), findsNothing, reason: key);
+    }
+    expect(find.byKey(const Key('more-details')), findsOneWidget);
+    // The overview still shows the totals chart and its period control.
+    expect(find.byKey(const Key('progress-period')), findsOneWidget);
+  });
 
   testWidgets('ProgressScreen_ShouldShowThisWeek_WhenShowingTotals', (
     tester,

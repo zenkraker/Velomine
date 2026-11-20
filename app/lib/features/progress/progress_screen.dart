@@ -5,45 +5,110 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../accounts/ftp_source_text.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/placeholder_block.dart';
+import '../../core/rider_mode.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/ftp_suggestion_card.dart';
+import '../../core/widgets/heart_rate_note_card.dart';
+import '../../core/widgets/more_details.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/segmented_control.dart';
 import '../../core/widgets/stat_card.dart';
 import '../rides/ride_type_chips.dart';
+import 'efficiency_card.dart';
 import 'events.dart';
+import 'ftp_reminder_card.dart';
+import 'intensity_card.dart';
+import 'power_summary.dart';
+import 'rider_card.dart';
 import 'progress_filter_sheet.dart';
 import 'progress_tabs.dart';
 import 'progress_view_models.dart';
 import 'totals_chart.dart';
+import 'training_summary.dart';
+
+/// Where the FTP the power curve was read with came from, for its source note.
+String? ftpSourceNote(AppLocalizations l10n, List<FtpHistoryEntry> history) {
+  final newest = history.firstOrNull;
+  if (newest == null) return null;
+  return ftpSourceText(l10n, newest.source_, newest.setAt);
+}
 
 /// Progress: one overview that answers "how am I today and this week?" and opens the page that answers
-/// the next question. The deep charts live on the four sub-pages, so this one fits in a screen.
+/// the next question. The deep charts live on the four sub-pages; a training rider keeps the analysis
+/// here, behind one fold for a simple mode.
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final layout = ref.watch(riderLayoutProvider);
     final filters = ref.watch(progressFiltersViewModelProvider);
     final totals = ref.watch(totalsViewModelProvider);
     final training = ref.watch(trainingViewModelProvider);
     final readiness = ref.watch(readinessViewModelProvider);
     final events = ref.watch(eventsViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
+    final riderCard = ref.watch(riderCardViewModelProvider);
+    final power = ref.watch(powerCurveViewModelProvider);
+    final reminder = ref.watch(ftpReminderViewModelProvider);
+    final heartRate = ref.watch(heartRateSuggestionViewModelProvider);
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
+    // A source counts only when its card is on the page: a folded part says nothing until it is opened,
+    // so a failure nobody can see is not thrown at the member.
     final failures = [
       totals.load.failure,
-      training.load.failure,
-      readiness.load.failure,
+      if (!layout.foldAdvanced) ...<Failure?>[
+        riderCard.load.failure,
+        training.load.failure,
+        power.load.failure,
+        readiness.load.failure,
+      ],
     ].whereType<Failure>();
+    // A source the member cannot see yet says so only once the fold is open, and its retry asks that one
+    // source again rather than reloading the whole page.
+    Widget? foldedError(String source, Failure? failure, VoidCallback reload) =>
+        failure == null
+        ? null
+        : ErrorState(
+            key: Key('progress-error-$source'),
+            message: failureText(l10n, failure),
+            actionKey: Key('progress-retry-$source'),
+            onRetry: reload,
+          );
+    final foldedErrors = [
+      foldedError(
+        'rider-card',
+        riderCard.load.failure,
+        () => ref.read(riderCardViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'training',
+        training.load.failure,
+        () => ref.read(trainingViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'power',
+        power.load.failure,
+        () => ref.read(powerCurveViewModelProvider.notifier).load(),
+      ),
+      foldedError(
+        'readiness',
+        readiness.load.failure,
+        () => ref.read(readinessViewModelProvider.notifier).load(),
+      ),
+    ].nonNulls;
 
     // The period, in the gender the language needs: "Questa settimana", "Questo mese", "Quest'anno".
     final thisPeriod = switch (filters.period) {
@@ -151,6 +216,104 @@ class ProgressScreen extends ConsumerWidget {
       ],
     );
 
+    // What a training rider wants on the overview, in the order it answers questions: the rider's own
+    // numbers, then the two suggestions, then the charts behind them. A simple mode folds them all behind
+    // one button rather than taking the overview away.
+    final analysis = <(Widget, bool)>[
+      if (riderCard.load.value case final card?)
+        (
+          RiderCard(card: card, onMore: () => showRiderCard(context, card)),
+          true,
+        ),
+      if (reminder.suggestion case final suggestion?)
+        (
+          FtpSuggestionCard(
+            watts: suggestion.watts,
+            method: suggestion.method,
+            effortWatts: suggestion.effortWatts,
+            suggestionId: suggestion.id,
+            busy: reminder.action.running,
+            onAccept: ref
+                .read(ftpReminderViewModelProvider.notifier)
+                .useSuggestion,
+            onDismiss: ref
+                .read(ftpReminderViewModelProvider.notifier)
+                .dismissSuggestion,
+          ),
+          true,
+        ),
+      for (final suggestion in heartRate.suggestions)
+        (
+          HeartRateNoteCard(
+            kind: suggestion.kind,
+            bpm: suggestion.bpm,
+            currentBpm: suggestion.kind == 'max'
+                ? heartRate.profile?.maxHeartRate
+                : heartRate.profile?.thresholdHeartRate.orElse(null),
+            suggestionId: suggestion.id,
+            busy: heartRate.action.running,
+            onAccept: ref
+                .read(heartRateSuggestionViewModelProvider.notifier)
+                .accept,
+            onDismiss: ref
+                .read(heartRateSuggestionViewModelProvider.notifier)
+                .dismiss,
+          ),
+          true,
+        ),
+      if (reminder.check?.reason != null && reminder.suggestion == null)
+        (
+          FtpReminderCard(
+            check: reminder.check!,
+            busy: reminder.action.running,
+            onUseEstimate: (watts) => ref
+                .read(ftpReminderViewModelProvider.notifier)
+                .useEstimate(watts),
+            onSnooze: () =>
+                ref.read(ftpReminderViewModelProvider.notifier).snooze(),
+          ),
+          true,
+        ),
+      if (training.load.value case final trainingData?)
+        (
+          TrainingSummary(
+            training: trainingData,
+            days: filters.trainingDays,
+            onDays: (days) async => ref
+                .read(progressFiltersViewModelProvider.notifier)
+                .setTrainingDays(days),
+          ),
+          true,
+        ),
+      if (training.load.value case final trainingData?)
+        if (trainingData.intensity case final intensity?)
+          (
+            IntensityCard(
+              intensity: intensity,
+              weeks: trainingData.intensityWeeks,
+            ),
+            // Riding with goals opens with this split; just riding folds it with the rest.
+            !layout.showIntensity,
+          ),
+      if (training.load.value case final trainingData?)
+        (EfficiencyCard(weeks: trainingData.efficiency), true),
+      if (power.load.value case final curve?)
+        (
+          PowerSummary(
+            curve: curve,
+            days: filters.powerDays,
+            onDays: (days) async => ref
+                .read(progressFiltersViewModelProvider.notifier)
+                .setPowerDays(days),
+            onUseFtp: (watts) =>
+                ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
+            ftpNote: ftpSourceNote(l10n, power.history),
+            ftpRideId: power.history.firstOrNull?.rideId,
+            onOpenRide: (id) => context.push('/rides/$id'),
+          ),
+          true,
+        ),
+    ];
     return PageScaffold(
       title: l10n.navProgress,
       subtitle: l10n.progressSubtitle,
@@ -273,6 +436,28 @@ class ProgressScreen extends ConsumerWidget {
               ],
             ),
           ),
+        // A simple mode folds the analysis, but what the page leads with stays where it is: only the
+        // cards the mode asks for stay above the fold.
+        if (layout.foldAdvanced) ...[
+          for (final (widget, advanced) in analysis)
+            if (!advanced) widget,
+          MoreDetails(
+            label: l10n.moreDetailsAnalysis,
+            children: [
+              // The folded sources' own failures wait here, so opening the fold is what shows them.
+              for (final error in foldedErrors) error,
+              CardGrid(
+                columns: 3,
+                children: [
+                  for (final (widget, advanced) in analysis)
+                    if (advanced) widget,
+                ],
+              ),
+            ],
+          ),
+        ] else
+          // A training rider sees the analysis on the page itself, in the same order.
+          for (final (widget, _) in analysis) widget,
       ],
     );
   }

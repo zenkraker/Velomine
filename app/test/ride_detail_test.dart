@@ -2,8 +2,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine/core/providers.dart';
+import 'package:velomine/core/rider_mode.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
+import 'package:velomine/core/widgets/stat_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
@@ -12,7 +14,11 @@ import 'package:velomine/core/l10n.dart';
 import 'package:velomine/core/theme.dart';
 import 'package:velomine/features/rides/detail/series_chart.dart';
 
-Widget _detailApp(Session session, String id) => ProviderScope(
+Widget _detailApp(
+  Session session,
+  String id, {
+  RiderModeLayout layout = RiderModeLayout.full,
+}) => ProviderScope(
   overrides: [
     sessionProvider.overrideWith((ref) => session),
     ridePollIntervalProvider.overrideWithValue(
@@ -23,7 +29,7 @@ Widget _detailApp(Session session, String id) => ProviderScope(
     localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
-      body: RideDetailScreen(id: id, onDeleted: () {}),
+      body: RideDetailScreen(id: id, layout: layout, onDeleted: () {}),
     ),
   ),
 );
@@ -110,6 +116,35 @@ void main() {
         findsNothing,
       ); // this ride has no cadence samples
       expect(server.requests, contains('GET /api/v1/rides/r1/streams'));
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowEstimatedWatts_WhenTheRideHasNoPowerMeter',
+    (tester) async {
+      server.rides.add(
+        rideJson(
+          'r2',
+          'ready',
+          distanceM: 30000,
+          movingS: 3600,
+          avgHeartRate: 140,
+          estimatedAvgPowerW: 142,
+          fileName: 'commute.fit',
+        ),
+      );
+      server.streams['r2'] = streamsJson(power: false, estimatedPower: true);
+      await open(tester, id: 'r2');
+
+      // Always said as an estimate, with what it was made from.
+      expect(
+        find.byKey(const Key('stat-estimated-average-power')),
+        findsOneWidget,
+      );
+      expect(find.text('142 W'), findsOneWidget);
+      expect(find.byKey(const Key('estimated-power-source')), findsOneWidget);
+      expect(find.byKey(const Key('chart-estimatedpower')), findsOneWidget);
+      expect(find.byKey(const Key('chart-power')), findsNothing);
     },
   );
 
@@ -876,6 +911,31 @@ void main() {
   );
 
   testWidgets(
+    'RideDetailScreen_ShouldSayTheZonesComeFromTheThreshold_WhenTheRideCarriesTheThresholdModel',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateZoneModel': 'threshold',
+        'heartRateZoneReferenceBpm': 160,
+        'heartRateZoneReferenceSource': 'measured',
+      };
+      await open(tester);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('heart-rate-zones')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Zones from your threshold heart rate (160 bpm)'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'RideDetailScreen_ShouldPaintPowerInSeriesPower_WhenTheChartShows',
     (tester) async {
       await open(tester);
@@ -890,6 +950,41 @@ void main() {
       );
       expect(power.color, colors.series['power']);
       expect(heartRate.color, colors.series['heartrate']);
+    },
+  );
+
+  testWidgets('RideDetailScreen_ShouldShowTheEffortScore_WhenTheRideHasOne', (
+    tester,
+  ) async {
+    server.rides[0] = {
+      ...server.rides[0],
+      'hrTss': 64.0,
+      'effortScore': 64.0,
+      'effortSource': 'heart_rate',
+    };
+    await open(tester);
+
+    expect(find.byKey(const Key('stat-effort-score')), findsOneWidget);
+    expect(
+      tester
+          .widget<StatFigure>(find.byKey(const Key('stat-effort-score')))
+          .value,
+      '64',
+    );
+    expect(find.text('From your heart rate'), findsOneWidget);
+  });
+
+  testWidgets(
+    'RideDetailScreen_ShouldSayTheEffortCameFromTheFeel_WhenTheRiderRatedTheRide',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'effortScore': 75.0,
+        'effortSource': 'feel',
+      };
+      await open(tester);
+
+      expect(find.text('From how hard it felt'), findsOneWidget);
     },
   );
 }

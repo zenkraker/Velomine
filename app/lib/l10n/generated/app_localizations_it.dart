@@ -1261,11 +1261,68 @@ class AppLocalizationsIt extends AppLocalizations {
   String get heartRateZones => 'Zone di frequenza cardiaca';
 
   @override
+  String heartRateZonesFromThreshold(String bpm) {
+    return 'Zone dalla tua frequenza cardiaca di soglia ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMax(String bpm) {
+    return 'Zone dalla tua frequenza cardiaca massima ($bpm bpm)';
+  }
+
+  @override
+  String heartRateZonesFromMaxEstimated(String bpm) {
+    return 'Zone dalla tua frequenza cardiaca massima ($bpm bpm, stimata)';
+  }
+
+  @override
   String get powerZones => 'Zone di potenza';
 
   @override
+  String get zonesTitle => 'Zone';
+
+  @override
+  String get zonesEdit => 'Modifica';
+
+  @override
+  String get zonesEditTitle => 'Le tue zone';
+
+  @override
+  String get zonesEditHelp =>
+      'Il limite superiore di ogni zona, in watt o battiti al minuto. Le zone sono una quota del tuo FTP e della tua frequenza cardiaca, quindi si spostano quando cambiano.';
+
+  @override
+  String zonesLimitLabel(int zone) {
+    return 'Zona $zone fino a';
+  }
+
+  @override
+  String get zonesInvalidLimit =>
+      'Inserisci un numero intero maggiore di zero per ogni zona.';
+
+  @override
+  String get zonesNotRising =>
+      'Il limite di ogni zona deve essere più alto del precedente.';
+
+  @override
+  String get zonesBackToAutomatic => 'Torna all\'automatico';
+
+  @override
+  String get zonesResetTitle => 'Usare le zone standard?';
+
+  @override
+  String get zonesResetBody =>
+      'I tuoi limiti vengono rimossi da tutte le zone e tornano quelli standard.';
+
+  @override
+  String get zonesResetAction => 'Usa le zone standard';
+
+  @override
+  String get zonesCustom => 'Limiti tuoi';
+
+  @override
   String get momentHint =>
-      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo il giro.';
+      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo l\'uscita.';
 
   @override
   String momentAt(String time, String distance) {
@@ -1310,6 +1367,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get statTrimp => 'TRIMP';
+
+  @override
+  String get statEffortScore => 'Punteggio di sforzo';
+
+  @override
+  String get effortFromPower => 'Dalla tua potenza';
+
+  @override
+  String get effortFromHeartRate => 'Dalla tua frequenza cardiaca';
+
+  @override
+  String get effortFromFeel => 'Da quanto è sembrata dura';
 
   @override
   String get statEfficiency => 'Fattore di efficienza';
@@ -2093,7 +2162,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get trainingLoadHint =>
-      'Imposta FTP (e frequenza cardiaca massima) nel profilo, poi carica un giro per vedere il carico di allenamento.';
+      'Imposta il tuo FTP o indossa una fascia cardiaca, poi carica un giro per vedere il carico di allenamento.';
+
+  @override
+  String get fitnessHeartRateLoad =>
+      'Include giri valutati dalla frequenza cardiaca.';
 
   @override
   String get fitnessFatigueForm => 'Fitness, fatica e forma';
@@ -2127,6 +2200,46 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get trainingLoadHelp =>
       'La fitness media gli ultimi 42 giorni di carico, la fatica gli ultimi 7. La forma è fitness meno fatica.';
+
+  @override
+  String get trainingMonotonous =>
+      'Questa settimana ogni giorno è stato impegnativo uguale. Un giorno facile ti aiuta ad assimilare.';
+
+  @override
+  String get trainingHeavyWeek =>
+      'Questa settimana è stata molto più pesante del solito.';
+
+  @override
+  String trainingStrain(String monotony, String strain) {
+    return 'Monotonia $monotony · Strain $strain';
+  }
+
+  @override
+  String get riderCardTitle => 'I tuoi numeri';
+
+  @override
+  String get riderCardMore => 'Altro';
+
+  @override
+  String get riderCardPowerNote =>
+      'Calcolata dai tuoi migliori sforzi degli ultimi 90 giorni.';
+
+  @override
+  String get riderCardBestsNote =>
+      'I tuoi migliori sforzi degli ultimi 90 giorni. Tocca uno per aprire l\'uscita.';
+
+  @override
+  String get riderCardEfficiencyNote =>
+      'La media delle tue uscite costanti, per settimana.';
+
+  @override
+  String get riderCardTotalsNote => 'Le tue uscite degli ultimi 90 giorni.';
+
+  @override
+  String get riderCardEffortNote => 'Dal tuo punteggio di sforzo.';
+
+  @override
+  String get riderCardEventNote => 'Dal tuo calendario.';
 
   @override
   String get accountSearch => 'Cerca un account';
@@ -5004,4 +5117,80 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionDeleteEvent => 'eliminare l\'evento';
+
+  @override
+  String get seriesEstimatedPower => 'Watt stimati';
+
+  @override
+  String get statEstimatedAveragePower => 'Potenza media stimata';
+
+  @override
+  String get estimatedPowerSource =>
+      'Dalla tua velocità, dalla pendenza e dal tuo peso con la bici. Senza vento, quindi sul piano può sbagliare di molto.';
+
+  @override
+  String get bikeWeight => 'Peso (kg)';
+
+  @override
+  String get bikeWeightHelper =>
+      'Serve a stimare i watt sulle uscite senza misuratore di potenza.';
+
+  @override
+  String get errorBikeWeight =>
+      'Inserisci il peso della bici in chilogrammi: da 3 a 40.';
+
+  @override
+  String get profileWeightEstimateHint =>
+      'Aggiungi il tuo peso per stimare i watt sulle uscite senza misuratore di potenza.';
+
+  @override
+  String get riderModeQuestion => 'Come vai in bici?';
+
+  @override
+  String get riderModeTitle => 'Come vado in bici';
+
+  @override
+  String get riderModeJustRiding => 'Solo per uscire';
+
+  @override
+  String get riderModeJustRidingBody =>
+      'Esco per divertirmi, con la famiglia o con gli amici. Voglio i miei percorsi, la distanza e com\'è andata l\'uscita.';
+
+  @override
+  String get riderModeWithGoals => 'Con obiettivi';
+
+  @override
+  String get riderModeWithGoalsBody =>
+      'Esco spesso e mi piace vedere i miei progressi: totali settimanali, obiettivi e quanto è stata dura l\'uscita, detto in parole semplici.';
+
+  @override
+  String get riderModeTraining => 'Allenamento';
+
+  @override
+  String get riderModeTrainingBody =>
+      'Mi alleno o gareggio. Voglio potenza, carico di allenamento, forma e ogni numero.';
+
+  @override
+  String get riderModeLater => 'Decido dopo';
+
+  @override
+  String get riderModeElsewhere => 'Scelta su un altro dispositivo';
+
+  @override
+  String get moreDetailsAnalysis => 'Mostra più analisi';
+
+  @override
+  String get moreDetailsAll => 'Mostra tutti i dettagli';
+
+  @override
+  String get showLess => 'Mostra meno';
+
+  @override
+  String get rideEffortEasy => 'per lo più facile';
+
+  @override
+  String get rideEffortSteady => 'costante';
+
+  @override
+  String get rideEffortHard => 'duro';
 }

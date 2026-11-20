@@ -8,15 +8,16 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// </summary>
 public static class RideParserVersion
 {
-    public const int Current = 4;
+    public const int Current = 5;
 
     /// <summary>Marks a ride as just read with the current parser and records the profile its training load came from.</summary>
-    public static void StampRead(this Ride ride, int? ftpW, int? maxHeartRate)
+    public static void StampRead(this Ride ride, int? ftpW, int? maxHeartRate, int? thresholdHeartRate)
     {
         ride.ParserVersion = Current;
         ride.ReparseFailedVersion = null;
         ride.LoadFtpW = ftpW ?? 0;
         ride.LoadMaxHeartRate = maxHeartRate ?? 0;
+        ride.LoadThresholdHeartRate = thresholdHeartRate ?? 0;
     }
 
     /// <summary>

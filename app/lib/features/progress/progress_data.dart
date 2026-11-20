@@ -47,6 +47,10 @@ class ProgressData {
   Future<Result<PowerCurveResponse?>> powerCurve(int days) =>
       _api.getPowerCurve(days: days).guard(FailureAction.loadProgress);
 
+  /// Every number the member has on one card, each with where it came from.
+  Future<Result<RiderCardResponse?>> riderCard() =>
+      _api.getRiderCard().guard(FailureAction.loadProgress);
+
   Future<Result<ReadinessResponse?>> readiness() =>
       _api.getReadiness().guard(FailureAction.loadProgress);
 

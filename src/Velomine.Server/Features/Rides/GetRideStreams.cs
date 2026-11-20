@@ -31,7 +31,9 @@ public sealed record RideStreamsResponse(
     short?[]? Power,
     short?[]? Cadence,
     short?[]? Temperature,
-    int[]? WPrimeBalanceJ = null);
+    int[]? WPrimeBalanceJ = null,
+    // Watts estimated from speed, slope and weight, for a ride with no power meter. Owner only.
+    short?[]? EstimatedPower = null);
 
 public sealed class RideStreamsValidator : Validator<RideStreamsRequest>
 {
@@ -72,7 +74,8 @@ public sealed class GetRideStreams(VelomineDbContext db, TimeProvider time) : En
         await Send.OkAsync(
             new RideStreamsResponse(
                 s.Time, s.Latitude, s.Longitude, s.Altitude, s.Speed, s.Distance, s.HeartRate, s.Power, s.Cadence, s.Temperature,
-                StreamSampling.ReduceValues(balance?.PerSample, maxPoints)),
+                StreamSampling.ReduceValues(balance?.PerSample, maxPoints),
+                s.EstimatedPower),
             ct);
     }
 }

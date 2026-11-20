@@ -61,6 +61,13 @@ class RideResponse {
     this.steady = const Optional.absent(),
     this.heartRateMaxNote = const Optional.absent(),
     this.heartRateThresholdNote = const Optional.absent(),
+    this.heartRateZoneModel = const Optional.absent(),
+    this.heartRateZoneReferenceBpm = const Optional.absent(),
+    this.heartRateZoneReferenceSource = const Optional.absent(),
+    this.hrTss = const Optional.absent(),
+    this.effortScore = const Optional.absent(),
+    this.effortSource = const Optional.absent(),
+    this.estimatedAvgPowerW = const Optional.absent(),
   });
 
   final String id;
@@ -225,6 +232,62 @@ class RideResponse {
   ///
   final Optional<String?> heartRateThresholdNote;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateZoneModel;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> heartRateZoneReferenceBpm;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> heartRateZoneReferenceSource;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> hrTss;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<double?> effortScore;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<String?> effortSource;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> estimatedAvgPowerW;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RideResponse &&
     other.id == id &&
@@ -274,7 +337,14 @@ class RideResponse {
     other.decouplingPct == decouplingPct &&
     other.steady == steady &&
     other.heartRateMaxNote == heartRateMaxNote &&
-    other.heartRateThresholdNote == heartRateThresholdNote;
+    other.heartRateThresholdNote == heartRateThresholdNote &&
+    other.heartRateZoneModel == heartRateZoneModel &&
+    other.heartRateZoneReferenceBpm == heartRateZoneReferenceBpm &&
+    other.heartRateZoneReferenceSource == heartRateZoneReferenceSource &&
+    other.hrTss == hrTss &&
+    other.effortScore == effortScore &&
+    other.effortSource == effortSource &&
+    other.estimatedAvgPowerW == estimatedAvgPowerW;
 
   @override
   int get hashCode =>
@@ -326,10 +396,17 @@ class RideResponse {
     (decouplingPct == null ? 0 : decouplingPct!.hashCode) +
     (steady == null ? 0 : steady!.hashCode) +
     (heartRateMaxNote == null ? 0 : heartRateMaxNote!.hashCode) +
-    (heartRateThresholdNote == null ? 0 : heartRateThresholdNote!.hashCode);
+    (heartRateThresholdNote == null ? 0 : heartRateThresholdNote!.hashCode) +
+    (heartRateZoneModel == null ? 0 : heartRateZoneModel!.hashCode) +
+    (heartRateZoneReferenceBpm == null ? 0 : heartRateZoneReferenceBpm!.hashCode) +
+    (heartRateZoneReferenceSource == null ? 0 : heartRateZoneReferenceSource!.hashCode) +
+    (hrTss == null ? 0 : hrTss!.hashCode) +
+    (effortScore == null ? 0 : effortScore!.hashCode) +
+    (effortSource == null ? 0 : effortSource!.hashCode) +
+    (estimatedAvgPowerW == null ? 0 : estimatedAvgPowerW!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource, hrTss=$hrTss, effortScore=$effortScore, effortSource=$effortSource, estimatedAvgPowerW=$estimatedAvgPowerW]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -539,6 +616,34 @@ class RideResponse {
       final value = this.heartRateThresholdNote.value;
       json[r'heartRateThresholdNote'] = value;
     }
+    if (this.heartRateZoneModel.isPresent) {
+      final value = this.heartRateZoneModel.value;
+      json[r'heartRateZoneModel'] = value;
+    }
+    if (this.heartRateZoneReferenceBpm.isPresent) {
+      final value = this.heartRateZoneReferenceBpm.value;
+      json[r'heartRateZoneReferenceBpm'] = value;
+    }
+    if (this.heartRateZoneReferenceSource.isPresent) {
+      final value = this.heartRateZoneReferenceSource.value;
+      json[r'heartRateZoneReferenceSource'] = value;
+    }
+    if (this.hrTss.isPresent) {
+      final value = this.hrTss.value;
+      json[r'hrTss'] = value;
+    }
+    if (this.effortScore.isPresent) {
+      final value = this.effortScore.value;
+      json[r'effortScore'] = value;
+    }
+    if (this.effortSource.isPresent) {
+      final value = this.effortSource.value;
+      json[r'effortSource'] = value;
+    }
+    if (this.estimatedAvgPowerW.isPresent) {
+      final value = this.estimatedAvgPowerW.value;
+      json[r'estimatedAvgPowerW'] = value;
+    }
     return json;
   }
 
@@ -622,6 +727,13 @@ class RideResponse {
     Optional<bool?>? steady,
     Optional<String?>? heartRateMaxNote,
     Optional<String?>? heartRateThresholdNote,
+    Optional<String?>? heartRateZoneModel,
+    Optional<int?>? heartRateZoneReferenceBpm,
+    Optional<String?>? heartRateZoneReferenceSource,
+    Optional<double?>? hrTss,
+    Optional<double?>? effortScore,
+    Optional<String?>? effortSource,
+    Optional<int?>? estimatedAvgPowerW,
   }) => RideResponse(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -671,6 +783,13 @@ class RideResponse {
     steady: steady ?? this.steady,
     heartRateMaxNote: heartRateMaxNote ?? this.heartRateMaxNote,
     heartRateThresholdNote: heartRateThresholdNote ?? this.heartRateThresholdNote,
+    heartRateZoneModel: heartRateZoneModel ?? this.heartRateZoneModel,
+    heartRateZoneReferenceBpm: heartRateZoneReferenceBpm ?? this.heartRateZoneReferenceBpm,
+    heartRateZoneReferenceSource: heartRateZoneReferenceSource ?? this.heartRateZoneReferenceSource,
+    hrTss: hrTss ?? this.hrTss,
+    effortScore: effortScore ?? this.effortScore,
+    effortSource: effortSource ?? this.effortSource,
+    estimatedAvgPowerW: estimatedAvgPowerW ?? this.estimatedAvgPowerW,
   );
 
   /// Returns a new [RideResponse] instance and imports its values from
@@ -775,6 +894,13 @@ class RideResponse {
         steady: json.containsKey(r'steady') ? Optional.present(mapValueOfType<bool>(json, r'steady')) : const Optional.absent(),
         heartRateMaxNote: json.containsKey(r'heartRateMaxNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateMaxNote')) : const Optional.absent(),
         heartRateThresholdNote: json.containsKey(r'heartRateThresholdNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateThresholdNote')) : const Optional.absent(),
+        heartRateZoneModel: json.containsKey(r'heartRateZoneModel') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneModel')) : const Optional.absent(),
+        heartRateZoneReferenceBpm: json.containsKey(r'heartRateZoneReferenceBpm') ? Optional.present(json[r'heartRateZoneReferenceBpm'] == null ? null : int.parse('${json[r'heartRateZoneReferenceBpm']}')) : const Optional.absent(),
+        heartRateZoneReferenceSource: json.containsKey(r'heartRateZoneReferenceSource') ? Optional.present(mapValueOfType<String>(json, r'heartRateZoneReferenceSource')) : const Optional.absent(),
+        hrTss: json.containsKey(r'hrTss') ? Optional.present(mapValueOfType<double>(json, r'hrTss')) : const Optional.absent(),
+        effortScore: json.containsKey(r'effortScore') ? Optional.present(mapValueOfType<double>(json, r'effortScore')) : const Optional.absent(),
+        effortSource: json.containsKey(r'effortSource') ? Optional.present(mapValueOfType<String>(json, r'effortSource')) : const Optional.absent(),
+        estimatedAvgPowerW: json.containsKey(r'estimatedAvgPowerW') ? Optional.present(json[r'estimatedAvgPowerW'] == null ? null : int.parse('${json[r'estimatedAvgPowerW']}')) : const Optional.absent(),
       );
     }
     return null;

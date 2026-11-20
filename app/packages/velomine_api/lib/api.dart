@@ -162,6 +162,8 @@ part 'model/ride_import_response.dart';
 part 'model/ride_laps_response.dart';
 part 'model/ride_response.dart';
 part 'model/ride_streams_response.dart';
+part 'model/rider_card_best.dart';
+part 'model/rider_card_response.dart';
 part 'model/rider_licence_response.dart';
 part 'model/route_detail_response.dart';
 part 'model/route_download_link_response.dart';
@@ -183,6 +185,7 @@ part 'model/set_event_ride_request.dart';
 part 'model/set_ftp_request.dart';
 part 'model/set_heart_rate_request.dart';
 part 'model/set_my_language_request.dart';
+part 'model/set_my_rider_mode_request.dart';
 part 'model/set_my_units_request.dart';
 part 'model/set_ride_bike_request.dart';
 part 'model/set_ride_details_request.dart';
@@ -190,6 +193,7 @@ part 'model/set_ride_type_request.dart';
 part 'model/set_supporter_hidden_request.dart';
 part 'model/set_telemetry_request.dart';
 part 'model/set_user_roles_request.dart';
+part 'model/set_zones_request.dart';
 part 'model/settings_response.dart';
 part 'model/share_view_response.dart';
 part 'model/share_views_response.dart';
@@ -230,7 +234,9 @@ part 'model/verify_email_request.dart';
 part 'model/vo2_max_estimate.dart';
 part 'model/wellbeing_consent_request.dart';
 part 'model/wellbeing_response.dart';
+part 'model/zone_set_response.dart';
 part 'model/zone_time.dart';
+part 'model/zones_response.dart';
 
 
 /// An [ApiClient] instance that uses the default values obtained from

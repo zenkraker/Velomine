@@ -15,6 +15,7 @@ import 'core/language_choice.dart';
 import 'core/map_defaults.dart';
 import 'core/motion.dart';
 import 'core/providers.dart';
+import 'core/rider_mode.dart';
 import 'core/server_config.dart';
 import 'core/session.dart';
 import 'core/solo_hint.dart';
@@ -309,19 +310,23 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(
             path: '/rides/:id',
-            builder: (context, state) => RideDetailScreen(
-              key: ValueKey(state.pathParameters['id']),
-              id: state.pathParameters['id']!,
-              onDeleted: () {
-                ref.read(ridesViewModelProvider.notifier).refresh();
-                _backOrGo(context, '/rides');
-              },
-              tileUrl:
-                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
-                  defaultMapTileUrl,
-              attribution:
-                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
-                  defaultMapAttribution,
+            builder: (context, state) => Consumer(
+              builder: (context, ref, _) => RideDetailScreen(
+                key: ValueKey(state.pathParameters['id']),
+                id: state.pathParameters['id']!,
+                // This is the member's own ride, so their mode decides what it opens with.
+                layout: ref.watch(riderLayoutProvider),
+                onDeleted: () {
+                  ref.read(ridesViewModelProvider.notifier).refresh();
+                  _backOrGo(context, '/rides');
+                },
+                tileUrl:
+                    ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                    defaultMapTileUrl,
+                attribution:
+                    ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                    defaultMapAttribution,
+              ),
             ),
           ),
           GoRoute(path: '/record', builder: (_, _) => const RecordingScreen()),

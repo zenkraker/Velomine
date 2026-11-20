@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
+import '../../core/heart_rate_zones.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
@@ -74,6 +75,15 @@ class IntensityCard extends StatelessWidget {
               _WeekBar(week: week, colors: colors, style: small),
           ],
           SourceNote(l10n.intensitySource),
+          // Only when a heart-rate ride was counted: a range read from power has no heart-rate model.
+          if (heartRateZonesSource(
+                l10n,
+                intensity.heartRateZoneModel.orElse(null),
+                intensity.heartRateZoneReferenceBpm.orElse(null),
+                intensity.heartRateZoneReferenceSource.orElse(null),
+              )
+              case final note?)
+            SourceNote(note),
         ],
       ),
     );

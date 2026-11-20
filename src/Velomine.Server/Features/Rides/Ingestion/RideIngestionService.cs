@@ -104,7 +104,9 @@ public sealed class RideIngestionService(
         var profile = await db.Users
             .Where(u => u.Id == ride.UserId)
             .FirstAsync(ct);
-        var maxHeartRate = HeartRates.For(profile, time).Max?.Bpm;
+        var heartRates = HeartRates.For(profile, time);
+        var maxHeartRate = heartRates.Max?.Bpm;
+        var thresholdHeartRate = heartRates.Threshold?.Bpm;
         // Copied once, onto the ride row made at upload: the activities of a multi-activity file inherit it below, and
         // a re-read from the original file leaves the columns alone because it assigns only what it derives.
         ride.Privacy ??= PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking()
@@ -120,6 +122,9 @@ public sealed class RideIngestionService(
         string? lastError = null;
         foreach (var file in parsed)
         {
+            // The bike a new ride is given is picked before the numbers, because its kind and weight shape the estimate.
+            var bikeId = ride.BikeId ?? DefaultBike.For(memberBikes, file.Discipline, file.Assist, file.Environment, file.Commute);
+            var bike = memberBikes.FirstOrDefault(b => b.Id == bikeId);
             RideMetricValues metrics;
             try
             {
@@ -130,7 +135,10 @@ public sealed class RideIngestionService(
                     file.DeviceMovingS,
                     file.Pauses,
                     ftpW: profile.FtpW,
-                    maxHeartRate: maxHeartRate);
+                    maxHeartRate: maxHeartRate,
+                    thresholdHeartRate: thresholdHeartRate,
+                    estimate: new PowerEstimate(
+                        profile.WeightKg, bike?.WeightKg, bike?.Kind, file.Discipline, file.Environment, file.Assist));
             }
             catch (RideParseException ex)
             {
@@ -174,7 +182,7 @@ public sealed class RideIngestionService(
             target.DedupKey = $"file:{ride.FileSha256}:{file.StartTime.ToUnixTimeSeconds()}";
             target.Error = null;
             Apply(target, metrics);
-            target.StampRead(profile.FtpW, maxHeartRate);
+            target.StampRead(profile.FtpW, maxHeartRate, thresholdHeartRate);
 
             if (await FindOriginalAsync(db, target, ct) is { } original)
             {
@@ -183,9 +191,9 @@ public sealed class RideIngestionService(
                 continue;
             }
 
-            target.BikeId ??= DefaultBike.For(memberBikes, file.Discipline, file.Assist, file.Environment, file.Commute);
+            target.BikeId ??= bikeId;
             target.Status = RideStatus.Ready;
-            target.Streams = ToStreams(file.Samples);
+            target.Streams = ToStreams(file.Samples, metrics.EstimatedPower);
             target.Laps.Clear();
             target.Laps.AddRange(LapMetrics.Build(target.Id, file.Laps, file.Samples, file.Pauses, profile.FtpW, maxHeartRate));
             target.PowerBests.Clear();
@@ -330,6 +338,10 @@ public sealed class RideIngestionService(
         ride.IntensityFactor = m.IntensityFactor;
         ride.Tss = m.Tss;
         ride.Trimp = m.Trimp;
+        ride.HrTss = m.HrTss;
+        ride.EstimatedAvgPowerW = m.EstimatedAvgPowerW;
+        ride.EstimatedNormalizedPowerW = m.EstimatedNormalizedPowerW;
+        ride.EstimatedTss = m.EstimatedTss;
         ride.AvgHeartRate = m.AvgHeartRate;
         ride.MaxHeartRate = m.MaxHeartRate;
         ride.AvgCadence = m.AvgCadence;
@@ -339,7 +351,7 @@ public sealed class RideIngestionService(
     }
 
     /// <summary>One array per signal; a signal the file never had is left null instead of an array of nulls.</summary>
-    internal static RideStreams ToStreams(IReadOnlyList<Sample> samples)
+    internal static RideStreams ToStreams(IReadOnlyList<Sample> samples, short?[]? estimatedPower = null)
     {
         static T?[]? Column<T>(IReadOnlyList<Sample> all, Func<Sample, T?> pick)
             where T : struct
@@ -358,6 +370,7 @@ public sealed class RideIngestionService(
             Distance = Column(samples, s => s.Distance),
             HeartRate = Column(samples, s => s.HeartRate),
             Power = Column(samples, s => s.Power),
+            EstimatedPower = estimatedPower,
             Cadence = Column(samples, s => s.Cadence),
             Temperature = Column(samples, s => s.Temperature),
         };

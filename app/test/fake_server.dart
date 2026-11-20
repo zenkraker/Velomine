@@ -37,6 +37,7 @@ class FakeAccount {
     List<String> roles = const ['member'],
     this.language,
     this.units = 'metric',
+    this.riderMode,
     this.soloTrialEndsAt,
   }) : id = 'id-${email.hashCode.abs()}',
        roles = [...roles];
@@ -51,6 +52,9 @@ class FakeAccount {
   List<String> roles;
   String? language;
   String units;
+
+  /// The rider mode slug on the account; null means never chosen, as on the real server.
+  String? riderMode;
   bool telemetryCrash = false;
   bool telemetryUsage = false;
 
@@ -65,6 +69,11 @@ class FakeServer {
   final rides = <Map<String, Object?>>[];
   final requests = <String>[]; // "METHOD /path", in order
   bool ssoEnabled = false;
+
+  /// A server that does not know rider modes. It says so with the flag rather than by leaving the keys out: the
+  /// generated client asserts in debug builds that a required key is there, so an older server answers
+  /// `riderModeSupported: false`. A release build reads a missing key as null, which the app treats the same way.
+  bool riderModeSupported = true;
   bool appSsoEnabled = true;
   bool telemetryEnabled = false;
   String? sentryDsn;
@@ -107,6 +116,9 @@ class FakeServer {
   /// Profiles by email; a missing one is the default (nothing set, weeks from Monday).
   final profiles = <String, Map<String, Object?>>{};
 
+  /// The rider's own zone bounds by email and set, as fractions of the reference.
+  final zoneBounds = <String, Map<String, List<double>>>{};
+
   /// FTP history entries by email, newest first, as the server keeps them.
   final ftpHistory = <String, List<Map<String, Object?>>>{};
 
@@ -128,6 +140,9 @@ class FakeServer {
 
   /// What GET /analytics/training answers; null uses [trainingJson].
   Map<String, Object?>? training;
+
+  /// What GET /analytics/rider-card answers; null uses [riderCardJson].
+  Map<String, Object?>? riderCard;
 
   /// The day counts asked for by GET /analytics/training, in order.
   final trainingRequests = <int>[];
@@ -241,6 +256,9 @@ class FakeServer {
   /// Simulates a server that cannot be reached: every request fails before it is handled.
   bool unreachable = false;
 
+  /// Path prefixes that answer 500 on their own, so a test can fail one source of a page and leave the rest.
+  final failing = <String>{};
+
   /// How long the access tokens the fake hands out last.
   int tokenExpiresIn = 3600;
 
@@ -299,6 +317,9 @@ class FakeServer {
     String? clubRole = 'member',
     String? language,
     String units = 'metric',
+    // The shared fixtures are settled riders, so no test is surprised by the first-launch question. A test
+    // about the question passes null, which is what registering gives.
+    String? riderMode = 'training',
     String? soloTrialEndsAt,
   }) {
     final account = FakeAccount(
@@ -309,6 +330,7 @@ class FakeServer {
       name: name,
       language: language,
       units: units,
+      riderMode: riderMode,
       soloTrialEndsAt: soloTrialEndsAt,
     );
     accounts[email] = account;
@@ -372,6 +394,10 @@ class FakeServer {
     requests.add('${request.method} $path');
     if (unauthorized.contains(path)) return http.Response('', 401);
     if (broken.contains(path)) return http.Response('', 500);
+    // A prefix, so a test can fail one source of a page and leave the rest.
+    if (failing.any(path.startsWith)) {
+      return http.Response('{"title":"Failed."}', 500);
+    }
     final waiting = _replyGates[path];
     if (waiting != null && waiting.isNotEmpty) {
       await waiting.removeAt(0).future;
@@ -528,6 +554,7 @@ class FakeServer {
         approved: !requireApproval,
         name: body['displayName']! as String,
         clubRole: null,
+        riderMode: null,
       );
       // Email on means a confirmation email went out and the address is not confirmed yet.
       if (smtpConfigured) verificationEmails.add(account.email);
@@ -649,6 +676,8 @@ class FakeServer {
         'roles': caller.roles,
         'language': caller.language,
         'units': caller.units,
+        'riderMode': riderModeSupported ? caller.riderMode : null,
+        'riderModeSupported': riderModeSupported,
         'telemetryConsentRequired': false,
         'telemetryCrash': caller.telemetryCrash,
         'telemetryUsage': caller.telemetryUsage,
@@ -991,8 +1020,10 @@ extension on FakeServer {
     if (!path.startsWith('/api/v1/accounts/me/profile') &&
         !path.startsWith('/api/v1/accounts/me/ftp') &&
         !path.startsWith('/api/v1/accounts/me/heart-rate') &&
+        !path.startsWith('/api/v1/accounts/me/zones') &&
         !path.startsWith('/api/v1/accounts/me/language') &&
         !path.startsWith('/api/v1/accounts/me/units') &&
+        !path.startsWith('/api/v1/accounts/me/rider-mode') &&
         !path.startsWith('/api/v1/accounts/me/telemetry') &&
         !path.startsWith('/api/v1/analytics') &&
         !path.startsWith('/api/v1/notifications') &&
@@ -1031,6 +1062,30 @@ extension on FakeServer {
         ? <String, Object?>{}
         : jsonDecode(request.body) as Map<String, Object?>;
 
+    if (path == '/api/v1/accounts/me/rider-mode' && request.method == 'PUT') {
+      final mode = body['riderMode'] as String?;
+      if (mode != 'just_riding' && mode != 'with_goals' && mode != 'training') {
+        return http.Response(
+          '{"detail":"Use just_riding, with_goals or training."}',
+          400,
+        );
+      }
+      caller.riderMode = mode;
+      return json({
+        'id': caller.id,
+        'email': caller.email,
+        'displayName': caller.name,
+        'roles': caller.roles,
+        'language': caller.language,
+        'units': caller.units,
+        'riderMode': caller.riderMode,
+        'riderModeSupported': true,
+        'telemetryConsentRequired': false,
+        'telemetryCrash': caller.telemetryCrash,
+        'telemetryUsage': caller.telemetryUsage,
+      });
+    }
+
     if (path == '/api/v1/accounts/me/units' && request.method == 'PUT') {
       final units = body['units'] as String?;
       if (units != 'metric' && units != 'imperial') {
@@ -1044,6 +1099,8 @@ extension on FakeServer {
         'roles': caller.roles,
         'language': caller.language,
         'units': caller.units,
+        'riderMode': riderModeSupported ? caller.riderMode : null,
+        'riderModeSupported': riderModeSupported,
         'telemetryConsentRequired': false,
         'telemetryCrash': caller.telemetryCrash,
         'telemetryUsage': caller.telemetryUsage,
@@ -1059,6 +1116,8 @@ extension on FakeServer {
         'roles': caller.roles,
         'language': caller.language,
         'units': caller.units,
+        'riderMode': riderModeSupported ? caller.riderMode : null,
+        'riderModeSupported': riderModeSupported,
         'telemetryConsentRequired': false,
         'telemetryCrash': caller.telemetryCrash,
         'telemetryUsage': caller.telemetryUsage,
@@ -1170,6 +1229,30 @@ extension on FakeServer {
         profile['${key}SetAt'] = '2026-11-12T09:00:00Z';
       }
       return json(_profileWithEstimate(profile));
+    }
+
+    if (path.startsWith('/api/v1/accounts/me/zones') &&
+        request.method != 'GET') {
+      final set = path.split('/').last;
+      if (!_zoneSetNames.contains(set)) {
+        return http.Response('{"detail":"unknown set"}', 404);
+      }
+      final mine = zoneBounds.putIfAbsent(caller.email, () => {});
+      if (request.method == 'DELETE') {
+        mine.remove(set);
+      } else {
+        final bounds = (body['bounds'] as List)
+            .map((v) => (v as num).toDouble())
+            .toList();
+        if (bounds.length != (set == 'power' ? 6 : 4)) {
+          return http.Response('{"detail":"wrong count"}', 400);
+        }
+        mine[set] = bounds;
+      }
+    }
+    if (path.startsWith('/api/v1/accounts/me/zones')) {
+      final profile = profiles[caller.email] ?? const <String, Object?>{};
+      return json(_zonesJson(profile, zoneBounds[caller.email] ?? const {}));
     }
 
     if (path == '/api/v1/accounts/me/ftp-history') {
@@ -1285,6 +1368,10 @@ extension on FakeServer {
       ftpCheck[caller.email] = {...?ftpCheck[caller.email], 'reason': null};
       snoozeRequests++;
       return http.Response('', 204);
+    }
+
+    if (path == '/api/v1/analytics/rider-card') {
+      return json(riderCard ?? riderCardJson());
     }
 
     if (path == '/api/v1/analytics/training') {
@@ -1667,6 +1754,82 @@ extension on FakeServer {
       // Where the FTP came from; null when there is no FTP, as the server answers.
       'ftpSetAt': profile['ftpW'] == null ? null : profile['ftpSetAt'],
       'ftpSource': profile['ftpW'] == null ? null : profile['ftpSource'],
+    };
+  }
+
+  static const _zoneSetNames = [
+    'power',
+    'heart-rate-max',
+    'heart-rate-threshold',
+  ];
+
+  /// The standard bounds of each set, and the sets the zones are read against.
+  static const _standardBounds = {
+    'power': [0.55, 0.75, 0.90, 1.05, 1.20, 1.50],
+    'heart-rate-max': [0.60, 0.70, 0.80, 0.90],
+    'heart-rate-threshold': [0.81, 0.90, 0.94, 1.00],
+  };
+
+  /// The zones in use, the way the server answers them: bounds, whether they are the rider's own, the reference
+  /// they are fractions of and the ranges they give today.
+  static Map<String, Object?> _zonesJson(
+    Map<String, Object?> profile,
+    Map<String, List<double>> custom,
+  ) {
+    final withEstimate = _profileWithEstimate(profile);
+    final thresholdSet =
+        withEstimate['thresholdHeartRateSource'] == 'manual' ||
+        withEstimate['thresholdHeartRateSource'] == 'measured';
+    final reference = {
+      'power': profile['ftpW'] as int?,
+      'heart-rate-max': withEstimate['maxHeartRate'] as int?,
+      'heart-rate-threshold': withEstimate['thresholdHeartRate'] as int?,
+    };
+    final source = {
+      'power': null,
+      'heart-rate-max': withEstimate['maxHeartRateSource'] as String?,
+      'heart-rate-threshold':
+          withEstimate['thresholdHeartRateSource'] as String?,
+    };
+    return {
+      'sets': [
+        for (final set in _zoneSetNames)
+          () {
+            final bounds = custom[set] ?? _standardBounds[set]!;
+            final bpm = reference[set]!;
+            // The top of a bound, as the server places it: rounded watts or bpm, minus one for the zone below.
+            int top(int index) => (bpm * bounds[index]).round();
+            return {
+              'set': set,
+              'bounds': bounds,
+              'custom': custom.containsKey(set),
+              'reference': reference[set],
+              'referenceSource': source[set],
+              'zones': [
+                if (reference[set] != null)
+                  for (var index = 0; index < bounds.length; index++)
+                    {
+                      'zone': index + 1,
+                      'from': index == 0 ? 0 : top(index - 1),
+                      'to': top(index) - 1,
+                      'seconds': 0.0,
+                    },
+                if (reference[set] != null)
+                  {
+                    'zone': bounds.length + 1,
+                    'from': top(bounds.length - 1),
+                    'to': null,
+                    'seconds': 0.0,
+                  },
+              ],
+            };
+          }(),
+      ],
+      'heartRateModel': thresholdSet
+          ? 'threshold'
+          : withEstimate['maxHeartRate'] == null
+          ? null
+          : 'max',
     };
   }
 
@@ -2222,6 +2385,7 @@ extension on FakeServer {
       'distanceM': b['initialDistanceM'],
       'movingS': 0.0,
       'isDefault': false,
+      'weightKg': null,
       'brand': null,
       'model': null,
       'modelYear': null,
@@ -2622,6 +2786,7 @@ Map<String, Object?> rideJson(
   double? elevationGainM,
   double? avgSpeedMs,
   int? avgPowerW,
+  int? estimatedAvgPowerW,
   int? normalizedPowerW,
   int? avgHeartRate,
   int? avgCadence,
@@ -2629,6 +2794,9 @@ Map<String, Object?> rideJson(
   double? intensityFactor,
   double? tss,
   double? trimp,
+  double? hrTss,
+  double? effortScore,
+  String? effortSource,
   List<Map<String, Object?>> heartRateZones = const [],
   List<Map<String, Object?>> powerZones = const [],
   List<Map<String, Object?>> powerRecords = const [],
@@ -2642,6 +2810,9 @@ Map<String, Object?> rideJson(
   bool? steady,
   String? heartRateMaxNote,
   String? heartRateThresholdNote,
+  String? heartRateZoneModel,
+  int? heartRateZoneReferenceBpm,
+  String? heartRateZoneReferenceSource,
   String? discipline,
   String? assist,
   String? environment,
@@ -2677,11 +2848,15 @@ Map<String, Object?> rideJson(
   'maxSpeedMs': null,
   'speedSource': null,
   'avgPowerW': avgPowerW,
+  'estimatedAvgPowerW': estimatedAvgPowerW,
   'maxPowerW': null,
   'normalizedPowerW': normalizedPowerW,
   'intensityFactor': intensityFactor,
   'tss': tss,
   'trimp': trimp,
+  'hrTss': hrTss,
+  'effortScore': effortScore,
+  'effortSource': effortSource,
   'avgHeartRate': avgHeartRate,
   'maxHeartRate': null,
   'avgCadence': avgCadence,
@@ -2699,6 +2874,9 @@ Map<String, Object?> rideJson(
   'wPrimeJ': wPrimeJ,
   'heartRateMaxNote': heartRateMaxNote,
   'heartRateThresholdNote': heartRateThresholdNote,
+  'heartRateZoneModel': heartRateZoneModel,
+  'heartRateZoneReferenceBpm': heartRateZoneReferenceBpm,
+  'heartRateZoneReferenceSource': heartRateZoneReferenceSource,
 };
 
 /// One personal power record as the ride detail receives it.
@@ -2749,6 +2927,12 @@ Map<String, Object?> trainingJson({
   double trimp = 180,
   int rides = 3,
   double distanceM = 80000,
+  int heartRateLoadRides = 0,
+  double? monotony,
+  double? strain,
+  double? strainUsual,
+  bool monotonous = false,
+  bool heavyWeek = false,
 }) => {
   'dayCount': days,
   'from': '2026-08-07',
@@ -2762,6 +2946,14 @@ Map<String, Object?> trainingJson({
   'intensity': null,
   'intensityWeeks': const <Object?>[],
   'efficiency': const <Object?>[],
+  'heartRateLoadRides': heartRateLoadRides,
+  'monotony': monotony,
+  'strain': strain,
+  'strainUsual': strainUsual,
+  'monotonous': monotonous,
+  'heavyWeek': heavyWeek,
+  'monotonyFrom': monotony == null ? null : '2026-10-29',
+  'monotonyTo': monotony == null ? null : '2026-11-04',
   'days': [
     for (var i = 0; i < 3; i++)
       {
@@ -2772,11 +2964,72 @@ Map<String, Object?> trainingJson({
         'elevationGainM': i == 2 ? 200.0 : 0.0,
         'tss': i == 2 ? 60.0 : 0.0,
         'trimp': i == 2 ? 45.0 : 0.0,
+        'load': i == 2 ? 60.0 : 0.0,
         'fitness': 40.0 + i,
         'fatigue': 30.0 + i,
         'form': 10.0,
       },
   ],
+};
+
+/// What GET /analytics/rider-card answers by default: a rider with power, two heart rates and no event.
+Map<String, Object?> riderCardJson({
+  int? ftpW = 250,
+  double? weightKg = 70,
+  double? wattsPerKg = 3.6,
+  int? criticalPowerW = 250,
+  int? wPrimeJ = 20000,
+  int? peakPowerW = 900,
+  int? maxHeartRate = 187,
+  int? thresholdHeartRate = 165,
+  double? fitness = 42,
+  double? fatigue = 34,
+  double? form = 8,
+  List<Map<String, Object?>> bests = const [],
+  Map<String, Object?>? nextEvent,
+}) => {
+  'ftpW': ftpW,
+  'weightKg': weightKg,
+  'wattsPerKg': wattsPerKg,
+  'ftpSource': ftpW == null ? null : 'manual',
+  'ftpSetAt': ftpW == null ? null : '2026-11-01T09:00:00Z',
+  'ftpRideId': null,
+  'ftpRideDate': null,
+  'criticalPowerW': criticalPowerW,
+  'wPrimeJ': wPrimeJ,
+  'peakPowerW': peakPowerW,
+  'bests': bests.isEmpty
+      ? [
+          for (final (seconds, watts) in [
+            (5, 900),
+            (60, 450),
+            (300, 317),
+            (1200, 267),
+          ])
+            {'seconds': seconds, 'watts': watts, 'rideId': null, 'date': null},
+        ]
+      : bests,
+  'maxHeartRate': maxHeartRate,
+  'maxHeartRateSource': maxHeartRate == null ? null : 'estimate',
+  'maxHeartRateSetAt': null,
+  'maxHeartRateRideId': null,
+  'maxHeartRateRideDate': null,
+  'thresholdHeartRate': thresholdHeartRate,
+  'thresholdHeartRateSource': thresholdHeartRate == null ? null : 'manual',
+  'thresholdHeartRateSetAt': thresholdHeartRate == null
+      ? null
+      : '2026-11-01T09:00:00Z',
+  'thresholdHeartRateRideId': null,
+  'thresholdHeartRateRideDate': null,
+  'efficiency': const <Object?>[],
+  'rides': 12,
+  'distanceM': 850000.0,
+  'movingS': 123600.0,
+  'elevationGainM': 7200.0,
+  'fitness': fitness,
+  'fatigue': fatigue,
+  'form': form,
+  'nextEvent': nextEvent,
 };
 
 /// Starts the app the way main.dart does, with the session restored first.
@@ -2936,6 +3189,8 @@ Map<String, Object?> streamsJson({
   bool cadence = false,
   bool speed = true,
   bool heartRate = true,
+  bool power = true,
+  bool estimatedPower = false,
   List<int>? wPrimeBalance,
 }) {
   const n = 60;
@@ -2948,7 +3203,8 @@ Map<String, Object?> streamsJson({
     'speed': speed ? each((_) => 10.0) : null,
     'distance': each((i) => i * 10.0),
     'heartRate': heartRate ? each((i) => 140 + i ~/ 6) : null,
-    'power': each((i) => i.isEven ? 180 : 220),
+    'power': power ? each((i) => i.isEven ? 180 : 220) : null,
+    'estimatedPower': estimatedPower ? each((i) => 140 + i ~/ 10) : null,
     'cadence': cadence ? each((_) => 90) : null,
     'temperature': null,
     'wPrimeBalanceJ': wPrimeBalance,
