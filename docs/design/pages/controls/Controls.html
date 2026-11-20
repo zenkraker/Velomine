@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Controls: Main action, period, sport filter and the page menu. Guideline: Controls.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Controls</title>
+<style>
+  .grid { padding: var(--space-xl); display: grid; grid-template-columns: max-content 1fr; gap: var(--space-lg) var(--space-xl); align-items: center; }
+  .lbl { color: var(--ink-muted); }
+  .menu-row { display: flex; align-items: center; gap: var(--space-sm); }
+  svg.i { width: 22px; height: 22px; fill: currentColor; }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; gap: var(--space-xs); } .grid > div:nth-child(odd) { margin-top: var(--space-md); } }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="lbl caption">Main action</div>
+  <div><button class="vm-btn button-label" type="button">Upload ride</button></div>
+  <div class="lbl caption">Period</div>
+  <div><div class="vm-seg" role="group" aria-label="Period"><button type="button" aria-pressed="true">Weeks</button><button type="button" aria-pressed="false">Months</button><button type="button" aria-pressed="false">Years</button></div></div>
+  <div class="lbl caption">Sport filter</div>
+  <div class="vm-chips" role="group" aria-label="Sport"><button class="vm-chip" type="button" aria-pressed="false">All</button><button class="vm-chip" type="button" aria-pressed="true">Road</button><button class="vm-chip" type="button" aria-pressed="false">Gravel</button><button class="vm-chip" type="button" aria-pressed="false">Mountain bike</button><button class="vm-chip" type="button" aria-pressed="false">Track</button></div>
+  <div class="lbl caption">Rare actions</div>
+  <div class="menu-row"><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><span class="caption vm-muted">Opens the page menu; destructive entries last, in danger red.</span></div>
+</div>
+</body>
+</html>

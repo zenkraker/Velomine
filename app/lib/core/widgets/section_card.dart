@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens.dart';
+import 'app_card.dart';
 
 /// A titled group of rows and fields, with one left edge for everything inside.
 class SectionCard extends StatelessWidget {
@@ -24,41 +25,36 @@ class SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.sm,
-          children: [
-            if (menu == null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text(title, style: text.titleMedium),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(left: AppSpacing.lg),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(title, style: text.titleMedium)),
-                    menu!,
-                  ],
+    final scheme = Theme.of(context).colorScheme;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(title, style: text.titleMedium)),
+              // The menu's tap area hangs over the card's padding, so it sits at the card's edge.
+              if (menu case final menu?)
+                Transform.translate(
+                  offset: const Offset(AppSpacing.md, 0),
+                  child: menu,
                 ),
+            ],
+          ),
+          if (description case final description?)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Text(
+                description,
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
-            if (description != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text(description!, style: text.bodySmall),
-              ),
-            // Rows bring their own vertical rhythm; the card only fixes the left and right edge.
-            for (final child in children)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: child,
-              ),
-          ],
-        ),
+            ),
+          for (final child in children)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: child,
+            ),
+        ],
       ),
     );
   }

@@ -590,4 +590,70 @@ void main() {
     expect(find.byType(RecordingScreen), findsOneWidget);
     expect(find.byKey(const Key('live-ride-banner')), findsNothing);
   });
+
+  for (final width in [390.0, 600.0, 1300.0]) {
+    testWidgets('RidesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.rides.add(
+        rideJson(
+          'r2',
+          'ready',
+          distanceM: 42000,
+          movingS: 5400,
+          elevationGainM: 300,
+          avgSpeedMs: 7.8,
+        ),
+      );
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+
+      expect(find.byKey(const Key('ride-r2')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('RidesScreen_ShouldOfferOneMainAction_WhenTheWindowIsAPhone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+
+    // One filled action in the header, and the imports behind the menu.
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(
+      find.byKey(const Key('upload-ride')).evaluate().isNotEmpty ||
+          find.byKey(const Key('start-ride')).evaluate().isNotEmpty,
+      isTrue,
+    );
+    // The imports and the filters sit behind the header's menu.
+    expect(find.byKey(const Key('rides-actions')), findsOneWidget);
+  });
+
+  testWidgets('RidesScreen_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    tester.view.physicalSize = const Size(390, 2600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.rides.add(
+      rideJson(
+        'r2',
+        'ready',
+        distanceM: 42000,
+        movingS: 5400,
+        elevationGainM: 300,
+        avgSpeedMs: 7.8,
+      ),
+    );
+    await startApp(tester, server.session(useCookies: true));
+
+    expect(tester.takeException(), isNull);
+  });
 }

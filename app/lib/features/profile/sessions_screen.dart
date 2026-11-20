@@ -13,6 +13,7 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'sessions_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -34,7 +35,6 @@ class SessionsScreen extends ConsumerWidget {
 
     final sessions = state.load.value;
     return PageScaffold(
-      eyebrow: l10n.profileTitle,
       title: l10n.sessionsTitle,
       subtitle: l10n.sessionsIntro,
       maxWidth: AppLayout.contentNarrow,
@@ -78,7 +78,8 @@ class SessionsScreen extends ConsumerWidget {
             icon: Icons.devices_other,
           )
         else
-          Card(
+          AppCard(
+            padding: EdgeInsets.zero,
             child: Column(
               children: [
                 for (final session in sessions ?? const [])

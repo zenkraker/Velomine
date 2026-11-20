@@ -13,6 +13,7 @@ import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/inline_error.dart';
@@ -299,7 +300,6 @@ class ClubScreen extends ConsumerWidget {
     ];
 
     return PageScaffold(
-      eyebrow: l10n.eyebrowClub,
       title: l10n.navClub,
       subtitle: l10n.clubSubtitle,
       // Leaving ends the member's place in the club: in the menu, last and red. The owner cannot leave.
@@ -324,11 +324,11 @@ class ClubScreen extends ConsumerWidget {
       children: [
         ClubHeroCard(club: club),
         if (!club.isActive)
-          Card(
-            color: Theme.of(context).colorScheme.errorContainer,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(l10n.clubInactive, key: const Key('club-inactive')),
+          AppCard(
+            child: Text(
+              l10n.clubInactive,
+              key: const Key('club-inactive'),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         if (clubState.load.failure case final failure?)
@@ -373,14 +373,12 @@ class ClubScreen extends ConsumerWidget {
     // The real header while the club is read, so the page is opaque from its first frame.
     if (clubState.load.running && !clubState.loaded) {
       return PageScaffold(
-        eyebrow: l10n.eyebrowClub,
         title: l10n.clubNoneTitleShort,
         subtitle: l10n.clubNoneSubtitle,
         children: const [LoadingState.rows(key: Key('club-loading'), count: 4)],
       );
     }
     return PageScaffold(
-      eyebrow: l10n.eyebrowClub,
       title: l10n.clubNoneTitleShort,
       subtitle: l10n.clubNoneSubtitle,
       children: [
@@ -392,44 +390,41 @@ class ClubScreen extends ConsumerWidget {
                 ? null
                 : ref.read(clubViewModelProvider.notifier).refresh,
           ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                Text(
-                  l10n.clubNoneTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                Text(l10n.clubNoneBody),
-                // One row of choices with one weight: the main way first, the alternatives beside it.
-                ToolbarRow(
-                  children: [
-                    FilledButton.icon(
-                      key: const Key('go-nearby-clubs'),
-                      onPressed: onOpenClubs,
-                      icon: const Icon(Icons.explore_outlined),
-                      label: Text(l10n.clubSeeNearby),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.md,
+            children: [
+              Text(
+                l10n.clubNoneTitle,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Text(l10n.clubNoneBody),
+              // One row of choices with one weight: the main way first, the alternatives beside it.
+              ToolbarRow(
+                children: [
+                  FilledButton.icon(
+                    key: const Key('go-nearby-clubs'),
+                    onPressed: onOpenClubs,
+                    icon: const Icon(Icons.explore_outlined),
+                    label: Text(l10n.clubSeeNearby),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('go-join-club'),
+                    onPressed: onJoin,
+                    icon: const Icon(Icons.group_add),
+                    label: Text(l10n.joinTitle),
+                  ),
+                  if (clubState.canStartClub)
+                    TextButton.icon(
+                      key: const Key('go-start-club'),
+                      onPressed: onStartClub,
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(l10n.startClubButton),
                     ),
-                    OutlinedButton.icon(
-                      key: const Key('go-join-club'),
-                      onPressed: onJoin,
-                      icon: const Icon(Icons.group_add),
-                      label: Text(l10n.joinTitle),
-                    ),
-                    if (clubState.canStartClub)
-                      TextButton.icon(
-                        key: const Key('go-start-club'),
-                        onPressed: onStartClub,
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text(l10n.startClubButton),
-                      ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
         if (nearby.request case final request?)

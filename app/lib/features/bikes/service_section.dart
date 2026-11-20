@@ -12,6 +12,7 @@ import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -358,78 +359,74 @@ class _ReminderCard extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final color = reminderColor(context, reminder.status);
-    return Card(
+    return AppCard(
       key: Key('reminder-${reminder.id}'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 6,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(reminder.name, style: text.titleMedium)),
-                Text(
-                  reminderStatusLabel(l10n, reminder.status),
-                  key: Key('reminder-status-${reminder.id}'),
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
-                ),
-                RowRemoveMenu(
-                  menuKey: Key('reminder-actions-${reminder.id}'),
-                  removeKey: Key('reminder-remove-${reminder.id}'),
-                  onRemove: onRemove,
-                ),
-              ],
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(reminder.name, style: text.titleMedium)),
+              Text(
+                reminderStatusLabel(l10n, reminder.status),
+                key: Key('reminder-status-${reminder.id}'),
+                style: TextStyle(color: color, fontWeight: FontWeight.w600),
+              ),
+              RowRemoveMenu(
+                menuKey: Key('reminder-actions-${reminder.id}'),
+                removeKey: Key('reminder-remove-${reminder.id}'),
+                onRemove: onRemove,
+              ),
+            ],
+          ),
+          if (reminder.percent != null)
+            Semantics(
+              label: l10n.wearPercent(reminder.percent!),
+              child: LinearProgressIndicator(
+                key: Key('reminder-bar-${reminder.id}'),
+                value: (reminder.percent! / 100).clamp(0.0, 1.0),
+                color: color,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-            if (reminder.percent != null)
-              Semantics(
-                label: l10n.wearPercent(reminder.percent!),
-                child: LinearProgressIndicator(
-                  key: Key('reminder-bar-${reminder.id}'),
-                  value: (reminder.percent! / 100).clamp(0.0, 1.0),
-                  color: color,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(4),
+          Text(
+            reminderProgressText(
+              l10n,
+              ref.watch(unitsChoiceViewModelProvider),
+              reminder,
+            ),
+            key: Key('reminder-text-${reminder.id}'),
+          ),
+          Text(
+            l10n.reminderLastDone(isoDate(reminder.lastDoneOn)),
+            style: text.bodySmall,
+          ),
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              FilledButton.tonal(
+                key: Key('reminder-done-${reminder.id}'),
+                onPressed: onDone,
+                child: Text(l10n.reminderDone),
+              ),
+              TextButton(
+                key: Key('reminder-edit-${reminder.id}'),
+                onPressed: onEdit,
+                child: Text(l10n.edit),
+              ),
+              TextButton(
+                key: Key('reminder-pause-${reminder.id}'),
+                onPressed: onPause,
+                child: Text(
+                  reminder.isPaused ? l10n.reminderResume : l10n.reminderPause,
                 ),
               ),
-            Text(
-              reminderProgressText(
-                l10n,
-                ref.watch(unitsChoiceViewModelProvider),
-                reminder,
-              ),
-              key: Key('reminder-text-${reminder.id}'),
-            ),
-            Text(
-              l10n.reminderLastDone(isoDate(reminder.lastDoneOn)),
-              style: text.bodySmall,
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                FilledButton.tonal(
-                  key: Key('reminder-done-${reminder.id}'),
-                  onPressed: onDone,
-                  child: Text(l10n.reminderDone),
-                ),
-                TextButton(
-                  key: Key('reminder-edit-${reminder.id}'),
-                  onPressed: onEdit,
-                  child: Text(l10n.edit),
-                ),
-                TextButton(
-                  key: Key('reminder-pause-${reminder.id}'),
-                  onPressed: onPause,
-                  child: Text(
-                    reminder.isPaused
-                        ? l10n.reminderResume
-                        : l10n.reminderPause,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -468,47 +465,45 @@ class _EntryCard extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     final distance =
         '${NumberFormat.decimalPattern(locale).format(units == Units.imperial ? (entry.bikeDistanceM / 1609.344).round() : (entry.bikeDistanceM / 1000).round())} ${distanceUnit(units)}';
-    return Card(
+    return AppCard(
       key: Key('entry-${entry.id}'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 6,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(entry.title, style: text.titleMedium)),
-                RowRemoveMenu(
-                  menuKey: Key('entry-actions-${entry.id}'),
-                  removeKey: Key('entry-remove-${entry.id}'),
-                  onRemove: onRemove,
-                ),
-              ],
-            ),
-            Text(
-              [
-                isoDate(entry.date),
-                l10n.entryAtDistance(distance),
-                entry.place ?? l10n.entryAtHome,
-                if (entry.costAmount != null) _cost(locale),
-              ].join(' · '),
-              key: Key('entry-meta-${entry.id}'),
-              style: text.bodySmall,
-            ),
-            if (entry.notes != null) Text(entry.notes!),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                TextButton(
-                  key: Key('entry-edit-${entry.id}'),
-                  onPressed: onEdit,
-                  child: Text(l10n.edit),
-                ),
-              ],
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(entry.title, style: text.titleMedium)),
+              RowRemoveMenu(
+                menuKey: Key('entry-actions-${entry.id}'),
+                removeKey: Key('entry-remove-${entry.id}'),
+                onRemove: onRemove,
+              ),
+            ],
+          ),
+          Text(
+            [
+              isoDate(entry.date),
+              l10n.entryAtDistance(distance),
+              entry.place ?? l10n.entryAtHome,
+              if (entry.costAmount != null) _cost(locale),
+            ].join(' · '),
+            key: Key('entry-meta-${entry.id}'),
+            style: text.bodySmall,
+          ),
+          if (entry.notes != null) Text(entry.notes!),
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              TextButton(
+                key: Key('entry-edit-${entry.id}'),
+                onPressed: onEdit,
+                child: Text(l10n.edit),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -5,12 +5,14 @@ import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/rider_mode.dart';
 import 'package:velomine/core/session.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
-import 'package:velomine/core/widgets/stat_tile.dart';
+import 'package:velomine/core/widgets/stat_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
 
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/core/theme.dart';
+import 'package:velomine/features/rides/detail/series_chart.dart';
 
 Widget _detailApp(
   Session session,
@@ -657,7 +659,8 @@ void main() {
       server.rides[0]['description'] = 'Cold start, warm finish.';
       await open(tester);
 
-      expect(find.text('Dawn patrol'), findsOneWidget);
+      // The page title and the map's glass card both name the ride.
+      expect(find.text('Dawn patrol'), findsWidgets);
       expect(find.text('Cold start, warm finish.'), findsOneWidget);
     },
   );
@@ -685,7 +688,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(server.requests, contains('PUT /api/v1/rides/r1/details'));
-    expect(find.text('Dawn patrol'), findsOneWidget);
+    expect(find.text('Dawn patrol'), findsWidgets);
     expect(find.text('Cold start'), findsOneWidget);
   });
 
@@ -823,6 +826,91 @@ void main() {
   });
 
   testWidgets(
+    'RideDetailScreen_ShouldLeadWithTheRouteMap_WhenTheRideHasARoute',
+    (tester) async {
+      await open(tester);
+
+      final map = find.byKey(const Key('route-map'));
+      expect(map, findsOneWidget);
+      // The map is the first thing under the title, above the numbers.
+      final mapTop = tester.getTopLeft(map).dy;
+      final statsTop = tester
+          .getTopLeft(find.byKey(const Key('stat-distance')))
+          .dy;
+      expect(mapTop, lessThan(statsTop));
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheFactsOnTheMap_WhenTheRideHasARoute',
+    (tester) async {
+      server.rides[0]['title'] = 'Dawn patrol';
+      await open(tester);
+
+      final facts = find.byKey(const Key('map-facts'));
+      expect(facts, findsOneWidget);
+      expect(
+        find.descendant(of: facts, matching: find.text('Dawn patrol')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: facts, matching: find.textContaining('42.3 km')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: facts, matching: find.textContaining('612 m')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldHideTheRoute_WhenTheCallerHasNoRouteGrant',
+    (tester) async {
+      // What the server's privacy function sends a caller without the route grant: every signal but the
+      // position, so the page has numbers and no route.
+      server.streams['r1'] = streamsJson(position: false);
+      await open(tester);
+
+      expect(find.byKey(const Key('route-map')), findsNothing);
+      expect(find.byKey(const Key('map-facts')), findsNothing);
+      expect(find.byKey(const Key('stat-distance')), findsOneWidget);
+      expect(find.byKey(const Key('chart-power')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldKeepMenuOrderAndDeleteLast_WhenTheMenuOpens',
+    (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      final text = tester
+          .getTopLeft(find.byKey(const Key('edit-ride-text')))
+          .dy;
+      final type = tester
+          .getTopLeft(find.byKey(const Key('edit-ride-type')))
+          .dy;
+      final delete = tester.getTopLeft(find.byKey(const Key('delete'))).dy;
+      expect(text, lessThan(type));
+      expect(type, lessThan(delete));
+
+      // Deleting is the red one, and it asks first.
+      final scheme = Theme.of(tester.element(find.byKey(const Key('delete'))))
+          .colorScheme;
+      final entry = tester.widget<MenuItemButton>(
+        find.byKey(const Key('delete')),
+      );
+      expect(entry.style?.foregroundColor?.resolve({}), scheme.error);
+      expect(
+        Theme.of(tester.element(find.byKey(const Key('delete')))),
+        isNotNull,
+      );
+    },
+  );
+
+  testWidgets(
     'RideDetailScreen_ShouldSayTheZonesComeFromTheThreshold_WhenTheRideCarriesTheThresholdModel',
     (tester) async {
       server.rides[0] = {
@@ -847,6 +935,24 @@ void main() {
     },
   );
 
+  testWidgets(
+    'RideDetailScreen_ShouldPaintPowerInSeriesPower_WhenTheChartShows',
+    (tester) async {
+      await open(tester);
+
+      final charts = tester.widgetList<SeriesChart>(find.byType(SeriesChart));
+      final power = charts.firstWhere((chart) => chart.series.id == 'power');
+      final heartRate = charts.firstWhere(
+        (chart) => chart.series.id == 'heartrate',
+      );
+      final colors = VelomineColors.of(
+        tester.element(find.byType(SeriesChart).first),
+      );
+      expect(power.color, colors.series['power']);
+      expect(heartRate.color, colors.series['heartrate']);
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldShowTheEffortScore_WhenTheRideHasOne', (
     tester,
   ) async {
@@ -860,7 +966,9 @@ void main() {
 
     expect(find.byKey(const Key('stat-effort-score')), findsOneWidget);
     expect(
-      tester.widget<StatTile>(find.byKey(const Key('stat-effort-score'))).value,
+      tester
+          .widget<StatFigure>(find.byKey(const Key('stat-effort-score')))
+          .value,
       '64',
     );
     expect(find.text('From your heart rate'), findsOneWidget);

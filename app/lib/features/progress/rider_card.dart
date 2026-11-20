@@ -11,7 +11,7 @@ import '../../core/units.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/source_note.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/stat_card.dart';
 import '../accounts/ftp_source_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../accounts/heart_rate_source_text.dart';
@@ -68,20 +68,20 @@ class RiderCard extends ConsumerWidget {
           spacing: AppSpacing.xl,
           runSpacing: AppSpacing.sm,
           children: [
-            StatTile(
+            StatFigure(
               label: 'FTP',
               value: _watts(card.ftpW),
               valueKey: const Key('rider-card-ftp'),
             ),
-            StatTile(
+            StatFigure(
               label: 'W/kg',
               value: wPerKg == null ? '–' : NumberFormat('0.0').format(wPerKg),
             ),
-            StatTile(
+            StatFigure(
               label: l10n.thresholdHeartRateField,
               value: _bpm(card.thresholdHeartRate),
             ),
-            StatTile(
+            StatFigure(
               label: l10n.fitness,
               value: card.fitness == null ? '–' : '${card.fitness!.round()}',
             ),
@@ -215,16 +215,16 @@ class RiderCardSheet extends ConsumerWidget {
             spacing: AppSpacing.xl,
             runSpacing: AppSpacing.sm,
             children: [
-              StatTile(label: l10n.statRides, value: '${card.rides}'),
-              StatTile(
+              StatFigure(label: l10n.statRides, value: '${card.rides}'),
+              StatFigure(
                 label: l10n.statMovingTime,
                 value: duration(card.movingS),
               ),
-              StatTile(
+              StatFigure(
                 label: l10n.statDistance,
                 value: km(units, card.distanceM),
               ),
-              StatTile(
+              StatFigure(
                 label: l10n.statClimbing,
                 value: elevation(units, card.elevationGainM),
               ),

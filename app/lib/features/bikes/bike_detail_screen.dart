@@ -23,11 +23,12 @@ import 'service_section.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'row_menu.dart';
 import '../../core/widgets/section_heading.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/stat_card.dart';
 
 DateTime _today() {
   final now = DateTime.now();
@@ -203,7 +204,6 @@ class BikeDetailScreen extends ConsumerWidget {
 
     final detail = s.detail;
     return PageScaffold(
-      eyebrow: l10n.eyebrowBikes,
       title: detail?.bike.name ?? l10n.navBikes,
       titleKey: const Key('bike-title'),
       primaryAction: detail == null ? null : _addPartButton(context, ref),
@@ -338,9 +338,12 @@ class BikeDetailScreen extends ConsumerWidget {
         spacing: AppSpacing.xl,
         runSpacing: 8,
         children: [
-          StatTile(label: l10n.statDistance, value: km(units, bike.distanceM)),
-          StatTile(label: l10n.statRides, value: '${bike.rideCount}'),
-          StatTile(label: l10n.statMovingTime, value: duration(bike.movingS)),
+          StatFigure(
+            label: l10n.statDistance,
+            value: km(units, bike.distanceM),
+          ),
+          StatFigure(label: l10n.statRides, value: '${bike.rideCount}'),
+          StatFigure(label: l10n.statMovingTime, value: duration(bike.movingS)),
         ],
       ),
       if (s.load.failure case final failure?)
@@ -362,13 +365,17 @@ class BikeDetailScreen extends ConsumerWidget {
             label: Text(l10n.addPartAction),
           ),
         ),
-      for (final part in current)
-        _PartCard(
-          part: part,
-          onEdit: () => _editPart(context, ref, part),
-          onReplace: () => _replacePart(context, ref, part),
-          onRemove: () => _removePart(context, ref, part),
-        ),
+      // The fitted parts as the component types group them: drivetrain, wheels, brakes, and so on.
+      for (final group in groupParts(l10n, current, s.types)) ...[
+        Text(group.name, style: text.labelLarge),
+        for (final part in group.parts)
+          _PartCard(
+            part: part,
+            onEdit: () => _editPart(context, ref, part),
+            onReplace: () => _replacePart(context, ref, part),
+            onRemove: () => _removePart(context, ref, part),
+          ),
+      ],
       if (retired.isNotEmpty) ...[
         Text(l10n.replacedParts, style: text.titleMedium),
         for (final part in retired)
@@ -444,83 +451,98 @@ class _PartCard extends ConsumerWidget {
     final color = wearColor(context, part.status);
     final make = [part.brand, part.model].whereType<String>().join(' ');
     final typeName = componentTypeName(l10n, part.type, part.typeName);
-    return Card(
+    return AppCard(
       key: Key('part-${part.id}'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 6,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    make.isEmpty ? typeName : '$typeName · $make',
-                    style: text.titleMedium,
-                  ),
-                ),
-                Text(
-                  wearLabel(l10n, part.status),
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
-                ),
-                RowRemoveMenu(
-                  menuKey: Key('part-actions-${part.id}'),
-                  removeKey: Key('remove-${part.id}'),
-                  onRemove: onRemove,
-                ),
-              ],
-            ),
-            if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
-            if (part.wearPercent != null)
-              Semantics(
-                label: l10n.wearPercent(part.wearPercent!),
-                child: LinearProgressIndicator(
-                  key: Key('wear-${part.id}'),
-                  value: (part.wearPercent! / 100).clamp(0.0, 1.0),
-                  color: color,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(4),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  make.isEmpty ? typeName : '$typeName · $make',
+                  style: text.titleMedium,
                 ),
               ),
-            Text(
-              wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
-              key: Key('wear-text-${part.id}'),
-            ),
-            Text(
-              part.removedOn == null
-                  ? l10n.installedOn(isoDate(part.installedOn))
-                  : l10n.installedAndRemoved(
-                      isoDate(part.installedOn),
-                      isoDate(part.removedOn!),
-                    ),
-              style: text.bodySmall,
-            ),
-            if (part.mpn != null)
               Text(
-                part.mpn!,
-                key: Key('mpn-${part.id}'),
-                style: text.bodySmall,
+                wearLabel(l10n, part.status),
+                style: TextStyle(color: color, fontWeight: FontWeight.w600),
               ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                TextButton(
-                  key: Key('edit-${part.id}'),
-                  onPressed: onEdit,
-                  child: Text(l10n.edit),
-                ),
-                if (onReplace != null)
-                  TextButton(
-                    key: Key('replace-${part.id}'),
-                    onPressed: onReplace,
-                    child: Text(l10n.replace),
-                  ),
-              ],
+              RowRemoveMenu(
+                menuKey: Key('part-actions-${part.id}'),
+                removeKey: Key('remove-${part.id}'),
+                onRemove: onRemove,
+              ),
+            ],
+          ),
+          if (part.isCustom) Text(l10n.customPart, style: text.bodySmall),
+          if (part.wearPercent != null)
+            Semantics(
+              label: l10n.wearPercent(part.wearPercent!),
+              child: LinearProgressIndicator(
+                key: Key('wear-${part.id}'),
+                value: (part.wearPercent! / 100).clamp(0.0, 1.0),
+                color: color,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ],
-        ),
+          Text(
+            wearText(l10n, ref.watch(unitsChoiceViewModelProvider), part),
+            key: Key('wear-text-${part.id}'),
+          ),
+          Text(
+            part.removedOn == null
+                ? l10n.installedOn(isoDate(part.installedOn))
+                : l10n.installedAndRemoved(
+                    isoDate(part.installedOn),
+                    isoDate(part.removedOn!),
+                  ),
+            style: text.bodySmall,
+          ),
+          if (part.mpn != null)
+            Text(part.mpn!, key: Key('mpn-${part.id}'), style: text.bodySmall),
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              TextButton(
+                key: Key('edit-${part.id}'),
+                onPressed: onEdit,
+                child: Text(l10n.edit),
+              ),
+              if (onReplace != null)
+                TextButton(
+                  key: Key('replace-${part.id}'),
+                  onPressed: onReplace,
+                  child: Text(l10n.replace),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
+}
+
+/// The fitted parts grouped as the component types group them, in the order the groups first appear:
+/// drivetrain (chain, cassette), wheels (tyres, sealant), brakes, and so on.
+List<({String name, List<ComponentResponse> parts})> groupParts(
+  AppLocalizations l10n,
+  List<ComponentResponse> parts,
+  List<ComponentTypeResponse> types,
+) {
+  final groupOf = {for (final type in types) type.id: type.group};
+  final order = <String>[];
+  final grouped = <String, List<ComponentResponse>>{};
+  for (final part in parts) {
+    final group = groupOf[part.type] ?? 'other';
+    if (!grouped.containsKey(group)) order.add(group);
+    grouped.putIfAbsent(group, () => []).add(part);
+  }
+  return [
+    for (final group in order)
+      (name: componentGroupName(l10n, group), parts: grouped[group]!),
+  ];
 }

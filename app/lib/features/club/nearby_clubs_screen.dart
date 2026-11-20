@@ -13,6 +13,7 @@ import 'location_picker.dart';
 import 'nearby_clubs_state.dart';
 import 'nearby_clubs_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/error_state.dart';
@@ -246,9 +247,9 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
           onRetry: s.load.running ? null : () => notifier.refresh(),
         ),
       if (s.request != null)
-        Card(
+        AppCard(
           key: const Key('pending-join-request'),
-          color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -360,8 +361,9 @@ class _ClubRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Card(
+    return AppCard(
       key: Key('nearby-club-${club.id}'),
+      padding: EdgeInsets.zero,
       child: ListTile(
         title: Text(club.name),
         subtitle: Text(

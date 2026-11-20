@@ -16,6 +16,7 @@ import 'recording_providers.dart';
 import 'recording_view_model.dart';
 import 'upload_queue.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/units.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/empty_state.dart';
@@ -23,7 +24,7 @@ import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/stat_card.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
   'permission' => l10n.recorderPermission,
@@ -168,50 +169,46 @@ class _StartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    return Card(
-      color: theme.colorScheme.surfaceContainerHigh,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(l10n.recordRide, style: theme.textTheme.headlineMedium),
-            // Said before the system asks: starting needs the position and keeps a notification.
-            Text(
-              l10n.recordPermissionHelp,
-              key: const Key('record-permission-help'),
-              style: Theme.of(context).textTheme.bodySmall,
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(l10n.recordRide, style: theme.textTheme.headlineMedium),
+          // Said before the system asks: starting needs the position and keeps a notification.
+          Text(
+            l10n.recordPermissionHelp,
+            key: const Key('record-permission-help'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          FilledButton.icon(
+            key: const Key('record-start'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(_bigControl),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            FilledButton.icon(
-              key: const Key('record-start'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(_bigControl),
+            onPressed: busy || loading ? null : onStart,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(busy ? l10n.starting : l10n.startRecording),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _summary(context),
+                  key: const Key('record-settings-summary'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-              onPressed: busy || loading ? null : onStart,
-              icon: const Icon(Icons.play_arrow),
-              label: Text(busy ? l10n.starting : l10n.startRecording),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _summary(context),
-                    key: const Key('record-settings-summary'),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-                IconButton(
-                  key: const Key('record-settings'),
-                  tooltip: l10n.recorderSettings,
-                  onPressed: () => showRecorderSettings(context),
-                  icon: const Icon(Icons.tune),
-                ),
-              ],
-            ),
-          ],
-        ),
+              IconButton(
+                key: const Key('record-settings'),
+                tooltip: l10n.recorderSettings,
+                onPressed: () => showRecorderSettings(context),
+                icon: const Icon(Icons.tune),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -397,10 +394,10 @@ class _LiveCard extends ConsumerWidget {
     final autoPaused = paused && state.autoPaused;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Card(
-      color: scheme.primaryContainer,
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: scheme.onPrimaryContainer),
+        style: TextStyle(color: scheme.onSurface),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
@@ -447,23 +444,26 @@ class _LiveCard extends ConsumerWidget {
                 spacing: AppSpacing.xl,
                 runSpacing: AppSpacing.sm,
                 children: [
-                  StatTile(label: l10n.moving, value: stopwatch(state.movingS)),
-                  StatTile(
+                  StatFigure(
+                    label: l10n.moving,
+                    value: stopwatch(state.movingS),
+                  ),
+                  StatFigure(
                     label: l10n.statDistance,
                     value: km(units, state.distanceM),
                   ),
-                  StatTile(
+                  StatFigure(
                     label: l10n.statAverageSpeed,
                     value: kmh(units, state.speedMs),
                   ),
-                  StatTile(
+                  StatFigure(
                     label: l10n.gps,
                     value: state.accuracyM == null
                         ? '–'
                         : '±${state.accuracyM!.round()} m',
                   ),
                   if (state.sensorName != null)
-                    StatTile(
+                    StatFigure(
                       label: l10n.heartRate,
                       value: state.heartRateBpm == null
                           ? '–'
@@ -606,8 +606,9 @@ class _LocalRideCard extends ConsumerWidget {
         (upload?.isBusy ?? false);
     final canUpload =
         ride.isReady && !_uploaded && !uploading && onUpload != null;
-    return Card(
+    return AppCard(
       key: Key('local-ride-${ride.id}'),
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           ListTile(

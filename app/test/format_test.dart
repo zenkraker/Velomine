@@ -77,4 +77,41 @@ void main() {
     expect(stopwatch(3723), '1:02:03');
     expect(stopwatch(null), '–');
   });
+
+  test('distanceParts_ShouldSplitValueAndUnit_WhenMetric', () {
+    final parts = distanceParts(Units.metric, 69700);
+    expect(parts.value, '69.7');
+    expect(parts.unit, 'km');
+    expect(distanceIn(Units.metric, 69700), closeTo(69.7, 0.001));
+  });
+
+  test('distanceParts_ShouldSplitValueAndUnit_WhenImperial', () {
+    final parts = distanceParts(Units.imperial, 42300);
+    expect(parts.value, '26.3');
+    expect(parts.unit, 'mi');
+    expect(distanceIn(Units.imperial, 42300), closeTo(26.28, 0.01));
+  });
+
+  test('distanceParts_ShouldReturnADashAndNoUnit_WhenDistanceIsNull', () {
+    expect(distanceParts(Units.metric, null), (value: '–', unit: null));
+    expect(distanceParts(Units.imperial, null), (value: '–', unit: null));
+  });
+
+  test('km_ShouldKeepItsText_WhenBuiltOnDistanceParts', () {
+    for (final (units, metres) in [
+      (Units.metric, 42300.0),
+      (Units.metric, 150000.0),
+      (Units.metric, 999.0),
+      (Units.imperial, 1609.344),
+      (Units.imperial, 42300.0),
+      (Units.imperial, 200000.0),
+    ]) {
+      final parts = distanceParts(units, metres);
+      expect(
+        km(units, metres),
+        '${parts.value} ${parts.unit}',
+        reason: '$metres',
+      );
+    }
+  });
 }

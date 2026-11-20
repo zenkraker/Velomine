@@ -113,7 +113,7 @@ void main() {
     expect(find.text('Coach'), findsWidgets);
   });
 
-  testWidgets('ClubScreen_ShouldPutLeaveLastAndRedInMenu_WhenMember', (
+  testWidgets('ClubScreen_ShouldKeepLeaveLastInTheMenu_WhenTheRiderIsAMember', (
     tester,
   ) async {
     final rider = server.add('rider@example.com');
@@ -140,7 +140,9 @@ void main() {
     expect(find.byType(MenuItemButton).last.evaluate().single.widget, leave);
   });
 
-  testWidgets('ClubScreen_ShouldHideLeaveAndExplain_WhenOwner', (tester) async {
+  testWidgets('ClubScreen_ShouldShowTheOwnerNote_WhenTheRiderOwns', (
+    tester,
+  ) async {
     final owner = server.add('owner@example.com', clubRole: 'owner');
     server.signInBrowser(owner);
     tester.view.physicalSize = const Size(1000, 2400);
@@ -229,6 +231,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(server.clubRoles[owner.email], 'owner');
 
+    await tester.tap(find.byKey(const Key('club-menu-club-1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('change-owner-club-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('save-owner')));
@@ -365,4 +369,47 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('ClubPages_ShouldNotShowAnotherClubsData_WhenTheClubDiffers', (
+    tester,
+  ) async {
+    // A rider of no club opens Club: the server answers with no club, and the page shows no member of
+    // any club at all — it never asks for one it does not belong to.
+    final outsider = server.add(
+      'outsider@example.com',
+      name: 'Outsider Bea',
+      clubRole: null,
+    );
+    server.signInBrowser(outsider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+
+    expect(find.byKey(const Key('go-nearby-clubs')), findsOneWidget);
+    expect(find.text(server.clubName), findsNothing);
+    expect(server.requests.where((r) => r.contains('/club/members/')), isEmpty);
+  });
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets('ClubScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      final owner = server.add(
+        'owner@example.com',
+        name: 'Owner Rina',
+        clubRole: 'owner',
+      );
+      server.signInBrowser(owner);
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      expect(find.byKey(const Key('join-code-value')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

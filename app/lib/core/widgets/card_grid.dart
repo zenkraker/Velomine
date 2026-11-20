@@ -10,6 +10,7 @@ class CardGrid extends StatelessWidget {
     super.key,
     required this.children,
     this.columns = 2,
+    this.tabletColumns = 1,
     this.hero = 0,
   });
 
@@ -19,17 +20,22 @@ class CardGrid extends StatelessWidget {
   /// first and larger, and the others sit beside it.
   final int hero;
 
-  /// How many cards a desktop window shows; below [AppBreakpoint.expandedWidth] there is always one.
+  /// How many cards a desktop window shows; below [AppBreakpoint.expandedWidth] there is [tabletColumns].
   final int columns;
+
+  /// How many cards a window from [AppBreakpoint.compactWidth] shows: one unless a grid asks for two.
+  final int tabletColumns;
 
   static const double _gap = AppSpacing.lg;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final count =
-          MediaQuery.sizeOf(context).width >= AppBreakpoint.expandedWidth
+      final windowWidth = MediaQuery.sizeOf(context).width;
+      final count = windowWidth >= AppBreakpoint.expandedWidth
           ? columns
+          : windowWidth >= AppBreakpoint.compactWidth
+          ? tabletColumns
           : 1;
       if (count == 1) {
         return Column(

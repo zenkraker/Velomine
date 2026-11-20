@@ -10,6 +10,7 @@ import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 
 /// The settings an admin can change, and (read-only) what only the server's environment sets.
 class SettingsTab extends ConsumerWidget {
@@ -197,7 +198,7 @@ class SettingsTab extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     for (final problem in catalogue.problems)
-                      Card(
+                      AppCard(
                         key: Key('contribution-${problem.id}'),
                         child: ListTile(
                           title: Text(
@@ -245,7 +246,7 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Card(
+    return AppCard(
       child: ListTile(
         leading: Icon(icon),
         title: Text(on ? l10n.statusOn(title) : l10n.statusOff(title)),

@@ -54,8 +54,8 @@ void main() {
       await startApp(tester, server.session(useCookies: true));
 
       final gate = server.delayNext('/api/v1/analytics/totals');
-      await tester.tap(find.text('Progress'));
-      await tester.pumpAndSettle();
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/progress');
 
       expect(find.byKey(const Key('totals-loading')), findsOneWidget);
 

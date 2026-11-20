@@ -23,13 +23,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> openProgress(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2000);
+  Future<void> openPower(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/progress/power');
   }
 
   testWidgets('ProfileScreen_ShouldSayWhereTheFtpCameFrom_WhenItWasTyped', (
@@ -87,7 +86,7 @@ void main() {
   testWidgets(
     'PowerSummary_ShouldRecordTheEstimate_WhenTheSuggestionIsAdopted',
     (tester) async {
-      await openProgress(tester);
+      await openPower(tester);
 
       final useFtp = find.byKey(const Key('use-ftp'));
       await tester.scrollUntilVisible(
@@ -108,10 +107,10 @@ void main() {
   );
 
   Future<void> openHistory(WidgetTester tester) async {
-    await openProgress(tester);
-    await tester.tap(find.byKey(const Key('progress-actions')));
+    await openPower(tester);
+    await tester.tap(find.byKey(const Key('power-actions')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('progress-ftp-history')));
+    await tester.tap(find.byKey(const Key('power-ftp-history')));
     await tester.pumpAndSettle();
   }
 

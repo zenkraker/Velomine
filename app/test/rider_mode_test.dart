@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/rider_mode.dart';
-import 'package:velomine/core/widgets/stat_tile.dart';
+import 'package:velomine/core/widgets/stat_card.dart';
 import 'package:velomine/features/profile/rider_mode_view_model.dart';
 import 'package:velomine/features/rides/detail/effort_word.dart';
 import 'package:velomine/features/rides/detail/series_chart.dart';
@@ -504,19 +504,13 @@ void main() {
     ) async {
       await openProgress(tester, mode: 'just_riding');
 
-      // The totals and the goals are the page; the training lab is one tap away.
+      // The four numbers are the page; the training lab is one tap away.
       expect(find.byKey(const Key('metric-period')), findsOneWidget);
-      expect(find.byKey(const Key('metric-readiness')), findsNothing);
-      expect(find.byKey(const Key('metric-training')), findsNothing);
-      expect(find.byKey(const Key('readiness-card')), findsNothing);
+      expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
+      expect(find.byKey(const Key('metric-form')), findsOneWidget);
       expect(find.byKey(const Key('fitness-chart')), findsNothing);
       expect(find.byKey(const Key('power-curve-card')), findsNothing);
       expect(find.byKey(const Key('more-details')), findsOneWidget);
-      // A simple mode folds the training lab, but the goals stay above the fold: opening it pushes nothing down.
-      expect(
-        tester.getTopLeft(find.byKey(const Key('add-goal'))).dy,
-        lessThan(tester.getTopLeft(find.byKey(const Key('more-details'))).dy),
-      );
     });
 
     testWidgets('ProgressScreen_ShouldAddIntensity_WhenModeIsWithGoals', (
@@ -525,10 +519,9 @@ void main() {
       withIntensity();
       await openProgress(tester, mode: 'with_goals');
 
-      // The easy / moderate / hard split is the point of this mode.
+      // The easy / moderate / hard split is the point of this mode, so it sits above the fold.
       expect(find.byKey(const Key('intensity-card')), findsOneWidget);
-      expect(find.byKey(const Key('metric-training')), findsNothing);
-      expect(find.byKey(const Key('readiness-card')), findsNothing);
+      expect(find.byKey(const Key('fitness-chart')), findsNothing);
       expect(find.byKey(const Key('more-details')), findsOneWidget);
     });
 
@@ -538,11 +531,8 @@ void main() {
       await openProgress(tester);
 
       expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
-      expect(find.byKey(const Key('metric-training')), findsOneWidget);
-      expect(find.byKey(const Key('readiness-card')), findsOneWidget);
+      expect(find.byKey(const Key('rider-card')), findsOneWidget);
       expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
-      // The check-in, still waiting for consent in this fixture.
-      expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
       expect(find.byKey(const Key('more-details')), findsNothing);
     });
 
@@ -556,7 +546,7 @@ void main() {
       await showMore(tester);
 
       expect(find.byKey(const Key('intensity-card')), findsOneWidget);
-      expect(find.byKey(const Key('readiness-card')), findsOneWidget);
+      expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
     });
 
     testWidgets(
@@ -601,9 +591,9 @@ void main() {
         await tester.tap(find.byKey(const Key('progress-retry-readiness')));
         await tester.pumpAndSettle();
 
-        // The card is back, and only the one source was asked again.
+        // The answer is back, and only the one source was asked again.
         expect(find.byKey(const Key('progress-error-readiness')), findsNothing);
-        expect(find.byKey(const Key('readiness-card')), findsOneWidget);
+        expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
         expect(calls('/api/v1/analytics/readiness'), readinessCalls + 1);
         expect(calls('/api/v1/analytics/training'), trainingCalls);
         expect(calls('/api/v1/analytics/power-curve'), powerCalls);
@@ -827,7 +817,7 @@ void main() {
         final card = find.byKey(const Key('ride-r1'));
 
         expect(
-          find.descendant(of: card, matching: find.byType(StatTile)),
+          find.descendant(of: card, matching: find.byType(StatFigure)),
           findsNWidgets(2),
         );
         // The heart rate is not on this card.
@@ -845,7 +835,7 @@ void main() {
       final card = find.byKey(const Key('ride-r1'));
 
       expect(
-        find.descendant(of: card, matching: find.byType(StatTile)),
+        find.descendant(of: card, matching: find.byType(StatFigure)),
         findsNWidgets(3),
       );
       expect(

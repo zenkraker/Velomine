@@ -128,7 +128,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('HomeShell_ShouldShowThreeTabs_WhenTheWindowIsAPhone', (
+  testWidgets('HomeShell_ShouldShowFourDestinations_WhenTheWindowIsAPhone', (
     tester,
   ) async {
     await pumpShell(tester, admin: true);
@@ -137,6 +137,7 @@ void main() {
     expect(find.byType(NavigationBar), findsNothing);
     expect(find.byKey(const Key('tab-rides')), findsOneWidget);
     expect(find.byKey(const Key('tab-progress')), findsOneWidget);
+    expect(find.byKey(const Key('tab-goals')), findsOneWidget);
     expect(find.byKey(const Key('tab-club')), findsOneWidget);
     expect(find.byKey(const Key('tab-record')), findsNothing);
     expect(find.byKey(const Key('tab-bikes')), findsNothing);
@@ -180,7 +181,7 @@ void main() {
 
   for (final width in [800.0, 1300.0]) {
     testWidgets(
-      'HomeShell_ShouldShowTheSameThreeDestinations_WhenTheWindowIs${width.toInt()}Wide',
+      'HomeShell_ShouldShowTheSameFourDestinations_WhenTheWindowIs${width.toInt()}Wide',
       (tester) async {
         await pumpShell(tester, size: Size(width, 1000));
         await tester.pumpAndSettle();
@@ -188,8 +189,13 @@ void main() {
         expect(find.byType(FloatingNavPill), findsNothing);
         expect(find.byKey(const Key('rail-rides')), findsOneWidget);
         expect(find.byKey(const Key('rail-progress')), findsOneWidget);
+        expect(find.byKey(const Key('rail-goals')), findsOneWidget);
         expect(find.byKey(const Key('rail-club')), findsOneWidget);
-        expect(find.text('Bikes'), findsNothing);
+        // The sidebar lists Bikes under Rides; the collapsed rail keeps its four destinations only.
+        expect(
+          find.byKey(const Key('nav-bikes')),
+          width >= 1200 ? findsOneWidget : findsNothing,
+        );
         expect(find.text('Record'), findsNothing);
         expect(
           find.text('Velomine'),
@@ -257,7 +263,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const Key('rail-club')),
-          matching: find.text('No club'),
+          matching: find.text('Club'),
         ),
         findsOneWidget,
       );
@@ -584,5 +590,120 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('live-ride-banner')), findsOneWidget);
+  });
+
+  /// The sidebar alone, at 1200 dp, with a mutable location so a test can move between pages.
+  Future<void> pumpSidebar(
+    WidgetTester tester,
+    ValueNotifier<String> location, {
+    String? clubName = 'Test Club',
+  }) async {
+    tester.view.physicalSize = const Size(1300, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          themeChoiceStoreProvider.overrideWithValue(MemoryThemeStore()),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Row(
+              children: [
+                ValueListenableBuilder<String>(
+                  valueListenable: location,
+                  builder: (context, value, _) => NavSidebar(
+                    location: value,
+                    clubName: clubName,
+                    unread: 0,
+                    name: 'Rider',
+                    isAdmin: false,
+                    signedOut: () {},
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('NavSidebar_ShouldKeepOpenedSections_WhenTheLocationChanges', (
+    tester,
+  ) async {
+    final location = ValueNotifier('/rides');
+    addTearDown(location.dispose);
+    await pumpSidebar(tester, location);
+
+    // The page's own section opened by itself; the one it is not in stays folded away.
+    expect(find.byKey(const Key('nav-all-rides')), findsOneWidget);
+    expect(find.byKey(const Key('nav-overview')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('rail-progress')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('nav-overview')), findsOneWidget);
+
+    // Moving to another page opens that page's section and leaves the opened ones open.
+    location.value = '/bikes';
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('nav-all-rides')), findsOneWidget);
+    expect(find.byKey(const Key('nav-overview')), findsOneWidget);
+    expect(find.byKey(const Key('nav-bikes')), findsOneWidget);
+    // The club section is still folded away: no page of it is on screen.
+    expect(find.byKey(const Key('nav-club-members')), findsNothing);
+  });
+
+  testWidgets('NavSidebar_ShouldShowPlainClubLink_WhenTheRiderHasNoClub', (
+    tester,
+  ) async {
+    final location = ValueNotifier('/rides');
+    addTearDown(location.dispose);
+    await pumpSidebar(tester, location, clubName: null);
+
+    final club = find.byKey(const Key('rail-club'));
+    expect(club, findsOneWidget);
+    expect(
+      find.descendant(of: club, matching: find.text('Club')),
+      findsOneWidget,
+    );
+    // One plain link to the join page: no chevron and no pages under it.
+    expect(
+      find.descendant(of: club, matching: find.byIcon(Icons.expand_more)),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('nav-club-members')), findsNothing);
+    expect(find.text('No club'), findsNothing);
+  });
+
+  testWidgets('NavSidebar_ShouldShowProfileAndPrivacyNote_WhenExpanded', (
+    tester,
+  ) async {
+    final location = ValueNotifier('/rides');
+    addTearDown(location.dispose);
+    await pumpSidebar(tester, location);
+
+    expect(find.byKey(const Key('sidebar-privacy')), findsOneWidget);
+    expect(find.text('Your data is yours.'), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-profile')), findsOneWidget);
+    // Unread notifications are the only badge: the rail carries the bell, the sections carry nothing.
+    expect(find.byKey(const Key('open-notifications')), findsOneWidget);
+    expect(find.byType(Badge), findsOneWidget);
+  });
+
+  testWidgets('HomeShell_ShouldLightGoals_WhenOnTheEventsPage', (tester) async {
+    await pumpShell(tester, location: '/progress/events');
+
+    // The events page belongs to Goals: the pill says so, and it is the only lit destination.
+    expect(find.byIcon(Icons.flag), findsOneWidget);
+    expect(find.byIcon(Icons.flag_outlined), findsNothing);
+    expect(find.byIcon(Icons.directions_bike), findsNothing);
+    expect(find.byIcon(Icons.insights), findsNothing);
+    expect(find.byIcon(Icons.groups), findsNothing);
   });
 }

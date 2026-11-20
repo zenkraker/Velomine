@@ -54,21 +54,36 @@ void main() {
   });
 
   testWidgets(
-    'ForgotPasswordScreen_ShouldConfirmWithoutNamingTheAccount_WhenSubmitted',
+    'ForgotPasswordScreen_ShouldSayTheSame_WhenTheAddressIsUnknownOrKnown',
     (tester) async {
       server.smtpConfigured = true;
+      server.add('rider@example.com');
       await openForgot(tester);
 
-      await tester.enterText(
-        find.byKey(const Key('forgot-email')),
-        'rider@example.com',
-      );
-      await tester.tap(find.byKey(const Key('forgot-submit')));
-      await tester.pumpAndSettle();
+      Future<void> ask(String address) async {
+        await tester.enterText(find.byKey(const Key('forgot-email')), address);
+        await tester.tap(find.byKey(const Key('forgot-submit')));
+        await tester.pumpAndSettle();
+      }
 
+      // An address with no account shows the same words as one with an account, so the form
+      // never tells a visitor whether somebody is registered here.
+      await ask('stranger@example.com');
       expect(find.byKey(const Key('forgot-sent')), findsOneWidget);
-      expect(find.textContaining('If an account exists'), findsOneWidget);
-      expect(server.passwordResetEmails, ['rider@example.com']);
+      final unknown = find
+          .textContaining('If an account exists')
+          .evaluate()
+          .single;
+
+      await tester.enterText(find.byKey(const Key('forgot-email')), '');
+      await ask('rider@example.com');
+      final known = find
+          .textContaining('If an account exists')
+          .evaluate()
+          .single;
+
+      expect((known.widget as Text).data, (unknown.widget as Text).data);
+      expect(server.passwordResetEmails, contains('rider@example.com'));
     },
   );
 

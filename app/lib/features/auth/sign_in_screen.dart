@@ -89,7 +89,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ? authProblemText(l10n, restoreProblem)
               : (ssoError == null ? null : ssoErrorText(l10n, ssoError)));
     return AuthPage(
-      eyebrow: l10n.authEyebrowSignIn,
       help: l10n.signInHelp,
       primaryLabel: s.challenge != null ? l10n.twoFactorVerify : l10n.signIn,
       primaryKey: Key(s.challenge != null ? 'two-factor-verify' : 'sign-in'),
@@ -205,6 +204,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           if (kIsWeb
               ? (sso?.enabled ?? false)
               : (sso?.appSsoEnabled ?? false)) ...[
+            const SizedBox(height: AppSpacing.md),
+            const AuthOr(),
             const SizedBox(height: AppSpacing.md),
             OutlinedButton(
               key: const Key('sso'),

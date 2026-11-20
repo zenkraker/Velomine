@@ -7,6 +7,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -44,7 +45,6 @@ class ClubRidesScreen extends ConsumerWidget {
 
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     return PageScaffold(
-      eyebrow: l10n.clubRidesEyebrow,
       title: l10n.clubRidesTitle,
       subtitle: l10n.clubRidesSubtitle,
       primaryAction: canPlan
@@ -137,8 +137,9 @@ class _RideCard extends StatelessWidget {
         color: dimmed ? Theme.of(context).disabledColor : null,
       ),
     );
-    return Card(
+    return AppCard(
       key: Key('club-ride-${ride.id}'),
+      padding: EdgeInsets.zero,
       child: ListTile(
         onTap: () => onOpen(ride.id),
         leading: const Icon(Icons.event),

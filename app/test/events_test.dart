@@ -39,13 +39,13 @@ void main() {
     };
   }
 
-  Future<void> openProgress(WidgetTester tester) async {
+  /// Goals is where the next event is shown, with the way to the events page.
+  Future<void> openGoals(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1000, 2000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/goals');
   }
 
   /// The events page, by its address.
@@ -67,7 +67,7 @@ void main() {
   ) async {
     server.events.add(eventJson());
 
-    await openProgress(tester);
+    await openGoals(tester);
     await reveal(tester, find.byKey(const Key('next-event')));
 
     expect(find.textContaining('Gran Fondo'), findsWidgets);
@@ -79,16 +79,16 @@ void main() {
   ) async {
     server.events.add(eventJson(daysFromToday: 0));
 
-    await openProgress(tester);
+    await openGoals(tester);
     await reveal(tester, find.byKey(const Key('next-event')));
 
     expect(find.textContaining('today'), findsWidgets);
   });
 
-  testWidgets('ProgressScreen_ShouldNotShowAnEventCard_WhenThereIsNoEvent', (
+  testWidgets('GoalsScreen_ShouldNotShowAnEventCard_WhenThereIsNoEvent', (
     tester,
   ) async {
-    await openProgress(tester);
+    await openGoals(tester);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('next-event')), findsNothing);
@@ -97,7 +97,7 @@ void main() {
   testWidgets('AllEvents_ShouldOpen_WhenTheCardIsTapped', (tester) async {
     server.events.add(eventJson());
 
-    await openProgress(tester);
+    await openGoals(tester);
     await reveal(tester, find.byKey(const Key('all-events')));
     await tester.tap(find.byKey(const Key('all-events')));
     await tester.pumpAndSettle();
@@ -109,7 +109,7 @@ void main() {
   testWidgets('EventsScreen_ShouldAddAnEvent_WhenTheFormIsSaved', (
     tester,
   ) async {
-    await openProgress(tester);
+    await openGoals(tester);
     await openEvents(tester);
 
     await tester.tap(find.byKey(const Key('add-event')));
@@ -128,7 +128,7 @@ void main() {
   testWidgets(
     'EventsScreen_ShouldRefuseAnEventWithoutAName_WhenTheFormIsSaved',
     (tester) async {
-      await openProgress(tester);
+      await openGoals(tester);
       await openEvents(tester);
 
       await tester.tap(find.byKey(const Key('add-event')));
@@ -146,7 +146,7 @@ void main() {
   ) async {
     server.events.add(eventJson());
 
-    await openProgress(tester);
+    await openGoals(tester);
     await openEvents(tester);
 
     await tester.tap(find.byKey(const Key('event-actions-event-1')));
@@ -174,7 +174,7 @@ void main() {
         movingS: 3600,
       ),
     );
-    await openProgress(tester);
+    await openGoals(tester);
     await openEvents(tester);
 
     await tester.tap(find.byKey(const Key('event-actions-event-1')));
@@ -204,7 +204,7 @@ void main() {
           ),
         );
       }
-      await openProgress(tester);
+      await openGoals(tester);
       await openEvents(tester);
 
       await tester.tap(find.byKey(const Key('event-actions-event-1')));
@@ -224,7 +224,7 @@ void main() {
     "EventsScreen_ShouldNotOpenThePicker_WhenTheDay'sRidesCannotBeRead",
     (tester) async {
       server.events.add(eventJson());
-      await openProgress(tester);
+      await openGoals(tester);
       await openEvents(tester);
 
       server.broken.add('/api/v1/rides');
@@ -247,7 +247,7 @@ void main() {
     tester,
   ) async {
     server.events.add(eventJson(rideId: 'ride-1'));
-    await openProgress(tester);
+    await openGoals(tester);
     await openEvents(tester);
 
     await tester.tap(find.byKey(const Key('event-actions-event-1')));
@@ -283,7 +283,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('event-actions-event-1')));
     await tester.pumpAndSettle();
-    expect(find.text("Collega un'uscita"), findsOneWidget);
+    expect(find.text('Collega un giro'), findsOneWidget);
     await tester.tap(find.byKey(const Key('event-link-event-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('pick-ride-ride-1')));

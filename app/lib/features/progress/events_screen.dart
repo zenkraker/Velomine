@@ -107,7 +107,6 @@ class EventsScreen extends ConsumerWidget {
     );
 
     return PageScaffold(
-      eyebrow: l10n.eyebrowProgress,
       title: l10n.eventsTitle,
       onBack: () => context.pop(),
       primaryAction: FilledButton.tonalIcon(

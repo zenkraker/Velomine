@@ -88,7 +88,6 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
     final point = state.point;
     final failure = state.create.failure;
     return PageScaffold(
-      eyebrow: l10n.eyebrowClub,
       title: l10n.startClubTitle,
       subtitle: l10n.startClubIntro,
       maxWidth: AppLayout.contentNarrow,

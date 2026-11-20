@@ -19,13 +19,12 @@ void main() {
     server.signInBrowser(server.add('rider@example.com', name: 'Ada'));
   });
 
-  Future<void> openProgress(WidgetTester tester) async {
+  Future<void> openPower(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/progress/power');
   }
 
   /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max.
@@ -61,7 +60,7 @@ void main() {
           'rideId': null,
         },
       ];
-      await openProgress(tester);
+      await openPower(tester);
 
       expect(
         estimateNotes(tester).first.text,
@@ -83,7 +82,7 @@ void main() {
         'rideId': 'r1',
       },
     ];
-    await openProgress(tester);
+    await openPower(tester);
 
     final note = estimateNotes(tester).first;
     expect(
@@ -93,7 +92,11 @@ void main() {
     );
 
     // The note is a way back to the ride it names.
-    await tester.ensureVisible(find.text(note.text));
+    await tester.scrollUntilVisible(
+      find.text(note.text),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text(note.text));
     await tester.pumpAndSettle();
@@ -105,7 +108,7 @@ void main() {
   testWidgets('PowerSummary_ShouldExplainTheEstimate_WhenAnEstimateExists', (
     tester,
   ) async {
-    await openProgress(tester);
+    await openPower(tester);
 
     // The rider has no FTP of their own, so the estimate's note is the first.
     expect(
@@ -130,7 +133,7 @@ void main() {
       'emailTrainingNotifications': false,
       'hasPassword': true,
     };
-    await openProgress(tester);
+    await openPower(tester);
 
     expect(
       estimateNotes(tester).last.text,

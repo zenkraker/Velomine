@@ -2,7 +2,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 
 /// Today's readiness: a band, the advice, and the factors that produced it.
 class ReadinessCard extends StatelessWidget {
@@ -15,27 +17,25 @@ class ReadinessCard extends StatelessWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final colors = VelomineColors.of(context);
 
     if (readiness.score == null) {
-      return Card(
+      return AppCard(
         key: const Key('readiness-card'),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.readiness, style: text.titleMedium),
-              const SizedBox(height: AppSpacing.sm),
-              Text(l10n.readinessNoData, style: text.bodyMedium),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.readiness, style: text.titleMedium),
+            const SizedBox(height: AppSpacing.sm),
+            Text(l10n.readinessNoData, style: text.bodyMedium),
+          ],
         ),
       );
     }
 
     final color = switch (readiness.band) {
-      'hard' => const Color(0xFF2E7D32),
-      'easy' => const Color(0xFFE07A3F),
+      'hard' => colors.accentStrong,
+      'easy' => colors.signal,
       'rest' => scheme.error,
       _ => scheme.primary,
     };
@@ -52,69 +52,65 @@ class ReadinessCard extends StatelessWidget {
       _ => l10n.readinessAdviceNormal,
     };
 
-    return Card(
+    return AppCard(
       key: const Key('readiness-card'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.readiness, style: text.titleMedium),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor: color.withValues(alpha: 0.15),
-                  child: Text(
-                    '${readiness.score}',
-                    key: const Key('readiness-score'),
-                    style: text.headlineMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w700,
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.readiness, style: text.titleMedium),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 34,
+                backgroundColor: color.withValues(alpha: 0.15),
+                child: Text(
+                  '${readiness.score}',
+                  key: const Key('readiness-score'),
+                  style: text.headlineMedium?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        key: const Key('readiness-band'),
-                        style: text.titleSmall?.copyWith(
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                        ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      key: const Key('readiness-band'),
+                      style: text.titleSmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(advice, style: text.bodyMedium),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(advice, style: text.bodyMedium),
+                  ],
                 ),
-              ],
-            ),
-            if (!readiness.hasWellbeing) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                l10n.readinessLoadOnly,
-                key: const Key('readiness-load-only'),
-                style: text.bodySmall,
               ),
             ],
-            if (readiness.factors.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.lg),
-              Text(l10n.readinessWhy, style: text.labelLarge),
-              const SizedBox(height: AppSpacing.xs),
-              for (final factor in readiness.factors)
-                _FactorRow(factor: factor),
-            ],
+          ),
+          if (!readiness.hasWellbeing) ...[
             const SizedBox(height: AppSpacing.md),
-            Text(l10n.readinessNotMedical, style: text.bodySmall),
+            Text(
+              l10n.readinessLoadOnly,
+              key: const Key('readiness-load-only'),
+              style: text.bodySmall,
+            ),
           ],
-        ),
+          if (readiness.factors.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Text(l10n.readinessWhy, style: text.labelLarge),
+            const SizedBox(height: AppSpacing.xs),
+            for (final factor in readiness.factors) _FactorRow(factor: factor),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          Text(l10n.readinessNotMedical, style: text.bodySmall),
+        ],
       ),
     );
   }
@@ -145,10 +141,11 @@ class _FactorRow extends StatelessWidget {
     };
     final effect = factor.effect;
     final effectText = '${effect > 0 ? '+' : ''}${effect.toStringAsFixed(0)}';
+    final colors = VelomineColors.of(context);
     final color = effect > 0
-        ? const Color(0xFF2E7D32)
+        ? colors.accentStrong
         : effect < 0
-        ? Theme.of(context).colorScheme.error
+        ? colors.signal
         : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Padding(

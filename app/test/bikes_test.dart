@@ -560,6 +560,94 @@ void main() {
     expect(part['type'], 'chain');
     expect(part['mpn'], 'CN-M8100');
   });
+
+  testWidgets('BikesScreen_ShouldShowTheServiceMarker_WhenAJobIsDue', (
+    tester,
+  ) async {
+    server.bikes.add({..._bike(), 'serviceDueCount': 2, 'serviceSoonCount': 1});
+    await openBikes(tester);
+
+    final card = find.byKey(const Key('bike-bike-1'));
+    expect(
+      find.descendant(of: card, matching: find.byKey(const Key('service-due'))),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'BikeDetailScreen_ShouldGroupPartsAndShowWearWithWords_WhenPartsExist',
+    (tester) async {
+      server.bikes.add(_bike());
+      server.parts['bike-1'] = [
+        _part(),
+        {
+          ..._part(),
+          'id': 'part-2',
+          'type': 'tubeless_sealant',
+          'typeName': 'Tubeless sealant',
+          'expectedDistanceM': null,
+          'expectedMonths': 3,
+          'usedMonths': 2.6,
+          'wearPercent': 87,
+          'status': 'worn',
+        },
+      ];
+      await openBikes(tester);
+      await tester.tap(find.byKey(const Key('bike-bike-1')));
+      await tester.pumpAndSettle();
+
+      // The parts sit under the group their component type belongs to.
+      expect(find.text('Drivetrain'), findsOneWidget);
+      expect(find.text('Wheels'), findsOneWidget);
+      // The wear colour never stands alone: the word is beside it.
+      expect(find.text('Replace'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('part-part-2')),
+          matching: find.byKey(const Key('wear-part-2')),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  for (final width in [390.0, 600.0, 1300.0]) {
+    testWidgets('BikesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.bikes.add(_bike());
+      server.parts['bike-1'] = [_part()];
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/bikes');
+
+      expect(find.byKey(const Key('bike-bike-1')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byKey(const Key('bike-bike-1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('add-part')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('BikesScreen_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    server.bikes.add(_bike());
+    server.parts['bike-1'] = [_part()];
+    tester.view.physicalSize = const Size(390, 2800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/bikes');
+
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Map<String, Object?> _bike() => {

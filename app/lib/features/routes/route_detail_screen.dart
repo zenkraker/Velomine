@@ -12,6 +12,7 @@ import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -67,7 +68,6 @@ class RouteDetailScreen extends ConsumerWidget {
     // The real header while the route is read, so the page is opaque from its first frame.
     if (s.load.running && s.detail == null) {
       return PageScaffold(
-        eyebrow: l10n.routesEyebrow,
         title: l10n.clubRoutesTitle,
         maxWidth: AppLayout.contentNarrow,
         children: const [
@@ -177,7 +177,6 @@ class RouteDetailScreen extends ConsumerWidget {
     ];
 
     return PageScaffold(
-      eyebrow: l10n.routesEyebrow,
       title: route.name,
       titleKey: const Key('route-title'),
       subtitle: routeLineOf(
@@ -222,14 +221,11 @@ class RouteDetailScreen extends ConsumerWidget {
         if (route.description != null && route.description!.isNotEmpty)
           Text(route.description!),
         if (route.isMine && !route.isShared)
-          Card(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                l10n.routeNotSharedBody,
-                key: const Key('route-not-shared'),
-              ),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Text(
+              l10n.routeNotSharedBody,
+              key: const Key('route-not-shared'),
             ),
           ),
         RoutePreview(

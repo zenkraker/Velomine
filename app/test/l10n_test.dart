@@ -63,7 +63,7 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
     await startApp(tester, server.session(useCookies: true));
 
-    expect(find.text('Uscite'), findsWidgets);
+    expect(find.text('Giri'), findsWidgets);
     expect(find.text('Rides'), findsNothing);
   });
 
@@ -88,7 +88,7 @@ void main() {
     await tester.tap(find.text('Italiano').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Uscite'), findsWidgets);
+    expect(find.text('Giri'), findsWidgets);
     expect(find.text('Rides'), findsNothing);
     expect(server.accounts[rider.email]!.language, 'it');
   });
@@ -109,10 +109,11 @@ void main() {
     server.signInBrowser(server.add('rider@example.com', language: 'it'));
     await startApp(tester, server.session(useCookies: true));
 
-    await tester.tap(find.text('Progressi'));
+    await goTo(tester, '/progress/fitness');
     await tester.pumpAndSettle();
 
-    expect(find.text('Carico di allenamento'), findsOneWidget);
+    // The training card's own name, and Obiettivi in the rail.
+    expect(find.text('Carico di allenamento'), findsWidgets);
     expect(find.text('Obiettivi'), findsOneWidget);
     // The training range end (4 Nov 2026) in Italian: a short month name, not "Nov".
     expect(find.textContaining('4 nov'), findsOneWidget);
@@ -126,9 +127,9 @@ void main() {
     await startApp(tester, server.session(useCookies: true));
 
     expect(
-      find.text('Nessuna uscita. Carica un file FIT, GPX o TCX.'),
+      find.text('Nessun giro. Carica un file FIT, GPX o TCX.'),
       findsOneWidget,
     );
-    expect(find.text('Carica uscita'), findsOneWidget);
+    expect(find.text('Carica giro'), findsOneWidget);
   });
 }

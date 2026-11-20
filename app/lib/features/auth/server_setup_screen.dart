@@ -116,7 +116,6 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       SetupProblem.saveFailed => l10n.setupSaveFailed,
     };
     return AuthPage(
-      eyebrow: l10n.authEyebrowServer,
       title: l10n.setupTitle,
       help: l10n.setupHelp,
       primaryLabel: l10n.setupConnect,

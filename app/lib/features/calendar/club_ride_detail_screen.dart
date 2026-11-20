@@ -67,7 +67,6 @@ class ClubRideDetailScreen extends ConsumerWidget {
     // The real header while the ride is read, so the page is opaque from its first frame.
     if (s.load.running && s.detail == null) {
       return PageScaffold(
-        eyebrow: l10n.clubRidesEyebrow,
         title: l10n.clubRidesTitle,
         maxWidth: AppLayout.contentNarrow,
         children: const [
@@ -104,7 +103,6 @@ class ClubRideDetailScreen extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
     return PageScaffold(
-      eyebrow: l10n.clubRidesEyebrow,
       title: ride.title,
       titleKey: const Key('club-ride-title'),
       subtitle: rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),

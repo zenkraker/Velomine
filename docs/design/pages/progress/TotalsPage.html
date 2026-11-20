@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- TotalsPage: Progress → Totals: one chart and one table, by week, month or year. Guideline: TotalsPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Totals page</title>
+<style>
+  main { max-width: 1160px; margin: 0 auto; padding: var(--space-xxl) var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+  .head h1 { margin: 0; }
+  .crumb { color: var(--ink-muted); margin: 0 0 var(--space-xs); }
+  .r3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-lg); }
+  .r21 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); }
+  .r11 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-lg); }
+  @media (max-width: 900px) { .r3, .r21, .r11 { grid-template-columns: 1fr; } }
+  .chart { display: block; width: 100%; height: auto; }
+  .grid line { stroke: var(--hairline); stroke-width: 1; }
+  .zero { stroke: var(--ink-muted); stroke-width: 1; }
+  .ylab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: end; }
+  .xlab { fill: var(--ink-muted); font-size: 12px; font-weight: 500; text-anchor: middle; }
+  .lab { fill: var(--ink-muted); font-size: 12px; font-weight: 600; }
+  .lab.ink { fill: var(--ink); }
+  .legend { display: flex; gap: var(--space-lg); flex-wrap: wrap; color: var(--ink-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md) var(--space-lg); margin-top: var(--space-sm); }
+  .stats dt { color: var(--ink-muted); }
+  .stats dd { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink-muted); font-weight: 500; padding: 0 var(--space-sm) var(--space-sm); }
+  td { padding: var(--space-md) var(--space-sm); border-top: 1px solid var(--hairline); }
+  th.n, td.n { text-align: right; }
+  tr.now td { background: var(--accent-soft); color: var(--on-accent-soft); font-weight: 600; }
+  tr.now td:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+  tr.now td:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  .scroll { overflow-x: auto; }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+
+  .s-now { stop-color: var(--accent-strong); }
+  .s-past { stop-color: var(--bar-muted); }
+  .avg { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 4 4; }
+
+</style>
+</head>
+<body>
+<main>
+<div class="head"><div><p class="crumb caption">Progress</p><h1 class="page-title">Totals</h1></div><div style="display:flex;gap:var(--space-sm);align-items:center"><div class="vm-seg" role="group" aria-label="Period"><button type="button" aria-pressed="true">Weeks</button><button type="button" aria-pressed="false">Months</button><button type="button" aria-pressed="false">Years</button></div><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div></div>
+<article class="vm-card">
+  <div class="vm-card-head"><h3 class="vm-card-title card-title">Distance per week</h3><div class="vm-seg" role="group" aria-label="Period"><button type="button" aria-pressed="true">Distance</button><button type="button" aria-pressed="false">Time</button><button type="button" aria-pressed="false">Climbing</button></div></div>
+  <svg class="chart" viewBox="0 0 1072 214" role="img" aria-label="Distance per week for 12 weeks; average 45.3 km; this week 69.7 km.">
+  <defs><linearGradient id="gNow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-now"/><stop offset="1" class="s-now" stop-opacity="0.55"/></linearGradient>
+  <linearGradient id="gPast" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-past"/><stop offset="1" class="s-past" stop-opacity="0.55"/></linearGradient>
+  <clipPath id="plot"><rect x="0" y="0" width="1072" height="184"/></clipPath></defs>
+  <g class="grid"><line x1="40" y1="184.0" x2="1068" y2="184.0"/><line x1="40" y1="128.0" x2="1068" y2="128.0"/><line x1="40" y1="72.0" x2="1068" y2="72.0"/><line x1="40" y1="16.0" x2="1068" y2="16.0"/></g>
+  <text class="ylab" x="32" y="188.0">0</text><text class="ylab" x="32" y="132.0">40</text><text class="ylab" x="32" y="76.0">80</text><text class="ylab" x="32" y="20.0">120</text>
+  <g clip-path="url(#plot)" fill="url(#gPast)"><rect x="64.8" y="79.0" width="36" height="113.0" rx="8"/><rect x="150.5" y="158.8" width="36" height="33.2" rx="8"/><rect x="236.2" y="97.2" width="36" height="94.8" rx="8"/><rect x="321.8" y="143.4" width="36" height="48.6" rx="8"/><rect x="407.5" y="143.7" width="36" height="48.3" rx="8"/><rect x="493.2" y="141.0" width="36" height="51.0" rx="8"/><rect x="578.8" y="127.0" width="36" height="65.0" rx="8"/><rect x="664.5" y="42.6" width="36" height="149.4" rx="8"/><rect x="750.2" y="143.7" width="36" height="48.3" rx="8"/><rect x="835.8" y="124.9" width="36" height="67.1" rx="8"/><rect x="921.5" y="159.4" width="36" height="32.6" rx="8"/><rect x="1007.2" y="86.4" width="36" height="105.6" rx="8" fill="url(#gNow)"/></g>
+  <line class="avg" x1="40" y1="120.6" x2="1068" y2="120.6"/><text class="lab" x="48" y="112.6">Average 45.3 km</text>
+  <text class="xlab" x="82.8" y="206">31 Aug</text><text class="xlab" x="168.5" y="206">7 Sep</text><text class="xlab" x="254.2" y="206">14 Sep</text><text class="xlab" x="339.8" y="206">21 Sep</text><text class="xlab" x="425.5" y="206">28 Sep</text><text class="xlab" x="511.2" y="206">5 Oct</text><text class="xlab" x="596.8" y="206">12 Oct</text><text class="xlab" x="682.5" y="206">19 Oct</text><text class="xlab" x="768.2" y="206">26 Oct</text><text class="xlab" x="853.8" y="206">2 Nov</text><text class="xlab" x="939.5" y="206">9 Nov</text><text class="xlab" x="1025.2" y="206">16 Nov</text>
+</svg>
+</article>
+<article class="vm-card">
+  <h3 class="vm-card-title card-title">Week by week</h3>
+  <div class="scroll"><table class="body"><thead><tr><th class="caption">Week</th><th class="caption n">Rides</th><th class="caption n">Distance</th><th class="caption n">Moving time</th><th class="caption n">Climbing</th></tr></thead><tbody><tr class="now"><td>This week</td><td class="n">1</td><td class="n">69.7 km</td><td class="n">2 h 35</td><td class="n">1,416 m</td></tr><tr><td>9 – 15 Nov</td><td class="n">1</td><td class="n">17.6 km</td><td class="n">0 h 45</td><td class="n">471 m</td></tr><tr><td>2 – 8 Nov</td><td class="n">1</td><td class="n">42.2 km</td><td class="n">1 h 35</td><td class="n">945 m</td></tr><tr><td>26 Oct – 1 Nov</td><td class="n">1</td><td class="n">28.8 km</td><td class="n">1 h 00</td><td class="n">940 m</td></tr><tr><td>19 – 25 Oct</td><td class="n">2</td><td class="n">101 km</td><td class="n">3 h 40</td><td class="n">2,364 m</td></tr><tr><td>12 – 18 Oct</td><td class="n">1</td><td class="n">40.7 km</td><td class="n">1 h 10</td><td class="n">1,416 m</td></tr><tr><td>5 – 11 Oct</td><td class="n">2</td><td class="n">30.7 km</td><td class="n">1 h 20</td><td class="n">941 m</td></tr><tr><td>28 Sep – 4 Oct</td><td class="n">1</td><td class="n">28.8 km</td><td class="n">1 h 00</td><td class="n">942 m</td></tr></tbody></table></div>
+  <a class="vm-link caption" href="#">Show 4 earlier weeks <span aria-hidden="true">↓</span></a>
+</article>
+</main>
+</body>
+</html>

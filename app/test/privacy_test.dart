@@ -143,4 +143,35 @@ void main() {
       expect(server.privacyZones.single['radiusM'], 322);
     },
   );
+
+  testWidgets(
+    'PrivacyScreen_ShouldConfirmBeforeRemovingAZone_WhenRemoveIsTapped',
+    (tester) async {
+      final rider = server.add('other@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      server.privacyZones.add({
+        'id': 'zone-work',
+        'name': 'Work',
+        'latitude': 46.0,
+        'longitude': 11.0,
+        'radiusM': 500,
+      });
+      await openPrivacy(tester);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('privacy-zone-actions-zone-work')),
+      );
+      await tester.tap(find.byKey(const Key('privacy-zone-actions-zone-work')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('privacy-zone-delete-zone-work')));
+      await tester.pumpAndSettle();
+
+      // The zone is still there, behind the question, and the button names the action.
+      expect(server.privacyZones, isNotEmpty);
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(server.privacyZones, isNotEmpty);
+    },
+  );
 }

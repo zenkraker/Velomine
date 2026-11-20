@@ -32,108 +32,91 @@ void main() {
     ];
   });
 
-  Future<void> openProgress(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2000);
+  Future<void> openProgress(
+    WidgetTester tester, {
+    Size size = const Size(1000, 2000),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-    await tester.tap(find.text('Progress'));
-    await tester.pumpAndSettle();
+    await goTo(tester, '/progress');
   }
 
-  Future<void> reveal(WidgetTester tester, Finder finder) async {
-    await tester.scrollUntilVisible(
-      finder,
-      300,
-      scrollable: find.byType(Scrollable).first,
+  testWidgets('ProgressScreen_ShouldShowFourStatCards_WhenTheRiderJustRides', (
+    tester,
+  ) async {
+    // A rider who just rides sees the four numbers; the analysis waits behind one button.
+    server.accounts['rider@example.com']!.riderMode = 'just_riding';
+    await openProgress(tester);
+
+    for (final key in [
+      'metric-readiness',
+      'metric-form',
+      'metric-period',
+      'metric-next-event',
+    ]) {
+      expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+    }
+    // The deep charts answer their own question on their own page, or behind the fold.
+    for (final key in [
+      'training-tss',
+      'tss-chart',
+      'fitness-chart',
+      'power-curve-card',
+      'intensity-card',
+      'efficiency-card',
+      'readiness-card',
+      'wellbeing-card',
+      'goal-goal-1',
+    ]) {
+      expect(find.byKey(Key(key)), findsNothing, reason: key);
+    }
+    expect(find.byKey(const Key('more-details')), findsOneWidget);
+    // The overview still shows the totals chart and its period control.
+    expect(find.byKey(const Key('progress-period')), findsOneWidget);
+  });
+
+  testWidgets('ProgressScreen_ShouldShowThisWeek_WhenShowingTotals', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    expect(server.requests, contains('GET /api/v1/analytics/totals'));
+    final card = find.byKey(const Key('metric-period'));
+    expect(
+      find.descendant(of: card, matching: find.text('This week')),
+      findsOneWidget,
+    );
+    // The latest week is 42.5 km against a 60 km week before it: below the average.
+    expect(
+      find.descendant(of: card, matching: find.text('42.5 km')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.text('Below your 12-week average of 60.0 km.'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('ProgressScreen_ShouldAskMonthlyTotals_WhenSwitchingToMonths', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('progress-period')),
+        matching: find.text('Months'),
+      ),
     );
     await tester.pumpAndSettle();
-  }
 
-  testWidgets(
-    'ProgressScreen_ShouldSayHowTheRangeSplits_WhenThereIsIntensityData',
-    (tester) async {
-      server.training = {
-        ...trainingJson(),
-        'intensity': {
-          'easyS': 6000.0,
-          'moderateS': 3000.0,
-          'hardS': 1000.0,
-          'easyPct': 60.0,
-          'moderatePct': 30.0,
-          'hardPct': 10.0,
-          'polarisationIndex': 1.3,
-          'label': 'pyramidal',
-          'rides': 3,
-        },
-        'intensityWeeks': [
-          {
-            'weekStart': '2026-11-02',
-            'easyS': 6000.0,
-            'moderateS': 3000.0,
-            'hardS': 1000.0,
-          },
-        ],
-      };
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('intensity-card')));
-
-      expect(
-        find.text('Pyramidal: most easy, less moderate, least hard'),
-        findsOneWidget,
-      );
-      expect(
-        find.textContaining('60.0 % easy'),
-        findsOneWidget,
-        reason: 'the three shares, one decimal each',
-      );
-      expect(
-        find.text('From power where you have it, otherwise heart rate.'),
-        findsOneWidget,
-      );
-    },
-  );
-
-  testWidgets(
-    'ProgressScreen_ShouldHideTheIntensityCard_WhenNoRideHadPowerOrHeartRate',
-    (tester) async {
-      await openProgress(tester);
-
-      expect(find.byKey(const Key('intensity-card')), findsNothing);
-    },
-  );
-
-  testWidgets(
-    'ProgressScreen_ShouldSayTheZonesComeFromTheEstimatedMaximum_WhenOnlyHeartRateRidesWereCounted',
-    (tester) async {
-      server.training = {
-        ...trainingJson(),
-        'intensity': {
-          'easyS': 6000.0,
-          'moderateS': 3000.0,
-          'hardS': 1000.0,
-          'easyPct': 60.0,
-          'moderatePct': 30.0,
-          'hardPct': 10.0,
-          'polarisationIndex': 1.3,
-          'label': 'pyramidal',
-          'rides': 3,
-          'heartRateZoneModel': 'max',
-          'heartRateZoneReferenceBpm': 180,
-          'heartRateZoneReferenceSource': 'estimate',
-        },
-      };
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('intensity-card')));
-
-      expect(
-        find.text('Zones from your maximum heart rate (180 bpm, estimated)'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text('Distance per month'), findsOneWidget);
+  });
 
   testWidgets(
     'ProgressScreen_ShouldShowOnlyTheChosenPeriod_WhenThePeriodChangesDuringALoad',
@@ -142,359 +125,25 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/progress');
 
       final gate = server.delayNext('/api/v1/analytics/totals');
-      await tester.tap(find.text('Progress'));
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const Key('progress-period')),
+          matching: find.text('Months'),
+        ),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 10));
 
-      await tester.tap(find.text('Months'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('This month'), findsOneWidget);
       gate.complete();
       await tester.pumpAndSettle();
 
-      expect(find.text('This month'), findsOneWidget);
-      expect(find.text('This week'), findsNothing);
-      expect(find.text('103 km'), findsWidgets);
+      expect(find.text('Distance per month'), findsOneWidget);
+      expect(find.text('Distance per week'), findsNothing);
     },
   );
-
-  testWidgets('ProgressScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    expect(server.requests, contains('GET /api/v1/analytics/totals'));
-    final thisWeek = find.byKey(const Key('total-0'));
-    expect(
-      find.descendant(of: thisWeek, matching: find.text('This week')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: thisWeek, matching: find.text('42.5 km')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: thisWeek,
-        matching: find.text('2 rides · 1 h 30 min · 400 m climbing'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.byKey(const Key('total-1')), findsOneWidget);
-    expect(find.byKey(const Key('no-goals')), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldAskMonthlyTotals_WhenSwitchingToMonths', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await tester.tap(find.text('Months'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('This month'), findsOneWidget);
-    expect(find.text('103 km'), findsWidgets); // 102.5 km, rounded
-  });
-
-  testWidgets('ProgressScreen_ShouldShowTrainingTotals_WhenChangingRange', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('training-tss')));
-    expect(server.trainingRequests, [90]);
-    expect(
-      tester.widget<Text>(find.byKey(const Key('training-tss'))).data,
-      '240',
-    );
-    expect(
-      tester.widget<Text>(find.byKey(const Key('training-trimp'))).data,
-      '180',
-    );
-    expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
-    expect(find.byKey(const Key('tss-chart')), findsOneWidget);
-
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const Key('training-range')),
-        matching: find.text('30 d'),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(server.trainingRequests, [90, 30]);
-  });
-
-  testWidgets('ProgressScreen_ShouldSendGoalInMetres_WhenTargetIsInKm', (
-    tester,
-  ) async {
-    server.goalCurrent['distance'] = 40000;
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('add-goal')));
-    await tester.tap(find.byKey(const Key('add-goal')));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('goal-target')), '100');
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-
-    expect(server.goals.single, {
-      'id': 'goal-1',
-      'period': 'week',
-      'metric': 'distance',
-      'target': 100000.0,
-    });
-    expect(find.text('Weekly distance'), findsOneWidget);
-    expect(find.text('40.0 km of 100 km · 40 %'), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldStoreMilesAsMetres_WhenUnitsAreImperial', (
-    tester,
-  ) async {
-    server.accounts['rider@example.com']!.units = 'imperial';
-    server.goalCurrent['distance'] = 40000;
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('add-goal')));
-    await tester.tap(find.byKey(const Key('add-goal')));
-    await tester.pumpAndSettle();
-    // The field is labelled in miles: 100 mi is 160934.4 m.
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('goal-target')))
-          .decoration!
-          .suffixText,
-      'mi',
-    );
-    await tester.enterText(find.byKey(const Key('goal-target')), '100');
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-
-    expect(server.goals.single['target'], closeTo(160934.4, 0.1));
-    expect(find.text('24.9 mi of 100 mi · 24 %'), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldUpdateAndDeleteGoal_WhenEditingGoal', (
-    tester,
-  ) async {
-    server.goals.add({
-      'id': 'goal-1',
-      'period': 'month',
-      'metric': 'time',
-      'target': 36000.0,
-    });
-    server.goalCurrent['time'] = 36000;
-    await openProgress(tester);
-    expect(find.text('Reached'), findsOneWidget);
-
-    await reveal(tester, find.byKey(const Key('goal-edit-goal-1')));
-    await tester.tap(find.byKey(const Key('goal-edit-goal-1')));
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('goal-target')))
-          .controller!
-          .text,
-      '10',
-    );
-    await tester.enterText(find.byKey(const Key('goal-target')), '20');
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-    expect(server.goals.single['target'], 72000.0);
-    expect(find.text('10 h 00 min of 20 h 00 min · 50 %'), findsOneWidget);
-
-    await reveal(tester, find.byKey(const Key('goal-delete-goal-1')));
-    await tester.tap(find.byKey(const Key('goal-delete-goal-1')));
-    await tester.pumpAndSettle();
-    expect(server.goals, isEmpty);
-    expect(find.byKey(const Key('no-goals')), findsOneWidget);
-  });
-
-  testWidgets('ProgressScreen_ShouldRejectEmptyTarget_WhenSavingGoal', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('add-goal')));
-    await tester.tap(find.byKey(const Key('add-goal')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('goal-save')));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Enter a target above 0.'), findsOneWidget);
-    expect(server.goals, isEmpty);
-  });
-
-  testWidgets('ProgressScreen_ShouldShowPowerAndReadiness_WhenAnalyticsLoad', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('power-curve-card')));
-    expect(find.byKey(const Key('readiness-card')), findsOneWidget);
-    expect(find.byKey(const Key('power-curve-card')), findsOneWidget);
-    expect(find.text('Estimated FTP'), findsOneWidget);
-    expect(find.byKey(const Key('use-ftp')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('use-ftp')));
-    await tester.pumpAndSettle();
-
-    expect(server.profiles['rider@example.com']?['ftpW'], 266);
-  });
-
-  testWidgets('ProgressScreen_ShouldAskForConsent_WhenWellbeingIsNotSetUp', (
-    tester,
-  ) async {
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('wellbeing-consent')));
-    expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('wellbeing-consent')));
-    await tester.pumpAndSettle();
-
-    expect(server.wellbeingConsent, isTrue);
-    await reveal(tester, find.byKey(const Key('wellbeing-save')));
-    await tester.tap(find.byKey(const Key('wellbeing-save')));
-    await tester.pumpAndSettle();
-
-    expect(server.wellbeingToday?['fatigue'], 3);
-    expect(server.wellbeingToday?['motivation'], 3);
-    expect(find.byKey(const Key('readiness-card')), findsOneWidget);
-    expect(find.text('How you feel'), findsOneWidget);
-  });
-
-  testWidgets(
-    'ProgressScreen_ShouldClearMemberData_WhenAnotherAccountSignsIn',
-    (tester) async {
-      final second = server.add('other@example.com');
-      await openProgress(tester);
-      expect(find.byKey(const Key('total-0')), findsOneWidget);
-      expect(find.text('42.5 km'), findsWidgets);
-
-      await openAccount(tester, 'sign-out');
-      await tester.pumpAndSettle();
-      server.totals.clear();
-      server.goals.clear();
-      server.goalCurrent.clear();
-
-      await tester.enterText(find.byKey(const Key('email')), second.email);
-      await tester.enterText(
-        find.byKey(const Key('password')),
-        second.password,
-      );
-      await tester.tap(find.byKey(const Key('sign-in')));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Progress'));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('total-0')), findsNothing);
-      expect(find.text('42.5 km'), findsNothing);
-      expect(find.byKey(const Key('no-goals')), findsOneWidget);
-      expect(
-        server.requests
-            .where((r) => r == 'GET /api/v1/analytics/totals')
-            .length,
-        2,
-      );
-    },
-  );
-
-  const consented = {
-    'date': '2026-11-08',
-    'fatigue': 3,
-    'soreness': 2,
-    'mood': 4,
-    'stress': 2,
-    'motivation': 5,
-  };
-
-  Future<void> openWithdraw(WidgetTester tester) async {
-    await reveal(tester, find.byKey(const Key('wellbeing-actions')));
-    await tester.tap(find.byKey(const Key('wellbeing-actions')));
-    await tester.pumpAndSettle();
-  }
-
-  testWidgets(
-    'ProgressScreen_ShouldWithdrawConsent_WhenTheMenuEntryIsConfirmed',
-    (tester) async {
-      server.wellbeingConsent = true;
-      server.wellbeingToday = consented;
-      await openProgress(tester);
-
-      await openWithdraw(tester);
-      // The only red thing in the card is the menu entry; no button stays on the card.
-      final entry = tester.widget<MenuItemButton>(
-        find.byKey(const Key('wellbeing-withdraw')),
-      );
-      final scheme = Theme.of(
-        tester.element(find.byKey(const Key('wellbeing-withdraw'))),
-      ).colorScheme;
-      expect(entry.style?.foregroundColor?.resolve({}), scheme.error);
-      await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wellbeing-withdraw-confirm')));
-      await tester.pumpAndSettle();
-
-      expect(server.wellbeingConsent, isFalse);
-      expect(server.sharingChoices['wellbeing'], 'none');
-      expect(find.byKey(const Key('wellbeing-consent-card')), findsOneWidget);
-    },
-  );
-
-  testWidgets('ProgressScreen_ShouldKeepConsent_WhenWithdrawIsCancelled', (
-    tester,
-  ) async {
-    server.wellbeingConsent = true;
-    server.wellbeingToday = consented;
-    await openProgress(tester);
-
-    await openWithdraw(tester);
-    await tester.tap(find.byKey(const Key('wellbeing-withdraw')));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-
-    expect(server.wellbeingConsent, isTrue);
-    expect(find.byKey(const Key('wellbeing-card')), findsOneWidget);
-  });
-
-  for (final (name, size) in [
-    ('Phone', const Size(390, 844)),
-    ('Wide', const Size(1000, 2000)),
-  ]) {
-    testWidgets(
-      'ProgressScreen_ShouldFilterFromOneSheet_WhenA${name}OpensTheMenuFilter',
-      (tester) async {
-        tester.view.physicalSize = size;
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await startApp(tester, server.session(useCookies: true));
-        await tester.tap(find.text('Progress'));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byKey(const Key('progress-actions')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('progress-filter')));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(BottomSheet), findsOneWidget);
-        await tester.tap(
-          find.descendant(
-            of: find.byType(BottomSheet),
-            matching: find.byKey(const Key('progress-filter-gravel')),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(server.analyticsFilters, contains('gravel'));
-      },
-    );
-  }
 
   testWidgets('ProgressScreen_ShouldAskForOneDiscipline_WhenAFilterIsChosen', (
     tester,
@@ -507,205 +156,189 @@ void main() {
     expect(server.analyticsFilters, contains('gravel'));
   });
 
-  testWidgets('ProgressScreen_ShouldShowTheFtpReminder_WhenTheCheckHasAReason', (
+  testWidgets(
+    'ProgressScreen_ShouldOpenTheFilterInOneSheet_WhenAPhoneTapsTheSportChip',
+    (tester) async {
+      await openProgress(tester, size: const Size(390, 844));
+
+      await tester.tap(find.byKey(const Key('progress-filter-chip')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byKey(const Key('progress-filter-gravel')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldOpenTheFilterInASheet_WhenTheMenuEntryIsChosen',
+    (tester) async {
+      await openProgress(tester);
+
+      await tester.tap(find.byKey(const Key('progress-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('progress-filter')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byKey(const Key('progress-filter-gravel')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(server.analyticsFilters, contains('gravel'));
+    },
+  );
+
+  testWidgets('ProgressScreen_ShouldShowTheNextEvent_WhenOneIsPlanned', (
     tester,
   ) async {
-    server.ftpCheck['rider@example.com'] = {
-      'reason': 'stale',
-      'ftpW': 250,
-      'ftpAgeDays': 49,
-      'estimateW': 268,
-      'estimateMethod': '20min',
-    };
+    final date = DateUtils.dateOnly(DateTime.now())
+        .add(const Duration(days: 10))
+        .toIso8601String()
+        .substring(0, 10);
+    server.events.add({
+      'id': 'event-1',
+      'name': 'Gran Fondo',
+      'date': date,
+      'kind': 'sportive',
+      'distanceM': 120000.0,
+      'elevationGainM': null,
+      'notes': null,
+      'rideId': null,
+      'createdAt': '2026-11-10T09:00:00Z',
+    });
     await openProgress(tester);
 
-    final card = find.byKey(const Key('ftp-reminder'));
-    await reveal(tester, card);
-    expect(find.text('Your FTP is 7 weeks old'), findsOneWidget);
-    expect(find.byKey(const Key('ftp-reminder-use')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('ftp-reminder-how')));
-    await tester.pumpAndSettle();
+    final card = find.byKey(const Key('metric-next-event'));
+    expect(card, findsOneWidget);
     expect(
-      find.text(
-        'Warm up for 15 minutes, with three short hard efforts. Ride 5 '
-        'minutes hard, then 10 minutes easy. Then ride 20 minutes as hard as '
-        'you can hold evenly. Velomine will notice the effort and suggest your '
-        'new FTP (95 % of the 20 minutes).',
+      find.descendant(of: card, matching: find.text('10 days')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Gran Fondo')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('NextEventCard_ShouldShowFallback_WhenNoEventPlanned', (
+    tester,
+  ) async {
+    await openProgress(tester);
+
+    final card = find.byKey(const Key('metric-next-event'));
+    expect(card, findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.text('No event planned. Add one to see the days to go.'),
       ),
       findsOneWidget,
     );
-    // The card is behind the sheet, so closing it is the way back to "Use ... W".
-    Navigator.of(tester.element(find.byKey(const Key('ftp-reminder-how-body'))))
-        .pop();
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('ftp-reminder-how-body')), findsNothing);
-
-    await tester.tap(find.byKey(const Key('ftp-reminder-use')));
-    await tester.pumpAndSettle();
-    expect(server.profiles['rider@example.com']?['ftpW'], 268);
+    expect(
+      find.descendant(of: card, matching: find.text('Goals and events')),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('ProgressScreen_ShouldHideIt_WhenSnoozed', (tester) async {
-    server.ftpCheck['rider@example.com'] = {
-      'reason': 'missing',
-      'ftpW': null,
-      'estimateW': 268,
-      'estimateMethod': '20min',
-    };
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('ftp-reminder')));
-    expect(find.text('Set your FTP'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('ftp-reminder-not-now')));
-    await tester.pumpAndSettle();
-
-    expect(server.snoozeRequests, 1);
-    expect(find.byKey(const Key('ftp-reminder')), findsNothing);
-  });
-
-  testWidgets(
-    'ProgressScreen_ShouldShowTheSuggestionInsteadOfTheReminder_WhenARideSuggestsAnFtp',
-    (tester) async {
-      server.ftpSuggestions['rider@example.com'] = {
-        'id': 'suggestion-1',
-        'rideId': 'ride-1',
-        'watts': 266,
-        'method': '20min',
-        'effortWatts': 280,
-        'createdAt': '2026-11-10T09:00:00Z',
-      };
-      server.ftpCheck['rider@example.com'] = {
-        'reason': 'stale',
-        'ftpW': 250,
-        'ftpAgeDays': 49,
-        'estimateW': 268,
-        'estimateMethod': '20min',
-      };
-      await openProgress(tester);
-
-      final card = find.byKey(const Key('ftp-suggestion'));
-      await reveal(tester, card);
-      expect(find.text('This ride suggests an FTP of 266 W'), findsOneWidget);
-      expect(find.text('95 % of your best 20 minutes (280 W)'), findsOneWidget);
-      // The reminder would ask about the number the suggestion is about to replace.
-      expect(find.byKey(const Key('ftp-reminder')), findsNothing);
-
-      await tester.tap(find.byKey(const Key('ftp-suggestion-use')));
-      await tester.pumpAndSettle();
-
-      expect(server.acceptedSuggestions, ['suggestion-1']);
-      expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
-    },
-  );
-
-  testWidgets(
-    'ProgressScreen_ShouldDropTheSuggestion_WhenTheMemberDismissesIt',
-    (tester) async {
-      server.ftpSuggestions['rider@example.com'] = {
-        'id': 'suggestion-2',
-        'rideId': 'ride-1',
-        'watts': 272,
-        'method': '30min',
-        'effortWatts': 280,
-        'createdAt': '2026-11-10T09:00:00Z',
-      };
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('ftp-suggestion')));
-      expect(find.text('97 % of your best 30 minutes (280 W)'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('ftp-suggestion-dismiss')));
-      await tester.pumpAndSettle();
-
-      expect(server.dismissedSuggestions, ['suggestion-2']);
-      expect(find.byKey(const Key('ftp-suggestion')), findsNothing);
-    },
-  );
-
-  testWidgets(
-    'ProgressScreen_ShouldNoteTheHeartRateRides_WhenSomeWereScoredFromIt',
-    (tester) async {
-      server.training = {...trainingJson(), 'heartRateLoadRides': 2};
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('fitness-chart')));
-
-      expect(
-        find.text('Includes rides scored from heart rate.'),
-        findsOneWidget,
-      );
-    },
-  );
-
-  testWidgets(
-    'ProgressScreen_ShouldStayQuietAboutHeartRate_WhenEveryRideHadPower',
-    (tester) async {
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('fitness-chart')));
-
-      expect(find.text('Includes rides scored from heart rate.'), findsNothing);
-    },
-  );
-
-  testWidgets(
-    'ProgressScreen_ShouldWarnAboutEveryDay_WhenTheWeekHasNoEasyDay',
-    (tester) async {
-      server.training = {
-        ...trainingJson(monotony: 2.27, strain: 817.2, monotonous: true),
-      };
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('training-monotonous')));
-
-      expect(
-        find.text(
-          'Every day was about as hard this week. An easy day helps you adapt.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('training-heavy-week')), findsNothing);
-    },
-  );
-
-  testWidgets('ProgressScreen_ShouldWarnAboutAHeavyWeek_WhenStrainIsHigh', (
-    tester,
-  ) async {
-    server.training = {
-      ...trainingJson(monotony: 0.94, strain: 451.2, heavyWeek: true),
-    };
-    await openProgress(tester);
-
-    await reveal(tester, find.byKey(const Key('training-heavy-week')));
-
-    expect(find.text('This week was much heavier than usual.'), findsOneWidget);
-    expect(find.byKey(const Key('training-monotonous')), findsNothing);
-  });
-
-  testWidgets(
-    'ProgressScreen_ShouldShowTheMonotonyAndStrain_WhenTheWeekHasLoad',
-    (tester) async {
-      server.training = {
-        ...trainingJson(monotony: 2.27, strain: 817.2, strainUsual: 428.0),
-      };
-      await openProgress(tester);
-
-      await reveal(tester, find.byKey(const Key('training-strain')));
-
-      expect(find.text('Monotony 2.27 · Strain 817'), findsOneWidget);
-      expect(find.byKey(const Key('training-monotonous')), findsNothing);
-    },
-  );
-
-  testWidgets('ProgressScreen_ShouldHideTheNumbers_WhenTheWeekHasNoLoad', (
+  testWidgets('ProgressScreen_ShouldOpenTheSubPage_WhenItsCardLinkIsChosen', (
     tester,
   ) async {
     await openProgress(tester);
 
-    await reveal(tester, find.byKey(const Key('fitness-chart')));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('metric-form')),
+        matching: find.text('Fitness'),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('training-strain')), findsNothing);
+    expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
+  });
+
+  testWidgets(
+    'ProgressScreen_ShouldClearMemberData_WhenAnotherAccountSignsIn',
+    (tester) async {
+      final second = server.add('other@example.com');
+      await openProgress(tester);
+      expect(find.text('42.5 km'), findsWidgets);
+
+      await openAccount(tester, 'sign-out');
+      await tester.pumpAndSettle();
+      server.totals.clear();
+
+      await tester.enterText(find.byKey(const Key('email')), second.email);
+      await tester.enterText(
+        find.byKey(const Key('password')),
+        second.password,
+      );
+      await tester.tap(find.byKey(const Key('sign-in')));
+      await tester.pumpAndSettle();
+
+      await goTo(tester, '/progress');
+
+      expect(find.text('42.5 km'), findsNothing);
+      expect(
+        server.requests
+            .where((r) => r == 'GET /api/v1/analytics/totals')
+            .length,
+        2,
+      );
+    },
+  );
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'ProgressScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        server.totals['week'] = [
+          for (var i = 0; i < 12; i++)
+            totalsJson(
+              '2026-09-${(1 + i * 2).toString().padLeft(2, '0')}',
+              '2026-09-${(7 + i * 2).toString().padLeft(2, '0')}',
+              rides: i,
+              distanceM: i * 9000.0,
+              movingS: i * 3600.0,
+              elevationGainM: i * 120.0,
+            ),
+        ];
+        server.training = trainingJson();
+        server.wellbeingConsent = true;
+        await openProgress(tester, size: Size(width, 2000));
+
+        for (final key in [
+          'metric-readiness',
+          'metric-form',
+          'metric-period',
+          'metric-next-event',
+        ]) {
+          expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('ProgressScreen_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    server.training = trainingJson();
+    await openProgress(tester, size: const Size(390, 2400));
+
+    expect(tester.takeException(), isNull);
   });
 }

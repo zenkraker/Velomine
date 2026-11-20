@@ -42,6 +42,7 @@ import 'rider_mode_sheet.dart';
 import 'solo_trial_badge.dart';
 import 'zones_card.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 
 const weekDayIds = [
   'monday',
@@ -435,7 +436,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final failure = s.load.failure;
     final bikes = ref.watch(bikesSummaryProvider);
     final sections = <Widget>[
-      _MyBikesRow(summary: bikes, onTap: () => context.push('/bikes')),
       SectionCard(
         title: l10n.profileAthlete,
         children: [
@@ -760,35 +760,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       SectionCard(
         title: l10n.accountMenu,
         children: [
-          if (s.profile?.hasPassword ?? false) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                key: const Key('change-password'),
-                onPressed: s.password.running ? null : _changePassword,
-                icon: const Icon(Icons.lock_reset),
-                label: Text(l10n.changePassword),
-              ),
+          // Each account destination is a row with what it is about, so the section reads as a list.
+          if (s.profile?.hasPassword ?? false)
+            _SettingsRow(
+              rowKey: const Key('change-password'),
+              icon: Icons.lock_reset,
+              title: l10n.changePassword,
+              onTap: s.password.running ? null : _changePassword,
             ),
-          ],
-          Text(l10n.twoFactorIntro),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              key: const Key('two-factor-settings'),
-              onPressed: () => context.push('/profile/two-factor'),
-              icon: const Icon(Icons.verified_user),
-              label: Text(l10n.twoFactorTitle),
-            ),
+          _SettingsRow(
+            rowKey: const Key('two-factor-settings'),
+            icon: Icons.verified_user,
+            title: l10n.twoFactorTitle,
+            subtitle: l10n.twoFactorIntro,
+            onTap: () => context.push('/profile/two-factor'),
           ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              key: const Key('sessions'),
-              onPressed: () => context.push('/profile/sessions'),
-              icon: const Icon(Icons.devices),
-              label: Text(l10n.sessionsTitle),
-            ),
+          _SettingsRow(
+            rowKey: const Key('sessions'),
+            icon: Icons.devices,
+            title: l10n.sessionsTitle,
+            onTap: () => context.push('/profile/sessions'),
           ),
         ],
       ),
@@ -796,14 +787,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: l10n.yourData,
         description: l10n.yourDataHelp,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              key: const Key('export-data'),
-              onPressed: s.export.running ? null : _export,
-              icon: const Icon(Icons.download),
-              label: Text(l10n.downloadMyData),
-            ),
+          _SettingsRow(
+            rowKey: const Key('export-data'),
+            icon: Icons.download,
+            title: l10n.downloadMyData,
+            onTap: s.export.running ? null : _export,
           ),
           if (s.export.completed)
             Text(l10n.exportStarted, key: const Key('export-started')),
@@ -811,7 +799,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     ];
     return PageScaffold(
-      eyebrow: l10n.accountMenu,
       title: l10n.profileTitle,
       maxWidth: AppLayout.contentMax,
       // Deleting the account is rare and final: in the menu, last and red.
@@ -840,7 +827,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? null
                 : ref.read(profileViewModelProvider.notifier).load,
           ),
-        // Two columns of cards on a desktop window, so the settings use the width they are given.
+        // The way to the bikes leads the page, full width; the settings sit in two columns under it.
+        _MyBikesRow(summary: bikes, onTap: () => context.push('/bikes')),
         CardGrid(children: sections),
       ],
     );
@@ -999,8 +987,8 @@ class _MyBikesRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final subtitle = l10n.bikeCount(summary.count);
-    return Card(
-      clipBehavior: Clip.antiAlias,
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: Semantics(
         button: true,
         label: '${l10n.myBikes}, $subtitle',
@@ -1023,6 +1011,37 @@ class _MyBikesRow extends StatelessWidget {
           onTap: onTap,
         ),
       ),
+    );
+  }
+}
+
+/// One destination of a settings card: its icon, its name, what it is about and a chevron.
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    required this.rowKey,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
+
+  final Key rowKey;
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      key: rowKey,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: scheme.onSurfaceVariant),
+      title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
+      trailing: Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+      onTap: onTap,
     );
   }
 }

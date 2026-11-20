@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,7 +24,10 @@ class VelomineRoot extends ConsumerWidget {
     final language = ref.watch(languageChoiceViewModelProvider);
     final value = config.value;
 
-    if (kIsWeb || value?.baseUrl != null) return const VelomineApp();
+    // The web app is served by its own server, so it never asks which one to use.
+    if (ref.watch(isWebProvider) || value?.baseUrl != null) {
+      return const VelomineApp();
+    }
 
     return MaterialApp(
       title: 'Velomine',

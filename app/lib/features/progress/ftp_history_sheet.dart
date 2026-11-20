@@ -82,6 +82,7 @@ class _FtpHistorySheetState extends State<_FtpHistorySheet> {
                   key: const Key('ftp-history-empty'),
                   message: l10n.ftpHistoryEmpty,
                   icon: Icons.history,
+                  framed: false,
                 ),
                 final entries => Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

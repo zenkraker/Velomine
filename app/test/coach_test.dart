@@ -214,4 +214,77 @@ void main() {
       expect(find.byKey(const Key('open-athletes')), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'CoachAthleteScreen_ShouldHideNotesAndReadiness_WhenTheCoachHasAGrant',
+    (tester) async {
+      final owner = server.add(
+        'owner@example.com',
+        name: 'Owner Rina',
+        clubRole: 'owner',
+      );
+      final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+      server.sharingChoices['analytics'] = 'coaches';
+      server.sharingChoices['wellbeing'] = 'coaches';
+      server.wellbeingConsent = true;
+      server.checkIns.add({
+        'date': '2026-11-08',
+        'fatigue': 4,
+        'soreness': 2,
+        'mood': 4,
+        'stress': 2,
+        'motivation': 5,
+      });
+      server.rideFeels['r1'] = {'rpe': 7, 'notes': 'A private note'};
+      server.signInBrowser(owner);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await startApp(tester, server.session(useCookies: true));
+      await tester.tap(find.text('Club'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open-athletes')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+      await tester.pumpAndSettle();
+
+      // Scores and RPE arrive; the member's notes and their readiness never do.
+      expect(find.byKey(const Key('coach-wellbeing')), findsOneWidget);
+      expect(find.textContaining('A private note'), findsNothing);
+      expect(find.byKey(const Key('readiness-card')), findsNothing);
+      expect(find.byKey(const Key('readiness-score')), findsNothing);
+    },
+  );
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'CoachAthleteScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        final owner = server.add(
+          'owner@example.com',
+          name: 'Owner Rina',
+          clubRole: 'owner',
+        );
+        final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+        server.sharingChoices['analytics'] = 'coaches';
+        server.sharingChoices['wellbeing'] = 'coaches';
+        server.wellbeingConsent = true;
+        server.signInBrowser(owner);
+        tester.view.physicalSize = Size(width, 2600);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+
+        await startApp(tester, server.session(useCookies: true));
+        await goTo(tester, '/club');
+        await tester.tap(find.byKey(const Key('open-athletes')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('coach-wellbeing')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

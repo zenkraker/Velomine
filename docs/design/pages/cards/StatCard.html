@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- StatCard: One fact per card: title, number, sentence, link. Guideline: StatCard.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Stat card</title>
+<style>
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-lg); padding: var(--space-xl); }
+</style>
+</head>
+<body>
+<div class="row">
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">Readiness</h3>
+    <div class="vm-number"><span class="kpi">50</span><span class="vm-state">Go easy</span></div>
+    <p class="vm-sentence body">Keep it easy: endurance pace, no hard efforts.</p>
+    <a class="vm-link caption" href="#">Why <span aria-hidden="true">→</span></a>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">This week</h3>
+    <div class="vm-number"><span class="kpi">69.7</span><span class="vm-unit">km</span></div>
+    <p class="vm-sentence body">1 ride · 2 h 35 · 1,416 m climbed</p>
+    <a class="vm-link caption" href="#">All weeks <span aria-hidden="true">→</span></a>
+  </article>
+  <article class="vm-card">
+    <h3 class="vm-card-title card-title">FTP</h3>
+    <div class="vm-number"><span class="kpi">211</span><span class="vm-unit">W</span></div>
+    <p class="vm-sentence body">3.5 W/kg, from your estimate on 20 Nov.</p>
+    <a class="vm-link caption" href="#">Power <span aria-hidden="true">→</span></a>
+  </article>
+</div>
+</body>
+</html>

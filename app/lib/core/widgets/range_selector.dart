@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../tokens.dart';
+import 'segmented_control.dart';
 
 /// A card title with the range it shows. The segments move under the title when the row does not
 /// fit, which is what a phone at a large text size asks for.
@@ -28,13 +29,11 @@ class RangeSelector<T> extends StatelessWidget {
     runSpacing: 8,
     children: [
       Text(title, style: Theme.of(context).textTheme.titleMedium),
-      SegmentedButton<T>(
-        key: segmentKey,
-        // The selected state is already visible; the tick costs the width a label needs on a phone.
-        showSelectedIcon: false,
+      SegmentedControl<T>(
+        buttonKey: segmentKey,
         segments: segments,
-        selected: {selected},
-        onSelectionChanged: (selection) => onChanged(selection.single),
+        selected: selected,
+        onChanged: onChanged,
       ),
     ],
   );

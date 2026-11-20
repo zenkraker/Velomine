@@ -16,7 +16,8 @@ import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/stat_tile.dart';
+import '../../core/widgets/stat_card.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/card_grid.dart';
 
 class BikesScreen extends ConsumerWidget {
@@ -63,7 +64,6 @@ class BikesScreen extends ConsumerWidget {
     );
 
     return PageScaffold(
-      eyebrow: l10n.eyebrowBikes,
       title: l10n.navBikes,
       subtitle: l10n.bikesSubtitle,
       primaryAction: add,
@@ -119,73 +119,69 @@ class _BikeCard extends ConsumerWidget {
       (l10n.statRides, bike.rideCount.toString()),
       (l10n.statMovingTime, duration(bike.movingS)),
     ];
-    return Card(
+    return AppCard(
       key: Key('bike-${bike.id}'),
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => onOpen(bike.id),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: AppSpacing.sm,
-            children: [
-              Row(
-                spacing: AppSpacing.sm,
-                children: [
-                  Icon(
-                    Icons.directions_bike,
-                    color: bike.isActive ? scheme.primary : scheme.outline,
-                  ),
-                  Expanded(
-                    child: Text(
-                      bike.name,
-                      style: text.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
-                    ServiceMarker(due: bike.serviceDueCount > 0),
-                ],
-              ),
-              Text(
-                [
-                  bikeKindName(l10n, bike.kind),
-                  if (make.isNotEmpty) make,
-                ].join(' · '),
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-              if (bike.isDefault || !bike.isActive)
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    if (bike.isDefault)
-                      Chip(
-                        label: Text(l10n.defaultBike),
-                        backgroundColor: scheme.primaryContainer,
-                        side: BorderSide.none,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    if (!bike.isActive)
-                      Chip(
-                        label: Text(l10n.archived),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                  ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Row(
+              spacing: AppSpacing.sm,
+              children: [
+                Icon(
+                  Icons.directions_bike,
+                  color: bike.isActive ? scheme.primary : scheme.outline,
                 ),
-              const SizedBox(height: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    bike.name,
+                    style: text.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
+                  ServiceMarker(due: bike.serviceDueCount > 0),
+              ],
+            ),
+            Text(
+              [
+                bikeKindName(l10n, bike.kind),
+                if (make.isNotEmpty) make,
+              ].join(' · '),
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            if (bike.isDefault || !bike.isActive)
               Wrap(
-                spacing: AppSpacing.xl,
-                runSpacing: AppSpacing.sm,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
                 children: [
-                  for (final (label, value) in facts)
-                    StatTile(label: label, value: value),
+                  if (bike.isDefault)
+                    Chip(
+                      label: Text(l10n.defaultBike),
+                      backgroundColor: scheme.primaryContainer,
+                      side: BorderSide.none,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  if (!bike.isActive)
+                    Chip(
+                      label: Text(l10n.archived),
+                      visualDensity: VisualDensity.compact,
+                    ),
                 ],
               ),
-            ],
-          ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xl,
+              runSpacing: AppSpacing.sm,
+              children: [
+                for (final (label, value) in facts)
+                  StatFigure(label: label, value: value),
+              ],
+            ),
+          ],
         ),
       ),
     );

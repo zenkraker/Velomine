@@ -6,26 +6,31 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
+import 'admin_state.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/form_sheet.dart';
+import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/empty_state.dart';
 
 /// Every club on the server, for the instance admin: create one, and turn it on or off.
+/// Opens the create-club sheet. The page header holds the button, so the screen and the tab both
+/// use this.
+Future<void> showCreateClubSheet(BuildContext context, WidgetRef ref) async {
+  final result = await showSheet<({String name, String ownerEmail})>(
+    context,
+    builder: (_) => const _CreateClubSheet(),
+  );
+  if (result == null) return;
+  await ref
+      .read(adminClubsViewModelProvider.notifier)
+      .create(result.name, result.ownerEmail);
+}
+
 class ClubsTab extends ConsumerWidget {
   const ClubsTab({super.key});
-
-  Future<void> _create(BuildContext context, WidgetRef ref) async {
-    final result = await showSheet<({String name, String ownerEmail})>(
-      context,
-      builder: (_) => const _CreateClubSheet(),
-    );
-    if (result == null) return;
-    await ref
-        .read(adminClubsViewModelProvider.notifier)
-        .create(result.name, result.ownerEmail);
-  }
 
   Future<void> _changeOwner(
     BuildContext context,
@@ -82,22 +87,6 @@ class ClubsTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.md,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.adminClubs,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    FilledButton.icon(
-                      key: const Key('create-club'),
-                      onPressed: () => _create(context, ref),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.adminCreateClub),
-                    ),
-                  ],
-                ),
                 if (s.load.failure case final failure?)
                   InlineError(
                     failureText(l10n, failure),
@@ -109,96 +98,13 @@ class ClubsTab extends ConsumerWidget {
                     message: l10n.adminNoClubs,
                     icon: Icons.groups_outlined,
                   ),
-                for (final club in s.clubs)
-                  Card(
-                    key: Key('club-${club.id}'),
+                if (s.clubs.isNotEmpty)
+                  AppCard(
+                    padding: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        ListTile(
-                          title: Text(club.name),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                key: Key('edit-plan-${club.id}'),
-                                tooltip: l10n.adminClubEditPlan,
-                                icon: const Icon(Icons.event_available),
-                                onPressed: s.action.running
-                                    ? null
-                                    : () => _editPlan(context, ref, club),
-                              ),
-                              if (club.members.any(
-                                (m) => m.userId != club.ownerId,
-                              ))
-                                IconButton(
-                                  key: Key('change-owner-${club.id}'),
-                                  tooltip: l10n.changeOwner,
-                                  icon: const Icon(Icons.person_pin_outlined),
-                                  onPressed: s.action.running
-                                      ? null
-                                      : () => _changeOwner(context, ref, club),
-                                ),
-                            ],
-                          ),
-                        ),
-                        // The facts sit under the tile with the card's whole width: beside the
-                        // trailing switch an email had a third of it and broke mid-word.
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.lg,
-                            0,
-                            AppSpacing.lg,
-                            AppSpacing.sm,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            spacing: AppSpacing.xs,
-                            children: [
-                              Text(
-                                club.memberLimit == null
-                                    ? l10n.clubMemberCount(club.memberCount)
-                                    : l10n.clubPlanMembers(
-                                        club.memberCount,
-                                        club.memberLimit!,
-                                      ),
-                                key: Key('club-members-${club.id}'),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              if (club.paidUntil != null)
-                                Text(
-                                  l10n.clubPlanPaidUntil(
-                                    dateOnly(club.paidUntil),
-                                  ),
-                                  key: Key('club-paid-until-${club.id}'),
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              if (club.ownerName != null)
-                                Text(
-                                  club.ownerName!,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              if (club.ownerEmail != null)
-                                Text(
-                                  club.ownerEmail!,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              Text(
-                                '${l10n.adminClubJoinCode}: ${club.joinCode}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SwitchListTile(
-                          key: Key('club-active-${club.id}'),
-                          title: Text(l10n.adminClubActive),
-                          value: club.isActive,
-                          onChanged: s.action.running
-                              ? null
-                              : (on) => ref
-                                    .read(adminClubsViewModelProvider.notifier)
-                                    .setActive(club, on),
-                        ),
+                        for (final club in s.clubs)
+                          ..._row(context, ref, s, club),
                       ],
                     ),
                   ),
@@ -208,6 +114,90 @@ class ClubsTab extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  List<Widget> _row(
+    BuildContext context,
+    WidgetRef ref,
+    AdminClubsState s,
+    AdminClubResponse club,
+  ) {
+    final l10n = context.l10n;
+    return [
+      ListTile(
+        title: Text(club.name),
+        subtitle: Text(
+          club.memberLimit == null
+              ? l10n.clubMemberCount(club.memberCount)
+              : l10n.clubPlanMembers(club.memberCount, club.memberLimit!),
+          key: Key('club-members-${club.id}'),
+        ),
+        trailing: PageMenu(
+          buttonKey: Key('club-menu-${club.id}'),
+          entries: [
+            PageMenuEntry(
+              key: Key('edit-plan-${club.id}'),
+              icon: Icons.event_available,
+              label: l10n.adminClubEditPlan,
+              onSelected: () => _editPlan(context, ref, club),
+            ),
+            if (club.members.any((m) => m.userId != club.ownerId))
+              PageMenuEntry(
+                key: Key('change-owner-${club.id}'),
+                icon: Icons.person_pin_outlined,
+                label: l10n.changeOwner,
+                onSelected: () => _changeOwner(context, ref, club),
+              ),
+          ],
+        ),
+      ),
+      // The facts sit under the tile with the card's whole width: beside the
+      // trailing switch an email had a third of it and broke mid-word.
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.sm,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.xs,
+          children: [
+            if (club.paidUntil != null)
+              Text(
+                l10n.clubPlanPaidUntil(dateOnly(club.paidUntil)),
+                key: Key('club-paid-until-${club.id}'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (club.ownerName != null)
+              Text(
+                club.ownerName!,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (club.ownerEmail != null)
+              Text(
+                club.ownerEmail!,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            Text(
+              '${l10n.adminClubJoinCode}: ${club.joinCode}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+      SwitchListTile(
+        key: Key('club-active-${club.id}'),
+        title: Text(l10n.adminClubActive),
+        value: club.isActive,
+        onChanged: s.action.running
+            ? null
+            : (on) => ref
+                  .read(adminClubsViewModelProvider.notifier)
+                  .setActive(club, on),
+      ),
+    ];
   }
 }
 

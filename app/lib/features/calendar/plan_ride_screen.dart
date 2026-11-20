@@ -10,6 +10,7 @@ import '../../core/units.dart';
 import '../../core/location_service.dart';
 import '../../core/providers.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/bottom_action_bar.dart';
@@ -200,7 +201,6 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
     // The real header while the ride is read, so the page is opaque from its first frame.
     if (s.load.running && (editing && detail == null)) {
       return PageScaffold(
-        eyebrow: l10n.clubRidesEyebrow,
         title: l10n.editRideTitle,
         maxWidth: AppLayout.contentNarrow,
         children: const [
@@ -211,7 +211,6 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
 
     final problem = _problemText(l10n);
     return PageScaffold(
-      eyebrow: l10n.clubRidesEyebrow,
       title: editing ? l10n.editRideTitle : l10n.planRideTitle,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
@@ -222,7 +221,8 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
       ),
       children: [
         // The form's fields, in one card; the page header already names it.
-        Card(
+        AppCard(
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
