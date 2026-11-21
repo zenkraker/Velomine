@@ -1768,6 +1768,38 @@
       }
     }
   },
+  "notificationHeartRateMaxMeasured": "Your maximum heart rate is now {bpm} bpm, measured on a ride.",
+  "@notificationHeartRateMaxMeasured": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHeartRateThresholdMeasured": "Your threshold heart rate is now {bpm} bpm, measured on a ride.",
+  "@notificationHeartRateThresholdMeasured": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHeartRateMaxSuggested": "A ride suggests a maximum heart rate of {bpm} bpm.",
+  "@notificationHeartRateMaxSuggested": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHeartRateThresholdSuggested": "A ride suggests a threshold heart rate of {bpm} bpm.",
+  "@notificationHeartRateThresholdSuggested": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
   "vo2MaxEstimate": "VO2max estimate",
   "vo2MaxFrom5Min": "from your best 5-minute power and weight",
   "vo2MaxNeedsWeight": "Set your weight to estimate VO2max.",

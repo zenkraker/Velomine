@@ -401,4 +401,80 @@ void main() {
       expect(notificationTarget(due), '/bikes/bike-1');
     },
   );
+
+  test('NotificationText_ShouldWordAMeasuredMax_WhenTheSubjectIsMaximum', () {
+    final measured = NotificationResponse.fromJson(
+      notificationJson(
+        'n-1',
+        'heart_rate_measured',
+        'Maximum 192 bpm',
+        rideId: 'ride-1',
+      ),
+    )!;
+
+    expect(
+      notificationText(AppLocalizationsEn(), measured),
+      'Your maximum heart rate is now 192 bpm, measured on a ride.',
+    );
+    expect(
+      notificationText(AppLocalizationsIt(), measured),
+      "La tua frequenza cardiaca massima ora è 192 bpm, misurata in un'uscita.",
+    );
+  });
+
+  test(
+    'NotificationText_ShouldWordASuggestedThreshold_WhenTheSubjectIsThreshold',
+    () {
+      final suggested = NotificationResponse.fromJson(
+        notificationJson(
+          'n-1',
+          'heart_rate_suggested',
+          'Threshold 165 bpm',
+          rideId: 'ride-1',
+        ),
+      )!;
+
+      expect(
+        notificationText(AppLocalizationsEn(), suggested),
+        'A ride suggests a threshold heart rate of 165 bpm.',
+      );
+      expect(
+        notificationText(AppLocalizationsIt(), suggested),
+        "Un'uscita suggerisce una frequenza cardiaca di soglia di 165 bpm.",
+      );
+    },
+  );
+
+  test('NotificationText_ShouldShowTheSubject_WhenItCannotBeRead', () {
+    final odd = NotificationResponse.fromJson(
+      notificationJson('n-1', 'heart_rate_measured', 'Something else'),
+    )!;
+
+    expect(notificationText(AppLocalizationsEn(), odd), 'Something else');
+  });
+
+  test(
+    'NotificationTarget_ShouldOpenTheRide_WhenAHeartRateNotificationHasARide',
+    () {
+      final measured = NotificationResponse.fromJson(
+        notificationJson(
+          'n-1',
+          'heart_rate_measured',
+          'Maximum 192 bpm',
+          rideId: 'ride-1',
+        ),
+      )!;
+      final suggested = NotificationResponse.fromJson(
+        notificationJson(
+          'n-2',
+          'heart_rate_suggested',
+          'Threshold 165 bpm',
+          rideId: 'ride-2',
+        ),
+      )!;
+
+      expect(notificationTarget(measured), '/rides/ride-1');
+      expect(notificationTarget(suggested), '/rides/ride-2');
+    },
+  );
 }

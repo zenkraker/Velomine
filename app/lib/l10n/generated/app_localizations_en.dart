@@ -3209,6 +3209,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationHeartRateMaxMeasured(int bpm) {
+    return 'Your maximum heart rate is now $bpm bpm, measured on a ride.';
+  }
+
+  @override
+  String notificationHeartRateThresholdMeasured(int bpm) {
+    return 'Your threshold heart rate is now $bpm bpm, measured on a ride.';
+  }
+
+  @override
+  String notificationHeartRateMaxSuggested(int bpm) {
+    return 'A ride suggests a maximum heart rate of $bpm bpm.';
+  }
+
+  @override
+  String notificationHeartRateThresholdSuggested(int bpm) {
+    return 'A ride suggests a threshold heart rate of $bpm bpm.';
+  }
+
+  @override
   String get vo2MaxEstimate => 'VO2max estimate';
 
   @override

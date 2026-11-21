@@ -5594,6 +5594,30 @@ abstract class AppLocalizations {
   /// **'A ride suggests an FTP of {record}.'**
   String notificationFtpSuggested(String record);
 
+  /// No description provided for @notificationHeartRateMaxMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'Your maximum heart rate is now {bpm} bpm, measured on a ride.'**
+  String notificationHeartRateMaxMeasured(int bpm);
+
+  /// No description provided for @notificationHeartRateThresholdMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'Your threshold heart rate is now {bpm} bpm, measured on a ride.'**
+  String notificationHeartRateThresholdMeasured(int bpm);
+
+  /// No description provided for @notificationHeartRateMaxSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'A ride suggests a maximum heart rate of {bpm} bpm.'**
+  String notificationHeartRateMaxSuggested(int bpm);
+
+  /// No description provided for @notificationHeartRateThresholdSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'A ride suggests a threshold heart rate of {bpm} bpm.'**
+  String notificationHeartRateThresholdSuggested(int bpm);
+
   /// No description provided for @vo2MaxEstimate.
   ///
   /// In en, this message translates to:

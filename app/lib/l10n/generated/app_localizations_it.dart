@@ -3233,6 +3233,26 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String notificationHeartRateMaxMeasured(int bpm) {
+    return 'La tua frequenza cardiaca massima ora è $bpm bpm, misurata in un\'uscita.';
+  }
+
+  @override
+  String notificationHeartRateThresholdMeasured(int bpm) {
+    return 'La tua frequenza cardiaca di soglia ora è $bpm bpm, misurata in un\'uscita.';
+  }
+
+  @override
+  String notificationHeartRateMaxSuggested(int bpm) {
+    return 'Un\'uscita suggerisce una frequenza cardiaca massima di $bpm bpm.';
+  }
+
+  @override
+  String notificationHeartRateThresholdSuggested(int bpm) {
+    return 'Un\'uscita suggerisce una frequenza cardiaca di soglia di $bpm bpm.';
+  }
+
+  @override
   String get vo2MaxEstimate => 'VO2max stimato';
 
   @override
