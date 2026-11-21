@@ -1,6 +1,6 @@
 # Running the demo
 
-The public demo runs on one Scaleway VPS: `velomine.eu` serves the presentation site and `demo.velomine.eu` serves the app. The same VPS runs a dev environment at `dev.velomine.eu`, for trying the newest version with real use. Three compose projects, set up by hand, GitHub has no access to the host:
+The public demo runs on one Scaleway VPS: `demo.velomine.eu` serves the app. The same VPS runs a dev environment at `dev.velomine.eu`, for trying the newest version with real use. The presentation site is not on the VPS at all: GitHub Pages serves it at `velomine.eu`. Three compose projects, set up by hand, and GitHub has no access to the host:
 
 | Directory | Project | Runs |
 |-----------|---------|------|
@@ -12,7 +12,7 @@ Each environment has its own database and volumes and is released on its own; Tr
 
 ## Where the versions come from
 
-Every merge to `main` that passes CI and the smoke test becomes the next patch version: a tag `vX.Y.Z`, a GitHub Release with notes, and the images `ghcr.io/zenkraker/velomine-{server,web}:X.Y.Z`. For a minor or major step, push a tag by hand (`git tag v0.3.0 && git push origin v0.3.0`); later merges count on from it. The repository's *Releases* page lists every version.
+Every merge to `main` that passes CI and the smoke test becomes the next patch version: a tag `vX.Y.Z`, a GitHub Release with notes, and the images `ghcr.io/zenkraker/velomine-{server,web}:X.Y.Z`. The site is not a version of its own: GitHub Pages publishes it from `main` when `site/` changes. For a minor or major step, push a tag by hand (`git tag v0.3.0 && git push origin v0.3.0`); later merges count on from it. The repository's *Releases* page lists every version.
 
 Work lands on the `dev` branch (features and fixes, by pull request); `main` is production. Every push to `dev` that passes CI and the smoke test is published the same way, as a prerelease (so *Latest release* and the README links stay stable), and the dev environment runs it. Releasing to production is merging `dev` into `main` with a merge commit, never a fast-forward: a commit that already carries a version tag is not released again, so `main` needs a commit of its own. The count follows the tags in a commit's own history and skips any number a tag already holds, so numbers stay unique and rise on both branches; merge `main` back into `dev` after a release so the history stays together. Dev is deployed by hand like the demo: set the new version in `/opt/velomine-dev/.env`. Never point the demo at a version that is only on `dev`.
 
@@ -31,7 +31,7 @@ sudo docker compose pull && sudo docker compose up -d --wait
 
 ## Traefik
 
-Traefik is not part of either environment, so releasing or restarting the demo or dev never takes the other down. Its `.env` is `/opt/velomine/deploy/traefik/.env` (`chmod 600`, never committed) with `VELOMINE_ACME_EMAIL`, `VELOMINE_DOMAIN=demo.velomine.eu`, `VELOMINE_SITE_DOMAIN=velomine.eu` and `VELOMINE_DEV_DOMAIN=dev.velomine.eu`. All three names have DNS pointing at the VPS.
+Traefik is not part of either environment, so releasing or restarting the demo or dev never takes the other down. Its `.env` is `/opt/velomine/deploy/traefik/.env` (`chmod 600`, never committed) with `VELOMINE_ACME_EMAIL`, nothing else. `demo.velomine.eu` and `dev.velomine.eu` have DNS pointing at the VPS. Traefik finds every route by the labels on an environment's web container, through the Docker socket (`compose.hosted.yaml`, from `VELOMINE_ENV` and `VELOMINE_HOST`).
 
 ```sh
 cd /opt/velomine
@@ -41,11 +41,19 @@ sudo docker compose -f deploy/traefik/compose.yaml up -d
 
 After a change to `deploy/traefik/` (a new route, a new Traefik version), run the same `up -d` again. Its certificates live in the `traefik_letsencrypt` volume.
 
+## The presentation site
+
+The site is plain HTML in `site/`, published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that touches it: `site/CNAME` holds `velomine.eu`, and `.nojekyll` keeps GitHub from processing the files. Nothing is built and no image is pushed. In the repository's *Settings → Pages*, the source is *GitHub Actions* and the custom domain is `velomine.eu` with *Enforce HTTPS*.
+
+DNS for `velomine.eu` points at GitHub: four `A` records (`185.199.108.153`, `.109.153`, `.110.153`, `.111.153`) and a `CNAME` for `www` to `zenkraker.github.io`. The site's links to the app are absolute, `https://demo.velomine.eu/…`, and its two forms post there, so they work before and during a deploy of the demo.
+
+A new page is a directory with an `index.html`, like the others: add its canonical and Open Graph tags, and its entry in `site/sitemap.xml` unless it is `noindex`.
+
 ## Set up the dev environment
 
-1. Add the DNS record for `dev.velomine.eu` and set `VELOMINE_DEV_DOMAIN` in Traefik's `.env`, then `up -d` Traefik as above.
+1. Add the DNS record for `dev.velomine.eu`.
 2. `sudo git clone <repository> /opt/velomine-dev`, check out the tag to run (a prerelease from `dev`, for example), and write `/opt/velomine-dev/.env` (`chmod 600`) with:
-   - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`, `VELOMINE_VERSION` and `VELOMINE_PROXY_ALIAS=dev-web`
+   - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`, `VELOMINE_VERSION`, `VELOMINE_ENV=dev` and `VELOMINE_HOST=dev.velomine.eu`
    - `VELOMINE__PUBLICURL=https://dev.velomine.eu`
    - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`, different from the demo's
    - no `VELOMINE__DEMO__ENABLED`: the demo remakes its data every night, dev keeps yours
@@ -63,9 +71,9 @@ cd /opt/velomine
 sudo docker compose rm -sf traefik                     # frees ports 80 and 443; run it before the checkout
 sudo git fetch --tags && sudo git checkout vX.Y.Z      # a version with this layout
 sudo docker network create proxy
-sudo nano deploy/traefik/.env                          # the Traefik variables from the demo's .env, see above
+sudo nano deploy/traefik/.env                          # VELOMINE_ACME_EMAIL from the demo's .env, see above
 sudo docker compose -f deploy/traefik/compose.yaml up -d
-sudo nano .env                                         # COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml, VELOMINE_PROXY_ALIAS=demo-web; drop VELOMINE_DOMAIN, VELOMINE_SITE_DOMAIN and VELOMINE_ACME_EMAIL
+sudo nano .env                                         # COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml, VELOMINE_ENV=demo, VELOMINE_HOST=demo.velomine.eu, VELOMINE__FEEDBACK__SITEURL=https://velomine.eu; drop VELOMINE_DOMAIN, VELOMINE_SITE_DOMAIN and VELOMINE_ACME_EMAIL
 sudo docker compose up -d --wait --remove-orphans
 sudo docker volume rm velomine_letsencrypt             # the old certificates; Traefik asks Let's Encrypt for new ones
 ```
@@ -74,7 +82,7 @@ The names are unreachable for a few seconds while Traefik gets its certificates.
 
 ## Check it
 
-- `https://velomine.eu` shows the site. `/sign-in` there redirects to the demo.
+- `https://velomine.eu` shows the site (GitHub Pages, independent of the VPS). Its *Sign in* opens `https://demo.velomine.eu/sign-in`, and its two forms (feedback, early access) answer on a page of the site.
 - `https://demo.velomine.eu` opens the app, and `https://dev.velomine.eu` opens the dev environment.
 - `curl -s https://demo.velomine.eu/api/v1/server` (or the dev name) reports the version.
 - `sudo docker compose ps` in each directory should show every container as `healthy` or `running`.
@@ -89,6 +97,7 @@ sudo docker compose -f deploy/traefik/compose.yaml logs --tail 50 traefik
 | Symptom | Cause |
 |---------|-------|
 | The web container is unhealthy, or pages answer 502 | The server is not running; its log says why. |
+| Traefik answers `404 page not found` for an environment's name | Traefik leaves out a container that is not healthy, or one without its labels: check `docker compose ps` in that environment and that `VELOMINE_ENV` and `VELOMINE_HOST` are set. |
 | `Could not create the admin: Passwords must ...` | `VELOMINE__ADMIN__PASSWORD` needs 10 or more characters with an upper-case letter, a lower-case letter and a digit. |
 | `Bind for 0.0.0.0:80 failed: port is already allocated` | Something else holds 80 or 443: `sudo ss -ltnp '( sport = :80 )'` and `sudo docker ps`. |
 | No certificate, or the browser warns | the Traefik log above. Every name's DNS must point at the VPS, and ports 80 and 443 must be open in the security group. |
@@ -99,7 +108,8 @@ sudo docker compose -f deploy/traefik/compose.yaml logs --tail 50 traefik
 The demo's lives in `/opt/velomine/.env`, with `chmod 600`, and is never committed. It holds:
 
 - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`
-- `VELOMINE_VERSION` and `VELOMINE_PROXY_ALIAS=demo-web`
+- `VELOMINE_VERSION`, `VELOMINE_ENV=demo` and `VELOMINE_HOST=demo.velomine.eu`
+- `VELOMINE__FEEDBACK__SITEURL=https://velomine.eu`, so the two forms of the site answer on a page of the site
 - `VELOMINE__PUBLICURL=https://demo.velomine.eu`
 - `VELOMINE__DEMO__ENABLED=true` and `VELOMINE__ACCOUNTS__SIGNUPENABLED=false`
 - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`

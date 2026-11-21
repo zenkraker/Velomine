@@ -1,8 +1,8 @@
 namespace Velomine.Server.Tests;
 
 /// <summary>
-/// The presentation site's content, read from site/ at the repository root. Which request reaches which file is the
-/// web image's job (app/nginx.conf) and is checked by tools/smoke-test-image.sh.
+/// The presentation site's content, read from site/ at the repository root. GitHub Pages serves it as it is
+/// (.github/workflows/pages.yml); the app lives on another host, so its links are absolute.
 /// </summary>
 public sealed class SiteTests
 {
@@ -31,7 +31,30 @@ public sealed class SiteTests
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "rel=\"canonical\""));
     }
 
-    /// <summary>The file the web image serves for <paramref name="path"/>: a directory path is its index.html.</summary>
+    [Theory]
+    [InlineData("/feedback/", "https://demo.velomine.eu/api/v1/feedback")]
+    [InlineData("/early-access/", "https://demo.velomine.eu/api/v1/early-access")]
+    public async Task SiteForms_ShouldPostToTheAppHost_WhenTheSiteIsOnItsOwnHost(string path, string action)
+    {
+        var html = await ReadSiteAsync(path);
+
+        // The site is on GitHub Pages and the app on another host, so the form cannot post to a path of the site's host.
+        Assert.Contains($"action=\"{action}\"", html);
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/status/")]
+    [InlineData("/demo/")]
+    public async Task SitePages_ShouldLinkToTheAppWithItsFullAddress_WhenTheSiteIsOnItsOwnHost(string path)
+    {
+        var html = await ReadSiteAsync(path);
+
+        Assert.Contains("href=\"https://demo.velomine.eu/sign-in\"", html);
+        Assert.DoesNotContain("href=\"/sign-in\"", html);
+    }
+
+    /// <summary>The file GitHub Pages serves for <paramref name="path"/>: a directory path is its index.html.</summary>
     private static async Task<string> ReadSiteAsync(string path)
     {
         var relative = path.TrimStart('/');
