@@ -326,6 +326,78 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task CoachAthlete_ShouldCountHeartRateLoad_WhenTheRideHasNoPower()
+    {
+        await using var api = await StartAsync();
+        var coach = await api.NewMemberAsync();
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await api.NewMemberAsync();
+        await JoinAndShareAsync(api, rider, club);
+        await AddRideAsync(api, rider.Id, hrTss: 90, startUtc: "2026-11-04T07:00:00");
+
+        var athlete = await coach.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+        var roster = await coach.Client.GetFromJsonAsync<CoachAthletesResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes", Ct);
+
+        // One athlete's page and the roster agree: the effort score, not the stored TSS, which is null here.
+        Assert.Equal(90, athlete!.Tss7);
+        Assert.Equal(athlete.Tss7, Assert.Single(roster!.Athletes).Tss7);
+        Assert.Equal(90, athlete.Tss42);
+    }
+
+    [Fact]
+    public async Task CoachAthlete_ShouldNotCountTheFeelScore_WhenThereIsNoWellbeingGrant()
+    {
+        await using var api = await StartAsync();
+        var coach = await api.NewMemberAsync();
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await api.NewMemberAsync();
+        await JoinAndShareAsync(api, rider, club);
+        await AddRideAsync(api, rider.Id, rpe: 7);
+
+        var without = await coach.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+        Assert.Equal(0, without!.Tss7);
+        Assert.Equal(0, without.Tss42);
+
+        (await rider.Client.PutAsJsonAsync(
+            "/api/v1/sharing",
+            new UpdateSharingRequest
+            {
+                Rides = "coaches",
+                Analytics = "coaches",
+                Routes = "none",
+                Wellbeing = "coaches",
+            },
+            Ct)).EnsureSuccessStatusCode();
+        var with = await coach.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+
+        // An hour rated 7 of 10 is 100 on the TSS scale, and the grant is what makes it readable.
+        Assert.Equal(100, with!.Tss7);
+        Assert.Equal(100, with.Tss42);
+    }
+
+    [Fact]
+    public async Task CoachAthlete_ShouldShowNoLoad_WhenTheRequestComesFromAnotherClub()
+    {
+        await using var api = await StartAsync();
+        var coach = await api.NewMemberAsync();
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await api.NewMemberAsync();
+        await JoinAndShareAsync(api, rider, club);
+        await AddRideAsync(api, rider.Id, hrTss: 90);
+
+        var stranger = await api.NewMemberAsync();
+        _ = await TestClubs.CreateAsync(api, stranger);
+
+        var athlete = await stranger.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+
+        Assert.Equal(HttpStatusCode.NotFound, athlete.StatusCode);
+    }
+
+    [Fact]
     public async Task ClubData_ShouldNotBeVisible_WhenRequestComesFromAnotherClub()
     {
         await using var api = await StartAsync();

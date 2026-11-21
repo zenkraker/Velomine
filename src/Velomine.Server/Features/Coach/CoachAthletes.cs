@@ -310,7 +310,8 @@ public static class CoachQueries
             clock.Today.AddDays(-41),
             clock.Today.AddDays(1),
             ct,
-            ftpW: ftpW);
+            ftpW: ftpW,
+            includeFeel: sharesWellbeing);
 
         // Each number exists only for the kind of data the member shared: no ride dates or counts to a coach
         // who was given training but not rides, and no training load to one given only rides.
@@ -331,7 +332,7 @@ public static class CoachQueries
             lastRideAt,
             sharesRides ? rides.Count : null,
             sharesRides ? rides.Sum(r => r.DistanceM) : null,
-            sharesAnalytics ? Math.Round(week.Sum(r => r.Tss), 1) : null,
-            sharesAnalytics ? Math.Round(rides.Sum(r => r.Tss), 1) : null);
+            sharesAnalytics ? Math.Round(week.Sum(r => r.Load), 1) : null,
+            sharesAnalytics ? Math.Round(rides.Sum(r => r.Load), 1) : null);
     }
 }
