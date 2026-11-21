@@ -22,10 +22,12 @@ public sealed class FtpReminderTests(PostgresFixture postgres)
     private static readonly DateTimeOffset Now = new(2026, 11, 17, 12, 0, 0, TimeSpan.Zero);
     private static DateOnly Today => DateOnly.FromDateTime(Now.UtcDateTime);
 
-    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
+    private Task<TestApi> StartAsync() => StartAsync(Now);
+
+    private Task<TestApi> StartAsync(DateTimeOffset now) => TestApi.StartAsync(postgres, b =>
     {
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(Now)));
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(now)));
     });
 
     private static Task<HttpResponseMessage> SetFtpAsync(HttpClient client, int watts) =>
@@ -35,7 +37,11 @@ public sealed class FtpReminderTests(PostgresFixture postgres)
         (await client.GetFromJsonAsync<FtpCheckResponse>("/api/v1/analytics/ftp-check", Ct))!;
 
     /// <summary>An FTP set <paramref name="ageDays"/> before today, through the history the reminder reads.</summary>
-    private static async Task SetFtpOnAsync(TestApi api, Guid userId, int watts, int ageDays)
+    private static Task SetFtpOnAsync(TestApi api, Guid userId, int watts, int ageDays) =>
+        SetFtpAtAsync(api, userId, watts, Now.AddDays(-ageDays));
+
+    /// <summary>An FTP set at an exact instant, through the history the reminder reads.</summary>
+    private static async Task SetFtpAtAsync(TestApi api, Guid userId, int watts, DateTimeOffset setAt)
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -46,11 +52,16 @@ public sealed class FtpReminderTests(PostgresFixture postgres)
             Id = Guid.NewGuid(),
             UserId = userId,
             Watts = watts,
-            SetAt = Now.AddDays(-ageDays),
+            SetAt = setAt,
             Source = FtpSources.Manual,
         });
         await db.SaveChangesAsync(Ct);
     }
+
+    /// <summary>A rider whose FTP was set at 23:30 UTC on 7 October, which is midday on 8 October in Auckland.</summary>
+    private static DateTimeOffset NearMidnight => new(2026, 10, 7, 23, 30, 0, TimeSpan.Zero);
+
+    private static DateOnly NearMidnightLocalDay => new(2026, 10, 8);
 
     /// <summary>A ready ride with power, a day before today.</summary>
     private static async Task AddPowerRideAsync(TestApi api, Guid userId, int normalizedPowerW)
@@ -99,6 +110,36 @@ public sealed class FtpReminderTests(PostgresFixture postgres)
         Assert.Equal(FtpReminderReasons.Stale, check.Reason);
         Assert.Equal(250, check.FtpW);
         Assert.Equal(42, check.FtpAgeDays);
+    }
+
+    [Fact]
+    public async Task FtpCheck_ShouldCountDaysOnTheRidersCalendar_WhenTheFtpWasSetNearMidnight()
+    {
+        // A rider in Auckland (UTC+13 in November) whose FTP was set at 23:30 UTC: for them it was the next day.
+        async Task<FtpCheckResponse?> CheckOnAsync(DateOnly localToday)
+        {
+            // Midday in Auckland, the way a rider's own day runs.
+            var now = new DateTimeOffset(localToday.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero).AddHours(-13);
+            await using var api = await StartAsync(now);
+            var member = await api.NewMemberAsync();
+            (await member.Client.PutAsJsonAsync(
+                "/api/v1/accounts/me/profile",
+                new UpdateProfileRequest("Test Rider", null, null, null, "Pacific/Auckland", "monday"), Ct)).EnsureSuccessStatusCode();
+            await SetFtpAtAsync(api, member.Id, 250, NearMidnight);
+            await AddPowerRideAsync(api, member.Id, 200);
+
+            return await CheckAsync(member.Client);
+        }
+
+        // 41 days on the rider's calendar, and 42 after the UTC date it was set on: the ride has not made it stale yet.
+        var notYet = await CheckOnAsync(NearMidnightLocalDay.AddDays(41));
+        Assert.Null(notYet!.Reason);
+        Assert.Equal(41, notYet.FtpAgeDays);
+
+        // One local day later it is 42 days old, and the reminder speaks.
+        var stale = await CheckOnAsync(NearMidnightLocalDay.AddDays(42));
+        Assert.Equal(FtpReminderReasons.Stale, stale!.Reason);
+        Assert.Equal(42, stale.FtpAgeDays);
     }
 
     [Fact]

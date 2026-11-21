@@ -55,7 +55,8 @@ public sealed class GetFtpCheck(VelomineDbContext db, TimeProvider time)
                 .OrderByDescending(h => h.SetAt).ThenByDescending(h => h.Id)
                 .Select(h => (DateTimeOffset?)h.SetAt)
                 .FirstOrDefaultAsync(ct);
-            if (setAt is { } instant) setOn = DateOnly.FromDateTime(instant.UtcDateTime);
+            // The day the rider set it, on their own calendar: near midnight UTC that is not the UTC date.
+            if (setAt is { } instant) setOn = clock.LocalDateOf(instant, null);
         }
 
         var ageDays = setOn is { } day ? clock.Today.DayNumber - day.DayNumber : (int?)null;
