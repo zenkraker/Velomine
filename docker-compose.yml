@@ -10,7 +10,8 @@
 #
 # Overlays add what one use needs, with -f (or COMPOSE_FILE in .env):
 #   compose.development.yaml  Dex, a local single sign-on provider for development (`just up` uses it)
-#   compose.demo.yaml         Traefik in front, with Let's Encrypt certificates, for a public server
+#   compose.hosted.yaml       Hardening, and the web image reachable only by the shared Traefik (deploy/traefik/), for
+#                             the project's own demo and dev servers; a self-hoster brings their own HTTPS
 
 x-logging: &logging
   driver: json-file

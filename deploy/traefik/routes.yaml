@@ -1,6 +1,8 @@
-# Traefik's routes for compose.demo.yaml, read through its file provider. Traefik renders this file as a Go template
-# first (so template braces must not appear in comments either) and fills in the host names from the environment
-# compose.demo.yaml gives it: VELOMINE_DOMAIN (the app) and VELOMINE_SITE_DOMAIN (the presentation site).
+# Traefik's routes for deploy/traefik/compose.yaml, read through its file provider. Traefik renders this file as a Go
+# template first (so template braces must not appear in comments either) and fills in the host names from the
+# environment compose.yaml gives it: VELOMINE_DOMAIN (the demo app), VELOMINE_SITE_DOMAIN (the presentation site) and
+# VELOMINE_DEV_DOMAIN (the dev environment, no route when empty). The demo's web image is reached as demo-web and the
+# dev one as dev-web: the VELOMINE_PROXY_ALIAS of each stack (compose.hosted.yaml).
 #
 # One name for both (VELOMINE_SITE_DOMAIN unset): one router, and the web image serves everything as it would anywhere.
 # Two names: each serves only its own part and redirects the rest to the other, keeping the path:
@@ -14,7 +16,7 @@ http:
       rule: Host(`{{ env "VELOMINE_DOMAIN" }}`)
       priority: 100
       entryPoints: [websecure]
-      service: velomine
+      service: demo
       middlewares: [hsts]
       tls:
         certResolver: letsencrypt
@@ -24,7 +26,7 @@ http:
       rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`) && (Path(`/`) || PathRegexp(`^/(status|pricing|demo|contact|feedback|early-access|principles|privacy|terms|security)(/|$)`) || Path(`/api/v1/feedback`) || Path(`/api/v1/early-access`) || PathPrefix(`/static/`) || PathPrefix(`/.well-known/`) || Path(`/robots.txt`) || Path(`/sitemap.xml`))
       priority: 300
       entryPoints: [websecure]
-      service: velomine
+      service: demo
       middlewares: [hsts]
       tls:
         certResolver: letsencrypt
@@ -32,7 +34,7 @@ http:
       rule: Host(`{{ env "VELOMINE_SITE_DOMAIN" }}`)
       priority: 200
       entryPoints: [websecure]
-      service: velomine
+      service: demo
       middlewares: [hsts, to-app]
       tls:
         certResolver: letsencrypt
@@ -40,7 +42,7 @@ http:
       rule: Host(`{{ env "VELOMINE_DOMAIN" }}`) && (PathRegexp(`^/(status|pricing|demo|contact|feedback|early-access|principles|privacy|terms|security)(/|$)`) || PathPrefix(`/static/`) || Path(`/sitemap.xml`))
       priority: 300
       entryPoints: [websecure]
-      service: velomine
+      service: demo
       middlewares: [hsts, to-site]
       tls:
         certResolver: letsencrypt
@@ -48,8 +50,20 @@ http:
       rule: Host(`{{ env "VELOMINE_DOMAIN" }}`) && Path(`/`)
       priority: 300
       entryPoints: [websecure]
-      service: velomine
+      service: demo
       middlewares: [hsts, app-root]
+      tls:
+        certResolver: letsencrypt
+{{- end }}
+
+{{- if env "VELOMINE_DEV_DOMAIN" }}
+
+    velomine-dev:
+      rule: Host(`{{ env "VELOMINE_DEV_DOMAIN" }}`)
+      priority: 100
+      entryPoints: [websecure]
+      service: dev
+      middlewares: [hsts]
       tls:
         certResolver: letsencrypt
 {{- end }}
@@ -78,7 +92,11 @@ http:
 {{- end }}
 
   services:
-    velomine:
+    demo:
       loadBalancer:
         servers:
-          - url: http://web:8080
+          - url: http://demo-web:8080
+    dev:
+      loadBalancer:
+        servers:
+          - url: http://dev-web:8080
