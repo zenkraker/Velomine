@@ -14,7 +14,9 @@ Each environment has its own database and volumes and is released on its own; Tr
 
 Every merge to `main` that passes CI and the smoke test becomes the next patch version: a tag `vX.Y.Z`, a GitHub Release with notes, and the images `ghcr.io/zenkraker/velomine-{server,web}:X.Y.Z`. For a minor or major step, push a tag by hand (`git tag v0.3.0 && git push origin v0.3.0`); later merges count on from it. The repository's *Releases* page lists every version.
 
-Work lands on the `dev` branch (features and fixes, by pull request); `main` is production. Every push to `dev` that passes CI and the smoke test is published the same way, as a prerelease (so *Latest release* and the README links stay stable), and the dev environment runs it. Releasing to production is merging `dev` into `main` with a merge commit, never a fast-forward: a commit that already carries a version tag is not released again, so `main` needs a commit of its own. The count follows the tags in a commit's own history and skips any number a tag already holds, so numbers stay unique and rise on both branches; merge `main` back into `dev` after a release so the history stays together. Dev is deployed by hand like the demo: set the new version in `/opt/velomine-dev/.env`. Never point the demo at a version that is only on `dev`.
+Work lands on the `dev` branch (features and fixes, by pull request); `main` is production. Every push to `dev` that passes CI and the smoke test is published as a prerelease, and the dev environment runs it. Its version is the one `main` will release next plus the run number, for example `0.1.31-dev.57` (images `ghcr.io/zenkraker/velomine-{server,web}:0.1.31-dev.57`, no `:0.1` tag), so it can never be mistaken for a production version and never takes a number `main` would use. GitHub keeps *Latest release* and the README links on the production versions.
+
+Releasing to production is merging `dev` into `main` with a merge commit, never a fast-forward: a commit that already carries a version tag is not released again, so `main` needs a commit of its own. Merge `main` back into `dev` afterwards, so dev's next version counts from the new release. Dev is deployed by hand like the demo: set the new version in `/opt/velomine-dev/.env`. Never point the demo at a `-dev` version.
 
 ## Deploy a version
 
@@ -44,7 +46,7 @@ After a change to `deploy/traefik/` (a new route, a new Traefik version), run th
 ## Set up the dev environment
 
 1. Add the DNS record for `dev.velomine.eu` and set `VELOMINE_DEV_DOMAIN` in Traefik's `.env`, then `up -d` Traefik as above.
-2. `sudo git clone <repository> /opt/velomine-dev`, check out the tag to run (a prerelease from `dev`, for example), and write `/opt/velomine-dev/.env` (`chmod 600`) with:
+2. `sudo git clone <repository> /opt/velomine-dev`, check out the `v…-dev.N` tag to run, and write `/opt/velomine-dev/.env` (`chmod 600`) with:
    - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`, `VELOMINE_VERSION` and `VELOMINE_PROXY_ALIAS=dev-web`
    - `VELOMINE__PUBLICURL=https://dev.velomine.eu`
    - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`, different from the demo's
