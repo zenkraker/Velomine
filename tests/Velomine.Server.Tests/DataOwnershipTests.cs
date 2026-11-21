@@ -175,6 +175,58 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
     }
 
     [Fact]
+    public async Task AccountExport_ShouldIncludeTheBikesWeightAndSpec_WhenTheBikeHasThem()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api);
+        (await me.Client.PostAsJsonAsync("/api/v1/bikes", new CreateBikeRequest
+        {
+            Name = "Road",
+            Brand = "Canyon",
+            Model = "Endurace",
+            ModelYear = 2024,
+            BuildSpec = "CF SL 7",
+            FrameSize = "M",
+            Kind = "road",
+            WheelCircumferenceMm = 2105,
+            WeightKg = 8.6,
+            InitialDistanceM = 0,
+        }, Ct)).EnsureSuccessStatusCode();
+
+        var download = await api.CreateClient().GetAsync(await LinkAsync(me.Client), Ct);
+        var bikes = JsonDocument.Parse(Encoding.UTF8.GetString((await UnzipAsync(download))["bikes.json"])).RootElement;
+
+        Assert.Equal(2024, bikes[0].GetProperty("modelYear").GetInt32());
+        Assert.Equal("CF SL 7", bikes[0].GetProperty("buildSpec").GetString());
+        Assert.Equal("M", bikes[0].GetProperty("frameSize").GetString());
+        Assert.Equal(8.6, bikes[0].GetProperty("weightKg").GetDouble());
+    }
+
+    [Fact]
+    public async Task AccountExport_ShouldIncludeTheEstimatedPower_WhenARideHasNoSensors()
+    {
+        await using var api = await StartAsync();
+        var me = await NewMemberAsync(api);
+        // Watts are estimated only when the rider has a weight.
+        (await me.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, 70, 2000, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        var uploaded = await TestApi.UploadAndWaitAsync(me.Client, Fit(new FitSession(Start, 600, NoPower: true)));
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var ride = await scope.ServiceProvider.GetRequiredService<VelomineDbContext>()
+                .Rides.AsNoTracking().SingleAsync(r => r.Id == uploaded.Id, Ct);
+            Assert.NotNull(ride.EstimatedTss);
+
+            var download = await api.CreateClient().GetAsync(await LinkAsync(me.Client), Ct);
+            var rides = JsonDocument.Parse(Encoding.UTF8.GetString((await UnzipAsync(download))["rides.json"])).RootElement;
+
+            Assert.Equal(ride.EstimatedNormalizedPowerW!.Value, rides[0].GetProperty("estimatedNormalizedPowerW").GetInt32());
+            Assert.Equal(ride.EstimatedTss!.Value, rides[0].GetProperty("estimatedTss").GetDouble());
+        }
+    }
+
+    [Fact]
     public async Task AccountExport_ShouldContainRiderMode_WhenMemberChose()
     {
         await using var api = await StartAsync();

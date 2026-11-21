@@ -129,8 +129,12 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             b.Name,
             b.Brand,
             b.Model,
+            b.ModelYear,
+            b.BuildSpec,
+            b.FrameSize,
             b.Kind,
             b.WheelCircumferenceMm,
+            b.WeightKg,
             b.InitialDistanceM,
             b.PurchasedOn,
             b.IsDefault,
@@ -178,6 +182,9 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             Ride = RideResponse.From(r),
             // The threshold the stored heart-rate effort came from, so the export says what it was read with.
             r.LoadThresholdHeartRate,
+            // The watts estimated from speed and slope, and the load they gave, which the API does not serve.
+            r.EstimatedNormalizedPowerW,
+            r.EstimatedTss,
             // Where the original file is in this ZIP; null when the file was not on disk.
             File = fileNames.GetValueOrDefault(r.FileSha256),
             r.FileSha256,
