@@ -585,6 +585,40 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task HeartRateSuggestion_ShouldClose_WhenTheRiderTypesTheNumber()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await SetAsync(member.Client, "max", 180)).EnsureSuccessStatusCode();
+        await UploadAsync(member.Client, Yesterday, Flat(MaxCandidate));
+        var suggestion = Assert.Single(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Max);
+
+        // The rider answers the question themselves, with a number above the one the ride saw.
+        (await SetAsync(member.Client, "max", 195)).EnsureSuccessStatusCode();
+
+        Assert.Empty(await SuggestionsAsync(member.Client));
+        var accepted = await member.Client.PostAsync(
+            $"/api/v1/analytics/heart-rate-suggestions/{suggestion.Id}/accept", null, Ct);
+        Assert.Equal(HttpStatusCode.NotFound, accepted.StatusCode);
+        Assert.Equal(195, (await ProfileAsync(member.Client)).MaxHeartRate);
+    }
+
+    [Fact]
+    public async Task HeartRateSuggestion_ShouldStayOpen_WhenTheRiderTypesTheOtherNumber()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await SetAsync(member.Client, "max", 185)).EnsureSuccessStatusCode();
+        await UploadAsync(member.Client, Yesterday, Flat(MaxCandidate));
+        var suggestion = Assert.Single(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Max);
+
+        (await SetAsync(member.Client, "threshold", 150)).EnsureSuccessStatusCode();
+
+        // Typing the threshold says nothing about the question the ride asked about the maximum.
+        Assert.Single(await SuggestionsAsync(member.Client), s => s.Id == suggestion.Id);
+    }
+
+    [Fact]
     public async Task DismissHeartRateSuggestion_ShouldHideIt_WhenOpen()
     {
         await using var api = await StartAsync();

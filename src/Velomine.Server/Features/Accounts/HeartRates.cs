@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Velomine.Server.Data;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Accounts;
@@ -138,6 +139,9 @@ public sealed class SetHeartRateValue(VelomineDbContext db, TimeProvider time)
         if (Current(user, kind) == bpm) return;
         Assign(user, kind, bpm, source, rideId);
         await AddAsync(user, kind, bpm, source, rideId, ct);
+        // A number the rider typed answers any open question about it, so accepting that suggestion later cannot
+        // lower the number they just set.
+        if (source == HeartRateSources.Manual) await DismissOpenAsync(user, kind, ct);
     }
 
     /// <summary>Back to the estimate: the history keeps the number that was set, marked <c>cleared</c>.</summary>
@@ -146,6 +150,16 @@ public sealed class SetHeartRateValue(VelomineDbContext db, TimeProvider time)
         if (Current(user, kind) is not { } was) return;
         Assign(user, kind, null, null, null);
         await AddAsync(user, kind, was, HeartRateSources.Cleared, null, ct);
+        await DismissOpenAsync(user, kind, ct);
+    }
+
+    /// <summary>Closes the open suggestion of one number, in the caller's own save.</summary>
+    private async Task DismissOpenAsync(User user, string kind, CancellationToken ct)
+    {
+        var open = await db.HeartRateSuggestions
+            .Where(s => s.UserId == user.Id && s.Kind == kind && s.Status == HeartRateSuggestionStatuses.Open)
+            .ToListAsync(ct);
+        foreach (var suggestion in open) suggestion.Status = HeartRateSuggestionStatuses.Dismissed;
     }
 
     private static int? Current(User user, string kind) =>
