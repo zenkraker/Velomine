@@ -44,7 +44,7 @@ public sealed class AcceptHeartRateSuggestion(VelomineDbContext db, SetHeartRate
     public override void Configure()
     {
         Post("analytics/heart-rate-suggestions/{suggestionId}/accept");
-        Description(d => d.Produces<ProfileResponse>(200).Produces(401).Produces(404), clearDefaults: true);
+        Description(d => d.Produces<ProfileResponse>(200).ProducesProblem(400).Produces(401).Produces(404), clearDefaults: true);
     }
 
     public override async Task HandleAsync(AcceptHeartRateSuggestionRequest req, CancellationToken ct)

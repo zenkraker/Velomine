@@ -559,6 +559,29 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task AcceptHeartRateSuggestion_ShouldAnswer400_WhenTheThresholdIsNotBelowTheMax()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await SetAsync(member.Client, "max", 185)).EnsureSuccessStatusCode();
+        (await SetAsync(member.Client, "threshold", 150)).EnsureSuccessStatusCode();
+        // The last twenty minutes at 170 suggest a threshold; the ride never beats the maximum of 185.
+        await UploadAsync(member.Client, Yesterday, s => (short)(s < 600 ? 150 : 170));
+        var suggestion = Assert.Single(await SuggestionsAsync(member.Client), s => s.Kind == HeartRateKinds.Threshold);
+        Assert.Equal(170, suggestion.Bpm);
+
+        // Typing a maximum below the suggestion is the rider's own business; accepting it then is not.
+        (await SetAsync(member.Client, "max", 165)).EnsureSuccessStatusCode();
+        var accepted = await member.Client.PostAsync(
+            $"/api/v1/analytics/heart-rate-suggestions/{suggestion.Id}/accept", null, Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, accepted.StatusCode);
+        var profile = await ProfileAsync(member.Client);
+        Assert.Equal((165, (int?)150), (profile.MaxHeartRate, profile.ThresholdHeartRate));
+        Assert.Single(await SuggestionsAsync(member.Client), s => s.Id == suggestion.Id);
+    }
+
+    [Fact]
     public async Task HeartRateHistory_ShouldAgreeWithTheColumns_WhenTheSuggestionIsAccepted()
     {
         await using var api = await StartAsync();
