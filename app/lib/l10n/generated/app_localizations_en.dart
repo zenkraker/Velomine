@@ -792,32 +792,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turn on rides first; routes add the map to them.';
 
   @override
+  String get shareStatsConfirmTitle => 'Share with your coaches?';
+
+  @override
+  String get shareStatsConfirmBody =>
+      'Your coaches will see every number of your rides: power, heart rate, speed, cadence, elevation, temperature, and the training built from them. They only read; your rides stay yours to change or delete. The map needs Routes, and even then the start, the end and your saved places stay hidden.';
+
+  @override
+  String get shareWellbeingConfirmTitle =>
+      'Share your wellbeing with your coaches?';
+
+  @override
+  String get shareWellbeingConfirmBody =>
+      'Your coaches will see your daily check-in scores and how hard each ride felt. This is health data, so we ask you first. Your notes stay private, and you can stop sharing at any time.';
+
+  @override
+  String get shareConfirmAction => 'Share';
+
+  @override
   String get privacyTitle => 'Ride privacy';
 
   @override
   String get privacyHelp =>
-      'What other people see when you share a ride or your club can see it. You always see everything.';
-
-  @override
-  String get privacyOthersSee => 'What others see of each ride';
-
-  @override
-  String get privacyHideHeartRate => 'Heart rate';
-
-  @override
-  String get privacyHidePower => 'Power';
-
-  @override
-  String get privacyHideCadence => 'Cadence';
-
-  @override
-  String get privacyHideSpeed => 'Speed';
-
-  @override
-  String get privacyHideElevation => 'Elevation';
-
-  @override
-  String get privacyHideTemperature => 'Temperature';
+      'What your club and coaches never see of your routes. You always see everything.';
 
   @override
   String get privacyTrimTitle => 'Hide the start and end';

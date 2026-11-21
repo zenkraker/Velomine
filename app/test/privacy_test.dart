@@ -24,50 +24,69 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-    'PrivacyScreen_ShouldSaveStreamSwitchesAndRemoveAZone_WhenTheMemberChangesThem',
-    (tester) async {
-      final rider = server.add('rider@example.com', clubRole: null);
-      server.signInBrowser(rider);
-      server.privacyZones.add({
-        'id': 'zone-home',
-        'name': 'Home',
-        'latitude': 46.0,
-        'longitude': 11.0,
-        'radiusM': 500,
-      });
-      await openPrivacy(tester);
+  testWidgets('PrivacyScreen_ShouldNotShowStreamSwitches_WhenItOpens', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
 
-      expect(find.text('Ride privacy'), findsWidgets);
-      expect(find.byKey(const Key('privacy-zone-zone-home')), findsOneWidget);
-      expect(server.privacyStreams['hidePower'], isFalse);
+    // A coach sees every number of what the rider shares, so there is no switch to hide one; only the route
+    // keeps its trim and its saved places.
+    expect(find.text('Ride privacy'), findsWidgets);
+    expect(find.byKey(const Key('privacy-hide-power')), findsNothing);
+    expect(find.byKey(const Key('privacy-hide-heart-rate')), findsNothing);
+    expect(find.text('What others see of each ride'), findsNothing);
+    expect(find.byKey(const Key('privacy-trim-start')), findsOneWidget);
+    expect(find.byKey(const Key('privacy-add-zone')), findsOneWidget);
+  });
 
-      // Sharing starts fully visible; turning power off hides it for every non-owner.
-      await tester.ensureVisible(find.byKey(const Key('privacy-hide-power')));
-      await tester.tap(find.byKey(const Key('privacy-hide-power')));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(const Key('privacy-save')));
-      await tester.tap(find.byKey(const Key('privacy-save')));
-      await tester.pumpAndSettle();
+  testWidgets('PrivacyScreen_ShouldSaveTheTrimWithoutTheSwitches_WhenSaved', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
 
-      expect(server.privacyStreams['hidePower'], isTrue);
-      expect(server.privacyStreams['hideHeartRate'], isFalse);
+    await tester.enterText(find.byKey(const Key('privacy-trim-start')), '500');
+    await tester.ensureVisible(find.byKey(const Key('privacy-save')));
+    await tester.tap(find.byKey(const Key('privacy-save')));
+    await tester.pumpAndSettle();
 
-      await tester.ensureVisible(
-        find.byKey(const Key('privacy-zone-actions-zone-home')),
-      );
-      await tester.tap(find.byKey(const Key('privacy-zone-actions-zone-home')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('privacy-zone-delete-zone-home')));
-      await tester.pumpAndSettle();
-      // It asks first: nothing is removed until the red action is chosen.
-      expect(server.privacyZones, isNotEmpty);
-      await tester.tap(find.byKey(const Key('confirm-privacy-zone-delete')));
-      await tester.pumpAndSettle();
+    expect(server.privacyTrimStartM, 500);
+    expect(server.privacyStreams['hidePower'], isFalse);
+  });
 
-      expect(server.privacyZones, isEmpty);
-    },
-  );
+  testWidgets('PrivacyScreen_ShouldAskAndRemoveAZone_WhenTheMemberDeletesIt', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    server.privacyZones.add({
+      'id': 'zone-home',
+      'name': 'Home',
+      'latitude': 46.0,
+      'longitude': 11.0,
+      'radiusM': 500,
+    });
+    await openPrivacy(tester);
+
+    expect(find.byKey(const Key('privacy-zone-zone-home')), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('privacy-zone-actions-zone-home')),
+    );
+    await tester.tap(find.byKey(const Key('privacy-zone-actions-zone-home')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('privacy-zone-delete-zone-home')));
+    await tester.pumpAndSettle();
+    // It asks first: nothing is removed until the red action is chosen.
+    expect(server.privacyZones, isNotEmpty);
+    await tester.tap(find.byKey(const Key('confirm-privacy-zone-delete')));
+    await tester.pumpAndSettle();
+
+    expect(server.privacyZones, isEmpty);
+  });
 
   testWidgets('PrivacyScreen_ShouldSaveTrims_WhenTheMemberEntersMetres', (
     tester,

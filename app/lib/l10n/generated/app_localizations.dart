@@ -1538,6 +1538,36 @@ abstract class AppLocalizations {
   /// **'Turn on rides first; routes add the map to them.'**
   String get routesNeedRides;
 
+  /// No description provided for @shareStatsConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with your coaches?'**
+  String get shareStatsConfirmTitle;
+
+  /// No description provided for @shareStatsConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your coaches will see every number of your rides: power, heart rate, speed, cadence, elevation, temperature, and the training built from them. They only read; your rides stay yours to change or delete. The map needs Routes, and even then the start, the end and your saved places stay hidden.'**
+  String get shareStatsConfirmBody;
+
+  /// No description provided for @shareWellbeingConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your wellbeing with your coaches?'**
+  String get shareWellbeingConfirmTitle;
+
+  /// No description provided for @shareWellbeingConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your coaches will see your daily check-in scores and how hard each ride felt. This is health data, so we ask you first. Your notes stay private, and you can stop sharing at any time.'**
+  String get shareWellbeingConfirmBody;
+
+  /// No description provided for @shareConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareConfirmAction;
+
   /// No description provided for @privacyTitle.
   ///
   /// In en, this message translates to:
@@ -1547,50 +1577,8 @@ abstract class AppLocalizations {
   /// No description provided for @privacyHelp.
   ///
   /// In en, this message translates to:
-  /// **'What other people see when you share a ride or your club can see it. You always see everything.'**
+  /// **'What your club and coaches never see of your routes. You always see everything.'**
   String get privacyHelp;
-
-  /// No description provided for @privacyOthersSee.
-  ///
-  /// In en, this message translates to:
-  /// **'What others see of each ride'**
-  String get privacyOthersSee;
-
-  /// No description provided for @privacyHideHeartRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Heart rate'**
-  String get privacyHideHeartRate;
-
-  /// No description provided for @privacyHidePower.
-  ///
-  /// In en, this message translates to:
-  /// **'Power'**
-  String get privacyHidePower;
-
-  /// No description provided for @privacyHideCadence.
-  ///
-  /// In en, this message translates to:
-  /// **'Cadence'**
-  String get privacyHideCadence;
-
-  /// No description provided for @privacyHideSpeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Speed'**
-  String get privacyHideSpeed;
-
-  /// No description provided for @privacyHideElevation.
-  ///
-  /// In en, this message translates to:
-  /// **'Elevation'**
-  String get privacyHideElevation;
-
-  /// No description provided for @privacyHideTemperature.
-  ///
-  /// In en, this message translates to:
-  /// **'Temperature'**
-  String get privacyHideTemperature;
 
   /// No description provided for @privacyTrimTitle.
   ///

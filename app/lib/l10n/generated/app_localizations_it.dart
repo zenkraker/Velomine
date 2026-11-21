@@ -797,32 +797,29 @@ class AppLocalizationsIt extends AppLocalizations {
       'Attiva prima i giri; i percorsi aggiungono la mappa.';
 
   @override
+  String get shareStatsConfirmTitle => 'Condividere con i tuoi allenatori?';
+
+  @override
+  String get shareStatsConfirmBody =>
+      'I tuoi allenatori vedranno tutti i valori delle tue uscite: potenza, frequenza cardiaca, velocità, cadenza, dislivello, temperatura e l\'allenamento che ne deriva. Possono solo guardare; le uscite restano tue da modificare o eliminare. La mappa richiede Percorsi, e anche allora l\'inizio, la fine e i tuoi luoghi salvati restano nascosti.';
+
+  @override
+  String get shareWellbeingConfirmTitle =>
+      'Condividere il tuo benessere con i tuoi allenatori?';
+
+  @override
+  String get shareWellbeingConfirmBody =>
+      'I tuoi allenatori vedranno i punteggi del tuo check-in giornaliero e quanto è stata dura ogni uscita. Sono dati sulla salute, per questo te lo chiediamo prima. Le tue note restano private e puoi smettere di condividere in qualsiasi momento.';
+
+  @override
+  String get shareConfirmAction => 'Condividi';
+
+  @override
   String get privacyTitle => 'Privacy dei giri';
 
   @override
   String get privacyHelp =>
-      'Cosa vedono gli altri quando condividi un giro o quando il club può vederlo. Tu vedi sempre tutto.';
-
-  @override
-  String get privacyOthersSee => 'Cosa vedono gli altri di ogni giro';
-
-  @override
-  String get privacyHideHeartRate => 'Frequenza cardiaca';
-
-  @override
-  String get privacyHidePower => 'Potenza';
-
-  @override
-  String get privacyHideCadence => 'Cadenza';
-
-  @override
-  String get privacyHideSpeed => 'Velocità';
-
-  @override
-  String get privacyHideElevation => 'Dislivello';
-
-  @override
-  String get privacyHideTemperature => 'Temperatura';
+      'Cosa il tuo club e i tuoi allenatori non vedono mai dei tuoi percorsi. Tu vedi sempre tutto.';
 
   @override
   String get privacyTrimTitle => 'Nascondi inizio e fine';
