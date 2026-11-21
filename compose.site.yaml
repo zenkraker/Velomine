@@ -1,0 +1,65 @@
+# The presentation site (the site/ directory) on the public demo host, added to the demo's stack. A self-hoster has no use
+# for it, and the dev environment never loads it: the demo's .env adds this file to COMPOSE_FILE and sets
+# VELOMINE_SITE_HOST:
+#
+#   COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml:compose.site.yaml
+#   VELOMINE_SITE_HOST=velomine.eu      the site's host name; VELOMINE_HOST (the app) is where /sign-in and the like go
+#
+# Traefik routes the host to the site image from the labels below, with two exceptions: the two forms post to the demo's
+# web image (the demo's service is demo, so VELOMINE_ENV must be demo), and the app's paths on the site's host redirect
+# to the app's host.
+
+services:
+  site:
+    image: ghcr.io/zenkraker/velomine-site:${VELOMINE_VERSION:?set VELOMINE_VERSION in .env}
+    restart: unless-stopped
+    networks: [proxy]
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/robots.txt"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.site.loadbalancer.server.port=8080
+      - traefik.http.middlewares.site-hsts.headers.stsseconds=31536000
+      # The app's paths that the site links to, sent on with their path (temporary, so a browser does not remember it).
+      - traefik.http.middlewares.site-to-app.redirectregex.regex=^https://[^/]+(.*)
+      - traefik.http.middlewares.site-to-app.redirectregex.replacement=https://${VELOMINE_HOST:?set VELOMINE_HOST in .env}$${1}
+      - traefik.http.middlewares.site-to-app.redirectregex.permanent=false
+      # Everything on the site's host is the site...
+      - traefik.http.routers.site.rule=Host(`${VELOMINE_SITE_HOST:?set VELOMINE_SITE_HOST in .env}`)
+      - traefik.http.routers.site.priority=100
+      - traefik.http.routers.site.entrypoints=websecure
+      - traefik.http.routers.site.tls.certresolver=letsencrypt
+      - traefik.http.routers.site.middlewares=site-hsts
+      # ...except the app's paths...
+      - traefik.http.routers.site-app.rule=Host(`${VELOMINE_SITE_HOST}`) && PathRegexp(`^/(sign-in|register|openapi)(/|$$)`)
+      - traefik.http.routers.site-app.priority=200
+      - traefik.http.routers.site-app.entrypoints=websecure
+      - traefik.http.routers.site-app.tls.certresolver=letsencrypt
+      - traefik.http.routers.site-app.middlewares=site-hsts,site-to-app
+      - traefik.http.routers.site-app.service=site
+      # ...and the two forms, whose posts the server answers with a redirect to a page of the site (a redirect here would
+      # turn the POST into a GET).
+      - traefik.http.routers.site-forms.rule=Host(`${VELOMINE_SITE_HOST}`) && (Path(`/api/v1/feedback`) || Path(`/api/v1/early-access`))
+      - traefik.http.routers.site-forms.priority=300
+      - traefik.http.routers.site-forms.entrypoints=websecure
+      - traefik.http.routers.site-forms.tls.certresolver=letsencrypt
+      - traefik.http.routers.site-forms.middlewares=site-hsts
+      - traefik.http.routers.site-forms.service=demo@docker
+
+networks:
+  proxy:
+    external: true

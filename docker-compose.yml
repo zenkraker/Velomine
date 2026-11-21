@@ -1,10 +1,10 @@
-# Velomine: PostgreSQL, the server (the API and background work) and the web image (the web app and the presentation
-# site). This is the whole stack a self-hoster runs; it holds no development or hosting extras.
+# Velomine: PostgreSQL, the server (the API and background work) and the web image (the web app). This is the whole
+# stack a self-hoster runs; it holds no development or hosting extras.
 #
 #   From source:              docker compose up --build
 #   From the published images: set VELOMINE_VERSION in .env, then  docker compose pull && docker compose up -d --wait
 #
-# http://localhost:8080 is the web image: it serves the web app and the site and forwards /api, /health and /openapi
+# http://localhost:8080 is the web image: it serves the web app and forwards /api, /health and /openapi
 # (and the single sign-on callbacks) to the server, which is not published. Settings go in a .env file next to this one
 # (README, "Settings you can change"); every variable in it reaches the server.
 #
@@ -62,7 +62,7 @@ services:
       - velomine-keys:/data/keys
     logging: *logging
 
-  # The web app and the presentation site (app/Dockerfile), the one published port.
+  # The web app (app/Dockerfile), the one published port.
   web:
     image: ghcr.io/zenkraker/velomine-web:${VELOMINE_VERSION:-dev}
     build:

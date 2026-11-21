@@ -71,7 +71,7 @@ cd Velomine
 docker compose up --build
 ```
 
-The first run takes roughly 5 to 10 minutes (later starts take seconds). It is ready when the log shows `Now listening on: http://0.0.0.0:8080`. Then open **http://localhost:8080** — the presentation site. Press *Sign in* to open the web app, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`.
+The first run takes roughly 5 to 10 minutes (later starts take seconds). It is ready when the log shows `Now listening on: http://0.0.0.0:8080`. Then open **http://localhost:8080** and sign in as `admin@velomine.local` with the password `Velomine-dev-1`.
 
 Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your data; `docker compose down -v` also deletes the data (database, uploaded files and keys), for a fresh start.
 

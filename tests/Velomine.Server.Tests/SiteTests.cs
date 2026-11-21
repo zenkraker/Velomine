@@ -2,7 +2,7 @@ namespace Velomine.Server.Tests;
 
 /// <summary>
 /// The presentation site's content, read from site/ at the repository root. Which request reaches which file is the
-/// web image's job (app/nginx.conf) and is checked by tools/smoke-test-image.sh.
+/// site image's job (site/nginx.conf).
 /// </summary>
 public sealed class SiteTests
 {

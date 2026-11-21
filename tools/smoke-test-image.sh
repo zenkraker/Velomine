@@ -2,7 +2,7 @@
 # Starts the server and web images against an empty PostgreSQL the way a host runs them (read-only root, no
 # capabilities, the server reachable only through the web image) and checks, through the web image's port, that the
 # server migrates and answers, reports the expected build, and that every path reaches the right place: the API, the
-# presentation site, the web app and its fallback.
+# web app and its fallback.
 #
 #   tools/smoke-test-image.sh <server-image> <web-image> [expected text in /api/v1/server "version"]
 #
@@ -95,23 +95,9 @@ expect_status() {
   ok "$path -> $want"
 }
 
-# The presentation site, served before the app.
-body / | grep -q '<title>Velomine' || fail "/ is not the presentation site"
-ok "/ -> presentation site"
-for page in status pricing demo contact feedback early-access principles privacy terms security; do
-  body "/$page/" | grep -q 'class="wordmark"' || fail "/$page/ is not a site page"
-  location="$(curl -s -o /dev/null -w '%{redirect_url}' "$base/$page")"
-  [[ "$(status "/$page")" == 301 && "$location" == *"/$page/" ]] || fail "/$page does not redirect to /$page/"
-done
-ok "site pages, and their trailing-slash redirects"
-expect_status 200 /static/site.css
-expect_status 200 /.well-known/security.txt
-expect_status 200 /robots.txt
-expect_status 200 /sitemap.xml
-
 # The web app: its files, and any path without an extension falls back to its index.html.
 expect_status 200 /main.dart.js
-for route in /sign-in /rides/0190a5b2-7c3e-7000-8000-000000000000 /settings/profile /it; do
+for route in / /sign-in /pricing/ /rides/0190a5b2-7c3e-7000-8000-000000000000 /settings/profile /it; do
   body "$route" | grep -q 'flutter_bootstrap.js' || fail "$route is not the web app"
 done
 ok "app routes -> web app"

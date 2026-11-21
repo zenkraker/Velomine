@@ -1,6 +1,6 @@
 # Running the demo
 
-The public demo runs on one Scaleway VPS: `velomine.eu` serves the presentation site and `demo.velomine.eu` serves the app. The same VPS runs a dev environment at `dev.velomine.eu`, for trying the newest version with real use. Three compose projects, set up by hand, GitHub has no access to the host:
+The public demo runs on one Scaleway VPS: `velomine.eu` serves the presentation site and `demo.velomine.eu` serves the app. The same VPS runs a dev environment at `dev.velomine.eu`, for trying the newest version with real use. Three compose projects (the demo's also runs the site), set up by hand, GitHub has no access to the host:
 
 | Directory | Project | Runs |
 |-----------|---------|------|
@@ -12,7 +12,7 @@ Each environment has its own database and volumes and is released on its own; Tr
 
 ## Where the versions come from
 
-Every merge to `main` that passes CI and the smoke test becomes the next patch version: a tag `vX.Y.Z`, a GitHub Release with notes, and the images `ghcr.io/zenkraker/velomine-{server,web}:X.Y.Z`. For a minor or major step, push a tag by hand (`git tag v0.3.0 && git push origin v0.3.0`); later merges count on from it. The repository's *Releases* page lists every version.
+Every merge to `main` that passes CI and the smoke test becomes the next patch version: a tag `vX.Y.Z`, a GitHub Release with notes, and the images `ghcr.io/zenkraker/velomine-{server,web,site}:X.Y.Z`. For a minor or major step, push a tag by hand (`git tag v0.3.0 && git push origin v0.3.0`); later merges count on from it. The repository's *Releases* page lists every version.
 
 Work lands on the `dev` branch (features and fixes, by pull request); `main` is production. Every push to `dev` that passes CI and the smoke test is published the same way, as a prerelease (so *Latest release* and the README links stay stable), and the dev environment runs it. Releasing to production is merging `dev` into `main` with a merge commit, never a fast-forward: a commit that already carries a version tag is not released again, so `main` needs a commit of its own. The count follows the tags in a commit's own history and skips any number a tag already holds, so numbers stay unique and rise on both branches; merge `main` back into `dev` after a release so the history stays together. Dev is deployed by hand like the demo: set the new version in `/opt/velomine-dev/.env`. Never point the demo at a version that is only on `dev`.
 
@@ -31,7 +31,7 @@ sudo docker compose pull && sudo docker compose up -d --wait
 
 ## Traefik
 
-Traefik is not part of either environment, so releasing or restarting the demo or dev never takes the other down. Its `.env` is `/opt/velomine/deploy/traefik/.env` (`chmod 600`, never committed) with `VELOMINE_ACME_EMAIL`, `VELOMINE_DOMAIN=demo.velomine.eu`, and `VELOMINE_SITE_DOMAIN=velomine.eu`. These names, and `dev.velomine.eu`, have DNS pointing at the VPS. Traefik finds each environment by the labels on its web container, through the Docker socket (`compose.hosted.yaml` sets them from `VELOMINE_ENV` and `VELOMINE_HOST`), so dev needs no entry in Traefik's `.env`.
+Traefik is not part of either environment, so releasing or restarting the demo or dev never takes the other down. Its `.env` is `/opt/velomine/deploy/traefik/.env` (`chmod 600`, never committed) with `VELOMINE_ACME_EMAIL`, nothing else. `velomine.eu`, `demo.velomine.eu` and `dev.velomine.eu` have DNS pointing at the VPS. Traefik finds every route by the labels on a container, through the Docker socket: the web image of each environment (`compose.hosted.yaml`, from `VELOMINE_ENV` and `VELOMINE_HOST`) and the demo's site image (`compose.site.yaml`, from `VELOMINE_SITE_HOST`).
 
 ```sh
 cd /opt/velomine
@@ -63,9 +63,9 @@ cd /opt/velomine
 sudo docker compose rm -sf traefik                     # frees ports 80 and 443; run it before the checkout
 sudo git fetch --tags && sudo git checkout vX.Y.Z      # a version with this layout
 sudo docker network create proxy
-sudo nano deploy/traefik/.env                          # the Traefik variables from the demo's .env, see above
+sudo nano deploy/traefik/.env                          # VELOMINE_ACME_EMAIL from the demo's .env, see above
 sudo docker compose -f deploy/traefik/compose.yaml up -d
-sudo nano .env                                         # COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml, VELOMINE_ENV=demo, VELOMINE_HOST=demo.velomine.eu; drop VELOMINE_DOMAIN, VELOMINE_SITE_DOMAIN and VELOMINE_ACME_EMAIL
+sudo nano .env                                         # COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml:compose.site.yaml, VELOMINE_ENV=demo, VELOMINE_HOST=demo.velomine.eu, VELOMINE_SITE_HOST=velomine.eu; drop VELOMINE_DOMAIN, VELOMINE_SITE_DOMAIN and VELOMINE_ACME_EMAIL
 sudo docker compose up -d --wait --remove-orphans
 sudo docker volume rm velomine_letsencrypt             # the old certificates; Traefik asks Let's Encrypt for new ones
 ```
@@ -74,7 +74,7 @@ The names are unreachable for a few seconds while Traefik gets its certificates.
 
 ## Check it
 
-- `https://velomine.eu` shows the site. `/sign-in` there redirects to the demo.
+- `https://velomine.eu` shows the site. `/sign-in` there redirects to the demo, and the two forms (feedback, early access) work.
 - `https://demo.velomine.eu` opens the app, and `https://dev.velomine.eu` opens the dev environment.
 - `curl -s https://demo.velomine.eu/api/v1/server` (or the dev name) reports the version.
 - `sudo docker compose ps` in each directory should show every container as `healthy` or `running`.
@@ -99,8 +99,8 @@ sudo docker compose -f deploy/traefik/compose.yaml logs --tail 50 traefik
 
 The demo's lives in `/opt/velomine/.env`, with `chmod 600`, and is never committed. It holds:
 
-- `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`
-- `VELOMINE_VERSION`, `VELOMINE_ENV=demo` and `VELOMINE_HOST=demo.velomine.eu` (the same name as `VELOMINE_DOMAIN` in Traefik's `.env`)
+- `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml:compose.site.yaml` (the last file is the site image, which the dev environment never runs)
+- `VELOMINE_VERSION`, `VELOMINE_ENV=demo`, `VELOMINE_HOST=demo.velomine.eu` and `VELOMINE_SITE_HOST=velomine.eu`
 - `VELOMINE__PUBLICURL=https://demo.velomine.eu`
 - `VELOMINE__DEMO__ENABLED=true` and `VELOMINE__ACCOUNTS__SIGNUPENABLED=false`
 - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`

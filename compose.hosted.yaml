@@ -8,7 +8,7 @@
 #   VELOMINE_VERSION=0.3.1                                the released images to run (never `latest`)
 #   VELOMINE_ENV=demo                                     this environment's name in Traefik: demo or dev
 #   VELOMINE_HOST=demo.velomine.eu                        the app's host name; Traefik routes it to this web image
-#   VELOMINE__PUBLICURL=https://demo.velomine.eu          the app's address, not the site's
+#   VELOMINE__PUBLICURL=https://demo.velomine.eu          the app's address, not the site's (compose.site.yaml)
 #   POSTGRES_PASSWORD, VELOMINE__ADMIN__EMAIL, VELOMINE__ADMIN__PASSWORD
 #
 # Release or roll back by changing VELOMINE_VERSION, then:  docker compose pull && docker compose up -d --wait
@@ -25,7 +25,7 @@ services:
     ports: !reset []
     networks: [default, proxy]
     # Traefik finds this container through the Docker socket and reads its route from these labels. The demo's service
-    # must be named demo: deploy/traefik/routes.yaml sends the presentation site to demo@docker.
+    # must be named demo: the site's form posts go to demo@docker (compose.site.yaml).
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -34,7 +34,9 @@ services:
       - traefik.http.routers.${VELOMINE_ENV}.priority=100
       - traefik.http.routers.${VELOMINE_ENV}.entrypoints=websecure
       - traefik.http.routers.${VELOMINE_ENV}.tls.certresolver=letsencrypt
-      - traefik.http.routers.${VELOMINE_ENV}.middlewares=hsts@file
+      - traefik.http.routers.${VELOMINE_ENV}.middlewares=${VELOMINE_ENV}-hsts
+      # HTTPS only for a year. nginx in the web image sets the other security headers.
+      - traefik.http.middlewares.${VELOMINE_ENV}-hsts.headers.stsseconds=31536000
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777

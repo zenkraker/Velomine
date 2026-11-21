@@ -1,5 +1,5 @@
 # Traefik for the VPS that runs the demo and the dev environment: the one process on ports 80 and 443. It gets and
-# renews the Let's Encrypt certificates and forwards each host name to the web image of one environment. Self-hosters
+# renews the Let's Encrypt certificates and forwards each host name to the container that owns it. Self-hosters
 # do not need it; they bring their own HTTPS. Each environment is its own compose project (see compose.hosted.yaml) and
 # reaches Traefik over the external network "proxy", so releasing or restarting one never touches the other.
 #
@@ -7,16 +7,14 @@
 # A git-ignored .env next to this file sets:
 #
 #   VELOMINE_ACME_EMAIL=ops@example.org   Let's Encrypt's contact for expiry notices
-#   VELOMINE_DOMAIN=demo.velomine.eu      the demo app (the same as VELOMINE_HOST in the demo's .env)
-#   VELOMINE_SITE_DOMAIN=velomine.eu      optional: a second name for the presentation site only (served by the demo)
 #
-# An environment's own route (the demo's app, dev) comes from the labels on its web container, read through the Docker
-# socket (compose.hosted.yaml); the presentation site and its redirects are in routes.yaml. Docker's socket gives
-# whoever holds it control of the host, even mounted read-only, so Traefik runs with a read-only file system and no new
-# privileges, publishes no dashboard or API, and routes only containers that carry traefik.enable=true.
+# Every route comes from the labels on a container, read through the Docker socket: an environment's web image
+# (compose.hosted.yaml) and the site image (compose.site.yaml). Docker's socket gives whoever holds it control of the
+# host, even mounted read-only, so Traefik runs with a read-only file system and no new privileges, publishes no
+# dashboard or API, and routes only containers that carry traefik.enable=true.
 #
 # Start or update it:  docker compose -f deploy/traefik/compose.yaml up -d
-# Changing routes.yaml or this file's settings recreates only Traefik. Needs Docker Compose 2.24 or newer (`!reset`).
+# Changing this file's settings recreates only Traefik. Needs Docker Compose 2.24 or newer (`!reset`).
 
 name: traefik
 
@@ -25,7 +23,6 @@ services:
     image: traefik:v3.7.17@sha256:f4bb143d1135a579b630ed491e17ec50f6f7c9c6a30585ff3d385471d2a86f5a
     restart: unless-stopped
     command:
-      - --providers.file.filename=/etc/traefik/routes.yaml
       - --providers.docker=true
       - --providers.docker.exposedByDefault=false
       - --providers.docker.network=proxy
@@ -47,17 +44,12 @@ services:
       - --global.sendAnonymousUsage=false
       - --global.checkNewVersion=false
       - --log.level=WARN
-    environment:
-      # Read by routes.yaml. Without a site name, the app's name serves the site too.
-      VELOMINE_DOMAIN: ${VELOMINE_DOMAIN:?set VELOMINE_DOMAIN in .env}
-      VELOMINE_SITE_DOMAIN: ${VELOMINE_SITE_DOMAIN:-${VELOMINE_DOMAIN}}
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     networks: [proxy]
     volumes:
-      - ./routes.yaml:/etc/traefik/routes.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
     read_only: true

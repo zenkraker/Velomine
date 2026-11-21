@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
-# The server image: the .NET API and the background services, and no front-end. The web app and the presentation site
-# are in the web image (app/Dockerfile), which forwards /api, /health and /openapi here.
+# The server image: the .NET API and the background services, and no front-end. The web app
+# is in the web image (app/Dockerfile), which forwards /api, /health and /openapi here.
 
 # Build stage: restore from lock files first so the layer is cached until packages change.
 FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
