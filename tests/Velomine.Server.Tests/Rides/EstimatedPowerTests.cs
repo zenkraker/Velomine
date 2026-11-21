@@ -216,34 +216,33 @@ public sealed class EstimatedPowerTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHideEstimatedPower_WhenTheRideHidesSpeed()
+    public async Task CoachRide_ShouldShowEstimatedPower_WhenTheRideHasNoSensors()
     {
         await using var api = await StartAsync();
-        var shared = await SharedRideAsync(api, speedHidden: true);
+        var shared = await SharedRideAsync(api);
 
         var coachRide = await shared.Coach.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{shared.Club.Id}/athletes/{shared.AthleteId}/rides/{shared.RideId}", Ct);
 
-        Assert.Null(coachRide!.EstimatedAvgPowerW);
-        // The owner still sees it: the estimate is theirs, only the viewer's switches matter.
-        var ownerRide = await shared.Athlete.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{shared.RideId}", Ct);
-        Assert.NotNull(ownerRide!.EstimatedAvgPowerW);
+        // A coach reads the estimate like the other numbers; an estimate is what the ride has, not a hidden switch.
+        Assert.NotNull(coachRide!.EstimatedAvgPowerW);
+        Assert.Null(coachRide.AvgPowerW);
     }
 
     [Fact]
-    public async Task CoachStreams_ShouldNotCarryEstimatedPower_WhenACoachReadsTheRide()
+    public async Task CoachStreams_ShouldCarryEstimatedPower_WhenTheRideHasNoSensors()
     {
         await using var api = await StartAsync();
-        var shared = await SharedRideAsync(api, speedHidden: false);
+        var shared = await SharedRideAsync(api);
 
         var coachStreams = await shared.Coach.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{shared.Club.Id}/athletes/{shared.AthleteId}/rides/{shared.RideId}/streams", Ct);
 
-        Assert.Null(coachStreams!.EstimatedPower);
-        // The owner's own endpoint serves it, so the map and the chart draw it.
+        Assert.NotNull(coachStreams!.EstimatedPower);
+        // The owner reads the same samples, so the chart draws the same line for both.
         var ownerStreams = await shared.Athlete.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/rides/{shared.RideId}/streams", Ct);
-        Assert.NotNull(ownerStreams!.EstimatedPower);
+        Assert.Equal(ownerStreams!.EstimatedPower, coachStreams.EstimatedPower);
     }
 
     /// <summary>A ride two hours ago, so it is not today's and cannot clash with another test's ride.</summary>
@@ -251,11 +250,8 @@ public sealed class EstimatedPowerTests(PostgresFixture postgres)
 
     private sealed record Shared(HttpClient Coach, HttpClient Athlete, AdminClubResponse Club, Guid AthleteId, Guid RideId);
 
-    /// <summary>
-    /// An athlete in a coach's club with a heart-rate-only ride, rides and analytics shared, and the speed switch set
-    /// before the ride because the snapshot is copied at import.
-    /// </summary>
-    private static async Task<Shared> SharedRideAsync(TestApi api, bool speedHidden)
+    /// <summary>An athlete in a coach's club with a sensorless ride, rides and analytics shared.</summary>
+    private static async Task<Shared> SharedRideAsync(TestApi api)
     {
         var coachEmail = TestApi.NewEmail();
         (await api.RegisterAsync(coachEmail, name: "Coach Rina")).EnsureSuccessStatusCode();
@@ -267,18 +263,6 @@ public sealed class EstimatedPowerTests(PostgresFixture postgres)
         (await athlete.PutAsJsonAsync("/api/v1/sharing",
             new UpdateSharingRequest { Rides = "coaches", Analytics = "coaches", Routes = "none", Wellbeing = "none" }, Ct))
             .EnsureSuccessStatusCode();
-        (await athlete.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest
-        {
-            HideHeartRate = false,
-            HidePower = false,
-            HideCadence = false,
-            HideSpeed = speedHidden,
-            HideElevation = false,
-            HideTemperature = false,
-            TrimStartM = 0,
-            TrimEndM = 0,
-        }, Ct)).EnsureSuccessStatusCode();
-
         var ride = await TestApi.UploadAndWaitAsync(athlete, Fit(new FitSession(Recent(), 120, NoPower: true)));
         Assert.NotNull(ride.EstimatedAvgPowerW);
         return new Shared(coach, athlete, club, athleteId, ride.Id);

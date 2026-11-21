@@ -77,17 +77,18 @@ public sealed class DataOwnershipTests(PostgresFixture postgres, DexFixture dex)
         await UploadAsync(me.Client, original);
         await UploadAsync(other.Client, Fit(new FitSession(Start.AddHours(6), 120)), "grace-ride.fit");
         await me.Client.PutAsJsonAsync("/api/v1/accounts/me/profile", new UpdateProfileRequest("Ada", 265, 61.5, 1995, "Europe/Rome", "sunday"), Ct);
-        await me.Client.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest
+        (await me.Client.PutAsJsonAsync(
+            "/api/v1/privacy/settings",
+            new UpdatePrivacyRequest { TrimStartM = 500, TrimEndM = 0 },
+            Ct)).EnsureSuccessStatusCode();
+        // A member of the last release may still have a switch set: the export keeps the stored value while the column lives.
+        await using (var scope = api.Services.CreateAsyncScope())
         {
-            HidePower = true,
-            HideHeartRate = false,
-            HideCadence = false,
-            HideSpeed = false,
-            HideElevation = false,
-            HideTemperature = false,
-            TrimStartM = 500,
-            TrimEndM = 0,
-        }, Ct);
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var settings = await db.PrivacySettings.SingleAsync(x => x.UserId == me.Id, Ct);
+            settings.HidePower = true;
+            await db.SaveChangesAsync(Ct);
+        }
         await me.Client.PostAsJsonAsync("/api/v1/privacy/zones", new CreatePrivacyZoneRequest
         {
             Name = "Home",

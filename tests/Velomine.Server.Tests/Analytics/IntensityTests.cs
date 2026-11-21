@@ -48,9 +48,7 @@ public sealed class IntensityTests(PostgresFixture postgres)
         short?[]? power = null,
         short?[]? heartRate = null,
         int seconds = 120,
-        string startUtc = "2026-11-03T07:00:00",
-        bool? hidePower = null,
-        bool? hideHeartRate = null)
+        string startUtc = "2026-11-03T07:00:00")
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -64,8 +62,6 @@ public sealed class IntensityTests(PostgresFixture postgres)
             UploadedAt = Now,
             StartTime = DateTimeOffset.Parse(startUtc + "Z"),
             MovingS = seconds,
-            HidePower = hidePower,
-            HideHeartRate = hideHeartRate,
         };
         ride.Streams = new RideStreams
         {
@@ -239,12 +235,27 @@ public sealed class IntensityTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachTraining_ShouldFallBackToHeartRate_WhenPowerIsHidden()
+    public async Task CoachTraining_ShouldReadThePower_WhenTheRiderSharesTraining()
     {
         await using var api = await StartAsync();
         var (owner, club, rider) = await SharedClubAsync(api);
-        // 300 W over an FTP of 200 is hard; heart rate 150 of 187 is moderate. The hidden power is never read.
-        await AddRideAsync(api, rider.Id, power: Samples(120, 300), heartRate: Samples(120, 150), hidePower: true);
+        // 300 W over an FTP of 200 is hard; the heart rate of 150 of 187 would be moderate, so power wins.
+        await AddRideAsync(api, rider.Id, power: Samples(120, 300), heartRate: Samples(120, 150));
+
+        var training = await owner.Client.GetFromJsonAsync<TrainingResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/training?days=7", Ct);
+
+        Assert.NotNull(training!.Intensity);
+        Assert.Equal(120, training.Intensity.HardS);
+        Assert.Equal(0, training.Intensity.ModerateS);
+    }
+
+    [Fact]
+    public async Task CoachTraining_ShouldReadTheHeartRate_WhenTheRideHasNoPower()
+    {
+        await using var api = await StartAsync();
+        var (owner, club, rider) = await SharedClubAsync(api);
+        await AddRideAsync(api, rider.Id, heartRate: Samples(120, 150));
 
         var training = await owner.Client.GetFromJsonAsync<TrainingResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/training?days=7", Ct);
@@ -255,26 +266,11 @@ public sealed class IntensityTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachTraining_ShouldSkipTheRide_WhenBothSignalsAreHidden()
-    {
-        await using var api = await StartAsync();
-        var (owner, club, rider) = await SharedClubAsync(api);
-        await AddRideAsync(api, rider.Id, power: Samples(120, 300), heartRate: Samples(120, 150),
-            hidePower: true, hideHeartRate: true);
-
-        var training = await owner.Client.GetFromJsonAsync<TrainingResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/training?days=7", Ct);
-
-        Assert.Null(training!.Intensity);
-        Assert.Empty(training.IntensityWeeks);
-    }
-
-    [Fact]
     public async Task CoachTraining_ShouldNotBeVisible_WhenRequestComesFromAnotherClub()
     {
         await using var api = await StartAsync();
         var (_, club, rider) = await SharedClubAsync(api);
-        await AddRideAsync(api, rider.Id, power: Samples(120, 300), heartRate: Samples(120, 150), hidePower: true);
+        await AddRideAsync(api, rider.Id, power: Samples(120, 300), heartRate: Samples(120, 150));
         var stranger = await NewMemberAsync(api);
         _ = await TestClubs.CreateAsync(api, stranger);
 

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
-using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Analytics;
@@ -20,7 +19,6 @@ public static class TrainingRange
         int days,
         CancellationToken ct,
         RideFilter filter = default,
-        PrivacyProfile? viewer = null,
         bool includeFeel = true)
     {
         var to = clock.Today;
@@ -79,8 +77,8 @@ public static class TrainingRange
                 rides.GroupBy(r => r.LocalDate).ToDictionary(g => g.Key, g => g.Sum(r => r.Load)))
             : null;
 
-        var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, time, from, to, ct, filter, viewer);
-        var efficiency = await Efficiency.LoadAsync(db, userId, clock, from, to, ct, filter, viewer);
+        var (intensity, weeks) = await Intensity.LoadAsync(db, userId, clock, time, from, to, ct, filter);
+        var efficiency = await Efficiency.LoadAsync(db, userId, clock, from, to, ct, filter);
 
         return new TrainingResponse(
             days,

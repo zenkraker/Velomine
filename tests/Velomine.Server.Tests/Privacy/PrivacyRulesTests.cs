@@ -5,8 +5,9 @@ using Velomine.Server.Features.Rides;
 namespace Velomine.Server.Tests.Privacy;
 
 /// <summary>
-/// The one privacy function every non-owner view goes through, tested on its own: what each switch removes, how the
-/// start and end are trimmed, and that a zone in the middle of the ride hides only the middle.
+/// The one privacy function every non-owner view goes through, tested on its own: it redacts the route only, so how
+/// the start and end are trimmed, that a zone in the middle hides only the middle, and that every number of the ride
+/// reaches a viewer as it is.
 /// A ride heading north from 46.0, 11.0: one degree of latitude is about 111.2 km, so 0.001 is about 111 m.
 /// </summary>
 public sealed class PrivacyRulesTests
@@ -14,11 +15,8 @@ public sealed class PrivacyRulesTests
     private const double Start = 46.0;
     private const double Lon = 11.0;
 
-    private static PrivacyProfile Hiding(
-        bool heartRate = false, bool power = false, bool cadence = false, bool speed = false,
-        bool elevation = false, bool temperature = false, int trimStart = 0, int trimEnd = 0,
-        params PrivacyZone[] zones) =>
-        new(new PrivacyDefaults(heartRate, power, cadence, speed, elevation, temperature, trimStart, trimEnd), zones);
+    private static PrivacyProfile Trimmed(int trimStart = 0, int trimEnd = 0, params PrivacyZone[] zones) =>
+        new(new PrivacyDefaults(trimStart, trimEnd), zones);
 
     /// <summary>A straight line north, 111 m per step, with every signal set.</summary>
     private static RideStreamsResponse Line(int points = 20) => new(
@@ -50,7 +48,7 @@ public sealed class PrivacyRulesTests
     public void ForViewer_ShouldHideTheEndOfTheRide_WhenTheEndIsTrimmed()
     {
         // 20 points 111 m apart: trimming 300 m at the end leaves every point up to 1.9 km.
-        var hidden = PrivacyRules.ForViewer(Line(), Hiding(trimEnd: 300), showRoute: true);
+        var hidden = PrivacyRules.ForViewer(Line(), Trimmed(trimEnd: 300), showRoute: true);
 
         // The line is 19 x 111 m = 2.1 km; the last 300 m start at 1.8 km, so points 0-16 stay and 17-19 go.
         Assert.NotNull(hidden.Latitude![16]);
@@ -65,7 +63,7 @@ public sealed class PrivacyRulesTests
         // A 250 m zone halfway: points 8-11 (0.9 to 1.2 km north) are inside it, the ends stay.
         var zone = new PrivacyZone { Name = "Work", Latitude = Start + 0.010, Longitude = Lon, RadiusM = 250 };
 
-        var hidden = PrivacyRules.ForViewer(Line(), Hiding(zones: zone), showRoute: true);
+        var hidden = PrivacyRules.ForViewer(Line(), Trimmed(zones: zone), showRoute: true);
 
         Assert.NotNull(hidden.Latitude![0]);
         Assert.Null(hidden.Latitude[10]);
@@ -80,30 +78,29 @@ public sealed class PrivacyRulesTests
         // Zones only hide what is inside them; a zone over the whole line leaves nothing to draw.
         var zone = new PrivacyZone { Latitude = Start + 0.005, Longitude = Lon, RadiusM = 1609 };
 
-        var hidden = PrivacyRules.ForViewer(Line(), Hiding(zones: zone), showRoute: true);
+        var hidden = PrivacyRules.ForViewer(Line(), Trimmed(zones: zone), showRoute: true);
 
         Assert.All(hidden.Latitude!, point => Assert.Null(point));
     }
 
     [Fact]
-    public void ForViewer_ShouldHideEverySwitch_WhenTheMemberTurnedThemAllOff()
+    public void ForViewer_ShouldPassEverySignal_WhenTheRideIsShared()
     {
-        var hidden = PrivacyRules.ForViewer(
-            Line(), Hiding(heartRate: true, power: true, cadence: true, speed: true, elevation: true, temperature: true), showRoute: true);
+        var shared = PrivacyRules.ForViewer(Line(), Trimmed(), showRoute: true);
 
-        Assert.Null(hidden.HeartRate);
-        Assert.Null(hidden.Power);
-        Assert.Null(hidden.Cadence);
-        Assert.Null(hidden.Speed);
-        Assert.Null(hidden.Altitude);
-        Assert.Null(hidden.Temperature);
-        Assert.NotNull(hidden.Latitude); // the route is its own grant, not one of the stream switches
+        Assert.Equal(Line().HeartRate, shared.HeartRate);
+        Assert.Equal(Line().Power, shared.Power);
+        Assert.Equal(Line().Cadence, shared.Cadence);
+        Assert.Equal(Line().Speed, shared.Speed);
+        Assert.Equal(Line().Altitude, shared.Altitude);
+        Assert.Equal(Line().Temperature, shared.Temperature);
+        Assert.NotNull(shared.Latitude);
     }
 
     [Fact]
     public void ForViewer_ShouldHideThePositions_WhenTheViewerLacksTheRoutesGrant()
     {
-        var hidden = PrivacyRules.ForViewer(Line(), Hiding(), showRoute: false);
+        var hidden = PrivacyRules.ForViewer(Line(), Trimmed(), showRoute: false);
 
         Assert.Null(hidden.Latitude);
         Assert.Null(hidden.Longitude);
@@ -112,53 +109,45 @@ public sealed class PrivacyRulesTests
     }
 
     [Fact]
-    public void ForViewer_ShouldNullThePowerNumbers_WhenPowerIsHidden()
+    public void ForViewer_ShouldPassEveryNumber_WhenTheRideIsShared()
     {
-        var hidden = PrivacyRules.ForViewer(Ride(Guid.NewGuid()), Hiding(power: true));
+        var ride = Ride(Guid.NewGuid()) with
+        {
+            HrTss = 64.0,
+            EstimatedAvgPowerW = 180,
+            EfficiencyFactor = 2.1,
+            DecouplingPct = 4.2,
+            Steady = true,
+            WPrimeJ = 22_000,
+            MinWPrimeBalanceJ = 8000,
+        };
 
-        Assert.Null(hidden.AvgPowerW);
-        Assert.Null(hidden.MaxPowerW);
-        Assert.Null(hidden.NormalizedPowerW);
-        Assert.Null(hidden.IntensityFactor); // IF and TSS are computed from power, so they are power
-        Assert.Null(hidden.Tss);
-        Assert.Null(hidden.PowerZones);
-        Assert.Equal(151, hidden.AvgHeartRate); // heart rate is a separate switch
-    }
+        var shared = PrivacyRules.ForViewer(ride);
 
-    [Fact]
-    public void ForViewer_ShouldNullTheHeartRateNumbers_WhenHeartRateIsHidden()
-    {
-        var hidden = PrivacyRules.ForViewer(Ride(Guid.NewGuid()), Hiding(heartRate: true));
-
-        Assert.Null(hidden.AvgHeartRate);
-        Assert.Null(hidden.MaxHeartRate);
-        Assert.Null(hidden.Trimp); // load is the heart-rate weighted minutes
-        Assert.Null(hidden.HeartRateZones);
-        Assert.Null(hidden.HeartRateZoneModel); // the model and its reference are part of the zones
-        Assert.Null(hidden.HeartRateZoneReferenceBpm);
-        Assert.Null(hidden.HeartRateZoneReferenceSource);
-        Assert.Equal(210, hidden.AvgPowerW);
-        Assert.Equal(95.5, hidden.Tss);
-    }
-
-    [Fact]
-    public void ForViewer_ShouldNullTheSpeedTheCadenceAndTheClimb_WhenEachIsHidden()
-    {
-        var id = Guid.NewGuid();
-
-        var noSpeed = PrivacyRules.ForViewer(Ride(id), Hiding(speed: true));
-        var noCadence = PrivacyRules.ForViewer(Ride(id), Hiding(cadence: true));
-        var noClimb = PrivacyRules.ForViewer(Ride(id), Hiding(elevation: true));
-
-        Assert.Null(noSpeed.AvgSpeedMs);
-        Assert.Null(noSpeed.MaxSpeedMs);
-        Assert.Null(noCadence.AvgCadence);
-        Assert.Null(noClimb.ElevationGainM);
-        Assert.Null(noClimb.ElevationLossM);
-        // Everything else is untouched.
-        Assert.Equal(2000, noSpeed.DistanceM);
-        Assert.Equal(2000, noCadence.DistanceM);
-        Assert.Equal(2000, noClimb.DistanceM);
+        Assert.Equal(210, shared.AvgPowerW);
+        Assert.Equal(480, shared.MaxPowerW);
+        Assert.Equal(240, shared.NormalizedPowerW);
+        Assert.Equal(1.2, shared.IntensityFactor);
+        Assert.Equal(95.5, shared.Tss);
+        Assert.Equal(64.0, shared.HrTss);
+        Assert.Equal(151, shared.AvgHeartRate);
+        Assert.Equal(178, shared.MaxHeartRate);
+        Assert.Equal(42.5, shared.Trimp);
+        Assert.Equal(88, shared.AvgCadence);
+        Assert.Equal(6.8, shared.AvgSpeedMs);
+        Assert.Equal(11.2, shared.MaxSpeedMs);
+        Assert.Equal(120, shared.ElevationGainM);
+        Assert.Equal(40, shared.ElevationLossM);
+        Assert.Equal(180, shared.EstimatedAvgPowerW);
+        Assert.Equal(2.1, shared.EfficiencyFactor);
+        Assert.Equal(4.2, shared.DecouplingPct);
+        Assert.True(shared.Steady);
+        Assert.Equal(22_000, shared.WPrimeJ);
+        Assert.Equal(8000, shared.MinWPrimeBalanceJ);
+        Assert.NotNull(shared.HeartRateZones);
+        Assert.NotNull(shared.PowerZones);
+        Assert.Equal(HeartRateZoneModels.Threshold, shared.HeartRateZoneModel);
+        Assert.Equal(160, shared.HeartRateZoneReferenceBpm);
     }
 
     [Fact]
@@ -173,7 +162,7 @@ public sealed class PrivacyRulesTests
             FtpSuggestionId = Guid.NewGuid(),
         };
 
-        var hidden = PrivacyRules.ForViewer(ride, Hiding());
+        var hidden = PrivacyRules.ForViewer(ride);
 
         Assert.Null(hidden.HeartRateNote);
         Assert.Null(hidden.HeartRateMaxNote);
@@ -186,30 +175,11 @@ public sealed class PrivacyRulesTests
     {
         // The member's own words about the ride are meant to pass; the per-ride wellbeing note is a different field
         // that never reaches a viewer at all.
-        var hidden = PrivacyRules.ForViewer(Ride(Guid.NewGuid()), Hiding(heartRate: true, power: true));
+        var hidden = PrivacyRules.ForViewer(Ride(Guid.NewGuid()));
 
         Assert.Equal("Morning", hidden.Title);
         Assert.Equal("Steady", hidden.Description);
         Assert.Equal("ride.fit", hidden.FileName);
-    }
-
-    [Fact]
-    public void ForViewer_ShouldRedactALapLikeTheSummary_WhenTheLapIsShared()
-    {
-        var lap = new LapResponse(1, 0, 300, 300, 295, 2000, 6.8, 11.2, 210, 480, 151, 178, 88, 120);
-
-        var hidden = PrivacyRules.ForViewer(lap, Hiding(heartRate: true, power: true, speed: true, cadence: true, elevation: true));
-
-        Assert.Null(hidden.AvgHeartRate);
-        Assert.Null(hidden.MaxHeartRate);
-        Assert.Null(hidden.AvgPowerW);
-        Assert.Null(hidden.MaxPowerW);
-        Assert.Null(hidden.AvgSpeedMs);
-        Assert.Null(hidden.MaxSpeedMs);
-        Assert.Null(hidden.AvgCadence);
-        Assert.Null(hidden.ElevationGainM);
-        Assert.Equal(2000, hidden.DistanceM); // distance and time are not a signal the switches control
-        Assert.Equal(300, hidden.DurationS);
     }
 
     [Fact]
@@ -219,7 +189,7 @@ public sealed class PrivacyRulesTests
         var streams = Line();
         var none = new PrivacyProfile(PrivacyDefaults.None, []);
 
-        Assert.Equal(ride, PrivacyRules.ForViewer(ride, none));
+        Assert.Equal(ride, PrivacyRules.ForViewer(ride));
         Assert.Equal(streams.Latitude, PrivacyRules.ForViewer(streams, none, showRoute: true).Latitude);
     }
 }

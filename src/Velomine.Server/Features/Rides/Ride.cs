@@ -198,24 +198,22 @@ public sealed class Ride
     /// <summary>The bike ridden. Copied from the member's default bike when the ride is imported; the member can change it.</summary>
     public Guid? BikeId { get; set; }
 
-    /// <summary>
-    /// <see cref="PrivacySettings.HideHeartRate"/> at import.
-    /// </summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideHeartRate { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HidePower"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HidePower { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideCadence"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideCadence { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideSpeed"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideSpeed { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideElevation"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideElevation { get; set; }
 
-    /// <summary><see cref="PrivacySettings.HideTemperature"/> at import.</summary>
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool? HideTemperature { get; set; }
 
     /// <summary><see cref="PrivacySettings.TrimStartM"/> at import.</summary>
@@ -225,27 +223,25 @@ public sealed class Ride
     public int? TrimEndM { get; set; }
 
     /// <summary>
-    /// The member's privacy defaults copied onto the ride when it was imported, so changing a default never changes
-    /// what a viewer sees of this ride. Null on a ride imported before the copy existed; the view then uses the
-    /// member's current choices. Zones are not part of it: they are places, and their current radius always applies.
-    /// A re-read of the ride from its original file keeps it (RideReparseService assigns only what it derives).
+    /// The member's trim copied onto the ride when it was imported, so changing the default never changes what a
+    /// viewer sees of this ride. Null on a ride imported before the copy existed; the view then uses the member's
+    /// current trim. Zones are not part of it: they are places, and their current radius always applies. A re-read of
+    /// the ride from its original file keeps it (RideReparseService assigns only what it derives).
     /// </summary>
     public PrivacyDefaults? Privacy
     {
-        get => HideHeartRate is null
-            ? null
-            : new(HideHeartRate.Value, HidePower!.Value, HideCadence!.Value, HideSpeed!.Value,
-                HideElevation!.Value, HideTemperature!.Value, TrimStartM!.Value, TrimEndM!.Value);
+        get => TrimStartM is null ? null : new(TrimStartM.Value, TrimEndM!.Value);
         set
         {
-            HideHeartRate = value?.HideHeartRate;
-            HidePower = value?.HidePower;
-            HideCadence = value?.HideCadence;
-            HideSpeed = value?.HideSpeed;
-            HideElevation = value?.HideElevation;
-            HideTemperature = value?.HideTemperature;
             TrimStartM = value?.TrimStartM;
             TrimEndM = value?.TrimEndM;
+            // The six switch columns stay valid for their last release; a new import writes them false.
+            HideHeartRate = value is null ? null : false;
+            HidePower = value is null ? null : false;
+            HideCadence = value is null ? null : false;
+            HideSpeed = value is null ? null : false;
+            HideElevation = value is null ? null : false;
+            HideTemperature = value is null ? null : false;
         }
     }
 

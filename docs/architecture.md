@@ -132,7 +132,7 @@ erDiagram
 ## 8. Security model
 
 - Access to member data is owner or an active grant for that data type and audience; checked on every endpoint that returns it.
-- Everything a non-owner sees passes through one privacy function: privacy zones around saved places, start and end trimming, per-stream switches, and no position data without a route grant.
+- Everything a non-owner sees passes through one privacy function: privacy zones around saved places, start and end trimming, and no position data without a route grant. Those hide the route only: a coach with a grant sees every number and stream of what was shared.
 - Wellbeing is health data: explicit, versioned consent; notes never leave the owner.
 - Every coach view of a member's data is logged, and the member can read the log.
 - Sessions are listed and revocable per device; refresh tokens rotate and a reused one ends the session.

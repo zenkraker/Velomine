@@ -73,17 +73,7 @@ public sealed class RoutesTests(PostgresFixture postgres)
         // A ride keeps the privacy defaults it was imported with, so these are saved before the upload.
         (await world.Rider.Client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
-            new Velomine.Server.Features.Privacy.UpdatePrivacyRequest
-            {
-                HideHeartRate = false,
-                HidePower = false,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = true,
-                HideTemperature = false,
-                TrimStartM = 1000,
-                TrimEndM = 1000,
-            },
+            new Velomine.Server.Features.Privacy.UpdatePrivacyRequest { TrimStartM = 1000, TrimEndM = 1000 },
             Ct)).EnsureSuccessStatusCode();
         var rideId = await UploadRideAsync(world.Rider.Client);
 
@@ -91,8 +81,9 @@ public sealed class RoutesTests(PostgresFixture postgres)
             world.Rider.Client, new CreateRouteRequest { RideId = rideId, Name = "Trimmed", Surface = "road" });
 
         Assert.InRange(route.DistanceM, 2_700, 2_900);
-        Assert.Null(route.Elevation);
-        Assert.Null(route.ClimbingM);
+        // The climb is part of the ride a coach reads: only the positions are trimmed.
+        Assert.NotNull(route.Elevation);
+        Assert.NotNull(route.ClimbingM);
     }
 
     [Fact]

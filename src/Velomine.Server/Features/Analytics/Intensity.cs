@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
-using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Analytics;
@@ -46,8 +45,7 @@ public static class Intensity
         DateOnly from,
         DateOnly to,
         CancellationToken ct,
-        RideFilter filter = default,
-        PrivacyProfile? viewer = null)
+        RideFilter filter = default)
     {
         var profile = await db.Users.AsNoTracking()
             .Where(u => u.Id == userId)
@@ -69,8 +67,6 @@ public static class Intensity
             {
                 r.StartTime,
                 r.UtcOffsetMinutes,
-                r.HidePower,
-                r.HideHeartRate,
                 r.Streams!.Time,
                 r.Streams.HeartRate,
                 r.Streams.Power,
@@ -86,16 +82,10 @@ public static class Intensity
             var date = clock.LocalDateOf(ride.StartTime!.Value, ride.UtcOffsetMinutes);
             if (date < from || date >= to) continue;
 
-            // A coach sees a ride through its privacy snapshot: power hidden falls back to heart rate, and both
-            // hidden means the ride says nothing.
-            var hidePower = viewer is not null && (ride.HidePower ?? viewer.HidePower);
-            var hideHeartRate = viewer is not null && (ride.HideHeartRate ?? viewer.HideHeartRate);
-            var power = hidePower ? null : ride.Power;
-            var heartRate = hideHeartRate ? null : ride.HeartRate;
-
-            var split = FromPower(power, ride.Time, profile.FtpW, profile.PowerZoneBounds);
+            // Power when the ride has it, else heart rate: a ride with both is read from its power.
+            var split = FromPower(ride.Power, ride.Time, profile.FtpW, profile.PowerZoneBounds);
             if (split is null && heartRateZones is not null &&
-                FromHeartRate(heartRate, ride.Time, heartRateZones) is { } fromHeartRate)
+                FromHeartRate(ride.HeartRate, ride.Time, heartRateZones) is { } fromHeartRate)
             {
                 split = fromHeartRate;
                 heartRateRides++;

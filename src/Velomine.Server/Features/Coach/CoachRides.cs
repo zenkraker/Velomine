@@ -77,7 +77,6 @@ public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
         }
 
         var canAnalytics = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Analytics, ct);
-        var current = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
         var limit = req.Limit ?? 50;
         var query = db.Rides.AsNoTracking()
             .Where(r => r.UserId == req.UserId && r.Status != RideStatus.Duplicate);
@@ -101,8 +100,7 @@ public sealed class ListCoachRides(VelomineDbContext db, TimeProvider time)
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Rides, ct);
         await Send.OkAsync(new ListRidesResponse(
             [.. page.Select(r => PrivacyRules.ForViewer(
-                canAnalytics ? RideResponse.From(r) : RideResponse.From(r).WithoutTrainingLoad(),
-                PrivacyRules.Effective(r, current)))], next), ct);
+                canAnalytics ? RideResponse.From(r) : RideResponse.From(r).WithoutTrainingLoad()))], next), ct);
     }
 }
 
@@ -139,7 +137,6 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
             await CoachQueries.ViewerNameAsync(db, viewerId, ct), ViewKinds.Ride, ct, req.RideId);
-        var privacy = await PrivacyRules.LoadAsync(db, req.UserId, ride, ct);
         // The records and the W′ balance are analytics: without that grant the ride has none to show.
         await Send.OkAsync(
             PrivacyRules.ForViewer(
@@ -148,8 +145,7 @@ public sealed class GetCoachRide(VelomineDbContext db, TimeProvider time)
                     PowerRecords = canAnalytics
                         ? await PowerRecords.ForRideAsync(db, req.UserId, ride.Id, ride.StartTime, ct)
                         : null,
-                },
-                privacy), ct);
+                }), ct);
     }
 }
 
@@ -207,7 +203,8 @@ public sealed class GetCoachRideStreams(VelomineDbContext db, TimeProvider time)
             reduced.Power,
             reduced.Cadence,
             reduced.Temperature,
-            StreamSampling.ReduceValues(balance?.PerSample, maxPoints));
+            StreamSampling.ReduceValues(balance?.PerSample, maxPoints),
+            reduced.EstimatedPower);
 
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId,
