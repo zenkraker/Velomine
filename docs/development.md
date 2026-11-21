@@ -284,7 +284,7 @@ Enter the folder and the shell loads. Run `just` on its own to list every comman
 | `just check` | Runs every check before a commit: .NET format check, server tests, Riverpod codegen, Dart format, analyzer and Flutter tests |
 | `nix fmt flake.nix` | Formats the flake with the pinned `nixfmt` |
 
-There is one way to run Velomine, in development and for a self-hoster alike: `docker-compose.yml`. Development adds `compose.development.yaml` (Dex) and the demo adds `compose.demo.yaml` (Traefik); nothing runs the server from your shell. Settings go in `.env`; `.env.example` lists every one. `flutter run -d chrome` still works for quick UI work, but password sign-in needs the cookie, which only works when the server serves the app, so use `just up` for anything that needs a session.
+There is one way to run Velomine, in development and for a self-hoster alike: `docker-compose.yml`. Development adds `compose.development.yaml` (Dex) and the demo and dev servers add `compose.hosted.yaml` (behind the shared Traefik in `deploy/traefik/`); nothing runs the server from your shell. Settings go in `.env`; `.env.example` lists every one. `flutter run -d chrome` still works for quick UI work, but password sign-in needs the cookie, which only works when the server serves the app, so use `just up` for anything that needs a session.
 
 ## Updating tools
 
