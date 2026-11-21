@@ -87,11 +87,9 @@ Sign in with *Dex (local test)* as `rider@sso.test` / `password`. It also needs 
 
 A server runs the same `docker-compose.yml`, from the images CI publishes instead of a build, behind HTTPS.
 
-1. Clone the repository on the server, or copy `docker-compose.yml` there (plus `compose.demo.yaml` and `deploy/traefik/routes.yaml`, if you want Traefik).
+1. Clone the repository on the server, or copy `docker-compose.yml` there.
 2. Copy `.env.example` to `.env` next to them and set at least `VELOMINE_VERSION`, `POSTGRES_PASSWORD`, `VELOMINE__PUBLICURL` and the first admin. See [Settings you can change](#settings-you-can-change).
-3. Put HTTPS in front. Either:
-   - **Traefik from `compose.demo.yaml`**, which gets Let's Encrypt certificates itself: point the domain's DNS at the server, open ports 80 and 443, and set `COMPOSE_FILE=docker-compose.yml:compose.demo.yaml`, `VELOMINE_DOMAIN` and `VELOMINE_ACME_EMAIL` in `.env`. The public demo runs exactly this.
-   - **Your own reverse proxy**, forwarding to the web container's port (`VELOMINE_PORT`, default 8080). Do not expose that port to the internet directly: it is plain HTTP.
+3. Put HTTPS in front with your own reverse proxy, forwarding to the web container's port (`VELOMINE_PORT`, default 8080). Do not expose that port to the internet directly: it is plain HTTP.
 4. Start it: `docker compose pull && docker compose up -d --wait`. To upgrade or roll back, change `VELOMINE_VERSION` and run the same command. `--wait` fails unless the server and the web app answer.
 
 ### Backups and upgrades
@@ -129,7 +127,6 @@ The defaults are for trying it out on your own machine only. Do not expose them 
 | The build fails while downloading | Run it again; it keeps what it already downloaded. Check your internet or proxy settings. |
 | The *Continue with Dex* page cannot be found | Use Chrome, Edge or Firefox. They resolve `dex.localhost` themselves; some other browsers and some tools do not. |
 | The sign-in provider says the redirect address is wrong | You changed `VELOMINE_PORT` without editing `deploy/dex/config.yaml`. |
-| `required variable VELOMINE_DOMAIN is missing a value` | You use `compose.demo.yaml`: set `VELOMINE_DOMAIN` and `VELOMINE_ACME_EMAIL` in `.env`. |
 | You still see the old app after pulling new code | Run `docker compose up --build` again. |
 | The web container is unhealthy, or every page answers 502 | The server is not running. `docker compose logs server` says why; `Could not create the admin: Passwords must ...` means `VELOMINE__ADMIN__PASSWORD` breaks the rules above. |
 | You forgot the admin password | The setting only applies while no admin exists. Run `docker compose down -v` to start over (this deletes the data). |

@@ -1,0 +1,71 @@
+# Traefik for the VPS that runs the demo and the dev environment: the one process on ports 80 and 443. It gets and
+# renews the Let's Encrypt certificates and forwards each host name to the web image of one environment. Self-hosters
+# do not need it; they bring their own HTTPS. Each environment is its own compose project (see compose.hosted.yaml) and
+# reaches Traefik over the external network "proxy", so releasing or restarting one never touches the other.
+#
+# One-time, on the host:  docker network create proxy
+# A git-ignored .env next to this file sets:
+#
+#   VELOMINE_ACME_EMAIL=ops@example.org   Let's Encrypt's contact for expiry notices
+#   VELOMINE_DOMAIN=demo.velomine.eu      the demo app; its DNS points at this server
+#   VELOMINE_SITE_DOMAIN=velomine.eu      optional: a second name for the presentation site only (served by the demo)
+#   VELOMINE_DEV_DOMAIN=dev.velomine.eu   optional: the dev environment
+#
+# Start or update it:  docker compose -f deploy/traefik/compose.yaml up -d
+# Changing routes.yaml or this file's settings recreates only Traefik. Traefik reads its routes from routes.yaml, not
+# from the Docker socket, so it has no access to the host's Docker. Needs Docker Compose 2.24 or newer (`!reset`).
+
+name: traefik
+
+services:
+  traefik:
+    image: traefik:v3.7.17@sha256:f4bb143d1135a579b630ed491e17ec50f6f7c9c6a30585ff3d385471d2a86f5a
+    restart: unless-stopped
+    command:
+      - --providers.file.filename=/etc/traefik/routes.yaml
+      # HTTP only redirects to HTTPS (and answers Let's Encrypt's challenge).
+      - --entryPoints.web.address=:80
+      - --entryPoints.web.http.redirections.entryPoint.to=websecure
+      - --entryPoints.web.http.redirections.entryPoint.scheme=https
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.websecure.http3=true
+      # Traefik stops reading a request after 60 s by default; a Strava archive (up to 1 GB) on a slow upload needs
+      # longer. The server still enforces its own size limit.
+      - --entryPoints.websecure.transport.respondingTimeouts.readTimeout=1h
+      - --certificatesResolvers.letsencrypt.acme.email=${VELOMINE_ACME_EMAIL:?set VELOMINE_ACME_EMAIL in .env}
+      - --certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web
+      # No dashboard, no API, no anonymous usage report; warnings and errors only, and no access log (it would hold
+      # addresses and raw paths).
+      - --api=false
+      - --global.sendAnonymousUsage=false
+      - --global.checkNewVersion=false
+      - --log.level=WARN
+    environment:
+      # Read by routes.yaml. Without a site name, the app's name serves the site too; without a dev name, no dev route.
+      VELOMINE_DOMAIN: ${VELOMINE_DOMAIN:?set VELOMINE_DOMAIN in .env}
+      VELOMINE_SITE_DOMAIN: ${VELOMINE_SITE_DOMAIN:-${VELOMINE_DOMAIN}}
+      VELOMINE_DEV_DOMAIN: ${VELOMINE_DEV_DOMAIN:-}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    networks: [proxy]
+    volumes:
+      - ./routes.yaml:/etc/traefik/routes.yaml:ro
+      - letsencrypt:/letsencrypt
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  proxy:
+    external: true
+
+volumes:
+  letsencrypt:
