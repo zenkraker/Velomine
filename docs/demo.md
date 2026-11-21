@@ -31,7 +31,7 @@ sudo docker compose pull && sudo docker compose up -d --wait
 
 ## Traefik
 
-Traefik is not part of either environment, so releasing or restarting the demo or dev never takes the other down. Its `.env` is `/opt/velomine/deploy/traefik/.env` (`chmod 600`, never committed) with `VELOMINE_ACME_EMAIL`, `VELOMINE_DOMAIN=demo.velomine.eu`, `VELOMINE_SITE_DOMAIN=velomine.eu` and `VELOMINE_DEV_DOMAIN=dev.velomine.eu`. All three names have DNS pointing at the VPS.
+Traefik is not part of either environment, so releasing or restarting the demo or dev never takes the other down. Its `.env` is `/opt/velomine/deploy/traefik/.env` (`chmod 600`, never committed) with `VELOMINE_ACME_EMAIL`, `VELOMINE_DOMAIN=demo.velomine.eu`, and `VELOMINE_SITE_DOMAIN=velomine.eu`. These names, and `dev.velomine.eu`, have DNS pointing at the VPS. Traefik finds each environment by the labels on its web container, through the Docker socket (`compose.hosted.yaml` sets them from `VELOMINE_ENV` and `VELOMINE_HOST`), so dev needs no entry in Traefik's `.env`.
 
 ```sh
 cd /opt/velomine
@@ -43,9 +43,9 @@ After a change to `deploy/traefik/` (a new route, a new Traefik version), run th
 
 ## Set up the dev environment
 
-1. Add the DNS record for `dev.velomine.eu` and set `VELOMINE_DEV_DOMAIN` in Traefik's `.env`, then `up -d` Traefik as above.
+1. Add the DNS record for `dev.velomine.eu`.
 2. `sudo git clone <repository> /opt/velomine-dev`, check out the tag to run (a prerelease from `dev`, for example), and write `/opt/velomine-dev/.env` (`chmod 600`) with:
-   - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`, `VELOMINE_VERSION` and `VELOMINE_PROXY_ALIAS=dev-web`
+   - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`, `VELOMINE_VERSION`, `VELOMINE_ENV=dev` and `VELOMINE_HOST=dev.velomine.eu`
    - `VELOMINE__PUBLICURL=https://dev.velomine.eu`
    - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`, different from the demo's
    - no `VELOMINE__DEMO__ENABLED`: the demo remakes its data every night, dev keeps yours
@@ -65,7 +65,7 @@ sudo git fetch --tags && sudo git checkout vX.Y.Z      # a version with this lay
 sudo docker network create proxy
 sudo nano deploy/traefik/.env                          # the Traefik variables from the demo's .env, see above
 sudo docker compose -f deploy/traefik/compose.yaml up -d
-sudo nano .env                                         # COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml, VELOMINE_PROXY_ALIAS=demo-web; drop VELOMINE_DOMAIN, VELOMINE_SITE_DOMAIN and VELOMINE_ACME_EMAIL
+sudo nano .env                                         # COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml, VELOMINE_ENV=demo, VELOMINE_HOST=demo.velomine.eu; drop VELOMINE_DOMAIN, VELOMINE_SITE_DOMAIN and VELOMINE_ACME_EMAIL
 sudo docker compose up -d --wait --remove-orphans
 sudo docker volume rm velomine_letsencrypt             # the old certificates; Traefik asks Let's Encrypt for new ones
 ```
@@ -89,6 +89,7 @@ sudo docker compose -f deploy/traefik/compose.yaml logs --tail 50 traefik
 | Symptom | Cause |
 |---------|-------|
 | The web container is unhealthy, or pages answer 502 | The server is not running; its log says why. |
+| Traefik answers `404 page not found` for an environment's name | Traefik leaves out a container that is not healthy, or one without its labels: check `docker compose ps` in that environment and that `VELOMINE_ENV` and `VELOMINE_HOST` are set. |
 | `Could not create the admin: Passwords must ...` | `VELOMINE__ADMIN__PASSWORD` needs 10 or more characters with an upper-case letter, a lower-case letter and a digit. |
 | `Bind for 0.0.0.0:80 failed: port is already allocated` | Something else holds 80 or 443: `sudo ss -ltnp '( sport = :80 )'` and `sudo docker ps`. |
 | No certificate, or the browser warns | the Traefik log above. Every name's DNS must point at the VPS, and ports 80 and 443 must be open in the security group. |
@@ -99,7 +100,7 @@ sudo docker compose -f deploy/traefik/compose.yaml logs --tail 50 traefik
 The demo's lives in `/opt/velomine/.env`, with `chmod 600`, and is never committed. It holds:
 
 - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`
-- `VELOMINE_VERSION` and `VELOMINE_PROXY_ALIAS=demo-web`
+- `VELOMINE_VERSION`, `VELOMINE_ENV=demo` and `VELOMINE_HOST=demo.velomine.eu` (the same name as `VELOMINE_DOMAIN` in Traefik's `.env`)
 - `VELOMINE__PUBLICURL=https://demo.velomine.eu`
 - `VELOMINE__DEMO__ENABLED=true` and `VELOMINE__ACCOUNTS__SIGNUPENABLED=false`
 - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`
