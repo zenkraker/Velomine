@@ -220,6 +220,7 @@ public static class CoachQueries
                 r.NormalizedPowerW,
                 r.Tss,
                 r.HrTss,
+                r.EstimatedTss,
                 Rpe = db.RideFeels.Where(f => f.RideId == r.Id).Select(f => (int?)f.Rpe).FirstOrDefault(),
             })
             .ToListAsync(ct);
@@ -255,7 +256,7 @@ public static class CoachQueries
                     var tss = r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, member.User.FtpW).Tss;
                     // The rating is wellbeing data: without its grant the feel score is not used.
                     var feelScore = sharesWellbeing ? TrainingLoad.FeelScore(r.MovingS, r.Rpe) : null;
-                    var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore);
+                    var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore, r.EstimatedTss);
                     return new RideDay(
                         clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
                         r.DistanceM ?? 0,

@@ -987,4 +987,19 @@ void main() {
       expect(find.text('From how hard it felt'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'RideDetail_ShouldSayFromEstimatedWatts_WhenTheEffortIsEstimated',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'estimatedAvgPowerW': 150,
+        'effortScore': 42.0,
+        'effortSource': 'estimated',
+      };
+      await open(tester);
+
+      expect(find.text('From estimated watts'), findsOneWidget);
+    },
+  );
 }

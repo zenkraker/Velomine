@@ -1373,6 +1373,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get effortFromFeel => 'From how hard it felt';
 
   @override
+  String get effortFromEstimated => 'From estimated watts';
+
+  @override
   String get statEfficiency => 'Efficiency factor';
 
   @override

@@ -430,6 +430,7 @@
   "effortFromPower": "Dalla tua potenza",
   "effortFromHeartRate": "Dalla tua frequenza cardiaca",
   "effortFromFeel": "Da quanto è sembrata dura",
+  "effortFromEstimated": "Dai watt stimati",
   "statEfficiency": "Fattore di efficienza",
   "statDecoupling": "Decoupling",
   "statAverageHeartRate": "Frequenza cardiaca media",

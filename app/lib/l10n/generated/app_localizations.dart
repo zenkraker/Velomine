@@ -2450,6 +2450,12 @@ abstract class AppLocalizations {
   /// **'From how hard it felt'**
   String get effortFromFeel;
 
+  /// No description provided for @effortFromEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'From estimated watts'**
+  String get effortFromEstimated;
+
   /// No description provided for @statEfficiency.
   ///
   /// In en, this message translates to:

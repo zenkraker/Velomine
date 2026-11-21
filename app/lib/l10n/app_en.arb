@@ -648,6 +648,7 @@
   "effortFromPower": "From your power",
   "effortFromHeartRate": "From your heart rate",
   "effortFromFeel": "From how hard it felt",
+  "effortFromEstimated": "From estimated watts",
   "statEfficiency": "Efficiency factor",
   "statDecoupling": "Decoupling",
   "statAverageHeartRate": "Average heart rate",

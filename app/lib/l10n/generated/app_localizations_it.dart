@@ -1381,6 +1381,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get effortFromFeel => 'Da quanto è sembrata dura';
 
   @override
+  String get effortFromEstimated => 'Dai watt stimati';
+
+  @override
   String get statEfficiency => 'Fattore di efficienza';
 
   @override

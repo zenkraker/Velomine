@@ -108,6 +108,55 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public void TrainingLoad_Effort_ShouldUseTheEstimatedTss_WhenThereIsNoPowerHeartRateOrFeel() =>
+        Assert.Equal((42.0, EffortSources.Estimated), TrainingLoad.Effort(null, null, null, 42.0));
+
+    [Fact]
+    public void TrainingLoad_Effort_ShouldPreferTheFeelScore_WhenTheRideAlsoHasAnEstimate() =>
+        Assert.Equal((100.0, EffortSources.Feel), TrainingLoad.Effort(null, null, 100.0, 42.0));
+
+    [Fact]
+    public async Task Training_ShouldCountTheEstimatedTss_WhenARideHasNoSensors()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // Watts are estimated only when the rider has a weight.
+        (await member.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, 70, 2000, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        // A GPX with speed from the positions and a slope from the altitude, but no power and no heart rate.
+        var uploaded = await TestApi.UploadAndWaitAsync(
+            member.Client, Bytes(Gpx(600, start: new DateTime(2026, 11, 4, 7, 0, 0, DateTimeKind.Utc))),
+            "ride.gpx");
+
+        var training = await TrainingAsync(member.Client);
+        var stored = await RideInDbAsync(api, uploaded.Id);
+
+        Assert.NotNull(stored.EstimatedTss);
+        Assert.Equal(stored.EstimatedTss, DayLoad(training));
+        Assert.Equal(0, training.Tss);
+    }
+
+    [Fact]
+    public async Task GetRide_ShouldSayEstimated_WhenTheEffortComesFromEstimatedWatts()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await member.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, 70, 2000, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        var uploaded = await TestApi.UploadAndWaitAsync(
+            member.Client, Bytes(Gpx(600, start: new DateTime(2026, 11, 4, 7, 0, 0, DateTimeKind.Utc))),
+            "ride.gpx");
+
+        var ride = await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{uploaded.Id}", Ct);
+        var stored = await RideInDbAsync(api, uploaded.Id);
+
+        Assert.Equal(EffortSources.Estimated, ride!.EffortSource);
+        Assert.Equal(stored.EstimatedTss, ride.EffortScore);
+    }
+
+    [Fact]
     public async Task Training_ShouldUseTheFeelScore_WhenARideHasNoPowerAndNoHeartRate()
     {
         await using var api = await StartAsync();
