@@ -72,37 +72,40 @@ public sealed class EstimatedPowerTests(PostgresFixture postgres)
         string? assist = null) =>
         new(riderWeightKg, bikeWeightKg, bikeKind, discipline, environment, assist);
 
-    /// <summary>The power model at sea level, with the row of a kind of bike; 80 kg is the story's 70 kg rider and 10 kg bike.</summary>
+    /// <summary>The power model with the row of a kind of bike; 80 kg is the story's 70 kg rider and 10 kg bike.</summary>
     private static double Watts(
         double speedMs,
         double grade,
         double massKg = 80,
-        string kind = "road",
-        double altitudeM = 0)
+        string kind = "road")
     {
         var (crr, cda, _) = EstimatedPower.Row(kind);
-        return EstimatedPower.Watts(speedMs, 0, grade, massKg, crr, cda, altitudeM);
+        return EstimatedPower.Watts(speedMs, 0, grade, massKg, crr, cda);
     }
 
     [Fact]
-    public void EstimatedPower_ShouldBe186W_WhenClimbingFivePercentAt4MetresPerSecond() =>
-        Assert.Equal(186, Math.Round(Watts(4, 0.05)));
+    public void EstimatedPower_ShouldBe182W_WhenClimbingFivePercentAt4MetresPerSecond() =>
+        Assert.Equal(182, Math.Round(Watts(4, 0.05))); // (784.8 · 0.05393 + 3.136) · 4 = 181.8 W
 
     [Fact]
-    public void EstimatedPower_ShouldBe143W_WhenRidingFlatAt30KmPerHour() =>
-        Assert.Equal(143, Math.Round(Watts(30_000 / 3600.0, 0)));
+    public void EstimatedPower_ShouldBe140W_WhenRidingFlatAt30KmPerHour() =>
+        Assert.Equal(140, Math.Round(Watts(30_000 / 3600.0, 0))); // (784.8 · 0.004 + 13.611) · 8.333 = 139.6 W
 
     [Fact]
-    public void EstimatedPower_ShouldBe89W_WhenRidingGravelFlatAt6MetresPerSecond() =>
-        Assert.Equal(89, Math.Round(Watts(6, 0, massKg: 83, kind: "gravel")));
+    public void EstimatedPower_ShouldBe87W_WhenRidingGravelFlatAt6MetresPerSecond() =>
+        Assert.Equal(87, Math.Round(Watts(6, 0, massKg: 83, kind: "gravel"))); // (814.2 · 0.008 + 7.938) · 6 = 86.7 W
 
     [Fact]
     public void EstimatedPower_ShouldBeZero_WhenDescending() =>
         Assert.Equal(0, Watts(12, -0.06));
 
     [Fact]
-    public void EstimatedPower_ShouldBeLower_WhenTheAirIsThinner() =>
-        Assert.Equal(184, Math.Round(Watts(4, 0.05, altitudeM: 1500)));
+    public void EstimatedPower_ShouldIgnoreAltitude_WhenTheAirDensityIsFixed()
+    {
+        // Strava assumes 15 °C and still air, so a climb at 1,500 m costs what it costs at sea level.
+        var (crr, cda, _) = EstimatedPower.Row("road");
+        Assert.Equal(182, Math.Round(EstimatedPower.Watts(4, 0, 0.05, 80, crr, cda)));
+    }
 
     [Fact]
     public void EstimatedPower_ShouldBeComputed_WhenEnvironmentIsUnknown()
