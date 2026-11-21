@@ -2486,6 +2486,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String heartRateMaxMeasuredOnly(int bpm) {
+    return 'New maximum heart rate: $bpm bpm.';
+  }
+
+  @override
   String heartRateThresholdMeasured(int bpm) {
     return 'New threshold heart rate: $bpm bpm. Your zones now use it.';
   }

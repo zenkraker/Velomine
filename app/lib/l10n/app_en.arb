@@ -1400,6 +1400,14 @@
       }
     }
   },
+  "heartRateMaxMeasuredOnly": "New maximum heart rate: {bpm} bpm.",
+  "@heartRateMaxMeasuredOnly": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
   "heartRateThresholdMeasured": "New threshold heart rate: {bpm} bpm. Your zones now use it.",
   "@heartRateThresholdMeasured": {
     "placeholders": {

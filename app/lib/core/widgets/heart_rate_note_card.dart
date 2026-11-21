@@ -13,6 +13,7 @@ class HeartRateNoteCard extends StatelessWidget {
     required this.bpm,
     this.currentBpm,
     this.suggestionId,
+    this.zonesFromThreshold = false,
     this.busy = false,
     this.onAccept,
     this.onDismiss,
@@ -30,6 +31,9 @@ class HeartRateNoteCard extends StatelessWidget {
   /// The suggestion to accept or dismiss; null when the value was measured and used.
   final String? suggestionId;
 
+  /// Whether the rider's zones come from the threshold, so a new maximum does not change them.
+  final bool zonesFromThreshold;
+
   final bool busy;
 
   final void Function(String suggestionId)? onAccept;
@@ -43,7 +47,9 @@ class HeartRateNoteCard extends StatelessWidget {
     final body = suggested
         ? l10n.heartRateSuggested(bpm, currentBpm ?? bpm)
         : kind == 'max'
-        ? l10n.heartRateMaxMeasured(bpm)
+        ? zonesFromThreshold
+              ? l10n.heartRateMaxMeasuredOnly(bpm)
+              : l10n.heartRateMaxMeasured(bpm)
         : l10n.heartRateThresholdMeasured(bpm);
     return Card(
       key: Key('heart-rate-note-$kind'),

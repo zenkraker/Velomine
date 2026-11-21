@@ -4322,6 +4322,12 @@ abstract class AppLocalizations {
   /// **'New maximum heart rate: {bpm} bpm. Your zones now use it.'**
   String heartRateMaxMeasured(int bpm);
 
+  /// No description provided for @heartRateMaxMeasuredOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'New maximum heart rate: {bpm} bpm.'**
+  String heartRateMaxMeasuredOnly(int bpm);
+
   /// No description provided for @heartRateThresholdMeasured.
   ///
   /// In en, this message translates to:
