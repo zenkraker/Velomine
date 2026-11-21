@@ -7,13 +7,16 @@
 # A git-ignored .env next to this file sets:
 #
 #   VELOMINE_ACME_EMAIL=ops@example.org   Let's Encrypt's contact for expiry notices
-#   VELOMINE_DOMAIN=demo.velomine.eu      the demo app; its DNS points at this server
+#   VELOMINE_DOMAIN=demo.velomine.eu      the demo app (the same as VELOMINE_HOST in the demo's .env)
 #   VELOMINE_SITE_DOMAIN=velomine.eu      optional: a second name for the presentation site only (served by the demo)
-#   VELOMINE_DEV_DOMAIN=dev.velomine.eu   optional: the dev environment
+#
+# An environment's own route (the demo's app, dev) comes from the labels on its web container, read through the Docker
+# socket (compose.hosted.yaml); the presentation site and its redirects are in routes.yaml. Docker's socket gives
+# whoever holds it control of the host, even mounted read-only, so Traefik runs with a read-only file system and no new
+# privileges, publishes no dashboard or API, and routes only containers that carry traefik.enable=true.
 #
 # Start or update it:  docker compose -f deploy/traefik/compose.yaml up -d
-# Changing routes.yaml or this file's settings recreates only Traefik. Traefik reads its routes from routes.yaml, not
-# from the Docker socket, so it has no access to the host's Docker. Needs Docker Compose 2.24 or newer (`!reset`).
+# Changing routes.yaml or this file's settings recreates only Traefik. Needs Docker Compose 2.24 or newer (`!reset`).
 
 name: traefik
 
@@ -23,6 +26,9 @@ services:
     restart: unless-stopped
     command:
       - --providers.file.filename=/etc/traefik/routes.yaml
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=proxy
       # HTTP only redirects to HTTPS (and answers Let's Encrypt's challenge).
       - --entryPoints.web.address=:80
       - --entryPoints.web.http.redirections.entryPoint.to=websecure
@@ -42,10 +48,9 @@ services:
       - --global.checkNewVersion=false
       - --log.level=WARN
     environment:
-      # Read by routes.yaml. Without a site name, the app's name serves the site too; without a dev name, no dev route.
+      # Read by routes.yaml. Without a site name, the app's name serves the site too.
       VELOMINE_DOMAIN: ${VELOMINE_DOMAIN:?set VELOMINE_DOMAIN in .env}
       VELOMINE_SITE_DOMAIN: ${VELOMINE_SITE_DOMAIN:-${VELOMINE_DOMAIN}}
-      VELOMINE_DEV_DOMAIN: ${VELOMINE_DEV_DOMAIN:-}
     ports:
       - "80:80"
       - "443:443"
@@ -53,6 +58,7 @@ services:
     networks: [proxy]
     volumes:
       - ./routes.yaml:/etc/traefik/routes.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
     read_only: true
     security_opt:
