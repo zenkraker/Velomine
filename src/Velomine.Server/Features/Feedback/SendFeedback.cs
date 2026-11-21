@@ -10,21 +10,33 @@ namespace Velomine.Server.Features.Feedback;
 
 /// <summary>
 /// Bound from "Velomine:Feedback" (environment: VELOMINE__FEEDBACK__ADDRESS). The address that receives what visitors
-/// write in the site's feedback form. Optional: without it, or without email, the form sends nothing.
+/// write in the site's feedback form. Optional: without it, or without email, the form sends nothing. SiteUrl
+/// (VELOMINE__FEEDBACK__SITEURL, such as https://velomine.eu) is where the site lives when it is not this server's own
+/// address: the forms' answers then redirect there, to an absolute address, instead of to a path on this host.
 /// </summary>
 public sealed class FeedbackOptions
 {
     public string? Address { get; set; }
 
+    public string? SiteUrl { get; set; }
+
     public bool Configured => !string.IsNullOrWhiteSpace(Address);
+
+    /// <summary>Where the browser goes next: a page of the site, on the site's own address when it has one.</summary>
+    public string PageUrl(string page) => string.IsNullOrWhiteSpace(SiteUrl) ? page : SiteUrl.Trim().TrimEnd('/') + page;
 }
 
 public sealed class FeedbackOptionsValidator : IValidateOptions<FeedbackOptions>
 {
-    public ValidateOptionsResult Validate(string? name, FeedbackOptions o) =>
-        !o.Configured || (MailAddress.TryCreate(o.Address, out var a) && a.Address == o.Address!.Trim())
-            ? ValidateOptionsResult.Success
-            : ValidateOptionsResult.Fail("VELOMINE__FEEDBACK__ADDRESS must be a plain email address such as feedback@example.org.");
+    public ValidateOptionsResult Validate(string? name, FeedbackOptions o)
+    {
+        if (o.Configured && !(MailAddress.TryCreate(o.Address, out var a) && a.Address == o.Address!.Trim()))
+            return ValidateOptionsResult.Fail("VELOMINE__FEEDBACK__ADDRESS must be a plain email address such as feedback@example.org.");
+        if (!string.IsNullOrWhiteSpace(o.SiteUrl)
+            && !(Uri.TryCreate(o.SiteUrl.Trim(), UriKind.Absolute, out var site) && site.Scheme is "http" or "https"))
+            return ValidateOptionsResult.Fail("VELOMINE__FEEDBACK__SITEURL must be an address such as https://velomine.eu.");
+        return ValidateOptionsResult.Success;
+    }
 }
 
 public static class FeedbackSetup
@@ -182,7 +194,7 @@ public sealed class SendFeedback(
 
     private async Task RedirectAsync(string location, CancellationToken ct)
     {
-        HttpContext.Response.Headers.Location = location;
+        HttpContext.Response.Headers.Location = feedback.Value.PageUrl(location);
         await Send.StringAsync(string.Empty, 303, cancellation: ct);
     }
 

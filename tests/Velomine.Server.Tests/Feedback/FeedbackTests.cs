@@ -10,12 +10,13 @@ public sealed class FeedbackTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private static async Task<(TestApi Api, FakeEmailSender Mail)> StartAsync(PostgresFixture postgres, bool configured = true, bool smtp = true)
+    private static async Task<(TestApi Api, FakeEmailSender Mail)> StartAsync(PostgresFixture postgres, bool configured = true, bool smtp = true, string? siteUrl = null)
     {
         var mail = new FakeEmailSender();
         var api = await TestApi.StartAsync(postgres, b =>
         {
             if (configured) b.UseSetting("Velomine:Feedback:Address", "feedback@club.example");
+            if (siteUrl is not null) b.UseSetting("Velomine:Feedback:SiteUrl", siteUrl);
             if (smtp)
             {
                 b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");

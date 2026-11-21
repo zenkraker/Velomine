@@ -73,7 +73,6 @@ final ssoStarterProvider = Provider<SsoStarter>((ref) {
   if (kIsWeb) {
     return () async {
       // The server redirects to the provider and back, ending on the rides page: leave this page for it.
-      // It cannot end on "/" because that is the presentation site, not the app.
       final server = ref.read(sessionProvider).serverUrl;
       final login = Uri.parse(
         '$server/api/v1/accounts/sso/login?returnUrl=%2Frides',

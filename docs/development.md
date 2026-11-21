@@ -243,7 +243,7 @@ codegraph init
 just up              # build and start PostgreSQL, Dex and the server in Docker
 ```
 
-Open http://localhost:8080 and sign in as `admin@velomine.local` / `Velomine-dev-1`. The server, the web app and the site run only in Docker, built from your working folder: after a change, run `just up` again. For Android:
+Open http://localhost:8080 and sign in as `admin@velomine.local` / `Velomine-dev-1`. The server and the web app run only in Docker; the presentation site is not served locally (open `site/index.html` in a browser, but its app links point at the demo), built from your working folder: after a change, run `just up` again. For Android:
 
 ```
 just emu             # start the emulator if needed and run the app on it

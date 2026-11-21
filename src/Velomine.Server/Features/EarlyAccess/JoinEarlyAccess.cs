@@ -119,7 +119,7 @@ public sealed class JoinEarlyAccess(
 
     private async Task RedirectAsync(string location, CancellationToken ct)
     {
-        HttpContext.Response.Headers.Location = location;
+        HttpContext.Response.Headers.Location = feedback.Value.PageUrl(location);
         await Send.StringAsync(string.Empty, 303, cancellation: ct);
     }
 

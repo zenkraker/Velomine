@@ -1,0 +1,43 @@
+# The presentation site (site/) on GitHub Pages, at velomine.eu. It is not part of any Velomine stack: a self-hosted
+# server and the demo have no use for it, and the web image serves only the app. Pages is GitHub's own service, so this
+# workflow holds no key of its own, and it publishes only when the site changes.
+#
+# One-time, in the repository's Settings → Pages: set the source to "GitHub Actions" and the custom domain to
+# velomine.eu with HTTPS enforced. velomine.eu's DNS points at GitHub (see docs/demo.md).
+name: Site
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      # The directory as it is: plain HTML, CSS and images, no build step. site/CNAME sets the domain and .nojekyll keeps
+      # GitHub from running Jekyll over it.
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
