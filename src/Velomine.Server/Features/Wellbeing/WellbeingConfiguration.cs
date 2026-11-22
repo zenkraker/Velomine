@@ -16,6 +16,7 @@ public sealed class WellbeingConfiguration : IEntityTypeConfiguration<DailyCheck
             t.HasCheckConstraint("ck_daily_check_ins_mood", "mood BETWEEN 1 AND 5");
             t.HasCheckConstraint("ck_daily_check_ins_stress", "stress BETWEEN 1 AND 5");
             t.HasCheckConstraint("ck_daily_check_ins_motivation", "motivation BETWEEN 1 AND 5");
+            t.HasCheckConstraint("ck_daily_check_ins_sleep", "sleep IS NULL OR sleep BETWEEN 1 AND 5");
         });
         checkIn.HasKey(c => c.Id);
         checkIn.HasIndex(c => new { c.UserId, c.LocalDate }).IsUnique();

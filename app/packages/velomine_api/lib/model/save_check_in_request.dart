@@ -18,6 +18,7 @@ class SaveCheckInRequest {
     required this.mood,
     required this.stress,
     required this.motivation,
+    this.sleep = const Optional.absent(),
   });
 
   /// Minimum value: 1
@@ -40,13 +41,24 @@ class SaveCheckInRequest {
   /// Maximum value: 5
   final int motivation;
 
+  /// Minimum value: 1
+  /// Maximum value: 5
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> sleep;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is SaveCheckInRequest &&
     other.fatigue == fatigue &&
     other.soreness == soreness &&
     other.mood == mood &&
     other.stress == stress &&
-    other.motivation == motivation;
+    other.motivation == motivation &&
+    other.sleep == sleep;
 
   @override
   int get hashCode =>
@@ -55,10 +67,11 @@ class SaveCheckInRequest {
     (soreness.hashCode) +
     (mood.hashCode) +
     (stress.hashCode) +
-    (motivation.hashCode);
+    (motivation.hashCode) +
+    (sleep == null ? 0 : sleep!.hashCode);
 
   @override
-  String toString() => 'SaveCheckInRequest[fatigue=$fatigue, soreness=$soreness, mood=$mood, stress=$stress, motivation=$motivation]';
+  String toString() => 'SaveCheckInRequest[fatigue=$fatigue, soreness=$soreness, mood=$mood, stress=$stress, motivation=$motivation, sleep=$sleep]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -67,6 +80,10 @@ class SaveCheckInRequest {
       json[r'mood'] = this.mood;
       json[r'stress'] = this.stress;
       json[r'motivation'] = this.motivation;
+    if (this.sleep.isPresent) {
+      final value = this.sleep.value;
+      json[r'sleep'] = value;
+    }
     return json;
   }
 
@@ -78,12 +95,14 @@ class SaveCheckInRequest {
     int? mood,
     int? stress,
     int? motivation,
+    Optional<int?>? sleep,
   }) => SaveCheckInRequest(
     fatigue: fatigue ?? this.fatigue,
     soreness: soreness ?? this.soreness,
     mood: mood ?? this.mood,
     stress: stress ?? this.stress,
     motivation: motivation ?? this.motivation,
+    sleep: sleep ?? this.sleep,
   );
 
   /// Returns a new [SaveCheckInRequest] instance and imports its values from
@@ -116,6 +135,7 @@ class SaveCheckInRequest {
         mood: mapValueOfType<int>(json, r'mood')!,
         stress: mapValueOfType<int>(json, r'stress')!,
         motivation: mapValueOfType<int>(json, r'motivation')!,
+        sleep: json.containsKey(r'sleep') ? Optional.present(json[r'sleep'] == null ? null : int.parse('${json[r'sleep']}')) : const Optional.absent(),
       );
     }
     return null;

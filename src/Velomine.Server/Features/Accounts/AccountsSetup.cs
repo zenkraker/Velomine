@@ -35,6 +35,7 @@ public static class AccountsSetup
         services.AddScoped<SessionSignIn>();
         services.AddSingleton<TwoFactorChallenges>();
         services.AddSingleton<ExportTokens>();
+        services.AddSingleton<RideFileTokens>();
         services.AddScoped<PasswordResetLinks>();
         services.AddScoped<EmailVerificationLinks>();
         services.AddSingleton<PasswordResetThrottle>();

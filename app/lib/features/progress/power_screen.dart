@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
@@ -11,23 +10,14 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/ftp_suggestion_card.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../accounts/ftp_source_text.dart';
-import '../../l10n/generated/app_localizations.dart';
 import 'ftp_history_sheet.dart';
 import 'ftp_reminder_card.dart';
 import 'power_summary.dart';
 import 'progress_data.dart';
 import 'progress_filter_sheet.dart';
+import 'progress_screen.dart';
 import 'progress_tabs.dart';
 import 'progress_view_models.dart';
-
-/// Where the current FTP came from, from the newest row of the member's own history. Null when the
-/// history says nothing yet (no FTP, or the call failed): a missing note beats a wrong one.
-String? _ftpNote(AppLocalizations l10n, List<FtpHistoryEntry> history) {
-  final newest = history.firstOrNull;
-  if (newest == null) return null;
-  return ftpSourceText(l10n, newest.source_, newest.setAt);
-}
 
 /// Progress → Power answers "What is my power profile?": FTP, critical power and the VO2max estimate
 /// above the power curve and the best efforts.
@@ -123,7 +113,11 @@ class PowerScreen extends ConsumerWidget {
                 .setPowerDays(days),
             onUseFtp: (watts) =>
                 ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
-            ftpNote: _ftpNote(l10n, power.history),
+            ftpNote: ftpSourceNote(
+              l10n,
+              power.history,
+              rideDate: power.ftpRideDate,
+            ),
             ftpRideId: power.history.firstOrNull?.rideId,
             onOpenRide: (id) => context.push('/rides/$id'),
           ),

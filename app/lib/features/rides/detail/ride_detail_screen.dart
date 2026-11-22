@@ -8,6 +8,7 @@ import 'package:velomine_api/api.dart';
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
 import '../../../core/heart_rate_zones.dart';
+import '../../../core/hooks.dart';
 import '../../../core/placeholder_block.dart';
 import '../../../core/confirm.dart';
 import '../../../core/l10n.dart';
@@ -47,17 +48,35 @@ import '../../../core/widgets/source_note.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../accounts/effort_source_text.dart';
 
+/// The two shapes the server hands a ride's file out in.
+const rideFileFormatOriginal = 'original';
+const rideFileFormatFit = 'fit';
+
+/// Whether the ride's own file is already a FIT file, so the server only has to hand it back.
+bool isFitFile(String fileName) {
+  final name = fileName.toLowerCase();
+  return name.endsWith('.fit') || name.endsWith('.fit.gz');
+}
+
 class RideDetailScreen extends ConsumerWidget {
   const RideDetailScreen({
     super.key,
     required this.id,
     required this.layout,
     required this.onDeleted,
+    required this.serverUrl,
+    required this.openLink,
     this.tileUrl,
     this.attribution,
   });
 
   final String id;
+
+  /// The server this session belongs to, used for the ride file's download address.
+  final String serverUrl;
+
+  /// Opens the download in the browser, which saves it.
+  final LinkOpener openLink;
 
   /// What this rider's mode puts first. Required, so a screen showing someone else's ride is given
   /// [RiderModeLayout.full] explicitly instead of silently following the viewer's mode.
@@ -65,6 +84,19 @@ class RideDetailScreen extends ConsumerWidget {
   final VoidCallback onDeleted;
   final String? tileUrl;
   final String? attribution;
+
+  /// Offers the ride's file to the browser: the original as received, or a FIT file written from it.
+  Future<void> _download(
+    BuildContext context,
+    WidgetRef ref,
+    String format,
+  ) async {
+    final path = await ref
+        .read(rideDetailViewModelProvider(id).notifier)
+        .rideFileLink(format);
+    if (path == null || !context.mounted) return;
+    await openLink(Uri.parse('$serverUrl$path'));
+  }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
@@ -153,6 +185,23 @@ class RideDetailScreen extends ConsumerWidget {
             ),
           ),
         ],
+        // The files are not destructive, so they sit above the divider with the rest.
+        PageMenuEntry(
+          key: const Key('download-original'),
+          label: l10n.rideDownloadOriginal,
+          icon: Icons.download_outlined,
+          onSelected: () =>
+              later(() => _download(context, ref, rideFileFormatOriginal)),
+        ),
+        // Only a FIT file read from something else needs writing: its own is what came in.
+        if (!isFitFile(ride.fileName))
+          PageMenuEntry(
+            key: const Key('download-fit'),
+            label: l10n.rideDownloadFit,
+            icon: Icons.file_download_outlined,
+            onSelected: () =>
+                later(() => _download(context, ref, rideFileFormatFit)),
+          ),
         PageMenuEntry(
           key: const Key('delete'),
           label: l10n.delete,
@@ -308,6 +357,7 @@ class RideDetailScreen extends ConsumerWidget {
             watts: watts,
             method: ride.ftpSuggestionMethod.value ?? '20min',
             suggestionId: ride.ftpSuggestionId.value,
+            effortWatts: ride.ftpSuggestionEffortW.value,
             busy: s.action.running,
             onAccept: notifier.acceptSuggestion,
             onDismiss: notifier.dismissSuggestion,

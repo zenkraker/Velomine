@@ -2988,6 +2988,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingMotivation => 'Motivazione';
 
   @override
+  String get wellbeingSleep => 'Sonno';
+
+  @override
   String get wellbeingShortFatigue => 'Aff';
 
   @override
@@ -3001,6 +3004,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wellbeingShortMotivation => 'Mot';
+
+  @override
+  String get wellbeingShortSleep => 'Son';
 
   @override
   String get wellbeingHistory => 'Ultimi 30 giorni';
@@ -3389,6 +3395,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rideTextEdit => 'Modifica titolo e descrizione';
+
+  @override
+  String get rideDownloadOriginal => 'Scarica il file originale';
+
+  @override
+  String get rideDownloadFit => 'Scarica come FIT';
 
   @override
   String get rideTextSheetTitle => 'Dai un nome al giro';

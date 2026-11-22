@@ -319,6 +319,8 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
                   ref.read(ridesViewModelProvider.notifier).refresh();
                   _backOrGo(context, '/rides');
                 },
+                serverUrl: ref.read(sessionProvider).serverUrl,
+                openLink: ref.read(linkOpenerProvider),
                 tileUrl:
                     ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                     defaultMapTileUrl,

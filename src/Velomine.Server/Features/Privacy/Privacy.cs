@@ -118,6 +118,7 @@ public static class PrivacyRules
     public static RideResponse ForViewer(RideResponse ride) => ride with
     {
         FtpSuggestionW = null, // never shown to a coach or a share viewer
+        FtpSuggestionEffortW = null,
         FtpSuggestionMethod = null,
         FtpSuggestionId = null,
         // The rider's own answer and what their ride did to their numbers: theirs only.

@@ -51,6 +51,7 @@ class RideResponse {
     this.powerZones = const Optional.present(const []),
     this.powerRecords = const Optional.present(const []),
     this.ftpSuggestionW = const Optional.absent(),
+    this.ftpSuggestionEffortW = const Optional.absent(),
     this.ftpSuggestionMethod = const Optional.absent(),
     this.ftpSuggestionId = const Optional.absent(),
     this.heartRateNote = const Optional.absent(),
@@ -151,6 +152,14 @@ class RideResponse {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   final Optional<int?> ftpSuggestionW;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<int?> ftpSuggestionEffortW;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -328,6 +337,7 @@ class RideResponse {
     _deepEquality.equals(other.powerZones, powerZones) &&
     _deepEquality.equals(other.powerRecords, powerRecords) &&
     other.ftpSuggestionW == ftpSuggestionW &&
+    other.ftpSuggestionEffortW == ftpSuggestionEffortW &&
     other.ftpSuggestionMethod == ftpSuggestionMethod &&
     other.ftpSuggestionId == ftpSuggestionId &&
     other.heartRateNote == heartRateNote &&
@@ -387,6 +397,7 @@ class RideResponse {
     (powerZones.hashCode) +
     (powerRecords.hashCode) +
     (ftpSuggestionW == null ? 0 : ftpSuggestionW!.hashCode) +
+    (ftpSuggestionEffortW == null ? 0 : ftpSuggestionEffortW!.hashCode) +
     (ftpSuggestionMethod == null ? 0 : ftpSuggestionMethod!.hashCode) +
     (ftpSuggestionId == null ? 0 : ftpSuggestionId!.hashCode) +
     (heartRateNote == null ? 0 : heartRateNote!.hashCode) +
@@ -406,7 +417,7 @@ class RideResponse {
     (estimatedAvgPowerW == null ? 0 : estimatedAvgPowerW!.hashCode);
 
   @override
-  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource, hrTss=$hrTss, effortScore=$effortScore, effortSource=$effortSource, estimatedAvgPowerW=$estimatedAvgPowerW]';
+  String toString() => 'RideResponse[id=$id, status=$status, error=$error, duplicateOf=$duplicateOf, fileName=$fileName, uploadedAt=$uploadedAt, startTime=$startTime, utcOffsetMinutes=$utcOffsetMinutes, device=$device, discipline=$discipline, assist=$assist, environment=$environment, commute=$commute, distanceM=$distanceM, elapsedS=$elapsedS, movingS=$movingS, elevationGainM=$elevationGainM, elevationLossM=$elevationLossM, avgSpeedMs=$avgSpeedMs, maxSpeedMs=$maxSpeedMs, speedSource=$speedSource, avgPowerW=$avgPowerW, maxPowerW=$maxPowerW, normalizedPowerW=$normalizedPowerW, intensityFactor=$intensityFactor, tss=$tss, trimp=$trimp, avgHeartRate=$avgHeartRate, maxHeartRate=$maxHeartRate, avgCadence=$avgCadence, bikeId=$bikeId, title=$title, description=$description, version=$version, heartRateZones=$heartRateZones, powerZones=$powerZones, powerRecords=$powerRecords, ftpSuggestionW=$ftpSuggestionW, ftpSuggestionEffortW=$ftpSuggestionEffortW, ftpSuggestionMethod=$ftpSuggestionMethod, ftpSuggestionId=$ftpSuggestionId, heartRateNote=$heartRateNote, minWPrimeBalanceJ=$minWPrimeBalanceJ, wPrimeJ=$wPrimeJ, efficiencyFactor=$efficiencyFactor, decouplingPct=$decouplingPct, steady=$steady, heartRateMaxNote=$heartRateMaxNote, heartRateThresholdNote=$heartRateThresholdNote, heartRateZoneModel=$heartRateZoneModel, heartRateZoneReferenceBpm=$heartRateZoneReferenceBpm, heartRateZoneReferenceSource=$heartRateZoneReferenceSource, hrTss=$hrTss, effortScore=$effortScore, effortSource=$effortSource, estimatedAvgPowerW=$estimatedAvgPowerW]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -576,6 +587,10 @@ class RideResponse {
       final value = this.ftpSuggestionW.value;
       json[r'ftpSuggestionW'] = value;
     }
+    if (this.ftpSuggestionEffortW.isPresent) {
+      final value = this.ftpSuggestionEffortW.value;
+      json[r'ftpSuggestionEffortW'] = value;
+    }
     if (this.ftpSuggestionMethod.isPresent) {
       final value = this.ftpSuggestionMethod.value;
       json[r'ftpSuggestionMethod'] = value;
@@ -717,6 +732,7 @@ class RideResponse {
     Optional<List<ZoneTime>?>? powerZones,
     Optional<List<PowerRecord>?>? powerRecords,
     Optional<int?>? ftpSuggestionW,
+    Optional<int?>? ftpSuggestionEffortW,
     Optional<String?>? ftpSuggestionMethod,
     Optional<String?>? ftpSuggestionId,
     Optional<String?>? heartRateNote,
@@ -773,6 +789,7 @@ class RideResponse {
     powerZones: powerZones ?? this.powerZones,
     powerRecords: powerRecords ?? this.powerRecords,
     ftpSuggestionW: ftpSuggestionW ?? this.ftpSuggestionW,
+    ftpSuggestionEffortW: ftpSuggestionEffortW ?? this.ftpSuggestionEffortW,
     ftpSuggestionMethod: ftpSuggestionMethod ?? this.ftpSuggestionMethod,
     ftpSuggestionId: ftpSuggestionId ?? this.ftpSuggestionId,
     heartRateNote: heartRateNote ?? this.heartRateNote,
@@ -884,6 +901,7 @@ class RideResponse {
         powerZones: json.containsKey(r'powerZones') ? Optional.present(ZoneTime.listFromJson(json[r'powerZones'])) : const Optional.absent(),
         powerRecords: json.containsKey(r'powerRecords') ? Optional.present(PowerRecord.listFromJson(json[r'powerRecords'])) : const Optional.absent(),
         ftpSuggestionW: json.containsKey(r'ftpSuggestionW') ? Optional.present(json[r'ftpSuggestionW'] == null ? null : int.parse('${json[r'ftpSuggestionW']}')) : const Optional.absent(),
+        ftpSuggestionEffortW: json.containsKey(r'ftpSuggestionEffortW') ? Optional.present(json[r'ftpSuggestionEffortW'] == null ? null : int.parse('${json[r'ftpSuggestionEffortW']}')) : const Optional.absent(),
         ftpSuggestionMethod: json.containsKey(r'ftpSuggestionMethod') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionMethod')) : const Optional.absent(),
         ftpSuggestionId: json.containsKey(r'ftpSuggestionId') ? Optional.present(mapValueOfType<String>(json, r'ftpSuggestionId')) : const Optional.absent(),
         heartRateNote: json.containsKey(r'heartRateNote') ? Optional.present(mapValueOfType<String>(json, r'heartRateNote')) : const Optional.absent(),

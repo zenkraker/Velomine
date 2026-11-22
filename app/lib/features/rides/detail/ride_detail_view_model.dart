@@ -6,6 +6,7 @@ import '../../../core/providers.dart';
 import '../../../core/result.dart';
 import '../../../core/units.dart';
 import '../../../core/user_message.dart';
+import '../rides_data.dart';
 import 'ride_detail_data.dart';
 import 'ride_detail_state.dart';
 
@@ -228,6 +229,21 @@ class RideDetailViewModel extends _$RideDetailViewModel {
     }
     final fresh = (await ref.read(rideDetailDataProvider).ride(id)).valueOrNull;
     if (ref.mounted && fresh != null) state = state.copyWith(ride: fresh);
+  }
+
+  /// The address of the ride's file for the browser to open: `original` as received, or `fit` written
+  /// from the ride. Null when it could not be made, with the reason said on the page.
+  Future<String?> rideFileLink(String format) async {
+    if (state.fileLink.running) return null;
+    state = state.copyWith(fileLink: state.fileLink.start());
+    final result = await ref.read(ridesDataProvider).rideFileLink(id, format);
+    if (!ref.mounted) return null;
+    state = state.copyWith(fileLink: state.fileLink.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return null;
+    }
+    return result.valueOrNull;
   }
 
   /// Returns whether the ride was deleted.

@@ -125,7 +125,22 @@ class PowerCurveViewModel extends _$PowerCurveViewModel {
     ).wait;
     if (!ref.mounted || generation != _loadGeneration) return;
     _history = history.valueOrNull?.entries ?? const [];
-    state = state.copyWith(load: state.load.finish(result), history: _history);
+    // A test FTP is dated by the ride it came from, which is the day of the effort, not the day the
+    // number was accepted. A ride that cannot be read simply has no day.
+    final newest = _history.firstOrNull;
+    final rideId = newest?.rideId;
+    final ftpRideDate = newest?.source_ == 'test' && rideId != null
+        ? await data.dateLookup(rideId)
+        : null;
+    if (!ref.mounted || generation != _loadGeneration) return;
+    // Built whole rather than copied, so a load without a test FTP clears the day it named before.
+    state = PowerState(
+      load: state.load.finish(result),
+      action: state.action,
+      messages: state.messages,
+      history: _history,
+      ftpRideDate: ftpRideDate,
+    );
   }
 
   /// Adopts the suggested FTP. Past TSS stays as it was; zones and new load use
@@ -510,6 +525,7 @@ class WellbeingViewModel extends _$WellbeingViewModel {
     int mood,
     int stress,
     int motivation,
+    int sleep,
   ) => _run(
     () => ref
         .read(progressDataProvider)
@@ -520,6 +536,7 @@ class WellbeingViewModel extends _$WellbeingViewModel {
             mood: mood,
             stress: stress,
             motivation: motivation,
+            sleep: Optional.present(sleep),
           ),
         ),
   );

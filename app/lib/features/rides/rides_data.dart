@@ -80,6 +80,17 @@ class RidesData {
   Future<Result<RideResponse?>> ride(String id) =>
       _api.getRide(id).guard(FailureAction.loadRide);
 
+  /// A two-minute address for the ride's file: the original as received, or a FIT file the server
+  /// writes for a ride read from GPX or TCX. The browser opens it, so it needs no sign-in of its own.
+  Future<Result<String?>> rideFileLink(String id, String format) async =>
+      (await _api
+              .createRideFileLink(
+                id,
+                CreateRideFileLinkRequest(format: Optional.present(format)),
+              )
+              .guard(FailureAction.loadRide))
+          .map((link) => link?.path);
+
   /// Uploads a Strava export archive. The server reads it in the background:
   /// [importStatus] follows it until it is done.
   Future<Result<String?>> startImport(XFile file) => (() async {

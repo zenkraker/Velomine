@@ -209,7 +209,7 @@ final class PowerCurveViewModelProvider
 }
 
 String _$powerCurveViewModelHash() =>
-    r'b3617818e8a43d2db2e040d72147a7d6c200926d';
+    r'7fd08b7a161f3fc4979231af1b9aaae7c1df8938';
 
 abstract class _$PowerCurveViewModel extends $Notifier<PowerState> {
   PowerState build();
@@ -551,7 +551,7 @@ final class WellbeingViewModelProvider
 }
 
 String _$wellbeingViewModelHash() =>
-    r'afcce6f28be44df7cb4850674493682b7cdeefbf';
+    r'df7d7891768230a92ef3db07717263cf353c64dd';
 
 abstract class _$WellbeingViewModel extends $Notifier<WellbeingState> {
   WellbeingState build();

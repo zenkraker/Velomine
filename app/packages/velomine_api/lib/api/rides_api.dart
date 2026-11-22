@@ -16,6 +16,59 @@ class RidesApi {
 
   final ApiClient apiClient;
 
+  /// Performs an HTTP 'POST /api/v1/rides/{id}/file-link' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [CreateRideFileLinkRequest] createRideFileLinkRequest (required):
+  Future<Response> createRideFileLinkWithHttpInfo(String id, CreateRideFileLinkRequest createRideFileLinkRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/rides/{id}/file-link'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = createRideFileLinkRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [CreateRideFileLinkRequest] createRideFileLinkRequest (required):
+  Future<RideFileLinkResponse?> createRideFileLink(String id, CreateRideFileLinkRequest createRideFileLinkRequest, { Future<void>? abortTrigger, }) async {
+    final response = await createRideFileLinkWithHttpInfo(id, createRideFileLinkRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RideFileLinkResponse',) as RideFileLinkResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'DELETE /api/v1/rides/{id}' operation and returns the [Response].
   /// Parameters:
   ///
@@ -52,6 +105,58 @@ class RidesApi {
   /// * [String] id (required):
   Future<void> deleteRide(String id, { Future<void>? abortTrigger, }) async {
     final response = await deleteRideWithHttpInfo(id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Performs an HTTP 'GET /api/v1/rides/{id}/file/{token}' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] format (required):
+  Future<Response> downloadRideFileWithHttpInfo(String id, String token, String format, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/rides/{id}/file/{token}'
+      .replaceAll('{id}', id)
+      .replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+      queryParams.addAll(_queryParams('', 'format', format));
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] format (required):
+  Future<void> downloadRideFile(String id, String token, String format, { Future<void>? abortTrigger, }) async {
+    final response = await downloadRideFileWithHttpInfo(id, token, format, abortTrigger: abortTrigger,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

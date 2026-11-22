@@ -41,6 +41,9 @@ public sealed class DailyCheckIn
     /// <summary>1 none, 5 high.</summary>
     public int Motivation { get; set; }
 
+    /// <summary>1 very poorly, 5 very well; null on a check-in saved before it was asked.</summary>
+    public int? Sleep { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

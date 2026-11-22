@@ -247,6 +247,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 c.Mood,
                 c.Stress,
                 c.Motivation,
+                c.Sleep,
                 c.CreatedAt,
                 c.UpdatedAt,
             }),

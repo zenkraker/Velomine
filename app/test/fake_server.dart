@@ -790,6 +790,17 @@ class FakeServer {
       final body = streams[samples.group(1)];
       return body == null ? http.Response('', 409) : json(body);
     }
+    final fileLink = RegExp(r'^/api/v1/rides/([^/]+)/file-link$')
+        .firstMatch(path);
+    if (fileLink != null && request.method == 'POST') {
+      final format = (jsonDecode(request.body) as Map)['format'] ?? 'original';
+      return json({
+        'path':
+            '/api/v1/rides/${fileLink.group(1)}/file/test-token'
+            '?format=$format',
+        'expiresAt': '2026-11-01T10:00:00Z',
+      });
+    }
     final laps = RegExp(r'^/api/v1/rides/([^/]+)/laps$').firstMatch(path);
     if (laps != null) {
       return json({'laps': rideLaps[laps.group(1)] ?? []});
@@ -2801,6 +2812,7 @@ Map<String, Object?> rideJson(
   List<Map<String, Object?>> powerZones = const [],
   List<Map<String, Object?>> powerRecords = const [],
   int? ftpSuggestionW,
+  int? ftpSuggestionEffortW,
   String? ftpSuggestionMethod,
   String? ftpSuggestionId,
   int? minWPrimeBalanceJ,
@@ -2865,6 +2877,7 @@ Map<String, Object?> rideJson(
   'powerZones': powerZones,
   'powerRecords': powerRecords,
   'ftpSuggestionW': ftpSuggestionW,
+  'ftpSuggestionEffortW': ftpSuggestionEffortW,
   'ftpSuggestionMethod': ftpSuggestionMethod,
   'ftpSuggestionId': ftpSuggestionId,
   'minWPrimeBalanceJ': minWPrimeBalanceJ,
