@@ -1,9 +1,6 @@
-# The web app's pages are not blocked here: its index.html carries <meta name="robots" content="noindex">, and a
-# crawler blocked by robots.txt would never see it (a blocked URL can still be listed). Only machine endpoints are blocked.
+# The presentation site only (GitHub Pages, velomine.eu). The app is on its own host and keeps itself out of search with
+# the noindex in its index.html; a self-hosted server has no robots.txt of ours.
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /openapi/
-Disallow: /health
 
 Sitemap: https://velomine.eu/sitemap.xml

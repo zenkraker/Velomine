@@ -54,6 +54,18 @@ public sealed class SiteTests
         Assert.DoesNotContain("href=\"/sign-in\"", html);
     }
 
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/demo/")]
+    public async Task SitePages_ShouldPrintTheDemoPassword_WhenTheyShowTheDemoAccounts(string path)
+    {
+        var html = await ReadSiteAsync(path);
+
+        // "Try the demo" opens the demo's sign-in directly, so the password a visitor needs is printed on the site.
+        Assert.Contains($"<code>{Velomine.Server.Features.Demo.DemoData.Password}</code>", html);
+        Assert.Contains("<code>demo-rider@velomine.eu</code>", html);
+    }
+
     /// <summary>The file GitHub Pages serves for <paramref name="path"/>: a directory path is its index.html.</summary>
     private static async Task<string> ReadSiteAsync(string path)
     {
