@@ -59,6 +59,7 @@ class PowerState {
     this.action = const CommandState.idle(),
     this.messages = const [],
     this.history = const [],
+    this.ftpRideDate,
   });
 
   final CommandState<PowerCurveResponse?> load;
@@ -69,16 +70,22 @@ class PowerState {
   /// when the history could not be read, and nothing to say is better than a wrong note.
   final List<FtpHistoryEntry> history;
 
+  /// The day of the ride the current FTP came from, when it came from a ride; null otherwise or
+  /// while unread.
+  final DateTime? ftpRideDate;
+
   PowerState copyWith({
     CommandState<PowerCurveResponse?>? load,
     VoidCommand? action,
     List<UserMessage>? messages,
     List<FtpHistoryEntry>? history,
+    DateTime? ftpRideDate,
   }) => PowerState(
     load: load ?? this.load,
     action: action ?? this.action,
     messages: messages ?? this.messages,
     history: history ?? this.history,
+    ftpRideDate: ftpRideDate ?? this.ftpRideDate,
   );
 }
 

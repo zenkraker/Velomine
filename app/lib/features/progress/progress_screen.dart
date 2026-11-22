@@ -36,11 +36,21 @@ import 'progress_view_models.dart';
 import 'totals_chart.dart';
 import 'training_summary.dart';
 
-/// Where the FTP the power curve was read with came from, for its source note.
-String? ftpSourceNote(AppLocalizations l10n, List<FtpHistoryEntry> history) {
+/// Where the FTP the power curve was read with came from, for its source note. [rideDate] is the day
+/// of the ride a test FTP came from, which the history row's own `setAt` is not.
+String? ftpSourceNote(
+  AppLocalizations l10n,
+  List<FtpHistoryEntry> history, {
+  DateTime? rideDate,
+}) {
   final newest = history.firstOrNull;
   if (newest == null) return null;
-  return ftpSourceText(l10n, newest.source_, newest.setAt);
+  return ftpSourceText(
+    l10n,
+    newest.source_,
+    newest.setAt,
+    rideDate: rideDate,
+  );
 }
 
 /// Progress: one overview that answers "how am I today and this week?" and opens the page that answers
@@ -307,7 +317,11 @@ class ProgressScreen extends ConsumerWidget {
                 .setPowerDays(days),
             onUseFtp: (watts) =>
                 ref.read(powerCurveViewModelProvider.notifier).useFtp(watts),
-            ftpNote: ftpSourceNote(l10n, power.history),
+            ftpNote: ftpSourceNote(
+              l10n,
+              power.history,
+              rideDate: power.ftpRideDate,
+            ),
             ftpRideId: power.history.firstOrNull?.rideId,
             onOpenRide: (id) => context.push('/rides/$id'),
           ),
