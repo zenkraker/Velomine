@@ -158,7 +158,9 @@ void main() {
     expect(find.textContaining('cannot leave'), findsOneWidget);
   });
 
-  testWidgets('ClubHeroCard_ShouldShowTheRoleAsABadge_WhenBuilt', (tester) async {
+  testWidgets('ClubHeroCard_ShouldShowTheRoleAsABadge_WhenBuilt', (
+    tester,
+  ) async {
     final club = ClubResponse(
       id: 'c1',
       name: 'Hero Club',
@@ -559,30 +561,31 @@ void main() {
     });
   }
 
-  testWidgets('NoClubPage_ShouldShowEachWayAsItsOwnCard_WhenTheRiderHasNoClub', (
-    tester,
-  ) async {
-    server.adminSettings['clubCreationEnabled'] = true;
-    final rider = server.add('rider@example.com', clubRole: null);
-    server.signInBrowser(rider);
-    tester.view.physicalSize = const Size(1000, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await startApp(tester, server.session(useCookies: true));
-    await goTo(tester, '/club');
+  testWidgets(
+    'NoClubPage_ShouldShowEachWayAsItsOwnCard_WhenTheRiderHasNoClub',
+    (tester) async {
+      server.adminSettings['clubCreationEnabled'] = true;
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
 
-    // Three ways forward, each its own card with its own button.
-    expect(find.byKey(const Key('club-way-nearby')), findsOneWidget);
-    expect(find.byKey(const Key('club-way-join')), findsOneWidget);
-    expect(find.byKey(const Key('club-way-start')), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('club-way-nearby')),
-        matching: find.byKey(const Key('go-nearby-clubs')),
-      ),
-      findsOneWidget,
-    );
-  });
+      // Three ways forward, each its own card with its own button.
+      expect(find.byKey(const Key('club-way-nearby')), findsOneWidget);
+      expect(find.byKey(const Key('club-way-join')), findsOneWidget);
+      expect(find.byKey(const Key('club-way-start')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('club-way-nearby')),
+          matching: find.byKey(const Key('go-nearby-clubs')),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('NoClubPage_ShouldShowOnlyTheWaitingRequest_WhenAskedToJoin', (
     tester,
@@ -673,23 +676,22 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets(
-      'StartClubPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
-      (tester) async {
-        server.adminSettings['clubCreationEnabled'] = true;
-        final rider = server.add('rider@example.com', clubRole: null);
-        server.signInBrowser(rider);
-        tester.view.physicalSize = Size(width, 2400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await startApp(tester, server.session(useCookies: true));
-        await goTo(tester, '/club/start');
+    testWidgets('StartClubPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.adminSettings['clubCreationEnabled'] = true;
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club/start');
 
-        expect(find.byKey(const Key('start-club-name-card')), findsOneWidget);
-        expect(find.byKey(const Key('start-club-location-card')), findsOneWidget);
-        expect(tester.takeException(), isNull);
-      },
-    );
+      expect(find.byKey(const Key('start-club-name-card')), findsOneWidget);
+      expect(find.byKey(const Key('start-club-location-card')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets(
       'CalendarFeedPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}',

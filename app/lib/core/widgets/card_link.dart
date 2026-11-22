@@ -19,9 +19,8 @@ class CardLink extends StatelessWidget {
         padding: EdgeInsets.zero,
         minimumSize: const Size(48, 48),
         foregroundColor: colors.accentStrong,
-        textStyle: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+        textStyle: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(fontWeight: FontWeight.w600),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

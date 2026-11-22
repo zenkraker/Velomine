@@ -52,22 +52,21 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-    'TotalsScreen_ShouldShowOneColumnPerNumber_WhenShowingTheTable',
-    (tester) async {
-      await openTotals(tester);
+  testWidgets('TotalsScreen_ShouldShowOneColumnPerNumber_WhenShowingTheTable', (
+    tester,
+  ) async {
+    await openTotals(tester);
 
-      // The table's header names the columns once, as the mock-up draws them.
-      final table = find.byKey(const Key('totals-table'));
-      for (final column in ['Rides', 'Distance', 'Moving time', 'Climbing']) {
-        expect(
-          find.descendant(of: table, matching: find.text(column)),
-          findsOneWidget,
-          reason: column,
-        );
-      }
-    },
-  );
+    // The table's header names the columns once, as the mock-up draws them.
+    final table = find.byKey(const Key('totals-table'));
+    for (final column in ['Rides', 'Distance', 'Moving time', 'Climbing']) {
+      expect(
+        find.descendant(of: table, matching: find.text(column)),
+        findsOneWidget,
+        reason: column,
+      );
+    }
+  });
 
   testWidgets('TotalsScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
     tester,

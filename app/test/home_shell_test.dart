@@ -261,9 +261,7 @@ void main() {
         );
         expect(
           tester.widget<Container>(navigation).color,
-          Theme.of(
-            tester.element(navigation),
-          ).colorScheme.surfaceContainer,
+          Theme.of(tester.element(navigation)).colorScheme.surfaceContainer,
         );
       },
     );

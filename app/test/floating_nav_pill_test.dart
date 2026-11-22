@@ -127,9 +127,8 @@ void main() {
       );
       expect(
         surface.color,
-        VelomineColors.of(
-          context,
-        ).glass.withValues(alpha: AppNav.pillOpacityNoBlur),
+        VelomineColors.of(context).glass
+            .withValues(alpha: AppNav.pillOpacityNoBlur),
       );
       expect(find.byType(BackdropFilter), findsNothing);
     },

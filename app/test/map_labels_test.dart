@@ -41,9 +41,7 @@ void main() {
         localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
-          data: MediaQueryData(
-            textScaler: TextScaler.noScaling,
-          ),
+          data: MediaQueryData(textScaler: TextScaler.noScaling),
           child: Scaffold(
             body: RouteMap(
               data: _route(),

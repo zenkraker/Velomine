@@ -188,9 +188,7 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
         const SizedBox(height: AppSpacing.lg),
         SectionCard(
           title: l10n.adminAccounts,
-          children: [
-            for (final user in rest) _tile(context, ref, user, myId),
-          ],
+          children: [for (final user in rest) _tile(context, ref, user, myId)],
         ),
       ],
     );
@@ -213,8 +211,7 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
         children: [
           Text(user.displayName),
           if (mine) AppBadge(l10n.you),
-          if (user.isLockedOut)
-            AppBadge(l10n.locked, tone: AppBadgeTone.bad),
+          if (user.isLockedOut) AppBadge(l10n.locked, tone: AppBadgeTone.bad),
           for (final role in user.roles)
             if (role != 'member')
               AppBadge(

@@ -201,16 +201,17 @@ void main() {
   );
 
   for (final width in [390.0, 1300.0]) {
-    testWidgets('RideDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
-      tester,
-    ) async {
-      tester.view.physicalSize = Size(width, 2400);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await open(tester);
+    testWidgets(
+      'RideDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await open(tester);
 
-      expect(tester.takeException(), isNull);
-    });
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
   testWidgets('RideDetailScreen_ShouldShowZonesAndLoad_WhenProfileHasThem', (

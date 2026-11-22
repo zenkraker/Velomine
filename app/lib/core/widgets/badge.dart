@@ -48,9 +48,8 @@ class AppBadge extends StatelessWidget {
           if (icon case final icon?) Icon(icon, size: 14, color: ink),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: ink, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: ink, fontWeight: FontWeight.w600),
           ),
         ],
       ),

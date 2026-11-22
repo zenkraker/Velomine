@@ -101,20 +101,21 @@ class _Status extends StatelessWidget {
                     : (done / status.total).clamp(0.0, 1.0),
               ),
             if (!processing) ...[
-          Text(
-            l10n.importSummaryImported(status.imported),
-            key: const Key('import-imported'),
-          ),
-          if (status.duplicates > 0)
-            Text(l10n.importSummaryDuplicates(status.duplicates)),
-          if (status.failed > 0) Text(l10n.importSummaryFailed(status.failed)),
-          if (status.skipped > 0)
-            Text(l10n.importSummarySkipped(status.skipped)),
-          if (status.status == 'failed')
-            Text(
-              importErrorText(l10n, status.error),
-              key: const Key('import-failure'),
-            ),
+              Text(
+                l10n.importSummaryImported(status.imported),
+                key: const Key('import-imported'),
+              ),
+              if (status.duplicates > 0)
+                Text(l10n.importSummaryDuplicates(status.duplicates)),
+              if (status.failed > 0)
+                Text(l10n.importSummaryFailed(status.failed)),
+              if (status.skipped > 0)
+                Text(l10n.importSummarySkipped(status.skipped)),
+              if (status.status == 'failed')
+                Text(
+                  importErrorText(l10n, status.error),
+                  key: const Key('import-failure'),
+                ),
             ],
           ],
         ),

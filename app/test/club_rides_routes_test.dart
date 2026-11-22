@@ -223,24 +223,25 @@ void main() {
     );
   });
 
-  testWidgets('RoutesScreen_ShouldSortFromASegmentedControl_WhenLongestIsChosen', (
-    tester,
-  ) async {
-    wide(tester);
-    final rider = server.add('rider@example.com');
-    server.signInBrowser(rider);
-    await startApp(tester, server.session(useCookies: true));
+  testWidgets(
+    'RoutesScreen_ShouldSortFromASegmentedControl_WhenLongestIsChosen',
+    (tester) async {
+      wide(tester);
+      final rider = server.add('rider@example.com');
+      server.signInBrowser(rider);
+      await startApp(tester, server.session(useCookies: true));
 
-    await openClub(tester);
-    await tapVisible(tester, const Key('open-club-routes'));
-    await tester.tap(find.text('Longest'));
-    await tester.pumpAndSettle();
+      await openClub(tester);
+      await tapVisible(tester, const Key('open-club-routes'));
+      await tester.tap(find.text('Longest'));
+      await tester.pumpAndSettle();
 
-    final control = tester.widget<SegmentedButton<String>>(
-      find.byKey(const Key('routes-sort')),
-    );
-    expect(control.selected, {'longest'});
-  });
+      final control = tester.widget<SegmentedButton<String>>(
+        find.byKey(const Key('routes-sort')),
+      );
+      expect(control.selected, {'longest'});
+    },
+  );
 
   testWidgets('RoutesScreen_ShouldNotShowAFloatingButton_WhenOnAPhone', (
     tester,

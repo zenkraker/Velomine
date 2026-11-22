@@ -114,7 +114,9 @@ class WellbeingCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final text = Theme.of(context).textTheme;
     final wellbeing = this.wellbeing;
-    final days = checkIns == null ? const <CheckInResponse>[] : _days(checkIns!);
+    final days = checkIns == null
+        ? const <CheckInResponse>[]
+        : _days(checkIns!);
 
     if (wellbeing == null) {
       return const SizedBox.shrink();
@@ -201,14 +203,10 @@ class WellbeingCard extends StatelessWidget {
           // Two weeks of how the rider felt, as a line: the latest point carries today's score.
           AreaChart(
             key: const Key('wellbeing-history-chart'),
-            values: [
-              for (final checkIn in days.reversed) _feelScore(checkIn),
-            ],
+            values: [for (final checkIn in days.reversed) _feelScore(checkIn)],
             labels: [
               for (final checkIn in days.reversed)
-                DateFormat.MMMd(
-                  locale,
-                ).format(checkIn.date),
+                DateFormat.MMMd(locale).format(checkIn.date),
             ],
             format: (value) => value.toStringAsFixed(1),
             semanticLabel: l10n.wellbeingHistory14,

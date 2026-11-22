@@ -308,7 +308,9 @@ void main() {
 
     expect(find.byKey(const Key('send-test-email')), findsNothing);
     expect(
-      find.text('Not set up. Set VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM.'),
+      find.text(
+        'Not set up. Set VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM.',
+      ),
       findsOneWidget,
     );
   });

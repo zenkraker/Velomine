@@ -94,8 +94,7 @@ class StatCard extends StatelessWidget {
               sentence,
               style: text.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
             ),
-          if (link case final link?)
-            CardLink(link, onPressed: onLink),
+          if (link case final link?) CardLink(link, onPressed: onLink),
         ],
       ),
     );

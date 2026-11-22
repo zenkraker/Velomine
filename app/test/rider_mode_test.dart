@@ -506,8 +506,14 @@ void main() {
         await openProgress(tester);
 
         // A card that is not on the page is not fetched either.
-        expect(server.requests, isNot(contains('GET /api/v1/analytics/rider-card')));
-        expect(server.requests, isNot(contains('GET /api/v1/analytics/power-curve')));
+        expect(
+          server.requests,
+          isNot(contains('GET /api/v1/analytics/rider-card')),
+        );
+        expect(
+          server.requests,
+          isNot(contains('GET /api/v1/analytics/power-curve')),
+        );
       },
     );
   });

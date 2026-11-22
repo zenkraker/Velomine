@@ -243,9 +243,11 @@ class ClubsTab extends ConsumerWidget {
     final until = club.paidUntil;
     final today = DateTime.now();
     if (until != null &&
-        DateTime(until.year, until.month, until.day).isBefore(
-          DateTime(today.year, today.month, today.day),
-        )) {
+        DateTime(
+          until.year,
+          until.month,
+          until.day,
+        ).isBefore(DateTime(today.year, today.month, today.day))) {
       return (label: l10n.adminClubPlanEnded, tone: AppBadgeTone.care);
     }
     return (label: l10n.adminClubActive, tone: AppBadgeTone.good);

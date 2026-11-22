@@ -894,7 +894,10 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
                   buttonKey: const Key('zone-switch'),
                   segments: [
                     ButtonSegment(value: 'heart', label: Text(l10n.heartRate)),
-                    ButtonSegment(value: 'power', label: Text(l10n.metricPower)),
+                    ButtonSegment(
+                      value: 'power',
+                      label: Text(l10n.metricPower),
+                    ),
                   ],
                   selected: kind,
                   onChanged: (value) => setState(() => _kind = value),
@@ -929,12 +932,14 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
                       child: LinearProgressIndicator(
                         value: maxSeconds <= 0 ? 0 : zone.seconds / maxSeconds,
                         minHeight: 8,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
                         valueColor: AlwaysStoppedAnimation(
                           // The hard zones carry the accent, the easy ones stay quiet.
-                          zone.zone >= 4 ? colors.accentStrong : colors.barMuted,
+                          zone.zone >= 4
+                              ? colors.accentStrong
+                              : colors.barMuted,
                         ),
                       ),
                     ),
@@ -960,13 +965,10 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
     );
   }
 
-  String _range(AppLocalizations l10n, ZoneTime zone, String kind) => zone.to == null
+  String _range(AppLocalizations l10n, ZoneTime zone, String kind) =>
+      zone.to == null
       ? l10n.zoneRangeOpen(zone.from, kind == 'heart' ? 'bpm' : 'W')
-      : l10n.zoneRange(
-          zone.from,
-          zone.to!,
-          kind == 'heart' ? 'bpm' : 'W',
-        );
+      : l10n.zoneRange(zone.from, zone.to!, kind == 'heart' ? 'bpm' : 'W');
 }
 
 /// The event this ride was, when one is linked to it.

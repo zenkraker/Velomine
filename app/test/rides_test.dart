@@ -530,32 +530,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    'RidesScreen_ShouldPutStartRideInTheMenu_WhenThePhoneCanRecord',
-    (tester) async {
-      tester.view.physicalSize = const Size(360, 780);
-      tester.view.devicePixelRatio = 1;
-      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearAllTestValues);
-      server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
-      await startApp(
-        tester,
-        server.session(useCookies: true),
-        overrides: recorderOverrides(FakeRecorder()),
-      );
+  testWidgets('RidesScreen_ShouldPutStartRideInTheMenu_WhenThePhoneCanRecord', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+    server.rides.add(rideJson('r1', 'ready', distanceM: 1000, movingS: 600));
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      overrides: recorderOverrides(FakeRecorder()),
+    );
 
-      expect(tester.takeException(), isNull);
-      // Upload is the header's one action at every width; Start ride waits in the menu.
-      expect(find.byKey(const Key('upload')), findsOneWidget);
-      expect(find.byKey(const Key('start-ride')), findsNothing);
-      expect(find.byType(FloatingActionButton), findsNothing);
+    expect(tester.takeException(), isNull);
+    // Upload is the header's one action at every width; Start ride waits in the menu.
+    expect(find.byKey(const Key('upload')), findsOneWidget);
+    expect(find.byKey(const Key('start-ride')), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
 
-      await tester.tap(find.byKey(const Key('rides-actions')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('start-ride')), findsOneWidget);
-    },
-  );
+    await tester.tap(find.byKey(const Key('rides-actions')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('start-ride')), findsOneWidget);
+  });
 
   testWidgets('RidesScreen_ShouldNotOfferStartRide_WhenThereIsNoRecorder', (
     tester,

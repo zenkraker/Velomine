@@ -183,9 +183,8 @@ class SettingsTab extends ConsumerWidget {
                             ? l10n.catalogueNeverSynced
                             : l10n.catalogueSynced(
                                 DateFormat.yMMMd(
-                                  Localizations.localeOf(
-                                    context,
-                                  ).toLanguageTag(),
+                                  Localizations.localeOf(context)
+                                      .toLanguageTag(),
                                 ).format(catalogue.syncedAt!.toLocal()),
                               ),
                         key: const Key('catalogue-status'),

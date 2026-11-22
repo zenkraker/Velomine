@@ -632,7 +632,9 @@ class _LocalRideCard extends ConsumerWidget {
                               ? 'retry-upload-${ride.id}'
                               : 'upload-${ride.id}',
                         ),
-                        icon: _failed ? Icons.refresh : Icons.cloud_upload_outlined,
+                        icon: _failed
+                            ? Icons.refresh
+                            : Icons.cloud_upload_outlined,
                         label: _failed ? l10n.retry : l10n.upload,
                         onSelected: busy
                             ? () {}

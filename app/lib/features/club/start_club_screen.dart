@@ -131,7 +131,10 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
                 attribution: widget.attribution,
               )
             else
-              Text(l10n.clubLocationNone, key: const Key('start-club-location')),
+              Text(
+                l10n.clubLocationNone,
+                key: const Key('start-club-location'),
+              ),
             Align(
               alignment: Alignment.centerLeft,
               child: OutlinedButton.icon(
