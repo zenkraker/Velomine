@@ -8,7 +8,9 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// </summary>
 public static class RideParserVersion
 {
-    public const int Current = 5;
+    // 6: estimated watts follow Strava's method (per sample, 15 °C still air, no drivetrain loss), so the stored
+    // estimate, its normalized power and its TSS change and every ride is read again.
+    public const int Current = 6;
 
     /// <summary>Marks a ride as just read with the current parser and records the profile its training load came from.</summary>
     public static void StampRead(this Ride ride, int? ftpW, int? maxHeartRate, int? thresholdHeartRate)

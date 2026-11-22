@@ -8,17 +8,19 @@ namespace Velomine.Server.Features.Privacy;
 
 public sealed class UpdatePrivacyRequest
 {
-    public required bool HideHeartRate { get; set; }
+    // Accepted and ignored since pack-2-gaps-2 Task 10, so an app of the last release keeps working: a coach sees
+    // every number of what the rider shares, and the route keeps only its trim and its saved places.
+    public bool? HideHeartRate { get; set; }
 
-    public required bool HidePower { get; set; }
+    public bool? HidePower { get; set; }
 
-    public required bool HideCadence { get; set; }
+    public bool? HideCadence { get; set; }
 
-    public required bool HideSpeed { get; set; }
+    public bool? HideSpeed { get; set; }
 
-    public required bool HideElevation { get; set; }
+    public bool? HideElevation { get; set; }
 
-    public required bool HideTemperature { get; set; }
+    public bool? HideTemperature { get; set; }
 
     /// <summary>Metres hidden at the start of every ride. 0 is off.</summary>
     public required int TrimStartM { get; set; }
@@ -36,7 +38,7 @@ public sealed class UpdatePrivacyValidator : Validator<UpdatePrivacyRequest>
     }
 }
 
-/// <summary>Sets every stream switch and both trims at once; the zones have their own endpoints.</summary>
+/// <summary>Sets both trims; the zones have their own endpoints and the switches no longer exist.</summary>
 public sealed class UpdatePrivacy(VelomineDbContext db, TimeProvider time)
     : Endpoint<UpdatePrivacyRequest, PrivacyResponse>
 {
@@ -56,12 +58,6 @@ public sealed class UpdatePrivacy(VelomineDbContext db, TimeProvider time)
             db.PrivacySettings.Add(settings);
         }
 
-        settings.HideHeartRate = req.HideHeartRate;
-        settings.HidePower = req.HidePower;
-        settings.HideCadence = req.HideCadence;
-        settings.HideSpeed = req.HideSpeed;
-        settings.HideElevation = req.HideElevation;
-        settings.HideTemperature = req.HideTemperature;
         settings.TrimStartM = req.TrimStartM;
         settings.TrimEndM = req.TrimEndM;
         settings.UpdatedAt = time.GetUtcNow();

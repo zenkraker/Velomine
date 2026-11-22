@@ -797,32 +797,29 @@ class AppLocalizationsIt extends AppLocalizations {
       'Attiva prima i giri; i percorsi aggiungono la mappa.';
 
   @override
+  String get shareStatsConfirmTitle => 'Condividere con i tuoi allenatori?';
+
+  @override
+  String get shareStatsConfirmBody =>
+      'I tuoi allenatori vedranno tutti i valori dei tuoi giri: potenza, frequenza cardiaca, velocità, cadenza, dislivello, temperatura e l\'allenamento che ne deriva. Possono solo guardare; i giri restano tuoi da modificare o eliminare. La mappa richiede Percorsi, e anche allora l\'inizio, la fine e i tuoi luoghi salvati restano nascosti.';
+
+  @override
+  String get shareWellbeingConfirmTitle =>
+      'Condividere il tuo benessere con i tuoi allenatori?';
+
+  @override
+  String get shareWellbeingConfirmBody =>
+      'I tuoi allenatori vedranno i punteggi del tuo check-in giornaliero e quanto è stato duro ogni giro. Sono dati sulla salute, per questo te lo chiediamo prima. Le tue note restano private e puoi smettere di condividere in qualsiasi momento.';
+
+  @override
+  String get shareConfirmAction => 'Condividi';
+
+  @override
   String get privacyTitle => 'Privacy dei giri';
 
   @override
   String get privacyHelp =>
-      'Cosa vedono gli altri quando condividi un giro o quando il club può vederlo. Tu vedi sempre tutto.';
-
-  @override
-  String get privacyOthersSee => 'Cosa vedono gli altri di ogni giro';
-
-  @override
-  String get privacyHideHeartRate => 'Frequenza cardiaca';
-
-  @override
-  String get privacyHidePower => 'Potenza';
-
-  @override
-  String get privacyHideCadence => 'Cadenza';
-
-  @override
-  String get privacyHideSpeed => 'Velocità';
-
-  @override
-  String get privacyHideElevation => 'Dislivello';
-
-  @override
-  String get privacyHideTemperature => 'Temperatura';
+      'Cosa il tuo club e i tuoi allenatori non vedono mai dei tuoi percorsi. Tu vedi sempre tutto.';
 
   @override
   String get privacyTrimTitle => 'Nascondi inizio e fine';
@@ -1379,6 +1376,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get effortFromFeel => 'Da quanto è sembrata dura';
+
+  @override
+  String get effortFromEstimated => 'Dai watt stimati';
 
   @override
   String get statEfficiency => 'Fattore di efficienza';
@@ -2499,6 +2499,11 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String heartRateMaxMeasuredOnly(int bpm) {
+    return 'Nuova frequenza cardiaca massima: $bpm bpm.';
+  }
+
+  @override
   String heartRateThresholdMeasured(int bpm) {
     return 'Nuova frequenza cardiaca di soglia: $bpm bpm. Le tue zone ora la usano.';
   }
@@ -3052,6 +3057,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Punteggi del check-in e RPE dei giri; le note restano private.';
 
   @override
+  String get shareRidesHelper => 'I tuoi giri e l\'allenamento che ne deriva.';
+
+  @override
   String get sharesWellbeing => 'Benessere';
 
   @override
@@ -3227,6 +3235,26 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String notificationFtpSuggested(String record) {
     return 'Un giro suggerisce un FTP di $record.';
+  }
+
+  @override
+  String notificationHeartRateMaxMeasured(int bpm) {
+    return 'La tua frequenza cardiaca massima ora è $bpm bpm, misurata in un giro.';
+  }
+
+  @override
+  String notificationHeartRateThresholdMeasured(int bpm) {
+    return 'La tua frequenza cardiaca di soglia ora è $bpm bpm, misurata in un giro.';
+  }
+
+  @override
+  String notificationHeartRateMaxSuggested(int bpm) {
+    return 'Un giro suggerisce una frequenza cardiaca massima di $bpm bpm.';
+  }
+
+  @override
+  String notificationHeartRateThresholdSuggested(int bpm) {
+    return 'Un giro suggerisce una frequenza cardiaca di soglia di $bpm bpm.';
   }
 
   @override

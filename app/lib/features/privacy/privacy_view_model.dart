@@ -38,15 +38,9 @@ class PrivacyViewModel extends _$PrivacyViewModel {
     };
   }
 
-  /// Saves every switch and both trims in one request, so a half-saved screen
-  /// cannot leave the member believing something is hidden when it is not.
+  /// Saves both trims in one request, so a half-saved screen cannot leave the
+  /// member believing the start or the end is hidden when it is not.
   Future<void> saveSettings({
-    required bool hideHeartRate,
-    required bool hidePower,
-    required bool hideCadence,
-    required bool hideSpeed,
-    required bool hideElevation,
-    required bool hideTemperature,
     required int trimStartM,
     required int trimEndM,
   }) async {
@@ -54,18 +48,7 @@ class PrivacyViewModel extends _$PrivacyViewModel {
     state = state.copyWith(save: state.save.start());
     final result = await ref
         .read(privacyDataProvider)
-        .save(
-          UpdatePrivacyRequest(
-            hideHeartRate: hideHeartRate,
-            hidePower: hidePower,
-            hideCadence: hideCadence,
-            hideSpeed: hideSpeed,
-            hideElevation: hideElevation,
-            hideTemperature: hideTemperature,
-            trimStartM: trimStartM,
-            trimEndM: trimEndM,
-          ),
-        );
+        .save(UpdatePrivacyRequest(trimStartM: trimStartM, trimEndM: trimEndM));
     if (!ref.mounted) return;
     state = switch (result) {
       Ok(:final value) => state.copyWith(

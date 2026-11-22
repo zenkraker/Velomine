@@ -9,6 +9,12 @@ public static class DataTypes
     public const string Wellbeing = "wellbeing";
 
     public static readonly string[] All = [Rides, Analytics, Routes, Wellbeing];
+
+    /// <summary>
+    /// The grants that let a viewer see this kind of data. Sharing rides gives the training built from them too (owner,
+    /// 21 Nov): a coach the rider shares rides with always sees their training numbers.
+    /// </summary>
+    public static string[] GrantedBy(string dataType) => dataType == Analytics ? [Analytics, Rides] : [dataType];
 }
 
 /// <summary>Who may look: nobody (no row) or the club's coaches. A whole-club audience is reserved for a member view.</summary>

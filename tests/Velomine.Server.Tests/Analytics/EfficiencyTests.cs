@@ -106,53 +106,33 @@ public sealed class EfficiencyTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHideDecoupling_WhenHeartRateIsHidden()
+    public async Task CoachRide_ShouldShowDecoupling_WhenTheRiderSharesRides()
     {
         await using var api = await StartAsync();
-        var shared = await SharedRideAsync(api, heartRateHidden: true, powerHidden: false);
+        var shared = await SharedRideAsync(api);
 
         var ride = await shared.Coach.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{shared.Club.Id}/athletes/{shared.AthleteId}/rides/{shared.RideId}", Ct);
 
-        Assert.Null(ride!.DecouplingPct);
-        Assert.Null(ride.EfficiencyFactor);
-        Assert.Null(ride.Steady);
-        Assert.NotNull(ride.NormalizedPowerW); // power is still shared
+        // A coach reads the numbers the rider's own page shows, decoupling among them.
+        Assert.Equal(4.8, ride!.DecouplingPct);
+        Assert.NotNull(ride.EfficiencyFactor);
+        Assert.True(ride.Steady);
+        Assert.NotNull(ride.NormalizedPowerW);
+        Assert.NotNull(ride.AvgHeartRate);
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHideDecoupling_WhenPowerIsHidden()
+    public async Task CoachTraining_ShouldCountASteadyRide_WhenTheRiderSharesTraining()
     {
         await using var api = await StartAsync();
-        var shared = await SharedRideAsync(api, heartRateHidden: false, powerHidden: true);
-
-        var ride = await shared.Coach.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/clubs/{shared.Club.Id}/athletes/{shared.AthleteId}/rides/{shared.RideId}", Ct);
-
-        Assert.Null(ride!.DecouplingPct);
-        Assert.Null(ride.EfficiencyFactor);
-        Assert.Null(ride.Steady);
-        Assert.NotNull(ride.AvgHeartRate); // heart rate is still shared
-    }
-
-    [Fact]
-    public async Task CoachTraining_ShouldLeaveOutARideWhoseHeartRateIsHidden_WhenItIsNoSteadyOne()
-    {
-        // The coach's training view needs both signals shared (it is built from TSS and TRIMP), so a ride whose
-        // heart rate is hidden is left out of the weekly efficiency too, even when its own snapshot says steady.
-        await using var api = await StartAsync();
-        var shared = await SharedRideAsync(api, heartRateHidden: false, powerHidden: false);
-        await using (var scope = api.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-            await db.Rides.Where(r => r.Id == shared.RideId)
-                .ExecuteUpdateAsync(s => s.SetProperty(r => r.HideHeartRate, (bool?)true), Ct);
-        }
+        var shared = await SharedRideAsync(api);
 
         var training = await shared.Coach.GetFromJsonAsync<TrainingResponse>(
             $"/api/v1/clubs/{shared.Club.Id}/athletes/{shared.AthleteId}/training?days=30", Ct);
 
-        Assert.Empty(training!.Efficiency);
+        var week = Assert.Single(training!.Efficiency);
+        Assert.Equal((1.39, 1), (week.EfficiencyFactor, week.Rides));
     }
 
     [Fact]
@@ -197,11 +177,8 @@ public sealed class EfficiencyTests(PostgresFixture postgres)
 
     private sealed record Shared(HttpClient Coach, AdminClubResponse Club, Guid AthleteId, Guid RideId);
 
-    /// <summary>
-    /// An athlete in a coach's club: one decoupling ride, rides and analytics shared, and the privacy switches set
-    /// before the ride because the snapshot is copied at import.
-    /// </summary>
-    private static async Task<Shared> SharedRideAsync(TestApi api, bool heartRateHidden, bool powerHidden)
+    /// <summary>An athlete in a coach's club: one decoupling ride, rides and analytics shared.</summary>
+    private static async Task<Shared> SharedRideAsync(TestApi api)
     {
         var ownerEmail = TestApi.NewEmail();
         (await api.RegisterAsync(ownerEmail, name: "Coach Rina")).EnsureSuccessStatusCode();
@@ -212,19 +189,6 @@ public sealed class EfficiencyTests(PostgresFixture postgres)
         (await athlete.PutAsJsonAsync("/api/v1/sharing",
             new UpdateSharingRequest { Rides = "coaches", Analytics = "coaches", Routes = "none", Wellbeing = "none" }, Ct))
             .EnsureSuccessStatusCode();
-        // The privacy snapshot is copied onto a ride at import, so it is set before the ride is read.
-        (await athlete.PutAsJsonAsync("/api/v1/privacy/settings", new UpdatePrivacyRequest
-        {
-            HideHeartRate = heartRateHidden,
-            HidePower = powerHidden,
-            HideCadence = false,
-            HideSpeed = false,
-            HideElevation = false,
-            HideTemperature = false,
-            TrimStartM = 0,
-            TrimEndM = 0,
-        }, Ct)).EnsureSuccessStatusCode();
-
         var ride = await UploadAsync(athlete, DecouplingFit());
         Assert.Equal(4.8, ride.DecouplingPct);
         return new Shared(coach, club, athleteId, ride.Id);

@@ -49,8 +49,7 @@ public sealed class HeartRateZoneModelTests(PostgresFixture postgres)
         TestApi api,
         Guid userId,
         short?[]? heartRate,
-        int seconds = 120,
-        bool? hideHeartRate = null)
+        int seconds = 120)
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -64,13 +63,9 @@ public sealed class HeartRateZoneModelTests(PostgresFixture postgres)
             UploadedAt = Now,
             StartTime = Now.AddDays(-1),
             MovingS = seconds,
-            // The privacy snapshot reads every switch together.
-            HideHeartRate = hideHeartRate,
-            HidePower = hideHeartRate is null ? null : false,
-            HideCadence = hideHeartRate is null ? null : false,
-            HideSpeed = hideHeartRate is null ? null : false,
-            HideElevation = hideHeartRate is null ? null : false,
-            HideTemperature = hideHeartRate is null ? null : false,
+            // The privacy snapshot is the trim: no trim, as a member with no saved settings imports.
+            TrimStartM = 0,
+            TrimEndM = 0,
         };
         ride.Streams = new RideStreams
         {
@@ -243,31 +238,7 @@ public sealed class HeartRateZoneModelTests(PostgresFixture postgres)
             (HeartRateZoneModels.Threshold, 160),
             (shown!.HeartRateZoneModel, shown.HeartRateZoneReferenceBpm));
         Assert.Equal((130, 143), (shown.HeartRateZones![1].From, shown.HeartRateZones[1].To));
-
-        // The heart-rate privacy switch hides the zones, the model and its reference together.
-        await HideHeartRateAsync(api, rideId, hidden: true);
-        var hidden = await coach.Client.GetFromJsonAsync<RideResponse>(path, Ct);
-        Assert.Null(hidden!.HeartRateZones);
-        Assert.Null(hidden.HeartRateZoneModel);
-        Assert.Null(hidden.HeartRateZoneReferenceBpm);
-        Assert.Null(hidden.HeartRateZoneReferenceSource);
-    }
-
-    private static async Task HideHeartRateAsync(TestApi api, Guid rideId, bool hidden)
-    {
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var ride = await db.Rides.FirstAsync(r => r.Id == rideId, Ct);
-        // The privacy snapshot is read as a whole: one switch set means all of them are.
-        ride.HideHeartRate = hidden;
-        ride.HidePower = false;
-        ride.HideCadence = false;
-        ride.HideSpeed = false;
-        ride.HideElevation = false;
-        ride.HideTemperature = false;
-        ride.TrimStartM = 0;
-        ride.TrimEndM = 0;
-        await db.SaveChangesAsync(Ct);
+        Assert.Equal(HeartRateSources.Manual, shown.HeartRateZoneReferenceSource);
     }
 
     [Fact]

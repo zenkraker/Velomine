@@ -41,7 +41,8 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
         var (effortScore, effortSource) = TrainingLoad.Effort(
             ride.Tss,
             ride.HrTss,
-            TrainingLoad.FeelScore(ride.MovingS, rpe));
+            TrainingLoad.FeelScore(ride.MovingS, rpe),
+            ride.EstimatedTss);
         await Send.OkAsync(
             (await RideDetails.BuildAsync(db, time, ride, ct)) with
             {

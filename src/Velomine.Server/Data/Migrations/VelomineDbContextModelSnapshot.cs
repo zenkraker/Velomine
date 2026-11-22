@@ -897,7 +897,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ux_bikes_one_default_per_user")
                         .HasFilter("is_default");
 
-                    b.ToTable("bikes", "bikes");
+                    b.ToTable("bikes", "bikes", t =>
+                        {
+                            t.HasCheckConstraint("ck_bikes_weight_kg", "weight_kg IS NULL OR weight_kg BETWEEN 3 AND 40");
+                        });
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Bikes.BikeComponent", b =>

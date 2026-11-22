@@ -72,6 +72,7 @@ public static class RideDays
                     r.NormalizedPowerW,
                     r.Tss,
                     r.HrTss,
+                    r.EstimatedTss,
                     r.Trimp,
                     Rpe = feel == null ? (int?)null : feel.Rpe,
                 })
@@ -83,7 +84,7 @@ public static class RideDays
                 // Rides read before the profile had an FTP have no stored TSS; work it out now.
                 var tss = r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, ftpW).Tss;
                 var feelScore = includeFeel ? TrainingLoad.FeelScore(r.MovingS, r.Rpe) : null;
-                var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore);
+                var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore, r.EstimatedTss);
                 return new RideDay(
                     clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
                     r.DistanceM ?? 0,

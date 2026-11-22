@@ -21,6 +21,8 @@ public static class EffortSources
     public const string HeartRate = "heart_rate";
 
     public const string Feel = "feel";
+
+    public const string Estimated = "estimated";
 }
 
 /// <summary>
@@ -201,11 +203,12 @@ public static class TrainingLoad
 
     /// <summary>
     /// A ride's effort score for fitness, fatigue and form: the first that exists, from power, then heart rate, then how
-    /// hard it felt. Null when the ride has none of them.
+    /// hard it felt, then the watts estimated from speed and slope. Null when the ride has none of them.
     /// </summary>
-    public static (double? Score, string? Source) Effort(double? tss, double? hrTss, double? feelScore) =>
+    public static (double? Score, string? Source) Effort(double? tss, double? hrTss, double? feelScore, double? estimatedTss) =>
         tss is { } power ? (power, EffortSources.Power)
         : hrTss is { } heartRate ? (heartRate, EffortSources.HeartRate)
         : feelScore is { } feel ? (feel, EffortSources.Feel)
+        : estimatedTss is { } estimated ? (estimated, EffortSources.Estimated)
         : (null, null);
 }

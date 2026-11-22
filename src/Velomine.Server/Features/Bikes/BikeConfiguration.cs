@@ -9,7 +9,8 @@ public sealed class BikeConfiguration : IEntityTypeConfiguration<Bike>, IEntityT
 {
     public void Configure(EntityTypeBuilder<Bike> bike)
     {
-        bike.ToTable("bikes", "bikes");
+        bike.ToTable("bikes", "bikes", t =>
+            t.HasCheckConstraint("ck_bikes_weight_kg", "weight_kg IS NULL OR weight_kg BETWEEN 3 AND 40"));
         bike.HasKey(b => b.Id);
         bike.Property(b => b.Name).HasMaxLength(100);
         bike.Property(b => b.Brand).HasMaxLength(100);

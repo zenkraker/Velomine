@@ -224,6 +224,78 @@ void main() {
   );
 
   testWidgets(
+    'RideDetail_ShouldNotSayZonesChanged_WhenANewMaxIsMeasuredAndZonesComeFromTheThreshold',
+    (tester) async {
+      // Zones built on the threshold: a new maximum does not move them, so the card promises nothing.
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateMaxNote': 'max_measured',
+        'heartRateZoneModel': 'threshold',
+      };
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 192,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r1',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(find.text('New maximum heart rate: 192 bpm.'), findsOneWidget);
+      expect(
+        find.text('New maximum heart rate: 192 bpm. Your zones now use it.'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetail_ShouldSayZonesChanged_WhenANewMaxIsMeasuredAndZonesComeFromTheMax',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'heartRateMaxNote': 'max_measured',
+        'heartRateZoneModel': 'max',
+      };
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'ftpW': null,
+        'weightKg': null,
+        'birthYear': null,
+        'timeZone': 'Europe/Rome',
+        'firstDayOfWeek': 'monday',
+        'emailNotifications': true,
+        'emailAccountNotifications': true,
+        'emailTrainingNotifications': false,
+        'hasPassword': true,
+        'maxHeartRate': 192,
+        'maxHeartRateSource': 'measured',
+        'maxHeartRateRideId': 'r1',
+        'thresholdHeartRate': 165,
+        'thresholdHeartRateSource': 'measured',
+        'thresholdHeartRateRideId': 'r1',
+      };
+      await open(tester);
+
+      expect(
+        find.text('New maximum heart rate: 192 bpm. Your zones now use it.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'RideDetailScreen_ShouldHideTheMeasuredCard_WhenTheNumberCameFromAnotherRide',
     (tester) async {
       // The profile carries the ride that set the number: this ride moved the maximum, but a later ride now holds it,
@@ -985,6 +1057,21 @@ void main() {
       await open(tester);
 
       expect(find.text('From how hard it felt'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetail_ShouldSayFromEstimatedWatts_WhenTheEffortIsEstimated',
+    (tester) async {
+      server.rides[0] = {
+        ...server.rides[0],
+        'estimatedAvgPowerW': 150,
+        'effortScore': 42.0,
+        'effortSource': 'estimated',
+      };
+      await open(tester);
+
+      expect(find.text('From estimated watts'), findsOneWidget);
     },
   );
 }

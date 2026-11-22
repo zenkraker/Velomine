@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../../core/confirm.dart';
 import '../../../core/failure.dart';
 import '../../../core/format.dart';
 import '../../../core/l10n.dart';
@@ -44,6 +45,29 @@ class ClubSharingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // Sharing with a coach is the rider's decision, so the first time a choice turns on they are told what it
+    // gives away; wellbeing is health data and asks for consent. Turning it back off never asks.
+    Future<void> askThen(
+      String key,
+      String from,
+      String to,
+      String? title,
+      String? body,
+      void Function(String value) apply,
+    ) async {
+      if (from == 'none' && to == 'coaches' && title != null && body != null) {
+        final agreed = await confirmAction(
+          context,
+          title: title,
+          body: body,
+          action: l10n.shareConfirmAction,
+          key: Key(key),
+        );
+        if (!agreed || !context.mounted) return;
+      }
+      apply(to);
+    }
+
     Widget choice(
       String label,
       String value,
@@ -85,13 +109,16 @@ class ClubSharingCard extends StatelessWidget {
             l10n.shareRides,
             state.rides,
             'share-rides',
-            (v) => onChoose(rides: v),
-          ),
-          choice(
-            l10n.shareAnalytics,
-            state.analytics,
-            'share-analytics',
-            (v) => onChoose(analytics: v),
+            (v) => askThen(
+              'share-rides-confirm',
+              state.rides,
+              v,
+              l10n.shareStatsConfirmTitle,
+              l10n.shareStatsConfirmBody,
+              // Training comes with the rides: a coach who sees them sees the numbers built from them.
+              (value) => onChoose(rides: value, analytics: value),
+            ),
+            helper: l10n.shareRidesHelper,
           ),
           choice(
             l10n.shareRoutes,
@@ -105,7 +132,14 @@ class ClubSharingCard extends StatelessWidget {
             l10n.shareWellbeing,
             state.wellbeing,
             'share-wellbeing',
-            (v) => onChoose(wellbeing: v),
+            (v) => askThen(
+              'share-wellbeing-confirm',
+              state.wellbeing,
+              v,
+              l10n.shareWellbeingConfirmTitle,
+              l10n.shareWellbeingConfirmBody,
+              (value) => onChoose(wellbeing: value),
+            ),
             helper: l10n.shareWellbeingHelper,
           ),
         ],

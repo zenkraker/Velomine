@@ -78,10 +78,6 @@ public sealed class ListCoachAthletes(VelomineDbContext db, TimeProvider time)
             .ToList();
         athletes.AddRange(await CoachQueries.SummariesAsync(db, time, sharing, grants, ct));
 
-        // Hiding power takes the training load with it, even on the roster.
-        var privacy = await PrivacyRules.LoadManyAsync(db, athletes.Select(a => a.UserId).ToList(), ct);
-        athletes = [.. athletes.Select(a => privacy[a.UserId].HidePower ? a with { Tss7 = null, Tss42 = null } : a)];
-
         // The roster shows each athlete's snapshot, so it is a view of their data, not just a directory.
         await SharingRules.RecordViewsAsync(
             db, time, athletes.Select(a => a.UserId), req.ClubId, viewerId,
@@ -119,8 +115,6 @@ public sealed class GetCoachAthlete(VelomineDbContext db, TimeProvider time)
             .Where(g => g.ClubId == req.ClubId && g.MemberId == req.UserId)
             .ToListAsync(ct);
         var summary = await CoachQueries.SummaryAsync(db, time, member, grants, ct);
-        var privacy = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
-        if (privacy.HidePower) summary = summary with { Tss7 = null, Tss42 = null };
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Summary, ct);
@@ -164,22 +158,13 @@ public sealed class GetCoachTraining(VelomineDbContext db, TimeProvider time)
         }
 
         var clock = await MemberClock.ForAsync(db, req.UserId, time, ct);
-        // Fitness, fatigue and form are built from TSS and TRIMP: hiding either stream hides the trend. The
-        // intensity split differs: it falls back to whichever signal the member still shares.
-        var privacy = await PrivacyRules.LoadCurrentAsync(db, req.UserId, ct);
-        if (privacy.HidesPowerOrHeartRate)
-        {
-            await Send.NotFoundAsync(ct);
-            return;
-        }
-
         await SharingRules.RecordViewAsync(
             db, time, req.UserId, req.ClubId, viewerId, await CoachQueries.ViewerNameAsync(db, viewerId, ct),
             ViewKinds.Training, ct);
         // The daily load counts hrTSS like TSS; only the feel score needs the wellbeing grant.
         var includeFeel = await SharingRules.CanViewAsync(db, req.ClubId, viewerId, req.UserId, DataTypes.Wellbeing, ct);
         await Send.OkAsync(await TrainingRange.LoadAsync(
-            db, req.UserId, clock, time, req.Days ?? 90, ct, viewer: privacy, includeFeel: includeFeel), ct);
+            db, req.UserId, clock, time, req.Days ?? 90, ct, includeFeel: includeFeel), ct);
     }
 }
 
@@ -220,6 +205,7 @@ public static class CoachQueries
                 r.NormalizedPowerW,
                 r.Tss,
                 r.HrTss,
+                r.EstimatedTss,
                 Rpe = db.RideFeels.Where(f => f.RideId == r.Id).Select(f => (int?)f.Rpe).FirstOrDefault(),
             })
             .ToListAsync(ct);
@@ -241,7 +227,7 @@ public static class CoachQueries
         {
             var memberGrants = grants.Where(g => g.MemberId == member.UserId).ToList();
             var sharesRides = memberGrants.Any(g => g.DataType == DataTypes.Rides);
-            var sharesAnalytics = memberGrants.Any(g => g.DataType == DataTypes.Analytics);
+            var sharesAnalytics = memberGrants.Any(g => DataTypes.GrantedBy(DataTypes.Analytics).Contains(g.DataType));
             var sharesRoutes = memberGrants.Any(g => g.DataType == DataTypes.Routes);
             var sharesWellbeing = memberGrants.Any(g => g.DataType == DataTypes.Wellbeing);
 
@@ -255,7 +241,7 @@ public static class CoachQueries
                     var tss = r.Tss ?? TrainingLoad.PowerLoad(r.NormalizedPowerW, r.MovingS ?? 0, member.User.FtpW).Tss;
                     // The rating is wellbeing data: without its grant the feel score is not used.
                     var feelScore = sharesWellbeing ? TrainingLoad.FeelScore(r.MovingS, r.Rpe) : null;
-                    var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore);
+                    var (load, source) = TrainingLoad.Effort(tss, r.HrTss, feelScore, r.EstimatedTss);
                     return new RideDay(
                         clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes),
                         r.DistanceM ?? 0,
@@ -293,7 +279,7 @@ public static class CoachQueries
         CancellationToken ct)
     {
         var sharesRides = grants.Any(g => g.DataType == DataTypes.Rides);
-        var sharesAnalytics = grants.Any(g => g.DataType == DataTypes.Analytics);
+        var sharesAnalytics = grants.Any(g => DataTypes.GrantedBy(DataTypes.Analytics).Contains(g.DataType));
         var sharesRoutes = grants.Any(g => g.DataType == DataTypes.Routes);
         var sharesWellbeing = grants.Any(g => g.DataType == DataTypes.Wellbeing);
 
@@ -309,7 +295,8 @@ public static class CoachQueries
             clock.Today.AddDays(-41),
             clock.Today.AddDays(1),
             ct,
-            ftpW: ftpW);
+            ftpW: ftpW,
+            includeFeel: sharesWellbeing);
 
         // Each number exists only for the kind of data the member shared: no ride dates or counts to a coach
         // who was given training but not rides, and no training load to one given only rides.
@@ -330,7 +317,7 @@ public static class CoachQueries
             lastRideAt,
             sharesRides ? rides.Count : null,
             sharesRides ? rides.Sum(r => r.DistanceM) : null,
-            sharesAnalytics ? Math.Round(week.Sum(r => r.Tss), 1) : null,
-            sharesAnalytics ? Math.Round(rides.Sum(r => r.Tss), 1) : null);
+            sharesAnalytics ? Math.Round(week.Sum(r => r.Load), 1) : null,
+            sharesAnalytics ? Math.Round(rides.Sum(r => r.Load), 1) : null);
     }
 }

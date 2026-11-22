@@ -28,15 +28,17 @@ public sealed record PowerEstimate(
 public sealed record EstimatedPowerValues(short?[]? PerSample, int? AvgPowerW, int? NormalizedPowerW, double? Tss);
 
 /// <summary>
-/// Watts estimated from speed, slope and weight for a ride with no power meter, by the standard cycling power model
-/// (Martin et al. 1998), as Strava does it. They are shown and give an estimated TSS; they never feed power bests,
-/// the power curve, FTP estimates, records, critical power, W' balance, decoupling or power zones.
+/// Watts estimated from speed, slope and weight for a ride with no power meter, the way Strava describes its own:
+/// the standard cycling power model (Martin et al. 1998) worked out per recorded sample, with no wind and 15 °C still
+/// air, and the watts of the rider and bike rather than at the cranks, so no drivetrain loss. They are shown and give
+/// an estimated TSS; they never feed power bests, the power curve, FTP estimates, records, critical power, W' balance,
+/// decoupling or power zones.
 /// </summary>
 public static class EstimatedPower
 {
     private const double Gravity = 9.81;
-    /// <summary>What the drivetrain loses between the cranks and the road.</summary>
-    private const double DrivetrainEfficiency = 0.976;
+    /// <summary>Strava assumes 15 °C and still air, so one density with no altitude correction.</summary>
+    private const double AirDensity = 1.225;
     private const double MaxWatts = 2000;
     private const double MaxGrade = 0.25;
     private const double MaxAccelerationMs2 = 1.5;
@@ -70,8 +72,8 @@ public static class EstimatedPower
     };
 
     /// <summary>
-    /// One second's power. Air density falls with altitude; a coasting, braking or descending second is 0 W, and so is
-    /// a stopped one. <paramref name="accelerationMs2"/> is limited to ±1.5 m/s², the grade to ±25 %.
+    /// One sample's power, as the watts the rider and bike use together: a coasting, braking or descending sample is
+    /// 0 W, and so is a stopped one. <paramref name="accelerationMs2"/> is limited to ±1.5 m/s², the grade to ±25 %.
     /// </summary>
     public static double Watts(
         double speedMs,
@@ -79,16 +81,14 @@ public static class EstimatedPower
         double grade,
         double massKg,
         double crr,
-        double cda,
-        double altitudeM)
+        double cda)
     {
         if (speedMs < StoppedSpeedMs) return 0;
         var slope = Math.Atan(Math.Clamp(grade, -MaxGrade, MaxGrade));
-        var density = 1.225 * Math.Exp(-altitudeM / 8434);
         var force = massKg * Gravity * (crr * Math.Cos(slope) + Math.Sin(slope))
-            + 0.5 * density * cda * speedMs * speedMs
+            + 0.5 * AirDensity * cda * speedMs * speedMs
             + massKg * Math.Clamp(accelerationMs2, -MaxAccelerationMs2, MaxAccelerationMs2);
-        return Math.Clamp(force * speedMs / DrivetrainEfficiency, 0, MaxWatts);
+        return Math.Clamp(force * speedMs, 0, MaxWatts);
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public static class EstimatedPower
                 ? (speed - before) / (samples[i].T - samples[i - 1].T)
                 : 0;
             var grade = Grade(samples, altitudes, speedsMedian, i);
-            watts[i] = (short)Math.Round(Watts(speed, acceleration, grade, mass, crr, cda, altitudes[i] ?? 0));
+            watts[i] = (short)Math.Round(Watts(speed, acceleration, grade, mass, crr, cda));
         }
 
         if (watts.All(w => w is null)) return null;

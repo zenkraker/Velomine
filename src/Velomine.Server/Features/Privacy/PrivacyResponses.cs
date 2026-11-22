@@ -1,6 +1,9 @@
 namespace Velomine.Server.Features.Privacy;
 
-/// <summary>What a non-owner may see of a ride's signals. Everything is visible by default.</summary>
+/// <summary>
+/// The six stream switches of the last release, kept in the response so an older app still reads it: they no longer
+/// do anything, so they always answer false.
+/// </summary>
 public sealed record PrivacyStreamsResponse(
     bool HideHeartRate,
     bool HidePower,
@@ -15,13 +18,7 @@ public sealed record PrivacyZoneResponse(Guid Id, string Name, double Latitude, 
 public sealed record PrivacyResponse(PrivacyStreamsResponse Streams, int TrimStartM, int TrimEndM, PrivacyZoneResponse[] Zones)
 {
     public static PrivacyResponse From(PrivacySettings? settings, IReadOnlyList<PrivacyZone> zones) => new(
-        new PrivacyStreamsResponse(
-            settings?.HideHeartRate ?? false,
-            settings?.HidePower ?? false,
-            settings?.HideCadence ?? false,
-            settings?.HideSpeed ?? false,
-            settings?.HideElevation ?? false,
-            settings?.HideTemperature ?? false),
+        new PrivacyStreamsResponse(false, false, false, false, false, false),
         settings?.TrimStartM ?? 0,
         settings?.TrimEndM ?? 0,
         [.. zones.Select(z => new PrivacyZoneResponse(z.Id, z.Name, z.Latitude, z.Longitude, z.RadiusM))]);

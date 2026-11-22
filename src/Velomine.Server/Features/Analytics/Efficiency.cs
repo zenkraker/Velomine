@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
-using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Analytics;
@@ -22,8 +21,7 @@ public static class Efficiency
         DateOnly from,
         DateOnly to,
         CancellationToken ct,
-        RideFilter filter = default,
-        PrivacyProfile? viewer = null)
+        RideFilter filter = default)
     {
         // Local dates are at most 14 hours from UTC, so a day either side catches every ride; the exact cut is below.
         var fromUtc = new DateTimeOffset(from.AddDays(-1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
@@ -32,7 +30,7 @@ public static class Efficiency
             .Where(r => r.UserId == userId && r.Status == RideStatus.Ready && r.StartTime >= fromUtc && r.StartTime < toUtc
                 && r.Steady == true && r.EfficiencyFactor != null);
         var rides = await filter.Apply(query)
-            .Select(r => new { r.StartTime, r.UtcOffsetMinutes, r.HidePower, r.HideHeartRate, r.EfficiencyFactor })
+            .Select(r => new { r.StartTime, r.UtcOffsetMinutes, r.EfficiencyFactor })
             .ToListAsync(ct);
 
         var weeks = new Dictionary<DateOnly, (double Sum, int Rides)>();
@@ -40,9 +38,6 @@ public static class Efficiency
         {
             var date = clock.LocalDateOf(ride.StartTime!.Value, ride.UtcOffsetMinutes);
             if (date < from || date >= to) continue;
-            // A coach sees a ride through its privacy snapshot: either signal hidden and the number is not theirs.
-            if (viewer is not null && ((ride.HidePower ?? viewer.HidePower) || (ride.HideHeartRate ?? viewer.HideHeartRate)))
-                continue;
 
             var week = Periods.StartOf(date, Periods.Week, clock.FirstDayOfWeek);
             var total = weeks.GetValueOrDefault(week);

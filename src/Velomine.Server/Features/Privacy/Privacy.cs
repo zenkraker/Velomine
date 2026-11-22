@@ -4,21 +4,27 @@ using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Privacy;
 
-/// <summary>Which signals a non-owner may see, and how much of the start and end of every ride is hidden. One row per member.</summary>
+/// <summary>How much of the start and end of every ride a non-owner may see. One row per member.</summary>
 public sealed class PrivacySettings
 {
     public Guid UserId { get; set; }
 
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool HideHeartRate { get; set; }
 
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool HidePower { get; set; }
 
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool HideCadence { get; set; }
 
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool HideSpeed { get; set; }
 
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool HideElevation { get; set; }
 
+    // Unused since pack-2-gaps-2 Task 10; drop the column in the next release.
     public bool HideTemperature { get; set; }
 
     /// <summary>Metres hidden at the start of every ride. 0 is off.</summary>
@@ -57,139 +63,60 @@ public static class PrivacyValues
 }
 
 /// <summary>
-/// The static privacy choices: the stream switches and the start and end trim. The member's row in
-/// <see cref="PrivacySettings"/> is the default for new rides; a ride keeps its own copy from the moment it is imported
-/// (<see cref="Ride.Privacy"/>), so changing the default never changes what a viewer sees of an older ride.
+/// The start and end of every ride a non-owner may see. The member's row in <see cref="PrivacySettings"/> is the
+/// default for new rides; a ride keeps its own copy from the moment it is imported (<see cref="Ride.Privacy"/>), so
+/// changing the default never changes what a viewer sees of an older ride.
 /// </summary>
-public sealed record PrivacyDefaults(
-    bool HideHeartRate,
-    bool HidePower,
-    bool HideCadence,
-    bool HideSpeed,
-    bool HideElevation,
-    bool HideTemperature,
-    int TrimStartM,
-    int TrimEndM)
+public sealed record PrivacyDefaults(int TrimStartM, int TrimEndM)
 {
-    /// <summary>Everything visible and no trim: what a member with no saved settings imports, and the safe base in a test.</summary>
-    public static readonly PrivacyDefaults None = new(false, false, false, false, false, false, 0, 0);
-
-    public bool HidesPowerOrHeartRate => HidePower || HideHeartRate;
+    /// <summary>No trim: what a member with no saved settings imports, and the safe base in a test.</summary>
+    public static readonly PrivacyDefaults None = new(0, 0);
 
     public static PrivacyDefaults From(PrivacySettings? settings) => settings is null
         ? None
-        : new(
-            settings.HideHeartRate,
-            settings.HidePower,
-            settings.HideCadence,
-            settings.HideSpeed,
-            settings.HideElevation,
-            settings.HideTemperature,
-            settings.TrimStartM,
-            settings.TrimEndM);
+        : new(settings.TrimStartM, settings.TrimEndM);
 }
 
 /// <summary>The owner's rules for one ride, loaded once per non-owner view. Zones are always the current ones: they are places, not a copy.</summary>
 public sealed record PrivacyProfile(PrivacyDefaults Defaults, IReadOnlyList<PrivacyZone> Zones)
 {
-    public bool HideHeartRate => Defaults.HideHeartRate;
-
-    public bool HidePower => Defaults.HidePower;
-
-    public bool HideCadence => Defaults.HideCadence;
-
-    public bool HideSpeed => Defaults.HideSpeed;
-
-    public bool HideElevation => Defaults.HideElevation;
-
-    public bool HideTemperature => Defaults.HideTemperature;
-
     public int TrimStartM => Defaults.TrimStartM;
 
     public int TrimEndM => Defaults.TrimEndM;
-
-    public bool HidesPowerOrHeartRate => Defaults.HidesPowerOrHeartRate;
 }
 
 /// <summary>
-/// The one place every non-owner view is redacted: stream switches, privacy zones and start/end trimming. The owner
-/// never goes through here. A hidden point keeps its sample but loses its position, so charts still line up and the
-/// client breaks the route line at the gap instead of drawing across it.
+/// The one place every non-owner view is redacted, and it redacts the route only: the start and end trim, the saved
+/// places, and the routes grant that positions need at all. Every number and stream of a shared ride reaches a coach
+/// as it is. The owner never goes through here. A hidden point keeps its sample but loses its position, so charts
+/// still line up and the client breaks the route line at the gap instead of drawing across it.
 /// </summary>
 public static class PrivacyRules
 {
     /// <summary>
-    /// The rules for one ride: the snapshot it was imported with, so relaxing the member's default today never
-    /// exposes a ride that was imported while a stream was hidden. The zones are today's, because they are places.
-    /// A ride imported before the snapshot existed falls back to the member's current choices. Load the whole ride
+    /// The rules for one ride: the trim it was imported with, so changing the member's default today never exposes a
+    /// ride that was imported while its start or end was hidden. The zones are today's, because they are places.
+    /// A ride imported before the snapshot existed falls back to the member's current trim. Load the whole ride
     /// row: <see cref="Ride.Privacy"/> reads the columns.
     /// </summary>
     public static async Task<PrivacyProfile> LoadAsync(VelomineDbContext db, Guid userId, Ride ride, CancellationToken ct) =>
         new(ride.Privacy ?? await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
 
-    /// <summary>
-    /// One ride's rules for a list that already holds <paramref name="current"/>, so a page of rides costs no extra
-    /// query per ride.
-    /// </summary>
-    public static PrivacyProfile Effective(Ride ride, PrivacyProfile current) =>
-        ride.Privacy is { } snapshot ? current with { Defaults = snapshot } : current;
-
-    /// <summary>
-    /// The member's current choices, with the zones as they are today, for a field that belongs to no single ride
-    /// (the roster, the power curve, the training trend): a single ride has its own rules, see <see cref="LoadAsync"/>.
-    /// </summary>
-    public static async Task<PrivacyProfile> LoadCurrentAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
-        new(await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
-
     private static async Task<PrivacyDefaults> CurrentDefaultsAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
         PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == userId, ct));
-
-    /// <summary>The stream switches for several owners at once, for a roster that shows their summaries.</summary>
-    public static async Task<Dictionary<Guid, PrivacyProfile>> LoadManyAsync(
-        VelomineDbContext db,
-        IReadOnlyCollection<Guid> userIds,
-        CancellationToken ct)
-    {
-        if (userIds.Count == 0) return [];
-        var ids = userIds.Distinct().ToList();
-        var settings = await db.PrivacySettings.AsNoTracking()
-            .Where(s => ids.Contains(s.UserId))
-            .ToListAsync(ct);
-        var byUser = settings.ToDictionary(s => s.UserId);
-        return ids.ToDictionary(id => id, id => new PrivacyProfile(PrivacyDefaults.From(byUser.GetValueOrDefault(id)), []));
-    }
 
     private static Task<List<PrivacyZone>> ZonesAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
         db.PrivacyZones.AsNoTracking().Where(z => z.UserId == userId).ToListAsync(ct);
 
     /// <summary>
-    /// A ride for a viewer with the rides grant. Title and description are the member's own words about the ride and
-    /// pass through on purpose (unlike the per-ride wellbeing note, which only the owner ever reads); a viewer
-    /// without the grant never reaches this function.
+    /// A ride for a viewer with the rides grant: every number of it, as the rider's own page shows them. Title and
+    /// description are the member's own words about the ride and pass through on purpose (unlike the per-ride
+    /// wellbeing note, which only the owner ever reads). Only what is the rider's own answer, rather than a number
+    /// about the ride, stays theirs: the FTP suggestion, the heart-rate notes and the effort score. A viewer without
+    /// the grant never reaches this function.
     /// </summary>
-    public static RideResponse ForViewer(RideResponse ride, PrivacyProfile privacy) => ride with
+    public static RideResponse ForViewer(RideResponse ride) => ride with
     {
-        AvgHeartRate = privacy.HideHeartRate ? null : ride.AvgHeartRate,
-        MaxHeartRate = privacy.HideHeartRate ? null : ride.MaxHeartRate,
-        Trimp = privacy.HideHeartRate ? null : ride.Trimp,
-        HeartRateZones = privacy.HideHeartRate ? null : ride.HeartRateZones,
-        // The model and its reference are part of the zones, so the heart-rate switch hides them too.
-        HeartRateZoneModel = privacy.HideHeartRate ? null : ride.HeartRateZoneModel,
-        HeartRateZoneReferenceBpm = privacy.HideHeartRate ? null : ride.HeartRateZoneReferenceBpm,
-        HeartRateZoneReferenceSource = privacy.HideHeartRate ? null : ride.HeartRateZoneReferenceSource,
-        AvgPowerW = privacy.HidePower ? null : ride.AvgPowerW,
-        MaxPowerW = privacy.HidePower ? null : ride.MaxPowerW,
-        NormalizedPowerW = privacy.HidePower ? null : ride.NormalizedPowerW,
-        IntensityFactor = privacy.HidePower ? null : ride.IntensityFactor,
-        Tss = privacy.HidePower ? null : ride.Tss,
-        PowerZones = privacy.HidePower ? null : ride.PowerZones,
-        PowerRecords = privacy.HidePower ? null : ride.PowerRecords,
-        MinWPrimeBalanceJ = privacy.HidePower ? null : ride.MinWPrimeBalanceJ,
-        WPrimeJ = privacy.HidePower ? null : ride.WPrimeJ,
-        // One signal is not a comparison: hiding either one hides how power and heart rate moved together.
-        EfficiencyFactor = privacy.HidesPowerOrHeartRate ? null : ride.EfficiencyFactor,
-        DecouplingPct = privacy.HidesPowerOrHeartRate ? null : ride.DecouplingPct,
-        Steady = privacy.HidesPowerOrHeartRate ? null : ride.Steady,
         FtpSuggestionW = null, // never shown to a coach or a share viewer
         FtpSuggestionMethod = null,
         FtpSuggestionId = null,
@@ -198,50 +125,20 @@ public static class PrivacyRules
         HeartRateMaxNote = null,
         HeartRateThresholdNote = null,
         // The effort score is the owner's: a coach or a share viewer reads the ride's load, not its effort.
-        HrTss = null,
         EffortScore = null,
         EffortSource = null,
-        // Estimated watts are made of speed, slope and elevation: hiding any of them hides the estimate too.
-        EstimatedAvgPowerW = privacy.HidePower || privacy.HideSpeed || privacy.HideElevation ? null : ride.EstimatedAvgPowerW,
-        AvgCadence = privacy.HideCadence ? null : ride.AvgCadence,
-        AvgSpeedMs = privacy.HideSpeed ? null : ride.AvgSpeedMs,
-        MaxSpeedMs = privacy.HideSpeed ? null : ride.MaxSpeedMs,
-        ElevationGainM = privacy.HideElevation ? null : ride.ElevationGainM,
-        ElevationLossM = privacy.HideElevation ? null : ride.ElevationLossM,
-    };
-
-    public static LapResponse ForViewer(LapResponse lap, PrivacyProfile privacy) => lap with
-    {
-        AvgHeartRate = privacy.HideHeartRate ? null : lap.AvgHeartRate,
-        MaxHeartRate = privacy.HideHeartRate ? null : lap.MaxHeartRate,
-        AvgPowerW = privacy.HidePower ? null : lap.AvgPowerW,
-        MaxPowerW = privacy.HidePower ? null : lap.MaxPowerW,
-        AvgCadence = privacy.HideCadence ? null : lap.AvgCadence,
-        AvgSpeedMs = privacy.HideSpeed ? null : lap.AvgSpeedMs,
-        MaxSpeedMs = privacy.HideSpeed ? null : lap.MaxSpeedMs,
-        ElevationGainM = privacy.HideElevation ? null : lap.ElevationGainM,
     };
 
     /// <summary>
-    /// Streams for a viewer. <paramref name="showRoute"/> is the member's separate routes grant; without it every
-    /// position is hidden, whatever the zones say.
+    /// Streams for a viewer: every signal as the rider recorded it, and the route only with the member's separate
+    /// routes grant, trimmed and with the saved places cut out. Without the grant every position is hidden, whatever
+    /// the zones say.
     /// shortcut: zones are applied after sampling; one averaged point across a zone edge can sit just outside it.
     /// Upgrade if zones ever need to be exact at any zoom.
     /// </summary>
     public static RideStreamsResponse ForViewer(RideStreamsResponse streams, PrivacyProfile privacy, bool showRoute)
     {
-        var result = streams with
-        {
-            HeartRate = privacy.HideHeartRate ? null : streams.HeartRate,
-            Power = privacy.HidePower ? null : streams.Power,
-            Cadence = privacy.HideCadence ? null : streams.Cadence,
-            Speed = privacy.HideSpeed ? null : streams.Speed,
-            Altitude = privacy.HideElevation ? null : streams.Altitude,
-            Temperature = privacy.HideTemperature ? null : streams.Temperature,
-            WPrimeBalanceJ = privacy.HidePower ? null : streams.WPrimeBalanceJ,
-            // The estimate is the owner's: it is made from the member's own weight and bike.
-            EstimatedPower = null,
-        };
+        var result = streams;
 
         if (!showRoute) return result with { Latitude = null, Longitude = null };
         if (privacy.Zones.Count == 0 && privacy.TrimStartM == 0 && privacy.TrimEndM == 0) return result;

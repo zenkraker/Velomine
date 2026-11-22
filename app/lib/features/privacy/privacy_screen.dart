@@ -45,12 +45,6 @@ class PrivacyScreen extends ConsumerStatefulWidget {
 class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
   final _trimStart = TextEditingController();
   final _trimEnd = TextEditingController();
-  bool _showHeartRate = true;
-  bool _showPower = true;
-  bool _showCadence = true;
-  bool _showSpeed = true;
-  bool _showElevation = true;
-  bool _showTemperature = true;
   bool _filled = false;
   String? _problem;
   late final ProviderSubscription<PrivacyResponse?> _privacySub;
@@ -69,12 +63,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     if (privacy == null || _filled || !mounted) return;
     setState(() {
       _filled = true;
-      _showHeartRate = !privacy.streams.hideHeartRate;
-      _showPower = !privacy.streams.hidePower;
-      _showCadence = !privacy.streams.hideCadence;
-      _showSpeed = !privacy.streams.hideSpeed;
-      _showElevation = !privacy.streams.hideElevation;
-      _showTemperature = !privacy.streams.hideTemperature;
       _trimStart.text = _trimText(privacy.trimStartM);
       _trimEnd.text = _trimText(privacy.trimEndM);
     });
@@ -122,16 +110,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     if (start == null || end == null) return;
     await ref
         .read(privacyViewModelProvider.notifier)
-        .saveSettings(
-          hideHeartRate: !_showHeartRate,
-          hidePower: !_showPower,
-          hideCadence: !_showCadence,
-          hideSpeed: !_showSpeed,
-          hideElevation: !_showElevation,
-          hideTemperature: !_showTemperature,
-          trimStartM: start,
-          trimEndM: end,
-        );
+        .saveSettings(trimStartM: start, trimEndM: end);
   }
 
   Future<void> _addZone(AppLocalizations l10n) async {
@@ -208,44 +187,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                 spacing: AppSpacing.lg,
                 children: [
                   Text(l10n.privacyHelp),
-                  const Divider(),
-                  SectionHeading(title: l10n.privacyOthersSee),
-                  _streamSwitch(
-                    'privacy-hide-heart-rate',
-                    _showHeartRate,
-                    l10n.privacyHideHeartRate,
-                    (v) => setState(() => _showHeartRate = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-power',
-                    _showPower,
-                    l10n.privacyHidePower,
-                    (v) => setState(() => _showPower = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-cadence',
-                    _showCadence,
-                    l10n.privacyHideCadence,
-                    (v) => setState(() => _showCadence = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-speed',
-                    _showSpeed,
-                    l10n.privacyHideSpeed,
-                    (v) => setState(() => _showSpeed = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-elevation',
-                    _showElevation,
-                    l10n.privacyHideElevation,
-                    (v) => setState(() => _showElevation = v),
-                  ),
-                  _streamSwitch(
-                    'privacy-hide-temperature',
-                    _showTemperature,
-                    l10n.privacyHideTemperature,
-                    (v) => setState(() => _showTemperature = v),
-                  ),
                   const Divider(),
                   SectionHeading(title: l10n.privacyTrimTitle),
                   Row(
@@ -334,19 +275,6 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       ],
     );
   }
-
-  Widget _streamSwitch(
-    String key,
-    bool value,
-    String title,
-    ValueChanged<bool> onChanged,
-  ) => SwitchListTile(
-    key: Key(key),
-    contentPadding: EdgeInsets.zero,
-    value: value,
-    title: Text(title),
-    onChanged: onChanged,
-  );
 
   Widget _trimField(
     String key,

@@ -511,6 +511,8 @@ class RideDetailScreen extends ConsumerWidget {
           bpm: suggestion.bpm,
           currentBpm: current,
           suggestionId: suggestion.id,
+          zonesFromThreshold:
+              ride.heartRateZoneModel.orElse(null) == 'threshold',
           busy: s.action.running,
           onAccept: notifier.acceptHeartRateSuggestion,
           onDismiss: notifier.dismissHeartRateSuggestion,
@@ -523,7 +525,13 @@ class RideDetailScreen extends ConsumerWidget {
         ? s.profile?.maxHeartRateRideId.orElse(null)
         : s.profile?.thresholdHeartRateRideId.orElse(null);
     if (current == null || measuredOn != ride.id) return const [];
-    return [HeartRateNoteCard(kind: kind, bpm: current)];
+    return [
+      HeartRateNoteCard(
+        kind: kind,
+        bpm: current,
+        zonesFromThreshold: ride.heartRateZoneModel.orElse(null) == 'threshold',
+      ),
+    ];
   }
 }
 

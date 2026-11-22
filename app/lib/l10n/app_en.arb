@@ -310,15 +310,13 @@
   "audienceNone": "Nobody",
   "audienceCoaches": "My coaches",
   "routesNeedRides": "Turn on rides first; routes add the map to them.",
+  "shareStatsConfirmTitle": "Share with your coaches?",
+  "shareStatsConfirmBody": "Your coaches will see every number of your rides: power, heart rate, speed, cadence, elevation, temperature, and the training built from them. They only read; your rides stay yours to change or delete. The map needs Routes, and even then the start, the end and your saved places stay hidden.",
+  "shareWellbeingConfirmTitle": "Share your wellbeing with your coaches?",
+  "shareWellbeingConfirmBody": "Your coaches will see your daily check-in scores and how hard each ride felt. This is health data, so we ask you first. Your notes stay private, and you can stop sharing at any time.",
+  "shareConfirmAction": "Share",
   "privacyTitle": "Ride privacy",
-  "privacyHelp": "What other people see when you share a ride or your club can see it. You always see everything.",
-  "privacyOthersSee": "What others see of each ride",
-  "privacyHideHeartRate": "Heart rate",
-  "privacyHidePower": "Power",
-  "privacyHideCadence": "Cadence",
-  "privacyHideSpeed": "Speed",
-  "privacyHideElevation": "Elevation",
-  "privacyHideTemperature": "Temperature",
+  "privacyHelp": "What your club and coaches never see of your routes. You always see everything.",
   "privacyTrimTitle": "Hide the start and end",
   "privacyTrimStart": "Start",
   "privacyTrimEnd": "End",
@@ -648,6 +646,7 @@
   "effortFromPower": "From your power",
   "effortFromHeartRate": "From your heart rate",
   "effortFromFeel": "From how hard it felt",
+  "effortFromEstimated": "From estimated watts",
   "statEfficiency": "Efficiency factor",
   "statDecoupling": "Decoupling",
   "statAverageHeartRate": "Average heart rate",
@@ -1399,6 +1398,14 @@
       }
     }
   },
+  "heartRateMaxMeasuredOnly": "New maximum heart rate: {bpm} bpm.",
+  "@heartRateMaxMeasuredOnly": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
   "heartRateThresholdMeasured": "New threshold heart rate: {bpm} bpm. Your zones now use it.",
   "@heartRateThresholdMeasured": {
     "placeholders": {
@@ -1616,6 +1623,7 @@
 
   "shareWellbeing": "Wellbeing",
   "shareWellbeingHelper": "Check-in scores and ride RPE; notes stay private.",
+  "shareRidesHelper": "Your rides and the training built from them.",
   "sharesWellbeing": "Wellbeing",
   "viewPowerCurve": "Power curve",
   "viewWellbeing": "Wellbeing",
@@ -1764,6 +1772,38 @@
     "placeholders": {
       "record": {
         "type": "String"
+      }
+    }
+  },
+  "notificationHeartRateMaxMeasured": "Your maximum heart rate is now {bpm} bpm, measured on a ride.",
+  "@notificationHeartRateMaxMeasured": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHeartRateThresholdMeasured": "Your threshold heart rate is now {bpm} bpm, measured on a ride.",
+  "@notificationHeartRateThresholdMeasured": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHeartRateMaxSuggested": "A ride suggests a maximum heart rate of {bpm} bpm.",
+  "@notificationHeartRateMaxSuggested": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHeartRateThresholdSuggested": "A ride suggests a threshold heart rate of {bpm} bpm.",
+  "@notificationHeartRateThresholdSuggested": {
+    "placeholders": {
+      "bpm": {
+        "type": "int"
       }
     }
   },

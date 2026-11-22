@@ -179,7 +179,7 @@ public sealed class PowerRecordsTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHidePowerRecords_WhenPowerIsHidden()
+    public async Task CoachRide_ShouldShowPowerRecords_WhenTheRiderSharesRides()
     {
         await using var api = await StartAsync();
         var ownerEmail = TestApi.NewEmail();
@@ -196,19 +196,10 @@ public sealed class PowerRecordsTests(PostgresFixture postgres)
 
         var shared = await coach.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{athleteId}/rides/{record.Id}", Ct);
+
+        // The records are a number about the ride, so the rider who shares rides shares them.
         Assert.NotEmpty(shared!.PowerRecords!);
-
-        // The privacy snapshot is copied onto a ride at import, so hiding power now reaches only new rides.
-        await using (var scope = api.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-            await db.Rides.Where(r => r.Id == record.Id)
-                .ExecuteUpdateAsync(s => s.SetProperty(r => r.HidePower, true), Ct);
-        }
-
-        var hidden = await coach.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{athleteId}/rides/{record.Id}", Ct);
-        Assert.Null(hidden!.PowerRecords);
+        Assert.NotNull(shared.NormalizedPowerW);
     }
 
     [Fact]

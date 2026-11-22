@@ -51,8 +51,7 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
         double? tss = null,
         double? hrTss = null,
         int? rpe = null,
-        string startUtc = "2026-11-04T07:00:00",
-        bool? hidePower = null)
+        string startUtc = "2026-11-04T07:00:00")
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -69,12 +68,9 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
             DistanceM = hours * 40_000,
             Tss = tss,
             HrTss = hrTss,
-            HidePower = hidePower,
-            HideHeartRate = hidePower is null ? null : false,
-            HideCadence = hidePower is null ? null : false,
-            HideSpeed = hidePower is null ? null : false,
-            HideElevation = hidePower is null ? null : false,
-            HideTemperature = hidePower is null ? null : false,
+            // The privacy snapshot is the trim: none, as a member with no saved settings imports.
+            TrimStartM = 0,
+            TrimEndM = 0,
         };
         db.Rides.Add(ride);
         if (rpe is { } rating) db.RideFeels.Add(new RideFeel { RideId = ride.Id, Rpe = rating, UpdatedAt = Now });
@@ -105,6 +101,55 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
                 Wellbeing = wellbeing,
             },
             Ct)).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public void TrainingLoad_Effort_ShouldUseTheEstimatedTss_WhenThereIsNoPowerHeartRateOrFeel() =>
+        Assert.Equal((42.0, EffortSources.Estimated), TrainingLoad.Effort(null, null, null, 42.0));
+
+    [Fact]
+    public void TrainingLoad_Effort_ShouldPreferTheFeelScore_WhenTheRideAlsoHasAnEstimate() =>
+        Assert.Equal((100.0, EffortSources.Feel), TrainingLoad.Effort(null, null, 100.0, 42.0));
+
+    [Fact]
+    public async Task Training_ShouldCountTheEstimatedTss_WhenARideHasNoSensors()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        // Watts are estimated only when the rider has a weight.
+        (await member.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, 70, 2000, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        // A GPX with speed from the positions and a slope from the altitude, but no power and no heart rate.
+        var uploaded = await TestApi.UploadAndWaitAsync(
+            member.Client, Bytes(Gpx(600, start: new DateTime(2026, 11, 4, 7, 0, 0, DateTimeKind.Utc))),
+            "ride.gpx");
+
+        var training = await TrainingAsync(member.Client);
+        var stored = await RideInDbAsync(api, uploaded.Id);
+
+        Assert.NotNull(stored.EstimatedTss);
+        Assert.Equal(stored.EstimatedTss, DayLoad(training));
+        Assert.Equal(0, training.Tss);
+    }
+
+    [Fact]
+    public async Task GetRide_ShouldSayEstimated_WhenTheEffortComesFromEstimatedWatts()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        (await member.Client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", null, 70, 2000, "UTC", "monday"), Ct)).EnsureSuccessStatusCode();
+        var uploaded = await TestApi.UploadAndWaitAsync(
+            member.Client, Bytes(Gpx(600, start: new DateTime(2026, 11, 4, 7, 0, 0, DateTimeKind.Utc))),
+            "ride.gpx");
+
+        var ride = await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{uploaded.Id}", Ct);
+        var stored = await RideInDbAsync(api, uploaded.Id);
+
+        Assert.Equal(EffortSources.Estimated, ride!.EffortSource);
+        Assert.Equal(stored.EstimatedTss, ride.EffortScore);
     }
 
     [Fact]
@@ -218,15 +263,15 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachTraining_ShouldCountAHiddenRidesLoad_WhenThePowerSwitchIsOff()
+    public async Task CoachTraining_ShouldCountTheHeartRateLoad_WhenTheRideHasNoPower()
     {
         await using var api = await StartAsync();
         var coach = await api.NewMemberAsync();
         var club = await TestClubs.CreateAsync(api, coach);
         var rider = await api.NewMemberAsync();
         await JoinAndShareAsync(api, rider, club);
-        // The ride's own snapshot hides power; hrTSS counts like TSS, so the daily total is not redacted.
-        await AddRideAsync(api, rider.Id, hrTss: 80, hidePower: true);
+        // hrTSS counts like TSS, so a heart-rate-only ride carries its load to the coach's daily total.
+        await AddRideAsync(api, rider.Id, hrTss: 80);
 
         var training = await coach.Client.GetFromJsonAsync<TrainingResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/training?days=7", Ct);
@@ -242,7 +287,7 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
         var club = await TestClubs.CreateAsync(api, coach);
         var rider = await api.NewMemberAsync();
         await JoinAndShareAsync(api, rider, club);
-        await AddRideAsync(api, rider.Id, hrTss: null, rpe: 7, hidePower: true);
+        await AddRideAsync(api, rider.Id, hrTss: null, rpe: 7);
 
         var training = await coach.Client.GetFromJsonAsync<TrainingResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/training?days=7", Ct);
@@ -274,6 +319,78 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
         Assert.Equal(rider.Id, athlete.UserId);
         Assert.Equal(90, athlete.Tss7);
         Assert.Equal(90, athlete.Tss42);
+    }
+
+    [Fact]
+    public async Task CoachAthlete_ShouldCountHeartRateLoad_WhenTheRideHasNoPower()
+    {
+        await using var api = await StartAsync();
+        var coach = await api.NewMemberAsync();
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await api.NewMemberAsync();
+        await JoinAndShareAsync(api, rider, club);
+        await AddRideAsync(api, rider.Id, hrTss: 90, startUtc: "2026-11-04T07:00:00");
+
+        var athlete = await coach.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+        var roster = await coach.Client.GetFromJsonAsync<CoachAthletesResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes", Ct);
+
+        // One athlete's page and the roster agree: the effort score, not the stored TSS, which is null here.
+        Assert.Equal(90, athlete!.Tss7);
+        Assert.Equal(athlete.Tss7, Assert.Single(roster!.Athletes).Tss7);
+        Assert.Equal(90, athlete.Tss42);
+    }
+
+    [Fact]
+    public async Task CoachAthlete_ShouldNotCountTheFeelScore_WhenThereIsNoWellbeingGrant()
+    {
+        await using var api = await StartAsync();
+        var coach = await api.NewMemberAsync();
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await api.NewMemberAsync();
+        await JoinAndShareAsync(api, rider, club);
+        await AddRideAsync(api, rider.Id, rpe: 7);
+
+        var without = await coach.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+        Assert.Equal(0, without!.Tss7);
+        Assert.Equal(0, without.Tss42);
+
+        (await rider.Client.PutAsJsonAsync(
+            "/api/v1/sharing",
+            new UpdateSharingRequest
+            {
+                Rides = "coaches",
+                Analytics = "coaches",
+                Routes = "none",
+                Wellbeing = "coaches",
+            },
+            Ct)).EnsureSuccessStatusCode();
+        var with = await coach.Client.GetFromJsonAsync<CoachAthleteResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+
+        // An hour rated 7 of 10 is 100 on the TSS scale, and the grant is what makes it readable.
+        Assert.Equal(100, with!.Tss7);
+        Assert.Equal(100, with.Tss42);
+    }
+
+    [Fact]
+    public async Task CoachAthlete_ShouldShowNoLoad_WhenTheRequestComesFromAnotherClub()
+    {
+        await using var api = await StartAsync();
+        var coach = await api.NewMemberAsync();
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await api.NewMemberAsync();
+        await JoinAndShareAsync(api, rider, club);
+        await AddRideAsync(api, rider.Id, hrTss: 90);
+
+        var stranger = await api.NewMemberAsync();
+        _ = await TestClubs.CreateAsync(api, stranger);
+
+        var athlete = await stranger.Client.GetAsync($"/api/v1/clubs/{club.Id}/athletes/{rider.Id}", Ct);
+
+        Assert.Equal(HttpStatusCode.NotFound, athlete.StatusCode);
     }
 
     [Fact]
@@ -312,12 +429,12 @@ public sealed class HeartRateEffortTests(PostgresFixture postgres)
         var shown = await coach.Client.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}", Ct);
 
-        // The owner reads the score and where it came from; a coach reads neither, nor the stored hrTSS.
+        // The owner reads the score and where it came from; a coach reads the ride's load (hrTss) but not the score.
         Assert.Equal((60.0, EffortSources.HeartRate), (own!.EffortScore, own.EffortSource));
         Assert.Equal(60.0, own.HrTss);
-        Assert.Null(shown!.EffortScore);
+        Assert.Equal(60.0, shown!.HrTss);
+        Assert.Null(shown.EffortScore);
         Assert.Null(shown.EffortSource);
-        Assert.Null(shown.HrTss);
     }
 
     [Fact]

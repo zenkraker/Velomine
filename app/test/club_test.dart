@@ -320,29 +320,136 @@ void main() {
     expect(find.text('Velocità'), findsWidgets);
   });
 
-  testWidgets('ClubScreen_ShouldSaveWellbeingSharing_WhenChosen', (
-    tester,
-  ) async {
-    final rider = server.add('rider@example.com');
-    server.signInBrowser(rider);
+  /// Opens the club page of a rider who belongs to the fake club.
+  Future<void> openClub(WidgetTester tester, {String? language}) async {
+    server.signInBrowser(server.add('rider@example.com', language: language));
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
-
-    await tester.tap(find.text('Club'));
+    await goTo(tester, '/club');
     await tester.pumpAndSettle();
+  }
+
+  /// Picks an audience in one of the sharing choices, as a rider would.
+  Future<void> choose(WidgetTester tester, String key, String audience) async {
     await tester.scrollUntilVisible(
-      find.byKey(const Key('share-wellbeing')),
+      find.byKey(Key(key)),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.byKey(const Key('share-wellbeing')));
+    await tester.tap(find.byKey(Key(key)));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('My coaches').last);
+    await tester.tap(find.text(audience).last);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('ClubSharingCard_ShouldAskFirst_WhenRidesAreSharedWithCoaches', (
+    tester,
+  ) async {
+    await openClub(tester);
+    await choose(tester, 'share-rides', 'My coaches');
+
+    // Nothing is shared until the rider agrees, and the prompt says what a coach then reads.
+    expect(find.text('Share with your coaches?'), findsOneWidget);
+    expect(server.sharingChoices['rides'], 'none');
+
+    await tester.tap(find.byKey(const Key('share-rides-confirm')));
     await tester.pumpAndSettle();
 
-    expect(server.sharingChoices['wellbeing'], 'coaches');
+    expect(server.sharingChoices['rides'], 'coaches');
+  });
+
+  testWidgets(
+    'ClubSharingCard_ShouldShareTrainingWithTheRides_WhenRidesAreSharedOrStopped',
+    (tester) async {
+      await openClub(tester);
+
+      // There is no separate training choice: it follows the rides.
+      expect(find.byKey(const Key('share-analytics')), findsNothing);
+
+      await choose(tester, 'share-rides', 'My coaches');
+      await tester.tap(find.byKey(const Key('share-rides-confirm')));
+      await tester.pumpAndSettle();
+      expect(server.sharingChoices['analytics'], 'coaches');
+
+      await choose(tester, 'share-rides', 'Nobody');
+      expect(server.sharingChoices['rides'], 'none');
+      expect(server.sharingChoices['analytics'], 'none');
+    },
+  );
+
+  testWidgets(
+    'ClubSharingCard_ShouldAskForConsent_WhenWellbeingIsSharedWithCoaches',
+    (tester) async {
+      await openClub(tester);
+      await choose(tester, 'share-wellbeing', 'My coaches');
+
+      // Wellbeing is health data, so the prompt asks for consent in its own words.
+      expect(
+        find.text('Share your wellbeing with your coaches?'),
+        findsOneWidget,
+      );
+      expect(server.sharingChoices['wellbeing'], 'none');
+
+      await tester.tap(find.byKey(const Key('share-wellbeing-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(server.sharingChoices['wellbeing'], 'coaches');
+    },
+  );
+
+  testWidgets(
+    'ClubSharingCard_ShouldAskForConsentInItalian_WhenWellbeingIsSharedWithCoaches',
+    (tester) async {
+      await openClub(tester, language: 'it');
+      await choose(tester, 'share-wellbeing', 'I miei allenatori');
+
+      expect(
+        find.text('Condividere il tuo benessere con i tuoi allenatori?'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('share-wellbeing-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(server.sharingChoices['wellbeing'], 'coaches');
+    },
+  );
+
+  testWidgets('ClubSharingCard_ShouldNotShare_WhenTheRiderCancels', (
+    tester,
+  ) async {
+    await openClub(tester);
+    await choose(tester, 'share-wellbeing', 'My coaches');
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(server.sharingChoices['wellbeing'], 'none');
+  });
+
+  testWidgets('ClubSharingCard_ShouldNotAsk_WhenSharingStops', (tester) async {
+    server.sharingChoices['rides'] = 'coaches';
+    await openClub(tester);
+
+    await choose(tester, 'share-rides', 'Nobody');
+
+    // Turning sharing off never asks: it takes nothing away.
+    expect(find.text('Share with your coaches?'), findsNothing);
+    expect(server.sharingChoices['rides'], 'none');
+  });
+
+  testWidgets('ClubSharingCard_ShouldNotAsk_WhenRoutesAreShared', (
+    tester,
+  ) async {
+    server.sharingChoices['rides'] = 'coaches';
+    await openClub(tester);
+
+    await choose(tester, 'share-routes', 'My coaches');
+
+    // Routes borrow the map to rides the rider already shares, and their own row says what it shows.
+    expect(find.text('Share with your coaches?'), findsNothing);
+    expect(server.sharingChoices['routes'], 'coaches');
   });
 
   testWidgets('StartClubScreen_ShouldPinSubmitInTheBottomBar_WhenOpened', (

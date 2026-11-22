@@ -57,11 +57,10 @@ public sealed class PrivacyTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task HidePower_ShouldHidePowerAndItsNumbers_WhenCoachReadsTheRide()
+    public async Task CoachRide_ShouldShowPowerAndItsNumbers_WhenTheRiderSharesRides()
     {
         await using var api = await StartAsync();
         var (owner, club, rider) = await SharedClubAsync(api);
-        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { HidePower = true });
         var rideId = await SharedRideAsync(api, rider);
 
         var ride = await owner.Client.GetFromJsonAsync<RideResponse>(
@@ -69,23 +68,23 @@ public sealed class PrivacyTests(PostgresFixture postgres)
         var streams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}/streams", Ct);
 
-        Assert.Null(ride!.AvgPowerW);
-        Assert.Null(ride.MaxPowerW);
-        Assert.Null(ride.NormalizedPowerW);
-        Assert.Null(streams!.Power);
+        Assert.NotNull(ride!.AvgPowerW);
+        Assert.NotNull(ride.MaxPowerW);
+        Assert.NotNull(ride.NormalizedPowerW);
+        Assert.NotNull(streams!.Power);
         Assert.NotNull(streams.HeartRate);
-        Assert.Equal(HttpStatusCode.NotFound, (await owner.Client.GetAsync(
+        // The training load and the power curve are numbers about the ride, so they come with it.
+        Assert.Equal(HttpStatusCode.OK, (await owner.Client.GetAsync(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/power-curve", Ct)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await owner.Client.GetAsync(
+        Assert.Equal(HttpStatusCode.OK, (await owner.Client.GetAsync(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/training", Ct)).StatusCode);
     }
 
     [Fact]
-    public async Task HideHeartRate_ShouldHideHeartRate_WhenCoachReadsStreams()
+    public async Task CoachRide_ShouldShowHeartRate_WhenTheRiderSharesRides()
     {
         await using var api = await StartAsync();
         var (owner, club, rider) = await SharedClubAsync(api);
-        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { HideHeartRate = true });
         var rideId = await SharedRideAsync(api, rider);
 
         var ride = await owner.Client.GetFromJsonAsync<RideResponse>(
@@ -93,17 +92,36 @@ public sealed class PrivacyTests(PostgresFixture postgres)
         var streams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}/streams", Ct);
 
-        Assert.Null(ride!.AvgHeartRate);
-        Assert.Null(streams!.HeartRate);
+        Assert.NotNull(ride!.AvgHeartRate);
+        Assert.NotNull(ride.MaxHeartRate);
+        Assert.NotNull(streams!.HeartRate);
         Assert.NotNull(streams.Power);
     }
 
     [Fact]
-    public async Task TrimStart_ShouldHideTheFirstMetres_WhenCoachReadsStreams()
+    public async Task CoachRide_ShouldNotBeVisible_WhenTheRequestComesFromAnotherClub()
+    {
+        await using var api = await StartAsync();
+        var (_, club, rider) = await SharedClubAsync(api);
+        var rideId = await SharedRideAsync(api, rider);
+        var stranger = await NewMemberAsync(api);
+        _ = await TestClubs.CreateAsync(api, stranger);
+
+        var ride = await stranger.Client.GetAsync(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}", Ct);
+        var streams = await stranger.Client.GetAsync(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}/streams", Ct);
+
+        Assert.Equal(HttpStatusCode.NotFound, ride.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, streams.StatusCode);
+    }
+
+    [Fact]
+    public async Task CoachStreams_ShouldStillTrimTheStartAndEnd_WhenTheRiderSetATrim()
     {
         await using var api = await StartAsync();
         var (owner, club, rider) = await SharedClubAsync(api);
-        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { TrimStartM = 500 });
+        await SetDefaultsAsync(rider.Client, PrivacyDefaults.None with { TrimStartM = 500, TrimEndM = 500 });
         var rideId = await SharedRideAsync(api, rider);
 
         var streams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
@@ -112,6 +130,62 @@ public sealed class PrivacyTests(PostgresFixture postgres)
         Assert.Null(streams!.Latitude![0]);
         Assert.Null(streams.Latitude[60]);
         Assert.NotNull(streams.Latitude[63]);
+        // The ride is a 600-second FIT about 4.8 km long, so the last 500 m are the last few samples.
+        Assert.Null(streams.Latitude[^1]);
+        Assert.NotNull(streams.Latitude[streams.Latitude.Length / 2]);
+    }
+
+    [Fact]
+    public async Task CoachStreams_ShouldHaveNoPositions_WhenThereIsNoRoutesGrant()
+    {
+        await using var api = await StartAsync();
+        var (owner, club, rider) = await SharedClubAsync(api);
+        (await rider.Client.PutAsJsonAsync("/api/v1/sharing", new
+        {
+            rides = "coaches",
+            analytics = "coaches",
+            routes = "none",
+            wellbeing = "none",
+        }, Ct)).EnsureSuccessStatusCode();
+        var rideId = await SharedRideAsync(api, rider);
+
+        var streams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{rideId}/streams", Ct);
+
+        Assert.Null(streams!.Latitude);
+        Assert.Null(streams.Longitude);
+        // The samples themselves are still a ride: only the positions need their own grant.
+        Assert.NotNull(streams.Power);
+        Assert.NotNull(streams.Time);
+    }
+
+    [Fact]
+    public async Task UpdatePrivacy_ShouldAcceptAnOldApp_WhenItStillSendsTheSwitches()
+    {
+        await using var api = await StartAsync();
+        var rider = await NewMemberAsync(api);
+
+        var response = await rider.Client.PutAsJsonAsync(
+            "/api/v1/privacy/settings",
+            new UpdatePrivacyRequest
+            {
+                HideHeartRate = true,
+                HidePower = true,
+                HideCadence = true,
+                HideSpeed = true,
+                HideElevation = true,
+                HideTemperature = true,
+                TrimStartM = 300,
+                TrimEndM = 0,
+            },
+            Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var saved = (await response.Content.ReadFromJsonAsync<PrivacyResponse>(Ct))!;
+        // The switches no longer exist, so they answer false whatever the app sends; the trim is saved as asked.
+        Assert.False(saved.Streams.HideHeartRate);
+        Assert.False(saved.Streams.HidePower);
+        Assert.Equal(300, saved.TrimStartM);
     }
 
     [Fact]
@@ -162,17 +236,7 @@ public sealed class PrivacyTests(PostgresFixture postgres)
         var second = await NewMemberAsync(api);
         (await first.Client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HideHeartRate = true,
-                HidePower = true,
-                HideCadence = true,
-                HideSpeed = true,
-                HideElevation = true,
-                HideTemperature = true,
-                TrimStartM = 300,
-                TrimEndM = 300,
-            },
+            new UpdatePrivacyRequest { TrimStartM = 300, TrimEndM = 300 },
             Ct)).EnsureSuccessStatusCode();
 
         var secondView = await second.Client.GetFromJsonAsync<PrivacyResponse>("/api/v1/privacy", Ct);
@@ -191,17 +255,7 @@ public sealed class PrivacyTests(PostgresFixture postgres)
         var second = await NewMemberAsync(api);
         (await first.Client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HideHeartRate = true,
-                HidePower = true,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = false,
-                HideTemperature = false,
-                TrimStartM = 900,
-                TrimEndM = 0,
-            },
+            new UpdatePrivacyRequest { TrimStartM = 900, TrimEndM = 0 },
             Ct)).EnsureSuccessStatusCode();
 
         var secondView = await second.Client.GetFromJsonAsync<PrivacyResponse>("/api/v1/privacy", Ct);
@@ -255,20 +309,10 @@ public sealed class PrivacyTests(PostgresFixture postgres)
         return (owner, club, rider);
     }
 
-    /// <summary>A ride keeps the defaults it was imported with, so a test that wants them to apply saves them first.</summary>
+    /// <summary>A ride keeps the trim it was imported with, so a test that wants it to apply saves it first.</summary>
     private static Task SetDefaultsAsync(HttpClient client, PrivacyDefaults defaults) =>
         client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HideHeartRate = defaults.HideHeartRate,
-                HidePower = defaults.HidePower,
-                HideCadence = defaults.HideCadence,
-                HideSpeed = defaults.HideSpeed,
-                HideElevation = defaults.HideElevation,
-                HideTemperature = defaults.HideTemperature,
-                TrimStartM = defaults.TrimStartM,
-                TrimEndM = defaults.TrimEndM,
-            },
+            new UpdatePrivacyRequest { TrimStartM = defaults.TrimStartM, TrimEndM = defaults.TrimEndM },
             Ct);
 }

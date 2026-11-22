@@ -150,7 +150,7 @@ Before building or shipping something, ask:
 | Cycling analytics (NP, IF, TSS, TRIMP, power curve, FTP and VO2max estimates, fitness/fatigue/form) | Turns recorded streams into training guidance. |
 | Readiness view from load, check-in and recent RPE | The point of collecting wellbeing data. |
 | Clubs and coaches, private by default | Coaching without making anything public. |
-| Privacy zones and per-stream switches | Keeps home and saved places out of every shared view; the owner always sees the full track. |
+| Privacy zones and start and end trimming | Keeps home and saved places out of every shared view; a coach otherwise reads every number of the ride, and the owner always sees the full track. |
 | Component wear by km, hours or months | Warns before a part fails, not after. |
 | Native phone recorder with standard Bluetooth sensors | No vendor app or account needed for any sensor. |
 

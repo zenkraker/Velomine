@@ -13,27 +13,63 @@ part of velomine_api;
 class UpdatePrivacyRequest {
   /// Returns a new [UpdatePrivacyRequest] instance.
   UpdatePrivacyRequest({
-    required this.hideHeartRate,
-    required this.hidePower,
-    required this.hideCadence,
-    required this.hideSpeed,
-    required this.hideElevation,
-    required this.hideTemperature,
+    this.hideHeartRate = const Optional.absent(),
+    this.hidePower = const Optional.absent(),
+    this.hideCadence = const Optional.absent(),
+    this.hideSpeed = const Optional.absent(),
+    this.hideElevation = const Optional.absent(),
+    this.hideTemperature = const Optional.absent(),
     required this.trimStartM,
     required this.trimEndM,
   });
 
-  final bool hideHeartRate;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> hideHeartRate;
 
-  final bool hidePower;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> hidePower;
 
-  final bool hideCadence;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> hideCadence;
 
-  final bool hideSpeed;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> hideSpeed;
 
-  final bool hideElevation;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> hideElevation;
 
-  final bool hideTemperature;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<bool?> hideTemperature;
 
   /// Minimum value: 0
   /// Maximum value: 5000
@@ -57,12 +93,12 @@ class UpdatePrivacyRequest {
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (hideHeartRate.hashCode) +
-    (hidePower.hashCode) +
-    (hideCadence.hashCode) +
-    (hideSpeed.hashCode) +
-    (hideElevation.hashCode) +
-    (hideTemperature.hashCode) +
+    (hideHeartRate == null ? 0 : hideHeartRate!.hashCode) +
+    (hidePower == null ? 0 : hidePower!.hashCode) +
+    (hideCadence == null ? 0 : hideCadence!.hashCode) +
+    (hideSpeed == null ? 0 : hideSpeed!.hashCode) +
+    (hideElevation == null ? 0 : hideElevation!.hashCode) +
+    (hideTemperature == null ? 0 : hideTemperature!.hashCode) +
     (trimStartM.hashCode) +
     (trimEndM.hashCode);
 
@@ -71,12 +107,30 @@ class UpdatePrivacyRequest {
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-      json[r'hideHeartRate'] = this.hideHeartRate;
-      json[r'hidePower'] = this.hidePower;
-      json[r'hideCadence'] = this.hideCadence;
-      json[r'hideSpeed'] = this.hideSpeed;
-      json[r'hideElevation'] = this.hideElevation;
-      json[r'hideTemperature'] = this.hideTemperature;
+    if (this.hideHeartRate.isPresent) {
+      final value = this.hideHeartRate.value;
+      json[r'hideHeartRate'] = value;
+    }
+    if (this.hidePower.isPresent) {
+      final value = this.hidePower.value;
+      json[r'hidePower'] = value;
+    }
+    if (this.hideCadence.isPresent) {
+      final value = this.hideCadence.value;
+      json[r'hideCadence'] = value;
+    }
+    if (this.hideSpeed.isPresent) {
+      final value = this.hideSpeed.value;
+      json[r'hideSpeed'] = value;
+    }
+    if (this.hideElevation.isPresent) {
+      final value = this.hideElevation.value;
+      json[r'hideElevation'] = value;
+    }
+    if (this.hideTemperature.isPresent) {
+      final value = this.hideTemperature.value;
+      json[r'hideTemperature'] = value;
+    }
       json[r'trimStartM'] = this.trimStartM;
       json[r'trimEndM'] = this.trimEndM;
     return json;
@@ -85,12 +139,12 @@ class UpdatePrivacyRequest {
   /// Clones this instance of [UpdatePrivacyRequest] and returns a new one where some of the
   /// properties have changed.
   UpdatePrivacyRequest copyWith({
-    bool? hideHeartRate,
-    bool? hidePower,
-    bool? hideCadence,
-    bool? hideSpeed,
-    bool? hideElevation,
-    bool? hideTemperature,
+    Optional<bool?>? hideHeartRate,
+    Optional<bool?>? hidePower,
+    Optional<bool?>? hideCadence,
+    Optional<bool?>? hideSpeed,
+    Optional<bool?>? hideElevation,
+    Optional<bool?>? hideTemperature,
     int? trimStartM,
     int? trimEndM,
   }) => UpdatePrivacyRequest(
@@ -115,18 +169,6 @@ class UpdatePrivacyRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        assert(json.containsKey(r'hideHeartRate'), 'Required key "UpdatePrivacyRequest[hideHeartRate]" is missing from JSON.');
-        assert(json[r'hideHeartRate'] != null, 'Required key "UpdatePrivacyRequest[hideHeartRate]" has a null value in JSON.');
-        assert(json.containsKey(r'hidePower'), 'Required key "UpdatePrivacyRequest[hidePower]" is missing from JSON.');
-        assert(json[r'hidePower'] != null, 'Required key "UpdatePrivacyRequest[hidePower]" has a null value in JSON.');
-        assert(json.containsKey(r'hideCadence'), 'Required key "UpdatePrivacyRequest[hideCadence]" is missing from JSON.');
-        assert(json[r'hideCadence'] != null, 'Required key "UpdatePrivacyRequest[hideCadence]" has a null value in JSON.');
-        assert(json.containsKey(r'hideSpeed'), 'Required key "UpdatePrivacyRequest[hideSpeed]" is missing from JSON.');
-        assert(json[r'hideSpeed'] != null, 'Required key "UpdatePrivacyRequest[hideSpeed]" has a null value in JSON.');
-        assert(json.containsKey(r'hideElevation'), 'Required key "UpdatePrivacyRequest[hideElevation]" is missing from JSON.');
-        assert(json[r'hideElevation'] != null, 'Required key "UpdatePrivacyRequest[hideElevation]" has a null value in JSON.');
-        assert(json.containsKey(r'hideTemperature'), 'Required key "UpdatePrivacyRequest[hideTemperature]" is missing from JSON.');
-        assert(json[r'hideTemperature'] != null, 'Required key "UpdatePrivacyRequest[hideTemperature]" has a null value in JSON.');
         assert(json.containsKey(r'trimStartM'), 'Required key "UpdatePrivacyRequest[trimStartM]" is missing from JSON.');
         assert(json[r'trimStartM'] != null, 'Required key "UpdatePrivacyRequest[trimStartM]" has a null value in JSON.');
         assert(json.containsKey(r'trimEndM'), 'Required key "UpdatePrivacyRequest[trimEndM]" is missing from JSON.');
@@ -135,12 +177,12 @@ class UpdatePrivacyRequest {
       }());
 
       return UpdatePrivacyRequest(
-        hideHeartRate: mapValueOfType<bool>(json, r'hideHeartRate')!,
-        hidePower: mapValueOfType<bool>(json, r'hidePower')!,
-        hideCadence: mapValueOfType<bool>(json, r'hideCadence')!,
-        hideSpeed: mapValueOfType<bool>(json, r'hideSpeed')!,
-        hideElevation: mapValueOfType<bool>(json, r'hideElevation')!,
-        hideTemperature: mapValueOfType<bool>(json, r'hideTemperature')!,
+        hideHeartRate: json.containsKey(r'hideHeartRate') ? Optional.present(mapValueOfType<bool>(json, r'hideHeartRate')) : const Optional.absent(),
+        hidePower: json.containsKey(r'hidePower') ? Optional.present(mapValueOfType<bool>(json, r'hidePower')) : const Optional.absent(),
+        hideCadence: json.containsKey(r'hideCadence') ? Optional.present(mapValueOfType<bool>(json, r'hideCadence')) : const Optional.absent(),
+        hideSpeed: json.containsKey(r'hideSpeed') ? Optional.present(mapValueOfType<bool>(json, r'hideSpeed')) : const Optional.absent(),
+        hideElevation: json.containsKey(r'hideElevation') ? Optional.present(mapValueOfType<bool>(json, r'hideElevation')) : const Optional.absent(),
+        hideTemperature: json.containsKey(r'hideTemperature') ? Optional.present(mapValueOfType<bool>(json, r'hideTemperature')) : const Optional.absent(),
         trimStartM: mapValueOfType<int>(json, r'trimStartM')!,
         trimEndM: mapValueOfType<int>(json, r'trimEndM')!,
       );
@@ -190,12 +232,6 @@ class UpdatePrivacyRequest {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'hideHeartRate',
-    'hidePower',
-    'hideCadence',
-    'hideSpeed',
-    'hideElevation',
-    'hideTemperature',
     'trimStartM',
     'trimEndM',
   };

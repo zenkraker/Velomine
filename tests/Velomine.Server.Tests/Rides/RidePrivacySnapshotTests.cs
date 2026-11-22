@@ -22,20 +22,10 @@ public sealed class RidePrivacySnapshotTests(PostgresFixture postgres)
     private Task<TestApi> StartAsync() =>
         TestApi.StartAsync(postgres, b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false"));
 
-    private static async Task SetDefaultsAsync(HttpClient client, bool hidePower, int trimStartM) =>
+    private static async Task SetDefaultsAsync(HttpClient client, int trimStartM, int trimEndM = 0) =>
         (await client.PutAsJsonAsync(
             "/api/v1/privacy/settings",
-            new UpdatePrivacyRequest
-            {
-                HideHeartRate = false,
-                HidePower = hidePower,
-                HideCadence = false,
-                HideSpeed = false,
-                HideElevation = false,
-                HideTemperature = false,
-                TrimStartM = trimStartM,
-                TrimEndM = 0,
-            },
+            new UpdatePrivacyRequest { TrimStartM = trimStartM, TrimEndM = trimEndM },
             Ct)).EnsureSuccessStatusCode();
 
     /// <summary>An owner and a rider who shares their rides, training and routes with the club's coaches.</summary>
@@ -64,66 +54,12 @@ public sealed class RidePrivacySnapshotTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task PrivacySettings_ShouldStayOnAnOlderRide_WhenTheMemberRelaxesTheDefaultAfterwards()
-    {
-        await using var api = await StartAsync();
-        var (owner, club, rider) = await SharedClubAsync(api);
-        await SetDefaultsAsync(rider.Client, hidePower: true, trimStartM: 0);
-        var old = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start, 600)));
-        await SetDefaultsAsync(rider.Client, hidePower: false, trimStartM: 0);
-        var fresh = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start.AddDays(1), 600)));
-
-        var oldView = await owner.Client.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{old.Id}", Ct);
-        var freshView = await owner.Client.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{fresh.Id}", Ct);
-
-        Assert.Null(oldView!.AvgPowerW);
-        Assert.Null(oldView.NormalizedPowerW);
-        Assert.NotNull(freshView!.AvgPowerW);
-        Assert.NotNull(freshView.NormalizedPowerW);
-    }
-
-    [Fact]
-    public async Task PrivacySettings_ShouldStayOnAnOlderRideInTheList_WhenTheMemberRelaxesTheDefaultAfterwards()
-    {
-        await using var api = await StartAsync();
-        var (owner, club, rider) = await SharedClubAsync(api);
-        await SetDefaultsAsync(rider.Client, hidePower: true, trimStartM: 0);
-        var old = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start, 600)));
-        await SetDefaultsAsync(rider.Client, hidePower: false, trimStartM: 0);
-        var fresh = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start.AddDays(1), 600)));
-
-        var list = await owner.Client.GetFromJsonAsync<ListRidesResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides", Ct);
-
-        Assert.Null(list!.Rides.Single(r => r.Id == old.Id).AvgPowerW);
-        Assert.NotNull(list.Rides.Single(r => r.Id == fresh.Id).AvgPowerW);
-    }
-
-    [Fact]
-    public async Task PrivacySettings_ShouldStayOnAnOlderRideStreams_WhenTheMemberRelaxesTheDefaultAfterwards()
-    {
-        await using var api = await StartAsync();
-        var (owner, club, rider) = await SharedClubAsync(api);
-        await SetDefaultsAsync(rider.Client, hidePower: true, trimStartM: 0);
-        var old = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start, 600)));
-        await SetDefaultsAsync(rider.Client, hidePower: false, trimStartM: 0);
-
-        var oldStreams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{old.Id}/streams", Ct);
-
-        Assert.Null(oldStreams!.Power);
-        Assert.NotNull(oldStreams.HeartRate);
-    }
-
-    [Fact]
-    public async Task TrimStart_ShouldStayOnAnOlderRide_WhenTheMemberSetsTrimmingAfterwards()
+    public async Task Trim_ShouldStayOnAnOlderRide_WhenTheMemberSetsTrimmingAfterwards()
     {
         await using var api = await StartAsync();
         var (owner, club, rider) = await SharedClubAsync(api);
         var ride = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start, 600)));
-        await SetDefaultsAsync(rider.Client, hidePower: false, trimStartM: 500);
+        await SetDefaultsAsync(rider.Client, trimStartM: 500);
 
         var streams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{ride.Id}/streams", Ct);
@@ -133,18 +69,41 @@ public sealed class RidePrivacySnapshotTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Trim_ShouldStayOnAnOlderRide_WhenTheMemberTurnsTrimmingOffAfterwards()
+    {
+        await using var api = await StartAsync();
+        var (owner, club, rider) = await SharedClubAsync(api);
+        await SetDefaultsAsync(rider.Client, trimStartM: 500);
+        var old = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start, 600)));
+        await SetDefaultsAsync(rider.Client, trimStartM: 0);
+        var fresh = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start.AddDays(1), 600)));
+
+        var oldStreams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{old.Id}/streams", Ct);
+        var freshStreams = await owner.Client.GetFromJsonAsync<RideStreamsResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{rider.Id}/rides/{fresh.Id}/streams", Ct);
+
+        // The old ride keeps the trim it was imported with; the new one starts at its first sample.
+        Assert.Null(oldStreams!.Latitude![0]);
+        Assert.NotNull(freshStreams!.Latitude![0]);
+    }
+
+    [Fact]
     public async Task UploadRide_ShouldCopyThePrivacyDefaults_WhenTheMemberHasSavedThem()
     {
         await using var api = await StartAsync();
         var rider = await api.NewMemberAsync();
-        await SetDefaultsAsync(rider.Client, hidePower: true, trimStartM: 600);
+        await SetDefaultsAsync(rider.Client, trimStartM: 600);
 
         var ride = await TestApi.UploadAndWaitAsync(rider.Client, Fit(new FitSession(Start, 600)));
 
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
         var stored = await db.Rides.AsNoTracking().SingleAsync(r => r.Id == ride.Id, Ct);
-        Assert.Equal(new PrivacyDefaults(false, true, false, false, false, false, 600, 0), stored.Privacy);
+        Assert.Equal(new PrivacyDefaults(600, 0), stored.Privacy);
+        // The six switch columns stay valid for their last release: a new import writes them false.
+        Assert.False(stored.HidePower);
+        Assert.False(stored.HideHeartRate);
     }
 
     [Fact]
@@ -152,7 +111,7 @@ public sealed class RidePrivacySnapshotTests(PostgresFixture postgres)
     {
         await using var api = await StartAsync();
         var rider = await api.NewMemberAsync();
-        await SetDefaultsAsync(rider.Client, hidePower: true, trimStartM: 0);
+        await SetDefaultsAsync(rider.Client, trimStartM: 900);
         // One file, two activities: the first fills the uploaded row, the second gets a row of its own.
         var file = Fit(new FitSession(Start, 600), new FitSession(Start.AddHours(3), 600));
 
@@ -169,6 +128,6 @@ public sealed class RidePrivacySnapshotTests(PostgresFixture postgres)
         }
 
         Assert.Equal(2, rides.Count);
-        Assert.All(rides, ride => Assert.True(ride.HidePower));
+        Assert.All(rides, ride => Assert.Equal(900, ride.TrimStartM));
     }
 }

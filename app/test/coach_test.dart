@@ -39,9 +39,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('My coaches').last);
     await tester.pumpAndSettle();
+    // Sharing with a coach is told before it happens, so the rider agrees first.
+    await tester.tap(find.byKey(const Key('share-rides-confirm')));
+    await tester.pumpAndSettle();
 
+    // The training comes with the rides; the route stays a choice of its own.
     expect(server.sharingChoices['rides'], 'coaches');
-    expect(server.sharingChoices['analytics'], 'none');
+    expect(server.sharingChoices['analytics'], 'coaches');
     expect(server.sharingChoices['routes'], 'none');
   });
 

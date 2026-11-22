@@ -346,33 +346,26 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHideWPrimeBalance_WhenPowerIsHidden()
+    public async Task CoachStreams_ShouldCarryTheWPrimeBalance_WhenTheRiderSharesTraining()
     {
         await using var api = await StartAsync();
         var (coach, clubId, athlete) = await ClubAsync(api, analytics: "coaches");
         await AddFitAsync(api, athlete.Id);
         var ride = await MinuteRideAsync(athlete.Client);
 
-        // The privacy snapshot is copied onto a ride at import, so hiding power now reaches only new rides.
-        await using (var scope = api.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-            await db.Rides.Where(r => r.Id == ride.Id)
-                .ExecuteUpdateAsync(s => s.SetProperty(r => r.HidePower, true), Ct);
-        }
-
-        var hidden = await coach.GetFromJsonAsync<RideResponse>(
+        var shared = await coach.GetFromJsonAsync<RideResponse>(
             $"/api/v1/clubs/{clubId}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
         var streams = await coach.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{clubId}/athletes/{athlete.Id}/rides/{ride.Id}/streams", Ct);
 
-        Assert.Null(hidden!.MinWPrimeBalanceJ);
-        Assert.Null(hidden.WPrimeJ);
-        Assert.Null(streams!.WPrimeBalanceJ);
+        // The balance is a number about the ride, so the coach reads it whole.
+        Assert.NotNull(shared!.MinWPrimeBalanceJ);
+        Assert.NotNull(shared.WPrimeJ);
+        Assert.NotNull(streams!.WPrimeBalanceJ);
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHideWPrimeBalance_WhenThereIsNoAnalyticsGrant()
+    public async Task CoachRide_ShouldShowWPrimeBalance_WhenOnlyRidesAreShared()
     {
         await using var api = await StartAsync();
         var (coach, clubId, athlete) = await ClubAsync(api, analytics: "none");
@@ -384,9 +377,10 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
         var streams = await coach.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{clubId}/athletes/{athlete.Id}/rides/{ride.Id}/streams", Ct);
 
-        Assert.Null(shared!.MinWPrimeBalanceJ);
-        Assert.Null(shared.WPrimeJ);
-        Assert.Null(streams!.WPrimeBalanceJ);
+        // Sharing rides gives the training built from them too, so the balance is there without a training grant.
+        Assert.NotNull(shared!.MinWPrimeBalanceJ);
+        Assert.NotNull(shared.WPrimeJ);
+        Assert.NotNull(streams!.WPrimeBalanceJ);
     }
 
     [Fact]
