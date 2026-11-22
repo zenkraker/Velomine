@@ -1,0 +1,44 @@
+# The presentation site (site/) on GitHub Pages, at velomine.eu. It is not part of any Velomine stack: a self-hosted
+# server and the demo have no use for it, and the web image serves only the app. Pages is GitHub's own service, so this
+# workflow holds no key of its own, and it publishes only when the site changes.
+#
+# One-time, in the repository's Settings → Pages: set the source to "GitHub Actions" and the custom domain to
+# velomine.eu with HTTPS enforced. velomine.eu's DNS points at GitHub (see docs/demo.md).
+name: Site
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      # The directory as it is: plain HTML, CSS and images, no build step. The action leaves out dotfiles unless told
+      # otherwise, and /.well-known/security.txt is one.
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+          include-hidden-files: true
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

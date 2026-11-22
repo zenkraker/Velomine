@@ -143,7 +143,8 @@ builder.Services.AddRateLimiter(options =>
         if (notSent is not null)
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status303SeeOther;
-            context.HttpContext.Response.Headers.Location = notSent + "?reason=busy";
+            var site = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<FeedbackOptions>>().Value;
+            context.HttpContext.Response.Headers.Location = site.PageUrl(notSent) + "?reason=busy";
         }
 
         return ValueTask.CompletedTask;
@@ -208,7 +209,7 @@ app.Use(async (context, next) =>
         feature.MaxRequestBodySize = importMaxBytes;
     await next(context);
 });
-// API only: the web app and the presentation site are served by the web image (app/Dockerfile), which forwards /api,
+// API only: the web app is served by the web image (app/Dockerfile), which forwards /api,
 // /health and /openapi here, so the browser sees one address.
 app.UseVelomineTelemetry();
 app.UseAuthentication();

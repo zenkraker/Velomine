@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # check=skip=FromPlatformFlagConstDisallowed
-# The web image: the Flutter web app and the presentation site, served by nginx, which forwards /api, /health and
+# The web image: the Flutter web app, served by nginx, which forwards /api, /health and
 # /openapi to the server. Build it from the repository root:  docker build -f app/Dockerfile .
 #
 # Flutter's official release, pinned by version and checksum (tools/check-versions.sh keeps flake.nix in step). It only
@@ -33,12 +33,11 @@ FROM nginx:1.30.6-alpine@sha256:583b7f2fce1cdb8da5ad5c39ebd3c33b98b87d493190e548
 ARG VERSION=0.0.0
 ARG REVISION=unknown
 COPY app/nginx.conf /etc/nginx/nginx.conf
-COPY site /srv/site
 COPY --from=build /src/app/build/web /srv/app
 # The build this image is, at /version.json, as the server reports its own at /api/v1/server.
 RUN printf '{"version":"%s","revision":"%s"}\n' "$VERSION" "$REVISION" > /srv/app/version.json
 LABEL org.opencontainers.image.title="Velomine web" \
-      org.opencontainers.image.description="Velomine web app and presentation site" \
+      org.opencontainers.image.description="Velomine web app" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${REVISION}" \
       org.opencontainers.image.source="https://github.com/zenkraker/Velomine"

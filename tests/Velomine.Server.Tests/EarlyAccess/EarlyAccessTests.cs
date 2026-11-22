@@ -10,13 +10,14 @@ public sealed class EarlyAccessTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private static async Task<(TestApi Api, FakeEmailSender Mail)> StartAsync(PostgresFixture postgres, bool configured = true, bool smtp = true, bool demo = false)
+    private static async Task<(TestApi Api, FakeEmailSender Mail)> StartAsync(PostgresFixture postgres, bool configured = true, bool smtp = true, bool demo = false, string? siteUrl = null)
     {
         var mail = new FakeEmailSender();
         var api = await TestApi.StartAsync(postgres, b =>
         {
             if (demo) b.UseSetting("Velomine:Demo:Enabled", "true");
             if (configured) b.UseSetting("Velomine:Feedback:Address", "feedback@club.example");
+            if (siteUrl is not null) b.UseSetting("Velomine:Feedback:SiteUrl", siteUrl);
             if (smtp)
             {
                 b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");
@@ -141,6 +142,18 @@ public sealed class EarlyAccessTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.SeeOther, response.StatusCode);
         Assert.Equal("/early-access/not-sent/?reason=busy", Location(response));
         Assert.Equal(5, mail.Sent.Count);
+    }
+
+    [Fact]
+    public async Task JoinEarlyAccess_ShouldRedirectToTheSiteAddress_WhenTheSiteLivesElsewhere()
+    {
+        var (api, _) = await StartAsync(postgres, siteUrl: "https://velomine.example/");
+        await using var _ = api;
+
+        Assert.Equal("https://velomine.example/early-access/sent/", Location(await PostAsync(api)));
+        Assert.Equal("https://velomine.example/early-access/not-sent/?reason=invalid", Location(await PostAsync(api, new() { ["email"] = "nope" })));
+        for (var i = 0; i < 3; i++) await PostAsync(api);
+        Assert.Equal("https://velomine.example/early-access/not-sent/?reason=busy", Location(await PostAsync(api)));
     }
 
     [Fact]

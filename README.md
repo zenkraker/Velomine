@@ -53,7 +53,7 @@ It is early: the interface is rough in places, and there are bugs. The iOS recor
 
 ## Self-hosting
 
-Self-hosting is free for riders and clubs, with every feature and no member limit. Everything runs with Docker: the server, the web app and PostgreSQL. An optional [supporter licence](https://velomine.eu/pricing/#supporter) funds the project and unlocks nothing.
+Self-hosting is free for riders and clubs, with every feature and no member limit. Everything runs with Docker: the server, the web app and PostgreSQL. A self-hosted server serves only the app; the presentation site at [velomine.eu](https://velomine.eu) is published separately, to GitHub Pages. An optional [supporter licence](https://velomine.eu/pricing/#supporter) funds the project and unlocks nothing.
 
 ### Try it on your computer, from source
 
@@ -75,7 +75,7 @@ cd Velomine
 docker compose up --build
 ```
 
-The first run takes roughly 5 to 10 minutes (later starts take seconds). It is ready when the log shows `Now listening on: http://0.0.0.0:8080`. Then open **http://localhost:8080** — the presentation site. Press *Sign in* to open the web app, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`.
+The first run takes roughly 5 to 10 minutes (later starts take seconds). It is ready when the log shows `Now listening on: http://0.0.0.0:8080`. Then open **http://localhost:8080** and sign in as `admin@velomine.local` with the password `Velomine-dev-1`.
 
 Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your data; `docker compose down -v` also deletes the data (database, uploaded files and keys), for a fresh start.
 
@@ -112,7 +112,7 @@ Nothing is sent to the Velomine project by default.
 | Error reports, traces and logs | Off | `VELOMINE__TELEMETRY__*` and the standard `OTEL_EXPORTER_OTLP_*` |
 | Email (password reset, notifications) | Off | `VELOMINE__SMTP__*` |
 | Shared parts catalogue: fetch a list, send back new parts | Off; the server keeps its own bundled list | `VELOMINE__CATALOGUE__*` |
-| Anonymous feedback form and early-access list on the site: answers and sign-ups emailed to this address | Off | `VELOMINE__FEEDBACK__ADDRESS` (needs email) |
+| Anonymous feedback form and early-access list on the public site: answers and sign-ups emailed to this address | Off | `VELOMINE__FEEDBACK__ADDRESS` (needs email); `VELOMINE__FEEDBACK__SITEURL` when the site is on another host |
 | Single sign-on | Off | `VELOMINE__SSO__*` |
 
 ### Settings you can change
