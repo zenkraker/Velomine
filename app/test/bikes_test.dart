@@ -577,6 +577,32 @@ void main() {
   });
 
   testWidgets(
+    'BikesScreen_ShouldSayServiceDueSoonInWords_WhenOnlyAServiceIsComing',
+    (tester) async {
+      server.bikes.add({
+        ..._bike(),
+        'serviceDueCount': 0,
+        'serviceSoonCount': 1,
+      });
+      await openBikes(tester);
+
+      final card = find.byKey(const Key('bike-bike-1'));
+      // The mock-up's badge: the words are on the card, not only in a tooltip.
+      expect(
+        find.descendant(of: card, matching: find.text('Service due soon')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('service-due')),
+        ),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
     'BikeDetailScreen_ShouldGroupPartsAndShowWearWithWords_WhenPartsExist',
     (tester) async {
       server.bikes.add(_bike());

@@ -11,7 +11,6 @@ import '../../core/units.dart';
 import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
 import 'bikes_view_models.dart';
-import 'service_marker.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
@@ -136,8 +135,19 @@ class _BikeCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
-                  ServiceMarker(due: bike.serviceDueCount > 0),
+                // The words, not colour alone: the mock-up's badge, as the profile's bike row draws it.
+                if (bike.serviceDueCount > 0)
+                  AppBadge(
+                    l10n.bikeServiceDue,
+                    key: const Key('service-due'),
+                    tone: AppBadgeTone.bad,
+                  )
+                else if (bike.serviceSoonCount > 0)
+                  AppBadge(
+                    l10n.bikeServiceSoon,
+                    key: const Key('service-soon'),
+                    tone: AppBadgeTone.care,
+                  ),
               ],
             ),
             Text(
