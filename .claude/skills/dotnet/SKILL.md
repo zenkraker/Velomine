@@ -14,7 +14,7 @@ Practical guidance for the server. The rules are in `AGENTS.md` (*Server*, *Club
 - **Queries:** `AsNoTracking()` for reads, project to DTOs with `Select`, no N+1 (check the generated SQL). A query on a club table always carries the caller's club.
 - **Time:** inject `TimeProvider`; never read `DateTime.UtcNow` in code you want to test.
 - **Logging:** `ILogger<T>` with message templates, route templates instead of paths, and nothing from the forbidden list in `AGENTS.md`.
-- **Configuration:** a new setting is an `IOptions<T>` with validation on start, documented in the README settings table when an operator may change it.
+- **Configuration:** a new setting is an `IOptions<T>` with validation on start, documented in `.env.example` when an operator may change it.
 
 ## Tests
 

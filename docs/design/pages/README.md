@@ -1,11 +1,111 @@
-# Page mock-ups
+# Velomine design
 
-A mock-up of every screen in the app, drawn in the visual language of [`../language.md`](../language.md) with the values of [`../tokens.json`](../tokens.json). Each page has an HTML mock-up and a guideline (`.md`) that names its route and the Flutter file that builds it.
+The design of every screen and component in the app: the visual language below, and a mock-up with a guideline for each page and building block. **Every screen and every shared widget follows it**, and nothing else describes the design.
 
+- **The code follows these pages.** Where a mock-up or guideline and the code differ, the page is right and the code is a bug. Build from the shared widgets in `app/lib/core/widgets/`.
+- **A new screen or component gets its guideline and mock-up here first**, in the same change as the code or before it, and is listed below. A design change lands here first, then in the code.
 - **Before changing a screen**, read its guideline and its mock-up. The mock-up shows the structure and the order of the content; the example names and numbers are invented.
-- **The mock-ups are a target, not the code.** Where a mock-up and the code differ, the mock-up is the intended design; build it from the shared widgets in `app/lib/core/widgets/`.
-- **Open a mock-up in a browser** to see it: it reads `tokens.css` (generated from `tokens.json`, Night by default, Day with the system setting) and `bundle.css` (the shared classes).
-- **A design change lands here first**, then in the code. The pieces under Cards, Charts, Controls, Maps and Navigation are the building blocks the pages are made of.
+- **Open a mock-up in a browser** to see it: it reads `tokens.css` (generated from [`../tokens.json`](../tokens.json), Night by default, Day with the system setting) and `bundle.css` (the shared classes). The pieces under Cards, Charts, Controls, Maps and Navigation are the building blocks the pages are made of.
+
+## The visual language
+
+The rules every screen follows. The values are in `docs/design/tokens.json`; `app/lib/core/theme.dart` and `app/lib/core/tokens.dart` implement them, and `app/test/design_tokens_test.dart` keeps the theme equal to the tokens. Change a value in `tokens.json` and the theme in the same change.
+
+Velomine is a cycling app for riders and their clubs: rides, progress, bikes and a club, on the phone and on the web. It is dark first, calm and data-rich. One colour, volt, carries the energy; everything else stays quiet so the rider's numbers lead.
+
+### Principles
+
+1. **One question per page.** Each page answers one question ("How am I this week?", "What is my power profile?"). A second question gets its own page, tab or detail route.
+2. **One fact per card.** A card has four parts, in this order: a title, one number, one sentence that explains it, and at most one link to the details ("Power →"). A card never repeats a number shown elsewhere on the page.
+3. **Summary first, details one tap away.** An overview page is a grid of fact cards; each links to its detail page. Long explanations live behind an info button, never in the card.
+4. **One accent, used sparingly.** Volt (`accent`, `accent-strong`) marks what is current, selected or the main action. Everything else is `ink`, `ink-muted` and the surfaces.
+5. **Surfaces, not lines.** Cards are set apart by their fill (`card` on `canvas`): no borders, no shadows. Dividers (`hairline`) only inside a card.
+6. **Glass only where something floats.** The nav pill, sheets and the info card over a map use `glass` with `blur-glass` and `shadow-float`. Cards in the page flow are never glass.
+7. **The route glows.** On a map the route is the brightest thing: the tiles dimmed toward `map-ground`, a blurred `route-glow` stroke under a sharp `accent-strong` line.
+
+### Content
+
+- Write in plain, short sentences, in English and Italian; every string exists in both.
+- Sentence case everywhere: titles, buttons, nav. No uppercase eyebrows, no emoji.
+- Speak to the rider as "you" ("Your best 20 minutes"). Name things as riders do: ride, climb, effort, not "activity entity".
+- Numbers carry their unit with a thin gap, formatted for the language: `69.7 km`, `2 h 35`, `1,416 m` in English; `69,7 km`, `1.416 m` in Italian. Store SI; format only in the view.
+- A card's sentence says what the number means, not how it was computed: "Keep it easy: endurance pace, no hard efforts."
+- Errors say what happened and what to do: "Couldn't load your rides. Check the connection and try again."
+
+### Colour
+
+- Page: `canvas`. Cards, sidebar, sheets: `card`. A hovered row or an inset block: `card-raised`.
+- Text: `ink` for titles, numbers and body; `ink-muted` for units, details, captions and axis labels.
+- The main action is a filled pill in `accent` with `on-accent` text. There is one per screen.
+- Links, the gauge arc, the current bar and the route line use `accent-strong`. By day this is olive (`#4e6300`), because volt on white is unreadable.
+- Selected nav item, segment or chip: `accent-soft` ground, `on-accent-soft` text.
+- Past bars: `bar-muted`. The current period: `accent-strong`. Only the current and the peak bar carry a value label.
+- `signal` (tail light) marks the finish and states that ask for care; `warning` and `danger` always come with a word or an icon, never colour alone.
+- Ride charts use the `series-*` colours so a signal looks the same everywhere: power is always `series-power`, heart rate always `series-heartrate`.
+- Both themes are first class. Night is the default look; Day follows the system setting.
+
+### Type
+
+- Two families: Geist (`sans`) for everything you read and every number; Instrument Serif (`display`) only for the page title and the wordmark.
+- The scale: `page-title` 40, `kpi` 40, `stat` 24, `card-title` 17, `body` and `nav-label` 15, `caption` 13, `axis` 12. Do not add sizes.
+- Big numbers are `kpi` at regular weight with tabular figures; the unit beside them is `caption` size in `ink-muted`.
+- Card titles are `card-title`, one line, sentence case.
+
+### Space and layout
+
+- The spacing scale is `space-xs` 4 · `space-sm` 8 · `space-md` 12 · `space-lg` 16 · `space-xl` 24 · `space-xxl` 32 · `space-xxxl` 48. Never a literal.
+- Cards: padding `space-xl`, gap between cards `space-lg`, corners `radius-lg`.
+- Size classes: compact under 600 dp (one column, gutter `space-lg`, floating nav pill), medium 600–1199 dp (two columns, gutter `space-xl`, collapsed rail), expanded from 1200 dp (up to four columns, gutter `space-xxl`, expanded sidebar). Content is at most 1160 px wide, centred in the space beside the sidebar.
+- In a row, cards are the same height; a grid row is full: no card alone with empty space beside it.
+- Touch targets are at least 48 × 48.
+
+### Cards
+
+- **Stat card** (`StatCard`): title, `kpi` number with unit, one `caption` or `body` sentence, one `accent-strong` link with an arrow. Optional state chip after the number.
+- **Chart card**: title, one chart, an optional control (period) in the title row, at most one sentence under the chart.
+- **List card**: title, rows with `body-strong` and `caption`, row actions appear on hover (web) or in the row's `⋯` menu, "All … →" link at the bottom.
+
+### Charts
+
+- Drawn with Flutter's canvas, never a chart library.
+- Faint `hairline` grid at round values (0, 40, 80, 120), at most four lines; axis labels in `axis` and `ink-muted`.
+- Bars have `radius-sm` tops and a vertical fade from full colour at the top to 55 % at the base.
+- Area charts: a 2 px line, the area under it faded to transparent, the last point marked with a dot and its value.
+- Fewer labels on a phone: compute the label step from the width so labels never touch.
+- No data: show the empty state with a sentence, never empty axes.
+
+### Maps
+
+- Tiles from the server's tile address, dimmed toward `map-ground` and desaturated, in both themes.
+- The route: a 14 px `route-glow` stroke blurred by 6 px, then a 4 px `accent-strong` line. Start: an `accent` dot. Finish: a `signal` dot with a `card` ring.
+- Facts about the ride sit in a `glass` card at the bottom of the map, `radius-xl`.
+
+### Navigation
+
+- Four main destinations, in this order everywhere: Rides, Progress, Goals, Club.
+- Phone: a floating `glass` pill with the four destinations; the selected one sits on `accent-soft`. Sub-pages of a destination are tabs at the top of its page.
+- From 1200 dp: the sidebar on `card`, with the `brand` wordmark, destinations that expand (Rides ▾, Progress ▾, Club ▾; Goals is one page), and the account, settings and privacy note at the bottom. The current page is `accent-soft`.
+- Progress has one overview and four sub-pages, each built around one main chart: Overview ("How am I today and this week?"), Fitness (fitness, fatigue and form), Power (power curve and FTP), Totals (weeks, months, years) and Wellbeing (readiness and check-ins).
+- A sub-page's title row carries the parent's name as a `caption` above the `page-title`.
+- An overview page fits in about one screen. When it grows past that, a card moves to its own sub-page, not further down the page.
+- One main action per screen, as a filled pill in the page header. Rare and destructive actions go in the header's `⋯` menu, destructive last, in `danger`.
+
+### Motion
+
+- Durations 120, 220 and 320 ms; a small spring for things that arrive (sheet, pill, chip), fast-out-slow-in for things that move.
+- Everything stops when the system asks to reduce motion.
+
+### Iconography
+
+- Material Symbols, outlined at rest and filled when selected, 24 px, in `ink` or `ink-muted`; `on-accent-soft` when selected.
+- Every icon-only button has a label for screen readers.
+- The previews in this system draw simplified line icons in place of Material Symbols.
+
+### In Flutter
+
+- Colours map to `ColorScheme` as each token's note says; the rest live in the `VelomineColors` theme extension.
+- Spacing and radii are `AppSpacing` and `AppRadius` in `lib/core/tokens.dart`; never a literal `EdgeInsets` or radius.
+- Text styles come from `Theme.of(context).textTheme`; `kpi` and `stat` are added there as named styles.
 
 ## Rides
 

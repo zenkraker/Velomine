@@ -11,9 +11,9 @@ Practical guidance for the app. The rules are in `AGENTS.md` (*App*, *State and 
 
 The SDK-bundled Dart MCP server is started by both agents. Prefer it over guessing from source:
 
-- `analyze_files` for diagnostics, `run_tests` for tests, `dart_fix` / `dart_format` for mechanical fixes.
+- `analyze_files` for diagnostics; tests, fixes and formatting run in the shell (`flutter test`, `dart fix`, `dart format`, or `just check`).
 - `pub` / `pub_dev_search` to look at packages; the dependency rule in `AGENTS.md` still decides what may be added.
-- `list_devices`, `launch_app`, `get_app_logs`, `get_runtime_errors`, `hot_reload`, `hot_restart`, `stop_app` for a running app.
+- `dtd` to connect to a running app, then `get_runtime_errors`, `hot_reload` and `hot_restart`.
 - `dtd`, `lsp`, `vm_service`, `widget_inspector` for runtime inspection.
 
 Load the matching official Flutter/Dart skill before the task, for example `flutter-add-widget-test`, `flutter-build-responsive-layout`, `flutter-fix-layout-issues`, `flutter-setup-localization` or `dart-add-unit-test`. This skill and `AGENTS.md` win where they disagree, especially on dependencies, state management and the generated client.

@@ -140,7 +140,7 @@ The defaults are for trying it out on your own machine only. Do not expose them 
 
 Not needed to run it.
 
-**Recommended: the Nix dev environment.** `flake.nix` provides every tool below at pinned versions (the Flutter release matches the `Dockerfile`), plus the Android SDK and emulator, Node for ponytail and CodeGraph, without installing them into your system. With direnv the tools load when you enter the folder, and `just` runs the everyday commands (`just up`, `just logs`, `just emu`, `just phone`, `just check`). The server always runs in Docker, as in the steps above. [docs/development.md](docs/development.md) explains how it works and walks through the one-time setup.
+**Recommended: the Nix dev environment.** `flake.nix` provides every tool below at pinned versions (the Flutter release matches `app/Dockerfile`), plus the Android SDK and emulator, Node for ponytail and CodeGraph, without installing them into your system. With direnv the tools load when you enter the folder, and `just` runs the everyday commands (`just up`, `just logs`, `just emu`, `just phone`, `just check`). The server always runs in Docker, as in the steps above. [docs/development.md](docs/development.md) explains how it works and walks through the one-time setup.
 
 **Without Nix**, install these yourself:
 
@@ -159,7 +159,7 @@ Not needed to run it.
 - [Architecture](docs/architecture.md)
 - [Code, API and app rules](AGENTS.md)
 - [Product values and scope](docs/design/values.md)
-- [Brand directions](docs/design/brand-directions.html)
+- [Design: the visual language and every screen](docs/design/pages/README.md)
 
 ## How it is built
 

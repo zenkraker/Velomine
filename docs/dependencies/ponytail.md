@@ -45,4 +45,4 @@ If it is abandoned, the repository keeps working: `AGENTS.md` still carries the 
 
 ## Recommendation
 
-Approve with conditions: agent plugin only, exact version pinned in `opencode.json`, and its rules never override `AGENTS.md`. Re-evaluate on a major update or a change of maintainer.
+Approve with conditions: the binding conditions are in the `AGENTS.md` table (agent plugin only, the official package at an exact version, never overriding `AGENTS.md`). Re-evaluate on a major update or a change of maintainer.

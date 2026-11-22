@@ -16,4 +16,4 @@ One fact on a card: a title, one big number, one sentence that explains it, and 
 - Add an icon tile, an uppercase eyebrow, a border or a shadow.
 - Clip the sentence: it wraps.
 
-**Flutter:** a `StatCard` in `lib/core/widgets/` replaces today's `StatTile` and the hand-made tiles in `progress_screen.dart`.
+**Flutter:** `StatCard` in `lib/core/widgets/stat_card.dart` draws every fact card.
