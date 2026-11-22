@@ -121,6 +121,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _emailTraining = false;
   _ProfileProblem? _problem;
 
+  /// Whether the last save came from the Preferences card, so its answer is shown there and not under the
+  /// athlete fields it never touched.
+  bool _preferenceSave = false;
+
+  /// The time zone's field, watched so leaving it saves what was typed, and the zone the account holds.
+  final _zoneFocus = FocusNode();
+  String? _filledZone;
+
   /// When the ride a test FTP came from started: the day of the effort, which the ride itself knows.
   DateTime? _ftpSourceRideStart;
 
@@ -132,9 +140,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _zoneFocus.addListener(() {
+      if (!_zoneFocus.hasFocus && _zone.text.trim() != _filledZone) {
+        _savePreference(timeZone: _zone.text.trim());
+      }
+    });
     _profileSub = ref.listenManual(profileViewModelProvider, (_, next) {
       final profile = next.profile;
       if (profile == null) return;
+      // A preference saving itself must not rewrite the athlete fields the rider is still typing in.
+      if (_preferenceSave) return;
       _fill(profile);
       _readFtpSourceRide(profile);
       _readHeartRateRides(profile);
@@ -213,6 +228,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ? p.thresholdHeartRate.orElse(null)?.toString() ?? ''
           : '';
       _zone.text = p.timeZone ?? '';
+      _filledZone = p.timeZone ?? '';
       _firstDay = p.firstDayOfWeek;
       _email = p.emailNotifications;
       _emailAccount = p.emailAccountNotifications;
@@ -226,6 +242,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
+    _zoneFocus.dispose();
     _profileSub.close();
     for (final c in [
       _name,
@@ -311,10 +328,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         : !birthYear.$1
         ? _ProfileProblem.birthYear
         : null;
-    setState(() => _problem = problem);
+    setState(() {
+      _problem = problem;
+      _preferenceSave = false;
+    });
     if (problem != null) return;
 
-    final zone = _zone.text.trim();
+    // The Preferences card saves its own choices, so this one keeps what the account already holds.
+    final profile = ref.read(profileViewModelProvider).profile;
     final ok = await ref
         .read(profileViewModelProvider.notifier)
         .save(
@@ -323,8 +344,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ftpW: ftp.$2?.toInt(),
             weightKg: _weightKg(weight.$2?.toDouble()),
             birthYear: birthYear.$2?.toInt(),
-            timeZone: zone.isEmpty ? null : zone,
-            firstDayOfWeek: _firstDay,
+            timeZone: profile?.timeZone,
+            firstDayOfWeek: profile?.firstDayOfWeek ?? _firstDay,
             emailNotifications: Optional.present(_email),
             emailAccountNotifications: Optional.present(_emailAccount),
             emailTrainingNotifications: Optional.present(_emailTraining),
@@ -332,6 +353,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
     if (!mounted) return;
     if (ok) setState(() {});
+  }
+
+  /// Saves one preference the moment it is chosen, as the design draws the Preferences card: no Save of its
+  /// own. The other fields keep the values the account holds, so nothing else is written.
+  Future<void> _savePreference({
+    String? timeZone,
+    String? firstDayOfWeek,
+  }) async {
+    final profile = ref.read(profileViewModelProvider).profile;
+    if (profile == null) return;
+    final zone = (timeZone ?? profile.timeZone)?.trim();
+    // The card keeps the answer: the athlete Save's own "Saved" line belongs to the Athlete card.
+    setState(() => _preferenceSave = true);
+    await ref
+        .read(profileViewModelProvider.notifier)
+        .save(
+          UpdateProfileRequest(
+            displayName: profile.displayName,
+            ftpW: profile.ftpW,
+            weightKg: profile.weightKg,
+            birthYear: profile.birthYear,
+            timeZone: zone == null || zone.isEmpty ? null : zone,
+            firstDayOfWeek: firstDayOfWeek ?? profile.firstDayOfWeek,
+          ),
+        );
   }
 
   /// Saves one heart-rate number as soon as its field is done. The range is the server's, so a number outside it never
@@ -556,10 +602,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 l10n.thresholdAboveMax(max),
                 key: const Key('profile-threshold-hr-above-max'),
               ),
-          if ((problem ?? (failure == null ? null : failureText(l10n, failure)))
+          if ((problem ??
+                  (!_preferenceSave && failure != null
+                      ? failureText(l10n, failure)
+                      : null))
               case final message?)
             InlineError(message, key: const Key('profile-error')),
-          if (s.save.completed)
+          if (s.save.completed && !_preferenceSave)
             Text(l10n.saved, key: const Key('profile-saved')),
           Align(
             alignment: Alignment.centerRight,
@@ -584,6 +633,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: l10n.timeZone,
             hint: 'Europe/Rome',
             helper: l10n.timeZoneHelper,
+            focusNode: _zoneFocus,
+            onDone: (text) => _savePreference(timeZone: text),
           ),
           DropdownButtonFormField<String>(
             key: const Key('profile-first-day'),
@@ -598,7 +649,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Text(weekDayName(l10n, day)),
                 ),
             ],
-            onChanged: (v) => setState(() => _firstDay = v ?? _firstDay),
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => _firstDay = value);
+              _savePreference(firstDayOfWeek: value);
+            },
           ),
           _choice(
             l10n.language,
@@ -650,6 +705,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               },
             ),
           ),
+          if (_preferenceSave)
+            if (s.save.failure case final preferenceFailure?)
+              InlineError(
+                failureText(l10n, preferenceFailure),
+                key: const Key('preferences-error'),
+              ),
           if (situation.settings)
             ListTile(
               key: const Key('profile-rider-mode'),

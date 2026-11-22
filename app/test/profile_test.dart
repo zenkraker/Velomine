@@ -917,6 +917,40 @@ void main() {
     },
   );
 
+  testWidgets('ProfileScreen_ShouldSaveTheFirstDay_WhenItIsChosen', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Saturday').last);
+    await tester.pumpAndSettle();
+
+    // No Save pressed: the choice saved itself, and the athlete fields are untouched.
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    final profile = server.profiles['rider@example.com']!;
+    expect(profile['firstDayOfWeek'], 'saturday');
+    expect(profile['displayName'], 'Ada');
+  });
+
+  testWidgets('ProfileScreen_ShouldSaySo_WhenAPreferenceCannotBeSaved', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+    server.failing.add('/api/v1/accounts/me/profile');
+
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Saturday').last);
+    await tester.pumpAndSettle();
+
+    // The error sits under the card that made the choice, not under the athlete fields.
+    expect(find.byKey(const Key('preferences-error')), findsOneWidget);
+    expect(find.byKey(const Key('profile-error')), findsNothing);
+  });
+
   testWidgets('ProfileScreen_ShouldDrawLanguageAndUnitsAsSegments_WhenOpened', (
     tester,
   ) async {
