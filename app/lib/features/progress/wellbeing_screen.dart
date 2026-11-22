@@ -33,6 +33,7 @@ class WellbeingScreen extends ConsumerWidget {
           values.mood,
           values.stress,
           values.motivation,
+          values.sleep,
         );
   }
 

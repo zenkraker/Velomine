@@ -68,8 +68,12 @@ public sealed class GetReadiness(VelomineDbContext db, TimeProvider time)
             if (checkIn is not null)
             {
                 hasWellbeing = true;
-                var good = (checkIn.Mood + checkIn.Motivation
-                    + (6 - checkIn.Fatigue) + (6 - checkIn.Soreness) + (6 - checkIn.Stress)) / 5.0;
+                // Sleep is one of Hooper's four: it joins the average when the check-in has it.
+                var good = checkIn.Sleep is { } sleep
+                    ? (checkIn.Mood + checkIn.Motivation + sleep
+                        + (6 - checkIn.Fatigue) + (6 - checkIn.Soreness) + (6 - checkIn.Stress)) / 6.0
+                    : (checkIn.Mood + checkIn.Motivation
+                        + (6 - checkIn.Fatigue) + (6 - checkIn.Soreness) + (6 - checkIn.Stress)) / 5.0;
                 factors.Add(new ReadinessFactor("wellbeing", Math.Round(good, 1), Math.Round((good - 3) * 10, 1)));
             }
         }

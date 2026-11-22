@@ -2964,6 +2964,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingMotivation => 'Motivation';
 
   @override
+  String get wellbeingSleep => 'Sleep';
+
+  @override
   String get wellbeingShortFatigue => 'Fat';
 
   @override
@@ -2977,6 +2980,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wellbeingShortMotivation => 'Mot';
+
+  @override
+  String get wellbeingShortSleep => 'Slp';
 
   @override
   String get wellbeingHistory => 'Last 30 days';

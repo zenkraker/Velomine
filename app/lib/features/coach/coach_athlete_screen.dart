@@ -156,12 +156,16 @@ class _CoachWellbeingCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: Text(
-                '${date(checkIn.date)} · '
-                '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
-                '${l10n.wellbeingShortSoreness} ${checkIn.soreness} · '
-                '${l10n.wellbeingShortMood} ${checkIn.mood} · '
-                '${l10n.wellbeingShortStress} ${checkIn.stress} · '
-                '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+                [
+                  date(checkIn.date),
+                  '${l10n.wellbeingShortFatigue} ${checkIn.fatigue}',
+                  '${l10n.wellbeingShortSoreness} ${checkIn.soreness}',
+                  '${l10n.wellbeingShortMood} ${checkIn.mood}',
+                  '${l10n.wellbeingShortStress} ${checkIn.stress}',
+                  '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+                  if (checkIn.sleep.orElse(null) case final sleep?)
+                    '${l10n.wellbeingShortSleep} $sleep',
+                ].join(' · '),
                 style: text.bodySmall,
               ),
             ),

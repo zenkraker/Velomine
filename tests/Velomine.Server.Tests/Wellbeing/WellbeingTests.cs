@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
@@ -35,10 +36,10 @@ public sealed class WellbeingTests(PostgresFixture postgres)
     private static Task<HttpResponseMessage> ConsentAsync(HttpClient client) =>
         client.PostAsJsonAsync("/api/v1/wellbeing/consent", new WellbeingConsentRequest(true), Ct);
 
-    private static Task<HttpResponseMessage> CheckInAsync(HttpClient client, int fatigue = 3) =>
+    private static Task<HttpResponseMessage> CheckInAsync(HttpClient client, int fatigue = 3, int? sleep = null) =>
         client.PutAsJsonAsync(
             "/api/v1/wellbeing/check-ins/today",
-            new SaveCheckInRequest { Fatigue = fatigue, Soreness = 2, Mood = 4, Stress = 2, Motivation = 5 },
+            new SaveCheckInRequest { Fatigue = fatigue, Soreness = 2, Mood = 4, Stress = 2, Motivation = 5, Sleep = sleep },
             Ct);
 
     private static Task<RideResponse> UploadAsync(HttpClient client) =>
@@ -95,7 +96,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
         (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct)).EnsureSuccessStatusCode();
 
         await ConsentAsync(athlete);
-        await CheckInAsync(athlete, fatigue: 4);
+        await CheckInAsync(athlete, fatigue: 4, sleep: 3);
         var ride = await UploadAsync(athlete);
         (await athlete.PutAsJsonAsync(
             $"/api/v1/rides/{ride.Id}/feel",
@@ -108,6 +109,7 @@ public sealed class WellbeingTests(PostgresFixture postgres)
             $"/api/v1/clubs/{club.Id}/athletes/{athleteId}/wellbeing?days=30", Ct);
         Assert.Single(wellbeing!.CheckIns);
         Assert.Equal(4, wellbeing.CheckIns[0].Fatigue);
+        Assert.Equal(3, wellbeing.CheckIns[0].Sleep);
         Assert.Single(wellbeing.Rides);
         Assert.Equal(7, wellbeing.Rides[0].Rpe);
         Assert.DoesNotContain("Felt strong", JsonSerializer.Serialize(wellbeing));
@@ -246,5 +248,122 @@ public sealed class WellbeingTests(PostgresFixture postgres)
 
         Assert.Contains("Hard day", json);
         Assert.Contains("\"fatigue\": 4", json);
+    }
+
+    [Fact]
+    public async Task SaveCheckIn_ShouldStoreSleep_WhenItIsSent()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        await ConsentAsync(client);
+
+        (await CheckInAsync(client, sleep: 2)).EnsureSuccessStatusCode();
+
+        var today = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
+        Assert.Equal(2, today!.Today!.Sleep);
+    }
+
+    [Fact]
+    public async Task SaveCheckIn_ShouldAcceptACheckIn_WhenSleepIsLeftOut()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        await ConsentAsync(client);
+
+        // A build that predates the question sends no sleep; the check-in is still saved, with no sleep.
+        Assert.Equal(HttpStatusCode.OK, (await CheckInAsync(client)).StatusCode);
+
+        var today = await client.GetFromJsonAsync<WellbeingResponse>("/api/v1/wellbeing", Ct);
+        Assert.Null(today!.Today!.Sleep);
+    }
+
+    [Fact]
+    public async Task SaveCheckIn_ShouldRefuseSleep_WhenItIsOutsideOneToFive()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        await ConsentAsync(client);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await CheckInAsync(client, sleep: 0)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await CheckInAsync(client, sleep: 6)).StatusCode);
+    }
+
+    [Fact]
+    public async Task CheckInTable_ShouldRefuseSleepOutsideTheRange_WhenWrittenDirectly()
+    {
+        await using var api = await StartAsync();
+        var (client, memberId, _) = await NewMemberAsync(api);
+        await ConsentAsync(client);
+        (await CheckInAsync(client, sleep: 3)).EnsureSuccessStatusCode();
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var error = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"UPDATE wellbeing.daily_check_ins SET sleep = 6 WHERE user_id = {memberId}", Ct));
+
+        Assert.Equal("ck_daily_check_ins_sleep", error.ConstraintName);
+    }
+
+    [Fact]
+    public async Task Readiness_ShouldCountSleep_WhenTheCheckInHasIt()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        (await client.PutAsJsonAsync(
+            "/api/v1/accounts/me/profile",
+            new UpdateProfileRequest("Rider", 200, 75, 2000, "UTC", "monday"),
+            Ct)).EnsureSuccessStatusCode();
+        await UploadAsync(client);
+        await ConsentAsync(client);
+
+        await CheckInAsync(client, sleep: 1);
+        var tired = await client.GetFromJsonAsync<ReadinessResponse>("/api/v1/analytics/readiness", Ct);
+        await CheckInAsync(client, sleep: 5);
+        var rested = await client.GetFromJsonAsync<ReadinessResponse>("/api/v1/analytics/readiness", Ct);
+
+        // (4 + 5 + 1 + 3 + 4 + 4) / 6 = 3.5 against (4 + 5 + 5 + 3 + 4 + 4) / 6 = 4.2, each as points from 3.
+        var tiredWellbeing = Assert.Single(tired!.Factors, f => f.Key == "wellbeing");
+        var restedWellbeing = Assert.Single(rested!.Factors, f => f.Key == "wellbeing");
+        Assert.Equal(3.5, tiredWellbeing.Value);
+        Assert.Equal(5.0, tiredWellbeing.Effect);
+        Assert.Equal(4.2, restedWellbeing.Value);
+        Assert.Equal(11.7, restedWellbeing.Effect);
+    }
+
+    [Fact]
+    public async Task CoachCheckIns_ShouldShowSleep_WhenWellbeingIsShared()
+    {
+        await using var api = await StartAsync();
+        var (coach, _, coachEmail) = await NewMemberAsync(api, "Coach Rina");
+        var club = await TestClubs.CreateAsync(api, coachEmail);
+        var (athlete, athleteId, _) = await NewMemberAsync(api, "Athlete Luca");
+        (await athlete.PostAsJsonAsync("/api/v1/club/join", new JoinClubRequest { Code = club.JoinCode }, Ct))
+            .EnsureSuccessStatusCode();
+        await ConsentAsync(athlete);
+        await CheckInAsync(athlete, sleep: 1);
+        await ShareAsync(athlete, "none", "none", "coaches");
+
+        var wellbeing = await coach.GetFromJsonAsync<CoachWellbeingResponse>(
+            $"/api/v1/clubs/{club.Id}/athletes/{athleteId}/wellbeing?days=30", Ct);
+
+        Assert.Equal(1, Assert.Single(wellbeing!.CheckIns).Sleep);
+    }
+
+    [Fact]
+    public async Task AccountExport_ShouldIncludeSleep_WhenTheCheckInHasIt()
+    {
+        await using var api = await StartAsync();
+        var (client, _, _) = await NewMemberAsync(api);
+        await ConsentAsync(client);
+        await CheckInAsync(client, sleep: 2);
+
+        var link = await (await client.PostAsync("/api/v1/accounts/me/export-link", null, Ct))
+            .Content.ReadFromJsonAsync<ExportLinkResponse>(Ct);
+        var download = await api.CreateClient().GetAsync(link!.Path, Ct);
+        using var zip = new ZipArchive(await download.Content.ReadAsStreamAsync(Ct), ZipArchiveMode.Read);
+        using var reader = new StreamReader(zip.GetEntry("wellbeing.json")!.Open());
+        var json = await reader.ReadToEndAsync(Ct);
+
+        Assert.Contains("\"sleep\": 2", json);
     }
 }

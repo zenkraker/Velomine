@@ -8,16 +8,17 @@ import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/segmented_control.dart';
 
-/// What a check-in says: five numbers from 1 to 5, in the order the server stores them.
+/// What a check-in says: six numbers from 1 to 5, in the order the server stores them.
 typedef CheckInScores = ({
   int fatigue,
   int soreness,
   int mood,
   int stress,
   int motivation,
+  int sleep,
 });
 
-/// Asks how the rider feels, in a sheet. Returns the five numbers, or null when the sheet is dismissed.
+/// Asks how the rider feels, in a sheet. Returns the six numbers, or null when the sheet is dismissed.
 Future<CheckInScores?> showCheckInSheet(BuildContext context) =>
     showSheet(context, builder: (_) => const _CheckInSheet());
 
@@ -30,6 +31,7 @@ class _CheckInSheet extends StatefulWidget {
 
 class _CheckInSheetState extends State<_CheckInSheet> {
   final _values = <String, int>{
+    'sleep': 3,
     'fatigue': 3,
     'soreness': 3,
     'mood': 3,
@@ -50,9 +52,11 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         mood: _values['mood']!,
         stress: _values['stress']!,
         motivation: _values['motivation']!,
+        sleep: _values['sleep']!,
       )),
       children: [
         for (final (id, label) in [
+          ('sleep', l10n.wellbeingSleep),
           ('fatigue', l10n.wellbeingFatigue),
           ('soreness', l10n.wellbeingSoreness),
           ('mood', l10n.wellbeingMood),
@@ -156,6 +160,9 @@ class WellbeingCard extends StatelessWidget {
                           label: l10n.wellbeingMotivation,
                           value: today.motivation,
                         ),
+                        // A check-in saved before sleep was asked has none: no sleep is not a zero.
+                        if (today.sleep.orElse(null) case final sleep?)
+                          _Score(label: l10n.wellbeingSleep, value: sleep),
                       ],
                     ),
                   ],
@@ -258,11 +265,15 @@ class _HistoryRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              '${l10n.wellbeingShortFatigue} ${checkIn.fatigue} · '
-              '${l10n.wellbeingShortSoreness} ${checkIn.soreness} · '
-              '${l10n.wellbeingShortMood} ${checkIn.mood} · '
-              '${l10n.wellbeingShortStress} ${checkIn.stress} · '
-              '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+              [
+                '${l10n.wellbeingShortFatigue} ${checkIn.fatigue}',
+                '${l10n.wellbeingShortSoreness} ${checkIn.soreness}',
+                '${l10n.wellbeingShortMood} ${checkIn.mood}',
+                '${l10n.wellbeingShortStress} ${checkIn.stress}',
+                '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+                if (checkIn.sleep.orElse(null) case final sleep?)
+                  '${l10n.wellbeingShortSleep} $sleep',
+              ].join(' · '),
               style: text.bodySmall,
             ),
           ),

@@ -146,6 +146,43 @@ void main() {
     },
   );
 
+  testWidgets('WellbeingCard_ShouldSaveSleep_WhenTheRiderPicksAScore', (
+    tester,
+  ) async {
+    server.wellbeingConsent = true;
+    await openWellbeing(tester);
+
+    await tester.tap(find.byKey(const Key('wellbeing-check-in')));
+    await tester.pumpAndSettle();
+    // Sleep is the first question, and starts at 3 like the others.
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('wellbeing-sleep')),
+        matching: find.text('2'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wellbeing-save')));
+    await tester.pumpAndSettle();
+
+    expect(server.wellbeingToday?['sleep'], 2);
+    expect(find.text('Sleep 2'), findsOneWidget);
+  });
+
+  testWidgets('WellbeingCard_ShouldShowNoSleep_WhenTheCheckInHasNone', (
+    tester,
+  ) async {
+    server.wellbeingConsent = true;
+    // A check-in saved before sleep was asked carries no sleep at all.
+    server.wellbeingToday = consented;
+    await openWellbeing(tester);
+
+    await reveal(tester, find.byKey(const Key('wellbeing-card')));
+    expect(find.text('Sleep 0'), findsNothing);
+    expect(find.textContaining('Sleep'), findsNothing);
+    expect(find.text('Motivation 5'), findsOneWidget);
+  });
+
   for (final width in [390.0, 600.0, 820.0, 1300.0]) {
     testWidgets(
       'WellbeingScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',

@@ -2988,6 +2988,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingMotivation => 'Motivazione';
 
   @override
+  String get wellbeingSleep => 'Sonno';
+
+  @override
   String get wellbeingShortFatigue => 'Aff';
 
   @override
@@ -3001,6 +3004,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wellbeingShortMotivation => 'Mot';
+
+  @override
+  String get wellbeingShortSleep => 'Son';
 
   @override
   String get wellbeingHistory => 'Ultimi 30 giorni';

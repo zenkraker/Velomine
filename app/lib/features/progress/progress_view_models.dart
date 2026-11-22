@@ -525,6 +525,7 @@ class WellbeingViewModel extends _$WellbeingViewModel {
     int mood,
     int stress,
     int motivation,
+    int sleep,
   ) => _run(
     () => ref
         .read(progressDataProvider)
@@ -535,6 +536,7 @@ class WellbeingViewModel extends _$WellbeingViewModel {
             mood: mood,
             stress: stress,
             motivation: motivation,
+            sleep: Optional.present(sleep),
           ),
         ),
   );

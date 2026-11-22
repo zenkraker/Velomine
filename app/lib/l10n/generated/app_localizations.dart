@@ -5186,6 +5186,12 @@ abstract class AppLocalizations {
   /// **'Motivation'**
   String get wellbeingMotivation;
 
+  /// No description provided for @wellbeingSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get wellbeingSleep;
+
   /// No description provided for @wellbeingShortFatigue.
   ///
   /// In en, this message translates to:
@@ -5215,6 +5221,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mot'**
   String get wellbeingShortMotivation;
+
+  /// No description provided for @wellbeingShortSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Slp'**
+  String get wellbeingShortSleep;
 
   /// No description provided for @wellbeingHistory.
   ///
