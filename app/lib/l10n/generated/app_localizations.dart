@@ -1904,6 +1904,48 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get adminClubActive;
 
+  /// No description provided for @adminClubInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get adminClubInactive;
+
+  /// No description provided for @adminClubPlanEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan ended'**
+  String get adminClubPlanEnded;
+
+  /// No description provided for @adminClubActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate club'**
+  String get adminClubActivate;
+
+  /// No description provided for @adminClubDeactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate club'**
+  String get adminClubDeactivate;
+
+  /// No description provided for @adminClubActiveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An inactive club keeps its members and rides, but nobody can join it until it is turned back on.'**
+  String get adminClubActiveHelp;
+
+  /// No description provided for @adminPeopleAndRides.
+  ///
+  /// In en, this message translates to:
+  /// **'People and rides'**
+  String get adminPeopleAndRides;
+
+  /// No description provided for @adminServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get adminServer;
+
   /// No description provided for @adminClubJoinCode.
   ///
   /// In en, this message translates to:

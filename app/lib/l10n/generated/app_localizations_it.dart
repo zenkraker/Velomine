@@ -999,6 +999,28 @@ class AppLocalizationsIt extends AppLocalizations {
   String get adminClubActive => 'Attivo';
 
   @override
+  String get adminClubInactive => 'Inattivo';
+
+  @override
+  String get adminClubPlanEnded => 'Piano terminato';
+
+  @override
+  String get adminClubActivate => 'Attiva club';
+
+  @override
+  String get adminClubDeactivate => 'Disattiva club';
+
+  @override
+  String get adminClubActiveHelp =>
+      'Un club inattivo mantiene membri e giri, ma nessuno può iscriversi finché non lo riattivi.';
+
+  @override
+  String get adminPeopleAndRides => 'Persone e giri';
+
+  @override
+  String get adminServer => 'Server';
+
+  @override
   String get adminClubJoinCode => 'Codice di accesso';
 
   @override
