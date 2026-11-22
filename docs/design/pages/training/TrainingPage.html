@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- TrainingPage: the auto-training week: today, this week, the goal. Guideline: TrainingPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Training</title>
+<style>
+  .split { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-lg); align-items: start; }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+  .today-name { display: flex; align-items: baseline; gap: var(--space-sm); flex-wrap: wrap; }
+  .targets { font-variant-numeric: tabular-nums; }
+  .shape { display: block; width: 100%; height: 40px; }
+  .shape rect { fill: var(--bar-muted); }
+  .shape rect.hard { fill: var(--accent-strong); }
+  .acts { display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap; }
+  .vm-row.today { background: var(--card-raised); border-radius: var(--radius-md); }
+  svg.dots { width: 22px; height: 22px; fill: currentColor; }
+</style>
+</head>
+<body>
+<main class="vm-page">
+  <div class="vm-head">
+    <div><h1 class="page-title">Training</h1><p class="sub body">Get fitter · 6 h a week</p></div>
+    <div class="vm-acts"><button class="vm-icon-btn" type="button" aria-label="More actions"><svg class="dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div>
+  </div>
+
+  <article class="vm-card">
+    <p class="caption vm-muted">Today · Thursday</p>
+    <div class="today-name"><span class="stat">Sweet spot 3×10</span><span class="body vm-muted">1 h 15</span></div>
+    <p class="vm-sentence body">Steady hard work that lifts the power you can hold, without needing days to recover.</p>
+    <p class="body targets"><strong>220–235 W</strong> · 152–160 bpm · feel 5–6</p>
+    <svg class="shape" viewBox="0 0 300 40" preserveAspectRatio="none" role="img" aria-label="Warm-up, three blocks of 10 minutes, cool-down">
+      <rect x="0" y="24" width="45" height="16"/><rect class="hard" x="47" y="8" width="45" height="32"/><rect x="94" y="28" width="20" height="12"/><rect class="hard" x="116" y="8" width="45" height="32"/><rect x="163" y="28" width="20" height="12"/><rect class="hard" x="185" y="8" width="45" height="32"/><rect x="232" y="28" width="68" height="12"/>
+    </svg>
+    <div class="acts"><button class="vm-btn button-label quiet small" type="button">Make today easy</button><a class="vm-link body" href="#">Open session →</a></div>
+  </article>
+
+  <div class="split">
+    <article class="vm-card">
+      <div class="vm-card-head"><h3 class="vm-card-title card-title">This week</h3></div>
+      <div class="vm-rows">
+        <div class="vm-row"><span class="vm-date"><b>24</b><span>Mon</span></span><div class="grow"><span class="t body">Rest</span></div></div>
+        <div class="vm-row"><span class="vm-date"><b>25</b><span>Tue</span></span><div class="grow"><span class="t body">Easy ride</span><span class="d">1 h</span></div><span class="vm-badge good">Done · 92</span></div>
+        <div class="vm-row"><span class="vm-date"><b>26</b><span>Wed</span></span><div class="grow"><span class="t body">Rest</span></div></div>
+        <div class="vm-row today"><span class="vm-date"><b>27</b><span>Thu</span></span><div class="grow"><span class="t body">Sweet spot 3×10</span><span class="d">1 h 15 · today</span></div></div>
+        <div class="vm-row"><span class="vm-date"><b>28</b><span>Fri</span></span><div class="grow"><span class="t body">Easy spin</span><span class="d">40 min</span></div><span class="vm-badge">Moved from Wed</span></div>
+        <div class="vm-row"><span class="vm-date"><b>29</b><span>Sat</span></span><div class="grow"><span class="t body">Threshold 3×10</span><span class="d">1 h 10</span></div></div>
+        <div class="vm-row"><span class="vm-date"><b>30</b><span>Sun</span></span><div class="grow"><span class="t body">Long ride</span><span class="d">2 h 30</span></div></div>
+      </div>
+      <p class="vm-sentence body">1 of 5 done. A good start to the week.</p>
+    </article>
+    <article class="vm-card">
+      <div class="vm-card-head"><h3 class="vm-card-title card-title">Your goal</h3></div>
+      <div class="vm-number"><span class="stat">Get fitter</span></div>
+      <p class="vm-sentence body">You ride regularly. We build both your base and a little speed.</p>
+      <p class="caption vm-muted">Set on 3 Nov</p>
+    </article>
+  </div>
+</main>
+</body>
+</html>
