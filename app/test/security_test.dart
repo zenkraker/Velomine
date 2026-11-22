@@ -9,6 +9,7 @@ import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'fake_server.dart';
 
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/core/widgets/badge.dart';
 
 void main() {
   late FakeServer server;
@@ -33,8 +34,9 @@ void main() {
     WidgetTester tester,
     Widget screen, {
     required FakeServer server,
+    Size size = const Size(1000, 1600),
   }) async {
-    tester.view.physicalSize = const Size(1000, 1600);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final session = server.session(useCookies: true);
@@ -157,11 +159,88 @@ void main() {
     server.signInBrowser(server.add('rider@example.com'));
     await pumpScreen(tester, const TwoFactorScreen(), server: server);
 
-    expect(find.text('Two-factor sign-in is off.'), findsOneWidget);
+    // Off: the page explains itself and the card offers the setup.
+    expect(find.text('Set up an authenticator'), findsOneWidget);
     await tester.tap(find.byKey(const Key('two-factor-start')));
     await tester.pumpAndSettle();
 
     expect(find.text('JBSWY3DPEHPK3PXP'), findsOneWidget);
     expect(find.byKey(const Key('two-factor-enable')), findsOneWidget);
   });
+
+  testWidgets(
+    'TwoFactorScreen_ShouldShowTheRecoveryCodesInTheirOwnCard_WhenTurnedOn',
+    (tester) async {
+      server.signInBrowser(server.add('rider@example.com'));
+      await pumpScreen(tester, const TwoFactorScreen(), server: server);
+
+      await tester.tap(find.byKey(const Key('two-factor-start')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('two-factor-password')),
+        'Rider-pass-123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('two-factor-code')),
+        '123456',
+      );
+      await tester.tap(find.byKey(const Key('two-factor-enable')));
+      await tester.pumpAndSettle();
+
+      // The codes are a card of their own, with their sentence, and the state stays on the setup card.
+      expect(find.text('Recovery codes'), findsOneWidget);
+      expect(find.text('AAAA-1111'), findsOneWidget);
+      expect(find.text('Two-factor sign-in is on.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'SessionsScreen_ShouldMarkTheCurrentDeviceWithABadge_WhenListed',
+    (tester) async {
+      server.signInBrowser(server.add('rider@example.com'));
+      await pumpScreen(tester, const SessionsScreen(), server: server);
+
+      expect(find.widgetWithText(AppBadge, 'This device'), findsOneWidget);
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'SessionsScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        server.signInBrowser(server.add('rider@example.com'));
+        server.sessions.add({
+          'id': 's-other',
+          'label': 'Web app',
+          'createdAt': '2026-11-01T10:00:00Z',
+          'lastUsedAt': '2026-11-09T10:00:00Z',
+          'current': false,
+        });
+        await pumpScreen(
+          tester,
+          const SessionsScreen(),
+          server: server,
+          size: Size(width, 1600),
+        );
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'TwoFactorScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        server.signInBrowser(server.add('rider@example.com'));
+        await pumpScreen(
+          tester,
+          const TwoFactorScreen(),
+          server: server,
+          size: Size(width, 1600),
+        );
+
+        expect(find.byKey(const Key('two-factor-start')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

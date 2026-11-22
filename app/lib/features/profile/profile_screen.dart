@@ -22,17 +22,18 @@ import '../../core/units.dart';
 import '../../core/providers.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/segmented_control.dart';
 import '../../core/widgets/source_note.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../auth/password_field.dart';
 import '../accounts/ftp_source_text.dart';
 import '../accounts/heart_rate_source_text.dart';
 import '../bikes/bikes_view_models.dart';
-import '../bikes/service_marker.dart';
 import '../supporter/supporter_badge.dart';
 import '../supporter/supporter_view_model.dart';
 
@@ -42,7 +43,6 @@ import 'rider_mode_sheet.dart';
 import 'solo_trial_badge.dart';
 import 'zones_card.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/app_card.dart';
 
 const weekDayIds = [
   'monday',
@@ -381,6 +381,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  /// A labelled choice under its own name, as the design draws the language and the units.
+  Widget _choice(String label, Widget control) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    spacing: AppSpacing.sm,
+    children: [
+      Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+      control,
+    ],
+  );
+
   Widget _number(
     String key,
     TextEditingController c,
@@ -444,6 +458,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             controller: _name,
             label: l10n.name,
           ),
+          _number(
+            'profile-birth-year',
+            _birthYear,
+            l10n.birthYear,
+            '',
+            helper: l10n.birthYearHelper,
+          ),
           _number('profile-ftp', _ftp, 'FTP', 'W', helper: l10n.ftpHelper),
           // Where the FTP came from, read from the newest row of its history.
           if (s.profile case final profile?)
@@ -466,13 +487,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     (s.profile?.hasRidesWithoutPower.orElse(false) ?? false)
                 ? l10n.profileWeightEstimateHint
                 : null,
-          ),
-          _number(
-            'profile-birth-year',
-            _birthYear,
-            l10n.birthYear,
-            '',
-            helper: l10n.birthYearHelper,
           ),
           // The maximum in use and where it came from; the same for the threshold below it, with one line of help.
           _number(
@@ -542,6 +556,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 l10n.thresholdAboveMax(max),
                 key: const Key('profile-threshold-hr-above-max'),
               ),
+          if ((problem ?? (failure == null ? null : failureText(l10n, failure)))
+              case final message?)
+            InlineError(message, key: const Key('profile-error')),
+          if (s.save.completed)
+            Text(l10n.saved, key: const Key('profile-saved')),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              key: const Key('profile-save'),
+              onPressed: s.save.running ? null : _save,
+              child: Text(l10n.save),
+            ),
+          ),
+        ],
+      ),
+      // The zones in use, from the numbers above: a list, with their limits editable and back to automatic.
+      if (s.zones case final zones?)
+        if (zonesInUse(zones).isNotEmpty)
+          ZonesCard(zones: zones, onReset: _resetZones),
+      SectionCard(
+        title: l10n.preferences,
+        children: [
           AppTextField(
             fieldKey: const Key('profile-zone'),
             controller: _zone,
@@ -564,58 +600,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
             onChanged: (v) => setState(() => _firstDay = v ?? _firstDay),
           ),
-          Builder(
-            builder: (context) {
-              final device = Localizations.localeOf(context).languageCode;
-              return DropdownButtonFormField<String>(
-                key: const Key('profile-language'),
-                isExpanded: true,
-                initialValue:
-                    language ??
-                    (supportedLanguages.contains(device) ? device : 'en'),
-                decoration: InputDecoration(labelText: l10n.language),
-                items: [
-                  for (final code in supportedLanguages)
-                    DropdownMenuItem(
-                      value: code,
-                      child: Text(switch (code) {
-                        'it' => l10n.languageItalian,
-                        _ => l10n.languageEnglish,
-                      }),
-                    ),
-                ],
-                onChanged: (code) {
-                  if (code != null) {
-                    ref
-                        .read(languageChoiceViewModelProvider.notifier)
-                        .choose(code);
-                  }
-                },
-              );
-            },
+          _choice(
+            l10n.language,
+            Builder(
+              builder: (context) {
+                final device = Localizations.localeOf(context).languageCode;
+                return SegmentedControl<String>(
+                  buttonKey: const Key('profile-language'),
+                  segments: [
+                    for (final code in supportedLanguages)
+                      ButtonSegment(
+                        value: code,
+                        label: Text(switch (code) {
+                          'it' => l10n.languageItalian,
+                          _ => l10n.languageEnglish,
+                        }),
+                      ),
+                  ],
+                  selected:
+                      language ??
+                      (supportedLanguages.contains(device) ? device : 'en'),
+                  onChanged: (code) => ref
+                      .read(languageChoiceViewModelProvider.notifier)
+                      .choose(code),
+                );
+              },
+            ),
           ),
-          DropdownButtonFormField<Units>(
-            key: const Key('profile-units'),
-            isExpanded: true,
-            initialValue: ref.watch(unitsChoiceViewModelProvider),
-            decoration: InputDecoration(labelText: l10n.units),
-            items: [
-              DropdownMenuItem(
-                value: Units.metric,
-                child: Text(l10n.unitsMetric),
-              ),
-              DropdownMenuItem(
-                value: Units.imperial,
-                child: Text(l10n.unitsImperial),
-              ),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              ref.read(unitsChoiceViewModelProvider.notifier).choose(value);
-              // The weight is now shown in the other unit.
-              final profile = ref.read(profileViewModelProvider).profile;
-              if (profile != null) _fill(profile);
-            },
+          _choice(
+            l10n.units,
+            SegmentedControl<Units>(
+              buttonKey: const Key('profile-units'),
+              segments: [
+                ButtonSegment(
+                  value: Units.metric,
+                  label: Text(l10n.unitsMetric),
+                ),
+                ButtonSegment(
+                  value: Units.imperial,
+                  label: Text(l10n.unitsImperial),
+                ),
+              ],
+              selected: ref.watch(unitsChoiceViewModelProvider),
+              onChanged: (value) {
+                ref.read(unitsChoiceViewModelProvider.notifier).choose(value);
+                // The weight is now shown in the other unit.
+                final profile = ref.read(profileViewModelProvider).profile;
+                if (profile != null) _fill(profile);
+              },
+            ),
           ),
           if (situation.settings)
             ListTile(
@@ -632,25 +665,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showRiderModeSheet(context, firstTime: false),
             ),
-          if ((problem ?? (failure == null ? null : failureText(l10n, failure)))
-              case final message?)
-            InlineError(message, key: const Key('profile-error')),
-          if (s.save.completed)
-            Text(l10n.saved, key: const Key('profile-saved')),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              key: const Key('profile-save'),
-              onPressed: s.save.running ? null : _save,
-              child: Text(l10n.save),
-            ),
+        ],
+      ),
+      SectionCard(
+        title: l10n.riding,
+        children: [
+          _MyBikesRow(summary: bikes, onTap: () => context.push('/bikes')),
+          _SettingsRow(
+            rowKey: const Key('profile-ride-privacy'),
+            icon: Icons.shield_outlined,
+            title: l10n.privacyRidePrivacy,
+            subtitle: l10n.privacyRidePrivacyHelp,
+            onTap: widget.onOpenPrivacy,
           ),
         ],
       ),
-      // The zones in use, from the numbers above: a list, with their limits editable and back to automatic.
-      if (s.zones case final zones?)
-        if (zonesInUse(zones).isNotEmpty)
-          ZonesCard(zones: zones, onReset: _resetZones),
       SectionCard(
         title: l10n.notifications,
         children: [
@@ -668,40 +697,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? (v) => setState(() => _email = v)
                 : null,
           ),
-          CheckboxListTile(
+          SwitchListTile(
             key: const Key('profile-email-account'),
             contentPadding: EdgeInsets.zero,
             value: _emailAccount,
             title: Text(l10n.emailAccountNotifications),
             subtitle: Text(l10n.emailAccountNotificationsHelp),
-            enabled: _email && widget.emailAvailable,
-            onChanged: (v) =>
-                setState(() => _emailAccount = v ?? _emailAccount),
+            onChanged: _email && widget.emailAvailable
+                ? (v) => setState(() => _emailAccount = v)
+                : null,
           ),
-          CheckboxListTile(
+          SwitchListTile(
             key: const Key('profile-email-training'),
             contentPadding: EdgeInsets.zero,
             value: _emailTraining,
             title: Text(l10n.emailTrainingNotifications),
             subtitle: Text(l10n.emailTrainingNotificationsHelp),
-            enabled: _email && widget.emailAvailable,
-            onChanged: (v) =>
-                setState(() => _emailTraining = v ?? _emailTraining),
+            onChanged: _email && widget.emailAvailable
+                ? (v) => setState(() => _emailTraining = v)
+                : null,
           ),
         ],
       ),
       SectionCard(
-        title: l10n.privacy,
+        title: l10n.telemetryTitle,
         description: l10n.telemetryHelp,
         children: [
-          ListTile(
-            key: const Key('profile-ride-privacy'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.privacyRidePrivacy),
-            subtitle: Text(l10n.privacyRidePrivacyHelp),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: widget.onOpenPrivacy,
-          ),
           if (!telemetryAvailable)
             Text(l10n.telemetryUnavailable)
           else ...[
@@ -739,12 +760,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ],
       ),
-      // Billing state, shown as a badge: the trial never takes a feature away.
-      if (s.profile?.soloTrialEndsAt != null)
-        SoloTrialBadge(
-          endsAt: s.profile!.soloTrialEndsAt,
-          today: DateTime.now(),
-        ),
       SectionCard(
         title: l10n.supporterSignInTitle,
         children: [
@@ -755,6 +770,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ref.read(supporterViewModelProvider.notifier).load,
             ),
           ),
+          // Billing state in the same card: the trial never takes a feature away.
+          if (s.profile?.soloTrialEndsAt != null)
+            SoloTrialBadge(
+              endsAt: s.profile!.soloTrialEndsAt,
+              today: DateTime.now(),
+            ),
         ],
       ),
       SectionCard(
@@ -787,11 +808,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: l10n.yourData,
         description: l10n.yourDataHelp,
         children: [
-          _SettingsRow(
-            rowKey: const Key('export-data'),
-            icon: Icons.download,
-            title: l10n.downloadMyData,
-            onTap: s.export.running ? null : _export,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              key: const Key('export-data'),
+              onPressed: s.export.running ? null : _export,
+              icon: const Icon(Icons.download),
+              label: Text(l10n.downloadMyData),
+            ),
           ),
           if (s.export.completed)
             Text(l10n.exportStarted, key: const Key('export-started')),
@@ -828,8 +852,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? null
                 : ref.read(profileViewModelProvider.notifier).load,
           ),
-        // The way to the bikes leads the page, full width; the settings sit in two columns under it.
-        _MyBikesRow(summary: bikes, onTap: () => context.push('/bikes')),
         CardGrid(children: sections),
       ],
     );
@@ -988,29 +1010,37 @@ class _MyBikesRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final subtitle = l10n.bikeCount(summary.count);
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Semantics(
-        button: true,
-        label: '${l10n.myBikes}, $subtitle',
-        excludeSemantics: true,
-        child: ListTile(
-          key: const Key('profile-my-bikes'),
-          minTileHeight: 56,
-          leading: const Icon(Icons.directions_bike),
-          title: Text(l10n.myBikes),
-          subtitle: Text(subtitle),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: AppSpacing.sm,
-            children: [
-              if (summary.due > 0 || summary.soon > 0)
-                ServiceMarker(due: summary.due > 0),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
-          onTap: onTap,
+    // The state in words, as the design draws it: a warning colour alone is never the message.
+    final state = summary.due > 0
+        ? l10n.bikeServiceDue
+        : summary.soon > 0
+        ? l10n.bikeServiceSoon
+        : null;
+    return Semantics(
+      button: true,
+      label: [l10n.myBikes, subtitle, ?state].join(', '),
+      excludeSemantics: true,
+      child: ListTile(
+        key: const Key('profile-my-bikes'),
+        contentPadding: EdgeInsets.zero,
+        minTileHeight: 56,
+        leading: const Icon(Icons.directions_bike),
+        title: Text(l10n.myBikes),
+        subtitle: Text(subtitle),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpacing.sm,
+          children: [
+            if (state case final state?)
+              AppBadge(
+                state,
+                key: Key(summary.due > 0 ? 'service-due' : 'service-soon'),
+                tone: summary.due > 0 ? AppBadgeTone.care : AppBadgeTone.warn,
+              ),
+            const Icon(Icons.chevron_right),
+          ],
         ),
+        onTap: onTap,
       ),
     );
   }

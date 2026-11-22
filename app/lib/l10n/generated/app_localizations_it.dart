@@ -327,6 +327,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorStart => 'Configura un\'app di autenticazione';
 
   @override
+  String get twoFactorStartSetup => 'Inizia la configurazione';
+
+  @override
   String get twoFactorKeyHelp =>
       'Digita questa chiave nella tua app di autenticazione, poi inserisci il codice che mostra.';
 
@@ -354,6 +357,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get twoFactorRecoveryHelp =>
       'Salvali in un posto sicuro. Ognuno funziona una volta, al posto del codice dell\'app.';
+
+  @override
+  String get twoFactorSetupTitle => 'Configura un\'app di autenticazione';
 
   @override
   String get twoFactorEnabled => 'L\'accesso a due fattori è attivo.';
@@ -2442,6 +2448,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get profileTitle => 'Profilo';
 
   @override
+  String get preferences => 'Preferenze';
+
+  @override
+  String get riding => 'In sella';
+
+  @override
   String get ftpHelper =>
       'Soglia funzionale di potenza. Usata per il carico di allenamento e le zone di potenza.';
 
@@ -3989,6 +4001,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aiuta a migliorare Velomine con segnalazioni anonime di errori e dati sulle prestazioni. Nessun dato che registri viene incluso.';
 
   @override
+  String get telemetryTitle => 'Aiutaci a migliorare Velomine';
+
+  @override
   String get crashReports => 'Segnalazioni di errori';
 
   @override
@@ -4951,6 +4966,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get supporterReplay => 'Rivedi';
+
+  @override
+  String get supporterReplayLink => 'Rivedi il momento';
 
   @override
   String get supporterBadgeReplayHint =>

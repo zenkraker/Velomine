@@ -680,6 +680,12 @@ abstract class AppLocalizations {
   /// **'Set up an authenticator'**
   String get twoFactorStart;
 
+  /// No description provided for @twoFactorStartSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start setup'**
+  String get twoFactorStartSetup;
+
   /// No description provided for @twoFactorKeyHelp.
   ///
   /// In en, this message translates to:
@@ -733,6 +739,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save them somewhere safe. Each works once, in place of the app code.'**
   String get twoFactorRecoveryHelp;
+
+  /// No description provided for @twoFactorSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up an authenticator'**
+  String get twoFactorSetupTitle;
 
   /// No description provided for @twoFactorEnabled.
   ///
@@ -4232,6 +4244,18 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileTitle;
 
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @riding.
+  ///
+  /// In en, this message translates to:
+  /// **'Riding'**
+  String get riding;
+
   /// No description provided for @ftpHelper.
   ///
   /// In en, this message translates to:
@@ -6836,6 +6860,12 @@ abstract class AppLocalizations {
   /// **'Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.'**
   String get telemetryHelp;
 
+  /// No description provided for @telemetryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve Velomine'**
+  String get telemetryTitle;
+
   /// No description provided for @crashReports.
   ///
   /// In en, this message translates to:
@@ -8467,6 +8497,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replay'**
   String get supporterReplay;
+
+  /// No description provided for @supporterReplayLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the celebration again'**
+  String get supporterReplayLink;
 
   /// No description provided for @supporterBadgeReplayHint.
   ///

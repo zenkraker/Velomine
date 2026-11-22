@@ -326,6 +326,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoFactorStart => 'Set up an authenticator';
 
   @override
+  String get twoFactorStartSetup => 'Start setup';
+
+  @override
   String get twoFactorKeyHelp =>
       'Type this key into your authenticator app, then enter the code it shows.';
 
@@ -353,6 +356,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get twoFactorRecoveryHelp =>
       'Save them somewhere safe. Each works once, in place of the app code.';
+
+  @override
+  String get twoFactorSetupTitle => 'Set up an authenticator';
 
   @override
   String get twoFactorEnabled => 'Two-factor sign-in is on.';
@@ -2427,6 +2433,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileTitle => 'Profile';
 
   @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get riding => 'Riding';
+
+  @override
   String get ftpHelper =>
       'Functional threshold power. Used for training load and power zones.';
 
@@ -3959,6 +3971,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.';
 
   @override
+  String get telemetryTitle => 'Help improve Velomine';
+
+  @override
   String get crashReports => 'Crash reports';
 
   @override
@@ -4917,6 +4932,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supporterReplay => 'Replay';
+
+  @override
+  String get supporterReplayLink => 'Play the celebration again';
 
   @override
   String get supporterBadgeReplayHint =>
