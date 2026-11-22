@@ -2275,7 +2275,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get riderCardTitle => 'I tuoi numeri';
 
   @override
-  String get riderCardMore => 'Altro';
+  String get riderCardWhole => 'Tutta la scheda';
+
+  @override
+  String get riderCardFtpPerKilo => 'FTP per chilo';
+
+  @override
+  String riderCardFtpAtWeight(int ftp, double weight) {
+    final intl.NumberFormat weightNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String weightString = weightNumberFormat.format(weight);
+
+    return '$ftp W a $weightString kg';
+  }
+
+  @override
+  String get riderCardPeak => 'Potenza di picco';
+
+  @override
+  String riderCardPeakNote(String duration) {
+    return 'Il migliore $duration, ultimi 90 giorni';
+  }
 
   @override
   String get riderCardPowerNote =>

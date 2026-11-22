@@ -2260,7 +2260,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riderCardTitle => 'Your numbers';
 
   @override
-  String get riderCardMore => 'More';
+  String get riderCardWhole => 'Whole rider card';
+
+  @override
+  String get riderCardFtpPerKilo => 'FTP per kilo';
+
+  @override
+  String riderCardFtpAtWeight(int ftp, double weight) {
+    final intl.NumberFormat weightNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String weightString = weightNumberFormat.format(weight);
+
+    return '$ftp W at $weightString kg';
+  }
+
+  @override
+  String get riderCardPeak => 'Peak power';
+
+  @override
+  String riderCardPeakNote(String duration) {
+    return 'Best $duration, last 90 days';
+  }
 
   @override
   String get riderCardPowerNote =>

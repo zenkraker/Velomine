@@ -3944,11 +3944,35 @@ abstract class AppLocalizations {
   /// **'Your numbers'**
   String get riderCardTitle;
 
-  /// No description provided for @riderCardMore.
+  /// No description provided for @riderCardWhole.
   ///
   /// In en, this message translates to:
-  /// **'More'**
-  String get riderCardMore;
+  /// **'Whole rider card'**
+  String get riderCardWhole;
+
+  /// No description provided for @riderCardFtpPerKilo.
+  ///
+  /// In en, this message translates to:
+  /// **'FTP per kilo'**
+  String get riderCardFtpPerKilo;
+
+  /// No description provided for @riderCardFtpAtWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'{ftp} W at {weight} kg'**
+  String riderCardFtpAtWeight(int ftp, double weight);
+
+  /// No description provided for @riderCardPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak power'**
+  String get riderCardPeak;
+
+  /// No description provided for @riderCardPeakNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Best {duration}, last 90 days'**
+  String riderCardPeakNote(String duration);
 
   /// No description provided for @riderCardPowerNote.
   ///

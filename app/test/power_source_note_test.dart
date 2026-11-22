@@ -27,9 +27,32 @@ void main() {
     await goTo(tester, '/progress/power');
   }
 
-  /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max.
-  List<SourceNote> notes(WidgetTester tester) =>
-      tester.widgetList<SourceNote>(find.byType(SourceNote)).toList();
+  /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max. The
+  /// rider's own numbers lead the page now, so their notes are left out of this list.
+  List<SourceNote> notes(WidgetTester tester) => tester
+      .widgetList<SourceNote>(
+        find.descendant(
+          of: find.byKey(const Key('power-ftp-card')),
+          matching: find.byType(SourceNote),
+        ),
+      )
+      .followedBy(
+        tester.widgetList<SourceNote>(
+          find.descendant(
+            of: find.byKey(const Key('critical-power-card')),
+            matching: find.byType(SourceNote),
+          ),
+        ),
+      )
+      .followedBy(
+        tester.widgetList<SourceNote>(
+          find.descendant(
+            of: find.byKey(const Key('vo2max-card')),
+            matching: find.byType(SourceNote),
+          ),
+        ),
+      )
+      .toList();
 
   /// The same, without the critical power note that sits above them.
   List<SourceNote> estimateNotes(WidgetTester tester) =>

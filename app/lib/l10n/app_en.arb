@@ -1226,7 +1226,17 @@
     }
   },
   "riderCardTitle": "Your numbers",
-  "riderCardMore": "More",
+  "riderCardWhole": "Whole rider card",
+  "riderCardFtpPerKilo": "FTP per kilo",
+  "riderCardFtpAtWeight": "{ftp} W at {weight} kg",
+  "@riderCardFtpAtWeight": {
+    "placeholders": { "ftp": { "type": "int" }, "weight": { "type": "double", "format": "decimalPattern" } }
+  },
+  "riderCardPeak": "Peak power",
+  "riderCardPeakNote": "Best {duration}, last 90 days",
+  "@riderCardPeakNote": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
   "riderCardPowerNote": "Fitted from your best efforts of the last 90 days.",
   "riderCardBestsNote": "Your best in the last 90 days. Tap one to open its ride.",
   "riderCardEfficiencyNote": "The mean of your steady rides, by week.",
