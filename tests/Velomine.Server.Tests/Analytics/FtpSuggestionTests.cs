@@ -152,6 +152,23 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task GetRide_ShouldNameTheSuggestionsEffort_WhenTheRideSuggestsAnFtp()
+    {
+        await using var api = await StartAsync();
+        var member = await api.NewMemberAsync();
+        await SetFtpAsync(member.Client, 250);
+        await UploadAsync(member.Client, 24, (1500, 280));
+
+        var suggestion = await SuggestionAsync(member.Client);
+        var ride = await member.Client.GetFromJsonAsync<RideResponse>(
+            $"/api/v1/rides/{suggestion!.RideId}", Ct);
+
+        // The card says "95 % of your best 20 minutes (280 W)", so the ride carries the effort itself.
+        Assert.Equal(suggestion.EffortWatts, ride!.FtpSuggestionEffortW);
+        Assert.Equal(280, ride.FtpSuggestionEffortW);
+    }
+
+    [Fact]
     public async Task FtpSuggestion_ShouldNotBeCreated_WhenTheCandidateIsLessThanThreePercentAbove()
     {
         await using var api = await StartAsync();
@@ -465,10 +482,12 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
         var response = RideResponse.From(new Ride { Id = Guid.NewGuid(), Status = RideStatus.Ready }) with
         {
             FtpSuggestionW = 266,
+            FtpSuggestionEffortW = 280,
             FtpSuggestionMethod = FtpSuggestionMethods.TwentyMinutes,
         };
 
         Assert.Null(response.WithoutTrainingLoad().FtpSuggestionW);
+        Assert.Null(response.WithoutTrainingLoad().FtpSuggestionEffortW);
         Assert.Null(response.WithoutTrainingLoad().FtpSuggestionMethod);
     }
 
@@ -493,6 +512,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
 
         Assert.NotNull(shared);
         Assert.Null(shared.FtpSuggestionW);
+        Assert.Null(shared.FtpSuggestionEffortW);
         Assert.Null(shared.FtpSuggestionMethod);
     }
 

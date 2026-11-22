@@ -859,6 +859,20 @@ void main() {
     },
   );
 
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheEffortWatts_WhenTheRideSuggestsAnFtp',
+    (tester) async {
+      server.rides[0]['ftpSuggestionW'] = 266;
+      server.rides[0]['ftpSuggestionEffortW'] = 263;
+      server.rides[0]['ftpSuggestionMethod'] = '20min';
+      server.rides[0]['ftpSuggestionId'] = 'suggestion-1';
+      await open(tester);
+
+      // The effort the number came from is the server's; the card never guesses it.
+      expect(find.text('95 % of your best 20 minutes (263 W)'), findsOneWidget);
+    },
+  );
+
   testWidgets('RideDetailScreen_ShouldHaveNoSuggestion_WhenTheRideHasNone', (
     tester,
   ) async {

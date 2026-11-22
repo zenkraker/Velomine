@@ -308,6 +308,7 @@ class RideDetailScreen extends ConsumerWidget {
             watts: watts,
             method: ride.ftpSuggestionMethod.value ?? '20min',
             suggestionId: ride.ftpSuggestionId.value,
+            effortWatts: ride.ftpSuggestionEffortW.value,
             busy: s.action.running,
             onAccept: notifier.acceptSuggestion,
             onDismiss: notifier.dismissSuggestion,

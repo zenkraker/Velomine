@@ -49,6 +49,7 @@ public sealed record RideResponse(
     // A suggestion is the owner's own question to answer: copied by hand, never by From, so no hand-built response
     // can carry one. GetRide sets it; WithoutTrainingLoad and PrivacyRules.ForViewer clear it.
     int? FtpSuggestionW = null,
+    int? FtpSuggestionEffortW = null,
     string? FtpSuggestionMethod = null,
     Guid? FtpSuggestionId = null,
     // What this ride did to a heart-rate number when it was first read: one of Analytics.HeartRateNotes, owner only.
@@ -132,6 +133,7 @@ public sealed record RideResponse(
         PowerZones = null,
         PowerRecords = null,
         FtpSuggestionW = null,
+        FtpSuggestionEffortW = null,
         FtpSuggestionMethod = null,
         FtpSuggestionId = null,
         HeartRateNote = null,

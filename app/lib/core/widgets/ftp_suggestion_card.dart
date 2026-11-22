@@ -27,7 +27,7 @@ class FtpSuggestionCard extends StatelessWidget {
   /// The suggestion to accept or dismiss; null when there is nothing to answer.
   final String? suggestionId;
 
-  /// The ride's best for that effort, when the page did not come from the suggestion itself.
+  /// The ride's best for that effort: the suggestion's own number, which the server carries on the ride.
   final int? effortWatts;
   final bool busy;
 

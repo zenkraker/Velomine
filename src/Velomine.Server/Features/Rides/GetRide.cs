@@ -31,7 +31,7 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
 
         var suggestion = await db.FtpSuggestions.AsNoTracking()
             .Where(s => s.RideId == ride.Id && s.Status == FtpSuggestionStatuses.Open)
-            .Select(s => new { s.Id, s.Watts, s.Method })
+            .Select(s => new { s.Id, s.Watts, s.Method, s.EffortWatts })
             .FirstOrDefaultAsync(ct);
         // The effort score is the owner's, and how hard the ride felt can be rated after it was read.
         var rpe = await db.RideFeels.AsNoTracking()
@@ -49,6 +49,7 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
                 PowerRecords = await PowerRecords.ForRideAsync(db, userId, ride.Id, ride.StartTime, ct),
                 // Only the owner sees the suggestion, and only on the ride it came from.
                 FtpSuggestionW = suggestion?.Watts,
+                FtpSuggestionEffortW = suggestion?.EffortWatts,
                 FtpSuggestionMethod = suggestion?.Method,
                 FtpSuggestionId = suggestion?.Id,
                 EffortScore = effortScore,
