@@ -14,6 +14,7 @@ import 'nearby_clubs_state.dart';
 import 'nearby_clubs_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/error_state.dart';
@@ -296,13 +297,22 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
             ),
           ),
       ] else
-        for (final club in s.clubs)
-          _ClubRow(
-            club: club,
-            requested: s.request?.clubId == club.id,
-            busy: s.action.running,
-            onAsk: () => _ask(club),
+        // The clubs are the rows of one card, nearest first.
+        AppCard(
+          key: const Key('nearby-clubs-card'),
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final club in s.clubs)
+                _ClubRow(
+                  club: club,
+                  requested: s.request?.clubId == club.id,
+                  busy: s.action.running,
+                  onAsk: () => _ask(club),
+                ),
+            ],
           ),
+        ),
     ];
   }
 }
@@ -362,26 +372,24 @@ class _ClubRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return AppCard(
+    return ListTile(
       key: Key('nearby-club-${club.id}'),
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        title: Text(club.name),
-        subtitle: Text(
-          '${l10n.clubMemberCount(club.memberCount)} · '
-          '${l10n.nearbyDistance(club.distanceKm.round())}',
-        ),
-        trailing: requested
-            ? Chip(
-                key: Key('requested-${club.id}'),
-                label: Text(l10n.nearbyRequested),
-              )
-            : FilledButton.tonal(
-                key: Key('ask-${club.id}'),
-                onPressed: busy ? null : onAsk,
-                child: Text(l10n.nearbyAsk),
-              ),
+      title: Text(club.name),
+      subtitle: Text(
+        '${l10n.clubMemberCount(club.memberCount)} · '
+        '${l10n.nearbyDistance(club.distanceKm.round())}',
       ),
+      trailing: requested
+          ? AppBadge(
+              l10n.nearbyRequested,
+              key: Key('requested-${club.id}'),
+              tone: AppBadgeTone.good,
+            )
+          : FilledButton.tonal(
+              key: Key('ask-${club.id}'),
+              onPressed: busy ? null : onAsk,
+              child: Text(l10n.nearbyAsk),
+            ),
     );
   }
 }

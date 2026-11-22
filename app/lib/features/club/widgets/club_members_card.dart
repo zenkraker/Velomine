@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../../core/l10n.dart';
+import '../../../core/tokens.dart';
 import '../../../core/widgets/app_card.dart';
 import 'club_labels.dart';
 
@@ -22,10 +23,23 @@ class ClubMembersCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AppCard(
+      key: const Key('club-members-card'),
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.sm,
+            ),
+            child: Text(
+              l10n.clubMembers,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
           for (final member in members)
             ListTile(
               key: Key('member-${member.userId}'),

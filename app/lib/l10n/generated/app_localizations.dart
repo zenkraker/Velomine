@@ -1376,6 +1376,30 @@ abstract class AppLocalizations {
   /// **'Ride on your own, or with a club.'**
   String get clubNoneSubtitle;
 
+  /// No description provided for @clubNearbyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs that ride near you, by distance.'**
+  String get clubNearbyBody;
+
+  /// No description provided for @clubJoinWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with a code'**
+  String get clubJoinWithCode;
+
+  /// No description provided for @clubJoinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a code from a club owner? Join with it.'**
+  String get clubJoinBody;
+
+  /// No description provided for @clubStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a club for the people you ride with. A month to try it.'**
+  String get clubStartBody;
+
   /// No description provided for @clubSubtitle.
   ///
   /// In en, this message translates to:
@@ -7016,6 +7040,12 @@ abstract class AppLocalizations {
   /// **'Club name'**
   String get startClubName;
 
+  /// No description provided for @startClubNameCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get startClubNameCard;
+
   /// No description provided for @startClubNameRequired.
   ///
   /// In en, this message translates to:
@@ -7778,6 +7808,18 @@ abstract class AppLocalizations {
   /// **'Download GPX'**
   String get routeOpenGpx;
 
+  /// No description provided for @routeTheRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'The route'**
+  String get routeTheRoute;
+
+  /// No description provided for @routeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get routeDescription;
+
   /// No description provided for @routeEdit.
   ///
   /// In en, this message translates to:
@@ -8144,6 +8186,12 @@ abstract class AppLocalizations {
   /// **'Maximum riders (optional)'**
   String get rideFormMaxRiders;
 
+  /// No description provided for @rideFormDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get rideFormDetails;
+
   /// No description provided for @rideFormSave.
   ///
   /// In en, this message translates to:
@@ -8185,6 +8233,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar subscription'**
   String get calendarTitle;
+
+  /// No description provided for @calendarAddressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your address'**
+  String get calendarAddressTitle;
 
   /// No description provided for @clubCalendarCaption.
   ///

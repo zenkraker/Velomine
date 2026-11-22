@@ -700,6 +700,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubNoneSubtitle => 'Esci da solo, oppure in un club.';
 
   @override
+  String get clubNearbyBody => 'I club che pedalano vicino a te, per distanza.';
+
+  @override
+  String get clubJoinWithCode => 'Entra con un codice';
+
+  @override
+  String get clubJoinBody =>
+      'Hai un codice dal proprietario di un club? Entra con quello.';
+
+  @override
+  String get clubStartBody =>
+      'Avvia un club per le persone con cui pedali. Un mese per provarlo.';
+
+  @override
   String get clubSubtitle =>
       'Il tuo club, i suoi giri e le persone che ne fanno parte.';
 
@@ -4130,6 +4144,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get startClubName => 'Nome del club';
 
   @override
+  String get startClubNameCard => 'Nome';
+
+  @override
   String get startClubNameRequired => 'Dai un nome al club.';
 
   @override
@@ -4559,6 +4576,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get routeOpenGpx => 'Scarica il GPX';
 
   @override
+  String get routeTheRoute => 'Il percorso';
+
+  @override
+  String get routeDescription => 'Descrizione';
+
+  @override
   String get routeEdit => 'Modifica';
 
   @override
@@ -4756,6 +4779,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Numero massimo di partecipanti (facoltativo)';
 
   @override
+  String get rideFormDetails => 'Dettagli';
+
+  @override
   String get rideFormSave => 'Salva il giro';
 
   @override
@@ -4776,6 +4802,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get calendarTitle => 'Abbonamento al calendario';
+
+  @override
+  String get calendarAddressTitle => 'Il tuo indirizzo';
 
   @override
   String get clubCalendarCaption => 'Calendario del club';

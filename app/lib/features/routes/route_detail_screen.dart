@@ -18,6 +18,8 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
+import '../../core/widgets/stat_card.dart';
 import '../club/club_view_model.dart';
 import 'route_widgets.dart';
 import 'routes_view_model.dart';
@@ -117,6 +119,20 @@ class RouteDetailScreen extends ConsumerWidget {
     }
 
     final entries = [
+      if (route.isMine)
+        PageMenuEntry(
+          key: const Key('edit-route'),
+          icon: Icons.edit_outlined,
+          label: l10n.routeEdit,
+          onSelected: onEdit,
+        ),
+      if (route.isMine && !route.isShared)
+        PageMenuEntry(
+          key: const Key('share-route'),
+          icon: Icons.link,
+          label: l10n.routeShare,
+          onSelected: busy ? () {} : notifier.share,
+        ),
       if (route.isMine && route.isShared)
         PageMenuEntry(
           key: const Key('withdraw-route'),
@@ -180,39 +196,59 @@ class RouteDetailScreen extends ConsumerWidget {
       title: route.name,
       parent: l10n.clubRoutesCaption,
       titleKey: const Key('route-title'),
-      subtitle: routeLineOf(
-        ref.watch(unitsChoiceViewModelProvider),
-        route.distanceM,
-        route.climbingM,
-      ),
+      subtitle: l10n.routeAddedBy(route.ownerName),
       maxWidth: AppLayout.contentNarrow,
-      primaryAction: route.isMine
-          ? FilledButton.icon(
-              key: const Key('edit-route'),
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined),
-              label: Text(l10n.routeEdit),
-            )
-          : null,
+      primaryAction: FilledButton.icon(
+        key: const Key('download-route'),
+        onPressed: busy ? null : () => _download(context, ref),
+        icon: const Icon(Icons.download),
+        label: Text(l10n.routeOpenGpx),
+      ),
       menu: entries.isEmpty
           ? null
           : PageMenu(buttonKey: const Key('route-actions'), entries: entries),
       children: [
-        Chip(label: Text(routeSurfaceName(l10n, route.surface))),
-        Text(
-          [
-            routeLineOf(
-              ref.watch(unitsChoiceViewModelProvider),
-              route.distanceM,
-              route.climbingM,
+        RoutePreview(
+          latitude: route.latitude,
+          longitude: route.longitude,
+          elevation: route.elevation,
+          tileUrl: tileUrl,
+          attribution: attribution,
+        ),
+        SectionCard(
+          title: l10n.routeTheRoute,
+          children: [
+            Wrap(
+              spacing: AppSpacing.xl,
+              runSpacing: AppSpacing.md,
+              children: [
+                StatFigure(
+                  label: l10n.statDistance,
+                  value: km(
+                    ref.watch(unitsChoiceViewModelProvider),
+                    route.distanceM,
+                  ),
+                ),
+                StatFigure(
+                  label: l10n.statClimbing,
+                  value: elevation(
+                    ref.watch(unitsChoiceViewModelProvider),
+                    route.climbingM,
+                  ),
+                ),
+                StatFigure(
+                  label: l10n.addRouteSurface,
+                  value: routeSurfaceName(l10n, route.surface),
+                ),
+              ],
             ),
-            l10n.routeAddedBy(route.ownerName),
-            dateTime(route.createdAt),
-          ].join(' · '),
-          style: Theme.of(context).textTheme.bodySmall,
+          ],
         ),
         if (route.description != null && route.description!.isNotEmpty)
-          Text(route.description!),
+          SectionCard(
+            title: l10n.routeDescription,
+            children: [Text(route.description!)],
+          ),
         if (route.isMine && !route.isShared)
           AppCard(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -221,34 +257,6 @@ class RouteDetailScreen extends ConsumerWidget {
               key: const Key('route-not-shared'),
             ),
           ),
-        RoutePreview(
-          latitude: route.latitude,
-          longitude: route.longitude,
-          elevation: route.elevation,
-          tileUrl: tileUrl,
-          attribution: attribution,
-        ),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            FilledButton.tonalIcon(
-              key: const Key('download-route'),
-              onPressed: s.action.running
-                  ? null
-                  : () => _download(context, ref),
-              icon: const Icon(Icons.download),
-              label: Text(l10n.routeOpenGpx),
-            ),
-            if (route.isMine && !route.isShared)
-              OutlinedButton.icon(
-                key: const Key('share-route'),
-                onPressed: s.action.running ? null : notifier.share,
-                icon: const Icon(Icons.link),
-                label: Text(l10n.routeShare),
-              ),
-          ],
-        ),
         if (!route.isMine && !isClubOwner)
           Text(
             l10n.routeOwnerOnly,

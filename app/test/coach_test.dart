@@ -282,12 +282,166 @@ void main() {
 
         await startApp(tester, server.session(useCookies: true));
         await goTo(tester, '/club');
+        await tester.ensureVisible(find.byKey(const Key('open-athletes')));
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('open-athletes')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('coach-wellbeing')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  /// Opens the Athletes page of a coach whose athlete shares everything the fake server can offer.
+  Future<void> openAthletes(WidgetTester tester) async {
+    server.signInBrowser(
+      server.add('owner@example.com', name: 'Owner Rina', clubRole: 'owner'),
+    );
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+    await tester.ensureVisible(find.byKey(const Key('open-athletes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-athletes')));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('CoachAthletesScreen_ShouldListEveryoneInOneCard_WhenOpened', (
+    tester,
+  ) async {
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+
+    // One list card holds every athlete, not a card each.
+    expect(find.byKey(const Key('athletes-card')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('athletes-card')),
+        matching: find.byKey(Key('athlete-${athlete.id}')),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'CoachAthletesScreen_ShouldBadgeWhatEachAthleteShares_WhenTheAthleteHasRides',
+    (tester) async {
+      final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+      server.sharingChoices['rides'] = 'coaches';
+      server.sharingChoices['analytics'] = 'coaches';
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await openAthletes(tester);
+
+      // The sharing is a badge beside the name even when the line already says the last ride.
+      final card = find.byKey(Key('athlete-${athlete.id}'));
+      expect(
+        find.descendant(of: card, matching: find.text('Rides')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Training')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Wellbeing')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('CoachRideScreen_ShouldShowTheNumbersInACard_WhenShared', (
+    tester,
+  ) async {
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    server.sharingChoices['routes'] = 'coaches';
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+    await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('coach-ride-r1')));
+    await tester.pumpAndSettle();
+
+    final numbers = find.byKey(const Key('coach-ride-numbers'));
+    expect(numbers, findsOneWidget);
+    expect(
+      find.descendant(of: numbers, matching: find.text('Distance')),
+      findsOneWidget,
+    );
+    // The map reads before the numbers it belongs to.
+    expect(
+      tester.getTopLeft(find.byKey(const Key('route-map'))).dy,
+      lessThan(tester.getTopLeft(numbers).dy),
+    );
+  });
+
+  testWidgets('CoachRideScreen_ShouldNameTheRideAndTheAthlete_WhenShared', (
+    tester,
+  ) async {
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.rides.first['title'] = 'Sunday long ride';
+    server.sharingChoices['rides'] = 'coaches';
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+    await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('coach-ride-r1')));
+    await tester.pumpAndSettle();
+
+    // The ride's name is the title, the athlete the caption above it.
+    expect(find.text('Sunday long ride'), findsOneWidget);
+    expect(find.text('Athlete Luca'), findsWidgets);
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'CoachAthletesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+        server.sharingChoices['rides'] = 'coaches';
+        server.sharingChoices['analytics'] = 'coaches';
+        server.sharingChoices['wellbeing'] = 'coaches';
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await openAthletes(tester);
+
+        expect(find.byKey(Key('athlete-${athlete.id}')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'CoachRideScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+        server.sharingChoices['rides'] = 'coaches';
+        server.sharingChoices['analytics'] = 'coaches';
+        server.sharingChoices['routes'] = 'coaches';
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await openAthletes(tester);
+        await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byKey(const Key('coach-ride-r1')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('coach-ride-r1')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('coach-ride-numbers')), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );

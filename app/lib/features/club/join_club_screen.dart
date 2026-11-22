@@ -6,6 +6,7 @@ import '../../core/l10n.dart';
 import '../auth/auth_page.dart';
 import 'club_view_model.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 
@@ -73,35 +74,39 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
         onPressed: _join,
       ),
       children: [
-        AutofillGroup(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                key: const Key('join-code'),
-                controller: _code,
-                textCapitalization: TextCapitalization.characters,
-                autocorrect: false,
-                enableSuggestions: false,
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(labelText: l10n.joinCode),
-                onSubmitted: (_) => _join(),
-              ),
-              if (message != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                AuthFailure(keyName: 'join-error', message: message),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              if (widget.onSkip != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    key: const Key('skip-join'),
-                    onPressed: state.action.running ? null : widget.onSkip,
-                    child: Text(l10n.joinSkip),
-                  ),
+        // The code and the way out are the page's one form, in one card.
+        AppCard(
+          key: const Key('join-club-form'),
+          child: AutofillGroup(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  key: const Key('join-code'),
+                  controller: _code,
+                  textCapitalization: TextCapitalization.characters,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(labelText: l10n.joinCode),
+                  onSubmitted: (_) => _join(),
                 ),
-            ],
+                if (message != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  AuthFailure(keyName: 'join-error', message: message),
+                ],
+                const SizedBox(height: AppSpacing.lg),
+                if (widget.onSkip != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      key: const Key('skip-join'),
+                      onPressed: state.action.running ? null : widget.onSkip,
+                      child: Text(l10n.joinSkip),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],

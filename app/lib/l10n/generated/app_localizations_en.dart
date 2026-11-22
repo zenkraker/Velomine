@@ -697,6 +697,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubNoneSubtitle => 'Ride on your own, or with a club.';
 
   @override
+  String get clubNearbyBody => 'Clubs that ride near you, by distance.';
+
+  @override
+  String get clubJoinWithCode => 'Join with a code';
+
+  @override
+  String get clubJoinBody => 'Have a code from a club owner? Join with it.';
+
+  @override
+  String get clubStartBody =>
+      'Start a club for the people you ride with. A month to try it.';
+
+  @override
   String get clubSubtitle => 'Your club, its rides and the people in it.';
 
   @override
@@ -4101,6 +4114,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startClubName => 'Club name';
 
   @override
+  String get startClubNameCard => 'Name';
+
+  @override
   String get startClubNameRequired => 'Give the club a name.';
 
   @override
@@ -4528,6 +4544,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routeOpenGpx => 'Download GPX';
 
   @override
+  String get routeTheRoute => 'The route';
+
+  @override
+  String get routeDescription => 'Description';
+
+  @override
   String get routeEdit => 'Edit';
 
   @override
@@ -4725,6 +4747,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideFormMaxRiders => 'Maximum riders (optional)';
 
   @override
+  String get rideFormDetails => 'Details';
+
+  @override
   String get rideFormSave => 'Save the ride';
 
   @override
@@ -4745,6 +4770,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarTitle => 'Calendar subscription';
+
+  @override
+  String get calendarAddressTitle => 'Your address';
 
   @override
   String get clubCalendarCaption => 'Club calendar';

@@ -12,11 +12,12 @@ import '../progress/power_summary.dart';
 import '../progress/training_summary.dart';
 import 'coach_athlete_view_model.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
+import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/section_heading.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/units.dart';
 
 /// One athlete as their coach sees them: shared summary, training load and recent rides.
@@ -54,13 +55,16 @@ class CoachAthleteScreen extends ConsumerWidget {
         else if (summary != null) ...[
           Wrap(
             spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
             children: [
-              if (summary.sharesRides) Chip(label: Text(l10n.sharesRides)),
+              if (summary.sharesRides)
+                AppBadge(l10n.sharesRides, tone: AppBadgeTone.good),
               if (summary.sharesAnalytics)
-                Chip(label: Text(l10n.sharesTraining)),
-              if (summary.sharesRoutes) Chip(label: Text(l10n.sharesRoutes)),
+                AppBadge(l10n.sharesTraining, tone: AppBadgeTone.good),
+              if (summary.sharesRoutes)
+                AppBadge(l10n.sharesRoutes, tone: AppBadgeTone.good),
               if (summary.sharesWellbeing)
-                Chip(label: Text(l10n.sharesWellbeing)),
+                AppBadge(l10n.sharesWellbeing, tone: AppBadgeTone.good),
             ],
           ),
           if (c.load.failure case final failure?)
@@ -68,59 +72,72 @@ class CoachAthleteScreen extends ConsumerWidget {
               message: failureText(l10n, failure),
               actionKey: const Key('coach-athlete-error'),
             ),
-          if (c.training case final training?) ...[
-            TrainingSummary(
-              training: training,
-              days: c.days,
-              onDays: (days) => ref
-                  .read(coachAthleteViewModelProvider(clubId, userId).notifier)
-                  .setDays(days),
-            ),
-            DailyLoadCard(training: training),
-            TrainingLoadCard(training: training),
-          ],
-          if (c.powerCurve case final curve?)
-            PowerSummary(
-              curve: curve,
-              days: c.days,
-              onDays: (days) => ref
-                  .read(coachAthleteViewModelProvider(clubId, userId).notifier)
-                  .setDays(days),
-              readOnly: true,
-            ),
-          if (c.wellbeing case final wellbeing?)
-            _CoachWellbeingCard(wellbeing: wellbeing),
-          if (summary.sharesRides) ...[
-            SectionHeading(title: l10n.shareRides),
-            if (c.rides.isEmpty)
-              EmptyState(
-                key: const Key('coach-no-rides'),
-                message: l10n.coachNoRides,
-                icon: Icons.directions_bike,
-              )
-            else
-              AppCard(
-                padding: EdgeInsets.zero,
-                child: Column(
+          // Each shared part has its card, paired two by two on a wider window.
+          CardGrid(
+            key: const Key('coach-athlete-parts'),
+            columns: 2,
+            tabletColumns: 2,
+            children: [
+              if (c.training case final training?) ...[
+                TrainingSummary(
+                  training: training,
+                  days: c.days,
+                  onDays: (days) => ref
+                      .read(
+                        coachAthleteViewModelProvider(clubId, userId).notifier,
+                      )
+                      .setDays(days),
+                ),
+                DailyLoadCard(training: training),
+                TrainingLoadCard(training: training),
+              ],
+              if (c.powerCurve case final curve?)
+                PowerSummary(
+                  curve: curve,
+                  days: c.days,
+                  onDays: (days) => ref
+                      .read(
+                        coachAthleteViewModelProvider(clubId, userId).notifier,
+                      )
+                      .setDays(days),
+                  readOnly: true,
+                ),
+              if (c.wellbeing case final wellbeing?)
+                _CoachWellbeingCard(wellbeing: wellbeing),
+              if (summary.sharesRides)
+                SectionCard(
+                  key: const Key('coach-rides-card'),
+                  title: l10n.shareRides,
                   children: [
-                    for (final ride in c.rides)
-                      ListTile(
-                        key: Key('coach-ride-${ride.id}'),
-                        leading: const Icon(Icons.directions_bike),
-                        title: Text(
-                          dateTime(ride.startTime ?? ride.uploadedAt),
-                        ),
-                        subtitle: Text(
-                          '${km(units, ride.distanceM)} · '
-                          '${duration(ride.movingS)}',
-                        ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => onOpenRide(ride.id),
+                    if (c.rides.isEmpty)
+                      EmptyState(
+                        key: const Key('coach-no-rides'),
+                        message: l10n.coachNoRides,
+                        icon: Icons.directions_bike,
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (final ride in c.rides)
+                            ListTile(
+                              key: Key('coach-ride-${ride.id}'),
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.directions_bike),
+                              title: Text(
+                                dateTime(ride.startTime ?? ride.uploadedAt),
+                              ),
+                              subtitle: Text(
+                                '${km(units, ride.distanceM)} · '
+                                '${duration(ride.movingS)}',
+                              ),
+                              onTap: () => onOpenRide(ride.id),
+                            ),
+                        ],
                       ),
                   ],
                 ),
-              ),
-          ],
+            ],
+          ),
         ],
       ],
     );
@@ -140,46 +157,33 @@ class _CoachWellbeingCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     String date(DateTime value) => DateFormat.MMMd(locale).format(value);
 
-    return AppCard(
+    return SectionCard(
       key: const Key('coach-wellbeing'),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeading(title: l10n.coachWellbeing),
-          const SizedBox(height: AppSpacing.xs),
-          Text(l10n.coachWellbeingNoNotes, style: text.bodySmall),
-          if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
-          ],
-          for (final checkIn in wellbeing.checkIns)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: Text(
-                [
-                  date(checkIn.date),
-                  '${l10n.wellbeingShortFatigue} ${checkIn.fatigue}',
-                  '${l10n.wellbeingShortSoreness} ${checkIn.soreness}',
-                  '${l10n.wellbeingShortMood} ${checkIn.mood}',
-                  '${l10n.wellbeingShortStress} ${checkIn.stress}',
-                  '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
-                  if (checkIn.sleep.orElse(null) case final sleep?)
-                    '${l10n.wellbeingShortSleep} $sleep',
-                ].join(' · '),
-                style: text.bodySmall,
-              ),
-            ),
-          for (final ride in wellbeing.rides)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: Text(
-                '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
-                style: text.bodySmall,
-              ),
-            ),
-        ],
-      ),
+      title: l10n.coachWellbeing,
+      description: l10n.coachWellbeingNoNotes,
+      children: [
+        if (wellbeing.checkIns.isEmpty && wellbeing.rides.isEmpty)
+          Text(l10n.coachWellbeingEmpty, style: text.bodyMedium),
+        for (final checkIn in wellbeing.checkIns)
+          Text(
+            [
+              date(checkIn.date),
+              '${l10n.wellbeingShortFatigue} ${checkIn.fatigue}',
+              '${l10n.wellbeingShortSoreness} ${checkIn.soreness}',
+              '${l10n.wellbeingShortMood} ${checkIn.mood}',
+              '${l10n.wellbeingShortStress} ${checkIn.stress}',
+              '${l10n.wellbeingShortMotivation} ${checkIn.motivation}',
+              if (checkIn.sleep.orElse(null) case final sleep?)
+                '${l10n.wellbeingShortSleep} $sleep',
+            ].join(' · '),
+            style: text.bodySmall,
+          ),
+        for (final ride in wellbeing.rides)
+          Text(
+            '${date(ride.date)} · ${l10n.wellbeingRpeSaved(ride.rpe)}',
+            style: text.bodySmall,
+          ),
+      ],
     );
   }
 }
