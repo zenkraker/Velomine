@@ -118,7 +118,7 @@ Don't
 - Add an icon tile, an uppercase eyebrow, a border or a shadow.
 - Clip the sentence: it wraps.
 
-**Flutter:** a `StatCard` in `lib/core/widgets/` replaces today's `StatTile` and the hand-made tiles in `progress_screen.dart`.
+**Flutter:** `StatCard` in `lib/core/widgets/stat_card.dart` draws every fact card.
 
 ### BarChart
 
@@ -203,7 +203,7 @@ Do
 - The same four destinations, in the same order, are the phone's nav pill.
 
 Don't
-- Add a fifth destination, or put a destructive action here (Sign out lives in the Profile page's menu).
+- Add a fifth destination, or put a destructive action here (Sign out lives in the account menu at the foot of the sidebar).
 - Show counts or badges except unread notifications.
 
 **Flutter:** one widget for the expanded rail in `home_shell.dart`; from 600 to 1199 dp the four destinations show as a collapsed rail of icons with labels, and on a phone as the nav pill.
@@ -241,7 +241,7 @@ Don't
 - Put the period selector and the sport filter in one row.
 - Show a destructive action as a visible button.
 
-**Flutter:** `FilledButton`, `SegmentedButton`, `FilterChip` and `PageMenu` themed from the tokens.
+**Flutter:** `FilledButton`, `SegmentedButton`, `ChoiceChip` and `PageMenu` themed from the tokens.
 
 ### ProgressDesktop
 

@@ -1,4 +1,4 @@
-# Sentry .NET and Flutter SDKs 6.12.1 / 10.3.0
+# Sentry .NET and Flutter SDKs 6.12.1 / 10.4.0
 
 ## Need
 Group errors and crashes with readable stack traces, link them to a trace and the release that introduced
@@ -19,7 +19,7 @@ MIT for `sentry-dotnet` and `sentry-dart`. Sentry Cloud is a paid service under 
 the free Developer plan is enough at current volume.
 
 ## Maintenance
-- Last release: 6.12.1 (.NET) and 10.3.0 (Flutter), both 2026.
+- Last release: 6.12.1 (.NET) and 10.4.x (Flutter), both 2026.
 - Active maintainers and regular releases; `sentry_flutter` is published by the verified `sentry.io`
   publisher on pub.dev.
 - Large issue trackers, but official Sentry engineers answer the SDK repositories.

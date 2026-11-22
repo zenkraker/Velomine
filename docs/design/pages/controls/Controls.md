@@ -14,4 +14,4 @@ The four controls every page draws from: the main action, the period selector, t
 - Put the period selector and the sport filter in one row.
 - Show a destructive action as a visible button.
 
-**Flutter:** `FilledButton`, `SegmentedButton`, `FilterChip` and `PageMenu` themed from the tokens.
+**Flutter:** `FilledButton`, `SegmentedButton`, `ChoiceChip` and `PageMenu` themed from the tokens.

@@ -11,7 +11,7 @@ The navigation from 1200 dp: the wordmark, four main destinations, and the priva
 - The same four destinations, in the same order, are the phone's nav pill.
 
 **Don't**
-- Add a fifth destination, or put a destructive action here (Sign out lives in the Profile page's menu).
+- Add a fifth destination, or put a destructive action here (Sign out lives in the account menu at the foot of the sidebar).
 - Show counts or badges except unread notifications.
 
 **Flutter:** one widget for the expanded rail in `home_shell.dart`; from 600 to 1199 dp the four destinations show as a collapsed rail of icons with labels, and on a phone as the nav pill.
