@@ -152,6 +152,17 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Login_ShouldAcceptTheBootstrapAdmin_WhenEmailIsConfigured()
+    {
+        var (api, _) = await StartAsync(postgres);
+        await using var _ = api;
+
+        var signedIn = await api.LoginAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+
+        Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+    }
+
+    [Fact]
     public async Task Login_ShouldAcceptTheAccount_WhenTheEmailIsConfirmed()
     {
         var (api, mail) = await StartAsync(postgres);
