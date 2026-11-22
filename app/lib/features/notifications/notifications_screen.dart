@@ -5,12 +5,13 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/section_heading.dart';
 import 'notifications_text.dart';
 import 'notifications_view_model.dart';
 
@@ -41,22 +42,26 @@ class NotificationsScreen extends ConsumerWidget {
       ref.read(notificationsViewModelProvider.notifier).messageShown,
     );
 
-    // Unread first, then grouped by what they are about, so a wear warning is not lost between two
-    // ride results and nothing waiting to be read sits below something already read.
-    final sorted = [...s.items]
-      ..sort((a, b) {
-        if (a.isRead != b.isRead) return a.isRead ? 1 : -1;
-        return b.createdAt.compareTo(a.createdAt);
-      });
+    // Unread first as its own group, then grouped by what they are about, so nothing waiting to be
+    // read sits below something already read.
+    List<NotificationResponse> newestFirst(
+      Iterable<NotificationResponse> items,
+    ) => [...items]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final unread = newestFirst(s.items.where((n) => !n.isRead));
     final groups = <String, List<NotificationResponse>>{};
-    for (final n in sorted) {
+    for (final n in newestFirst(s.items.where((n) => n.isRead))) {
       groups.putIfAbsent(_groupOf(n.type), () => []).add(n);
     }
     String groupTitle(String group) => switch (group) {
       'rides' => l10n.notificationGroupRides,
       'club' => l10n.notificationGroupClub,
       'bikes' => l10n.notificationGroupBikes,
+      'unread' => l10n.notificationGroupUnread,
       _ => l10n.notificationGroupAccount,
+    };
+    final sections = <String, List<NotificationResponse>>{
+      if (unread.isNotEmpty) 'unread': unread,
+      ...groups,
     };
 
     final markAllAction = s.markAll.running
@@ -91,14 +96,13 @@ class NotificationsScreen extends ConsumerWidget {
             message: l10n.noNotifications,
             icon: Icons.notifications_none,
           ),
-        for (final MapEntry(key: group, value: items) in groups.entries) ...[
-          SectionHeading(title: groupTitle(group)),
-          for (final n in items)
-            _NotificationTile(
-              notification: n,
-              onTap: () => _open(context, ref, n),
-            ),
-        ],
+        for (final MapEntry(key: group, value: items) in sections.entries)
+          _NotificationGroup(
+            group: group,
+            title: groupTitle(group),
+            items: items,
+            onOpen: (n) => _open(context, ref, n),
+          ),
       ],
     );
   }
@@ -119,6 +123,46 @@ class NotificationsScreen extends ConsumerWidget {
     'part_soon' || 'part_worn' => 'bikes',
     _ => 'account',
   };
+}
+
+class _NotificationGroup extends StatelessWidget {
+  const _NotificationGroup({
+    required this.group,
+    required this.title,
+    required this.items,
+    required this.onOpen,
+  });
+
+  final String group;
+  final String title;
+  final List<NotificationResponse> items;
+  final void Function(NotificationResponse) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      key: Key('notification-group-$group'),
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.sm,
+            ),
+            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          for (final (i, n) in items.indexed) ...[
+            if (i > 0) const Divider(height: 1),
+            _NotificationTile(notification: n, onTap: () => onOpen(n)),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _NotificationTile extends StatelessWidget {
@@ -147,24 +191,17 @@ class _NotificationTile extends StatelessWidget {
     final n = notification;
     final scheme = Theme.of(context).colorScheme;
     final warning = n.type == 'ride_failed' || n.type == 'part_worn';
-    return AppCard(
+    return ListTile(
       key: Key('notification-${n.id}'),
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(_icon(n.type), color: warning ? scheme.error : null),
-        title: Text(
-          notificationText(context.l10n, n),
-          style: n.isRead ? null : const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(dateTime(n.createdAt)),
-        trailing: n.isRead
-            ? null
-            : Semantics(
-                label: context.l10n.unread,
-                child: Icon(Icons.circle, size: 10, color: scheme.primary),
-              ),
+      onTap: onTap,
+      leading: Icon(_icon(n.type), color: warning ? scheme.error : null),
+      title: Text(
+        notificationText(context.l10n, n),
+        style: n.isRead ? null : const TextStyle(fontWeight: FontWeight.w600),
       ),
+      subtitle: Text(dateTime(n.createdAt)),
+      // An unread row says so in words, beside its date, as the mock-up draws it.
+      trailing: n.isRead ? null : AppBadge(context.l10n.unread),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/theme.dart';
 
 import 'fake_server.dart';
 
@@ -161,6 +162,25 @@ void main() {
     expect(find.byKey(const Key('event-event-1')), findsNothing);
   });
 
+  testWidgets('EventsScreen_ShouldShowTheAddEventPillInTheHeader_WhenOpened', (
+    tester,
+  ) async {
+    await openGoals(tester);
+    await openEvents(tester);
+
+    final context = tester.element(find.byKey(const Key('add-event')));
+    final pill = tester.widget<Material>(
+      find
+          .descendant(
+            of: find.byKey(const Key('add-event')),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    // The page's one action wears the accent, like every other page's main action.
+    expect(pill.color, VelomineColors.of(context).accent);
+  });
+
   testWidgets('EventsScreen_ShouldLinkTheRide_WhenOneIsPicked', (tester) async {
     final event = eventJson();
     server.events.add(event);
@@ -174,6 +194,10 @@ void main() {
         movingS: 3600,
       ),
     );
+    // Two rides that day: the rider says which one the event was.
+    server.rides.add(
+      rideJson('ride-2', 'ready', startTime: '${event['date']}T16:00:00Z'),
+    );
     await openGoals(tester);
     await openEvents(tester);
 
@@ -184,6 +208,33 @@ void main() {
     await tester.tap(find.byKey(const Key('pick-ride-ride-1')));
     await tester.pumpAndSettle();
 
+    expect(server.eventWrites, contains('ride event-1'));
+    expect(server.events.single['rideId'], 'ride-1');
+  });
+
+  testWidgets('EventsScreen_ShouldLinkTheOnlyRideOfTheDay_WhenNothingIsPicked', (
+    tester,
+  ) async {
+    final event = eventJson();
+    server.events.add(event);
+    server.rides.add(
+      rideJson(
+        'ride-1',
+        'ready',
+        startTime: '${event['date']}T09:00:00Z',
+        utcOffsetMinutes: 0,
+      ),
+    );
+    await openGoals(tester);
+    await openEvents(tester);
+
+    await tester.tap(find.byKey(const Key('event-actions-event-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('event-link-event-1')));
+    await tester.pumpAndSettle();
+
+    // One ride that day can only be the event's: it is linked without a picker.
+    expect(find.byKey(const Key('pick-ride-ride-1')), findsNothing);
     expect(server.eventWrites, contains('ride event-1'));
     expect(server.events.single['rideId'], 'ride-1');
   });
@@ -275,6 +326,10 @@ void main() {
         utcOffsetMinutes: 0,
       ),
     );
+    // Two rides that day, so the picker is what the Italian labels are read on.
+    server.rides.add(
+      rideJson('ride-2', 'ready', startTime: '${event['date']}T16:00:00Z'),
+    );
     tester.view.physicalSize = const Size(1000, 2000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -291,6 +346,22 @@ void main() {
 
     expect(server.events.single['rideId'], 'ride-1');
   });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('EventsScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.events.add(eventJson());
+      tester.view.physicalSize = Size(width, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await openEvents(tester);
+
+      expect(find.byKey(const Key('event-event-1')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('RideDetailScreen_ShouldNameTheEvent_WhenTheRideWasOne', (
     tester,

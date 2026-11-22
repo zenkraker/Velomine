@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
@@ -23,6 +24,29 @@ String rideStartText(
   final date = MaterialLocalizations.of(context).formatMediumDate(local);
   final time = TimeOfDay.fromDateTime(local).format(context);
   return '$date · $time';
+}
+
+/// The ride's day number and short month, for the date block that leads its calendar row.
+({String day, String month}) rideDateBlock(
+  DateTime startsAt,
+  int utcOffsetMinutes,
+) {
+  final local = startsAt.toUtc().add(Duration(minutes: utcOffsetMinutes));
+  return (
+    day: DateFormat('d').format(local),
+    month: DateFormat('MMM').format(local),
+  );
+}
+
+/// The ride's wall clock without the date, which its date block already carries: "Sat 08:30".
+String rideRowTime(
+  BuildContext context,
+  DateTime startsAt,
+  int utcOffsetMinutes,
+) {
+  final local = startsAt.toUtc().add(Duration(minutes: utcOffsetMinutes));
+  final weekday = DateFormat('EEE').format(local);
+  return '$weekday ${TimeOfDay.fromDateTime(local).format(context)}';
 }
 
 /// How many are in, or how many places are left.

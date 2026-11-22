@@ -33,6 +33,32 @@ void main() {
     },
   );
 
+  testWidgets('SignInScreen_ShouldShowItsTitle_WhenTheFormOpens', (
+    tester,
+  ) async {
+    await startApp(tester, server.session(useCookies: false));
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(
+      find.text('Sign in to see your rides and your form.'),
+      findsOneWidget,
+    );
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('SignInScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: false));
+
+      expect(find.byKey(const Key('sign-in')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'SignInScreen_ShouldKeepSignInInTheBottomBar_WhenTheKeyboardIsOpen',
     (tester) async {
@@ -223,7 +249,7 @@ void main() {
 
     expect(
       tester
-          .widget<CheckboxListTile>(find.byKey(const Key('stay-signed-in')))
+          .widget<SwitchListTile>(find.byKey(const Key('stay-signed-in')))
           .value,
       isTrue,
     );
@@ -233,7 +259,7 @@ void main() {
     expect(server.lastRememberMe, isTrue);
   });
 
-  testWidgets('SignInScreen_ShouldNotStayLoggedIn_WhenTheBoxIsCleared', (
+  testWidgets('SignInScreen_ShouldNotStayLoggedIn_WhenTheSwitchIsTapped', (
     tester,
   ) async {
     server.add('rider@example.com');

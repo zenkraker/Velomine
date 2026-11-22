@@ -180,4 +180,33 @@ void main() {
     expect(find.byType(ServerSetupScreen), findsNothing);
     expect(find.byKey(const Key('sign-in')), findsOneWidget);
   });
+
+  testWidgets('ServerSetupScreen_ShouldShowItsCaption_WhenItOpens', (
+    tester,
+  ) async {
+    await pump(tester, check: (_) async => info());
+
+    expect(find.text('Server'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Server')).dy,
+      lessThan(
+        tester.getTopLeft(find.text('Which server does your club use?')).dy,
+      ),
+    );
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'ServerSetupScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pump(tester, check: (_) async => info());
+
+        expect(find.byKey(const Key('server-save')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

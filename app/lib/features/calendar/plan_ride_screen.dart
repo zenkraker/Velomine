@@ -16,6 +16,8 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
+import '../../core/widgets/segmented_control.dart';
 import '../auth/auth_page.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../club/location_picker.dart';
@@ -24,6 +26,32 @@ import 'club_rides_view_model.dart';
 import 'club_rides_state.dart';
 
 const ridePaceIds = ['easy', 'steady', 'fast'];
+
+/// A form label above a control that carries no label of its own.
+class _Labelled extends StatelessWidget {
+  const _Labelled({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.sm,
+      children: [
+        Text(
+          label,
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
 
 /// Plans a ride, or changes one; the same form does both.
 class PlanRideScreen extends ConsumerStatefulWidget {
@@ -202,6 +230,7 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
     if (s.load.running && (editing && detail == null)) {
       return PageScaffold(
         title: l10n.editRideTitle,
+        parent: l10n.clubCalendarCaption,
         maxWidth: AppLayout.contentNarrow,
         children: const [
           LoadingState.rows(key: Key('plan-ride-loading'), count: 4),
@@ -212,6 +241,7 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
     final problem = _problemText(l10n);
     return PageScaffold(
       title: editing ? l10n.editRideTitle : l10n.planRideTitle,
+      parent: l10n.clubCalendarCaption,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
         buttonKey: const Key('save-ride'),
@@ -220,114 +250,127 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
         onPressed: () => _save(s, notifier),
       ),
       children: [
-        // The form's fields, in one card; the page header already names it.
+        // The form's own fields: the page header already names the screen.
         AppCard(
-          padding: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
-              children: [
-                AppTextField(
-                  fieldKey: const Key('ride-title'),
-                  controller: _title,
-                  label: l10n.rideFormTitle,
-                ),
-                Row(
-                  spacing: AppSpacing.sm,
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        key: const Key('ride-date'),
-                        onPressed: _pickDate,
-                        icon: const Icon(Icons.calendar_today),
-                        label: Text(
-                          MaterialLocalizations.of(context)
-                              .formatMediumDate(_date),
-                        ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.md,
+            children: [
+              AppTextField(
+                fieldKey: const Key('ride-title'),
+                controller: _title,
+                label: l10n.rideFormTitle,
+              ),
+              Row(
+                spacing: AppSpacing.sm,
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const Key('ride-date'),
+                      onPressed: _pickDate,
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(
+                        MaterialLocalizations.of(context)
+                            .formatMediumDate(_date),
                       ),
                     ),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        key: const Key('ride-time'),
-                        onPressed: _pickTime,
-                        icon: const Icon(Icons.schedule),
-                        label: Text(_time.format(context)),
-                      ),
-                    ),
-                  ],
-                ),
-                AppTextField(
-                  fieldKey: const Key('ride-meeting'),
-                  controller: _meeting,
-                  label: l10n.rideFormMeetingName,
-                ),
-                OutlinedButton.icon(
-                  key: const Key('ride-meeting-point'),
-                  onPressed: _pickMeeting,
-                  icon: const Icon(Icons.place_outlined),
-                  label: Text(
-                    _point == null
-                        ? l10n.rideFormPickMeeting
-                        : '${_point!.latitude.toStringAsFixed(5)}, ${_point!.longitude.toStringAsFixed(5)}',
                   ),
-                ),
-                DropdownButtonFormField<String?>(
-                  key: const Key('ride-route'),
-                  initialValue: _routeId,
-                  decoration: InputDecoration(labelText: l10n.rideFormRoute),
-                  items: [
-                    DropdownMenuItem(
-                      value: null,
-                      child: Text(l10n.rideFormNoRoute),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const Key('ride-time'),
+                      onPressed: _pickTime,
+                      icon: const Icon(Icons.schedule),
+                      label: Text(_time.format(context)),
                     ),
-                    for (final route in s.routes)
-                      DropdownMenuItem(
-                        value: route.id,
-                        child: Text(
-                          '${route.name} · ${km(ref.watch(unitsChoiceViewModelProvider), route.distanceM)}',
-                        ),
-                      ),
-                  ],
-                  onChanged: (value) => setState(() => _routeId = value),
-                ),
-                DropdownButtonFormField<String>(
-                  key: const Key('ride-pace'),
-                  initialValue: _pace,
-                  decoration: InputDecoration(labelText: l10n.rideFormPace),
-                  items: [
-                    for (final pace in ridePaceIds)
-                      DropdownMenuItem(
-                        value: pace,
-                        child: Text(ridePaceName(l10n, pace)),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) setState(() => _pace = value);
-                  },
-                ),
-                SwitchListTile(
-                  key: const Key('ride-no-drop'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.rideFormNoDrop),
-                  value: _noDrop,
-                  onChanged: (value) => setState(() => _noDrop = value),
-                ),
-                AppTextField(
-                  fieldKey: const Key('ride-notes'),
-                  controller: _notes,
-                  label: l10n.rideFormNotes,
-                ),
-                AppTextField(
-                  fieldKey: const Key('ride-max-riders'),
-                  controller: _maxRiders,
-                  label: l10n.rideFormMaxRiders,
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+        SectionCard(
+          title: l10n.rideMeeting,
+          children: [
+            AppTextField(
+              fieldKey: const Key('ride-meeting'),
+              controller: _meeting,
+              label: l10n.rideFormMeetingName,
+            ),
+            if (_point case final point?)
+              MeetingMap(
+                key: const Key('ride-meeting-map'),
+                latitude: point.latitude,
+                longitude: point.longitude,
+                tileUrl: widget.tileUrl,
+                attribution: widget.attribution,
+              ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton.icon(
+                key: const Key('ride-meeting-point'),
+                onPressed: _pickMeeting,
+                icon: const Icon(Icons.place_outlined),
+                label: Text(l10n.rideFormPickMeeting),
+              ),
+            ),
+          ],
+        ),
+        SectionCard(
+          title: l10n.rideFormDetails,
+          children: [
+            DropdownButtonFormField<String?>(
+              key: const Key('ride-route'),
+              initialValue: _routeId,
+              decoration: InputDecoration(labelText: l10n.rideFormRoute),
+              items: [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(l10n.rideFormNoRoute),
+                ),
+                for (final route in s.routes)
+                  DropdownMenuItem(
+                    value: route.id,
+                    child: Text(
+                      '${route.name} · ${km(ref.watch(unitsChoiceViewModelProvider), route.distanceM)}',
+                    ),
+                  ),
+              ],
+              onChanged: (value) => setState(() => _routeId = value),
+            ),
+            _Labelled(
+              label: l10n.rideFormPace,
+              child: SegmentedControl<String>(
+                buttonKey: const Key('ride-pace'),
+                segments: [
+                  for (final pace in ridePaceIds)
+                    ButtonSegment(
+                      value: pace,
+                      label: Text(ridePaceName(l10n, pace)),
+                    ),
+                ],
+                selected: _pace,
+                onChanged: (value) => setState(() => _pace = value),
+              ),
+            ),
+            SwitchListTile(
+              key: const Key('ride-no-drop'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.rideFormNoDrop),
+              value: _noDrop,
+              onChanged: (value) => setState(() => _noDrop = value),
+            ),
+            AppTextField(
+              fieldKey: const Key('ride-max-riders'),
+              controller: _maxRiders,
+              label: l10n.rideFormMaxRiders,
+              keyboardType: TextInputType.number,
+            ),
+            AppTextField(
+              fieldKey: const Key('ride-notes'),
+              controller: _notes,
+              label: l10n.rideFormNotes,
+            ),
+          ],
         ),
         if (problem != null)
           AuthFailure(keyName: 'plan-ride-problem', message: problem),

@@ -410,6 +410,12 @@ abstract class AppLocalizations {
   /// **'Sign in to see your rides and your form.'**
   String get signInHelp;
 
+  /// No description provided for @signInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get signInTitle;
+
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:
@@ -445,6 +451,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create an account'**
   String get createAccount;
+
+  /// No description provided for @registerCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'New account'**
+  String get registerCaption;
 
   /// No description provided for @createAccountAction.
   ///
@@ -680,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Set up an authenticator'**
   String get twoFactorStart;
 
+  /// No description provided for @twoFactorStartSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start setup'**
+  String get twoFactorStartSetup;
+
   /// No description provided for @twoFactorKeyHelp.
   ///
   /// In en, this message translates to:
@@ -733,6 +751,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save them somewhere safe. Each works once, in place of the app code.'**
   String get twoFactorRecoveryHelp;
+
+  /// No description provided for @twoFactorSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up an authenticator'**
+  String get twoFactorSetupTitle;
 
   /// No description provided for @twoFactorEnabled.
   ///
@@ -865,6 +889,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Which server does your club use?'**
   String get setupTitle;
+
+  /// No description provided for @setupCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get setupCaption;
 
   /// No description provided for @setupServerAddress.
   ///
@@ -1376,6 +1406,30 @@ abstract class AppLocalizations {
   /// **'Ride on your own, or with a club.'**
   String get clubNoneSubtitle;
 
+  /// No description provided for @clubNearbyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Clubs that ride near you, by distance.'**
+  String get clubNearbyBody;
+
+  /// No description provided for @clubJoinWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with a code'**
+  String get clubJoinWithCode;
+
+  /// No description provided for @clubJoinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a code from a club owner? Join with it.'**
+  String get clubJoinBody;
+
+  /// No description provided for @clubStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a club for the people you ride with. A month to try it.'**
+  String get clubStartBody;
+
   /// No description provided for @clubSubtitle.
   ///
   /// In en, this message translates to:
@@ -1849,6 +1903,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Active'**
   String get adminClubActive;
+
+  /// No description provided for @adminClubInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get adminClubInactive;
+
+  /// No description provided for @adminClubPlanEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan ended'**
+  String get adminClubPlanEnded;
+
+  /// No description provided for @adminClubActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate club'**
+  String get adminClubActivate;
+
+  /// No description provided for @adminClubDeactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate club'**
+  String get adminClubDeactivate;
+
+  /// No description provided for @adminClubActiveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An inactive club keeps its members and rides, but nobody can join it until it is turned back on.'**
+  String get adminClubActiveHelp;
+
+  /// No description provided for @adminPeopleAndRides.
+  ///
+  /// In en, this message translates to:
+  /// **'People and rides'**
+  String get adminPeopleAndRides;
+
+  /// No description provided for @adminServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get adminServer;
 
   /// No description provided for @adminClubJoinCode.
   ///
@@ -2336,6 +2432,12 @@ abstract class AppLocalizations {
   /// **'At {time}{distance}'**
   String momentAt(String time, String distance);
 
+  /// No description provided for @rideNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbers'**
+  String get rideNumbers;
+
   /// No description provided for @statDistance.
   ///
   /// In en, this message translates to:
@@ -2707,6 +2809,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parts'**
   String get parts;
+
+  /// No description provided for @totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get totals;
 
   /// No description provided for @addPartAction.
   ///
@@ -3836,11 +3944,35 @@ abstract class AppLocalizations {
   /// **'Your numbers'**
   String get riderCardTitle;
 
-  /// No description provided for @riderCardMore.
+  /// No description provided for @riderCardWhole.
   ///
   /// In en, this message translates to:
-  /// **'More'**
-  String get riderCardMore;
+  /// **'Whole rider card'**
+  String get riderCardWhole;
+
+  /// No description provided for @riderCardFtpPerKilo.
+  ///
+  /// In en, this message translates to:
+  /// **'FTP per kilo'**
+  String get riderCardFtpPerKilo;
+
+  /// No description provided for @riderCardFtpAtWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'{ftp} W at {weight} kg'**
+  String riderCardFtpAtWeight(int ftp, double weight);
+
+  /// No description provided for @riderCardPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak power'**
+  String get riderCardPeak;
+
+  /// No description provided for @riderCardPeakNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Best {duration}, last 90 days'**
+  String riderCardPeakNote(String duration);
 
   /// No description provided for @riderCardPowerNote.
   ///
@@ -4196,6 +4328,18 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileTitle;
 
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @riding.
+  ///
+  /// In en, this message translates to:
+  /// **'Riding'**
+  String get riding;
+
   /// No description provided for @ftpHelper.
   ///
   /// In en, this message translates to:
@@ -4543,6 +4687,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rides'**
   String get notificationGroupRides;
+
+  /// No description provided for @notificationGroupUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationGroupUnread;
 
   /// No description provided for @notificationGroupClub.
   ///
@@ -5053,6 +5203,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Why'**
   String get readinessWhy;
+
+  /// No description provided for @readinessWhyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Why {score}'**
+  String readinessWhyScore(Object score);
 
   /// No description provided for @readinessNotMedical.
   ///
@@ -6020,6 +6176,12 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
+  /// No description provided for @forgotPasswordCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Password help'**
+  String get forgotPasswordCaption;
+
   /// No description provided for @forgotPasswordTitle.
   ///
   /// In en, this message translates to:
@@ -6067,6 +6229,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send reset link'**
   String get sendResetLink;
+
+  /// No description provided for @resetPasswordCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get resetPasswordCaption;
 
   /// No description provided for @resetPasswordTitle.
   ///
@@ -6788,6 +6956,12 @@ abstract class AppLocalizations {
   /// **'Help improve Velomine with anonymous crash reports and performance data. Nothing you record is ever included.'**
   String get telemetryHelp;
 
+  /// No description provided for @telemetryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve Velomine'**
+  String get telemetryTitle;
+
   /// No description provided for @crashReports.
   ///
   /// In en, this message translates to:
@@ -6883,6 +7057,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{done} of {total} activities read'**
   String importProgress(int done, int total);
+
+  /// No description provided for @importProgressUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'of {total} activities read'**
+  String importProgressUnit(Object total);
 
   /// No description provided for @importFinished.
   ///
@@ -6991,6 +7171,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Club name'**
   String get startClubName;
+
+  /// No description provided for @startClubNameCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get startClubNameCard;
 
   /// No description provided for @startClubNameRequired.
   ///
@@ -7640,6 +7826,12 @@ abstract class AppLocalizations {
   /// **'Routes'**
   String get clubRoutesTitle;
 
+  /// No description provided for @clubRoutesCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Club routes'**
+  String get clubRoutesCaption;
+
   /// No description provided for @clubRoutesHelp.
   ///
   /// In en, this message translates to:
@@ -7747,6 +7939,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download GPX'**
   String get routeOpenGpx;
+
+  /// No description provided for @routeTheRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'The route'**
+  String get routeTheRoute;
+
+  /// No description provided for @routeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get routeDescription;
 
   /// No description provided for @routeEdit.
   ///
@@ -8114,6 +8318,12 @@ abstract class AppLocalizations {
   /// **'Maximum riders (optional)'**
   String get rideFormMaxRiders;
 
+  /// No description provided for @rideFormDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get rideFormDetails;
+
   /// No description provided for @rideFormSave.
   ///
   /// In en, this message translates to:
@@ -8155,6 +8365,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar subscription'**
   String get calendarTitle;
+
+  /// No description provided for @calendarAddressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your address'**
+  String get calendarAddressTitle;
+
+  /// No description provided for @clubCalendarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Club calendar'**
+  String get clubCalendarCaption;
 
   /// No description provided for @calendarHelp.
   ///
@@ -8371,6 +8593,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replay'**
   String get supporterReplay;
+
+  /// No description provided for @supporterReplayLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the celebration again'**
+  String get supporterReplayLink;
 
   /// No description provided for @supporterBadgeReplayHint.
   ///

@@ -12,7 +12,7 @@ import '../../core/confirm.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -59,7 +59,8 @@ String reminderProgressText(
     ),
 ].join(' · ');
 
-/// The bike's reminders (most urgent first) and its service log. Reads and drives the bike's ViewModel.
+/// The bike's reminders (most urgent first) and its service log: one card each, a row per reminder or
+/// entry, and the add link at the end of the card. Reads and drives the bike's ViewModel.
 class ServiceSection extends ConsumerWidget {
   const ServiceSection({super.key, required this.id});
 
@@ -208,139 +209,139 @@ class ServiceSection extends ConsumerWidget {
     final s = ref.watch(bikeDetailViewModelProvider(id));
     final notifier = ref.read(bikeDetailViewModelProvider(id).notifier);
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final reminders =
         s.detail?.reminders ?? const <MaintenanceReminderResponse>[];
     final parts = s.detail?.components ?? const <ComponentResponse>[];
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.md,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.lg,
       children: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
+        SectionCard(
+          title: l10n.service,
+          description: l10n.serviceRemindersIntro,
           children: [
-            Text(l10n.service, style: text.titleLarge),
-            FilledButton.icon(
-              key: const Key('add-reminder'),
-              onPressed: () => _addReminder(context, ref),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.serviceAddReminder),
+            if (reminders.isEmpty)
+              // The common jobs are the empty state: one tap starts a reminder.
+              Wrap(
+                key: const Key('no-reminders'),
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final job in s.jobs)
+                    ActionChip(
+                      key: Key('suggest-${job.id}'),
+                      label: Text(serviceJobName(l10n, job.id)),
+                      onPressed: () => _addReminder(context, ref, job: job),
+                    ),
+                ],
+              ),
+            for (final reminder in reminders)
+              _ReminderRow(
+                reminder: reminder,
+                onDone: () => _done(context, ref, reminder),
+                onEdit: () => _editReminder(context, ref, reminder),
+                onPause: () =>
+                    notifier.setReminderPaused(reminder, !reminder.isPaused),
+                onRemove: () => _removeReminder(context, ref, reminder),
+              ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const Key('add-reminder'),
+                onPressed: () => _addReminder(context, ref),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.serviceAddReminder),
+              ),
             ),
           ],
         ),
-        if (reminders.isEmpty) ...[
-          Text(l10n.serviceRemindersIntro, key: const Key('no-reminders')),
-          if (s.jobs.isNotEmpty)
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                for (final job in s.jobs)
-                  ActionChip(
-                    key: Key('suggest-${job.id}'),
-                    label: Text(serviceJobName(l10n, job.id)),
-                    onPressed: () => _addReminder(context, ref, job: job),
-                  ),
-              ],
-            ),
-        ],
-        for (final reminder in reminders)
-          _ReminderCard(
-            reminder: reminder,
-            onDone: () => _done(context, ref, reminder),
-            onEdit: () => _editReminder(context, ref, reminder),
-            onPause: () =>
-                notifier.setReminderPaused(reminder, !reminder.isPaused),
-            onRemove: () => _removeReminder(context, ref, reminder),
-          ),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
+        SectionCard(
+          title: l10n.serviceLog,
+          description: l10n.serviceLogIntro,
           children: [
-            Text(l10n.serviceLog, style: text.titleMedium),
-            OutlinedButton.icon(
-              key: const Key('add-entry'),
-              onPressed: () => _addEntry(context, ref),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.serviceAddEntry),
+            if (parts.isNotEmpty &&
+                (s.log.isNotEmpty || s.logComponentId != null))
+              DropdownButtonFormField<String?>(
+                key: const Key('log-filter'),
+                initialValue: s.logComponentId,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: l10n.logFilterLabel),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(l10n.logFilterAll),
+                  ),
+                  for (final p in parts)
+                    DropdownMenuItem<String?>(
+                      value: p.id,
+                      child: Text(
+                        partLabel(l10n, p),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: notifier.filterLog,
+              ),
+            if (s.logLoad.failure case final failure?)
+              Row(
+                children: [
+                  Expanded(
+                    child: InlineError(
+                      failureText(l10n, failure),
+                      key: const Key('log-error'),
+                    ),
+                  ),
+                  TextButton(
+                    key: const Key('log-retry'),
+                    onPressed: notifier.loadLog,
+                    child: Text(l10n.retry),
+                  ),
+                ],
+              )
+            else if (s.logLoad.running && s.log.isEmpty)
+              const LoadingState()
+            else if (s.log.isEmpty)
+              // An empty log is the card's sentence and its add link alone; the key is its marker.
+              s.logComponentId == null
+                  ? const SizedBox.shrink(key: Key('no-entries'))
+                  : EmptyState(
+                      key: const Key('no-entries'),
+                      message: l10n.logFilterEmpty,
+                    ),
+            for (final entry in s.log)
+              _EntryRow(
+                entry: entry,
+                onEdit: () => _editEntry(context, ref, entry),
+                onRemove: () => _removeEntry(context, ref, entry),
+              ),
+            if (s.logHasMore)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  key: const Key('log-more'),
+                  onPressed: s.logLoad.running ? null : notifier.loadMoreLog,
+                  child: Text(l10n.logShowMore),
+                ),
+              ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const Key('add-entry'),
+                onPressed: () => _addEntry(context, ref),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.serviceAddEntry),
+              ),
             ),
           ],
         ),
-        if (parts.isNotEmpty && (s.log.isNotEmpty || s.logComponentId != null))
-          DropdownButtonFormField<String?>(
-            key: const Key('log-filter'),
-            initialValue: s.logComponentId,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l10n.logFilterLabel),
-            items: [
-              DropdownMenuItem<String?>(
-                value: null,
-                child: Text(l10n.logFilterAll),
-              ),
-              for (final p in parts)
-                DropdownMenuItem<String?>(
-                  value: p.id,
-                  child: Text(
-                    partLabel(l10n, p),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
-            onChanged: notifier.filterLog,
-          ),
-        if (s.logLoad.failure case final failure?)
-          Row(
-            children: [
-              Expanded(
-                child: InlineError(
-                  failureText(l10n, failure),
-                  key: const Key('log-error'),
-                ),
-              ),
-              TextButton(
-                key: const Key('log-retry'),
-                onPressed: notifier.loadLog,
-                child: Text(l10n.retry),
-              ),
-            ],
-          )
-        else if (s.logLoad.running && s.log.isEmpty)
-          const LoadingState()
-        else if (s.log.isEmpty)
-          s.logComponentId == null
-              ? Text(l10n.serviceLogIntro, key: const Key('no-entries'))
-              : EmptyState(
-                  key: const Key('no-entries'),
-                  message: l10n.logFilterEmpty,
-                ),
-        for (final entry in s.log)
-          _EntryCard(
-            entry: entry,
-            onEdit: () => _editEntry(context, ref, entry),
-            onRemove: () => _removeEntry(context, ref, entry),
-          ),
-        if (s.logHasMore)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              key: const Key('log-more'),
-              onPressed: s.logLoad.running ? null : notifier.loadMoreLog,
-              child: Text(l10n.logShowMore),
-            ),
-          ),
       ],
     );
   }
 }
 
-class _ReminderCard extends ConsumerWidget {
-  const _ReminderCard({
+/// One reminder as a row of the Service card.
+class _ReminderRow extends ConsumerWidget {
+  const _ReminderRow({
     required this.reminder,
     required this.onDone,
     required this.onEdit,
@@ -359,81 +360,79 @@ class _ReminderCard extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final color = reminderColor(context, reminder.status);
-    return AppCard(
+    return Column(
       key: Key('reminder-${reminder.id}'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 6,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(reminder.name, style: text.titleMedium)),
-              Text(
-                reminderStatusLabel(l10n, reminder.status),
-                key: Key('reminder-status-${reminder.id}'),
-                style: TextStyle(color: color, fontWeight: FontWeight.w600),
-              ),
-              RowRemoveMenu(
-                menuKey: Key('reminder-actions-${reminder.id}'),
-                removeKey: Key('reminder-remove-${reminder.id}'),
-                onRemove: onRemove,
-              ),
-            ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: AppSpacing.xs,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(reminder.name, style: text.titleMedium)),
+            Text(
+              reminderStatusLabel(l10n, reminder.status),
+              key: Key('reminder-status-${reminder.id}'),
+              style: TextStyle(color: color, fontWeight: FontWeight.w600),
+            ),
+            RowRemoveMenu(
+              menuKey: Key('reminder-actions-${reminder.id}'),
+              removeKey: Key('reminder-remove-${reminder.id}'),
+              onRemove: onRemove,
+            ),
+          ],
+        ),
+        if (reminder.percent != null)
+          Semantics(
+            label: l10n.wearPercent(reminder.percent!),
+            child: LinearProgressIndicator(
+              key: Key('reminder-bar-${reminder.id}'),
+              value: (reminder.percent! / 100).clamp(0.0, 1.0),
+              color: color,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
-          if (reminder.percent != null)
-            Semantics(
-              label: l10n.wearPercent(reminder.percent!),
-              child: LinearProgressIndicator(
-                key: Key('reminder-bar-${reminder.id}'),
-                value: (reminder.percent! / 100).clamp(0.0, 1.0),
-                color: color,
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
+        Text(
+          reminderProgressText(
+            l10n,
+            ref.watch(unitsChoiceViewModelProvider),
+            reminder,
+          ),
+          key: Key('reminder-text-${reminder.id}'),
+        ),
+        Text(
+          l10n.reminderLastDone(isoDate(reminder.lastDoneOn)),
+          style: text.bodySmall,
+        ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            FilledButton.tonal(
+              key: Key('reminder-done-${reminder.id}'),
+              onPressed: onDone,
+              child: Text(l10n.reminderDone),
+            ),
+            TextButton(
+              key: Key('reminder-edit-${reminder.id}'),
+              onPressed: onEdit,
+              child: Text(l10n.edit),
+            ),
+            TextButton(
+              key: Key('reminder-pause-${reminder.id}'),
+              onPressed: onPause,
+              child: Text(
+                reminder.isPaused ? l10n.reminderResume : l10n.reminderPause,
               ),
             ),
-          Text(
-            reminderProgressText(
-              l10n,
-              ref.watch(unitsChoiceViewModelProvider),
-              reminder,
-            ),
-            key: Key('reminder-text-${reminder.id}'),
-          ),
-          Text(
-            l10n.reminderLastDone(isoDate(reminder.lastDoneOn)),
-            style: text.bodySmall,
-          ),
-          Wrap(
-            spacing: AppSpacing.sm,
-            children: [
-              FilledButton.tonal(
-                key: Key('reminder-done-${reminder.id}'),
-                onPressed: onDone,
-                child: Text(l10n.reminderDone),
-              ),
-              TextButton(
-                key: Key('reminder-edit-${reminder.id}'),
-                onPressed: onEdit,
-                child: Text(l10n.edit),
-              ),
-              TextButton(
-                key: Key('reminder-pause-${reminder.id}'),
-                onPressed: onPause,
-                child: Text(
-                  reminder.isPaused ? l10n.reminderResume : l10n.reminderPause,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-class _EntryCard extends ConsumerWidget {
-  const _EntryCard({
+/// One service entry as a row of the Service log card.
+class _EntryRow extends ConsumerWidget {
+  const _EntryRow({
     required this.entry,
     required this.onEdit,
     required this.onRemove,
@@ -465,46 +464,43 @@ class _EntryCard extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     final distance =
         '${NumberFormat.decimalPattern(locale).format(units == Units.imperial ? (entry.bikeDistanceM / 1609.344).round() : (entry.bikeDistanceM / 1000).round())} ${distanceUnit(units)}';
-    return AppCard(
+    return Column(
       key: Key('entry-${entry.id}'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 6,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(entry.title, style: text.titleMedium)),
-              RowRemoveMenu(
-                menuKey: Key('entry-actions-${entry.id}'),
-                removeKey: Key('entry-remove-${entry.id}'),
-                onRemove: onRemove,
-              ),
-            ],
-          ),
-          Text(
-            [
-              isoDate(entry.date),
-              l10n.entryAtDistance(distance),
-              entry.place ?? l10n.entryAtHome,
-              if (entry.costAmount != null) _cost(locale),
-            ].join(' · '),
-            key: Key('entry-meta-${entry.id}'),
-            style: text.bodySmall,
-          ),
-          if (entry.notes != null) Text(entry.notes!),
-          Wrap(
-            spacing: AppSpacing.sm,
-            children: [
-              TextButton(
-                key: Key('entry-edit-${entry.id}'),
-                onPressed: onEdit,
-                child: Text(l10n.edit),
-              ),
-            ],
-          ),
-        ],
-      ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: AppSpacing.xs,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(entry.title, style: text.titleMedium)),
+            RowRemoveMenu(
+              menuKey: Key('entry-actions-${entry.id}'),
+              removeKey: Key('entry-remove-${entry.id}'),
+              onRemove: onRemove,
+            ),
+          ],
+        ),
+        Text(
+          [
+            isoDate(entry.date),
+            l10n.entryAtDistance(distance),
+            entry.place ?? l10n.entryAtHome,
+            if (entry.costAmount != null) _cost(locale),
+          ].join(' · '),
+          key: Key('entry-meta-${entry.id}'),
+          style: text.bodySmall,
+        ),
+        if (entry.notes != null) Text(entry.notes!),
+        Wrap(
+          spacing: AppSpacing.sm,
+          children: [
+            TextButton(
+              key: Key('entry-edit-${entry.id}'),
+              onPressed: onEdit,
+              child: Text(l10n.edit),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

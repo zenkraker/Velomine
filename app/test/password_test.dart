@@ -167,4 +167,58 @@ void main() {
       expect(find.byKey(const Key('reset-done')), findsNothing);
     },
   );
+
+  testWidgets('ForgotPasswordScreen_ShouldShowItsCaption_WhenTheFormOpens', (
+    tester,
+  ) async {
+    await openForgot(tester);
+
+    expect(find.text('Password help'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Password help')).dy,
+      lessThan(tester.getTopLeft(find.text('Reset your password')).dy),
+    );
+  });
+
+  testWidgets(
+    'ResetPasswordScreen_ShouldShowOneButtonAndItsCaption_WhenTheLinkOpens',
+    (tester) async {
+      await pumpReset(tester);
+
+      expect(
+        tester.getTopLeft(find.text('New password').first).dy,
+        lessThan(tester.getTopLeft(find.text('Choose a new password')).dy),
+      );
+      // The form ends at the pinned Set new password button: no way back to asking again.
+      expect(find.text('Forgot password?'), findsNothing);
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'ForgotPasswordScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await openForgot(tester);
+
+        expect(find.byKey(const Key('forgot-submit')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'ResetPasswordScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pumpReset(tester);
+
+        expect(find.byKey(const Key('reset-submit')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

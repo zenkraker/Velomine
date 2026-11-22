@@ -114,6 +114,9 @@ void main() {
     await reveal(tester, find.byKey(const Key('readiness-card')));
     expect(find.byKey(const Key('readiness-card')), findsOneWidget);
     expect(find.byKey(const Key('readiness-score')), findsOneWidget);
+    expect(find.byKey(const Key('readiness-band')), findsOneWidget);
+    // Why the score is what it is sits on its own card, beside the score.
+    expect(find.byKey(const Key('readiness-why')), findsOneWidget);
     expect(find.text('How you feel'), findsWidgets);
     expect(
       find.text('A training guide, not a medical measure.'),
@@ -140,7 +143,8 @@ void main() {
       await openWellbeing(tester);
 
       await reveal(tester, find.byKey(const Key('wellbeing-card')));
-      // Fourteen rows, and no more.
+      // One line over the last two weeks, and fourteen rows under it, and no more.
+      expect(find.byKey(const Key('wellbeing-history-chart')), findsOneWidget);
       final rows = find.textContaining('Fat 2');
       expect(rows, findsNWidgets(14));
     },

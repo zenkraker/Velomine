@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:velomine/core/widgets/app_card.dart';
+import 'package:velomine/core/widgets/stat_card.dart';
 
 import 'fake_server.dart';
 
@@ -575,6 +577,32 @@ void main() {
   });
 
   testWidgets(
+    'BikesScreen_ShouldSayServiceDueSoonInWords_WhenOnlyAServiceIsComing',
+    (tester) async {
+      server.bikes.add({
+        ..._bike(),
+        'serviceDueCount': 0,
+        'serviceSoonCount': 1,
+      });
+      await openBikes(tester);
+
+      final card = find.byKey(const Key('bike-bike-1'));
+      // The mock-up's badge: the words are on the card, not only in a tooltip.
+      expect(
+        find.descendant(of: card, matching: find.text('Service due soon')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('service-due')),
+        ),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
     'BikeDetailScreen_ShouldGroupPartsAndShowWearWithWords_WhenPartsExist',
     (tester) async {
       server.bikes.add(_bike());
@@ -611,12 +639,98 @@ void main() {
     },
   );
 
+  testWidgets(
+    'BikeDetailScreen_ShouldShowTheFourTotalsInOneCard_WhenTheBikeHasAPart',
+    (tester) async {
+      server.bikes.add(_bike());
+      server.parts['bike-1'] = [_part()];
+      await openBikes(tester);
+      await tester.tap(find.byKey(const Key('bike-bike-1')));
+      await tester.pumpAndSettle();
+
+      final totals = find.ancestor(
+        of: find.text('Totals'),
+        matching: find.byType(AppCard),
+      );
+      expect(totals, findsOneWidget);
+      expect(
+        find.descendant(of: totals, matching: find.byType(StatFigure)),
+        findsNWidgets(4),
+      );
+      // The part count is the fourth figure.
+      expect(
+        find.descendant(of: totals, matching: find.text('Parts')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: totals, matching: find.text('1')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'BikeDetailScreen_ShouldDrawAGroupAsOneCard_WhenTwoPartsShareIt',
+    (tester) async {
+      server.bikes.add(_bike());
+      server.parts['bike-1'] = [
+        _part(),
+        {..._part(), 'id': 'part-2', 'wearPercent': 85, 'status': 'soon'},
+      ];
+      await openBikes(tester);
+      await tester.tap(find.byKey(const Key('bike-bike-1')));
+      await tester.pumpAndSettle();
+
+      final group = find.ancestor(
+        of: find.byKey(const Key('part-part-1')),
+        matching: find.byType(AppCard),
+      );
+      expect(group, findsOneWidget);
+      // Both rows sit in that one card.
+      expect(
+        find.descendant(
+          of: group,
+          matching: find.byKey(const Key('part-part-2')),
+        ),
+        findsOneWidget,
+      );
+      // The wear is in words above the bar, not only in its colour.
+      expect(
+        find.descendant(of: group, matching: find.text('3% worn')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: group, matching: find.text('85% worn')),
+        findsOneWidget,
+      );
+    },
+  );
+
   for (final width in [390.0, 600.0, 1300.0]) {
     testWidgets('BikesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
       tester,
     ) async {
       server.bikes.add(_bike());
       server.parts['bike-1'] = [_part()];
+      server.reminders['bike-1'] = [
+        {
+          'id': 'r1',
+          'name': 'Lube the chain',
+          'intervalDistanceM': 300000.0,
+          'lastDoneOn': '2026-10-01',
+          'usedDistanceM': 312000.0,
+          'percent': 104,
+          'status': 'due',
+        },
+      ];
+      server.serviceLog['bike-1'] = [
+        {
+          'id': 'e1',
+          'date': '2026-10-05',
+          'title': 'Full service',
+          'bikeDistanceM': 1200000.0,
+        },
+      ];
       tester.view.physicalSize = Size(width, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);

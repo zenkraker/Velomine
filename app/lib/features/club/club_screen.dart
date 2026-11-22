@@ -21,7 +21,6 @@ import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
-import '../../core/widgets/section_heading.dart';
 import '../../core/widgets/toolbar_row.dart';
 import '../sharing/sharing_view_model.dart';
 import '../calendar/club_ride_widgets.dart';
@@ -244,18 +243,9 @@ class ClubScreen extends ConsumerWidget {
     final coach = owner || club.myRole == 'coach';
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
-    // What the club's owner looks after. Paired on a desktop window, one under the other on a tablet.
-    final manage = <Widget>[
+    // What the club is: the plan and the code that lets people in, beside the club's own card.
+    final about = <Widget>[
       if (club.plan case final plan?) ClubPlanCard(plan: plan),
-      if (owner)
-        ClubRequestsCard(
-          requests: requests,
-          onRefresh: ref.read(joinRequestsViewModelProvider.notifier).refresh,
-          onApprove: (request) =>
-              _decideJoinRequest(context, ref, request, approve: true),
-          onDecline: (request) =>
-              _decideJoinRequest(context, ref, request, approve: false),
-        ),
       if (owner && club.joinCode != null)
         ClubJoinCodeCard(
           code: club.joinCode!,
@@ -266,6 +256,40 @@ class ClubScreen extends ConsumerWidget {
             if (context.mounted) _rotateCode(context, ref);
           }),
         ),
+    ];
+
+    // The people and the settings, in the order the page reads: who is asking, who is in, the athletes,
+    // what the member shares and where the club is.
+    final manage = <Widget>[
+      if (owner)
+        ClubRequestsCard(
+          requests: requests,
+          onRefresh: ref.read(joinRequestsViewModelProvider.notifier).refresh,
+          onApprove: (request) =>
+              _decideJoinRequest(context, ref, request, approve: true),
+          onDecline: (request) =>
+              _decideJoinRequest(context, ref, request, approve: false),
+        ),
+      // The roster is for the club's managers: a rider sees the rides, the routes and what they share.
+      if (coach)
+        ClubMembersCard(
+          members: club.members,
+          owner: owner,
+          onSetRole: (userId, role) =>
+              ref.read(clubViewModelProvider.notifier).setRole(userId, role),
+        ),
+      if (coach) ClubAthletesCard(onOpen: onOpenAthletes),
+      ClubSharingCard(
+        state: sharing,
+        onChoose: ({rides, analytics, routes, wellbeing}) => ref
+            .read(sharingViewModelProvider.notifier)
+            .choose(
+              rides: rides,
+              analytics: analytics,
+              routes: routes,
+              wellbeing: wellbeing,
+            ),
+      ),
       if (owner)
         ClubLocationCard(
           club: club,
@@ -279,28 +303,21 @@ class ClubScreen extends ConsumerWidget {
           onToggleDiscoverable: (value) =>
               _toggleDiscoverable(context, ref, club, value),
         ),
-      ClubMembersCard(
-        members: club.members,
-        owner: owner,
-        onSetRole: (userId, role) =>
-            ref.read(clubViewModelProvider.notifier).setRole(userId, role),
-      ),
-      if (coach) ClubAthletesCard(onOpen: onOpenAthletes),
-      ClubSharingCard(
-        state: sharing,
-        onChoose: ({rides, analytics, routes, wellbeing}) => ref
-            .read(sharingViewModelProvider.notifier)
-            .choose(
-              rides: rides,
-              analytics: analytics,
-              routes: routes,
-              wellbeing: wellbeing,
-            ),
-      ),
     ];
 
+    // Paired on a desktop window, one under the other on a tablet.
+    Widget cards(List<Widget> children) => wide
+        ? CardGrid(columns: 2, children: children)
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.lg,
+            children: children,
+          );
+
     return PageScaffold(
-      title: l10n.navClub,
+      // The club's own name names the page; "Club" is the crumb above it.
+      title: club.name,
+      parent: l10n.navClub,
       subtitle: l10n.clubSubtitle,
       // Leaving ends the member's place in the club: in the menu, last and red. The owner cannot leave.
       menu: owner
@@ -339,19 +356,10 @@ class ClubScreen extends ConsumerWidget {
                 ? null
                 : ref.read(clubViewModelProvider.notifier).refresh,
           ),
-        SectionHeading(title: l10n.clubRidesTitle),
+        if (about.isNotEmpty) cards(about),
         _ridesSection(context, ref, canPlan: coach),
-        SectionHeading(title: l10n.clubRoutesTitle),
         _routesSection(context, ref),
-        SectionHeading(title: l10n.clubMembers),
-        if (wide)
-          CardGrid(columns: 2, children: manage)
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpacing.lg,
-            children: manage,
-          ),
+        if (manage.isNotEmpty) cards(manage),
         // The owner cannot leave; the note stays where the button used to be.
         if (owner)
           Text(
@@ -362,7 +370,7 @@ class ClubScreen extends ConsumerWidget {
     );
   }
 
-  /// The page for a member without a club: the one thing to do, and the invitation that is waiting.
+  /// The page for a member without a club: three ways forward, or the invitation that is waiting.
   Widget _noClub(
     BuildContext context,
     WidgetRef ref,
@@ -391,39 +399,16 @@ class ClubScreen extends ConsumerWidget {
                 : ref.read(clubViewModelProvider.notifier).refresh,
           ),
         AppCard(
+          key: const Key('club-none-card'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: AppSpacing.md,
             children: [
               Text(
                 l10n.clubNoneTitle,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               Text(l10n.clubNoneBody),
-              // One row of choices with one weight: the main way first, the alternatives beside it.
-              ToolbarRow(
-                children: [
-                  FilledButton.icon(
-                    key: const Key('go-nearby-clubs'),
-                    onPressed: onOpenClubs,
-                    icon: const Icon(Icons.explore_outlined),
-                    label: Text(l10n.clubSeeNearby),
-                  ),
-                  OutlinedButton.icon(
-                    key: const Key('go-join-club'),
-                    onPressed: onJoin,
-                    icon: const Icon(Icons.group_add),
-                    label: Text(l10n.joinTitle),
-                  ),
-                  if (clubState.canStartClub)
-                    TextButton.icon(
-                      key: const Key('go-start-club'),
-                      onPressed: onStartClub,
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: Text(l10n.startClubButton),
-                    ),
-                ],
-              ),
             ],
           ),
         ),
@@ -445,6 +430,47 @@ class ClubScreen extends ConsumerWidget {
                   child: Text(l10n.nearbyCancel),
                 ),
               ),
+            ],
+          )
+        // A request that is waiting takes the place of the three ways forward.
+        else
+          CardGrid(
+            columns: 3,
+            children: [
+              _ClubWayCard(
+                cardKey: const Key('club-way-nearby'),
+                title: l10n.nearbyTitle,
+                body: l10n.clubNearbyBody,
+                icon: Icons.explore_outlined,
+                action: FilledButton(
+                  key: const Key('go-nearby-clubs'),
+                  onPressed: onOpenClubs,
+                  child: Text(l10n.clubSeeNearby),
+                ),
+              ),
+              _ClubWayCard(
+                cardKey: const Key('club-way-join'),
+                title: l10n.clubJoinWithCode,
+                body: l10n.clubJoinBody,
+                icon: Icons.vpn_key_outlined,
+                action: OutlinedButton(
+                  key: const Key('go-join-club'),
+                  onPressed: onJoin,
+                  child: Text(l10n.joinTitle),
+                ),
+              ),
+              if (clubState.canStartClub)
+                _ClubWayCard(
+                  cardKey: const Key('club-way-start'),
+                  title: l10n.startClubButton,
+                  body: l10n.clubStartBody,
+                  icon: Icons.group_add_outlined,
+                  action: TextButton(
+                    key: const Key('go-start-club'),
+                    onPressed: onStartClub,
+                    child: Text(l10n.startClubButton),
+                  ),
+                ),
             ],
           ),
       ],
@@ -551,6 +577,41 @@ class ClubScreen extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// One of the three ways forward for a rider without a club: what it is, and the button that takes it.
+class _ClubWayCard extends StatelessWidget {
+  const _ClubWayCard({
+    required this.cardKey,
+    required this.title,
+    required this.body,
+    required this.icon,
+    required this.action,
+  });
+
+  final Key cardKey;
+  final String title;
+  final String body;
+  final IconData icon;
+  final Widget action;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return AppCard(
+      key: cardKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(title, style: text.titleMedium),
+          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          Text(body),
+          action,
+        ],
+      ),
     );
   }
 }

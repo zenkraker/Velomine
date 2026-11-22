@@ -1,6 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/bottom_action_bar.dart';
+import 'package:velomine/core/widgets/section_card.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -8,8 +11,11 @@ void main() {
 
   setUp(() => server = FakeServer());
 
-  Future<void> openPrivacy(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2400);
+  Future<void> openPrivacy(
+    WidgetTester tester, {
+    Size size = const Size(1000, 2400),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(
@@ -22,6 +28,65 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('profile-ride-privacy')));
     await tester.tap(find.byKey(const Key('profile-ride-privacy')));
     await tester.pumpAndSettle();
+  }
+
+  testWidgets('PrivacyScreen_ShouldKeepSaveInTheBottomBar_WhenItOpens', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+
+    // One save for both cards, pinned under the content instead of inside the first card.
+    expect(
+      find.descendant(
+        of: find.byType(BottomActionBar),
+        matching: find.byKey(const Key('privacy-save')),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('PrivacyScreen_ShouldDrawBothGroupsAsCards_WhenItOpens', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await openPrivacy(tester);
+
+    String cardTitleOf(String key) => tester
+        .widget<SectionCard>(
+          find
+              .ancestor(
+                of: find.byKey(Key(key)),
+                matching: find.byType(SectionCard),
+              )
+              .first,
+        )
+        .title;
+
+    expect(cardTitleOf('privacy-trim-start'), 'Hide the start and end');
+    expect(cardTitleOf('privacy-add-zone'), 'Saved places');
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('PrivacyScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      server.privacyZones.add({
+        'id': 'zone-home',
+        'name': 'Home',
+        'latitude': 46.0,
+        'longitude': 11.0,
+        'radiusM': 500,
+      });
+      await openPrivacy(tester, size: Size(width, 2400));
+
+      expect(find.byKey(const Key('privacy-zone-zone-home')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   }
 
   testWidgets('PrivacyScreen_ShouldNotShowStreamSwitches_WhenItOpens', (

@@ -62,6 +62,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final l10n = context.l10n;
     return AuthPage(
       title: l10n.resetPasswordTitle,
+      caption: l10n.resetPasswordCaption,
       help: s.done ? null : l10n.resetPasswordHelp,
       onBack: () => context.go('/sign-in'),
       primaryLabel: s.done ? l10n.goToSignIn : l10n.setNewPassword,
@@ -95,11 +96,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               message: resetProblemText(l10n, s.problem!),
             ),
           ],
-          TextButton(
-            key: const Key('reset-ask-again'),
-            onPressed: () => context.go('/forgot-password'),
-            child: Text(l10n.forgotPassword),
-          ),
         ],
       ],
     );

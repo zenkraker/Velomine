@@ -163,49 +163,20 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
         ),
     ];
 
-    // The phone with a recorder starts rides from the header; everywhere else the header uploads, and
-    // on the phone Upload then waits in the menu.
+    // Uploading is the page's one action at every width; where the phone can record, Start ride is the
+    // first entry of the menu.
     final hasRecorder = ref.watch(recorderProvider) != null;
-    final startRidePrimary = hasRecorder && !wide;
-    // On a phone the header also holds the notifications and the account, and the labelled button
-    // overflows it at 360 dp, so it is a filled icon there (its tooltip names it).
-    Widget headerButton(
-      Key key,
-      IconData icon,
-      String label,
-      VoidCallback? onPressed,
-    ) => FilledButton.icon(
-      key: key,
-      onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
+    final primaryAction = FilledButton.icon(
+      key: const Key('upload'),
+      onPressed: upload,
+      icon: const Icon(Icons.upload_file),
+      label: Text(uploadLabel),
     );
-    final primaryAction = startRidePrimary
-        ? headerButton(
-            const Key('start-ride'),
-            Icons.play_arrow,
-            l10n.startRide,
-            () => context.push('/record'),
-          )
-        : headerButton(
-            const Key('upload'),
-            Icons.upload_file,
-            uploadLabel,
-            upload,
-          );
     final menu = PageMenu(
       buttonKey: const Key('rides-actions'),
       badge: filterActive,
       entries: [
-        if (startRidePrimary)
-          PageMenuEntry(
-            key: const Key('upload'),
-            icon: Icons.upload_file,
-            label: uploadLabel,
-            onSelected: upload ?? () {},
-          ),
-        // A tablet with a recorder uploads from the header; starting a ride stays one tap away.
-        if (hasRecorder && wide)
+        if (hasRecorder)
           PageMenuEntry(
             key: const Key('start-ride'),
             icon: Icons.play_arrow,

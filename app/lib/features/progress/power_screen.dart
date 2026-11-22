@@ -18,6 +18,7 @@ import 'progress_filter_sheet.dart';
 import 'progress_screen.dart';
 import 'progress_tabs.dart';
 import 'progress_view_models.dart';
+import 'rider_card.dart';
 
 /// Progress → Power answers "What is my power profile?": FTP, critical power and the VO2max estimate
 /// above the power curve and the best efforts.
@@ -30,6 +31,7 @@ class PowerScreen extends ConsumerWidget {
     final filters = ref.watch(progressFiltersViewModelProvider);
     final power = ref.watch(powerCurveViewModelProvider);
     final reminder = ref.watch(ftpReminderViewModelProvider);
+    final riderCard = ref.watch(riderCardViewModelProvider);
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
     listenUserMessages(
@@ -78,6 +80,16 @@ class PowerScreen extends ConsumerWidget {
             onRetry: ref.read(powerCurveViewModelProvider.notifier).load,
             actionKey: const Key('power-error'),
           ),
+        // First, full width: the rider's own numbers, the ones this page does not otherwise show.
+        if (riderCard.load.failure case final cardFailure?)
+          ErrorState(
+            key: const Key('rider-card-error'),
+            message: failureText(l10n, cardFailure),
+            onRetry: ref.read(riderCardViewModelProvider.notifier).load,
+            actionKey: const Key('rider-card-retry'),
+          )
+        else if (riderCard.load.value case final card?)
+          RiderCard(card: card, onMore: () => showRiderCard(context, card)),
         // A ride that shows a higher FTP is the strongest answer there is, so it leads; while it is
         // open the reminder stays quiet, because it would only ask about the number it replaces.
         if (reminder.suggestion case final suggestion?)

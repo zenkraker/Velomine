@@ -15,6 +15,9 @@ import '../../../core/l10n.dart';
 import '../../../core/rider_mode.dart';
 import '../../../core/theme.dart';
 import '../../../core/user_message_text.dart';
+import '../../../core/widgets/section_card.dart';
+import '../../../core/widgets/stat_card.dart';
+import '../../../core/widgets/toolbar_row.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../rides_screen.dart';
 import '../ride_text_sheet.dart';
@@ -35,6 +38,7 @@ import 'scale.dart';
 import 'series_chart.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/ftp_suggestion_card.dart';
 import '../../../core/widgets/heart_rate_note_card.dart';
@@ -42,10 +46,9 @@ import '../../../core/widgets/inline_error.dart';
 import '../../../core/widgets/more_details.dart';
 import '../../../core/widgets/page_menu.dart';
 import '../../../core/widgets/page_scaffold.dart';
+import '../../../core/widgets/segmented_control.dart';
 import '../../../core/units.dart';
-import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/source_note.dart';
-import '../../../core/widgets/stat_card.dart';
 import '../../accounts/effort_source_text.dart';
 
 /// The two shapes the server hands a ride's file out in.
@@ -132,6 +135,7 @@ class RideDetailScreen extends ConsumerWidget {
 
     return PageScaffold(
       // The title is the page's name, so a rename shows here at once.
+      parent: l10n.navRides,
       title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
       titleKey: const Key('ride-title'),
       menu: menu,
@@ -372,13 +376,19 @@ class RideDetailScreen extends ConsumerWidget {
         if (note != null)
           for (final card in _heartRateNoteCard(s, ride, note, notifier))
             (card, true),
-      if (rideTypeIsSet(ride)) (RideTypeChips(ride: ride), false),
-      (
-        PowerRecordChips(
-          records: ride.powerRecords.orElse(const []) ?? const [],
+      if (rideTypeIsSet(ride) ||
+          (ride.powerRecords.orElse(const []) ?? const []).isNotEmpty)
+        (
+          ToolbarRow(
+            children: [
+              RideTypeChips(ride: ride),
+              PowerRecordChips(
+                records: ride.powerRecords.orElse(const []) ?? const [],
+              ),
+            ],
+          ),
+          true,
         ),
-        true,
-      ),
       if (s.series?.hasRoute ?? false)
         (
           RouteMap(
@@ -415,64 +425,7 @@ class RideDetailScreen extends ConsumerWidget {
           ),
           false,
         ),
-      if (layout.foldAdvanced)
-        (_Stats(ride: ride, show: _StatsShow.advanced), true),
-      if (s.laps.isNotEmpty)
-        (LapTable(laps: s.laps, selectedLap: selection.selectedLap), true),
-      if (heartRateZones.isEmpty &&
-          powerZones.isEmpty &&
-          (ride.avgHeartRate != null || ride.avgPowerW != null))
-        (
-          Text(
-            l10n.trainingHint,
-            key: const Key('training-hint'),
-            style: text.bodySmall,
-          ),
-          true,
-        ),
-      if (heartRateZones.isNotEmpty)
-        (
-          _ZonesCard(
-            key: const Key('heart-rate-zones'),
-            title: l10n.heartRateZones,
-            unit: 'bpm',
-            zones: heartRateZones,
-            colors: _heartRateZoneColors,
-            note: heartRateZonesSource(
-              l10n,
-              ride.heartRateZoneModel.orElse(null),
-              ride.heartRateZoneReferenceBpm.orElse(null),
-              ride.heartRateZoneReferenceSource.orElse(null),
-            ),
-          ),
-          !layout.showZonesAndCharts,
-        ),
-      if (powerZones.isNotEmpty)
-        (
-          _ZonesCard(
-            key: const Key('power-zones'),
-            title: l10n.powerZones,
-            unit: 'W',
-            zones: powerZones,
-            colors: _powerZoneColors,
-          ),
-          true,
-        ),
-      if (s.bikes.isNotEmpty || ride.bikeId != null)
-        (
-          _BikePicker(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
-          false,
-        ),
-      (
-        RideFeelCard(
-          feel: s.feel,
-          saving: s.feelCommand.running,
-          onSave: notifier.saveFeel,
-          onDelete: notifier.deleteFeel,
-        ),
-        true,
-      ),
-      if (s.views case final views?) (_ViewsCard(views: views), false),
+      // The charts come straight after the numbers: one cursor runs along all of them.
       if (s.series != null && s.series!.series.isNotEmpty) ...[
         (
           ValueListenableBuilder<int?>(
@@ -508,6 +461,50 @@ class RideDetailScreen extends ConsumerWidget {
             !layout.rideChartIds.contains(series.id),
           ),
       ],
+      if (layout.foldAdvanced)
+        (_Stats(ride: ride, show: _StatsShow.advanced), true),
+      if (heartRateZones.isEmpty &&
+          powerZones.isEmpty &&
+          (ride.avgHeartRate != null || ride.avgPowerW != null))
+        (
+          Text(
+            l10n.trainingHint,
+            key: const Key('training-hint'),
+            style: text.bodySmall,
+          ),
+          true,
+        ),
+      if (heartRateZones.isNotEmpty || powerZones.isNotEmpty)
+        (
+          _ZonesSwitcher(
+            heartRateZones: heartRateZones,
+            powerZones: powerZones,
+            heartRateNote: heartRateZonesSource(
+              l10n,
+              ride.heartRateZoneModel.orElse(null),
+              ride.heartRateZoneReferenceBpm.orElse(null),
+              ride.heartRateZoneReferenceSource.orElse(null),
+            ),
+          ),
+          !layout.showZonesAndCharts,
+        ),
+      if (s.laps.isNotEmpty)
+        (LapTable(laps: s.laps, selectedLap: selection.selectedLap), true),
+      (
+        RideFeelCard(
+          feel: s.feel,
+          saving: s.feelCommand.running,
+          onSave: notifier.saveFeel,
+          onDelete: notifier.deleteFeel,
+        ),
+        true,
+      ),
+      if (s.bikes.isNotEmpty || ride.bikeId != null)
+        (
+          _BikePicker(bikes: s.bikes, ride: ride, onChanged: notifier.setBike),
+          false,
+        ),
+      if (s.views case final views?) (_ViewsCard(views: views), false),
     ];
     if (!layout.foldAdvanced) return [for (final (widget, _) in items) widget];
     final folded = [
@@ -632,6 +629,14 @@ class _Stats extends ConsumerWidget {
   final RideResponse ride;
   final _StatsShow show;
 
+  /// The four numbers the card leads with; the rest are tiles under them.
+  static const _headline = {
+    'distance',
+    'moving-time',
+    'climbing',
+    'average-power',
+  };
+
   /// The tiles a simple rider keeps, by the id the tile is tagged with.
   static const _basic = {
     'distance',
@@ -715,14 +720,51 @@ class _Stats extends ConsumerWidget {
     ];
     final text = Theme.of(context).textTheme;
     final basic = show == _StatsShow.all || show == _StatsShow.basic;
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: 12,
+    final shown = [
+      for (final (id, label, value) in tiles)
+        if (show == _StatsShow.all ||
+            (show == _StatsShow.basic) == _basic.contains(id))
+          (id: id, label: label, value: value),
+    ];
+    // The four numbers a ride leads with, then everything else as tiles on the same card.
+    final headlines = [
+      for (final tile in shown)
+        if (_headline.contains(tile.id)) tile,
+    ];
+    final rest = [
+      for (final tile in shown)
+        if (!_headline.contains(tile.id)) tile,
+    ];
+    return SectionCard(
+      key: const Key('ride-numbers'),
+      title: l10n.rideNumbers,
       children: [
-        for (final (id, label, value) in tiles)
-          if (show == _StatsShow.all ||
-              (show == _StatsShow.basic) == _basic.contains(id))
-            StatFigure(key: Key('stat-$id'), label: label, value: value),
+        if (headlines.isNotEmpty)
+          Wrap(
+            spacing: AppSpacing.xl,
+            runSpacing: AppSpacing.md,
+            children: [
+              for (final tile in headlines)
+                _Headline(
+                  key: Key('stat-${tile.id}'),
+                  label: tile.label,
+                  value: tile.value,
+                ),
+            ],
+          ),
+        if (rest.isNotEmpty)
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: [
+              for (final tile in rest)
+                StatFigure(
+                  key: Key('stat-${tile.id}'),
+                  label: tile.label,
+                  value: tile.value,
+                ),
+            ],
+          ),
         if (basic && ride.speedSource == 'gps')
           Text(l10n.speedFromGps, style: text.bodySmall),
         if (show != _StatsShow.basic) ...[
@@ -765,131 +807,169 @@ class _Stats extends ConsumerWidget {
   }
 }
 
-/// Which of the ride's tiles this view draws.
-enum _StatsShow { all, basic, advanced }
+/// The one number a card leads with: its name, then the figure at the kpi size.
+class _Headline extends StatelessWidget {
+  const _Headline({super.key, required this.label, required this.value});
 
-/// Time in each training zone, as a bar per zone.
-class _ZonesCard extends StatelessWidget {
-  const _ZonesCard({
-    super.key,
-    required this.title,
-    required this.unit,
-    required this.zones,
-    required this.colors,
-    this.note,
-  });
-
-  final String title;
-  final String unit;
-  final List<ZoneTime> zones;
-  final List<Color> colors;
-
-  /// Where the zones came from, when the server says.
-  final String? note;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      spacing: AppSpacing.xs,
+      children: [
+        Text(
+          label,
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(value, style: VelomineText.of(context).kpi),
+      ],
+    );
+  }
+}
+
+/// Which of the ride's tiles this view draws.
+enum _StatsShow { all, basic, advanced }
+
+/// Time in each training zone, as a bar per zone, with one switch between the heart-rate zones and the
+/// power zones: the ride's zones are one card, as the mock-up draws them.
+class _ZonesSwitcher extends StatefulWidget {
+  const _ZonesSwitcher({
+    required this.heartRateZones,
+    required this.powerZones,
+    this.heartRateNote,
+  });
+
+  final List<ZoneTime> heartRateZones;
+  final List<ZoneTime> powerZones;
+
+  /// Where the heart-rate zones came from, when the server says.
+  final String? heartRateNote;
+
+  @override
+  State<_ZonesSwitcher> createState() => _ZonesSwitcherState();
+}
+
+class _ZonesSwitcherState extends State<_ZonesSwitcher> {
+  String _kind = 'heart';
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final heartRate = widget.heartRateZones.isNotEmpty;
+    final power = widget.powerZones.isNotEmpty;
+    final kind = heartRate ? _kind : 'power';
+    final zones = kind == 'heart' ? widget.heartRateZones : widget.powerZones;
+    final colors = VelomineColors.of(context);
     final maxSeconds = zones.fold<double>(
       0,
       (largest, zone) => zone.seconds > largest ? zone.seconds : largest,
     );
     final total = zones.fold<double>(0, (sum, zone) => sum + zone.seconds);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(title, style: text.titleMedium)),
-                const SizedBox(width: AppSpacing.sm),
+    return AppCard(
+      key: const Key('zones'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.md,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              Text(
+                kind == 'heart' ? l10n.heartRateZones : l10n.powerZones,
+                style: text.titleMedium,
+              ),
+              if (heartRate && power)
+                SegmentedControl<String>(
+                  buttonKey: const Key('zone-switch'),
+                  segments: [
+                    ButtonSegment(value: 'heart', label: Text(l10n.heartRate)),
+                    ButtonSegment(
+                      value: 'power',
+                      label: Text(l10n.metricPower),
+                    ),
+                  ],
+                  selected: kind,
+                  onChanged: (value) => setState(() => _kind = value),
+                )
+              else
                 Text(duration(total), style: text.bodySmall),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            for (final (index, zone) in zones.indexed) ...[
-              Semantics(
-                label: l10n.zoneSemantics(
-                  zone.zone,
-                  _range(l10n, zone),
-                  duration(zone.seconds),
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 30,
-                      child: Text('Z${zone.zone}', style: text.labelMedium),
+            ],
+          ),
+          for (final (index, zone) in zones.indexed) ...[
+            Semantics(
+              label: l10n.zoneSemantics(
+                zone.zone,
+                _range(l10n, zone, kind),
+                duration(zone.seconds),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 30,
+                    child: Text('Z${zone.zone}', style: text.labelMedium),
+                  ),
+                  SizedBox(
+                    width: 92,
+                    child: Text(
+                      _range(l10n, zone, kind),
+                      style: text.labelSmall,
                     ),
-                    SizedBox(
-                      width: 92,
-                      child: Text(_range(l10n, zone), style: text.labelSmall),
-                    ),
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppSpacing.xs),
-                        child: LinearProgressIndicator(
-                          value: maxSeconds <= 0
-                              ? 0
-                              : zone.seconds / maxSeconds,
-                          minHeight: 8,
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          valueColor: AlwaysStoppedAnimation(
-                            colors[index % colors.length],
-                          ),
+                  ),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppSpacing.xs),
+                      child: LinearProgressIndicator(
+                        value: maxSeconds <= 0 ? 0 : zone.seconds / maxSeconds,
+                        minHeight: 8,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        valueColor: AlwaysStoppedAnimation(
+                          // The hard zones carry the accent, the easy ones stay quiet.
+                          zone.zone >= 4
+                              ? colors.accentStrong
+                              : colors.barMuted,
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: 56,
-                      child: Text(
-                        duration(zone.seconds),
-                        textAlign: TextAlign.right,
-                        style: text.labelSmall,
-                      ),
+                  ),
+                  SizedBox(
+                    width: 56,
+                    child: Text(
+                      duration(zone.seconds),
+                      textAlign: TextAlign.right,
+                      style: text.labelSmall,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (index < zones.length - 1)
-                const SizedBox(height: AppSpacing.xs),
-            ],
-            if (note case final note?) ...[
-              const SizedBox(height: AppSpacing.sm),
-              SourceNote(note),
-            ],
+            ),
+            if (index < zones.length - 1) const SizedBox(height: AppSpacing.xs),
           ],
-        ),
+          if (kind == 'heart')
+            if (widget.heartRateNote case final note?) SourceNote(note),
+          Text(duration(total), style: text.bodySmall),
+        ],
       ),
     );
   }
 
-  String _range(AppLocalizations l10n, ZoneTime zone) => zone.to == null
-      ? l10n.zoneRangeOpen(zone.from, unit)
-      : l10n.zoneRange(zone.from, zone.to!, unit);
+  String _range(AppLocalizations l10n, ZoneTime zone, String kind) =>
+      zone.to == null
+      ? l10n.zoneRangeOpen(zone.from, kind == 'heart' ? 'bpm' : 'W')
+      : l10n.zoneRange(zone.from, zone.to!, kind == 'heart' ? 'bpm' : 'W');
 }
-
-const _heartRateZoneColors = [
-  Color(0xFF4A90E2),
-  Color(0xFF4CAF50),
-  Color(0xFFF2C14E),
-  Color(0xFFF08A3C),
-  Color(0xFFC0392B),
-];
-
-const _powerZoneColors = [
-  Color(0xFF90A4AE),
-  Color(0xFF4A90E2),
-  Color(0xFF4CAF50),
-  Color(0xFFF2C14E),
-  Color(0xFFF08A3C),
-  Color(0xFFC0392B),
-  Color(0xFF8E44AD),
-];
 
 /// The event this ride was, when one is linked to it.
 class EventLinkCard extends ConsumerWidget {

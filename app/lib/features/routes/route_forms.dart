@@ -16,6 +16,7 @@ import '../../core/user_message_text.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/segmented_control.dart';
 import 'route_widgets.dart';
 import 'routes_state.dart';
 import 'routes_view_model.dart';
@@ -76,6 +77,7 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
     final draft = s.draft;
     return PageScaffold(
       title: l10n.addRouteTitle,
+      parent: l10n.clubRoutesCaption,
       subtitle: l10n.addRouteHelp,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: draft == null
@@ -101,22 +103,20 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
         SectionCard(
           title: l10n.addRouteFromRide,
           children: [
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                ChoiceChip(
-                  key: const Key('choose-route-from-ride'),
+            SegmentedControl<String>(
+              buttonKey: const Key('route-source'),
+              segments: [
+                ButtonSegment(
+                  value: 'ride',
                   label: Text(l10n.addRouteFromRide),
-                  selected: _source == 'ride',
-                  onSelected: (_) => setState(() => _source = 'ride'),
                 ),
-                ChoiceChip(
-                  key: const Key('choose-route-from-file'),
+                ButtonSegment(
+                  value: 'file',
                   label: Text(l10n.addRouteFromFile),
-                  selected: _source == 'file',
-                  onSelected: (_) => setState(() => _source = 'file'),
                 ),
               ],
+              selected: _source,
+              onChanged: (value) => setState(() => _source = value),
             ),
             if (_source == 'file')
               Align(
@@ -205,20 +205,10 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                 controller: _description,
                 label: l10n.addRouteDescription,
               ),
-              DropdownButtonFormField<String>(
-                key: const Key('route-surface'),
-                initialValue: _surface,
-                decoration: InputDecoration(labelText: l10n.addRouteSurface),
-                items: [
-                  for (final surface in routeSurfaceIds)
-                    DropdownMenuItem(
-                      value: surface,
-                      child: Text(routeSurfaceName(l10n, surface)),
-                    ),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _surface = value);
-                },
+              _SurfaceChoice(
+                fieldKey: const Key('route-surface'),
+                surface: _surface,
+                onChanged: (value) => setState(() => _surface = value),
               ),
             ],
           ),
@@ -285,6 +275,7 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
 
     return PageScaffold(
       title: l10n.editRouteTitle,
+      parent: l10n.clubRoutesCaption,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
         buttonKey: const Key('save-route-edit'),
@@ -315,20 +306,10 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
               controller: _description,
               label: l10n.addRouteDescription,
             ),
-            DropdownButtonFormField<String>(
-              key: const Key('edit-route-surface'),
-              initialValue: _surface,
-              decoration: InputDecoration(labelText: l10n.addRouteSurface),
-              items: [
-                for (final surface in routeSurfaceIds)
-                  DropdownMenuItem(
-                    value: surface,
-                    child: Text(routeSurfaceName(l10n, surface)),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _surface = value);
-              },
+            _SurfaceChoice(
+              fieldKey: const Key('edit-route-surface'),
+              surface: _surface,
+              onChanged: (value) => setState(() => _surface = value),
             ),
           ],
         ),
@@ -337,6 +318,46 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
             message: failureText(l10n, failure),
             actionKey: const Key('edit-route-error'),
           ),
+      ],
+    );
+  }
+}
+
+/// The surface, as a segmented control under its label.
+class _SurfaceChoice extends StatelessWidget {
+  const _SurfaceChoice({
+    required this.fieldKey,
+    required this.surface,
+    required this.onChanged,
+  });
+
+  final Key fieldKey;
+  final String surface;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.sm,
+      children: [
+        Text(
+          l10n.addRouteSurface,
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        SegmentedControl<String>(
+          buttonKey: fieldKey,
+          segments: [
+            for (final id in routeSurfaceIds)
+              ButtonSegment(value: id, label: Text(routeSurfaceName(l10n, id))),
+          ],
+          selected: surface,
+          onChanged: onChanged,
+        ),
       ],
     );
   }

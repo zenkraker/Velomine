@@ -295,4 +295,63 @@ void main() {
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(find.byKey(const Key('join-request-note')), findsOneWidget);
   });
+
+  testWidgets(
+    'NearbyClubsScreen_ShouldPutTheClubsInOneCard_WhenTheyAreInReach',
+    (tester) async {
+      widen(tester);
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.clubLatitude = 45.4642;
+      server.clubLongitude = 9.19;
+      server.clubDiscoverable = true;
+      server.signInBrowser(rider);
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        locationService: FakeLocationService((
+          latitude: 45.4642,
+          longitude: 9.19,
+        )),
+      );
+      await goTo(tester, '/clubs');
+
+      // The clubs are the rows of one card, not a card each.
+      expect(find.byKey(const Key('nearby-clubs-card')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('nearby-clubs-card')),
+          matching: find.byKey(const Key('nearby-club-club-1')),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'NearbyClubsScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        final rider = server.add('rider@example.com', clubRole: null);
+        server.clubLatitude = 45.4642;
+        server.clubLongitude = 9.19;
+        server.clubDiscoverable = true;
+        server.signInBrowser(rider);
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(
+          tester,
+          server.session(useCookies: true),
+          locationService: FakeLocationService((
+            latitude: 45.4642,
+            longitude: 9.19,
+          )),
+        );
+        await goTo(tester, '/clubs');
+
+        expect(find.byKey(const Key('nearby-club-club-1')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

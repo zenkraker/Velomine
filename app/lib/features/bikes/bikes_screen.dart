@@ -11,13 +11,13 @@ import '../../core/units.dart';
 import '../../core/user_message_text.dart';
 import 'bike_forms.dart';
 import 'bikes_view_models.dart';
-import 'service_marker.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
 
 class BikesScreen extends ConsumerWidget {
@@ -40,21 +40,13 @@ class BikesScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final notifier = ref.read(bikesViewModelProvider.notifier);
     final onAdd = s.action.running ? null : () => _add(context, ref);
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    // The one action, in the header at every width; on a phone a filled icon whose tooltip names it.
-    final add = wide
-        ? FilledButton.icon(
-            key: const Key('add-bike'),
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addBike),
-          )
-        : IconButton.filled(
-            key: const Key('add-bike'),
-            tooltip: l10n.addBike,
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-          );
+    // The one action, a filled pill in the header at every width.
+    final add = FilledButton.icon(
+      key: const Key('add-bike'),
+      onPressed: onAdd,
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addBike),
+    );
 
     listenUserMessages(
       ref,
@@ -65,6 +57,7 @@ class BikesScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.navBikes,
+      parent: l10n.profileTitle,
       subtitle: l10n.bikesSubtitle,
       primaryAction: add,
       children: [
@@ -142,8 +135,19 @@ class _BikeCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (bike.serviceDueCount > 0 || bike.serviceSoonCount > 0)
-                  ServiceMarker(due: bike.serviceDueCount > 0),
+                // The words, not colour alone: the mock-up's badge, as the profile's bike row draws it.
+                if (bike.serviceDueCount > 0)
+                  AppBadge(
+                    l10n.bikeServiceDue,
+                    key: const Key('service-due'),
+                    tone: AppBadgeTone.bad,
+                  )
+                else if (bike.serviceSoonCount > 0)
+                  AppBadge(
+                    l10n.bikeServiceSoon,
+                    key: const Key('service-soon'),
+                    tone: AppBadgeTone.care,
+                  ),
               ],
             ),
             Text(
@@ -159,17 +163,8 @@ class _BikeCard extends ConsumerWidget {
                 runSpacing: AppSpacing.xs,
                 children: [
                   if (bike.isDefault)
-                    Chip(
-                      label: Text(l10n.defaultBike),
-                      backgroundColor: scheme.primaryContainer,
-                      side: BorderSide.none,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  if (!bike.isActive)
-                    Chip(
-                      label: Text(l10n.archived),
-                      visualDensity: VisualDensity.compact,
-                    ),
+                    AppBadge(l10n.defaultBike, tone: AppBadgeTone.good),
+                  if (!bike.isActive) AppBadge(l10n.archived),
                 ],
               ),
             const SizedBox(height: AppSpacing.xs),

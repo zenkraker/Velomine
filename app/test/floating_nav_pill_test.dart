@@ -28,10 +28,10 @@ void main() {
     return blur;
   }
 
-  testWidgets('pillBlurOf_ShouldBeZero_WhenTheDeviceIsAnAndroidPhone', (
+  testWidgets('pillBlurOf_ShouldKeepTheBlur_WhenTheDeviceIsAnAndroidPhone', (
     tester,
   ) async {
-    expect(await blurOn(tester, TargetPlatform.android), 0);
+    expect(await blurOn(tester, TargetPlatform.android), AppNav.pillBlur);
   });
 
   testWidgets('pillBlurOf_ShouldKeepTheBlur_WhenTheDeviceIsAnIPhone', (
@@ -46,37 +46,93 @@ void main() {
     expect(await blurOn(tester, TargetPlatform.iOS, highContrast: true), 0);
   });
 
-  testWidgets('FloatingNavPill_ShouldDrawNoBackdropFilter_WhenBlurIsOff', (
-    tester,
-  ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Stack(
-            children: [
-              FloatingNavPill(
-                items: [
-                  (
-                    key: null,
-                    icon: const Icon(Icons.home_outlined),
-                    selectedIcon: const Icon(Icons.home),
-                    label: 'One',
-                  ),
-                ],
-                selected: 0,
-                onSelected: (_) {},
-              ),
-            ],
+  testWidgets(
+    'FloatingNavPill_ShouldFillWithTheGlassColourAndBlur_WhenTheSystemAllowsBoth',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: nightTheme(),
+          home: Scaffold(
+            body: Stack(
+              children: [
+                FloatingNavPill(
+                  items: [
+                    (
+                      key: null,
+                      icon: const Icon(Icons.home_outlined),
+                      selectedIcon: const Icon(Icons.home),
+                      label: 'One',
+                    ),
+                  ],
+                  selected: 0,
+                  onSelected: (_) {},
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(BackdropFilter), findsNothing);
-    expect(find.text('One'), findsOneWidget);
-  });
+      final context = tester.element(find.byType(FloatingNavPill));
+      final surface = tester.widget<ColoredBox>(
+        find.descendant(
+          of: find.byType(FloatingNavPill),
+          matching: find.byType(ColoredBox),
+        ),
+      );
+      expect(surface.color, VelomineColors.of(context).glass);
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      expect(find.text('One'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'FloatingNavPill_ShouldFillWithNearlySolidGlass_WhenTheSystemAsksForHighContrast',
+    (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(highContrast: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: nightTheme(),
+          home: Scaffold(
+            body: Stack(
+              children: [
+                FloatingNavPill(
+                  items: [
+                    (
+                      key: null,
+                      icon: const Icon(Icons.home_outlined),
+                      selectedIcon: const Icon(Icons.home),
+                      label: 'One',
+                    ),
+                  ],
+                  selected: 0,
+                  onSelected: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final context = tester.element(find.byType(FloatingNavPill));
+      final surface = tester.widget<ColoredBox>(
+        find.descendant(
+          of: find.byType(FloatingNavPill),
+          matching: find.byType(ColoredBox),
+        ),
+      );
+      expect(
+        surface.color,
+        VelomineColors.of(context).glass
+            .withValues(alpha: AppNav.pillOpacityNoBlur),
+      );
+      expect(find.byType(BackdropFilter), findsNothing);
+    },
+  );
 
   testWidgets(
     'FloatingNavPill_ShouldPaintSelectedItemOnAccentSoft_WhenSelected',

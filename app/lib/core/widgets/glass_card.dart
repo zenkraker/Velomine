@@ -30,7 +30,7 @@ class GlassCard extends StatelessWidget {
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.medium),
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
         ),
         shadows: [
           BoxShadow(
@@ -41,7 +41,7 @@ class GlassCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.medium),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
         child: blur > 0
             ? BackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),

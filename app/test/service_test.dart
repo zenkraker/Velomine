@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/widgets/app_card.dart';
 import 'package:velomine/features/notifications/notifications_text.dart';
 import 'package:velomine/l10n/generated/app_localizations_en.dart';
 import 'package:velomine/l10n/generated/app_localizations_it.dart';
@@ -64,6 +65,68 @@ void main() {
       expect(find.text('210 of 300 km'), findsOneWidget);
       expect(find.byKey(const Key('reminder-bar-r2')), findsOneWidget);
       expect(find.text('Last done 2026-10-01'), findsNWidgets(2));
+    },
+  );
+
+  testWidgets(
+    'ServiceSection_ShouldDrawARowPerItemInTwoCards_WhenTheBikeHasAReminderAndAnEntry',
+    (tester) async {
+      server.reminders['bike-1'] = [
+        reminder('r1', 'Lube the chain', 'due', percent: 104, usedKm: 312),
+      ];
+      server.serviceLog['bike-1'] = [
+        {
+          'id': 'e1',
+          'date': '2026-10-05',
+          'title': 'Full service',
+          'bikeDistanceM': 1200000.0,
+        },
+      ];
+      await openBike(tester);
+
+      Finder cardOf(Finder row) =>
+          find.ancestor(of: row, matching: find.byType(AppCard));
+      final reminderRow = find.byKey(const Key('reminder-r1'));
+      final entryRow = find.byKey(const Key('entry-e1'));
+      // A reminder and an entry are rows, never a card each.
+      expect(
+        find.descendant(of: reminderRow, matching: find.byType(AppCard)),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: entryRow, matching: find.byType(AppCard)),
+        findsNothing,
+      );
+      expect(cardOf(reminderRow), findsOneWidget);
+      expect(cardOf(entryRow), findsOneWidget);
+      expect(
+        find.descendant(
+          of: cardOf(reminderRow),
+          matching: find.text('Service'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: cardOf(entryRow),
+          matching: find.text('Service log'),
+        ),
+        findsOneWidget,
+      );
+
+      // The add links close each card, quiet buttons under its rows.
+      final addReminder = find.byKey(const Key('add-reminder'));
+      final addEntry = find.byKey(const Key('add-entry'));
+      expect(tester.widget(addReminder), isA<TextButton>());
+      expect(tester.widget(addEntry), isA<TextButton>());
+      expect(
+        tester.getTopLeft(addReminder).dy,
+        greaterThan(tester.getTopLeft(reminderRow).dy),
+      );
+      expect(
+        tester.getTopLeft(addEntry).dy,
+        greaterThan(tester.getTopLeft(entryRow).dy),
+      );
     },
   );
 

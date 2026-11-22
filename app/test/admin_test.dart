@@ -1,7 +1,40 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/failure.dart';
+import 'package:velomine/core/result.dart';
+import 'package:velomine/core/session.dart';
+import 'package:velomine/core/widgets/badge.dart';
+import 'package:velomine/core/widgets/empty_state.dart';
+import 'package:velomine/core/widgets/error_state.dart';
+import 'package:velomine/core/widgets/section_card.dart';
+import 'package:velomine/features/admin/admin_data.dart';
+import 'package:velomine_api/api.dart';
 
 import 'fake_server.dart';
+
+/// A data source whose two loads fail, so the tabs can show their error state.
+class _FailingAdminData extends AdminData {
+  _FailingAdminData(Session session) : super(session.admin, session.accounts);
+
+  int overviewCalls = 0;
+  int settingsCalls = 0;
+
+  @override
+  Future<Result<OverviewResponse?>> overview() async {
+    overviewCalls++;
+    return const Failed(
+      Failure(FailureKind.unreachable, action: FailureAction.loadAdmin),
+    );
+  }
+
+  @override
+  Future<Result<AdminSettingsBundle>> settings() async {
+    settingsCalls++;
+    return const Failed(
+      Failure(FailureKind.unreachable, action: FailureAction.loadAdmin),
+    );
+  }
+}
 
 void main() {
   late FakeServer server;
@@ -220,14 +253,18 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
 
-    expect(find.text('Email (SMTP): on'), findsOneWidget);
+    expect(find.text('Email (SMTP)'), findsOneWidget);
     expect(
       find.text(
         'smtp.club.example:587 · starttls · from velomine@club.example',
       ),
       findsOneWidget,
     );
-    expect(find.text('Single sign-on: off'), findsOneWidget);
+    expect(find.text('Single sign-on'), findsOneWidget);
+    expect(
+      find.textContaining('Not set up. Set VELOMINE__SSO__AUTHORITY'),
+      findsOneWidget,
+    );
     // Nothing to edit: no field for a password, user name, client id, secret or map.
     expect(find.byType(TextField), findsNothing);
   });
@@ -270,7 +307,12 @@ void main() {
     );
 
     expect(find.byKey(const Key('send-test-email')), findsNothing);
-    expect(find.text('Email (SMTP): off'), findsOneWidget);
+    expect(
+      find.text(
+        'Not set up. Set VELOMINE__SMTP__HOST and VELOMINE__SMTP__FROM.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('OverviewTab_ShouldShowTotals_WhenOpened', (tester) async {
@@ -323,4 +365,178 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('overview-accounts')), findsOneWidget);
   });
+
+  testWidgets('AccountsTab_ShouldTitleItsLists_WhenOpened', (tester) async {
+    await openAdmin(tester);
+
+    expect(
+      find.widgetWithText(SectionCard, 'Waiting for approval'),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(SectionCard, 'Accounts'), findsOneWidget);
+  });
+
+  testWidgets('AccountsTab_ShouldShowAnEmptyState_WhenNobodyIsWaiting', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+
+    expect(
+      tester.widget(find.byKey(const Key('none-pending'))),
+      isA<EmptyState>(),
+    );
+  });
+
+  testWidgets('ClubsTab_ShouldShowAStateBadge_WhenTheClubIsRunning', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    final badge = tester.widget<AppBadge>(
+      find.byKey(const Key('club-state-club-1')),
+    );
+    expect(badge.label, 'Active');
+    expect(badge.tone, AppBadgeTone.good);
+    expect(find.byType(SwitchListTile), findsNothing);
+  });
+
+  testWidgets('ClubsTab_ShouldShowPlanEnded_WhenThePlanHasEnded', (
+    tester,
+  ) async {
+    server.clubPaidUntil = '2026-11-01';
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    final badge = tester.widget<AppBadge>(
+      find.byKey(const Key('club-state-club-1')),
+    );
+    expect(badge.label, 'Plan ended');
+    expect(badge.tone, AppBadgeTone.care);
+  });
+
+  testWidgets('ClubsTab_ShouldAskBeforeTurningTheClubOff_WhenChosen', (
+    tester,
+  ) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-clubs')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('club-menu-club-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('club-active-club-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Deactivate club'), findsWidgets);
+    expect(server.clubActive, isTrue);
+
+    await tester.tap(find.byKey(const Key('confirm-club-active-club-1')));
+    await tester.pumpAndSettle();
+    expect(server.clubActive, isFalse);
+    expect(
+      tester.widget<AppBadge>(find.byKey(const Key('club-state-club-1'))).label,
+      'Inactive',
+    );
+  });
+
+  testWidgets('OverviewTab_ShouldTitleItsTwoCards_WhenOpened', (tester) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-overview')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(SectionCard, 'People and rides'),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(SectionCard, 'Server'), findsOneWidget);
+  });
+
+  testWidgets('OverviewTab_ShouldOfferARetry_WhenTheLoadFails', (tester) async {
+    final session = server.session(useCookies: true);
+    final data = _FailingAdminData(session);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(
+      tester,
+      session,
+      overrides: [adminDataProvider.overrideWithValue(data)],
+    );
+    await openAccount(tester, 'admin');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ErrorState), findsOneWidget);
+    expect(data.overviewCalls, 1);
+
+    await tester.tap(find.byKey(const Key('overview-retry')));
+    await tester.pumpAndSettle();
+    expect(data.overviewCalls, 2);
+  });
+
+  testWidgets('SettingsTab_ShouldTitleItsCards_WhenOpened', (tester) async {
+    await openAdmin(tester);
+    await tester.tap(find.byKey(const Key('tab-settings')));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(SectionCard, 'Sign-up'), findsOneWidget);
+    expect(
+      find.widgetWithText(SectionCard, 'Set with environment variables'),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(SectionCard, 'Shared parts catalogue'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('SettingsTab_ShouldOfferARetry_WhenTheLoadFails', (tester) async {
+    final session = server.session(useCookies: true);
+    final data = _FailingAdminData(session);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(
+      tester,
+      session,
+      overrides: [adminDataProvider.overrideWithValue(data)],
+    );
+    await openAccount(tester, 'admin');
+    await tester.tap(find.byKey(const Key('tab-settings')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ErrorState), findsOneWidget);
+    expect(data.settingsCalls, 1);
+
+    await tester.tap(find.byKey(const Key('settings-retry')));
+    await tester.pumpAndSettle();
+    expect(data.settingsCalls, 2);
+  });
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('AdminScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.clubRoles['admin@example.com'] = 'owner';
+      server.clubMemberLimit = 25;
+      server.clubPaidUntil = '2026-11-01';
+      server.add('waiting@example.com', approved: false, name: 'Waiting Rina');
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await openAccount(tester, 'admin');
+      await tester.pumpAndSettle();
+
+      for (final tab in ['overview', 'accounts', 'clubs', 'settings']) {
+        final chip = find.byKey(Key('tab-$tab'));
+        // The chips scroll sideways: on a phone the last one starts off-screen.
+        await tester.ensureVisible(chip);
+        await tester.pumpAndSettle();
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      }
+    });
+  }
 }

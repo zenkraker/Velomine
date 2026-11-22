@@ -122,6 +122,13 @@ class GoalsScreen extends ConsumerWidget {
             key: const Key('no-goals'),
             message: l10n.noGoals,
             icon: Icons.flag_outlined,
+            // The same way forward as the header's, where the rider's eye lands first.
+            action: FilledButton.icon(
+              key: const Key('add-goal-empty'),
+              onPressed: () => _addGoal(context, ref),
+              icon: const Icon(Icons.flag),
+              label: Text(l10n.addGoal),
+            ),
           ),
         CardGrid(
           columns: 3,

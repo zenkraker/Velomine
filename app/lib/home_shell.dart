@@ -446,8 +446,9 @@ class _CollapsedRail extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Container(
+      key: const Key('nav-rail'),
       width: AppNav.railWidth,
-      color: scheme.surfaceContainerLow,
+      color: scheme.surfaceContainer,
       child: SafeArea(
         right: false,
         child: Column(
@@ -675,8 +676,9 @@ class _NavSidebarState extends State<NavSidebar> {
         ),
     ];
     return Container(
+      key: const Key('nav-sidebar'),
       width: AppNav.railExpandedWidth,
-      color: scheme.surfaceContainerLow,
+      color: scheme.surfaceContainer,
       child: SafeArea(
         right: false,
         child: Column(

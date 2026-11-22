@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/card_link.dart';
+
 import 'fake_server.dart';
 
 void main() {
@@ -58,7 +60,8 @@ void main() {
     ]) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
-    // The deep charts answer their own question on their own page, or behind the fold.
+    // The deep charts answer their own question on their own page: none of them is on the overview,
+    // and there is no fold to open.
     for (final key in [
       'training-tss',
       'tss-chart',
@@ -69,13 +72,28 @@ void main() {
       'readiness-card',
       'wellbeing-card',
       'goal-goal-1',
+      'more-details',
     ]) {
       expect(find.byKey(Key(key)), findsNothing, reason: key);
     }
-    expect(find.byKey(const Key('more-details')), findsOneWidget);
-    // The overview still shows the totals chart and its period control.
+    // The overview still shows the totals chart and its period control, and links on to Totals.
     expect(find.byKey(const Key('progress-period')), findsOneWidget);
+    expect(find.byKey(const Key('progress-totals-link')), findsOneWidget);
   });
+
+  testWidgets(
+    'ProgressScreen_ShouldKeepTheAnalysisOffTheOverview_WhenTheModeIsTraining',
+    (tester) async {
+      // A training rider gets the same overview as everyone else: the analysis lives on its sub-pages.
+      server.accounts['rider@example.com']!.riderMode = 'training';
+      await openProgress(tester);
+
+      expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
+      expect(find.byKey(const Key('more-details')), findsNothing);
+      expect(find.byKey(const Key('intensity-card')), findsNothing);
+      expect(find.byKey(const Key('power-curve-card')), findsNothing);
+    },
+  );
 
   testWidgets('ProgressScreen_ShouldShowThisWeek_WhenShowingTotals', (
     tester,
@@ -155,6 +173,40 @@ void main() {
 
     expect(server.analyticsFilters, contains('gravel'));
   });
+
+  testWidgets(
+    'ProgressScreen_ShouldPutTheSportChipInTheTitleRow_WhenTheWindowIsAPhone',
+    (tester) async {
+      await openProgress(tester, size: const Size(390, 844));
+
+      // The chip sits in the header, above the sub-pages' tabs.
+      final chip = tester
+          .getTopLeft(find.byKey(const Key('progress-filter-chip')))
+          .dy;
+      final tabs = tester
+          .getTopLeft(find.byKey(const Key('progress-tab-overview')))
+          .dy;
+      expect(chip, lessThan(tabs));
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldOpenTheFitnessPage_WhenThePhoneTapsTheFormCard',
+    (tester) async {
+      await openProgress(tester, size: const Size(390, 844));
+
+      final card = find.byKey(const Key('metric-form'));
+      // Two cards side by side carry no link: the whole card is the way on.
+      expect(
+        find.descendant(of: card, matching: find.byType(CardLink)),
+        findsNothing,
+      );
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'ProgressScreen_ShouldOpenTheFilterInOneSheet_WhenAPhoneTapsTheSportChip',

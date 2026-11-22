@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/widgets/section_card.dart';
 import 'package:velomine/features/profile/solo_trial_badge.dart';
 
 import 'fake_server.dart';
@@ -38,6 +39,36 @@ void main() {
 
     expect(find.byKey(const Key('solo-trial')), findsOneWidget);
     expect(find.textContaining('Solo trial'), findsOneWidget);
+  });
+
+  testWidgets('ProfileScreen_ShouldKeepTheSoloTrialInTheSupporterCard_WhenOn', (
+    tester,
+  ) async {
+    final end = DateTime.now().toUtc().add(const Duration(days: 30));
+    server.signInBrowser(
+      server.add(
+        'rider@example.com',
+        name: 'Ada',
+        soloTrialEndsAt: end.toIso8601String().substring(0, 10),
+      ),
+    );
+
+    await openProfile(tester);
+
+    // The trial is billing state of the licence: a badge in that card, not a card of its own.
+    expect(
+      tester
+          .widget<SectionCard>(
+            find
+                .ancestor(
+                  of: find.byKey(const Key('solo-trial')),
+                  matching: find.byType(SectionCard),
+                )
+                .first,
+          )
+          .title,
+      'Supporter',
+    );
   });
 
   testWidgets('ProfileScreen_ShouldShowNoTrial_WhenTheAccountHasNone', (

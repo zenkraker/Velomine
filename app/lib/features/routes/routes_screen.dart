@@ -9,21 +9,33 @@ import '../../core/l10n.dart';
 import '../../core/units.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/segmented_control.dart';
 import '../../core/widgets/toolbar_row.dart';
 import 'route_widgets.dart';
 import 'routes_state.dart';
 import 'routes_view_model.dart';
 
 class RoutesScreen extends ConsumerWidget {
-  const RoutesScreen({super.key, required this.onOpen, required this.onAdd});
+  const RoutesScreen({
+    super.key,
+    required this.onOpen,
+    required this.onAdd,
+    this.tileUrl,
+    this.attribution,
+  });
 
   final void Function(String id) onOpen;
   final VoidCallback onAdd;
+
+  /// The map's tile address from the server, and the line that credits it.
+  final String? tileUrl;
+  final String? attribution;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,24 +49,7 @@ class RoutesScreen extends ConsumerWidget {
       ref.read(routesViewModelProvider.notifier).messageShown,
     );
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     final sortAndFilters = [
-      DropdownButton<String>(
-        key: const Key('routes-sort'),
-        value: s.sort,
-        items: [
-          for (final sort in routeSortIds)
-            DropdownMenuItem(
-              value: sort,
-              child: Text(routeSortName(l10n, sort)),
-            ),
-        ],
-        onChanged: (value) {
-          if (value != null) {
-            ref.read(routesViewModelProvider.notifier).setSort(value);
-          }
-        },
-      ),
       for (final surface in [null, ...routeSurfaceIds])
         ChoiceChip(
           key: Key(
@@ -72,25 +67,27 @@ class RoutesScreen extends ConsumerWidget {
                 surface != null && s.surface == surface ? null : surface,
               ),
         ),
+      SegmentedControl<String>(
+        buttonKey: const Key('routes-sort'),
+        segments: [
+          for (final sort in routeSortIds)
+            ButtonSegment(value: sort, label: Text(routeSortName(l10n, sort))),
+        ],
+        selected: s.sort,
+        onChanged: (sort) =>
+            ref.read(routesViewModelProvider.notifier).setSort(sort),
+      ),
     ];
 
     final page = PageScaffold(
       title: l10n.clubRoutesTitle,
       subtitle: l10n.routesSubtitle,
-      primaryAction: wide
-          ? FilledButton.icon(
-              key: const Key('add-route'),
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.clubAddRoute),
-            )
-          // The phone header row is tight: a filled icon, its tooltip names it.
-          : IconButton.filled(
-              key: const Key('add-route'),
-              tooltip: l10n.clubAddRoute,
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-            ),
+      primaryAction: FilledButton.icon(
+        key: const Key('add-route'),
+        onPressed: onAdd,
+        icon: const Icon(Icons.add),
+        label: Text(l10n.clubAddRoute),
+      ),
       children: [
         ToolbarRow(children: sortAndFilters),
         if (s.load.failure case final failure?)
@@ -117,7 +114,12 @@ class RoutesScreen extends ConsumerWidget {
           CardGrid(
             children: [
               for (final route in s.routes)
-                _RouteCard(route: route, onOpen: onOpen),
+                _RouteCard(
+                  route: route,
+                  onOpen: onOpen,
+                  tileUrl: tileUrl,
+                  attribution: attribution,
+                ),
             ],
           ),
       ],
@@ -127,10 +129,17 @@ class RoutesScreen extends ConsumerWidget {
 }
 
 class _RouteCard extends ConsumerWidget {
-  const _RouteCard({required this.route, required this.onOpen});
+  const _RouteCard({
+    required this.route,
+    required this.onOpen,
+    this.tileUrl,
+    this.attribution,
+  });
 
   final RouteSummaryResponse route;
   final void Function(String id) onOpen;
+  final String? tileUrl;
+  final String? attribution;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -140,19 +149,64 @@ class _RouteCard extends ConsumerWidget {
     return AppCard(
       key: Key('route-${route.id}'),
       padding: EdgeInsets.zero,
-      child: ListTile(
-        onTap: () => onOpen(route.id),
-        leading: const Icon(Icons.route),
-        title: Text(route.name, style: text.titleMedium),
-        subtitle: Text(
-          [
-            routeLineOf(units, route.distanceM, route.climbingM),
-            routeSurfaceName(l10n, route.surface),
-            l10n.routeAddedBy(route.ownerName),
-            if (route.isMine && !route.isShared) l10n.routeNotShared,
-          ].join(' · '),
-        ),
-        trailing: const Icon(Icons.chevron_right),
+      onTap: () => onOpen(route.id),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.md,
+        children: [
+          // The line on the dimmed map is what tells one route from another.
+          if (route.latitude.length > 1)
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppRadius.large),
+                topRight: Radius.circular(AppRadius.large),
+              ),
+              // The card's own tap opens the route: the line in it does not pan or zoom.
+              child: IgnorePointer(
+                child: RoutePreview(
+                  key: Key('route-line-${route.id}'),
+                  latitude: route.latitude,
+                  longitude: route.longitude,
+                  showElevation: false,
+                  tileUrl: tileUrl,
+                  attribution: attribution,
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              0,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: AppSpacing.sm,
+              children: [
+                Text(route.name, style: text.titleMedium),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    AppBadge(routeSurfaceName(l10n, route.surface)),
+                    if (route.isMine && !route.isShared)
+                      AppBadge(l10n.routeNotShared, tone: AppBadgeTone.warn),
+                  ],
+                ),
+                Text(
+                  [
+                    routeLineOf(units, route.distanceM, route.climbingM),
+                    l10n.routeAddedBy(route.ownerName),
+                  ].join(' · '),
+                  style: text.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -64,6 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final l10n = context.l10n;
     return AuthPage(
       title: l10n.createAccount,
+      caption: l10n.registerCaption,
       primaryLabel: created ? l10n.backToSignIn : l10n.createAccountAction,
       primaryKey: created ? null : const Key('register'),
       onPrimary: created ? () => context.go('/sign-in') : _register,
@@ -96,6 +97,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   children: [
                     TextField(
+                      key: const Key('name'),
+                      controller: _name,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.name],
+                      decoration: InputDecoration(labelText: l10n.name),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
                       key: const Key('email'),
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
@@ -105,14 +114,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         AutofillHints.username,
                       ],
                       decoration: InputDecoration(labelText: l10n.email),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      key: const Key('name'),
-                      controller: _name,
-                      textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.name],
-                      decoration: InputDecoration(labelText: l10n.name),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     PasswordField(

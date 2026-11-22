@@ -6,6 +6,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/failure.dart';
 import '../../../core/l10n.dart';
+import '../../../core/theme.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/page_scaffold.dart';
@@ -33,6 +34,7 @@ class ImportScreen extends ConsumerWidget {
     final status = state.load.value;
 
     return PageScaffold(
+      parent: l10n.navRides,
       title: l10n.importTitle,
       maxWidth: AppLayout.contentNarrow,
       children: [
@@ -64,42 +66,69 @@ class _Status extends StatelessWidget {
     final done =
         status.imported + status.duplicates + status.failed + status.skipped;
 
-    return SectionCard(
-      title: l10n.importTitle,
-      description: processing ? l10n.importRunning : l10n.importFinished,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.lg,
       children: [
-        if (processing) ...[
-          LinearProgressIndicator(
-            value: status.total == 0
-                ? null
-                : (done / status.total).clamp(0.0, 1.0),
-          ),
-          if (status.total > 0) Text(l10n.importProgress(done, status.total)),
-        ],
-        if (!processing) ...[
-          Text(
-            l10n.importSummaryImported(status.imported),
-            key: const Key('import-imported'),
-          ),
-          if (status.duplicates > 0)
-            Text(l10n.importSummaryDuplicates(status.duplicates)),
-          if (status.failed > 0) Text(l10n.importSummaryFailed(status.failed)),
-          if (status.skipped > 0)
-            Text(l10n.importSummarySkipped(status.skipped)),
-          if (status.status == 'failed')
-            Text(
-              importErrorText(l10n, status.error),
-              key: const Key('import-failure'),
-            ),
+        SectionCard(
+          key: const Key('import-status'),
+          title: l10n.importTitle,
+          description: processing ? l10n.importRunning : l10n.importFinished,
+          children: [
+            if (status.total > 0)
+              // The count read of the total is the card's number, its unit under it.
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$done',
+                      style: VelomineText.of(context).kpi,
+                    ),
+                    TextSpan(
+                      text: ' ${l10n.importProgressUnit(status.total)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                key: const Key('import-progress'),
+              ),
+            if (processing)
+              LinearProgressIndicator(
+                value: status.total == 0
+                    ? null
+                    : (done / status.total).clamp(0.0, 1.0),
+              ),
+            if (!processing) ...[
+              Text(
+                l10n.importSummaryImported(status.imported),
+                key: const Key('import-imported'),
+              ),
+              if (status.duplicates > 0)
+                Text(l10n.importSummaryDuplicates(status.duplicates)),
+              if (status.failed > 0)
+                Text(l10n.importSummaryFailed(status.failed)),
+              if (status.skipped > 0)
+                Text(l10n.importSummarySkipped(status.skipped)),
+              if (status.status == 'failed')
+                Text(
+                  importErrorText(l10n, status.error),
+                  key: const Key('import-failure'),
+                ),
+            ],
+          ],
+        ),
+        // The quiet way out, under the card, as the mock-up draws it.
+        if (!processing)
           Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton(
               key: const Key('import-back'),
               onPressed: onDone,
               child: Text(l10n.importBackToRides),
             ),
           ),
-        ],
       ],
     );
   }

@@ -37,7 +37,11 @@ public sealed class ListRoutesValidator : Validator<ListRoutesRequest>
     }
 }
 
-/// <summary>The routes in the signed-in member's club library. A member with no club has no library: 404.</summary>
+/// <summary>
+/// The routes in the signed-in member's club library. A member with no club has no library: 404. Every route carries
+/// its line thinned to at most <see cref="RouteGeometry.MaxPreviewPoints"/> points, which is what the list's cards
+/// draw on the map; the full line is the route's own page.
+/// </summary>
 public sealed class ListRoutes(VelomineDbContext db) : Endpoint<ListRoutesRequest, RouteListResponse>
 {
     public override void Configure()
@@ -64,8 +68,12 @@ public sealed class ListRoutes(VelomineDbContext db) : Endpoint<ListRoutesReques
             _ => routes.OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.Id),
         };
 
-        await Send.OkAsync(new RouteListResponse(await RouteQueries.Summaries(routes, userId).ToArrayAsync(ct)), ct);
+        await Send.OkAsync(new RouteListResponse(Preview(await RouteQueries.Summaries(routes, userId).ToArrayAsync(ct))), ct);
     }
+
+    /// <summary>Each route with its line thinned to a preview: enough for a card's map, no more.</summary>
+    internal static RouteSummaryResponse[] Preview(RouteSummaryRow[] routes) =>
+        [.. routes.Select(r => r.ToResponse())];
 }
 
 /// <summary>
@@ -85,6 +93,6 @@ public sealed class ListMyRoutes(VelomineDbContext db) : EndpointWithoutRequest<
         var userId = User.UserId();
         var routes = db.Routes.AsNoTracking().Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.Id);
-        await Send.OkAsync(new RouteListResponse(await RouteQueries.Summaries(routes, userId).ToArrayAsync(ct)), ct);
+        await Send.OkAsync(new RouteListResponse(ListRoutes.Preview(await RouteQueries.Summaries(routes, userId).ToArrayAsync(ct))), ct);
     }
 }

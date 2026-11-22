@@ -11,7 +11,7 @@ import '../../core/tokens.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/section_heading.dart';
+import '../../core/widgets/section_card.dart';
 
 class TwoFactorScreen extends ConsumerStatefulWidget {
   const TwoFactorScreen({super.key});
@@ -50,6 +50,8 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
 
     return PageScaffold(
       title: l10n.twoFactorTitle,
+      parent: l10n.profileTitle,
+      subtitle: l10n.twoFactorIntro,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: !(info?.hasPassword ?? false)
           ? null
@@ -78,84 +80,88 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
             actionKey: const Key('two-factor-error'),
             onRetry: notifier.load,
           )
+        else if (!(info?.hasPassword ?? false))
+          SectionCard(
+            title: l10n.twoFactorSetupTitle,
+            children: [Text(l10n.twoFactorNoPassword)],
+          )
         else ...[
-          SectionHeading(
-            title: (info?.enabled ?? false)
-                ? l10n.twoFactorStateOn
-                : l10n.twoFactorStateOff,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          if (!(info?.hasPassword ?? false))
-            Text(l10n.twoFactorNoPassword)
-          else ...[
-            Text(l10n.twoFactorIntro),
-            const SizedBox(height: AppSpacing.lg),
-            if (info?.enabled ?? false) ...[
-              TextField(
-                key: const Key('two-factor-password'),
-                controller: _password,
-                obscureText: true,
-                decoration: InputDecoration(labelText: l10n.twoFactorPassword),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                key: const Key('two-factor-regenerate'),
-                onPressed: state.regenerate.running
-                    ? null
-                    : () => notifier.regenerate(_password.text),
-                child: Text(l10n.twoFactorRegenerate),
-              ),
-            ] else if (setup == null)
-              OutlinedButton(
-                key: const Key('two-factor-start'),
-                onPressed: state.start.running ? null : notifier.start,
-                child: Text(l10n.twoFactorStart),
-              )
-            else ...[
-              Text(l10n.twoFactorKeyHelp),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Text(
-                    '${l10n.twoFactorKey}: ',
-                    style: Theme.of(context).textTheme.labelLarge,
+          SectionCard(
+            title: l10n.twoFactorSetupTitle,
+            description: (info?.enabled ?? false)
+                ? null
+                : l10n.twoFactorKeyHelp,
+            children: [
+              if (info?.enabled ?? false) ...[
+                Text(l10n.twoFactorStateOn),
+                TextField(
+                  key: const Key('two-factor-password'),
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorPassword,
                   ),
-                  Expanded(
-                    child: SelectableText(
-                      setup.key,
-                      key: const Key('two-factor-key'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                key: const Key('two-factor-password'),
-                controller: _password,
-                obscureText: true,
-                decoration: InputDecoration(labelText: l10n.twoFactorPassword),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                key: const Key('two-factor-code'),
-                controller: _code,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: l10n.twoFactorCodeLabel),
-              ),
-            ],
-            if (codes != null) ...[
-              const Divider(),
-              SectionHeading(title: l10n.twoFactorRecoveryTitle),
-              Text(l10n.twoFactorRecoveryHelp),
-              const SizedBox(height: AppSpacing.sm),
-              for (final code in codes)
-                SelectableText(
-                  code,
-                  key: Key('recovery-$code'),
-                  style: const TextStyle(fontFamily: 'monospace'),
                 ),
+                OutlinedButton(
+                  key: const Key('two-factor-regenerate'),
+                  onPressed: state.regenerate.running
+                      ? null
+                      : () => notifier.regenerate(_password.text),
+                  child: Text(l10n.twoFactorRegenerate),
+                ),
+              ] else if (setup == null)
+                OutlinedButton(
+                  key: const Key('two-factor-start'),
+                  onPressed: state.start.running ? null : notifier.start,
+                  child: Text(l10n.twoFactorStartSetup),
+                )
+              else ...[
+                Row(
+                  children: [
+                    Text(
+                      '${l10n.twoFactorKey}: ',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    Expanded(
+                      child: SelectableText(
+                        setup.key,
+                        key: const Key('two-factor-key'),
+                      ),
+                    ),
+                  ],
+                ),
+                TextField(
+                  key: const Key('two-factor-password'),
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorPassword,
+                  ),
+                ),
+                TextField(
+                  key: const Key('two-factor-code'),
+                  controller: _code,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorCodeLabel,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
+          if (codes != null)
+            SectionCard(
+              title: l10n.twoFactorRecoveryTitle,
+              description: l10n.twoFactorRecoveryHelp,
+              children: [
+                for (final code in codes)
+                  SelectableText(
+                    code,
+                    key: Key('recovery-$code'),
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
+              ],
+            ),
         ],
       ],
     );
