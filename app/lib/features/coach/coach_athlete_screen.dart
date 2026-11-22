@@ -9,6 +9,7 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../progress/power_summary.dart';
+import '../rides/ride_title.dart';
 import '../progress/training_summary.dart';
 import 'coach_athlete_view_model.dart';
 import '../../core/tokens.dart';
@@ -123,10 +124,10 @@ class CoachAthleteScreen extends ConsumerWidget {
                               key: Key('coach-ride-${ride.id}'),
                               contentPadding: EdgeInsets.zero,
                               leading: const Icon(Icons.directions_bike),
-                              title: Text(
-                                dateTime(ride.startTime ?? ride.uploadedAt),
-                              ),
+                              // The ride's name leads, as the mock-up draws it; the day is the detail.
+                              title: Text(rideTitle(l10n, ride)),
                               subtitle: Text(
+                                '${DateFormat.MMMd(Localizations.localeOf(context).toLanguageTag()).format((ride.startTime ?? ride.uploadedAt).toLocal())} · '
                                 '${km(units, ride.distanceM)} · '
                                 '${duration(ride.movingS)}',
                               ),

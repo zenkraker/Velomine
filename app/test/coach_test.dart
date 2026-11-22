@@ -131,6 +131,14 @@ void main() {
 
     expect(find.byKey(const Key('training-tss')), findsOneWidget);
     expect(find.byKey(const Key('coach-ride-r1')), findsOneWidget);
+    // The row leads with the ride's name, its day in the detail, as the mock-up draws it.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('coach-ride-r1')),
+        matching: find.text('Morning ride'),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const Key('coach-ride-r1')));
     await tester.pumpAndSettle();
