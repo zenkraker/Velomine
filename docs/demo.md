@@ -45,7 +45,7 @@ After a change to `deploy/traefik/` (a new route, a new Traefik version), run th
 
 The site is plain HTML in `site/`, published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that touches it: `site/CNAME` holds `velomine.eu`, and `.nojekyll` keeps GitHub from processing the files. Nothing is built and no image is pushed. In the repository's *Settings → Pages*, the source is *GitHub Actions* and the custom domain is `velomine.eu` with *Enforce HTTPS*.
 
-DNS for `velomine.eu` points at GitHub: four `A` records (`185.199.108.153`, `.109.153`, `.110.153`, `.111.153`) and a `CNAME` for `www` to `zenkraker.github.io`. The site's links to the app are absolute, `https://demo.velomine.eu/…`, and its two forms post there, so they work before and during a deploy of the demo.
+DNS for `velomine.eu` (Scaleway Domains and DNS) points at GitHub: the apex has four `A` records, `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`, and no other `A` record; `www` is a `CNAME` to `zenkraker.github.io.`, which GitHub redirects to the apex. The apex's `MX` and `TXT` records (Proton mail, SPF for Proton and Scaleway Transactional Email) stay as they are, and `demo` and `dev` keep their own `A` records to the VPS. The domain is verified in the GitHub account's *Settings → Pages* (a `TXT` record GitHub names), so no other account can claim it. The site's links to the app are absolute, `https://demo.velomine.eu/…`, and its two forms post there, so they work before and during a deploy of the demo.
 
 A new page is a directory with an `index.html`, like the others: add its canonical and Open Graph tags, and its entry in `site/sitemap.xml` unless it is `noindex`.
 
