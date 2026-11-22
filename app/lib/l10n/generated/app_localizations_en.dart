@@ -1551,6 +1551,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parts => 'Parts';
 
   @override
+  String get totals => 'Totals';
+
+  @override
   String get addPartAction => 'Add part';
 
   @override

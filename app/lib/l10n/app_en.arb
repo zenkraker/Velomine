@@ -790,6 +790,7 @@
   "archive": "Archive",
   "restore": "Restore",
   "parts": "Parts",
+  "totals": "Totals",
   "addPartAction": "Add part",
   "noParts": "No parts yet. Add the chain, tyres or brake pads to see how worn they are.",
   "replacedParts": "Replaced parts",

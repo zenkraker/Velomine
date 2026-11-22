@@ -1560,6 +1560,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get parts => 'Componenti';
 
   @override
+  String get totals => 'Totali';
+
+  @override
   String get addPartAction => 'Aggiungi componente';
 
   @override

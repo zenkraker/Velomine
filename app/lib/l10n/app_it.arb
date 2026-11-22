@@ -479,6 +479,7 @@
   "archive": "Archivia",
   "restore": "Ripristina",
   "parts": "Componenti",
+  "totals": "Totali",
   "addPartAction": "Aggiungi componente",
   "noParts": "Nessun componente. Aggiungi catena, copertoni o pastiglie dei freni per vedere quanto sono usurati.",
   "replacedParts": "Componenti sostituiti",

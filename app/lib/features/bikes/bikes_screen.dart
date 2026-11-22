@@ -18,6 +18,7 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
 
 class BikesScreen extends ConsumerWidget {
@@ -152,17 +153,8 @@ class _BikeCard extends ConsumerWidget {
                 runSpacing: AppSpacing.xs,
                 children: [
                   if (bike.isDefault)
-                    Chip(
-                      label: Text(l10n.defaultBike),
-                      backgroundColor: scheme.primaryContainer,
-                      side: BorderSide.none,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  if (!bike.isActive)
-                    Chip(
-                      label: Text(l10n.archived),
-                      visualDensity: VisualDensity.compact,
-                    ),
+                    AppBadge(l10n.defaultBike, tone: AppBadgeTone.good),
+                  if (!bike.isActive) AppBadge(l10n.archived),
                 ],
               ),
             const SizedBox(height: AppSpacing.xs),

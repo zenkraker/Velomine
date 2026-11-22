@@ -2738,6 +2738,12 @@ abstract class AppLocalizations {
   /// **'Parts'**
   String get parts;
 
+  /// No description provided for @totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get totals;
+
   /// No description provided for @addPartAction.
   ///
   /// In en, this message translates to:
