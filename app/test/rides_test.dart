@@ -514,6 +514,9 @@ void main() {
         overrides: recorderOverrides(recorder),
       );
 
+      // Start ride is the first entry of the page's menu.
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('start-ride')));
       await tester.pumpAndSettle();
 
@@ -523,12 +526,12 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.byType(RecordingScreen), findsNothing);
-      expect(find.byKey(const Key('start-ride')), findsOneWidget);
+      expect(find.byKey(const Key('upload')), findsOneWidget);
     },
   );
 
   testWidgets(
-    'RidesScreen_ShouldPutUploadInTheMenu_WhenStartRideIsTheHeaderButton',
+    'RidesScreen_ShouldPutStartRideInTheMenu_WhenThePhoneCanRecord',
     (tester) async {
       tester.view.physicalSize = const Size(360, 780);
       tester.view.devicePixelRatio = 1;
@@ -543,13 +546,14 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
-      expect(find.byKey(const Key('start-ride')), findsOneWidget);
-      expect(find.byKey(const Key('upload')), findsNothing);
+      // Upload is the header's one action at every width; Start ride waits in the menu.
+      expect(find.byKey(const Key('upload')), findsOneWidget);
+      expect(find.byKey(const Key('start-ride')), findsNothing);
       expect(find.byType(FloatingActionButton), findsNothing);
 
       await tester.tap(find.byKey(const Key('rides-actions')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('upload')), findsOneWidget);
+      expect(find.byKey(const Key('start-ride')), findsOneWidget);
     },
   );
 
@@ -625,11 +629,7 @@ void main() {
 
     // One filled action in the header, and the imports behind the menu.
     expect(find.byType(FloatingActionButton), findsNothing);
-    expect(
-      find.byKey(const Key('upload-ride')).evaluate().isNotEmpty ||
-          find.byKey(const Key('start-ride')).evaluate().isNotEmpty,
-      isTrue,
-    );
+    expect(find.byKey(const Key('upload')), findsOneWidget);
     // The imports and the filters sit behind the header's menu.
     expect(find.byKey(const Key('rides-actions')), findsOneWidget);
   });

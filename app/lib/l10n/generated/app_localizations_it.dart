@@ -1327,6 +1327,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get rideNumbers => 'Numeri';
+
+  @override
   String get statDistance => 'Distanza';
 
   @override
@@ -4020,6 +4023,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String importProgress(int done, int total) {
     return '$done di $total attività lette';
+  }
+
+  @override
+  String importProgressUnit(Object total) {
+    return 'di $total attività lette';
   }
 
   @override

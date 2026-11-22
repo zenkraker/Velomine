@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/badge.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// The member-facing name of a surface.
@@ -52,25 +54,12 @@ class RideTypeChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final labels = rideTypeLabels(context.l10n, ride);
     if (labels.isEmpty) return const SizedBox.shrink();
-    final colors = Theme.of(context).colorScheme;
     return Wrap(
-      spacing: 6,
-      runSpacing: 4,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
       children: [
         for (final (key, label) in labels)
-          Container(
-            key: Key('ride-type-$key'),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: colors.secondaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(color: colors.onSecondaryContainer),
-            ),
-          ),
+          AppBadge(label, key: Key('ride-type-$key')),
       ],
     );
   }

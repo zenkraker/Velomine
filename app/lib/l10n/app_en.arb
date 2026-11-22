@@ -629,6 +629,7 @@
       }
     }
   },
+  "rideNumbers": "Numbers",
   "statDistance": "Distance",
   "statMovingTime": "Moving time",
   "statElapsedTime": "Elapsed time",
@@ -2294,6 +2295,7 @@
   "importTitle": "Import from Strava",
   "importRunning": "Reading your archive. This can take a few minutes.",
   "importProgress": "{done} of {total} activities read",
+  "importProgressUnit": "of {total} activities read",
   "@importProgress": {
     "placeholders": {
       "done": {

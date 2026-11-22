@@ -2336,6 +2336,12 @@ abstract class AppLocalizations {
   /// **'At {time}{distance}'**
   String momentAt(String time, String distance);
 
+  /// No description provided for @rideNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbers'**
+  String get rideNumbers;
+
   /// No description provided for @statDistance.
   ///
   /// In en, this message translates to:
@@ -6883,6 +6889,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{done} of {total} activities read'**
   String importProgress(int done, int total);
+
+  /// No description provided for @importProgressUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'of {total} activities read'**
+  String importProgressUnit(Object total);
 
   /// No description provided for @importFinished.
   ///
