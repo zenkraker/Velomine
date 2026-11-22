@@ -457,6 +457,12 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             builder: (context, _) => RoutesScreen(
               onOpen: (id) => context.push('/club/routes/$id'),
               onAdd: () => context.push('/club/routes/new'),
+              tileUrl:
+                  ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                  defaultMapTileUrl,
+              attribution:
+                  ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                  defaultMapAttribution,
             ),
           ),
           GoRoute(

@@ -325,6 +325,35 @@ public sealed class RoutesTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Routes_ShouldCarryTheLineInTheList_WhenTheRouteIsShared()
+    {
+        await using var api = await StartAsync(postgres);
+        var world = await NewWorldAsync(api);
+        var created = await CreateRouteAsync(world.Rider.Client);
+
+        var list = await world.Rider.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct);
+        var listed = Assert.Single(list!.Routes);
+
+        // The card draws the line, so the list carries it: aligned arrays, thinned to a preview, from the
+        // same start the detail page draws.
+        var detail = await world.Rider.Client.GetFromJsonAsync<RouteDetailResponse>($"/api/v1/routes/{created.Id}", Ct);
+        Assert.NotEmpty(listed.Latitude);
+        Assert.Equal(listed.Latitude.Length, listed.Longitude.Length);
+        Assert.InRange(listed.Latitude.Length, 2, RouteGeometry.MaxPreviewPoints + 1);
+        Assert.Equal(detail!.Latitude[0], listed.Latitude[0]);
+        Assert.Equal(detail.Latitude[^1], listed.Latitude[^1]);
+        Assert.Equal(detail.Longitude[^1], listed.Longitude[^1]);
+        // A short line is its own preview; a long one is thinned to the cap.
+        Assert.True(
+            listed.Latitude.Length == detail.Latitude.Length
+            || listed.Latitude.Length <= RouteGeometry.MaxPreviewPoints + 1,
+            "The preview is thinner than the stored line or over the cap.");
+
+        // The other club's member still sees no route, and its line least of all.
+        Assert.Empty((await world.OtherRider.Client.GetFromJsonAsync<RouteListResponse>("/api/v1/routes", Ct))!.Routes);
+    }
+
+    [Fact]
     public async Task Routes_ShouldBeOpenToTheClub_WhenAMemberSharedThem()
     {
         await using var api = await StartAsync(postgres);

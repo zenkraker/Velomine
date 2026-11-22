@@ -3,7 +3,10 @@ using Velomine.Server.Data;
 
 namespace Velomine.Server.Features.Routes;
 
-/// <summary>A route in a list. OwnerName is the member who added it, shown inside the club only.</summary>
+/// <summary>
+/// A route in a list. OwnerName is the member who added it, shown inside the club only. Latitude and Longitude are
+/// the line thinned to a preview, so every card draws it on the map.
+/// </summary>
 public sealed record RouteSummaryResponse(
     Guid Id,
     string Name,
@@ -15,7 +18,34 @@ public sealed record RouteSummaryResponse(
     string OwnerName,
     DateTimeOffset CreatedAt,
     bool IsMine,
-    bool IsShared);
+    bool IsShared,
+    double[] Latitude,
+    double[] Longitude);
+
+/// <summary>A route as the database has it, its line whole: the list thins it to <see cref="RouteSummaryResponse"/>.</summary>
+public sealed record RouteSummaryRow(
+    Guid Id,
+    string Name,
+    string? Description,
+    string Surface,
+    double DistanceM,
+    double? ClimbingM,
+    Guid OwnerId,
+    string OwnerName,
+    DateTimeOffset CreatedAt,
+    bool IsMine,
+    bool IsShared,
+    double[] Latitude,
+    double[] Longitude)
+{
+    public RouteSummaryResponse ToResponse()
+    {
+        var (latitude, longitude) = RouteGeometry.Preview(Latitude, Longitude);
+        return new RouteSummaryResponse(
+            Id, Name, Description, Surface, DistanceM, ClimbingM, OwnerId, OwnerName, CreatedAt, IsMine, IsShared,
+            latitude, longitude);
+    }
+}
 
 /// <summary>A route with its line: latitude and longitude of every point, and elevation in metres when the route has it.</summary>
 public sealed record RouteDetailResponse(
@@ -67,8 +97,8 @@ public static class RouteQueries
     public static IQueryable<CyclingRoute> Visible(VelomineDbContext db, Guid userId, Guid? clubId) =>
         db.Routes.Where(r => r.UserId == userId || (clubId != null && r.ClubId == clubId));
 
-    public static IQueryable<RouteSummaryResponse> Summaries(IQueryable<CyclingRoute> routes, Guid viewerId) =>
-        routes.Select(r => new RouteSummaryResponse(
+    public static IQueryable<RouteSummaryRow> Summaries(IQueryable<CyclingRoute> routes, Guid viewerId) =>
+        routes.Select(r => new RouteSummaryRow(
             r.Id,
             r.Name,
             r.Description,
@@ -79,7 +109,9 @@ public static class RouteQueries
             r.Owner.DisplayName,
             r.CreatedAt,
             r.UserId == viewerId,
-            r.ClubId != null));
+            r.ClubId != null,
+            r.Line!.Latitude,
+            r.Line.Longitude));
 
     public static RouteDetailResponse Detail(CyclingRoute route, Guid viewerId) => new(
         route.Id,

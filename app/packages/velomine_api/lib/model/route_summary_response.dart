@@ -24,6 +24,8 @@ class RouteSummaryResponse {
     required this.createdAt,
     required this.isMine,
     required this.isShared,
+    this.latitude = const [],
+    this.longitude = const [],
   });
 
   final String id;
@@ -48,6 +50,10 @@ class RouteSummaryResponse {
 
   final bool isShared;
 
+  final List<double> latitude;
+
+  final List<double> longitude;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RouteSummaryResponse &&
     other.id == id &&
@@ -60,7 +66,9 @@ class RouteSummaryResponse {
     other.ownerName == ownerName &&
     other.createdAt == createdAt &&
     other.isMine == isMine &&
-    other.isShared == isShared;
+    other.isShared == isShared &&
+    _deepEquality.equals(other.latitude, latitude) &&
+    _deepEquality.equals(other.longitude, longitude);
 
   @override
   int get hashCode =>
@@ -75,10 +83,12 @@ class RouteSummaryResponse {
     (ownerName.hashCode) +
     (createdAt.hashCode) +
     (isMine.hashCode) +
-    (isShared.hashCode);
+    (isShared.hashCode) +
+    (latitude.hashCode) +
+    (longitude.hashCode);
 
   @override
-  String toString() => 'RouteSummaryResponse[id=$id, name=$name, description=$description, surface=$surface, distanceM=$distanceM, climbingM=$climbingM, ownerId=$ownerId, ownerName=$ownerName, createdAt=$createdAt, isMine=$isMine, isShared=$isShared]';
+  String toString() => 'RouteSummaryResponse[id=$id, name=$name, description=$description, surface=$surface, distanceM=$distanceM, climbingM=$climbingM, ownerId=$ownerId, ownerName=$ownerName, createdAt=$createdAt, isMine=$isMine, isShared=$isShared, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -101,6 +111,8 @@ class RouteSummaryResponse {
       json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
       json[r'isMine'] = this.isMine;
       json[r'isShared'] = this.isShared;
+      json[r'latitude'] = this.latitude;
+      json[r'longitude'] = this.longitude;
     return json;
   }
 
@@ -120,6 +132,8 @@ class RouteSummaryResponse {
     DateTime? createdAt,
     bool? isMine,
     bool? isShared,
+    List<double>? latitude,
+    List<double>? longitude,
   }) => RouteSummaryResponse(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -132,6 +146,8 @@ class RouteSummaryResponse {
     createdAt: createdAt ?? this.createdAt,
     isMine: isMine ?? this.isMine,
     isShared: isShared ?? this.isShared,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
   );
 
   /// Returns a new [RouteSummaryResponse] instance and imports its values from
@@ -165,6 +181,10 @@ class RouteSummaryResponse {
         assert(json[r'isMine'] != null, 'Required key "RouteSummaryResponse[isMine]" has a null value in JSON.');
         assert(json.containsKey(r'isShared'), 'Required key "RouteSummaryResponse[isShared]" is missing from JSON.');
         assert(json[r'isShared'] != null, 'Required key "RouteSummaryResponse[isShared]" has a null value in JSON.');
+        assert(json.containsKey(r'latitude'), 'Required key "RouteSummaryResponse[latitude]" is missing from JSON.');
+        assert(json[r'latitude'] != null, 'Required key "RouteSummaryResponse[latitude]" has a null value in JSON.');
+        assert(json.containsKey(r'longitude'), 'Required key "RouteSummaryResponse[longitude]" is missing from JSON.');
+        assert(json[r'longitude'] != null, 'Required key "RouteSummaryResponse[longitude]" has a null value in JSON.');
         return true;
       }());
 
@@ -180,6 +200,12 @@ class RouteSummaryResponse {
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         isMine: mapValueOfType<bool>(json, r'isMine')!,
         isShared: mapValueOfType<bool>(json, r'isShared')!,
+        latitude: json[r'latitude'] is Iterable
+            ? (json[r'latitude'] as Iterable).map((e) => (e as num).toDouble()).toList(growable: false)
+            : const [],
+        longitude: json[r'longitude'] is Iterable
+            ? (json[r'longitude'] as Iterable).map((e) => (e as num).toDouble()).toList(growable: false)
+            : const [],
       );
     }
     return null;
@@ -238,6 +264,8 @@ class RouteSummaryResponse {
     'createdAt',
     'isMine',
     'isShared',
+    'latitude',
+    'longitude',
   };
 }
 
