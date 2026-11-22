@@ -145,7 +145,7 @@ erDiagram
 - **One Flutter codebase** for Android, iOS and the web app. The web app is served by the web image at the same address as the API, so cookie sessions and single sign-on need no cross-origin setup.
 - **The presentation site** is plain HTML in `site/`, published to GitHub Pages, with no JavaScript, no cookies, no analytics and no third-party scripts, because Flutter web cannot be crawled or previewed.
 - **The phone records natively** (Kotlin today, Swift to follow) with the screen off, pairs a standard Bluetooth LE heart-rate strap without a vendor app, saves each ride as a FIT file first and uploads it through an idempotent queue.
-- **Design system:** two themes for every screen, night (asphalt, Volt) and day (warm off-white, olive, iron oxide as the signal colour). The language is `docs/design/language.md`, its values `docs/design/tokens.json`.
+- **Design system:** two themes for every screen, night (asphalt, Volt) and day (warm off-white, olive, iron oxide as the signal colour). The design is `docs/design/pages/`, its values `docs/design/tokens.json`.
 
 ## 10. Decisions
 

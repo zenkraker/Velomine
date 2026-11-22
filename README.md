@@ -159,7 +159,7 @@ Not needed to run it.
 - [Architecture](docs/architecture.md)
 - [Code, API and app rules](AGENTS.md)
 - [Product values and scope](docs/design/values.md)
-- [Brand directions](docs/design/brand-directions.html)
+- [Design: the visual language and every screen](docs/design/pages/README.md)
 
 ## How it is built
 

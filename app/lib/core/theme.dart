@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'motion.dart';
 import 'tokens.dart';
 
-// The Velomine visual language (docs/design/language.md). Every colour below is a token in
+// The Velomine visual language (docs/design/pages/README.md). Every colour below is a token in
 // docs/design/tokens.json, Night first; test/design_tokens_test.dart keeps the two equal.
 
 // Night.

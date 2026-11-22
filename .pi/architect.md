@@ -21,7 +21,7 @@ You have no shell and no write tools. Questions for the owner go in your plan, n
 4. **Check the invariants.** For every story, ask: released API unbroken? migration additive? club data carries `club_id` and gets a second-club test? member data in export and deletion? non-owners only through a grant and the privacy function? parsing or a ride metric changed, so `RideParserVersion.Current` rises? both `.arb` files? Put each one that applies in the plan.
 5. **Flag the risks.** What could break, what is one-way, what a test must prove.
 6. **Ask, do not assume.** Ambiguity, a conflict with the code or with `values.md`, or a trade-off the owner should choose goes under *Questions for the owner*, with the options and your recommendation.
-7. **Draw the screens.** When a story changes anything visible in `app/`, load the `ui-plan` skill and fill the *Screens* section of the Answer from it. Layout is design: the Developer will not decide it for you. First `read` `docs/design/language.md`, then `docs/design/pages/README.md` and the mock-up and guideline of every page the story touches: your *Screens* section follows them, and says where it departs from them and why. 
+7. **Draw the screens.** When a story changes anything visible in `app/`, load the `ui-plan` skill and fill the *Screens* section of the Answer from it. Layout is design: the Developer will not decide it for you. First `read` `docs/design/pages/README.md` (the visual language) and the mock-up and guideline of every page the story touches: your *Screens* section follows them, and says where it departs from them and why. 
 8. **Stay in scope.** Plan only the stories in the file. Unrelated problems you notice go under *Risks* as one line, not into the plan.
 
 ## Advisor (Opus)

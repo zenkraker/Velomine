@@ -10,8 +10,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 | `.claude/skills/*/SKILL.md` | Practical guidance per stack. Always loaded by both agents (see *AI coding agents*) |
 | `docs/architecture.md` | System shape: deployment, tenancy, data ownership, background work, security model, decisions |
 | `docs/design/values.md` | Product values, scope, non-goals and decision tests |
-| `docs/design/language.md`, `docs/design/tokens.json` | The visual language: principles, colour, type, layout, charts, navigation, page structures, and their values |
-| `docs/design/pages/` | A mock-up and a guideline for every screen of the app, with its route and Flutter file: the target design of each page |
+| `docs/design/pages/`, `docs/design/tokens.json` | The design: the visual language (principles, colour, type, layout, charts, navigation) in `pages/README.md`, a mock-up and a guideline for every screen and shared component with its route and Flutter file, and the values in `tokens.json` |
 | `docs/design/v2.md` | Inter-club ideas, not committed |
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/demo.md` | How the public demo is deployed, checked and backed up |
@@ -116,7 +115,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 ### Screens and layout
 
-- **The visual language is `docs/design/language.md`.** Its values live in `docs/design/tokens.json`; `lib/core/theme.dart` (`ColorScheme`, `VelomineColors`, `VelomineText`) and `lib/core/tokens.dart` implement them, and `test/design_tokens_test.dart` fails when they differ. A colour, size or spacing changes in `tokens.json` and the theme in the same change; widgets never use a literal colour or text size. Every screen has a mock-up and a guideline in `docs/design/pages/`; a change to a screen follows its mock-up, and a change to the design updates the mock-up first.
+- **The design is `docs/design/pages/`**: the visual language in its `README.md`, and a mock-up and a guideline for every screen and shared component. Its values live in `docs/design/tokens.json`; `lib/core/theme.dart` (`ColorScheme`, `VelomineColors`, `VelomineText`) and `lib/core/tokens.dart` implement them, and `test/design_tokens_test.dart` fails when they differ. A colour, size or spacing changes in `tokens.json` and the theme in the same change; widgets never use a literal colour or text size. **Every screen and shared widget must match its guideline and mock-up**; where they differ, the code is wrong. A new screen or component gets its guideline and mock-up in `docs/design/pages/` in the same change or before it, and a change to the design updates the mock-up first.
 - **Every routed screen is a `PageScaffold`** (`lib/core/widgets/`), inside the shell or pushed over it with `onBack`. A screen stays bespoke only when `PageScaffold` cannot give what it needs.
 - **One main action per screen**, as `primaryAction` in the header, in the same place at every width. A new screen never adds a `FloatingActionButton`.
 - **Rare and destructive actions go in a `PageMenu`** of `PageMenuEntry`; destructive entries come last, after a divider, in the error colour. Every destructive action is confirmed with `confirmDestructive`, whose button names the action. A destructive action is never a visible button.
