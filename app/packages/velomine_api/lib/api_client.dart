@@ -255,6 +255,8 @@ class ApiClient {
           return CreatePrivacyZoneRequest.fromJson(value);
         case 'CreateReminderRequest':
           return CreateReminderRequest.fromJson(value);
+        case 'CreateRideFileLinkRequest':
+          return CreateRideFileLinkRequest.fromJson(value);
         case 'CreateRouteRequest':
           return CreateRouteRequest.fromJson(value);
         case 'CreateServiceEntryRequest':
@@ -403,6 +405,8 @@ class ApiClient {
           return ResetPasswordRequest.fromJson(value);
         case 'RideFeelResponse':
           return RideFeelResponse.fromJson(value);
+        case 'RideFileLinkResponse':
+          return RideFileLinkResponse.fromJson(value);
         case 'RideImportResponse':
           return RideImportResponse.fromJson(value);
         case 'RideLapsResponse':

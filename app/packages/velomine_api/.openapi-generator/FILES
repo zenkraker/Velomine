@@ -67,6 +67,7 @@ lib/model/create_component_request.dart
 lib/model/create_goal_request.dart
 lib/model/create_privacy_zone_request.dart
 lib/model/create_reminder_request.dart
+lib/model/create_ride_file_link_request.dart
 lib/model/create_route_request.dart
 lib/model/create_service_entry_request.dart
 lib/model/create_template_request.dart
@@ -141,6 +142,7 @@ lib/model/request_to_join_request.dart
 lib/model/resend_verification_request.dart
 lib/model/reset_password_request.dart
 lib/model/ride_feel_response.dart
+lib/model/ride_file_link_response.dart
 lib/model/ride_import_response.dart
 lib/model/ride_laps_response.dart
 lib/model/ride_response.dart

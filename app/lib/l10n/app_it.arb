@@ -1152,6 +1152,8 @@
     }
   },
   "rideTextEdit": "Modifica titolo e descrizione",
+  "rideDownloadOriginal": "Scarica il file originale",
+  "rideDownloadFit": "Scarica come FIT",
   "rideTextSheetTitle": "Dai un nome al giro",
   "rideTextHelp": "Parole tue. Gli allenatori con cui condividi i giri possono leggerle.",
   "rideTextTitle": "Titolo",

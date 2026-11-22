@@ -19,6 +19,7 @@ class RideDetailState {
     this.load = const CommandState.idle(),
     this.action = const CommandState.idle(),
     this.feelCommand = const CommandState.idle(),
+    this.fileLink = const CommandState.idle(),
     this.messages = const [],
   });
 
@@ -54,6 +55,9 @@ class RideDetailState {
   /// Saving or removing the ride feel.
   final VoidCommand feelCommand;
 
+  /// Making the address the browser downloads the ride's file from.
+  final CommandState<String?> fileLink;
+
   final List<UserMessage> messages;
 
   RideDetailState copyWith({
@@ -69,6 +73,7 @@ class RideDetailState {
     CommandState<RideResponse?>? load,
     VoidCommand? action,
     VoidCommand? feelCommand,
+    CommandState<String?>? fileLink,
     List<UserMessage>? messages,
   }) => RideDetailState(
     ride: ride ?? this.ride,
@@ -83,6 +88,7 @@ class RideDetailState {
     load: load ?? this.load,
     action: action ?? this.action,
     feelCommand: feelCommand ?? this.feelCommand,
+    fileLink: fileLink ?? this.fileLink,
     messages: messages ?? this.messages,
   );
 }

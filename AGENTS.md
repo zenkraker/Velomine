@@ -90,6 +90,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 - **Single sign-on, phone** (RFC 8252): a public client with PKCE through `flutter_appauth` and the redirect `com.velomine.app:/sso-callback`. The app posts the ID and access tokens to `POST /accounts/sso/token`; the server validates the ID token against the provider's discovery document and JWKS and is the trust boundary.
 - **Password reset:** `forgot` always answers `202` when email is configured, so it never reveals who is registered; without email it answers `503` and an admin can make a one-time link. The link is built from `VELOMINE__PUBLICURL`, never the incoming Host header, and carries the token in the fragment.
 - **Export** is a two-minute Data Protection token link (`POST /accounts/me/export-link`) that streams a ZIP built in a temporary file, so the phone can hand it to the system browser. Nothing secret goes in it.
+- A ride's file downloads the same way: `POST /rides/{id}/file-link` gives a two-minute link to the original as received, or to a FIT file the server writes for a ride read from GPX or TCX.
 - Rate limiting with the built-in ASP.NET Core limiter on login, upload and starting a club, plus an in-memory limit on the anonymous password endpoints. Uploads use a token bucket, so a whole folder can arrive at once while the sustained rate stays limited.
 
 ## Shared parts catalogue

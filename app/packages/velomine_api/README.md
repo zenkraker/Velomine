@@ -209,7 +209,9 @@ Class | Method | HTTP request | Description
 *PrivacyApi* | [**deletePrivacyZone**](doc//PrivacyApi.md#deleteprivacyzone) | **DELETE** /api/v1/privacy/zones/{id} | 
 *PrivacyApi* | [**getPrivacy**](doc//PrivacyApi.md#getprivacy) | **GET** /api/v1/privacy | 
 *PrivacyApi* | [**updatePrivacy**](doc//PrivacyApi.md#updateprivacy) | **PUT** /api/v1/privacy/settings | 
+*RidesApi* | [**createRideFileLink**](doc//RidesApi.md#createridefilelink) | **POST** /api/v1/rides/{id}/file-link | 
 *RidesApi* | [**deleteRide**](doc//RidesApi.md#deleteride) | **DELETE** /api/v1/rides/{id} | 
+*RidesApi* | [**downloadRideFile**](doc//RidesApi.md#downloadridefile) | **GET** /api/v1/rides/{id}/file/{token} | 
 *RidesApi* | [**getRide**](doc//RidesApi.md#getride) | **GET** /api/v1/rides/{id} | 
 *RidesApi* | [**getRideImport**](doc//RidesApi.md#getrideimport) | **GET** /api/v1/rides/imports/{id} | 
 *RidesApi* | [**getRideLaps**](doc//RidesApi.md#getridelaps) | **GET** /api/v1/rides/{id}/laps | 
@@ -292,6 +294,7 @@ Class | Method | HTTP request | Description
  - [CreateGoalRequest](doc//CreateGoalRequest.md)
  - [CreatePrivacyZoneRequest](doc//CreatePrivacyZoneRequest.md)
  - [CreateReminderRequest](doc//CreateReminderRequest.md)
+ - [CreateRideFileLinkRequest](doc//CreateRideFileLinkRequest.md)
  - [CreateRouteRequest](doc//CreateRouteRequest.md)
  - [CreateServiceEntryRequest](doc//CreateServiceEntryRequest.md)
  - [CreateTemplateRequest](doc//CreateTemplateRequest.md)
@@ -366,6 +369,7 @@ Class | Method | HTTP request | Description
  - [ResendVerificationRequest](doc//ResendVerificationRequest.md)
  - [ResetPasswordRequest](doc//ResetPasswordRequest.md)
  - [RideFeelResponse](doc//RideFeelResponse.md)
+ - [RideFileLinkResponse](doc//RideFileLinkResponse.md)
  - [RideImportResponse](doc//RideImportResponse.md)
  - [RideLapsResponse](doc//RideLapsResponse.md)
  - [RideResponse](doc//RideResponse.md)

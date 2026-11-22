@@ -14,7 +14,7 @@ public sealed class SignInRequiredTests(PostgresFixture postgres)
     private static readonly string[] OpenWithoutASession =
     [
         "register", "login", "loginTwoFactor", "refresh", "forgotPassword", "resetPassword", "downloadExport",
-        "readSharedRide", "readCalendarFeed", "downloadRoute",
+        "readSharedRide", "readCalendarFeed", "downloadRoute", "downloadRideFile",
     ];
 
     [Fact]

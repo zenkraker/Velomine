@@ -3397,6 +3397,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get rideTextEdit => 'Modifica titolo e descrizione';
 
   @override
+  String get rideDownloadOriginal => 'Scarica il file originale';
+
+  @override
+  String get rideDownloadFit => 'Scarica come FIT';
+
+  @override
   String get rideTextSheetTitle => 'Dai un nome al giro';
 
   @override

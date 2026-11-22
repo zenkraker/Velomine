@@ -3373,6 +3373,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideTextEdit => 'Edit title and description';
 
   @override
+  String get rideDownloadOriginal => 'Download original file';
+
+  @override
+  String get rideDownloadFit => 'Download as FIT';
+
+  @override
   String get rideTextSheetTitle => 'Name this ride';
 
   @override

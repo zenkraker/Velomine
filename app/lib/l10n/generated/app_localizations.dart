@@ -5810,6 +5810,18 @@ abstract class AppLocalizations {
   /// **'Edit title and description'**
   String get rideTextEdit;
 
+  /// No description provided for @rideDownloadOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Download original file'**
+  String get rideDownloadOriginal;
+
+  /// No description provided for @rideDownloadFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Download as FIT'**
+  String get rideDownloadFit;
+
   /// No description provided for @rideTextSheetTitle.
   ///
   /// In en, this message translates to:

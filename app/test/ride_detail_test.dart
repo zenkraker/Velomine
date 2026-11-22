@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:velomine/core/hooks.dart';
 import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/rider_mode.dart';
 import 'package:velomine/core/session.dart';
@@ -18,6 +19,7 @@ Widget _detailApp(
   Session session,
   String id, {
   RiderModeLayout layout = RiderModeLayout.full,
+  List<Uri>? opened,
 }) => ProviderScope(
   overrides: [
     sessionProvider.overrideWith((ref) => session),
@@ -29,7 +31,13 @@ Widget _detailApp(
     localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
-      body: RideDetailScreen(id: id, layout: layout, onDeleted: () {}),
+      body: RideDetailScreen(
+        id: id,
+        layout: layout,
+        onDeleted: () {},
+        serverUrl: 'https://velomine.test',
+        openLink: (uri) async => opened?.add(uri),
+      ),
     ),
   ),
 );
@@ -80,11 +88,19 @@ void main() {
     ];
   });
 
-  Future<void> open(WidgetTester tester, {String id = 'r1'}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    String id = 'r1',
+    LinkOpener? openLink,
+  }) async {
     tester.view.physicalSize = const Size(1000, 2800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await startApp(tester, server.session(useCookies: true));
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      openLink: openLink,
+    );
     await tester.tap(find.byKey(Key('ride-$id')));
     await tester.pumpAndSettle();
   }
@@ -962,6 +978,51 @@ void main() {
       expect(find.byKey(const Key('map-facts')), findsNothing);
       expect(find.byKey(const Key('stat-distance')), findsOneWidget);
       expect(find.byKey(const Key('chart-power')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldOfferAFitDownload_WhenTheRideCameFromGpx',
+    (tester) async {
+      // The ride's own file is sunday.gpx, so the FIT copy is the one the server writes from it.
+      await open(tester);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('download-original')), findsOneWidget);
+      expect(find.byKey(const Key('download-fit')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldOfferOnlyTheOriginal_WhenTheRideIsAlreadyFit',
+    (tester) async {
+      server.rides[0]['fileName'] = 'ride.fit';
+      await open(tester);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('download-original')), findsOneWidget);
+      expect(find.byKey(const Key('download-fit')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldOpenTheDownloadLink_WhenTheRiderChoosesIt',
+    (tester) async {
+      Uri? opened;
+      await open(tester, openLink: (uri) async => opened = uri);
+      await tester.tap(find.byKey(const Key('ride-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('download-fit')));
+      await tester.pumpAndSettle();
+
+      expect(server.requests, contains('POST /api/v1/rides/r1/file-link'));
+      // The browser is sent to the server that made the link, with the format the rider asked for.
+      expect(
+        opened.toString(),
+        'http://server/api/v1/rides/r1/file/test-token?format=fit',
+      );
     },
   );
 
