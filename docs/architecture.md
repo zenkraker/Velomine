@@ -1,12 +1,12 @@
 # Velomine architecture
 
-How Velomine is shaped: one application, one database, clubs and members, and how it is deployed. This document describes the system at a high level and records the decisions behind it. The code rules that implement it are in [`AGENTS.md`](../AGENTS.md), the product rules in [values](design/values.md), what works today on the [status page](../src/Velomine.Server/site/status/index.html), and inter-club ideas in [v2](design/v2.md).
+How Velomine is shaped: one application, one database, clubs and members, and how it is deployed. This document describes the system at a high level and records the decisions behind it. The code rules that implement it are in [`AGENTS.md`](../AGENTS.md), the product rules in [values](design/values.md), what works today on the [status page](../site/status/index.html), and inter-club ideas in [v2](design/v2.md).
 
 It describes only what is decided. Features that are not built yet are on the status page, not here.
 
 ## 1. Goals and constraints
 
-- **Simple to run.** One application image and one PostgreSQL database, for the cloud and for a self-hosted club alike. No microservices, brokers, caches or extra services; scale by running more instances behind a proxy.
+- **Simple to run.** Two images (the server and the web app) and one PostgreSQL database, for the cloud and for a self-hosted club alike. No microservices, brokers, caches or extra services; scale by running more instances behind a proxy.
 - **Cycling first.** Every model, screen and metric is about bikes and rides today. Another sport is a product decision first (`docs/design/values.md`) and would get models and metrics of its own.
 - **Private by default.** Nothing a member records is visible to anyone else until the member shares it, and every share can be revoked.
 - **Members own their data.** Full export (original files and JSON) and complete deletion, whether or not they belong to a club.
@@ -144,8 +144,8 @@ erDiagram
 
 - **One Flutter codebase** for Android, iOS and the web app. The web app is served by the web image at the same address as the API, so cookie sessions and single sign-on need no cross-origin setup.
 - **The presentation site** is plain HTML in `site/`, published to GitHub Pages, with no JavaScript, no cookies, no analytics and no third-party scripts, because Flutter web cannot be crawled or previewed.
-- **The phone records natively** (Kotlin, Swift) with the screen off, pairs standard Bluetooth LE sensors without vendor apps, saves each ride as a FIT file first and uploads it through an idempotent queue.
-- **Design system:** a day theme (Cloud Dancer, deep teal, iron oxide) and a night-ride theme (asphalt, Volt) for recording.
+- **The phone records natively** (Kotlin today, Swift to follow) with the screen off, pairs a standard Bluetooth LE heart-rate strap without a vendor app, saves each ride as a FIT file first and uploads it through an idempotent queue.
+- **Design system:** two themes for every screen, night (asphalt, Volt) and day (warm off-white, olive, iron oxide as the signal colour). The design is `docs/design/pages/`, its values `docs/design/tokens.json`.
 
 ## 10. Decisions
 
@@ -180,4 +180,4 @@ erDiagram
 | nginx inside the web image; Traefik in front of a public server, from a compose overlay | nginx serves the static files and forwards the API, the same for a self-hoster and on the demo. Traefik handles certificates and the public routes in its own compose project (`deploy/traefik/`), so the root compose stays free of hosting extras and a self-hoster brings their own HTTPS. It finds each environment by its container labels through the Docker socket (the only container that mounts it, read-only). |
 | Compose overlays and pipelines in this repository; the host set up by hand, secrets outside Git | The demo runs the same root `docker-compose.yml` a self-hoster does, plus one overlay, so the stack is tested on every deploy. A provisioning tool cost more to maintain than one hand-managed VPS. GitHub holds no host secret. |
 | Build once in CI; deploy by hand with `docker compose` | Every environment runs a version CI built and tested, never a rebuild. With no customers yet, a manual pull and `up --wait` is the simplest deploy with no deploy key, timer or script to maintain; automate it when deploys become frequent. |
-| One VPS and one database instance for every environment; only the demo runs until there are customers | No cost for environments nobody uses yet. The others are written out and commented out, so turning one on is uncommenting, not designing. Commented-out code is not checked by CI or `tofu validate`: check it when turning it on. The public demo will live next to prod: revisit before prod holds a club's real data, when prod moves to its own VPS and an HA database. |
+| One VPS and one database instance for every environment; only the demo runs until there are customers | No cost for environments nobody uses yet. A new environment is a new compose project with its own `.env` and the same images. The public demo will live next to prod: revisit before prod holds a club's real data, when prod moves to its own VPS and an HA database. |

@@ -11,8 +11,8 @@ These rules apply to widgets you create or change. Existing code outside the Pla
 
 ## Layout
 
-- Every screen uses `PageScaffold`. Max width (1200), padding (16 / 24 / 32 by size class) and navigation (`NavigationBar` compact, `NavigationRail` medium, sidebar expanded) belong there, not in pages. If `PageScaffold` lacks one of these and the Plan doesn't change it, NEEDS_CONTEXT.
-- Size classes (compact < 600, medium 600–839, expanded ≥ 840) come from one shared helper. Never compare raw widths inside a widget.
+- Every screen uses `PageScaffold`. Content width (1160), padding (16 / 24 / 32 by size class) and navigation (`FloatingNavPill` under 600 dp, collapsed rail from 600 dp, `NavSidebar` from 1200 dp) belong there, not in pages. If `PageScaffold` lacks one of these and the Plan doesn't change it, NEEDS_CONTEXT.
+- Size classes (compact < 600, medium 600–1199, expanded ≥ 1200) come from `AppBreakpoint` in `lib/core/tokens.dart`. Never compare raw widths inside a widget.
 - No empty columns or dead space.
 - Columns: compact 1, medium 2, expanded as the Plan's wireframe says. Build splits with `Row` + `Expanded(flex:)`; cards in one row have equal height.
 - Spacing from the spacing constants (4, 8, 12, 16, 24, 32, 48). No literal `EdgeInsets` values.
@@ -42,10 +42,9 @@ Build loading, empty, error and populated for every data widget the Plan lists.
 
 ## Screenshot check (before `just check`)
 
-1. Add the Plan's page(s) to the `pages` map in `app/test/ui_review/ui_review_test.dart`, with fake data.
-2. Run `just ui-shots`. It renders each page at phone (390), tablet (820) and desktop (1440) width into `app/test/ui_review/goldens/` (git-ignored). A "RenderFlex overflowed" error fails it: fix the layout. Don't hide it with `ClipRect` or a scroll view the Plan didn't ask for.
-3. Open every PNG for your pages with `read` and compare it with the Plan's wireframes.
-4. Pass/fail each item, and put the list in your report under **Checks**:
+1. Give each changed page a widget test per width, like the existing `<Screen>_ShouldNotOverflow_WhenWidthIs<N>` tests (390, 600, 820 and 1300 dp), with fake data. A "RenderFlex overflowed" error fails it: fix the layout. Don't hide it with `ClipRect` or a scroll view the Plan didn't ask for.
+2. With a running app (`just phone` or the web build), look at the page at phone and desktop width and compare it with the Plan's wireframes.
+3. Pass/fail each item, and put the list in your report under **Checks**:
    - [ ] Matches the Plan's wireframes at phone and desktop width
    - [ ] Navigation matches the size class
    - [ ] No empty columns or dead space
@@ -53,4 +52,4 @@ Build loading, empty, error and populated for every data widget the Plan lists.
    - [ ] No number repeated on one screen
    - [ ] Spacing, colors, text styles from theme/constants
    - [ ] Loading, empty, error states exist
-5. Fix failures in your code and re-run. A failure caused by the Plan → NEEDS_CONTEXT.
+4. Fix failures in your code and re-run. A failure caused by the Plan → NEEDS_CONTEXT.

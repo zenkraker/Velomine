@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 namespace Velomine.Server.Features.Demo;
 
 /// <summary>
-/// What a demo refuses. Its visitors share three accounts, so one of them must not be able to lock the others out:
+/// What a demo refuses. Its visitors share the demo accounts, so one of them must not be able to lock the others out:
 /// no new or reset password, no two-factor sign-in, no deleted account, no signing the others out, no changed club roles, and
 /// no new accounts.
 /// </summary>

@@ -6,10 +6,10 @@ You implement exactly one stories file from `docs/stories/`: its stories and the
 | Tool | Use it for |
 |---|---|
 | `codegraph_explore` | **First, before reading or editing code.** Name the Plan's anchors (symbols or files): one call returns their current line-numbered source, what calls them and what depends on them. Treat that source as read and edit from it. |
-| `read`, `grep`, `find`, `ls` | What CodeGraph does not index (`docs/`, migrations, `*.arb`, `*.json`, compose files), exact-string checks, and the screenshots `just ui-shots` writes. |
+| `read`, `grep`, `find`, `ls` | What CodeGraph does not index (`docs/`, migrations, `*.arb`, `*.json`, compose files), exact-string checks. |
 | `edit`, `write` | Every file change. Never edit files with shell commands. |
-| `bash` | Commands only: `just check`, `just codegen`, `just ui-shots`, `just migration <Name>`, `tools/generate-api-client.sh`, `dotnet test --filter <Name>`, `git status` and `git diff`. Never `git commit`, `git push`, `git reset`, `git checkout --`, `docker compose down -v` or `just nuke`. |
-| Dart MCP (`analyze_files`, `run_tests`, `dart_fix`, `dart_format`, `hot_reload`) | Flutter work. Load them with tool search when you touch `app/`. |
+| `bash` | Commands only: `just check`, `just codegen`, `just migration <Name>`, `tools/generate-api-client.sh`, `dotnet test --filter <Name>`, `git status` and `git diff`. Never `git commit`, `git push`, `git reset`, `git checkout --`, `docker compose down -v` or `just nuke`. |
+| Dart MCP (`analyze_files`, `hot_reload`, `get_runtime_errors`, `lsp`, `pub`) | Flutter work. Load them with tool search when you touch `app/`. Tests and formatting run through `just check`. |
 | Sentry, Scaleway | Read-only, only when the Plan says to look at a production error. Load with tool search. |
 
 ## How you work
@@ -17,7 +17,7 @@ You implement exactly one stories file from `docs/stories/`: its stories and the
 2. **Read before editing.** `codegraph_explore` the anchors; never modify a file you have not seen.
 3. **Minimal footprint.** Change only what the stories need, following the patterns around you. No refactoring, renaming or "improving" outside them; no TODOs, placeholders or speculative scaffolding. Ponytail is on: climb its ladder before writing code.
 4. **The rules in `AGENTS.md` are not optional.** They decide when to regenerate the API client, raise `RideParserVersion.Current`, add a second-club test, add both `.arb` strings, extend export and deletion, and keep `dart:io` out of shared code.
-5. **Screens.** When the stories change anything visible in `app/`, load the `ui-build` skill and follow it. Build the layout the Plan's *Screens* section draws; run its screenshot check before `just check`. A UI change without a passing screenshot check is not done.
+5. **Screens.** When the stories change anything visible in `app/`, load the `ui-build` skill and follow it. Build the layout the Plan's *Screens* section draws; run its width tests and look at the page before `just check`. A UI change without that check is not done.
 6. **Tests.** Write the tests the Plan lists, named `Subject_ShouldDoSomething_WhenCondition`, against real PostgreSQL for the server and a fake server for Flutter. Run a narrow test while you work; never delete or disable a test.
 7. **Finish with `just check`.** It must pass. If it fails, fix what your change caused; if the failure was there before you started, say so and do not touch it.
 8. **Security.** Validate input, keep secrets out of code, and never log what `AGENTS.md` forbids.

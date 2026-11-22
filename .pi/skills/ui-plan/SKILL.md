@@ -33,20 +33,20 @@ The app is Flutter, shipped to web and iOS/Android from the same widgets. Plan e
 4. **Data states** to build per widget: loading, empty (with its Italian copy), error.
 5. **New `.arb` strings** with Italian text (and the other language, per AGENTS.md).
 6. **Shared pieces**: whether `PageScaffold` already handles max width, padding and navigation per size class. If it doesn't and the story needs it, plan that change in *Files to change*.
-7. **Which page(s) the Developer adds to `app/test/ui_review/ui_review_test.dart`**, and the fake data they need.
+7. **Which widths each page is tested at** (the `_ShouldNotOverflow_WhenWidthIs<N>` tests), and the fake data they need.
 
 ## Velomine page map (target structure)
 
 | Route | Question it answers | Contents |
 |---|---|---|
-| `/progressi` (Panoramica) | "How am I today and this week?" | Readiness card, this-week KPIs, weekly distance chart, link to goals |
-| `/progressi/forma` | "Is my fitness going up?" | Fitness/fatigue/form chart, daily TSS, easy/moderate/hard distribution, 30g/90g/1a selector |
-| `/progressi/potenza` | "What is my power profile?" | Power curve, best efforts, FTP, critical power, VO2max, aerobic efficiency |
-| `/progressi/periodi` | "What did I do in each week/month/year?" | Period list (weeks/months/years) |
-| `/obiettivi` | "Am I hitting my goals?" | Goals list, add goal |
-| `/benessere` | "How do I feel?" | Wellness entries |
+| `/progress` (Overview) | "How am I today and this week?" | Readiness card, this-week KPIs, weekly distance chart, link to goals |
+| `/progress/fitness` | "Is my fitness going up?" | Fitness/fatigue/form chart, daily load, easy/moderate/hard distribution, range selector |
+| `/progress/power` | "What is my power profile?" | Power curve, best efforts, FTP, critical power, VO2max, aerobic efficiency |
+| `/progress/totals` | "What did I do in each week/month/year?" | Period list (weeks/months/years) |
+| `/progress/wellbeing` | "How do I feel?" | Check-ins and ride RPE |
+| `/goals` | "Am I hitting my goals?" | Goals list, add goal |
 
-Tabs inside Progressi: Panoramica · Forma · Potenza · Periodi. The sport filter sits in the page header and applies to all tabs; on compact width it becomes a dropdown or a horizontally scrolling chip row.
+`docs/design/pages/README.md` owns the full route list. Tabs inside Progress (`ProgressTabs`): Overview · Fitness · Power · Totals · Wellbeing. The sport filter sits in the page header and applies to all tabs; on compact width it becomes a dropdown or a horizontally scrolling chip row.
 
 When a story conflicts with this map, raise it with the PO instead of silently deviating. Update this table when the owner approves a change.
 
