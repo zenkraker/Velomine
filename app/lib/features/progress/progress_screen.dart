@@ -45,12 +45,7 @@ String? ftpSourceNote(
 }) {
   final newest = history.firstOrNull;
   if (newest == null) return null;
-  return ftpSourceText(
-    l10n,
-    newest.source_,
-    newest.setAt,
-    rideDate: rideDate,
-  );
+  return ftpSourceText(l10n, newest.source_, newest.setAt, rideDate: rideDate);
 }
 
 /// Progress: one overview that answers "how am I today and this week?" and opens the page that answers

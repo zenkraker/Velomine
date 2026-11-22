@@ -121,56 +121,58 @@ void main() {
     expect(server.requests, contains('GET /api/v1/rides/r1'));
   });
 
-  testWidgets('PowerScreen_ShouldDateATestFtpByItsRide_WhenItWasAcceptedLater', (
-    tester,
-  ) async {
-    server.rides.add(
-      rideJson('r1', 'ready', startTime: '2026-11-12T07:30:00Z'),
-    );
-    giveFtp(250);
-    server.ftpHistory['rider@example.com'] = [
-      {
-        'watts': 250,
-        'setAt': '2026-11-15T09:00:00Z',
-        'source': 'test',
-        'rideId': 'r1',
-      },
-    ];
-    await openPower(tester);
+  testWidgets(
+    'PowerScreen_ShouldDateATestFtpByItsRide_WhenItWasAcceptedLater',
+    (tester) async {
+      server.rides.add(
+        rideJson('r1', 'ready', startTime: '2026-11-12T07:30:00Z'),
+      );
+      giveFtp(250);
+      server.ftpHistory['rider@example.com'] = [
+        {
+          'watts': 250,
+          'setAt': '2026-11-15T09:00:00Z',
+          'source': 'test',
+          'rideId': 'r1',
+        },
+      ];
+      await openPower(tester);
 
-    // The day of the effort, not the day the number was accepted three days later.
-    expect(
-      estimateNotes(tester).first.text,
-      'From your ride on '
-      '${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
-    );
-  });
-
-  testWidgets('ProgressScreen_ShouldDateATestFtpByItsRide_WhenItWasAcceptedLater', (
-    tester,
-  ) async {
-    server.rides.add(
-      rideJson('r1', 'ready', startTime: '2026-11-12T07:30:00Z'),
-    );
-    giveFtp(250);
-    server.ftpHistory['rider@example.com'] = [
-      {
-        'watts': 250,
-        'setAt': '2026-11-15T09:00:00Z',
-        'source': 'test',
-        'rideId': 'r1',
-      },
-    ];
-    await openProgress(tester);
-
-    expect(
-      find.text(
+      // The day of the effort, not the day the number was accepted three days later.
+      expect(
+        estimateNotes(tester).first.text,
         'From your ride on '
         '${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
-      ),
-      findsOneWidget,
-    );
-  });
+      );
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldDateATestFtpByItsRide_WhenItWasAcceptedLater',
+    (tester) async {
+      server.rides.add(
+        rideJson('r1', 'ready', startTime: '2026-11-12T07:30:00Z'),
+      );
+      giveFtp(250);
+      server.ftpHistory['rider@example.com'] = [
+        {
+          'watts': 250,
+          'setAt': '2026-11-15T09:00:00Z',
+          'source': 'test',
+          'rideId': 'r1',
+        },
+      ];
+      await openProgress(tester);
+
+      expect(
+        find.text(
+          'From your ride on '
+          '${DateFormat.yMMMd().format(DateTime(2026, 11, 12))}',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('PowerSummary_ShouldExplainTheEstimate_WhenAnEstimateExists', (
     tester,
