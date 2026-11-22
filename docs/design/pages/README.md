@@ -82,9 +82,9 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 
 ### Navigation
 
-- Four main destinations, in this order everywhere: Rides, Progress, Goals, Club.
-- Phone: a floating `glass` pill with the four destinations; the selected one sits on `accent-soft`. Sub-pages of a destination are tabs at the top of its page.
-- From 1200 dp: the sidebar on `card`, with the `brand` wordmark, destinations that expand (Rides ▾, Progress ▾, Club ▾; Goals is one page), and the account, settings and privacy note at the bottom. The current page is `accent-soft`.
+- Four main destinations, in this order everywhere: Rides, Progress, Goals, Club. A rider who turned auto training on gets a fifth, Training, after Rides: Rides, Training, Progress, Goals, Club.
+- Phone: a floating `glass` pill with the destinations; the selected one sits on `accent-soft`. Sub-pages of a destination are tabs at the top of its page.
+- From 1200 dp: the sidebar on `card`, with the `brand` wordmark, destinations that expand (Rides ▾, Progress ▾, Club ▾; Training and Goals are one page each), and the account, settings and privacy note at the bottom. The current page is `accent-soft`.
 - Progress has one overview and four sub-pages, each built around one main chart: Overview ("How am I today and this week?"), Fitness (fitness, fatigue and form), Power (power curve and FTP), Totals (weeks, months, years) and Wellbeing (readiness and check-ins).
 - A sub-page's title row carries the parent's name as a `caption` above the `page-title`.
 - An overview page fits in about one screen. When it grows past that, a card moves to its own sub-page, not further down the page.
@@ -128,6 +128,14 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 
 - [EventsPage](goals/EventsPage.html) ([guideline](goals/EventsPage.md)): Events: the rider's races and sportives. Route `/progress/events`, opened from Goals, `features/progress/events_screen.dart`.
 - [GoalsPage](goals/GoalsPage.html) ([guideline](goals/GoalsPage.md)): Goals as a main destination: it answers "Am I hitting my goals?" with one GoalGauge card per goal and Add goal as the page's one main action.
+
+## Training
+
+Shown only to a rider who turned auto training on.
+
+- [TrainingPage](training/TrainingPage.html) ([guideline](training/TrainingPage.md)): Training: today's session, this week, the goal. Route `/training`, `features/training/training_screen.dart`.
+- [SessionPage](training/SessionPage.html) ([guideline](training/SessionPage.md)): one planned session, and how it went. Route `/training/sessions/:id`, `features/training/session_screen.dart`.
+- [TrainingSetupPage](training/TrainingSetupPage.html) ([guideline](training/TrainingSetupPage.md)): three questions before auto training starts. Route `/training/setup`, `features/training/training_setup_screen.dart`.
 
 ## Club
 
@@ -202,4 +210,4 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 ## Navigation
 
 - [NavPill](navigation/NavPill.html) ([guideline](navigation/NavPill.md)): The phone's main navigation: a floating glass pill with Rides, Progress, Goals and Club, above the content and the safe area.
-- [Sidebar](navigation/Sidebar.html) ([guideline](navigation/Sidebar.md)): The navigation from 1200 dp: the wordmark, four main destinations, and the privacy note, profile and settings at the bottom.
+- [Sidebar](navigation/Sidebar.html) ([guideline](navigation/Sidebar.md)): The navigation from 1200 dp: the wordmark, the main destinations, and the privacy note, profile and settings at the bottom.

@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- TrainingSetupPage: three questions before auto training starts. Guideline: TrainingSetupPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Set up auto training</title>
+<style>
+  .choice { display: flex; gap: var(--space-md); align-items: flex-start; }
+  .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ink-muted); flex: none; margin-top: 2px; }
+  .radio.on { border-color: var(--accent-strong); box-shadow: inset 0 0 0 4px var(--card), inset 0 0 0 10px var(--accent-strong); }
+</style>
+</head>
+<body>
+<main class="vm-page narrow">
+  <div class="vm-head">
+    <div><p class="crumb caption">Training</p><h1 class="page-title">Set up auto training</h1><p class="sub body">Velomine plans your week from your rides. It is new: <a class="vm-link" style="display:inline" href="#">tell us what feels wrong</a>.</p></div>
+  </div>
+
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">1 · Your goal</h3></div>
+    <div class="vm-rows">
+      <div class="vm-row choice"><span class="radio"></span><div class="grow"><span class="t body">Add aerobic exercise</span></div></div>
+      <div class="vm-row choice"><span class="radio on"></span><div class="grow"><span class="t body">Get fitter, ride longer</span><span class="d">You ride regularly. We build both your base and a little speed.</span></div><span class="vm-badge good">Suggested</span></div>
+      <div class="vm-row choice"><span class="radio"></span><div class="grow"><span class="t body">Faster on climbs, raise FTP</span></div></div>
+      <div class="vm-row choice"><span class="radio"></span><div class="grow"><span class="t body">An event on a date</span><span class="d">Granfondo del Po · 14 Jun</span></div></div>
+      <div class="vm-row choice"><span class="radio"></span><div class="grow"><span class="t body">Keep fitness</span></div></div>
+    </div>
+  </article>
+
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">2 · When you ride</h3></div>
+    <div class="vm-form">
+      <div class="vm-field"><span class="l">Days you can ride</span>
+        <div class="vm-chips"><button class="vm-chip" type="button" aria-pressed="false">Mon</button><button class="vm-chip" type="button" aria-pressed="true">Tue</button><button class="vm-chip" type="button" aria-pressed="false">Wed</button><button class="vm-chip" type="button" aria-pressed="true">Thu</button><button class="vm-chip" type="button" aria-pressed="false">Fri</button><button class="vm-chip" type="button" aria-pressed="true">Sat</button><button class="vm-chip" type="button" aria-pressed="true">Sun</button></div>
+      </div>
+      <div class="vm-fields2">
+        <label class="vm-field"><span class="l">Hours a week</span><span class="vm-input"><span>6</span><span class="end">h</span></span></label>
+        <label class="vm-field"><span class="l">Long ride on</span><span class="vm-input"><span>Velomine picks (Sunday)</span><span class="end">▾</span></span></label>
+      </div>
+    </div>
+  </article>
+
+  <article class="vm-card">
+    <div class="vm-card-head"><h3 class="vm-card-title card-title">3 · Your heart rate</h3></div>
+    <div class="vm-form">
+      <div class="vm-rows"><div class="vm-switch"><div class="grow"><span class="body">I don't know</span><span class="d">We estimate it from your age and learn it from your rides.</span></div><span class="vm-toggle on" role="switch" aria-checked="true"></span></div></div>
+      <label class="vm-field"><span class="l">Year of birth</span><span class="vm-input"><span>1988</span></span></label>
+    </div>
+  </article>
+
+  <p class="caption vm-muted">If you have a heart condition or have not exercised for a long time, check with a doctor first.</p>
+  <button class="vm-btn button-label block" type="button">Start</button>
+</main>
+</body>
+</html>
