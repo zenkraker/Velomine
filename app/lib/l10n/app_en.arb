@@ -71,6 +71,7 @@
   "staySignedIn": "Stay logged in",
   "pressBackAgain": "Press back again to exit",
   "signInHelp": "Sign in to see your rides and your form.",
+  "signInTitle": "Welcome back",
   "signIn": "Sign in",
   "change": "Change",
   "tryAgain": "Try again",
@@ -91,6 +92,7 @@
     }
   },
   "createAccount": "Create an account",
+  "registerCaption": "New account",
   "createAccountAction": "Create account",
   "haveAccount": "I already have an account",
   "backToSignIn": "Back to sign in",
@@ -178,6 +180,7 @@
   "signingIn": "Signing you in…",
 
   "setupTitle": "Which server does your club use?",
+  "setupCaption": "Server",
   "setupServerAddress": "Server address",
   "setupServerHint": "https://velomine.club.example",
   "setupInsecure": "This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.",
@@ -1993,6 +1996,7 @@
   "recorderEbikeHelp": "Counts as assisted and prefers your e-bike.",
 
   "forgotPassword": "Forgot password?",
+  "forgotPasswordCaption": "Password help",
   "forgotPasswordTitle": "Reset your password",
   "forgotPasswordHelp": "Enter the email address of your account. If it can be reset, we will send a link.",
   "forgotPasswordSent": "If an account exists for that address, we sent a link to reset the password. Check your spam folder too.",
@@ -2001,6 +2005,7 @@
   "forgotPasswordFailed": "Could not start the reset. Try again.",
   "errorEnterEmail": "Enter your email address.",
   "sendResetLink": "Send reset link",
+  "resetPasswordCaption": "New password",
   "resetPasswordTitle": "Choose a new password",
   "resetPasswordHelp": "Choose a password of at least 10 characters.",
   "setNewPassword": "Set new password",

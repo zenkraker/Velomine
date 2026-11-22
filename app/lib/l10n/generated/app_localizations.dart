@@ -410,6 +410,12 @@ abstract class AppLocalizations {
   /// **'Sign in to see your rides and your form.'**
   String get signInHelp;
 
+  /// No description provided for @signInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get signInTitle;
+
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:
@@ -445,6 +451,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create an account'**
   String get createAccount;
+
+  /// No description provided for @registerCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'New account'**
+  String get registerCaption;
 
   /// No description provided for @createAccountAction.
   ///
@@ -877,6 +889,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Which server does your club use?'**
   String get setupTitle;
+
+  /// No description provided for @setupCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get setupCaption;
 
   /// No description provided for @setupServerAddress.
   ///
@@ -6092,6 +6110,12 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
+  /// No description provided for @forgotPasswordCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Password help'**
+  String get forgotPasswordCaption;
+
   /// No description provided for @forgotPasswordTitle.
   ///
   /// In en, this message translates to:
@@ -6139,6 +6163,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send reset link'**
   String get sendResetLink;
+
+  /// No description provided for @resetPasswordCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get resetPasswordCaption;
 
   /// No description provided for @resetPasswordTitle.
   ///

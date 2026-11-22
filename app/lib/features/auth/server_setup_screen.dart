@@ -117,6 +117,7 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
     };
     return AuthPage(
       title: l10n.setupTitle,
+      caption: l10n.setupCaption,
       help: l10n.setupHelp,
       primaryLabel: l10n.setupConnect,
       primaryKey: const Key('server-save'),

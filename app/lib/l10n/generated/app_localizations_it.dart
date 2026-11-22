@@ -171,6 +171,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get signInHelp => 'Accedi per vedere i tuoi giri e la tua forma.';
 
   @override
+  String get signInTitle => 'Bentornato';
+
+  @override
   String get signIn => 'Accedi';
 
   @override
@@ -191,6 +194,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get createAccount => 'Crea un account';
+
+  @override
+  String get registerCaption => 'Nuovo account';
 
   @override
   String get createAccountAction => 'Crea account';
@@ -434,6 +440,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get setupTitle => 'Quale server usa il tuo club?';
+
+  @override
+  String get setupCaption => 'Server';
 
   @override
   String get setupServerAddress => 'Indirizzo del server';
@@ -3547,6 +3556,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get forgotPassword => 'Password dimenticata?';
 
   @override
+  String get forgotPasswordCaption => 'Aiuto password';
+
+  @override
   String get forgotPasswordTitle => 'Reimposta la password';
 
   @override
@@ -3574,6 +3586,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sendResetLink => 'Invia il link';
+
+  @override
+  String get resetPasswordCaption => 'Nuova password';
 
   @override
   String get resetPasswordTitle => 'Scegli una nuova password';
