@@ -115,21 +115,10 @@ class ClubSharingCard extends StatelessWidget {
               v,
               l10n.shareStatsConfirmTitle,
               l10n.shareStatsConfirmBody,
-              (value) => onChoose(rides: value),
+              // Training comes with the rides: a coach who sees them sees the numbers built from them.
+              (value) => onChoose(rides: value, analytics: value),
             ),
-          ),
-          choice(
-            l10n.shareAnalytics,
-            state.analytics,
-            'share-analytics',
-            (v) => askThen(
-              'share-analytics-confirm',
-              state.analytics,
-              v,
-              l10n.shareStatsConfirmTitle,
-              l10n.shareStatsConfirmBody,
-              (value) => onChoose(analytics: value),
-            ),
+            helper: l10n.shareRidesHelper,
           ),
           choice(
             l10n.shareRoutes,

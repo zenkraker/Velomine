@@ -94,45 +94,16 @@ public sealed record PrivacyProfile(PrivacyDefaults Defaults, IReadOnlyList<Priv
 public static class PrivacyRules
 {
     /// <summary>
-    /// The rules for one ride: the snapshot it was imported with, so relaxing the member's default today never
-    /// exposes a ride that was imported while a stream was hidden. The zones are today's, because they are places.
-    /// A ride imported before the snapshot existed falls back to the member's current choices. Load the whole ride
+    /// The rules for one ride: the trim it was imported with, so changing the member's default today never exposes a
+    /// ride that was imported while its start or end was hidden. The zones are today's, because they are places.
+    /// A ride imported before the snapshot existed falls back to the member's current trim. Load the whole ride
     /// row: <see cref="Ride.Privacy"/> reads the columns.
     /// </summary>
     public static async Task<PrivacyProfile> LoadAsync(VelomineDbContext db, Guid userId, Ride ride, CancellationToken ct) =>
         new(ride.Privacy ?? await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
 
-    /// <summary>
-    /// One ride's rules for a list that already holds <paramref name="current"/>, so a page of rides costs no extra
-    /// query per ride.
-    /// </summary>
-    public static PrivacyProfile Effective(Ride ride, PrivacyProfile current) =>
-        ride.Privacy is { } snapshot ? current with { Defaults = snapshot } : current;
-
-    /// <summary>
-    /// The member's current choices, with the zones as they are today, for a field that belongs to no single ride
-    /// (the roster, the power curve, the training trend): a single ride has its own rules, see <see cref="LoadAsync"/>.
-    /// </summary>
-    public static async Task<PrivacyProfile> LoadCurrentAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
-        new(await CurrentDefaultsAsync(db, userId, ct), await ZonesAsync(db, userId, ct));
-
     private static async Task<PrivacyDefaults> CurrentDefaultsAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
         PrivacyDefaults.From(await db.PrivacySettings.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == userId, ct));
-
-    /// <summary>The stream switches for several owners at once, for a roster that shows their summaries.</summary>
-    public static async Task<Dictionary<Guid, PrivacyProfile>> LoadManyAsync(
-        VelomineDbContext db,
-        IReadOnlyCollection<Guid> userIds,
-        CancellationToken ct)
-    {
-        if (userIds.Count == 0) return [];
-        var ids = userIds.Distinct().ToList();
-        var settings = await db.PrivacySettings.AsNoTracking()
-            .Where(s => ids.Contains(s.UserId))
-            .ToListAsync(ct);
-        var byUser = settings.ToDictionary(s => s.UserId);
-        return ids.ToDictionary(id => id, id => new PrivacyProfile(PrivacyDefaults.From(byUser.GetValueOrDefault(id)), []));
-    }
 
     private static Task<List<PrivacyZone>> ZonesAsync(VelomineDbContext db, Guid userId, CancellationToken ct) =>
         db.PrivacyZones.AsNoTracking().Where(z => z.UserId == userId).ToListAsync(ct);

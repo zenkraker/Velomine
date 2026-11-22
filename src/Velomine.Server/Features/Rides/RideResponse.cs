@@ -54,11 +54,10 @@ public sealed record RideResponse(
     // What this ride did to a heart-rate number when it was first read: one of Analytics.HeartRateNotes, owner only.
     // Copied by hand like an FTP suggestion, so WithoutTrainingLoad clears it and no other response carries it.
     string? HeartRateNote = null,
-    // Derived from power: RideDetails sets them, WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
+    // Derived from power: RideDetails sets them, WithoutTrainingLoad clears them.
     int? MinWPrimeBalanceJ = null,
     int? WPrimeJ = null,
-    // From power and heart rate together: WithoutTrainingLoad clears them, and PrivacyRules.ForViewer does too when
-    // it hides either signal.
+    // From power and heart rate together: WithoutTrainingLoad clears them.
     double? EfficiencyFactor = null,
     double? DecouplingPct = null,
     bool? Steady = null,
@@ -67,17 +66,16 @@ public sealed record RideResponse(
     string? HeartRateMaxNote = null,
     string? HeartRateThresholdNote = null,
     // Which model the heart-rate zones came from and the reference they are fractions of: a coach or a share viewer
-    // sees them too (they are the rider's zones), hidden by the heart-rate privacy switch.
+    // sees them too (they are the rider's zones).
     string? HeartRateZoneModel = null,
     int? HeartRateZoneReferenceBpm = null,
     string? HeartRateZoneReferenceSource = null,
     // The heart-rate effort score stored at read, and the effort score the dashboard uses with where it came from.
-    // Set here and in GetRide; WithoutTrainingLoad and PrivacyRules.ForViewer clear them.
+    // Set here and in GetRide; WithoutTrainingLoad clears them all, PrivacyRules.ForViewer only the effort score.
     double? HrTss = null,
     double? EffortScore = null,
     string? EffortSource = null,
-    // Watts estimated from speed, slope and weight when the ride has no power at all. Hidden from a viewer when the
-    // ride hides power, speed or elevation, since all three go into it.
+    // Watts estimated from speed, slope and weight when the ride has no power at all. A coach sees them too.
     int? EstimatedAvgPowerW = null)
 {
     public static RideResponse From(Ride r) => new(

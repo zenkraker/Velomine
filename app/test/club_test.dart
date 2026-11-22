@@ -361,18 +361,21 @@ void main() {
   });
 
   testWidgets(
-    'ClubSharingCard_ShouldAskFirst_WhenTrainingIsSharedWithCoaches',
+    'ClubSharingCard_ShouldShareTrainingWithTheRides_WhenRidesAreSharedOrStopped',
     (tester) async {
       await openClub(tester);
-      await choose(tester, 'share-analytics', 'My coaches');
 
-      expect(find.text('Share with your coaches?'), findsOneWidget);
-      expect(server.sharingChoices['analytics'], 'none');
+      // There is no separate training choice: it follows the rides.
+      expect(find.byKey(const Key('share-analytics')), findsNothing);
 
-      await tester.tap(find.byKey(const Key('share-analytics-confirm')));
+      await choose(tester, 'share-rides', 'My coaches');
+      await tester.tap(find.byKey(const Key('share-rides-confirm')));
       await tester.pumpAndSettle();
-
       expect(server.sharingChoices['analytics'], 'coaches');
+
+      await choose(tester, 'share-rides', 'Nobody');
+      expect(server.sharingChoices['rides'], 'none');
+      expect(server.sharingChoices['analytics'], 'none');
     },
   );
 

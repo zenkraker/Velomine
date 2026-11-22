@@ -227,7 +227,7 @@ public static class CoachQueries
         {
             var memberGrants = grants.Where(g => g.MemberId == member.UserId).ToList();
             var sharesRides = memberGrants.Any(g => g.DataType == DataTypes.Rides);
-            var sharesAnalytics = memberGrants.Any(g => g.DataType == DataTypes.Analytics);
+            var sharesAnalytics = memberGrants.Any(g => DataTypes.GrantedBy(DataTypes.Analytics).Contains(g.DataType));
             var sharesRoutes = memberGrants.Any(g => g.DataType == DataTypes.Routes);
             var sharesWellbeing = memberGrants.Any(g => g.DataType == DataTypes.Wellbeing);
 
@@ -279,7 +279,7 @@ public static class CoachQueries
         CancellationToken ct)
     {
         var sharesRides = grants.Any(g => g.DataType == DataTypes.Rides);
-        var sharesAnalytics = grants.Any(g => g.DataType == DataTypes.Analytics);
+        var sharesAnalytics = grants.Any(g => DataTypes.GrantedBy(DataTypes.Analytics).Contains(g.DataType));
         var sharesRoutes = grants.Any(g => g.DataType == DataTypes.Routes);
         var sharesWellbeing = grants.Any(g => g.DataType == DataTypes.Wellbeing);
 

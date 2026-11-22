@@ -3033,6 +3033,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check-in scores and ride RPE; notes stay private.';
 
   @override
+  String get shareRidesHelper => 'Your rides and the training built from them.';
+
+  @override
   String get sharesWellbeing => 'Wellbeing';
 
   @override

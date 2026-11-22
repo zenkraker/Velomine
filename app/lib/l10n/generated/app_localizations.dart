@@ -5312,6 +5312,12 @@ abstract class AppLocalizations {
   /// **'Check-in scores and ride RPE; notes stay private.'**
   String get shareWellbeingHelper;
 
+  /// No description provided for @shareRidesHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rides and the training built from them.'**
+  String get shareRidesHelper;
+
   /// No description provided for @sharesWellbeing.
   ///
   /// In en, this message translates to:

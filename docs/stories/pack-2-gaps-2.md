@@ -206,6 +206,7 @@ The rider keeps full control of their own data: they edit, delete and stop shari
 ## Decisions (owner, 21 Nov 2026)
 - **D1 and D2 (one rule):** a rider who shares with their coaches lets them see every number and stream of what they share, and everything computed from all their rides. Only the route's start and end trim and the saved places stay hidden (and positions need the Routes grant, as before). The six stream switches are removed; their columns stay for one release. The rider keeps full control of their data, and the coach only reads. Sharing rides or training shows an information prompt, and sharing wellbeing asks for explicit consent. Nobody uses the app yet, so there is no notice for existing riders (Tasks 10 and 11).
 - **D3:** estimated watts copy Strava's published method (Task 12). The 1 Hz grid is dropped.
+- **D4 (21 Nov, after review):** sharing rides with the coaches gives them the training built from those rides too. There is no separate Training choice in the app any more; `DataTypes.GrantedBy` lets a rides grant answer for training, and an older training-only grant still works.
 
 ## Deliberately left out
 - Duration words in the power-record notification ("5 s", "1 min") read correctly in Italian too.

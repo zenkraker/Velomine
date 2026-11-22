@@ -365,7 +365,7 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRide_ShouldHideWPrimeBalance_WhenThereIsNoAnalyticsGrant()
+    public async Task CoachRide_ShouldShowWPrimeBalance_WhenOnlyRidesAreShared()
     {
         await using var api = await StartAsync();
         var (coach, clubId, athlete) = await ClubAsync(api, analytics: "none");
@@ -377,9 +377,10 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
         var streams = await coach.GetFromJsonAsync<RideStreamsResponse>(
             $"/api/v1/clubs/{clubId}/athletes/{athlete.Id}/rides/{ride.Id}/streams", Ct);
 
-        Assert.Null(shared!.MinWPrimeBalanceJ);
-        Assert.Null(shared.WPrimeJ);
-        Assert.Null(streams!.WPrimeBalanceJ);
+        // Sharing rides gives the training built from them too, so the balance is there without a training grant.
+        Assert.NotNull(shared!.MinWPrimeBalanceJ);
+        Assert.NotNull(shared.WPrimeJ);
+        Assert.NotNull(streams!.WPrimeBalanceJ);
     }
 
     [Fact]

@@ -147,7 +147,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 
 ## Security and privacy in code
 
-- Data seen by anyone but the owner (coach, club, share link) goes through the one privacy function in `Features/Privacy/`, which applies privacy zones and start and end trimming to the route. A coach with a grant sees every number and stream of what was shared; the member's own notes, suggestions and effort score stay owner only. The owner always sees everything. Routes need their own grant: without it the streams keep every signal except latitude and longitude.
+- Data seen by anyone but the owner (coach, club, share link) goes through the one privacy function in `Features/Privacy/`, which applies privacy zones and start and end trimming to the route. A coach with a grant sees every number and stream of what was shared; sharing rides also gives the training built from them (`DataTypes.GrantedBy`); the member's own notes, suggestions and effort score stay owner only. The owner always sees everything. Routes need their own grant: without it the streams keep every signal except latitude and longitude.
 - Wellbeing is health data: explicit, versioned consent before the first save. A coach sees scores and RPE when granted; free-text notes are returned only to the owner. The readiness score is member-only.
 - Every coach or share view of a member's data is recorded in the sharing view log, which the member can read.
 - Secrets come from configuration or a secret store, never the database or an API response. SMTP and single sign-on credentials are environment-only.

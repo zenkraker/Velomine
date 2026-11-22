@@ -34,16 +34,18 @@ public static class SharingRules
         if (!await db.ClubMemberships.AsNoTracking().AnyAsync(m => m.ClubId == clubId && m.UserId == ownerId, ct))
             return false;
 
-        var grant = await db.ShareGrants.AsNoTracking()
-            .FirstOrDefaultAsync(g => g.ClubId == clubId && g.MemberId == ownerId && g.DataType == dataType, ct);
-        if (grant is null) return false;
+        var asked = DataTypes.GrantedBy(dataType);
+        var audiences = await db.ShareGrants.AsNoTracking()
+            .Where(g => g.ClubId == clubId && g.MemberId == ownerId && asked.Contains(g.DataType))
+            .Select(g => g.Audience)
+            .ToListAsync(ct);
 
-        return grant.Audience switch
+        return audiences.Any(audience => audience switch
         {
             Audiences.Club => true,
             Audiences.Coaches => viewer.Role is ClubRoles.Owner or ClubRoles.Coach,
             _ => false,
-        };
+        });
     }
 
     /// <summary>Remembers that someone other than the owner looked. The name is kept, so a later rename does not rewrite history.</summary>

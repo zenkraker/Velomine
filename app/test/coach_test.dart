@@ -43,8 +43,9 @@ void main() {
     await tester.tap(find.byKey(const Key('share-rides-confirm')));
     await tester.pumpAndSettle();
 
+    // The training comes with the rides; the route stays a choice of its own.
     expect(server.sharingChoices['rides'], 'coaches');
-    expect(server.sharingChoices['analytics'], 'none');
+    expect(server.sharingChoices['analytics'], 'coaches');
     expect(server.sharingChoices['routes'], 'none');
   });
 

@@ -418,7 +418,7 @@ void main() {
     );
     expect(
       notificationText(AppLocalizationsIt(), measured),
-      "La tua frequenza cardiaca massima ora è 192 bpm, misurata in un'uscita.",
+      "La tua frequenza cardiaca massima ora è 192 bpm, misurata in un giro.",
     );
   });
 
@@ -440,7 +440,7 @@ void main() {
       );
       expect(
         notificationText(AppLocalizationsIt(), suggested),
-        "Un'uscita suggerisce una frequenza cardiaca di soglia di 165 bpm.",
+        "Un giro suggerisce una frequenza cardiaca di soglia di 165 bpm.",
       );
     },
   );

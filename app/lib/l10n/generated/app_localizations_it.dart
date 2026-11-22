@@ -801,7 +801,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get shareStatsConfirmBody =>
-      'I tuoi allenatori vedranno tutti i valori delle tue uscite: potenza, frequenza cardiaca, velocità, cadenza, dislivello, temperatura e l\'allenamento che ne deriva. Possono solo guardare; le uscite restano tue da modificare o eliminare. La mappa richiede Percorsi, e anche allora l\'inizio, la fine e i tuoi luoghi salvati restano nascosti.';
+      'I tuoi allenatori vedranno tutti i valori dei tuoi giri: potenza, frequenza cardiaca, velocità, cadenza, dislivello, temperatura e l\'allenamento che ne deriva. Possono solo guardare; i giri restano tuoi da modificare o eliminare. La mappa richiede Percorsi, e anche allora l\'inizio, la fine e i tuoi luoghi salvati restano nascosti.';
 
   @override
   String get shareWellbeingConfirmTitle =>
@@ -809,7 +809,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get shareWellbeingConfirmBody =>
-      'I tuoi allenatori vedranno i punteggi del tuo check-in giornaliero e quanto è stata dura ogni uscita. Sono dati sulla salute, per questo te lo chiediamo prima. Le tue note restano private e puoi smettere di condividere in qualsiasi momento.';
+      'I tuoi allenatori vedranno i punteggi del tuo check-in giornaliero e quanto è stato duro ogni giro. Sono dati sulla salute, per questo te lo chiediamo prima. Le tue note restano private e puoi smettere di condividere in qualsiasi momento.';
 
   @override
   String get shareConfirmAction => 'Condividi';
@@ -3057,6 +3057,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Punteggi del check-in e RPE dei giri; le note restano private.';
 
   @override
+  String get shareRidesHelper => 'I tuoi giri e l\'allenamento che ne deriva.';
+
+  @override
   String get sharesWellbeing => 'Benessere';
 
   @override
@@ -3236,22 +3239,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String notificationHeartRateMaxMeasured(int bpm) {
-    return 'La tua frequenza cardiaca massima ora è $bpm bpm, misurata in un\'uscita.';
+    return 'La tua frequenza cardiaca massima ora è $bpm bpm, misurata in un giro.';
   }
 
   @override
   String notificationHeartRateThresholdMeasured(int bpm) {
-    return 'La tua frequenza cardiaca di soglia ora è $bpm bpm, misurata in un\'uscita.';
+    return 'La tua frequenza cardiaca di soglia ora è $bpm bpm, misurata in un giro.';
   }
 
   @override
   String notificationHeartRateMaxSuggested(int bpm) {
-    return 'Un\'uscita suggerisce una frequenza cardiaca massima di $bpm bpm.';
+    return 'Un giro suggerisce una frequenza cardiaca massima di $bpm bpm.';
   }
 
   @override
   String notificationHeartRateThresholdSuggested(int bpm) {
-    return 'Un\'uscita suggerisce una frequenza cardiaca di soglia di $bpm bpm.';
+    return 'Un giro suggerisce una frequenza cardiaca di soglia di $bpm bpm.';
   }
 
   @override
