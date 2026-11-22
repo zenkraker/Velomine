@@ -16,6 +16,7 @@ class AuthPage extends StatelessWidget {
   const AuthPage({
     super.key,
     this.title,
+    this.caption,
     this.help,
     this.onBack,
     this.primaryLabel,
@@ -27,6 +28,10 @@ class AuthPage extends StatelessWidget {
 
   /// The name of the step. Sign-in leaves it empty: the wordmark is its title.
   final String? title;
+
+  /// The page this step belongs to, as a small caption above the title: "Password help" above "Reset
+  /// your password".
+  final String? caption;
 
   /// One sentence on what the step is for, under the title.
   final String? help;
@@ -87,10 +92,22 @@ class AuthPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
+              if (caption case final caption?)
+                Text(
+                  caption,
+                  textAlign: TextAlign.center,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               if (title case final title?)
                 Semantics(
                   header: true,
-                  child: Text(title, style: text.headlineMedium),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: text.headlineLarge,
+                  ),
                 ),
               if (help case final help?)
                 Text(

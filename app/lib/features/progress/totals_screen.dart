@@ -178,6 +178,8 @@ class _TotalsCard extends ConsumerWidget {
 
 /// The same totals as the chart, newest first, with every number. A long year stops at the first few
 /// rows until the member asks for the earlier ones; the chart still has them all.
+/// The periods as a table: one row per period, one column per number, right-aligned so the figures
+/// line up, and the current period's row on the accent's soft ground.
 class _TotalsTable extends ConsumerWidget {
   const _TotalsTable({
     required this.totals,
@@ -189,65 +191,121 @@ class _TotalsTable extends ConsumerWidget {
   final bool showEarlier;
   final VoidCallback onShowEarlier;
 
+  /// The width of each column: the period reads long, the numbers stay narrow and right-aligned.
+  static const _periodWidth = 140.0;
+  static const _ridesWidth = 56.0;
+  static const _numberWidth = 96.0;
+
+  /// The table's own width: the columns above and the room either side of them, which is wider than a
+  /// phone, so the card scrolls.
+  static const _tableWidth =
+      _periodWidth + _ridesWidth + _numberWidth * 3 + AppSpacing.xl * 2;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final units = ref.watch(unitsChoiceViewModelProvider);
+    final text = Theme.of(context).textTheme;
     final rows = totals.totals.reversed.toList();
     final shown = showEarlier ? rows : rows.take(_totalsShown).toList();
+    final current = Theme.of(context).colorScheme.primaryContainer;
+
+    Widget cell(String value, double width, {TextStyle? style}) => SizedBox(
+      width: width,
+      child: Text(
+        value,
+        textAlign: TextAlign.right,
+        style: style ?? text.bodySmall,
+      ),
+    );
+
     return AppCard(
+      key: const Key('totals-table'),
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Column(
-        children: [
-          for (final (i, t) in shown.indexed)
-            ListTile(
-              key: Key('total-$i'),
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xl,
-              ),
-              title: Text(
-                i == 0
-                    ? switch (totals.period) {
-                        'week' => l10n.thisWeek,
-                        'month' => l10n.thisMonth,
-                        _ => l10n.thisYear,
-                      }
-                    : periodTitle(totals.period, t.start, t.end),
-              ),
-              subtitle: Text(
-                l10n.periodTotals(
-                  t.rides,
-                  duration(t.movingS),
-                  elevation(units, t.elevationGainM),
-                ),
-              ),
-              trailing: Text(
-                km(units, t.distanceM),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-              tileColor: i == 0
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : null,
-            ),
-          if (rows.length > shown.length)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Padding(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: _tableWidth,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.xl,
                   vertical: AppSpacing.xs,
                 ),
-                child: TextButton(
-                  key: const Key('totals-more'),
-                  onPressed: onShowEarlier,
-                  child: Text(l10n.totalsShowEarlier),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: _periodWidth,
+                      child: Text(switch (totals.period) {
+                        'week' => l10n.periodWeeks,
+                        'month' => l10n.periodMonths,
+                        _ => l10n.periodYears,
+                      }, style: text.labelSmall),
+                    ),
+                    cell(l10n.navRides, _ridesWidth),
+                    cell(l10n.statDistance, _numberWidth),
+                    cell(l10n.statMovingTime, _numberWidth),
+                    cell(l10n.statClimbing, _numberWidth),
+                  ],
                 ),
               ),
-            ),
-        ],
+              SizedBox(
+                width: _tableWidth,
+                height: 1,
+                child: ColoredBox(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+              for (final (i, t) in shown.indexed)
+                Container(
+                  key: Key('total-$i'),
+                  color: i == 0 ? current : null,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: _periodWidth,
+                        child: Text(
+                          i == 0
+                              ? switch (totals.period) {
+                                  'week' => l10n.thisWeek,
+                                  'month' => l10n.thisMonth,
+                                  _ => l10n.thisYear,
+                                }
+                              : periodTitle(totals.period, t.start, t.end),
+                          style: text.bodySmall,
+                        ),
+                      ),
+                      cell('${t.rides}', _ridesWidth),
+                      cell(km(units, t.distanceM), _numberWidth),
+                      cell(duration(t.movingS), _numberWidth),
+                      cell(elevation(units, t.elevationGainM), _numberWidth),
+                    ],
+                  ),
+                ),
+              if (rows.length > shown.length)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: TextButton(
+                      key: const Key('totals-more'),
+                      onPressed: onShowEarlier,
+                      child: Text(l10n.totalsShowEarlier),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

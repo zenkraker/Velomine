@@ -2,12 +2,15 @@ import '../../core/widgets/loading_state.dart';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'coach_athletes_view_model.dart';
-import '../../core/widgets/card_grid.dart';
+import '../../core/tokens.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -30,6 +33,7 @@ class CoachAthletesScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return PageScaffold(
       title: l10n.athletesTitle,
+      parent: l10n.navClub,
       subtitle: l10n.athletesSubtitle,
       children: [
         if (s.load.failure case final failure?)
@@ -47,39 +51,44 @@ class CoachAthletesScreen extends ConsumerWidget {
             key: const Key('no-athletes'),
             message: l10n.athletesEmpty,
             icon: Icons.people_outline,
-          ),
-        CardGrid(
-          children: [
-            for (final athlete in s.athletes)
-              AppCard(
-                key: Key('athlete-${athlete.userId}'),
-                padding: EdgeInsets.zero,
-                child: ListTile(
-                  leading: const Icon(Icons.person_outline),
-                  title: Text(athlete.displayName),
-                  subtitle: Text(
-                    [
-                      if (athlete.lastRideAt != null)
-                        l10n.lastRideOn(dateTime(athlete.lastRideAt)),
-                      if (athlete.tss7 != null)
-                        '${l10n.days7}: ${athlete.tss7!.round()} TSS',
-                      if (athlete.tss42 != null)
-                        '${l10n.days42}: ${athlete.tss42!.round()} TSS',
-                      if (athlete.lastRideAt == null &&
-                          athlete.tss7 == null) ...[
-                        if (athlete.sharesRides) l10n.sharesRides,
-                        if (athlete.sharesAnalytics) l10n.sharesTraining,
-                        if (athlete.sharesWellbeing) l10n.sharesWellbeing,
+          )
+        else
+          // One list card: every athlete is a row, with what they share beside their name.
+          AppCard(
+            key: const Key('athletes-card'),
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (final athlete in s.athletes)
+                  ListTile(
+                    key: Key('athlete-${athlete.userId}'),
+                    leading: const Icon(Icons.person_outline),
+                    title: Text(athlete.displayName),
+                    subtitle: Text(_loadLine(l10n, athlete)),
+                    trailing: Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        if (athlete.sharesRides) AppBadge(l10n.sharesRides),
+                        if (athlete.sharesAnalytics)
+                          AppBadge(l10n.sharesTraining),
+                        if (athlete.sharesWellbeing)
+                          AppBadge(l10n.sharesWellbeing),
                       ],
-                    ].join(' · '),
+                    ),
+                    onTap: () => onOpen(athlete.userId),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => onOpen(athlete.userId),
-                ),
-              ),
-          ],
-        ),
+              ],
+            ),
+          ),
       ],
     );
   }
 }
+
+/// The last ride and the training load; what the athlete shares is a badge of its own.
+String _loadLine(AppLocalizations l10n, CoachAthleteResponse athlete) => [
+  if (athlete.lastRideAt != null) l10n.lastRideOn(dateTime(athlete.lastRideAt)),
+  if (athlete.tss7 != null) '${l10n.days7}: ${athlete.tss7!.round()} TSS',
+  if (athlete.tss42 != null) '${l10n.days42}: ${athlete.tss42!.round()} TSS',
+].join(' · ');

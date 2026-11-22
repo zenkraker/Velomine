@@ -3491,6 +3491,9 @@ extension LibraryApi on FakeServer {
     'createdAt': r['createdAt'],
     'isMine': r['ownerId'] == caller.id,
     'isShared': r['shared'] == true,
+    // The list carries the line thinned to a preview, which is what a card's map draws.
+    'latitude': r['latitude'],
+    'longitude': r['longitude'],
   };
 
   Map<String, Object?> _routeDetail(

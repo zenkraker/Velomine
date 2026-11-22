@@ -18,6 +18,7 @@ class AppTextField extends StatelessWidget {
     this.maxLength,
     this.maxLines = 1,
     this.onDone,
+    this.focusNode,
   });
 
   /// The key a test or a finder looks the field up by; it lands on the `TextField` itself.
@@ -40,10 +41,14 @@ class AppTextField extends StatelessWidget {
   /// Called when the keyboard's done key is pressed, with the text as it is then.
   final ValueChanged<String>? onDone;
 
+  /// The node the field's focus belongs to, for a field that saves itself when the rider leaves it.
+  final FocusNode? focusNode;
+
   @override
   Widget build(BuildContext context) => TextField(
     key: fieldKey,
     controller: controller,
+    focusNode: focusNode,
     keyboardType: keyboardType,
     inputFormatters: inputFormatters,
     enabled: enabled,

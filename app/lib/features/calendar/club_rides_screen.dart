@@ -7,13 +7,12 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/section_heading.dart';
+import '../../core/widgets/section_card.dart';
 import 'club_ride_widgets.dart';
 import 'club_rides_view_model.dart';
 
@@ -43,25 +42,17 @@ class ClubRidesScreen extends ConsumerWidget {
       ref.read(clubRidesViewModelProvider.notifier).messageShown,
     );
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     return PageScaffold(
       title: l10n.clubRidesTitle,
+      parent: l10n.clubCalendarCaption,
       subtitle: l10n.clubRidesSubtitle,
       primaryAction: canPlan
-          ? (wide
-                ? FilledButton.icon(
-                    key: const Key('plan-ride'),
-                    onPressed: onPlan,
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.clubPlanRide),
-                  )
-                // The phone header row is tight: a filled icon, its tooltip names it.
-                : IconButton.filled(
-                    key: const Key('plan-ride'),
-                    tooltip: l10n.clubPlanRide,
-                    onPressed: onPlan,
-                    icon: const Icon(Icons.add),
-                  ))
+          ? FilledButton.icon(
+              key: const Key('plan-ride'),
+              onPressed: onPlan,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.clubPlanRide),
+            )
           : null,
       menu: PageMenu(
         buttonKey: const Key('club-rides-actions'),
@@ -99,24 +90,33 @@ class ClubRidesScreen extends ConsumerWidget {
                 : null,
           )
         else ...[
-          if (s.upcoming.isNotEmpty) ...[
-            SectionHeading(title: l10n.ridesUpcoming),
-            for (final ride in s.upcoming)
-              _RideCard(ride: ride, onOpen: onOpen),
-          ],
-          if (s.past.isNotEmpty) ...[
-            SectionHeading(title: l10n.ridesPast),
-            for (final ride in s.past)
-              _RideCard(ride: ride, onOpen: onOpen, dimmed: true),
-          ],
+          if (s.upcoming.isNotEmpty)
+            SectionCard(
+              key: const Key('club-rides-upcoming'),
+              title: l10n.ridesUpcoming,
+              children: [
+                for (final ride in s.upcoming)
+                  _RideRow(ride: ride, onOpen: onOpen),
+              ],
+            ),
+          if (s.past.isNotEmpty)
+            SectionCard(
+              key: const Key('club-rides-past'),
+              title: l10n.ridesPast,
+              children: [
+                for (final ride in s.past)
+                  _RideRow(ride: ride, onOpen: onOpen, dimmed: true),
+              ],
+            ),
         ],
       ],
     );
   }
 }
 
-class _RideCard extends StatelessWidget {
-  const _RideCard({
+/// One ride in its list's card: its date block leads, then the title, the states and the details.
+class _RideRow extends StatelessWidget {
+  const _RideRow({
     required this.ride,
     required this.onOpen,
     this.dimmed = false,
@@ -137,39 +137,63 @@ class _RideCard extends StatelessWidget {
         color: dimmed ? Theme.of(context).disabledColor : null,
       ),
     );
-    return AppCard(
+    return ListTile(
       key: Key('club-ride-${ride.id}'),
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        onTap: () => onOpen(ride.id),
-        leading: const Icon(Icons.event),
-        title: Row(
-          spacing: AppSpacing.sm,
-          children: [
-            Flexible(child: title),
-            if (ride.isCancelled)
-              Chip(
-                key: const Key('ride-cancelled'),
-                label: Text(l10n.rideCancelled),
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-              ),
-            if (ride.isFull && !ride.isCancelled)
-              Chip(label: Text(l10n.rideFull)),
-            if (ride.isSignedUp && !ride.isCancelled)
-              Chip(label: Text(l10n.rideSignedUp)),
-          ],
-        ),
-        subtitle: Text(
-          [
-            rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
-            rideSubtitle(l10n, ride),
-            if (ride.createdByName != null)
-              l10n.ridePlannedBy(ride.createdByName!),
-          ].join('\n'),
-        ),
-        isThreeLine: true,
-        trailing: const Icon(Icons.chevron_right),
+      contentPadding: EdgeInsets.zero,
+      onTap: () => onOpen(ride.id),
+      leading: _RideDateBlock(ride: ride),
+      title: Row(
+        spacing: AppSpacing.sm,
+        children: [
+          Flexible(child: title),
+          if (ride.isCancelled)
+            Chip(
+              key: const Key('ride-cancelled'),
+              label: Text(l10n.rideCancelled),
+              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            ),
+          if (ride.isFull && !ride.isCancelled)
+            Chip(label: Text(l10n.rideFull)),
+          if (ride.isSignedUp && !ride.isCancelled)
+            Chip(label: Text(l10n.rideSignedUp)),
+        ],
       ),
+      subtitle: Text(
+        [
+          rideRowTime(context, ride.startsAt, ride.utcOffsetMinutes),
+          rideSubtitle(l10n, ride),
+          if (ride.createdByName != null)
+            l10n.ridePlannedBy(ride.createdByName!),
+        ].join('\n'),
+      ),
+      isThreeLine: true,
+      trailing: const Icon(Icons.chevron_right),
+    );
+  }
+}
+
+/// The day and the month of the ride's wall clock, as the row's leading block.
+class _RideDateBlock extends StatelessWidget {
+  const _RideDateBlock({required this.ride});
+
+  final ClubRideSummaryResponse ride;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final date = rideDateBlock(ride.startsAt, ride.utcOffsetMinutes);
+    return Column(
+      key: Key('club-ride-date-${ride.id}'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(date.day, style: text.titleMedium),
+        Text(
+          date.month,
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

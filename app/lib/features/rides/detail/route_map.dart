@@ -164,13 +164,17 @@ class _RouteMapState extends State<RouteMap> {
                             ),
                           if (widget.title case final title?)
                             Positioned(
-                              left: AppSpacing.sm,
-                              right: AppSpacing.sm,
-                              bottom: AppSpacing.sm,
+                              left: AppSpacing.lg,
+                              right: AppSpacing.lg,
+                              bottom: AppSpacing.lg,
                               // The card is part of the map's own tap: it carries no buttons.
                               child: IgnorePointer(
                                 child: GlassCard(
                                   key: const Key('map-facts'),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.xl,
+                                    vertical: AppSpacing.lg,
+                                  ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,

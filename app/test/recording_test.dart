@@ -326,9 +326,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Opens the sheet the start card keeps its choices in.
+  /// Opens the sheet behind the page's menu: the e-bike switch and the rest the card has no room for.
   Future<void> openSettings(WidgetTester tester) async {
     await tester.tap(find.byKey(const Key('record-settings')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-recorder-settings')));
     await tester.pumpAndSettle();
   }
 
@@ -372,7 +374,7 @@ void main() {
       final settings = MemoryRecorderSettings();
       await pump(tester, recorder, settings: settings);
 
-      await openSettings(tester);
+      // The pause switch sits on the start card, so it is one tap and no sheet.
       final toggle = find.byKey(const Key('auto-pause-switch'));
       expect(toggle, findsOneWidget);
       expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
@@ -381,13 +383,60 @@ void main() {
       await tester.pumpAndSettle();
       expect(settings.autoPause, isFalse);
 
-      await tester.tap(find.byKey(const Key('record-settings-done')));
-      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('record-start')));
       await tester.pumpAndSettle();
       expect(recorder.lastAutoPause, isFalse);
     },
   );
+
+  testWidgets(
+    'RecordingScreen_ShouldShowTheRideTypeAsChipsOnTheCard_WhenIdle',
+    (tester) async {
+      final recorder = FakeRecorder();
+      await pump(tester, recorder);
+
+      expect(find.byKey(const Key('record-type-road')), findsOneWidget);
+      expect(find.byKey(const Key('record-type-gravel')), findsOneWidget);
+      expect(find.byKey(const Key('auto-pause-switch')), findsOneWidget);
+      expect(find.byKey(const Key('record-settings-summary')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'RecordingScreen_ShouldOpenTheRecorderSettings_WhenTheMenuEntryIsTapped',
+    (tester) async {
+      final recorder = FakeRecorder();
+      await pump(tester, recorder);
+
+      expect(find.byKey(const Key('record-ebike-switch')), findsNothing);
+      await openSettings(tester);
+
+      expect(find.byKey(const Key('record-ebike-switch')), findsOneWidget);
+    },
+  );
+
+  testWidgets('RecordingScreen_ShouldShowMovingTimeAsTheClock_WhenRiding', (
+    tester,
+  ) async {
+    final recorder = FakeRecorder();
+    await pump(tester, recorder);
+    recorder.emit(
+      const RecorderSnapshot(
+        state: 'recording',
+        rideId: 'ride-live',
+        elapsedS: 130,
+        movingS: 95,
+        distanceM: 830,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<Text>(find.byKey(const Key('record-clock'))).data,
+      '1:35',
+    );
+    expect(find.text('2:10'), findsOneWidget);
+  });
 
   testWidgets('RecordingScreen_ShouldShowAutoPause_WhenPaused', (tester) async {
     final recorder = FakeRecorder();
@@ -644,7 +693,6 @@ void main() {
       );
     await pump(tester, recorder);
 
-    await openSettings(tester);
     expect(find.byKey(const Key('pair-sensor')), findsOneWidget);
     await tester.tap(find.byKey(const Key('pair-sensor')));
     await tester.pumpAndSettle();
@@ -673,7 +721,6 @@ void main() {
         sensorStatus: 'paired',
       );
     await pump(tester, recorder);
-    await openSettings(tester);
 
     await tester.tap(find.byKey(const Key('forget-sensor')));
     await tester.pumpAndSettle();
@@ -687,7 +734,6 @@ void main() {
   ) async {
     final recorder = FakeRecorder()..sensorSupport = false;
     await pump(tester, recorder);
-    await openSettings(tester);
 
     expect(find.byKey(const Key('pair-sensor')), findsNothing);
     expect(find.text('Heart-rate strap'), findsNothing);
@@ -698,7 +744,6 @@ void main() {
   ) async {
     final recorder = FakeRecorder()..sensorPermission = false;
     await pump(tester, recorder);
-    await openSettings(tester);
 
     await tester.tap(find.byKey(const Key('pair-sensor')));
     await tester.pumpAndSettle();
@@ -764,11 +809,10 @@ void main() {
     final settings = MemoryRecorderSettings();
     await pump(tester, recorder, settings: settings);
 
+    // The ride type is a chip on the card; the e-bike switch is in the menu's settings sheet.
+    await tester.tap(find.byKey(const Key('record-type-gravel')));
+    await tester.pumpAndSettle();
     await openSettings(tester);
-    await tester.tap(find.byKey(const Key('record-ride-type')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Gravel').last);
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('record-ebike-switch')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('record-settings-done')));

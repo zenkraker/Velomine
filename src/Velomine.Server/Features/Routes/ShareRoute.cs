@@ -40,7 +40,7 @@ public sealed class ShareRoute(VelomineDbContext db) : Endpoint<RouteIdRequest, 
         route.ClubId = clubId;
         await db.SaveChangesAsync(ct);
         await Send.OkAsync(
-            await RouteQueries.Summaries(db.Routes.AsNoTracking().Where(r => r.Id == route.Id), userId).FirstAsync(ct), ct);
+            (await RouteQueries.Summaries(db.Routes.AsNoTracking().Where(r => r.Id == route.Id), userId).FirstAsync(ct)).ToResponse(), ct);
     }
 }
 

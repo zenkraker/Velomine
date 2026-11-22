@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/widgets/app_card.dart';
 
 import 'fake_server.dart';
 
@@ -165,24 +166,115 @@ void main() {
   });
 
   testWidgets(
-    'NotificationsScreen_ShouldGroupByArea_WhenNotificationsSpanTwoAreas',
+    'NotificationsScreen_ShouldShowTheUnreadGroupFirst_WhenSomeAreUnread',
     (tester) async {
       await openNotifications(tester);
 
-      // Each area has its own heading, and its rows sit under it.
-      expect(find.text('Rides'), findsWidgets);
-      expect(find.text('Bikes'), findsWidgets);
-      final bikesHeading = tester.getTopLeft(find.text('Bikes').last).dy;
-      final ridesHeading = tester.getTopLeft(find.text('Rides').last).dy;
-      final bikeRow = tester
-          .getTopLeft(find.byKey(const Key('notification-n-3')))
-          .dy;
-      final rideRow = tester
-          .getTopLeft(find.byKey(const Key('notification-n-2')))
-          .dy;
-      // Each row sits under its own area's heading.
-      expect(bikesHeading, lessThan(bikeRow));
-      expect(ridesHeading, lessThan(rideRow));
+      final unreadGroup = find.byKey(const Key('notification-group-unread'));
+      expect(unreadGroup, findsOneWidget);
+      // Every unread row is in it, and every read row is not.
+      expect(
+        find.descendant(
+          of: unreadGroup,
+          matching: find.byKey(const Key('notification-n-3')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: unreadGroup,
+          matching: find.byKey(const Key('notification-n-2')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: unreadGroup,
+          matching: find.byKey(const Key('notification-n-1')),
+        ),
+        findsNothing,
+      );
+      // Above every area group of the read ones.
+      expect(
+        tester.getTopLeft(unreadGroup).dy,
+        lessThan(
+          tester
+              .getTopLeft(find.byKey(const Key('notification-group-rides')))
+              .dy,
+        ),
+      );
+      // An unread row says so in words.
+      expect(find.text('Unread'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'NotificationsScreen_ShouldDrawOneCardPerGroup_WhenAGroupHasRows',
+    (tester) async {
+      server.notifications
+        ..clear()
+        ..addAll([
+          notificationJson(
+            'n-1',
+            'ride_ready',
+            'a.fit',
+            rideId: 'ride-1',
+            isRead: true,
+          ),
+          notificationJson('n-2', 'ride_failed', 'b.fit', isRead: true),
+        ]);
+      await openNotifications(tester);
+
+      // One card titled with the area, holding its rows, not one card per row.
+      final group = find.byKey(const Key('notification-group-rides'));
+      expect(group, findsOneWidget);
+      expect(find.widgetWithText(AppCard, 'Rides'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: group,
+          matching: find.byKey(const Key('notification-n-1')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: group,
+          matching: find.byKey(const Key('notification-n-2')),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'NotificationsScreen_ShouldGroupByArea_WhenNotificationsSpanTwoAreas',
+    (tester) async {
+      // Everything read, so the area groups are what the page shows.
+      for (final n in server.notifications) {
+        n['isRead'] = true;
+      }
+      await openNotifications(tester);
+
+      // Each area has its own card, and its rows sit inside it.
+      final bikes = find.byKey(const Key('notification-group-bikes'));
+      final rides = find.byKey(const Key('notification-group-rides'));
+      expect(bikes, findsOneWidget);
+      expect(rides, findsOneWidget);
+      expect(find.byKey(const Key('notification-group-unread')), findsNothing);
+      expect(
+        find.descendant(
+          of: bikes,
+          matching: find.byKey(const Key('notification-n-3')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: rides,
+          matching: find.byKey(const Key('notification-n-2')),
+        ),
+        findsOneWidget,
+      );
     },
   );
 

@@ -89,6 +89,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ? authProblemText(l10n, restoreProblem)
               : (ssoError == null ? null : ssoErrorText(l10n, ssoError)));
     return AuthPage(
+      title: l10n.signInTitle,
       help: l10n.signInHelp,
       primaryLabel: s.challenge != null ? l10n.twoFactorVerify : l10n.signIn,
       primaryKey: Key(s.challenge != null ? 'two-factor-verify' : 'sign-in'),
@@ -170,13 +171,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ],
             onSubmitted: (_) => _signIn(),
           ),
-          CheckboxListTile(
+          SwitchListTile(
             key: const Key('stay-signed-in'),
             contentPadding: EdgeInsets.zero,
-            dense: true,
-            controlAffinity: ListTileControlAffinity.leading,
             value: _staySignedIn,
-            onChanged: (value) => setState(() => _staySignedIn = value ?? true),
+            onChanged: (value) => setState(() => _staySignedIn = value),
             title: Text(l10n.staySignedIn),
           ),
           Align(

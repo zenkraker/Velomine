@@ -2,14 +2,16 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/confirm.dart';
 import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/user_message_text.dart';
-import 'admin_state.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/inline_error.dart';
@@ -63,6 +65,28 @@ class ClubsTab extends ConsumerWidget {
         .setPlan(club, plan.memberLimit, plan.paidUntil);
   }
 
+  /// Turns the club off or on, after saying what that means for its members.
+  Future<void> _setActive(
+    BuildContext context,
+    WidgetRef ref,
+    AdminClubResponse club,
+  ) async {
+    final l10n = context.l10n;
+    final active = !club.isActive;
+    final sure = await confirmAction(
+      context,
+      title: active ? l10n.adminClubActivate : l10n.adminClubDeactivate,
+      body: l10n.adminClubActiveHelp,
+      action: active ? l10n.adminClubActivate : l10n.adminClubDeactivate,
+      key: Key('confirm-club-active-${club.id}'),
+    );
+    if (sure && context.mounted) {
+      await ref
+          .read(adminClubsViewModelProvider.notifier)
+          .setActive(club, active);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -103,8 +127,7 @@ class ClubsTab extends ConsumerWidget {
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        for (final club in s.clubs)
-                          ..._row(context, ref, s, club),
+                        for (final club in s.clubs) ..._row(context, ref, club),
                       ],
                     ),
                   ),
@@ -119,13 +142,24 @@ class ClubsTab extends ConsumerWidget {
   List<Widget> _row(
     BuildContext context,
     WidgetRef ref,
-    AdminClubsState s,
     AdminClubResponse club,
   ) {
     final l10n = context.l10n;
+    final badge = _stateBadge(l10n, club);
     return [
       ListTile(
-        title: Text(club.name),
+        title: Wrap(
+          spacing: AppSpacing.sm,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(club.name),
+            AppBadge(
+              badge.label,
+              key: Key('club-state-${club.id}'),
+              tone: badge.tone,
+            ),
+          ],
+        ),
         subtitle: Text(
           club.memberLimit == null
               ? l10n.clubMemberCount(club.memberCount)
@@ -148,11 +182,19 @@ class ClubsTab extends ConsumerWidget {
                 label: l10n.changeOwner,
                 onSelected: () => _changeOwner(context, ref, club),
               ),
+            PageMenuEntry(
+              key: Key('club-active-${club.id}'),
+              icon: club.isActive ? Icons.power_settings_new : Icons.power,
+              label: club.isActive
+                  ? l10n.adminClubDeactivate
+                  : l10n.adminClubActivate,
+              onSelected: () => _setActive(context, ref, club),
+            ),
           ],
         ),
       ),
       // The facts sit under the tile with the card's whole width: beside the
-      // trailing switch an email had a third of it and broke mid-word.
+      // trailing menu an email had a third of it and broke mid-word.
       Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -187,17 +229,28 @@ class ClubsTab extends ConsumerWidget {
           ],
         ),
       ),
-      SwitchListTile(
-        key: Key('club-active-${club.id}'),
-        title: Text(l10n.adminClubActive),
-        value: club.isActive,
-        onChanged: s.action.running
-            ? null
-            : (on) => ref
-                  .read(adminClubsViewModelProvider.notifier)
-                  .setActive(club, on),
-      ),
     ];
+  }
+
+  /// What the row says about the club: switched off, plan over, or running.
+  ({String label, AppBadgeTone tone}) _stateBadge(
+    AppLocalizations l10n,
+    AdminClubResponse club,
+  ) {
+    if (!club.isActive) {
+      return (label: l10n.adminClubInactive, tone: AppBadgeTone.neutral);
+    }
+    final until = club.paidUntil;
+    final today = DateTime.now();
+    if (until != null &&
+        DateTime(
+          until.year,
+          until.month,
+          until.day,
+        ).isBefore(DateTime(today.year, today.month, today.day))) {
+      return (label: l10n.adminClubPlanEnded, tone: AppBadgeTone.care);
+    }
+    return (label: l10n.adminClubActive, tone: AppBadgeTone.good);
   }
 }
 

@@ -78,6 +78,11 @@ class EventsScreen extends ConsumerWidget {
     final notifier = ref.read(eventsViewModelProvider.notifier);
     final rides = await notifier.ridesOn(event.date);
     if (!context.mounted || rides == null) return;
+    // One ride that day can only be the event's ride: it is linked without asking.
+    if (rides.length == 1) {
+      await notifier.linkRide(event.id, rides.single.id);
+      return;
+    }
     final picked = await showRidePicker(
       context,
       rides: rides,
@@ -108,8 +113,9 @@ class EventsScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.eventsTitle,
+      parent: l10n.navGoals,
       onBack: () => context.pop(),
-      primaryAction: FilledButton.tonalIcon(
+      primaryAction: FilledButton.icon(
         key: const Key('add-event'),
         onPressed: s.action.running ? null : () => _add(context, ref),
         icon: const Icon(Icons.event_outlined),

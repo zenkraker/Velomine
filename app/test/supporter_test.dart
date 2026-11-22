@@ -21,8 +21,11 @@ void main() {
     server.signInBrowser(server.add('rider@example.com', name: 'Ada'));
   });
 
-  Future<void> openProfile(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2000);
+  Future<void> openProfile(
+    WidgetTester tester, {
+    Size size = const Size(1000, 2000),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     // No motion, so the celebration settles on its last frame instead of playing for 5 s.
@@ -64,6 +67,35 @@ void main() {
     expect(find.byKey(const Key('supporter-become')), findsNothing);
   });
 
+  testWidgets('ProfileScreen_ShouldNameTheLicenceInTheBadge_WhenItIsShown', (
+    tester,
+  ) async {
+    licence();
+    await openProfile(tester);
+
+    // The badge carries the licence itself: its number and the day it was activated.
+    final badge = tester.widget<SupporterBadge>(
+      find.byKey(const Key('supporter-badge')),
+    );
+    expect(badge.label, contains('42'));
+    expect(badge.label, contains('Supporter'));
+  });
+
+  testWidgets('ProfileScreen_ShouldReplayFromTheLink_WhenItIsTapped', (
+    tester,
+  ) async {
+    licence();
+    await openProfile(tester);
+
+    final link = find.byKey(const Key('supporter-replay'));
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SupporterCelebrationScreen), findsOneWidget);
+  });
+
   testWidgets('ProfileScreen_ShouldHideTheBadge_WhenTheSwitchIsOff', (
     tester,
   ) async {
@@ -86,6 +118,7 @@ void main() {
     (tester) async {
       await openProfile(tester);
       await tester.ensureVisible(find.byKey(const Key('supporter-become')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('supporter-become')));
       await tester.pumpAndSettle();
 
@@ -184,6 +217,7 @@ void main() {
     (tester) async {
       await openProfile(tester);
       await tester.ensureVisible(find.byKey(const Key('supporter-become')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('supporter-become')));
       await tester.pumpAndSettle();
 
@@ -205,6 +239,7 @@ void main() {
     (tester) async {
       await openProfile(tester);
       await tester.ensureVisible(find.byKey(const Key('supporter-become')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('supporter-become')));
       await tester.pumpAndSettle();
 
@@ -251,6 +286,41 @@ void main() {
       expect(find.byType(SupporterCelebrationScreen), findsNothing);
     },
   );
+
+  testWidgets(
+    'SupporterActivationScreen_ShouldNameItselfAndExplainTheKey_WhenItOpens',
+    (tester) async {
+      await openProfile(tester);
+      await tester.ensureVisible(find.byKey(const Key('supporter-become')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('supporter-become')));
+      await tester.pumpAndSettle();
+
+      // The page carries the title and the sentence; the card holds the key alone.
+      expect(find.text('Become a supporter'), findsOneWidget);
+      expect(
+        find.textContaining('Paste the key you were sent'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('supporter-key')), findsOneWidget);
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'SupporterActivationScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        await openProfile(tester, size: Size(width, 2000));
+        await tester.ensureVisible(find.byKey(const Key('supporter-become')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('supporter-become')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('supporter-key')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'SupporterCelebrationScreen_ShouldGoToTheProfile_WhenThereIsNoLicence',

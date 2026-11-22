@@ -65,6 +65,6 @@ public sealed class UpdateRoute(VelomineDbContext db) : Endpoint<UpdateRouteRequ
         await db.SaveChangesAsync(ct);
 
         await Send.OkAsync(
-            await RouteQueries.Summaries(db.Routes.AsNoTracking().Where(r => r.Id == route.Id), userId).FirstAsync(ct), ct);
+            (await RouteQueries.Summaries(db.Routes.AsNoTracking().Where(r => r.Id == route.Id), userId).FirstAsync(ct)).ToResponse(), ct);
     }
 }

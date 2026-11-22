@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../theme.dart';
 import '../tokens.dart';
 import 'app_card.dart';
+import 'card_link.dart';
 
 /// One fact on a card: a title, one big number with its unit, one sentence that explains it and,
 /// at most, one link to the page that shows the details.
@@ -18,6 +19,8 @@ class StatCard extends StatelessWidget {
     this.link,
     this.onLink,
     this.valueKey,
+    this.compact = false,
+    this.onTap,
   });
 
   final String title;
@@ -42,12 +45,19 @@ class StatCard extends StatelessWidget {
   /// A key on the number alone, for a test that reads it.
   final Key? valueKey;
 
+  /// A card drawn narrow, two across on a phone: its number drops from the kpi size to the stat size.
+  final bool compact;
+
+  /// Makes the whole card open the page that answers the next question, for a card with no link.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final numbers = VelomineText.of(context);
     return AppCard(
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: AppSpacing.sm,
@@ -61,7 +71,10 @@ class StatCard extends StatelessWidget {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: value, style: numbers.kpi),
+                    TextSpan(
+                      text: value,
+                      style: compact ? numbers.stat : numbers.kpi,
+                    ),
                     if (unit case final unit?)
                       TextSpan(
                         text: ' $unit',
@@ -81,7 +94,7 @@ class StatCard extends StatelessWidget {
               sentence,
               style: text.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
             ),
-          if (link case final link?) _Link(link, onLink: onLink),
+          if (link case final link?) CardLink(link, onPressed: onLink),
         ],
       ),
     );
@@ -180,37 +193,6 @@ class _StateChip extends StatelessWidget {
           color: care ? colors.signal : colors.onAccentSoft,
           fontWeight: FontWeight.w600,
         ),
-      ),
-    );
-  }
-}
-
-class _Link extends StatelessWidget {
-  const _Link(this.label, {required this.onLink});
-
-  final String label;
-  final VoidCallback? onLink;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = VelomineColors.of(context);
-    return TextButton(
-      onPressed: onLink,
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        minimumSize: const Size(48, 48),
-        foregroundColor: colors.accentStrong,
-        textStyle: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpacing.xs,
-        children: [
-          // A narrow card wraps the label instead of overflowing its link.
-          Flexible(child: Text(label)),
-          const ExcludeSemantics(child: Icon(Icons.arrow_forward, size: 16)),
-        ],
       ),
     );
   }

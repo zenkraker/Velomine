@@ -8,6 +8,7 @@ import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
@@ -121,8 +122,16 @@ class WellbeingScreen extends ConsumerWidget {
             onEdit: () => _checkIn(context, ref),
           )
         else ...[
+          // Halves: what the readiness is, and why it is that, side by side from the tablet width.
           if (readiness.load.value case final data?)
-            ReadinessCard(readiness: data),
+            CardGrid(
+              columns: 2,
+              tabletColumns: 2,
+              children: [
+                ReadinessCard(readiness: data),
+                ReadinessWhyCard(readiness: data),
+              ],
+            ),
           WellbeingCard(
             wellbeing: today,
             checkIns: wellbeing.checkIns,

@@ -237,6 +237,36 @@ void main() {
     );
   }
 
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('HomeShell_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      await pumpShell(tester, size: Size(width, 900));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  // The rail and the sidebar sit on `card`, the same fill as a card in the page, not a dimmer surface.
+  for (final width in [800.0, 1300.0]) {
+    testWidgets(
+      'HomeShell_ShouldPaintTheNavigationOnCard_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        await pumpShell(tester, size: Size(width, 900));
+        await tester.pumpAndSettle();
+
+        final navigation = find.byKey(
+          Key(width >= 1200 ? 'nav-sidebar' : 'nav-rail'),
+        );
+        expect(
+          tester.widget<Container>(navigation).color,
+          Theme.of(tester.element(navigation)).colorScheme.surfaceContainer,
+        );
+      },
+    );
+  }
+
   testWidgets(
     'HomeShell_ShouldNameTheClub_WhenTheWindowIsExpandedAndTheRiderHasOne',
     (tester) async {

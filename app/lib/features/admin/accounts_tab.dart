@@ -13,11 +13,13 @@ import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/inline_error.dart';
 import '../../core/widgets/page_menu.dart';
+import '../../core/widgets/section_card.dart';
 
 String _roleName(AppLocalizations l10n, String role) => switch (role) {
   'member' => l10n.roleMember,
@@ -163,44 +165,31 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
           onChanged: (value) => setState(() => _query = value),
         ),
         const SizedBox(height: AppSpacing.lg),
-        if (s.load.failure case final failure?)
+        if (s.load.failure case final failure?) ...[
           InlineError(
             failureText(l10n, failure),
             key: const Key('admin-error'),
           ),
-        Text(
-          l10n.waitingForApproval,
-          style: Theme.of(context).textTheme.titleMedium,
+          const SizedBox(height: AppSpacing.md),
+        ],
+        SectionCard(
+          title: l10n.waitingForApproval,
+          children: [
+            if (waiting.isEmpty && !s.load.running)
+              EmptyState(
+                key: const Key('none-pending'),
+                message: l10n.nonePending,
+                framed: false,
+              )
+            else
+              for (final user in waiting) _tile(context, ref, user, myId),
+          ],
         ),
-        if (waiting.isEmpty && !s.load.running)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(l10n.nonePending, key: const Key('none-pending')),
-          ),
-        // Each list is one card of rows, as the mock-up draws it.
-        if (waiting.isNotEmpty)
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (final user in waiting) _tile(context, ref, user, myId),
-              ],
-            ),
-          ),
         const SizedBox(height: AppSpacing.lg),
-        Text(
-          l10n.adminAccounts,
-          style: Theme.of(context).textTheme.titleMedium,
+        SectionCard(
+          title: l10n.adminAccounts,
+          children: [for (final user in rest) _tile(context, ref, user, myId)],
         ),
-        if (rest.isNotEmpty)
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (final user in rest) _tile(context, ref, user, myId),
-              ],
-            ),
-          ),
       ],
     );
   }
@@ -215,15 +204,22 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
     final mine = user.id == myId;
     return ListTile(
       key: Key('user-${user.id}'),
+      contentPadding: EdgeInsets.zero,
       title: Wrap(
         spacing: AppSpacing.sm,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(user.displayName),
-          if (mine) Chip(label: Text(l10n.you)),
-          if (user.isLockedOut) Chip(label: Text(l10n.locked)),
+          if (mine) AppBadge(l10n.you),
+          if (user.isLockedOut) AppBadge(l10n.locked, tone: AppBadgeTone.bad),
           for (final role in user.roles)
-            if (role != 'member') Chip(label: Text(_roleName(l10n, role))),
+            if (role != 'member')
+              AppBadge(
+                _roleName(l10n, role),
+                tone: role == 'admin'
+                    ? AppBadgeTone.good
+                    : AppBadgeTone.neutral,
+              ),
         ],
       ),
       subtitle: Text('${user.email} · ${dateTime(user.createdAt)}'),

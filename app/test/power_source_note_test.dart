@@ -27,17 +27,32 @@ void main() {
     await goTo(tester, '/progress/power');
   }
 
-  Future<void> openProgress(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await startApp(tester, server.session(useCookies: true));
-    await goTo(tester, '/progress');
-  }
-
-  /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max.
-  List<SourceNote> notes(WidgetTester tester) =>
-      tester.widgetList<SourceNote>(find.byType(SourceNote)).toList();
+  /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max. The
+  /// rider's own numbers lead the page now, so their notes are left out of this list.
+  List<SourceNote> notes(WidgetTester tester) => tester
+      .widgetList<SourceNote>(
+        find.descendant(
+          of: find.byKey(const Key('power-ftp-card')),
+          matching: find.byType(SourceNote),
+        ),
+      )
+      .followedBy(
+        tester.widgetList<SourceNote>(
+          find.descendant(
+            of: find.byKey(const Key('critical-power-card')),
+            matching: find.byType(SourceNote),
+          ),
+        ),
+      )
+      .followedBy(
+        tester.widgetList<SourceNote>(
+          find.descendant(
+            of: find.byKey(const Key('vo2max-card')),
+            matching: find.byType(SourceNote),
+          ),
+        ),
+      )
+      .toList();
 
   /// The same, without the critical power note that sits above them.
   List<SourceNote> estimateNotes(WidgetTester tester) =>
@@ -162,7 +177,8 @@ void main() {
           'rideId': 'r1',
         },
       ];
-      await openProgress(tester);
+      // The FTP note is the Power page's: the overview carries no power curve.
+      await openPower(tester);
 
       expect(
         find.text(

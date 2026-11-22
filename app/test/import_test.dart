@@ -37,6 +37,13 @@ void main() {
     expect(find.byKey(const Key('import-imported')), findsOneWidget);
     expect(find.text('2 rides imported'), findsOneWidget);
     expect(find.text('1 ride was already here'), findsOneWidget);
+    // The count read of the total is the card's number, and the way out is the quiet button under it.
+    expect(find.byKey(const Key('import-progress')), findsOneWidget);
+    expect(find.textContaining('of 3 activities read'), findsOneWidget);
+    expect(
+      find.widgetWithText(OutlinedButton, 'Back to rides'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('RidesScreen_ShouldImportNothing_WhenThePickerIsCancelled', (

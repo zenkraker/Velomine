@@ -11,12 +11,14 @@ import '../rides/detail/ride_selection.dart';
 import '../rides/detail/route_map.dart';
 import '../rides/detail/series_chart.dart';
 import '../rides/ride_type_chips.dart';
+import 'coach_athlete_view_model.dart';
 import 'coach_ride_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/widgets/stat_card.dart';
 
 /// One shared ride, read-only: numbers, charts and (only when shared) the route.
@@ -46,10 +48,18 @@ class CoachRideScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final units = ref.watch(unitsChoiceViewModelProvider);
     final ride = c.ride;
+    // Whose ride it is names the page's caption; the ride's own name is the title, the date when it has none.
+    final athlete = ref.watch(
+      coachAthleteViewModelProvider(
+        clubId,
+        userId,
+      ).select((s) => s.summary?.displayName),
+    );
     return PageScaffold(
+      parent: athlete,
       title: ride == null
           ? l10n.rideDetailTitle
-          : dateTime(ride.startTime ?? ride.uploadedAt),
+          : ride.title ?? dateTime(ride.startTime ?? ride.uploadedAt),
       subtitle: l10n.coachReadOnly,
       children: [
         if (c.notFound)
@@ -62,56 +72,7 @@ class CoachRideScreen extends ConsumerWidget {
           const LoadingState()
         else if (ride != null) ...[
           if (rideTypeIsSet(ride)) RideTypeChips(ride: ride),
-          Wrap(
-            spacing: AppSpacing.xl,
-            runSpacing: AppSpacing.md,
-            children: [
-              StatFigure(
-                label: l10n.statDistance,
-                value: km(units, ride.distanceM),
-              ),
-              StatFigure(
-                label: l10n.statMovingTime,
-                value: duration(ride.movingS),
-              ),
-              StatFigure(
-                label: l10n.statAverageSpeed,
-                value: kmh(units, ride.avgSpeedMs),
-              ),
-              if (ride.avgPowerW != null)
-                StatFigure(
-                  label: l10n.statAveragePower,
-                  value: '${ride.avgPowerW} W',
-                ),
-              if (ride.normalizedPowerW != null)
-                StatFigure(
-                  label: l10n.statNormalizedPower,
-                  value: '${ride.normalizedPowerW} W',
-                ),
-              if (ride.avgHeartRate != null)
-                StatFigure(
-                  label: l10n.statAverageHeartRate,
-                  value: '${ride.avgHeartRate} bpm',
-                ),
-              if (ride.tss != null)
-                StatFigure(
-                  label: l10n.statTss,
-                  value: ride.tss!.round().toString(),
-                ),
-              if (ride.trimp != null)
-                StatFigure(
-                  label: l10n.statTrimp,
-                  value: ride.trimp!.round().toString(),
-                ),
-            ],
-          ),
-          if (c.load.failure case final failure?)
-            ErrorState(
-              message: failureText(l10n, failure),
-              actionKey: const Key('coach-ride-error'),
-            ),
-          if (c.laps.isNotEmpty)
-            LapTable(laps: c.laps, selectedLap: selection.selectedLap),
+          // The map sits right under the header, before the numbers it belongs to.
           if (c.data != null && c.data!.hasRoute)
             RouteMap(
               data: c.data!,
@@ -127,6 +88,62 @@ class CoachRideScreen extends ConsumerWidget {
               key: const Key('route-not-shared'),
               style: text.bodySmall,
             ),
+          SectionCard(
+            key: const Key('coach-ride-numbers'),
+            title: l10n.rideNumbers,
+            children: [
+              Wrap(
+                spacing: AppSpacing.xl,
+                runSpacing: AppSpacing.md,
+                children: [
+                  StatFigure(
+                    label: l10n.statDistance,
+                    value: km(units, ride.distanceM),
+                  ),
+                  StatFigure(
+                    label: l10n.statMovingTime,
+                    value: duration(ride.movingS),
+                  ),
+                  StatFigure(
+                    label: l10n.statAverageSpeed,
+                    value: kmh(units, ride.avgSpeedMs),
+                  ),
+                  if (ride.avgPowerW != null)
+                    StatFigure(
+                      label: l10n.statAveragePower,
+                      value: '${ride.avgPowerW} W',
+                    ),
+                  if (ride.normalizedPowerW != null)
+                    StatFigure(
+                      label: l10n.statNormalizedPower,
+                      value: '${ride.normalizedPowerW} W',
+                    ),
+                  if (ride.avgHeartRate != null)
+                    StatFigure(
+                      label: l10n.statAverageHeartRate,
+                      value: '${ride.avgHeartRate} bpm',
+                    ),
+                  if (ride.tss != null)
+                    StatFigure(
+                      label: l10n.statTss,
+                      value: ride.tss!.round().toString(),
+                    ),
+                  if (ride.trimp != null)
+                    StatFigure(
+                      label: l10n.statTrimp,
+                      value: ride.trimp!.round().toString(),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          if (c.load.failure case final failure?)
+            ErrorState(
+              message: failureText(l10n, failure),
+              actionKey: const Key('coach-ride-error'),
+            ),
+          if (c.laps.isNotEmpty)
+            LapTable(laps: c.laps, selectedLap: selection.selectedLap),
           if (c.data != null && c.data!.series.isNotEmpty)
             for (final series in c.data!.series)
               SeriesChart(

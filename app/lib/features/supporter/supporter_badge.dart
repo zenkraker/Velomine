@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/theme.dart';
@@ -204,35 +205,33 @@ class _SupporterSectionState extends ConsumerState<SupporterSection> {
       );
     }
     if (s.riderLicence == null) return const SizedBox.shrink();
+    final licence = s.riderLicence!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.sm,
       children: [
-        Row(
-          spacing: AppSpacing.md,
-          children: [
-            if (s.badgeShown)
-              Flexible(
-                child: SupporterBadge(
-                  key: const Key('supporter-badge'),
-                  label: l10n.supporter,
-                  hint: l10n.supporterBadgeReplayHint,
-                  onReplay: widget.onReplay,
-                ),
+        if (s.badgeShown)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SupporterBadge(
+              key: const Key('supporter-badge'),
+              label: l10n.supporterSerialNumber(
+                licence.serial,
+                dateOnly(licence.activatedAt),
               ),
-            // Above the badge itself, a pointer is not a touch, so the badge's three quick taps still count.
-            IconButton(
-              key: const Key('supporter-replay'),
-              style: IconButton.styleFrom(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                minimumSize: const Size.square(48),
-              ),
-              tooltip: l10n.supporterReplay,
-              onPressed: widget.onReplay,
-              icon: const Icon(Icons.replay),
+              hint: l10n.supporterBadgeReplayHint,
+              onReplay: widget.onReplay,
             ),
-          ],
+          ),
+        // A link rather than a second target: the badge itself replays on three quick taps.
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            key: const Key('supporter-replay'),
+            onPressed: widget.onReplay,
+            child: Text(l10n.supporterReplayLink),
+          ),
         ),
         SwitchListTile(
           key: const Key('supporter-hidden'),

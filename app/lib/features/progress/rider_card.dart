@@ -8,10 +8,12 @@ import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
+import '../../core/widgets/card_link.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/widgets/source_note.dart';
 import '../../core/widgets/stat_card.dart';
+import '../rides/detail/power_record_chips.dart' show recordDuration;
 import '../accounts/ftp_source_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../accounts/heart_rate_source_text.dart';
@@ -46,60 +48,129 @@ String? _ftpNote(AppLocalizations l10n, RiderCardResponse card) =>
       null => null,
     };
 
-/// The rider's own numbers on one card: the few that answer "where do I stand" on the page,
-/// and every one of them, with where it came from, in the sheet.
-class RiderCard extends ConsumerWidget {
+/// The rider's own numbers at the top of Progress → Power: only the ones no other card on that page
+/// already shows, each with where it came from, and the way to the whole card.
+class RiderCard extends StatelessWidget {
   const RiderCard({super.key, required this.card, required this.onMore});
 
   final RiderCardResponse card;
+
+  /// Opens the whole card in a sheet: every number, with where it came from.
   final VoidCallback onMore;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final next = card.nextEvent;
     final wPerKg = card.wattsPerKg;
+    final weight = card.weightKg;
+    final ftp = card.ftpW;
+    // The peak is the window it was set in, so the note can name it.
+    final peak = card.bests
+        .where((best) => best.watts != null)
+        .fold<RiderCardBest?>(
+          null,
+          (best, next) =>
+              best == null || next.watts! > best.watts! ? next : best,
+        );
     return SectionCard(
       key: const Key('rider-card'),
       title: l10n.riderCardTitle,
       children: [
         Wrap(
           spacing: AppSpacing.xl,
-          runSpacing: AppSpacing.sm,
+          runSpacing: AppSpacing.lg,
           children: [
-            StatFigure(
-              label: 'FTP',
-              value: _watts(card.ftpW),
-              valueKey: const Key('rider-card-ftp'),
+            _Number(
+              key: const Key('rider-card-max-hr'),
+              label: l10n.maxHeartRateField,
+              value: _bpm(card.maxHeartRate),
+              note: heartRateSourceText(
+                l10n,
+                card.maxHeartRateSource,
+                card.maxHeartRateSetAt,
+                rideDate: card.maxHeartRateRideDate,
+                rideId: card.maxHeartRateRideId,
+              ),
             ),
-            StatFigure(
-              label: 'W/kg',
-              value: wPerKg == null ? '–' : NumberFormat('0.0').format(wPerKg),
-            ),
-            StatFigure(
+            _Number(
+              key: const Key('rider-card-threshold-hr'),
               label: l10n.thresholdHeartRateField,
               value: _bpm(card.thresholdHeartRate),
+              note: heartRateSourceText(
+                l10n,
+                card.thresholdHeartRateSource,
+                card.thresholdHeartRateSetAt,
+                threshold: true,
+                rideDate: card.thresholdHeartRateRideDate,
+                rideId: card.thresholdHeartRateRideId,
+              ),
             ),
-            StatFigure(
-              label: l10n.fitness,
-              value: card.fitness == null ? '–' : '${card.fitness!.round()}',
+            _Number(
+              key: const Key('rider-card-wkg'),
+              label: l10n.riderCardFtpPerKilo,
+              value: wPerKg == null
+                  ? '–'
+                  : '${NumberFormat('0.0').format(wPerKg)} W/kg',
+              note: ftp == null || weight == null
+                  ? null
+                  : l10n.riderCardFtpAtWeight(ftp, weight),
+            ),
+            _Number(
+              key: const Key('rider-card-peak'),
+              label: l10n.riderCardPeak,
+              value: _watts(card.peakPowerW),
+              note: peak == null
+                  ? null
+                  : l10n.riderCardPeakNote(recordDuration(l10n, peak.seconds)),
             ),
           ],
         ),
-        if (next != null)
-          Text(
-            l10n.eventNext(next.name, daysAway(l10n, next.date)),
-            style: theme.textTheme.bodyMedium,
-          ),
         Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
+          alignment: AlignmentDirectional.centerStart,
+          child: CardLink(
+            l10n.riderCardWhole,
             key: const Key('rider-card-more'),
             onPressed: onMore,
-            child: Text(l10n.riderCardMore),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// One number of the card: its name, its value and the line saying where it came from.
+class _Number extends StatelessWidget {
+  const _Number({
+    super.key,
+    required this.label,
+    required this.value,
+    this.note,
+  });
+
+  final String label;
+  final String value;
+  final String? note;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final note = this.note;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      spacing: AppSpacing.xs,
+      children: [
+        Text(
+          label,
+          style: text.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        if (note != null) SourceNote(note),
       ],
     );
   }

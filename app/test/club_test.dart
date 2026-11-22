@@ -14,7 +14,7 @@ void main() {
 
   setUp(() => server = FakeServer());
 
-  testWidgets('JoinClubScreen_ShouldJoinAndShowRoster_WhenCodeIsValid', (
+  testWidgets('JoinClubScreen_ShouldJoinAndOpenTheClub_WhenCodeIsValid', (
     tester,
   ) async {
     final rider = server.add('rider@example.com', clubRole: null);
@@ -49,8 +49,9 @@ void main() {
 
     await tester.tap(find.text('Club'));
     await tester.pumpAndSettle();
+    // The club's name names the page; a rider sees no roster, only the owner and coaches do.
     expect(find.text('Test Club'), findsOneWidget);
-    expect(find.byKey(Key('member-${rider.id}')), findsOneWidget);
+    expect(find.byKey(const Key('club-members-card')), findsNothing);
     expect(find.byKey(const Key('join-code-value')), findsNothing);
 
     await tester.tap(find.byKey(const Key('club-actions')));
@@ -157,7 +158,9 @@ void main() {
     expect(find.textContaining('cannot leave'), findsOneWidget);
   });
 
-  testWidgets('ClubHeroCard_ShouldShowNameAndRole_WhenBuilt', (tester) async {
+  testWidgets('ClubHeroCard_ShouldShowTheRoleAsABadge_WhenBuilt', (
+    tester,
+  ) async {
     final club = ClubResponse(
       id: 'c1',
       name: 'Hero Club',
@@ -176,8 +179,46 @@ void main() {
         home: Scaffold(body: ClubHeroCard(club: club)),
       ),
     );
-    expect(find.text('Hero Club'), findsOneWidget);
+    // The club's name is the page's title now, so the card carries the club's state alone.
+    expect(find.text('Hero Club'), findsNothing);
+    expect(find.byKey(const Key('club-role')), findsOneWidget);
     expect(find.text('Coach'), findsOneWidget);
+  });
+
+  testWidgets('ClubScreen_ShouldHideTheMembersCard_WhenTheRiderIsAMember', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', name: 'Rider Luca');
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+
+    // The roster is the club's business: a rider never reads it.
+    expect(find.byKey(const Key('club-members-card')), findsNothing);
+    expect(find.byKey(Key('member-${rider.id}')), findsNothing);
+  });
+
+  testWidgets('ClubScreen_ShouldShowTheMembersCard_WhenTheRiderIsACoach', (
+    tester,
+  ) async {
+    final coach = server.add(
+      'coach@example.com',
+      name: 'Coach Marco',
+      clubRole: 'coach',
+    );
+    server.add('rider@example.com', name: 'Rider Luca');
+    server.signInBrowser(coach);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+
+    expect(find.byKey(const Key('club-members-card')), findsOneWidget);
+    expect(find.text('Rider Luca'), findsOneWidget);
   });
 
   testWidgets('JoinClubScreen_ShouldPrefillCode_WhenInvited', (tester) async {
@@ -518,5 +559,154 @@ void main() {
       expect(find.byKey(const Key('join-code-value')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+  }
+
+  testWidgets(
+    'NoClubPage_ShouldShowEachWayAsItsOwnCard_WhenTheRiderHasNoClub',
+    (tester) async {
+      server.adminSettings['clubCreationEnabled'] = true;
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      // Three ways forward, each its own card with its own button.
+      expect(find.byKey(const Key('club-way-nearby')), findsOneWidget);
+      expect(find.byKey(const Key('club-way-join')), findsOneWidget);
+      expect(find.byKey(const Key('club-way-start')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('club-way-nearby')),
+          matching: find.byKey(const Key('go-nearby-clubs')),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('NoClubPage_ShouldShowOnlyTheWaitingRequest_WhenAskedToJoin', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.joinRequests.add({
+      'id': 'join-1',
+      'clubId': 'club-1',
+      'userId': rider.id,
+      'displayName': rider.name,
+      'note': 'May I join?',
+      'createdAt': '2026-11-09T10:00:00Z',
+    });
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+
+    expect(find.text('Waiting for ${server.clubName}'), findsOneWidget);
+    expect(find.byKey(const Key('club-way-nearby')), findsNothing);
+    expect(find.byKey(const Key('club-way-join')), findsNothing);
+  });
+
+  testWidgets(
+    'CalendarFeedScreen_ShouldPutReplaceAheadOfStopInTheMenu_WhenAnAddressExists',
+    (tester) async {
+      final rider = server.add('rider@example.com');
+      server.signInBrowser(rider);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club/calendar');
+
+      // With no address there is only the action that makes one.
+      expect(find.byKey(const Key('calendar-actions')), findsNothing);
+      await tester.tap(find.byKey(const Key('create-calendar-address')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('calendar-address')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('calendar-actions')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('replace-calendar-address')), findsOneWidget);
+      // Replace is a rare action in the menu, ahead of the destructive Stop.
+      final entries = tester
+          .widgetList<MenuItemButton>(find.byType(MenuItemButton))
+          .toList();
+      expect(entries.first.key, const Key('replace-calendar-address'));
+      expect(entries.last.key, const Key('stop-calendar-address'));
+
+      await tester.tap(find.byKey(const Key('replace-calendar-address')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('confirm-replace-calendar')), findsOneWidget);
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('NoClubPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.adminSettings['clubCreationEnabled'] = true;
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      expect(find.byKey(const Key('club-way-nearby')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('JoinClubPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/join');
+
+      expect(find.byKey(const Key('join-club-form')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('StartClubPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.adminSettings['clubCreationEnabled'] = true;
+      final rider = server.add('rider@example.com', clubRole: null);
+      server.signInBrowser(rider);
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club/start');
+
+      expect(find.byKey(const Key('start-club-name-card')), findsOneWidget);
+      expect(find.byKey(const Key('start-club-location-card')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'CalendarFeedPage_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        final rider = server.add('rider@example.com');
+        server.signInBrowser(rider);
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(tester, server.session(useCookies: true));
+        await goTo(tester, '/club/calendar');
+
+        expect(find.byKey(const Key('calendar-address-card')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 }

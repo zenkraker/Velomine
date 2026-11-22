@@ -164,13 +164,65 @@ void main() {
     },
   );
 
+  testWidgets(
+    'RideDetailScreen_ShouldShowTheNumbersAsOneCard_WhenTheRideIsOpened',
+    (tester) async {
+      await open(tester);
+
+      final card = find.byKey(const Key('ride-numbers'));
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('stat-distance')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.byKey(const Key('stat-tss'))),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('Numbers')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'RideDetailScreen_ShouldPutTheChartsAboveTheZones_WhenTheRideHasBoth',
+    (tester) async {
+      await open(tester);
+
+      final charts = tester.getTopLeft(find.byKey(const Key('chart-power'))).dy;
+      final zones = tester.getTopLeft(find.byKey(const Key('zones'))).dy;
+      expect(charts, lessThan(zones));
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets(
+      'RideDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await open(tester);
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('RideDetailScreen_ShouldShowZonesAndLoad_WhenProfileHasThem', (
     tester,
   ) async {
     await open(tester);
 
-    expect(find.byKey(const Key('heart-rate-zones')), findsOneWidget);
-    expect(find.byKey(const Key('power-zones')), findsOneWidget);
+    // One zones card: the heart-rate zones first, the power zones behind its switch.
+    expect(find.byKey(const Key('zones')), findsOneWidget);
+    expect(find.byKey(const Key('zone-switch')), findsOneWidget);
+    expect(find.text('Heart rate zones'), findsWidgets);
     expect(
       find.descendant(
         of: find.byKey(const Key('stat-intensity')),
@@ -192,8 +244,21 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Heart rate zones'), findsOneWidget);
-    expect(find.text('Power zones'), findsOneWidget);
+    expect(find.text('Heart rate zones'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('zone-switch')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('zone-switch')),
+        matching: find.text('Power'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Power zones'), findsWidgets);
+    expect(find.text('Heart rate zones'), findsNothing);
     expect(find.textContaining('TSS uses your FTP'), findsOneWidget);
   });
 
@@ -1069,7 +1134,7 @@ void main() {
       await open(tester);
 
       await tester.scrollUntilVisible(
-        find.byKey(const Key('heart-rate-zones')),
+        find.byKey(const Key('zone-switch')),
         300,
         scrollable: find.byType(Scrollable).first,
       );

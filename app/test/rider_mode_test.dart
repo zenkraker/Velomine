@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:velomine/core/providers.dart';
 import 'package:velomine/core/rider_mode.dart';
+import 'package:velomine/core/l10n.dart';
+import 'package:velomine/core/widgets/more_details.dart';
+import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine/core/widgets/stat_card.dart';
 import 'package:velomine/features/profile/rider_mode_view_model.dart';
 import 'package:velomine/features/rides/detail/effort_word.dart';
@@ -476,157 +479,71 @@ void main() {
       await goTo(tester, '/progress');
     }
 
-    /// The split of riding into easy, moderate and hard, so just riding has something to fold.
-    void withIntensity() => server.training = {
-      ...trainingJson(),
-      'intensity': {
-        'easyS': 6000.0,
-        'moderateS': 3000.0,
-        'hardS': 1000.0,
-        'easyPct': 60.0,
-        'moderatePct': 30.0,
-        'hardPct': 10.0,
-        'polarisationIndex': 1.3,
-        'label': 'pyramidal',
-        'rides': 3,
-      },
-    };
-
-    Future<void> showMore(WidgetTester tester) async {
-      await tester.ensureVisible(find.byKey(const Key('more-details')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('more-details')));
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('ProgressScreen_ShouldFoldAnalysis_WhenModeIsJustRiding', (
-      tester,
-    ) async {
-      await openProgress(tester, mode: 'just_riding');
-
-      // The four numbers are the page; the training lab is one tap away.
-      expect(find.byKey(const Key('metric-period')), findsOneWidget);
-      expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
-      expect(find.byKey(const Key('metric-form')), findsOneWidget);
-      expect(find.byKey(const Key('fitness-chart')), findsNothing);
-      expect(find.byKey(const Key('power-curve-card')), findsNothing);
-      expect(find.byKey(const Key('more-details')), findsOneWidget);
-    });
-
-    testWidgets('ProgressScreen_ShouldAddIntensity_WhenModeIsWithGoals', (
-      tester,
-    ) async {
-      withIntensity();
-      await openProgress(tester, mode: 'with_goals');
-
-      // The easy / moderate / hard split is the point of this mode, so it sits above the fold.
-      expect(find.byKey(const Key('intensity-card')), findsOneWidget);
-      expect(find.byKey(const Key('fitness-chart')), findsNothing);
-      expect(find.byKey(const Key('more-details')), findsOneWidget);
-    });
-
-    testWidgets('ProgressScreen_ShouldShowEverything_WhenModeIsTraining', (
-      tester,
-    ) async {
-      await openProgress(tester);
-
-      expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
-      expect(find.byKey(const Key('rider-card')), findsOneWidget);
-      expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
-      expect(find.byKey(const Key('more-details')), findsNothing);
-    });
-
-    testWidgets('ProgressScreen_ShouldRevealCards_WhenShowMoreIsTapped', (
-      tester,
-    ) async {
-      withIntensity();
-      await openProgress(tester, mode: 'just_riding');
-      expect(find.byKey(const Key('intensity-card')), findsNothing);
-
-      await showMore(tester);
-
-      expect(find.byKey(const Key('intensity-card')), findsOneWidget);
-      expect(find.byKey(const Key('fitness-chart')), findsOneWidget);
-    });
-
     testWidgets(
-      'ProgressScreen_ShouldNotShowError_WhenOnlyAFoldedSourceFails',
+      'ProgressScreen_ShouldShowTheSameOverview_WhenTheRiderModeChanges',
       (tester) async {
-        server.failing.add('/api/v1/analytics/readiness');
         await openProgress(tester, mode: 'just_riding');
 
-        // Nothing on the page is broken as far as the member can see.
-        expect(find.byKey(const Key('progress-error-readiness')), findsNothing);
+        // The overview answers one question in every mode: the analysis lives on its own sub-pages.
+        for (final key in [
+          'metric-readiness',
+          'metric-form',
+          'metric-period',
+          'metric-next-event',
+        ]) {
+          expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+        }
+        expect(find.byKey(const Key('more-details')), findsNothing);
+        expect(find.byKey(const Key('rider-card')), findsNothing);
+        expect(find.byKey(const Key('intensity-card')), findsNothing);
+        expect(find.byKey(const Key('wellbeing-card')), findsNothing);
       },
     );
 
-    testWidgets('ProgressScreen_ShouldShowError_WhenFailedSourceIsUnfolded', (
-      tester,
-    ) async {
-      server.failing.add('/api/v1/analytics/readiness');
-      await openProgress(tester, mode: 'just_riding');
-
-      await showMore(tester);
-
-      expect(find.byKey(const Key('progress-error-readiness')), findsOneWidget);
-    });
-
     testWidgets(
-      'ProgressScreen_ShouldReloadOnlyTheFailedFoldedSource_WhenItsRetryIsTapped',
+      'ProgressScreen_ShouldNotAskForTheAnalysis_WhenTheOverviewOpens',
       (tester) async {
-        server.failing.add('/api/v1/analytics/readiness');
-        await openProgress(tester, mode: 'just_riding');
-        await showMore(tester);
+        await openProgress(tester);
 
-        int calls(String path) =>
-            server.requests.where((r) => r == 'GET $path').length;
-        final trainingCalls = calls('/api/v1/analytics/training');
-        final powerCalls = calls('/api/v1/analytics/power-curve');
-        final readinessCalls = calls('/api/v1/analytics/readiness');
-
-        server.failing.clear();
-        await tester.ensureVisible(
-          find.byKey(const Key('progress-retry-readiness')),
+        // A card that is not on the page is not fetched either.
+        expect(
+          server.requests,
+          isNot(contains('GET /api/v1/analytics/rider-card')),
         );
-        await tester.tap(find.byKey(const Key('progress-retry-readiness')));
-        await tester.pumpAndSettle();
-
-        // The answer is back, and only the one source was asked again.
-        expect(find.byKey(const Key('progress-error-readiness')), findsNothing);
-        expect(find.byKey(const Key('metric-readiness')), findsOneWidget);
-        expect(calls('/api/v1/analytics/readiness'), readinessCalls + 1);
-        expect(calls('/api/v1/analytics/training'), trainingCalls);
-        expect(calls('/api/v1/analytics/power-curve'), powerCalls);
+        expect(
+          server.requests,
+          isNot(contains('GET /api/v1/analytics/power-curve')),
+        );
       },
     );
+  });
 
+  group('more details', () {
     testWidgets('MoreDetails_ShouldFoldAgain_WhenShowLessIsTapped', (
       tester,
     ) async {
-      withIntensity();
-      await openProgress(tester, mode: 'just_riding');
-      await showMore(tester);
-      expect(find.byKey(const Key('intensity-card')), findsOneWidget);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MoreDetails(
+                label: 'More',
+                children: const [Text('one card')],
+              ),
+            ),
+          ),
+        ),
+      );
 
-      await tester.ensureVisible(find.byKey(const Key('more-details')));
-      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('more-details')));
       await tester.pumpAndSettle();
+      expect(find.text('one card'), findsOneWidget);
 
-      // The same button that opened it closes it.
-      expect(find.byKey(const Key('intensity-card')), findsNothing);
-      expect(find.byKey(const Key('readiness-card')), findsNothing);
-      expect(find.byKey(const Key('more-details')), findsOneWidget);
-    });
-
-    testWidgets('ProgressScreen_ShouldNotShowWellbeingCard_WhenModeIsSimple', (
-      tester,
-    ) async {
-      await openProgress(tester, mode: 'just_riding');
-
-      // The check-in asks for health data: a simple mode never opens with it.
-      expect(find.byKey(const Key('wellbeing-card')), findsNothing);
-      expect(find.byKey(const Key('wellbeing-consent-card')), findsNothing);
+      await tester.tap(find.byKey(const Key('more-details')));
+      await tester.pumpAndSettle();
+      expect(find.text('one card'), findsNothing);
     });
   });
 
@@ -700,7 +617,7 @@ void main() {
       expect(find.byKey(const Key('stat-tss')), findsNothing);
       expect(find.byKey(const Key('stat-normalized-power')), findsNothing);
       expect(find.byKey(const Key('stat-average-cadence')), findsNothing);
-      expect(find.byKey(const Key('power-zones')), findsNothing);
+      expect(find.byKey(const Key('zones')), findsNothing);
       expect(find.byType(SeriesChart), findsNothing);
       expect(find.byKey(const Key('more-details')), findsOneWidget);
     });
@@ -714,7 +631,7 @@ void main() {
 
         expect(find.byKey(const Key('stat-tss')), findsOneWidget);
         expect(find.byKey(const Key('stat-normalized-power')), findsOneWidget);
-        expect(find.byKey(const Key('power-zones')), findsOneWidget);
+        expect(find.byKey(const Key('zones')), findsOneWidget);
         expect(find.byType(SeriesChart), findsWidgets);
       },
     );
@@ -739,7 +656,7 @@ void main() {
         // No heart rate is no effort word and no heart-rate tile, not "easy" by default.
         expect(find.byKey(const Key('ride-effort')), findsNothing);
         expect(find.byKey(const Key('stat-average-heart-rate')), findsNothing);
-        expect(find.byKey(const Key('heart-rate-zones')), findsNothing);
+        expect(find.byKey(const Key('zones')), findsNothing);
       },
     );
 
@@ -749,7 +666,8 @@ void main() {
         await openRide(tester, mode: 'with_goals');
 
         // This mode keeps the zones and the main charts, and folds the power analysis.
-        expect(find.byKey(const Key('heart-rate-zones')), findsOneWidget);
+        expect(find.byKey(const Key('zones')), findsOneWidget);
+        expect(find.text('Heart rate zones'), findsWidgets);
         expect(
           find.byKey(const Key('stat-average-heart-rate')),
           findsOneWidget,
@@ -757,7 +675,6 @@ void main() {
         expect(find.byType(SeriesChart), findsNWidgets(3));
         expect(find.byKey(const Key('more-details')), findsOneWidget);
         expect(find.byKey(const Key('stat-tss')), findsNothing);
-        expect(find.byKey(const Key('power-zones')), findsNothing);
       },
     );
 
@@ -770,7 +687,7 @@ void main() {
         expect(find.byKey(const Key('more-details')), findsNothing);
         expect(find.byKey(const Key('ride-effort')), findsNothing);
         expect(find.byKey(const Key('stat-tss')), findsOneWidget);
-        expect(find.byKey(const Key('power-zones')), findsOneWidget);
+        expect(find.byKey(const Key('zones')), findsOneWidget);
         expect(find.byType(SeriesChart), findsWidgets);
       },
     );

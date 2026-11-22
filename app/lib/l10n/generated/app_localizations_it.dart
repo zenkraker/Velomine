@@ -171,6 +171,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get signInHelp => 'Accedi per vedere i tuoi giri e la tua forma.';
 
   @override
+  String get signInTitle => 'Bentornato';
+
+  @override
   String get signIn => 'Accedi';
 
   @override
@@ -191,6 +194,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get createAccount => 'Crea un account';
+
+  @override
+  String get registerCaption => 'Nuovo account';
 
   @override
   String get createAccountAction => 'Crea account';
@@ -327,6 +333,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorStart => 'Configura un\'app di autenticazione';
 
   @override
+  String get twoFactorStartSetup => 'Inizia la configurazione';
+
+  @override
   String get twoFactorKeyHelp =>
       'Digita questa chiave nella tua app di autenticazione, poi inserisci il codice che mostra.';
 
@@ -354,6 +363,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get twoFactorRecoveryHelp =>
       'Salvali in un posto sicuro. Ognuno funziona una volta, al posto del codice dell\'app.';
+
+  @override
+  String get twoFactorSetupTitle => 'Configura un\'app di autenticazione';
 
   @override
   String get twoFactorEnabled => 'L\'accesso a due fattori è attivo.';
@@ -428,6 +440,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get setupTitle => 'Quale server usa il tuo club?';
+
+  @override
+  String get setupCaption => 'Server';
 
   @override
   String get setupServerAddress => 'Indirizzo del server';
@@ -700,6 +715,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubNoneSubtitle => 'Esci da solo, oppure in un club.';
 
   @override
+  String get clubNearbyBody => 'I club che pedalano vicino a te, per distanza.';
+
+  @override
+  String get clubJoinWithCode => 'Entra con un codice';
+
+  @override
+  String get clubJoinBody =>
+      'Hai un codice dal proprietario di un club? Entra con quello.';
+
+  @override
+  String get clubStartBody =>
+      'Avvia un club per le persone con cui pedali. Un mese per provarlo.';
+
+  @override
   String get clubSubtitle =>
       'Il tuo club, i suoi giri e le persone che ne fanno parte.';
 
@@ -968,6 +997,28 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get adminClubActive => 'Attivo';
+
+  @override
+  String get adminClubInactive => 'Inattivo';
+
+  @override
+  String get adminClubPlanEnded => 'Piano terminato';
+
+  @override
+  String get adminClubActivate => 'Attiva club';
+
+  @override
+  String get adminClubDeactivate => 'Disattiva club';
+
+  @override
+  String get adminClubActiveHelp =>
+      'Un club inattivo mantiene membri e giri, ma nessuno può iscriversi finché non lo riattivi.';
+
+  @override
+  String get adminPeopleAndRides => 'Persone e giri';
+
+  @override
+  String get adminServer => 'Server';
 
   @override
   String get adminClubJoinCode => 'Codice di accesso';
@@ -1327,6 +1378,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get rideNumbers => 'Numeri';
+
+  @override
   String get statDistance => 'Distanza';
 
   @override
@@ -1541,6 +1595,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get parts => 'Componenti';
+
+  @override
+  String get totals => 'Totali';
 
   @override
   String get addPartAction => 'Aggiungi componente';
@@ -2218,7 +2275,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get riderCardTitle => 'I tuoi numeri';
 
   @override
-  String get riderCardMore => 'Altro';
+  String get riderCardWhole => 'Tutta la scheda';
+
+  @override
+  String get riderCardFtpPerKilo => 'FTP per chilo';
+
+  @override
+  String riderCardFtpAtWeight(int ftp, double weight) {
+    final intl.NumberFormat weightNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String weightString = weightNumberFormat.format(weight);
+
+    return '$ftp W a $weightString kg';
+  }
+
+  @override
+  String get riderCardPeak => 'Potenza di picco';
+
+  @override
+  String riderCardPeakNote(String duration) {
+    return 'Il migliore $duration, ultimi 90 giorni';
+  }
 
   @override
   String get riderCardPowerNote =>
@@ -2420,6 +2497,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get profileTitle => 'Profilo';
+
+  @override
+  String get preferences => 'Preferenze';
+
+  @override
+  String get riding => 'In sella';
 
   @override
   String get ftpHelper =>
@@ -2636,6 +2719,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationGroupRides => 'Giri';
+
+  @override
+  String get notificationGroupUnread => 'Non lette';
 
   @override
   String get notificationGroupClub => 'Club';
@@ -2917,6 +3003,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get readinessWhy => 'Perché';
+
+  @override
+  String readinessWhyScore(Object score) {
+    return 'Perché $score';
+  }
 
   @override
   String get readinessNotMedical =>
@@ -3507,6 +3598,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get forgotPassword => 'Password dimenticata?';
 
   @override
+  String get forgotPasswordCaption => 'Aiuto password';
+
+  @override
   String get forgotPasswordTitle => 'Reimposta la password';
 
   @override
@@ -3534,6 +3628,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sendResetLink => 'Invia il link';
+
+  @override
+  String get resetPasswordCaption => 'Nuova password';
 
   @override
   String get resetPasswordTitle => 'Scegli una nuova password';
@@ -3961,6 +4058,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aiuta a migliorare Velomine con segnalazioni anonime di errori e dati sulle prestazioni. Nessun dato che registri viene incluso.';
 
   @override
+  String get telemetryTitle => 'Aiutaci a migliorare Velomine';
+
+  @override
   String get crashReports => 'Segnalazioni di errori';
 
   @override
@@ -4020,6 +4120,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String importProgress(int done, int total) {
     return '$done di $total attività lette';
+  }
+
+  @override
+  String importProgressUnit(Object total) {
+    return 'di $total attività lette';
   }
 
   @override
@@ -4112,6 +4217,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get startClubName => 'Nome del club';
+
+  @override
+  String get startClubNameCard => 'Nome';
 
   @override
   String get startClubNameRequired => 'Dai un nome al club.';
@@ -4479,6 +4587,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubRoutesTitle => 'Rotte';
 
   @override
+  String get clubRoutesCaption => 'Rotte del club';
+
+  @override
   String get clubRoutesHelp =>
       'Le linee condivise dal club, ognuna custodita da chi l\'ha aggiunta.';
 
@@ -4538,6 +4649,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get routeOpenGpx => 'Scarica il GPX';
+
+  @override
+  String get routeTheRoute => 'Il percorso';
+
+  @override
+  String get routeDescription => 'Descrizione';
 
   @override
   String get routeEdit => 'Modifica';
@@ -4737,6 +4854,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Numero massimo di partecipanti (facoltativo)';
 
   @override
+  String get rideFormDetails => 'Dettagli';
+
+  @override
   String get rideFormSave => 'Salva il giro';
 
   @override
@@ -4757,6 +4877,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get calendarTitle => 'Abbonamento al calendario';
+
+  @override
+  String get calendarAddressTitle => 'Il tuo indirizzo';
+
+  @override
+  String get clubCalendarCaption => 'Calendario del club';
 
   @override
   String get calendarHelp =>
@@ -4897,6 +5023,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get supporterReplay => 'Rivedi';
+
+  @override
+  String get supporterReplayLink => 'Rivedi il momento';
 
   @override
   String get supporterBadgeReplayHint =>

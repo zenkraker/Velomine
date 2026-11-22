@@ -2,6 +2,8 @@ import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/units.dart';
+import 'package:velomine/core/widgets/section_card.dart';
 import 'package:velomine/core/widgets/source_note.dart';
 import 'package:velomine/features/rides/detail/ride_detail_screen.dart';
 
@@ -15,8 +17,11 @@ void main() {
     server.signInBrowser(server.add('rider@example.com', name: 'Ada'));
   });
 
-  Future<void> openProfile(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 1600);
+  Future<void> openProfile(
+    WidgetTester tester, {
+    Size size = const Size(1000, 1600),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await startApp(tester, server.session(useCookies: true));
@@ -399,9 +404,10 @@ void main() {
     (tester) async {
       await openProfile(tester);
 
-      await tester.tap(find.byKey(const Key('profile-units')));
+      // Units are a segmented control, and the choice is saved as it is made.
+      await tester.ensureVisible(find.byKey(const Key('profile-units')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Imperial (miles, lb)').last);
+      await tester.tap(find.text('Imperial (miles, lb)'));
       await tester.pumpAndSettle();
 
       expect(server.requests, contains('PUT /api/v1/accounts/me/units'));
@@ -567,7 +573,12 @@ void main() {
     server.smtpConfigured = true;
     await openProfile(tester);
 
+    // The preferences card, above, pushes the notifications below the first screen.
+    await tester.ensureVisible(find.byKey(const Key('profile-email')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-email')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-save')));
     await tester.pumpAndSettle();
@@ -879,4 +890,162 @@ void main() {
     expect(find.text('Bike bike-1'), findsWidgets);
     expect(find.byKey(const Key('bike-actions')), findsOneWidget);
   });
+
+  /// The title of the card a widget sits in: the design's sections are cards of their own.
+  String cardTitleOf(WidgetTester tester, String key) => tester
+      .widget<SectionCard>(
+        find
+            .ancestor(
+              of: find.byKey(Key(key)),
+              matching: find.byType(SectionCard),
+            )
+            .first,
+      )
+      .title;
+
+  testWidgets(
+    'ProfileScreen_ShouldKeepThePreferencesInTheirOwnCard_WhenOpened',
+    (tester) async {
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      // The athlete card holds the numbers; how the app behaves lives in Preferences.
+      expect(cardTitleOf(tester, 'profile-name'), 'Athlete');
+      expect(cardTitleOf(tester, 'profile-birth-year'), 'Athlete');
+      expect(cardTitleOf(tester, 'profile-zone'), 'Preferences');
+      expect(cardTitleOf(tester, 'profile-language'), 'Preferences');
+      expect(cardTitleOf(tester, 'profile-units'), 'Preferences');
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldSaveTheFirstDay_WhenItIsChosen', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+    expect(server.requests, isNot(contains('PUT /api/v1/accounts/me/profile')));
+
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Saturday').last);
+    await tester.pumpAndSettle();
+
+    // No Save pressed: the choice saved itself, and the athlete fields are untouched.
+    expect(server.requests, contains('PUT /api/v1/accounts/me/profile'));
+    final profile = server.profiles['rider@example.com']!;
+    expect(profile['firstDayOfWeek'], 'saturday');
+    expect(profile['displayName'], 'Ada');
+  });
+
+  testWidgets('ProfileScreen_ShouldSaySo_WhenAPreferenceCannotBeSaved', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+    server.failing.add('/api/v1/accounts/me/profile');
+
+    await tester.tap(find.byKey(const Key('profile-first-day')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Saturday').last);
+    await tester.pumpAndSettle();
+
+    // The error sits under the card that made the choice, not under the athlete fields.
+    expect(find.byKey(const Key('preferences-error')), findsOneWidget);
+    expect(find.byKey(const Key('profile-error')), findsNothing);
+  });
+
+  testWidgets('ProfileScreen_ShouldDrawLanguageAndUnitsAsSegments_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    // Both choices are one tap, never a menu.
+    expect(
+      tester.widget<SegmentedButton<String>>(
+        find.byKey(const Key('profile-language')),
+      ),
+      isA<SegmentedButton<String>>(),
+    );
+    expect(
+      tester.widget<SegmentedButton<Units>>(
+        find.byKey(const Key('profile-units')),
+      ),
+      isA<SegmentedButton<Units>>(),
+    );
+  });
+
+  testWidgets('ProfileScreen_ShouldAskTheBirthYearBeforeTheFtp_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester);
+
+    // The athlete fields read in the design's order: name, year of birth, FTP, weight.
+    expect(
+      tester.getTopLeft(find.byKey(const Key('profile-birth-year'))).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('profile-ftp'))).dy),
+    );
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldKeepBikesAndPrivacyInTheRidingCard_WhenOpened',
+    (tester) async {
+      server.bikes.add(bike('bike-1'));
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      expect(cardTitleOf(tester, 'profile-my-bikes'), 'Riding');
+      expect(cardTitleOf(tester, 'profile-ride-privacy'), 'Riding');
+    },
+  );
+
+  testWidgets(
+    'ProfileScreen_ShouldKeepTelemetryInItsOwnCard_WhenTheServerCollectsIt',
+    (tester) async {
+      server.telemetryEnabled = true;
+      server.sentryDsn = 'https://key@example.invalid/1';
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      // The opt-in is its own card, never a row of the privacy settings.
+      expect(cardTitleOf(tester, 'telemetry-crash'), 'Help improve Velomine');
+      expect(cardTitleOf(tester, 'telemetry-usage'), 'Help improve Velomine');
+    },
+  );
+
+  testWidgets('ProfileScreen_ShouldDrawEveryEmailChoiceAsASwitch_WhenOpened', (
+    tester,
+  ) async {
+    await openProfile(tester, size: const Size(1000, 4000));
+
+    for (final key in [
+      'profile-email',
+      'profile-email-account',
+      'profile-email-training',
+    ]) {
+      expect(tester.widget<SwitchListTile>(find.byKey(Key(key))), isNotNull);
+    }
+    expect(find.byType(CheckboxListTile), findsNothing);
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldDownloadFromAButton_WhenTheDataCardIsShown',
+    (tester) async {
+      await openProfile(tester, size: const Size(1000, 4000));
+
+      // A quiet button under the sentence, not a settings row with a chevron.
+      expect(
+        find.widgetWithText(OutlinedButton, 'Download my data'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('ProfileScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.bikes.add(bike('bike-1', due: 1));
+      await openProfile(tester, size: Size(width, 2400));
+
+      // The segmented choices are the widest thing on the page, so they are laid out before the check.
+      await tester.ensureVisible(find.byKey(const Key('profile-units')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

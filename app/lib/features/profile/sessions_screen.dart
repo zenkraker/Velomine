@@ -14,6 +14,7 @@ import '../../core/user_message_text.dart';
 import 'sessions_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
@@ -36,6 +37,7 @@ class SessionsScreen extends ConsumerWidget {
     final sessions = state.load.value;
     return PageScaffold(
       title: l10n.sessionsTitle,
+      parent: l10n.profileTitle,
       subtitle: l10n.sessionsIntro,
       maxWidth: AppLayout.contentNarrow,
       // Signing the other devices out is rare: in the menu, behind a confirmation.
@@ -90,7 +92,10 @@ class SessionsScreen extends ConsumerWidget {
                       '${l10n.sessionLastUsed}: ${dateTime(session.lastUsedAt)}',
                     ),
                     trailing: session.current
-                        ? Text(l10n.sessionThisDevice)
+                        ? AppBadge(
+                            l10n.sessionThisDevice,
+                            tone: AppBadgeTone.good,
+                          )
                         : TextButton(
                             key: Key('revoke-${session.id}'),
                             onPressed: state.revoke.running

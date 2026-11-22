@@ -7,8 +7,8 @@ import '../../core/tokens.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../auth/auth_page.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_text_field.dart';
-import '../../core/widgets/section_card.dart';
 import 'supporter_celebration_screen.dart';
 import 'supporter_view_model.dart';
 
@@ -71,7 +71,9 @@ class _SupporterActivationScreenState
     final loadFailure = s.load.failure;
     return PageScaffold(
       key: const Key('supporter-activation'),
-      title: l10n.supporterSignInTitle,
+      title: l10n.supporterBecome,
+      parent: l10n.profileTitle,
+      subtitle: l10n.supporterKeyHelp,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: ValueListenableBuilder(
         valueListenable: _key,
@@ -90,27 +92,28 @@ class _SupporterActivationScreenState
             keyName: 'supporter-activation-load-error',
             message: failureText(l10n, loadFailure),
           ),
-        SectionCard(
-          title: l10n.supporterBecome,
-          description: l10n.supporterKeyHelp,
-          children: [
-            AppTextField(
-              fieldKey: const Key('supporter-key'),
-              controller: _key,
-              label: l10n.supporterKey,
-              maxLines: 3,
-            ),
-            if (failure != null)
-              AuthFailure(
-                keyName: 'supporter-activate-error',
-                message: switch (failure.code) {
-                  403 => l10n.supporterClubOwnerOnly,
-                  409 => l10n.supporterAlreadyActivated,
-                  503 => l10n.supporterUnavailable,
-                  _ => l10n.supporterKeyInvalid,
-                },
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                fieldKey: const Key('supporter-key'),
+                controller: _key,
+                label: l10n.supporterKey,
+                maxLines: 3,
               ),
-          ],
+              if (failure != null)
+                AuthFailure(
+                  keyName: 'supporter-activate-error',
+                  message: switch (failure.code) {
+                    403 => l10n.supporterClubOwnerOnly,
+                    409 => l10n.supporterAlreadyActivated,
+                    503 => l10n.supporterUnavailable,
+                    _ => l10n.supporterKeyInvalid,
+                  },
+                ),
+            ],
+          ),
         ),
       ],
     );

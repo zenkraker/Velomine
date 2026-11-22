@@ -45,6 +45,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final l10n = context.l10n;
     return AuthPage(
       title: l10n.forgotPasswordTitle,
+      caption: l10n.forgotPasswordCaption,
       help: l10n.forgotPasswordHelp,
       onBack: () => context.go('/sign-in'),
       primaryLabel: l10n.sendResetLink,
