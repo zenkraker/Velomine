@@ -2641,6 +2641,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notificationGroupRides => 'Giri';
 
   @override
+  String get notificationGroupUnread => 'Non lette';
+
+  @override
   String get notificationGroupClub => 'Club';
 
   @override

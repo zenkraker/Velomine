@@ -878,6 +878,7 @@
 
   "notificationsSubtitle": "Ciò che il server ti ha detto, dal più recente.",
   "notificationGroupRides": "Giri",
+  "notificationGroupUnread": "Non lette",
   "notificationGroupClub": "Club",
   "notificationGroupBikes": "Bici",
   "notificationGroupAccount": "Account",

@@ -1478,6 +1478,7 @@
 
   "notificationsSubtitle": "What the server told you, newest first.",
   "notificationGroupRides": "Rides",
+  "notificationGroupUnread": "Unread",
   "notificationGroupClub": "Club",
   "notificationGroupBikes": "Bikes",
   "notificationGroupAccount": "Account",

@@ -2624,6 +2624,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationGroupRides => 'Rides';
 
   @override
+  String get notificationGroupUnread => 'Unread';
+
+  @override
   String get notificationGroupClub => 'Club';
 
   @override

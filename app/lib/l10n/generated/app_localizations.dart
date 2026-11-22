@@ -4550,6 +4550,12 @@ abstract class AppLocalizations {
   /// **'Rides'**
   String get notificationGroupRides;
 
+  /// No description provided for @notificationGroupUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationGroupUnread;
+
   /// No description provided for @notificationGroupClub.
   ///
   /// In en, this message translates to:

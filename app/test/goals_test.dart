@@ -342,4 +342,43 @@ void main() {
       expect(find.byKey(const Key('goals-summary')), findsNothing);
     },
   );
+
+  testWidgets(
+    'GoalsScreen_ShouldOfferAddGoalInTheEmptyState_WhenThereAreNoGoals',
+    (tester) async {
+      await openGoals(tester);
+
+      final empty = find.byKey(const Key('no-goals'));
+      final add = find.descendant(
+        of: empty,
+        matching: find.byKey(const Key('add-goal-empty')),
+      );
+      expect(empty, findsOneWidget);
+      expect(add, findsOneWidget);
+
+      // The button in the empty state opens the same form as the header's.
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('goal-target')), findsOneWidget);
+    },
+  );
+
+  for (final width in [390.0, 1300.0]) {
+    testWidgets('GoalsScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      server.goals.add({
+        'id': 'goal-1',
+        'period': 'week',
+        'metric': 'distance',
+        'target': 100000.0,
+      });
+      server.goalCurrent['distance'] = 40000;
+      server.events.add(eventJson());
+      await openGoals(tester, size: Size(width, 2400));
+
+      expect(find.byKey(const Key('goal-goal-1')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
