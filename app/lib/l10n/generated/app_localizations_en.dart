@@ -2899,6 +2899,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readinessWhy => 'Why';
 
   @override
+  String readinessWhyScore(Object score) {
+    return 'Why $score';
+  }
+
+  @override
   String get readinessNotMedical => 'A training guide, not a medical measure.';
 
   @override

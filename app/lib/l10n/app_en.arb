@@ -1572,6 +1572,7 @@
   "readinessNoData": "Record a ride to see readiness.",
   "readinessLoadOnly": "Add a daily check-in to include how you feel.",
   "readinessWhy": "Why",
+  "readinessWhyScore": "Why {score}",
   "readinessNotMedical": "A training guide, not a medical measure.",
   "readinessFactorForm": "Form",
   "readinessFactorRamp": "7-day ramp",

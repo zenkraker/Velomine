@@ -5060,6 +5060,12 @@ abstract class AppLocalizations {
   /// **'Why'**
   String get readinessWhy;
 
+  /// No description provided for @readinessWhyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Why {score}'**
+  String readinessWhyScore(Object score);
+
   /// No description provided for @readinessNotMedical.
   ///
   /// In en, this message translates to:

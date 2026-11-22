@@ -52,6 +52,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'TotalsScreen_ShouldShowOneColumnPerNumber_WhenShowingTheTable',
+    (tester) async {
+      await openTotals(tester);
+
+      // The table's header names the columns once, as the mock-up draws them.
+      final table = find.byKey(const Key('totals-table'));
+      for (final column in ['Rides', 'Distance', 'Moving time', 'Climbing']) {
+        expect(
+          find.descendant(of: table, matching: find.text(column)),
+          findsOneWidget,
+          reason: column,
+        );
+      }
+    },
+  );
+
   testWidgets('TotalsScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
     tester,
   ) async {
@@ -66,13 +83,14 @@ void main() {
       find.descendant(of: thisWeek, matching: find.text('42.5 km')),
       findsOneWidget,
     );
-    expect(
-      find.descendant(
-        of: thisWeek,
-        matching: find.text('2 rides · 1 h 30 min · 400 m climbing'),
-      ),
-      findsOneWidget,
-    );
+    // One column per number, right-aligned: a row is not one sentence of numbers.
+    for (final value in ['2', '1 h 30 min', '400 m']) {
+      expect(
+        find.descendant(of: thisWeek, matching: find.text(value)),
+        findsOneWidget,
+        reason: value,
+      );
+    }
     expect(find.byKey(const Key('total-1')), findsOneWidget);
   });
 

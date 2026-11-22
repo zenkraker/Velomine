@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
+import '../../core/widgets/area_chart.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
@@ -94,11 +95,26 @@ class WellbeingCard extends StatelessWidget {
   final VoidCallback onEdit;
   final bool saving;
 
+  /// The last two weeks of check-ins, the oldest first.
+  static List<CheckInResponse> _days(CheckInsResponse checkIns) =>
+      checkIns.checkIns.reversed.take(14).toList().reversed.toList();
+
+  /// How the rider felt on a day, as one number out of five.
+  static double _feelScore(CheckInResponse checkIn) =>
+      (checkIn.fatigue +
+          checkIn.soreness +
+          checkIn.mood +
+          checkIn.stress +
+          checkIn.motivation) /
+      5;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final text = Theme.of(context).textTheme;
     final wellbeing = this.wellbeing;
+    final days = checkIns == null ? const <CheckInResponse>[] : _days(checkIns!);
 
     if (wellbeing == null) {
       return const SizedBox.shrink();
@@ -182,9 +198,27 @@ class WellbeingCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(l10n.wellbeingHistory14, style: text.labelLarge),
           const SizedBox(height: AppSpacing.xs),
-          // Two weeks, newest first: the page answers "how do I feel", not "what did I ever say".
-          for (final checkIn in checkIns.checkIns.reversed.take(14))
-            _HistoryRow(checkIn: checkIn),
+          // Two weeks of how the rider felt, as a line: the latest point carries today's score.
+          AreaChart(
+            key: const Key('wellbeing-history-chart'),
+            values: [
+              for (final checkIn in days.reversed) _feelScore(checkIn),
+            ],
+            labels: [
+              for (final checkIn in days.reversed)
+                DateFormat.MMMd(
+                  locale,
+                ).format(checkIn.date),
+            ],
+            format: (value) => value.toStringAsFixed(1),
+            semanticLabel: l10n.wellbeingHistory14,
+            emptyMessage: l10n.wellbeingNoToday,
+            height: AppProgress.fitnessChartHeight,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // The numbers behind the line, newest first: the page answers "how do I feel", not "what did
+          // I ever say".
+          for (final checkIn in days.reversed) _HistoryRow(checkIn: checkIn),
         ],
         const SizedBox(height: AppSpacing.md),
         Text(l10n.wellbeingPrivate, style: text.bodySmall),

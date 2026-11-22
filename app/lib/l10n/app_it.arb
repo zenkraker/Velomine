@@ -965,6 +965,7 @@
   "readinessNoData": "Registra un giro per vedere la prontezza.",
   "readinessLoadOnly": "Aggiungi il check-in giornaliero per includere come ti senti.",
   "readinessWhy": "Perché",
+  "readinessWhyScore": "Perché {score}",
   "readinessNotMedical": "Una guida per l'allenamento, non una misura medica.",
   "readinessFactorForm": "Forma",
   "readinessFactorRamp": "Crescita 7 giorni",

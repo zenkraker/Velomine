@@ -27,14 +27,6 @@ void main() {
     await goTo(tester, '/progress/power');
   }
 
-  Future<void> openProgress(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await startApp(tester, server.session(useCookies: true));
-    await goTo(tester, '/progress');
-  }
-
   /// Every note on the power card, in order: critical power, current FTP, estimate, VO2max.
   List<SourceNote> notes(WidgetTester tester) =>
       tester.widgetList<SourceNote>(find.byType(SourceNote)).toList();
@@ -162,7 +154,8 @@ void main() {
           'rideId': 'r1',
         },
       ];
-      await openProgress(tester);
+      // The FTP note is the Power page's: the overview carries no power curve.
+      await openPower(tester);
 
       expect(
         find.text(

@@ -160,10 +160,8 @@ abstract final class AppNav {
   /// The space between the live-ride banner and the pill under it.
   static const double bannerGap = AppSpacing.sm;
 
-  /// How opaque the pill's surface is over the blur.
-  static const double pillOpacity = 0.82;
-
-  /// How opaque it is with no blur: nearly solid, so the content behind never shows through unreadably.
+  /// How opaque the glass turns where the blur cannot run: nearly solid, so the content behind never
+  /// shows through unreadably.
   static const double pillOpacityNoBlur = 0.96;
 
   /// How far the pill slides down, in its own heights, when it hides: past the margin and safe area.
@@ -188,6 +186,10 @@ abstract final class AppGauge {
 
 abstract final class AppProgress {
   static const double fitnessChartHeight = 170;
+
+  /// The readiness factor's effect bar: its length and thickness, and the column of the signed number.
+  static const double effectBarWidth = 72;
+  static const double effectBarHeight = 6;
   static const double loadChartHeight = 120;
   static const double detailWidth = 190;
   static const double effectWidth = 34;

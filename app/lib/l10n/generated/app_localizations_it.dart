@@ -2922,6 +2922,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get readinessWhy => 'Perché';
 
   @override
+  String readinessWhyScore(Object score) {
+    return 'Perché $score';
+  }
+
+  @override
   String get readinessNotMedical =>
       'Una guida per l\'allenamento, non una misura medica.';
 

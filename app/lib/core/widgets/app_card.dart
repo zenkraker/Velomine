@@ -8,6 +8,7 @@ class AppCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(AppSpacing.xl),
+    this.onTap,
   });
 
   final Widget child;
@@ -15,8 +16,16 @@ class AppCard extends StatelessWidget {
   /// The card's inner margin: the card padding token unless a card draws its own rows.
   final EdgeInsetsGeometry padding;
 
+  /// Makes the whole card a target, for a card that opens the page that explains it.
+  final VoidCallback? onTap;
+
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(padding: padding, child: child),
-  );
+  Widget build(BuildContext context) {
+    final content = Padding(padding: padding, child: child);
+    if (onTap == null) return Card(child: content);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(onTap: onTap, child: content),
+    );
+  }
 }
