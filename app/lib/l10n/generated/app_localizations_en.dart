@@ -4448,6 +4448,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clubRoutesTitle => 'Routes';
 
   @override
+  String get clubRoutesCaption => 'Club routes';
+
+  @override
   String get clubRoutesHelp =>
       'Lines the club shares, each one kept by the member who added it.';
 
@@ -4726,6 +4729,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarTitle => 'Calendar subscription';
+
+  @override
+  String get clubCalendarCaption => 'Club calendar';
 
   @override
   String get calendarHelp =>

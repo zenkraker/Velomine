@@ -76,6 +76,7 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
     final draft = s.draft;
     return PageScaffold(
       title: l10n.addRouteTitle,
+      parent: l10n.clubRoutesCaption,
       subtitle: l10n.addRouteHelp,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: draft == null
@@ -285,6 +286,7 @@ class _EditRouteScreenState extends ConsumerState<EditRouteScreen> {
 
     return PageScaffold(
       title: l10n.editRouteTitle,
+      parent: l10n.clubRoutesCaption,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
         buttonKey: const Key('save-route-edit'),

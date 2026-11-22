@@ -113,6 +113,7 @@ class _NearbyClubsScreenState extends ConsumerState<NearbyClubsScreen> {
                 : ref.read(nearbyClubsViewModelProvider.notifier).nextRadius();
             return PageScaffold(
               title: l10n.nearbyTitle,
+              parent: l10n.navClub,
               onBack: widget.onBack,
               maxWidth: AppLayout.contentNarrow,
               refresh: position == null || s.locating

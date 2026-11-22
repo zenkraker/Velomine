@@ -301,6 +301,7 @@ class ClubScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.navClub,
+      parent: l10n.navClub,
       subtitle: l10n.clubSubtitle,
       // Leaving ends the member's place in the club: in the menu, last and red. The owner cannot leave.
       menu: owner

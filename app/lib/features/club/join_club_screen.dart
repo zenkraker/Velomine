@@ -63,6 +63,7 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
           };
     return PageScaffold(
       title: l10n.joinTitle,
+      parent: l10n.navClub,
       subtitle: l10n.joinIntro,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(

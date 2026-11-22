@@ -33,6 +33,7 @@ class ImportScreen extends ConsumerWidget {
     final status = state.load.value;
 
     return PageScaffold(
+      parent: l10n.navRides,
       title: l10n.importTitle,
       maxWidth: AppLayout.contentNarrow,
       children: [

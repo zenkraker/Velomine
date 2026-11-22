@@ -72,6 +72,7 @@ class _SupporterActivationScreenState
     return PageScaffold(
       key: const Key('supporter-activation'),
       title: l10n.supporterSignInTitle,
+      parent: l10n.profileTitle,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: ValueListenableBuilder(
         valueListenable: _key,

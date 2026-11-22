@@ -68,6 +68,7 @@ class ClubRideDetailScreen extends ConsumerWidget {
     if (s.load.running && s.detail == null) {
       return PageScaffold(
         title: l10n.clubRidesTitle,
+        parent: l10n.clubCalendarCaption,
         maxWidth: AppLayout.contentNarrow,
         children: const [
           LoadingState.rows(key: Key('club-ride-loading'), count: 4),
@@ -100,27 +101,20 @@ class ClubRideDetailScreen extends ConsumerWidget {
         ? null
         : ref.watch(routeDetailViewModelProvider(ride.routeId!)).detail;
     final busy = s.action.running;
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
 
     return PageScaffold(
       title: ride.title,
+      parent: l10n.clubCalendarCaption,
       titleKey: const Key('club-ride-title'),
       subtitle: rideStartText(context, ride.startsAt, ride.utcOffsetMinutes),
       maxWidth: AppLayout.contentNarrow,
       primaryAction: detail.canPlan
-          ? (wide
-                ? OutlinedButton.icon(
-                    key: const Key('edit-ride'),
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: Text(l10n.rideEdit),
-                  )
-                : IconButton.filled(
-                    key: const Key('edit-ride'),
-                    tooltip: l10n.rideEdit,
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                  ))
+          ? FilledButton.icon(
+              key: const Key('edit-ride'),
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined),
+              label: Text(l10n.rideEdit),
+            )
           : null,
       menu: detail.canPlan && !ride.isCancelled
           ? PageMenu(

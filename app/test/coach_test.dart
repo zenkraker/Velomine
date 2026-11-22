@@ -81,7 +81,8 @@ void main() {
     // Training only: no ride date on the roster, but the load is there.
     server.sharingChoices['rides'] = 'none';
     server.sharingChoices['analytics'] = 'coaches';
-    await tester.tap(find.text('Club'));
+    // The Athletes page carries "Club" as its caption, so the destination is found by its key.
+    await tester.tap(find.byKey(const Key('rail-club')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open-athletes')));
     await tester.pumpAndSettle();

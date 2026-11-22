@@ -800,6 +800,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ];
     return PageScaffold(
       title: l10n.profileTitle,
+      parent: l10n.accountMenu,
       maxWidth: AppLayout.contentMax,
       // Deleting the account is rare and final: in the menu, last and red.
       menu: PageMenu(

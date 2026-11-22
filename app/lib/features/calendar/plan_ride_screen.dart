@@ -202,6 +202,7 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
     if (s.load.running && (editing && detail == null)) {
       return PageScaffold(
         title: l10n.editRideTitle,
+        parent: l10n.clubCalendarCaption,
         maxWidth: AppLayout.contentNarrow,
         children: const [
           LoadingState.rows(key: Key('plan-ride-loading'), count: 4),
@@ -212,6 +213,7 @@ class _PlanRideScreenState extends ConsumerState<PlanRideScreen> {
     final problem = _problemText(l10n);
     return PageScaffold(
       title: editing ? l10n.editRideTitle : l10n.planRideTitle,
+      parent: l10n.clubCalendarCaption,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(
         buttonKey: const Key('save-ride'),

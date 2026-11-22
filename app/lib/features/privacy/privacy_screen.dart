@@ -172,6 +172,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
 
     return PageScaffold(
       title: l10n.privacyTitle,
+      parent: l10n.profileTitle,
       maxWidth: AppLayout.contentNarrow,
       children: [
         privacy == null && state.load.running

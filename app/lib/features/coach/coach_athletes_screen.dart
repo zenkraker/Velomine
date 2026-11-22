@@ -30,6 +30,7 @@ class CoachAthletesScreen extends ConsumerWidget {
     final l10n = context.l10n;
     return PageScaffold(
       title: l10n.athletesTitle,
+      parent: l10n.navClub,
       subtitle: l10n.athletesSubtitle,
       children: [
         if (s.load.failure case final failure?)

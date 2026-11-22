@@ -69,6 +69,7 @@ class RouteDetailScreen extends ConsumerWidget {
     if (s.load.running && s.detail == null) {
       return PageScaffold(
         title: l10n.clubRoutesTitle,
+        parent: l10n.clubRoutesCaption,
         maxWidth: AppLayout.contentNarrow,
         children: const [
           LoadingState.rows(key: Key('route-loading'), count: 4),
@@ -92,7 +93,6 @@ class RouteDetailScreen extends ConsumerWidget {
       );
     }
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     final busy = s.action.running;
 
     // Destructive entries open a dialog after the menu has closed, never inside its callback.
@@ -178,6 +178,7 @@ class RouteDetailScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: route.name,
+      parent: l10n.clubRoutesCaption,
       titleKey: const Key('route-title'),
       subtitle: routeLineOf(
         ref.watch(unitsChoiceViewModelProvider),
@@ -186,20 +187,12 @@ class RouteDetailScreen extends ConsumerWidget {
       ),
       maxWidth: AppLayout.contentNarrow,
       primaryAction: route.isMine
-          ? (wide
-                ? FilledButton.icon(
-                    key: const Key('edit-route'),
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: Text(l10n.routeEdit),
-                  )
-                // The phone header row is tight: a filled icon, its tooltip names it.
-                : IconButton.filled(
-                    key: const Key('edit-route'),
-                    tooltip: l10n.routeEdit,
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                  ))
+          ? FilledButton.icon(
+              key: const Key('edit-route'),
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined),
+              label: Text(l10n.routeEdit),
+            )
           : null,
       menu: entries.isEmpty
           ? null

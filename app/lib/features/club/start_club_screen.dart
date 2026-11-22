@@ -89,6 +89,7 @@ class _StartClubScreenState extends ConsumerState<StartClubScreen> {
     final failure = state.create.failure;
     return PageScaffold(
       title: l10n.startClubTitle,
+      parent: l10n.navClub,
       subtitle: l10n.startClubIntro,
       maxWidth: AppLayout.contentNarrow,
       bottomAction: BottomActionBar.button(

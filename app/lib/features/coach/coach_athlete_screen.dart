@@ -40,6 +40,7 @@ class CoachAthleteScreen extends ConsumerWidget {
     final summary = c.summary;
     return PageScaffold(
       title: summary?.displayName ?? l10n.athletesTitle,
+      parent: l10n.athletesTitle,
       subtitle: l10n.coachReadOnly,
       children: [
         if (c.notFound)

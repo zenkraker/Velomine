@@ -231,6 +231,15 @@ abstract final class AppStatCard {
   static const double stateHeight = 28;
 }
 
+/// The small badge beside a name or a title, as the mock-up's `vm-badge` draws it.
+abstract final class AppBadgeSize {
+  /// One line of the axis size, the badge never wraps.
+  static const double height = 24;
+
+  /// The room either side of the label: 10 px in the mock-up, between [AppSpacing.sm] and [AppSpacing.md].
+  static const double sidePadding = AppSpacing.sm + 2;
+}
+
 /// The club page's cards.
 abstract final class AppClub {
   /// The plan's member bar and the small icon before a status line.

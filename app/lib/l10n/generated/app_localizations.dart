@@ -7640,6 +7640,12 @@ abstract class AppLocalizations {
   /// **'Routes'**
   String get clubRoutesTitle;
 
+  /// No description provided for @clubRoutesCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Club routes'**
+  String get clubRoutesCaption;
+
   /// No description provided for @clubRoutesHelp.
   ///
   /// In en, this message translates to:
@@ -8155,6 +8161,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calendar subscription'**
   String get calendarTitle;
+
+  /// No description provided for @clubCalendarCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Club calendar'**
+  String get clubCalendarCaption;
 
   /// No description provided for @calendarHelp.
   ///

@@ -4479,6 +4479,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get clubRoutesTitle => 'Rotte';
 
   @override
+  String get clubRoutesCaption => 'Rotte del club';
+
+  @override
   String get clubRoutesHelp =>
       'Le linee condivise dal club, ognuna custodita da chi l\'ha aggiunta.';
 
@@ -4757,6 +4760,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get calendarTitle => 'Abbonamento al calendario';
+
+  @override
+  String get clubCalendarCaption => 'Calendario del club';
 
   @override
   String get calendarHelp =>

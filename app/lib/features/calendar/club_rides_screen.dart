@@ -43,25 +43,17 @@ class ClubRidesScreen extends ConsumerWidget {
       ref.read(clubRidesViewModelProvider.notifier).messageShown,
     );
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     return PageScaffold(
       title: l10n.clubRidesTitle,
+      parent: l10n.clubCalendarCaption,
       subtitle: l10n.clubRidesSubtitle,
       primaryAction: canPlan
-          ? (wide
-                ? FilledButton.icon(
-                    key: const Key('plan-ride'),
-                    onPressed: onPlan,
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.clubPlanRide),
-                  )
-                // The phone header row is tight: a filled icon, its tooltip names it.
-                : IconButton.filled(
-                    key: const Key('plan-ride'),
-                    tooltip: l10n.clubPlanRide,
-                    onPressed: onPlan,
-                    icon: const Icon(Icons.add),
-                  ))
+          ? FilledButton.icon(
+              key: const Key('plan-ride'),
+              onPressed: onPlan,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.clubPlanRide),
+            )
           : null,
       menu: PageMenu(
         buttonKey: const Key('club-rides-actions'),

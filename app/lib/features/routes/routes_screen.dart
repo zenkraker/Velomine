@@ -7,7 +7,6 @@ import 'package:velomine_api/api.dart';
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
 import '../../core/units.dart';
-import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
@@ -37,7 +36,6 @@ class RoutesScreen extends ConsumerWidget {
       ref.read(routesViewModelProvider.notifier).messageShown,
     );
 
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
     final sortAndFilters = [
       DropdownButton<String>(
         key: const Key('routes-sort'),
@@ -77,20 +75,12 @@ class RoutesScreen extends ConsumerWidget {
     final page = PageScaffold(
       title: l10n.clubRoutesTitle,
       subtitle: l10n.routesSubtitle,
-      primaryAction: wide
-          ? FilledButton.icon(
-              key: const Key('add-route'),
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.clubAddRoute),
-            )
-          // The phone header row is tight: a filled icon, its tooltip names it.
-          : IconButton.filled(
-              key: const Key('add-route'),
-              tooltip: l10n.clubAddRoute,
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-            ),
+      primaryAction: FilledButton.icon(
+        key: const Key('add-route'),
+        onPressed: onAdd,
+        icon: const Icon(Icons.add),
+        label: Text(l10n.clubAddRoute),
+      ),
       children: [
         ToolbarRow(children: sortAndFilters),
         if (s.load.failure case final failure?)

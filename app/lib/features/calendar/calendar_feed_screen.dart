@@ -37,6 +37,7 @@ class CalendarFeedScreen extends ConsumerWidget {
     final busy = s.action.running;
     return PageScaffold(
       title: l10n.calendarTitle,
+      parent: l10n.clubCalendarCaption,
       subtitle: l10n.calendarHelp,
       maxWidth: AppLayout.contentNarrow,
       menu: s.active

@@ -36,6 +36,7 @@ class SessionsScreen extends ConsumerWidget {
     final sessions = state.load.value;
     return PageScaffold(
       title: l10n.sessionsTitle,
+      parent: l10n.profileTitle,
       subtitle: l10n.sessionsIntro,
       maxWidth: AppLayout.contentNarrow,
       // Signing the other devices out is rare: in the menu, behind a confirmation.

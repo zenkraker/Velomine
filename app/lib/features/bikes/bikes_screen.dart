@@ -40,21 +40,13 @@ class BikesScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final notifier = ref.read(bikesViewModelProvider.notifier);
     final onAdd = s.action.running ? null : () => _add(context, ref);
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    // The one action, in the header at every width; on a phone a filled icon whose tooltip names it.
-    final add = wide
-        ? FilledButton.icon(
-            key: const Key('add-bike'),
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addBike),
-          )
-        : IconButton.filled(
-            key: const Key('add-bike'),
-            tooltip: l10n.addBike,
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-          );
+    // The one action, a filled pill in the header at every width.
+    final add = FilledButton.icon(
+      key: const Key('add-bike'),
+      onPressed: onAdd,
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addBike),
+    );
 
     listenUserMessages(
       ref,
@@ -65,6 +57,7 @@ class BikesScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.navBikes,
+      parent: l10n.profileTitle,
       subtitle: l10n.bikesSubtitle,
       primaryAction: add,
       children: [

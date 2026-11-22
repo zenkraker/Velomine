@@ -132,6 +132,7 @@ class RideDetailScreen extends ConsumerWidget {
 
     return PageScaffold(
       // The title is the page's name, so a rename shows here at once.
+      parent: l10n.navRides,
       title: s.ride == null ? l10n.rideDetailTitle : rideTitle(l10n, s.ride!),
       titleKey: const Key('ride-title'),
       menu: menu,

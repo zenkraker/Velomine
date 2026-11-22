@@ -108,6 +108,7 @@ class EventsScreen extends ConsumerWidget {
 
     return PageScaffold(
       title: l10n.eventsTitle,
+      parent: l10n.navGoals,
       onBack: () => context.pop(),
       primaryAction: FilledButton.tonalIcon(
         key: const Key('add-event'),

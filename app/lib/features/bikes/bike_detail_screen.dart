@@ -205,6 +205,7 @@ class BikeDetailScreen extends ConsumerWidget {
     final detail = s.detail;
     return PageScaffold(
       title: detail?.bike.name ?? l10n.navBikes,
+      parent: l10n.navBikes,
       titleKey: const Key('bike-title'),
       primaryAction: detail == null ? null : _addPartButton(context, ref),
       menu: detail == null ? null : _bikeMenu(context, ref, detail.bike),
@@ -215,20 +216,12 @@ class BikeDetailScreen extends ConsumerWidget {
   /// The page's one action: a filled icon on a phone, whose tooltip names it, a labelled button from 600 dp.
   Widget _addPartButton(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
-    return wide
-        ? FilledButton.icon(
-            key: const Key('add-part'),
-            onPressed: () => _addPart(context, ref),
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addPartAction),
-          )
-        : IconButton.filled(
-            key: const Key('add-part'),
-            tooltip: l10n.addPartAction,
-            onPressed: () => _addPart(context, ref),
-            icon: const Icon(Icons.add),
-          );
+    return FilledButton.icon(
+      key: const Key('add-part'),
+      onPressed: () => _addPart(context, ref),
+      icon: const Icon(Icons.add),
+      label: Text(l10n.addPartAction),
+    );
   }
 
   /// The rare jobs on a bike, behind one menu in the page header. Entries that open a sheet or a
