@@ -48,7 +48,7 @@ The app is Flutter, shipped to web and iOS/Android from the same widgets. Plan e
 
 `docs/design/pages/README.md` owns the full route list. Tabs inside Progress (`ProgressTabs`): Overview · Fitness · Power · Totals · Wellbeing. The sport filter sits in the page header and applies to all tabs; on compact width it becomes a dropdown or a horizontally scrolling chip row.
 
-When a story conflicts with this map, raise it with the PO instead of silently deviating. Update this table when the owner approves a change.
+When a story conflicts with this map, raise it with the owner instead of silently deviating. Update this table when the owner approves a change.
 
 ## References
 

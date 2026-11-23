@@ -41,7 +41,7 @@ One small npm package: hooks, six skills and one OpenCode plugin file, no depend
 
 ## Risk and exit plan
 
-If it is abandoned, the repository keeps working: `AGENTS.md` still carries the project's rules, and the package is instruction text plus three small hooks. To remove it, delete the `plugins` entry in `opencode.json` (and `/plugin remove ponytail` in Claude Code) and delete `~/.config/opencode/.ponytail-active` and `~/.config/ponytail/config.json`. No repository code depends on it.
+If it is abandoned, the repository keeps working: `AGENTS.md` still carries the project's rules, and the package is instruction text plus three small hooks. To remove it, delete its entry in `.pi/settings.json`, run `/plugin remove ponytail` in Claude Code, and delete `~/.config/ponytail/config.json`. (OpenCode, named above, is no longer used.) No repository code depends on it.
 
 ## Recommendation
 

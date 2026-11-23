@@ -11,4 +11,4 @@ Pendant's own profiles (subagents) and its other settings are not files here: th
 
 - A file that is already in the volume is never overwritten, so your own changes and the logins you made inside the container survive a rebuild. To take a changed default, delete the file in the volume and run `bash .devcontainer/post-create.sh`.
 - **Never put credentials here** (Claude's `.credentials.json`, Pi's `auth.json`, API keys, tokens): this folder is committed. Sign in inside the container once (see *Dev container* in `docs/development.md`); the login stays in the volume.
-- Project settings, skills and MCP servers (`.claude/`, `.pi/`, `.mcp.json`, `opencode.json`) come with the repository and need nothing here.
+- Project settings, skills and MCP servers (`.claude/`, `.pi/`, `.mcp.json`) come with the repository and need nothing here.

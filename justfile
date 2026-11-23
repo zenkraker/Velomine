@@ -102,22 +102,3 @@ check:
     dotnet test --solution Velomine.slnx
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
-
-# models: the PO and architect use the owner's Claude plan, the developer a cheaper one; `pi --list-models` shows the names
-pi_planner := "pi-claude-tether/claude-sonnet-5-5"
-pi_developer := "deepseek/deepseek-flash"
-
-# the project skills Pi does not read from CLAUDE.md
-pi_skills := "--skill .claude/skills/dotnet --skill .claude/skills/flutter --skill .claude/skills/postgres --skill .claude/skills/software-architecture"
-
-# Pi: talk to the PO; it writes the stories, starts the architect and dev as terminals of their own through hc, and starts dev on your go
-po *args:
-    PONYTAIL_DEFAULT_MODE=full pi --approve --name po --model {{pi_planner}} --thinking high --append-system-prompt .pi/po.md {{args}}
-
-# Pi: the architect helper (read-only); the PO starts it as its own terminal through hc, and you can talk to it there
-architect *args:
-    PONYTAIL_DEFAULT_MODE=full pi --approve --name architect --model {{pi_planner}} --thinking high --exclude-tools edit,write,bash {{pi_skills}} --append-system-prompt .pi/architect.md {{args}}
-
-# Pi: the dev helper; the PO starts it as its own terminal through hc only after your go. It never loads the advisor tools
-dev *args:
-    PONYTAIL_DEFAULT_MODE=full pi --approve --name dev --model {{pi_developer}} --exclude-tools ask_advisor,record_advisor_outcome,advisor_config {{pi_skills}} --append-system-prompt .pi/dev.md {{args}}

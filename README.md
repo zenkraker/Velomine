@@ -150,7 +150,7 @@ Not needed to run it.
 | **Flutter 3.50.0** (comes with Dart 3.14.0) | The app. Run `flutter doctor` to see what else your target needs (Android Studio for Android, Xcode for iOS). |
 | **just** | `just check` runs every check before a commit; `just --list` shows the rest. |
 | **Java 11 or newer, or Docker** | Regenerating the API client with `tools/generate-api-client.sh`. |
-| **Claude Code or OpenCode, with the ponytail plugin, plus CodeGraph** | Required for working on this repository; see [AGENTS.md](AGENTS.md). |
+| **Claude Code or Pi, with the ponytail plugin, plus CodeGraph** | Required for working on this repository; see [AGENTS.md](AGENTS.md). |
 
 ## Documents
 

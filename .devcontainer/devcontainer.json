@@ -67,6 +67,13 @@
       ],
       "settings": {
         "dart.flutterSdkPath": "/opt/flutter",
+        // The project skills, which Claude Code gets from CLAUDE.md (AGENTS.md: always loaded, for both agents).
+        "pendant.extraSkills": [
+          "/workspaces/Velomine/.claude/skills/dotnet",
+          "/workspaces/Velomine/.claude/skills/flutter",
+          "/workspaces/Velomine/.claude/skills/postgres",
+          "/workspaces/Velomine/.claude/skills/software-architecture"
+        ],
         // Pendant: the subagent profiles (machine-scoped, so a dev container can set them).
         // Pendant keeps them in VS Code settings, not in the Pi folder. pendant.pinnedModels is
         // application-scoped and cannot be set here; sign in to Settings Sync for it.

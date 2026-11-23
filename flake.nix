@@ -1,17 +1,9 @@
 {
   description = "Velomine dev environment (CachyOS + Nix)";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  # OpenCode's own flake: nixpkgs lags a version. Pinned to a commit, so
-  # `nix flake update` never moves it: upgrade by changing the commit here. It
-  # follows our nixpkgs because its own lock lags the bun its package.json asks for
-  # (1.4.4); built with an older bun the server dies on start with "Export named
-  # 'extension' not found in module 'ws'". When upgrading, check that nixpkgs' bun is
-  # at least the `packageManager` version in OpenCode's package.json.
-  inputs.opencode.url = "github:anomalyco/opencode/a3d6e54b3dff0975d01a7307464ef7be9fa6b1ee";
-  inputs.opencode.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs =
-    { nixpkgs, opencode, ... }:
+    { nixpkgs, ... }:
     let
       # x86_64 Linux only: the Claude Code manifest and extension hashes below are linux-x64.
       system = "x86_64-linux";
@@ -80,31 +72,6 @@
       dotnet = pkgs.dotnetCorePackages.sdk_10_0;
       nodejs = pkgs.nodejs_24; # ponytail hooks and sentry-mcp; pinned so an LTS bump is a deliberate change
 
-      # The OpenCode desktop app is installed on the host, not here. It connects to
-      # this CLI's background service, which gets a fixed port and password once:
-      #
-      #   opencode service set port 4096
-      #   opencode service set password '<a password of your own>'
-      #
-      # Both are kept in ~/.config/opencode/service-prod.json, outside the repository,
-      # and survive restarts. Each day, from the repository with the dev shell loaded
-      # (so the MCP servers the service spawns find `dart`, `sentry-mcp` and `scw-mcp`):
-      #
-      #   opencode service start    # http://127.0.0.1:4096
-      #
-      # In the desktop, add that address with the user `opencode` and the password.
-      # `opencode` in the terminal uses the same service. Keep the desktop on the same
-      # release as the commit pinned above. More in docs/development.md.
-      #
-      # nix/hashes.json at this commit does not match what bun 1.4.4 installs on
-      # x86_64-linux; the value below is what the sandboxed install produced. Try
-      # dropping this override on every OpenCode upgrade.
-      opencodeCli = opencode.packages.${system}.opencode.override {
-        node_modules = opencode.packages.${system}.opencode.node_modules.override {
-          hash = "sha256-TeuJv1JURfx1s7PqUmf0uK76eKiae8ieukrqQ3AIZ1Q=";
-        };
-      };
-
       # Claude Code from Anthropic's release manifest, ahead of nixpkgs. To update, take the
       # version from https://downloads.claude.ai/claude-code-releases/latest and the
       # linux-x64 checksum from <that URL's folder>/<version>/manifest.zst.json. Drop this
@@ -132,10 +99,8 @@
         };
       });
 
-      # TEMPORARY: OpenCode 2 rejects the hosted Sentry MCP OAuth with a 401
-      # (https://github.com/anomalyco/opencode/issues/56195). Remove this local
-      # stdio wrapper and point opencode.json back at https://mcp.sentry.dev/mcp
-      # once the fix ships. npx pins the package version; upgrade it deliberately.
+      # Local stdio Sentry MCP for Pi (.pi/mcp.json), read-only skills; Claude Code uses
+      # the hosted server in .mcp.json. npx pins the package version; upgrade it deliberately.
       sentryMcpVersion = "0.49.0";
       sentryMcp = pkgs.writeShellApplication {
         name = "sentry-mcp";
@@ -160,16 +125,6 @@
         '';
       };
 
-      # OpenCode V2 is not in nixpkgs' extension set yet.
-      opencodeV2Extensions = pkgs.vscode-utils.extensionsFromVscodeMarketplace [
-        {
-          name = "opencode-v2";
-          publisher = "sst-dev";
-          version = "0.1.1";
-          sha256 = "sha256-11a8JaishNyy6XkTeh6s36efdt1tSNYclOdkglx8x30=";
-        }
-      ];
-
       # VS Code with the project's extensions, using the same Microsoft build as the
       # host package. Run it with `nix run .#vscode`.
       vscode = pkgs.vscode-with-extensions.override {
@@ -180,8 +135,7 @@
           pkgs.vscode-extensions.jnoortheen.nix-ide
           pkgs.vscode-extensions.mkhl.direnv
           pkgs.vscode-extensions.ms-dotnettools.csdevkit
-        ]
-        ++ opencodeV2Extensions;
+        ];
       };
     in
     {
@@ -194,7 +148,6 @@
           scalewayMcp
           claudeCode
           ;
-        opencode = opencodeCli;
       };
 
       devShells.${system}.default = pkgs.mkShell {
@@ -208,21 +161,19 @@
 
           # AI coding agents and the tooling they share.
           # Agent plugins are recommended, not pinned here: ponytail
-          # (@dietrichgebert/ponytail, configured in opencode.json and
-          # .claude/settings.json) and the official Flutter agent plugin
+          # (@dietrichgebert/ponytail, configured in .claude/settings.json and
+          # .pi/settings.json) and the official Flutter agent plugin
           # (Flutter/Dart skills plus the `dart mcp-server` MCP server used by
-          # .mcp.json and opencode.json). Install them per agent; see
+          # .mcp.json and .pi/mcp.json). Install them per agent; see
           # docs/development.md.
           claudeCode # the only Claude Code install: no host copy, no self-update
           nodejs # ponytail's Claude Code hooks
           pkgs.codegraph
           pkgs.sentry-cli # releases and debug-symbol uploads
-          sentryMcp # local stdio Sentry MCP (hosted OAuth is broken in OpenCode 2)
+          sentryMcp # local stdio Sentry MCP for Pi
           pkgs.scaleway-cli # scw, for the read-only profile and `scw init`
           scalewayMcp # read-only Scaleway MCP (see above)
-          opencodeCli # alternative to Claude Code
-          pkgs.herdr # terminal workspace above both agents: panes, status, sessions that survive a closed window
-          pkgs.pi-coding-agent # Pi: the PO, architect and dev roles (`just po`, `just architect`, `just dev`; .pi/)
+          pkgs.pi-coding-agent # Pi in the terminal (`pi`); the same setup as the Pendant extension (.pi/)
 
           # Flutter's own command-line needs, plus helpers
           pkgs.git

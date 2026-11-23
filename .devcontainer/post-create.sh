@@ -32,4 +32,4 @@ seed "$here/config/pi" "$HOME/.state/pi"
 npm install -g --prefix "$HOME/.state/npm-global" \
   @anthropic-ai/claude-code@2.1.329
 
-echo "velomine: dev container ready. Missing compared with the flake: nixd, OpenCode and the pi command (the Pendant extension brings its own Pi)."
+echo "velomine: dev container ready. Missing compared with the flake: nixd and the pi command (the Pendant extension brings its own Pi)."

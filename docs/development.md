@@ -25,7 +25,7 @@ You only need a few ideas to use this setup.
 | Place | What | Why there |
 |-------|------|-----------|
 | Your distribution (pacman, apt, …) | Nix, direnv, Docker, VS Code, a Chromium-based browser | Used across all projects, or system services Nix cannot run |
-| `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, CodeGraph, OpenCode, VS Code with extensions, just | Versions that matter to this project |
+| `flake.nix` (in `/nix/store`) | .NET SDK, Flutter tarball, Android SDK, Java, Node, CodeGraph, Pi, VS Code with extensions, just | Versions that matter to this project |
 | `.dev/` in the repository | Caches, unpacked Flutter, emulator | Machine-local and writable; safe to delete |
 | Docker | PostgreSQL and Dex | The same containers as `just up`; see [the compose file](../docker-compose.yml) and [the development overlay](../compose.development.yaml) |
 
@@ -40,9 +40,7 @@ You only need a few ideas to use this setup.
 | Claude Code | 2.1.322 | AI coding agent, pinned ahead of nixpkgs from Anthropic's release manifest (see *Updating tools*). It is the only install: no native installer, npm package or VS Code Marketplace extension on the host, and it never updates itself. |
 | Node.js | from nixpkgs | Ponytail's Claude Code hooks (see [AGENTS.md](../AGENTS.md)) |
 | CodeGraph | from nixpkgs | Required by AGENTS.md, so there's no `curl … \| sh` install |
-| OpenCode | from its own flake (`anomalyco/opencode`), pinned to a commit in `flake.nix` | AI coding agent, an alternative to Claude Code |
-| herdr | 0.9.5 (from nixpkgs) | Terminal workspace above the agents: Claude Code and OpenCode in panes side by side, with each one's status (working, waiting, done), and sessions that survive a closed window or SSH drop. See *Running both agents with herdr*. |
-| VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code (same version as the CLI) and OpenCode V2. It is the same Microsoft build as `visual-studio-code-bin`. |
+| VS Code | 1.144 with the project's extensions | `nix run .#vscode`: Dart/Flutter, Nix IDE, direnv, C# Dev Kit, Claude Code (same version as the CLI). It is the same Microsoft build as `visual-studio-code-bin`. |
 | just | from nixpkgs | Runs the commands in the `justfile` |
 | nixd | from nixpkgs | Language server for editing `flake.nix` |
 
@@ -113,7 +111,7 @@ code --install-extension ms-dotnettools.csdevkit
 - **Nix IDE** gives syntax highlighting and completion for `flake.nix`, using `nixd` from the flake.
 - **Flutter** (also installs Dart) and **C# Dev Kit** are the language extensions. The flake sets `DOTNET_ROOT` so the C# Dev Kit finds the SDK.
 
-The flake also builds the same VS Code with those extensions, plus Claude Code and OpenCode V2: run `nix run .#vscode` from the repository. It keeps your normal VS Code settings, and its extensions come from the flake instead of the Marketplace. Use it for Claude Code in VS Code: don't install the Claude Code extension into your host VS Code.
+The flake also builds the same VS Code with those extensions, plus Claude Code: run `nix run .#vscode` from the repository. It keeps your normal VS Code settings, and its extensions come from the flake instead of the Marketplace. Use it for Claude Code in VS Code: don't install the Claude Code extension into your host VS Code.
 
 ### 5. Set up Claude Code
 
@@ -128,44 +126,7 @@ Ponytail keeps changes small (smallest complete change, YAGNI, stdlib first). It
 
 CodeGraph indexes the code into a local symbol graph and gives the agent one MCP tool, `codegraph_explore`, which returns the source of the relevant symbols with their call paths (`codegraph explore "..."` does the same in a shell). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook, so `codegraph` must be on PATH when Claude Code starts: start it from the dev shell. Without Nix, install it with `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh`.
 
-OpenCode reads `AGENTS.md` directly and takes its MCP servers and plugins from `opencode.json`; Claude Code reads the same rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. OpenCode needs no install command for ponytail: the `plugins` entry loads `@dietrichgebert/ponytail` from npm on first start and keeps it active in every session of this repository. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. For OpenCode that includes its background service, which spawns MCP servers: after a `direnv reload`, restart it with `opencode service restart` from the repository. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in each agent as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
-
-#### Running both agents with herdr
-
-herdr runs Claude Code and OpenCode side by side in one terminal and keeps them alive when the window closes. Start it from the repository with the dev shell loaded, so every pane inherits `claude`, `opencode`, `dart`, `codegraph` and the MCP wrappers:
-
-```
-herdr
-```
-
-Open a pane per agent and start `claude` or `opencode` in it as usual; herdr recognises both. For exact status (working, waiting for you, done) instead of reading the screen, run once per agent: `herdr integration install claude` and `herdr integration install opencode`. These write hooks into each agent's own user settings (`~/.claude/`, `~/.config/opencode/`), never into the repository; don't commit them. herdr only runs the agents: the rules still come from `AGENTS.md`, `CLAUDE.md` and `opencode.json`.
-
-The product owner flow (`just po`) runs inside the herdr desktop, whose CLI is `hc`: the PO starts the architect and dev with `hc run --bg --name <role> just <role>` (`just architect`, `just dev`) and talks to them with `hc send`, `hc wait` and `hc read`. Each helper is a sub-agent of the PO: the desktop lists it under its PO. A sub-agent has no pane at first, only a temporary overlay, so the PO runs `herdr-app do terminal.keep --terminal <helper>` to give it a tab of its own with a live status, which you can open and type in (`terminal.park` takes the tab away again). `hc kill <role>` removes it when the work is done, and ending the PO closes its helpers. Start `just po` from a desktop terminal with the dev shell loaded.
-
-herdr keeps its config and logs in `~/.config/herdr/`. By default it checks herdr.dev in the background for new versions and agent-detection updates. The flake pins the version, so you can turn both off in `~/.config/herdr/config.toml`:
-
-```toml
-[update]
-version_check = false
-manifest_check = false
-```
-
-#### OpenCode desktop
-
-The OpenCode desktop app is optional and is installed on the host, not from the flake. It connects to the background service of the flake's CLI, which gets a fixed port and password once:
-
-```bash
-opencode service set port 4096
-opencode service set password '<a password of your own>'
-```
-
-Both are stored in `~/.config/opencode/service-prod.json`, outside the repository, and survive restarts. Each day, start the service from the repository with the dev shell loaded, so the MCP servers it spawns find `dart`, `sentry-mcp` and `scw-mcp`:
-
-```bash
-opencode service start    # http://127.0.0.1:4096
-```
-
-In the desktop app, add that address under the server settings with the user `opencode` and your password. The `opencode` command in the dev shell uses the same service, so the terminal and the desktop share sessions. Keep the desktop on the same release as the CLI pinned in `flake.nix`.
+Claude Code reads the rules through `CLAUDE.md` and its MCP servers from `.mcp.json`. Pi (in the dev shell, or the Pendant extension in the dev container) reads `AGENTS.md` directly, its packages (ponytail, `pi-claude-tether`, `pi-advisor-flow`) from `.pi/settings.json` and its MCP servers from `.pi/mcp.json`. Both start the Dart MCP server with `dart mcp-server`, which ships with the pinned Flutter SDK: start the agent from the dev shell (with direnv loaded) so `dart` and `FLUTTER_ROOT` are set. The first launch resolves the server package into the pub cache in `.dev/`. Install the official Flutter agent plugin (the Flutter/Dart skills plus that MCP server) in Claude Code as [Flutter's AI setup](https://docs.flutter.dev/ai/get-started) describes; the dev shell provides the SDK, not the agent's skills.
 
 #### Agent MCP servers
 
@@ -183,30 +144,19 @@ claude plugin marketplace add flutter/agent-plugins
 claude plugin install dart-flutter@dart-flutter
 ```
 
-OpenCode has no Flutter plugin marketplace, so keep the `dart mcp-server` entry in `opencode.json` and install the official skills into the workspace:
-
-```
-npx skills add flutter/agent-plugins --skill '*' --agent universal --yes
-npx skills add dart-lang/skills --skill '*' --agent universal --yes
-```
-
 #### Project skills
 
-The project skills in `.claude/skills/` (dotnet, flutter, postgres, software-architecture) are loaded into every session of both agents: `CLAUDE.md` imports them and `opencode.json` lists them under `instructions`. When you add a skill, add it to both files. `AGENTS.md` wins where a skill disagrees with it.
+The project skills in `.claude/skills/` (dotnet, flutter, postgres, software-architecture) are loaded into every session of both agents: `CLAUDE.md` imports them for Claude Code, and `pendant.extraSkills` in `.devcontainer/devcontainer.json` lists them for Pi (in the dev shell, pass them with `pi --skill <folder>`). When you add a skill, add it to both. `AGENTS.md` wins where a skill disagrees with it.
 
 #### Sentry MCP
 
-Sentry MCP is available in two forms. Claude Code uses the hosted server configured in `.mcp.json`. OpenCode 2
-currently fails the hosted server's OAuth with a 401 ([anomalyco/opencode#56195](https://github.com/anomalyco/opencode/issues/56195)),
-so the dev shell provides a local stdio server instead. **Temporary workaround:** remove the `sentry-mcp`
-wrapper from `flake.nix` and point `opencode.json` back at `https://mcp.sentry.dev/mcp` once that issue is fixed.
+Sentry MCP is available in two forms, both read-only (`inspect,triage`). Claude Code uses the hosted server configured in `.mcp.json` and signs in through `/mcp`. Pi uses the local `sentry-mcp` wrapper (`.pi/mcp.json`), which needs one login:
 
 ```
 sentry-mcp auth login     # once; opens the browser and stores the login
 ```
 
-`opencode.json` starts the `sentry-mcp` wrapper, which defaults to `MCP_SKILLS=inspect,triage`; the local server then uses the stored
-login. `sentry-cli` is also in the shell for releases and debug-symbol uploads. Without an LLM provider the
+`sentry-cli` is also in the shell for releases and debug-symbol uploads. Without an LLM provider the
 local server's AI-powered search tools are unavailable, but project/DSN discovery and the other tools work.
 If you need `project-management` for a setup task, run it explicitly with
 `MCP_SKILLS=inspect,triage,project-management sentry-mcp` and re-authorize; never commit a token.
@@ -215,7 +165,7 @@ If you need `project-management` for a setup task, run it explicitly with
 
 Scaleway's own MCP server is built into the Scaleway CLI (`scw mcp server serve`). The `scw-mcp` wrapper in the dev shell
 starts it read-only (`read-only=true`), so only get and list commands exist, and limits it to the namespaces `instance`, `rdb`, `dns`,
-`object`, `iam`, `registry` and `vpc`. Both agents register it as `scaleway`.
+`object`, `iam`, `registry` and `vpc`. Claude Code and Pi register it as `scaleway`.
 
 It runs under the CLI profile named by `SCW_PROFILE`, `velomine-readonly` by default. Create the key for it once:
 
@@ -278,7 +228,7 @@ Nix also runs on other Linux distributions, macOS and WSL 2. Install it with the
 
 ## Dev container (isolates your home folder)
 
-The dev shell is not a sandbox: Claude Code, Pi, OpenCode and VS Code still write their settings, logins and caches into your home folder. The dev container in `.devcontainer/` runs the toolchain, the agents and the editor's extensions inside a container, so none of that lands on your machine. The Nix way above stays as it is; both are supported. `just check` passes in the container.
+The dev shell is not a sandbox: Claude Code, Pi and VS Code still write their settings, logins and caches into your home folder. The dev container in `.devcontainer/` runs the toolchain, the agents and the editor's extensions inside a container, so none of that lands on your machine. The Nix way above stays as it is; both are supported. `just check` passes in the container.
 
 ### Start it
 
@@ -292,8 +242,8 @@ The dev shell is not a sandbox: Claude Code, Pi, OpenCode and VS Code still writ
 
 ### What is inside
 
-- **No Nix.** `.devcontainer/Dockerfile` (Debian 12, the last with JDK 17) installs the versions `flake.nix` pins: Flutter 3.50.0 (same checksum), the Android SDK (platforms 35 and 36, build tools 36.0.0, NDK 28.2, CMake 3.22.1), JDK 17, `just`, and the release binaries of `scw` 2.62.0, `sentry-cli` 2.58.2 and `codegraph` 1.6.2, each with its checksum. .NET 10, Node 24 and Docker come from devcontainer features; `devcontainer-lock.json` pins their digests. **Versions are repeated:** change `flake.nix` and `.devcontainer/Dockerfile` together; `tools/check-versions.sh` checks Flutter. Not in the container: `nixd`, OpenCode, a browser and herdr.
-- **Agents.** `post-create.sh` installs Claude Code from npm at a pinned version. Pi comes from the Pendant extension, which brings its own and puts no `pi` command on `PATH`, so `just po`, `just architect` and `just dev` work only in the dev shell.
+- **No Nix.** `.devcontainer/Dockerfile` (Debian 12, the last with JDK 17) installs the versions `flake.nix` pins: Flutter 3.50.0 (same checksum), the Android SDK (platforms 35 and 36, build tools 36.0.0, NDK 28.2, CMake 3.22.1), JDK 17, `just`, and the release binaries of `scw` 2.62.0, `sentry-cli` 2.58.2 and `codegraph` 1.6.2, each with its checksum. .NET 10, Node 24 and Docker come from devcontainer features; `devcontainer-lock.json` pins their digests. **Versions are repeated:** change `flake.nix` and `.devcontainer/Dockerfile` together; `tools/check-versions.sh` checks Flutter. Not in the container: `nixd` and a browser.
+- **Agents.** `post-create.sh` installs Claude Code from npm at a pinned version. Pi comes from the Pendant extension, which brings its own and puts no `pi` command on `PATH`; it loads the project skills through `pendant.extraSkills`.
 - **MCP servers.** `.mcp.json` works unchanged: `codegraph` (`/opt/codegraph`), `dart` (the Flutter SDK's `dart mcp-server`), `scaleway` (the `scw-mcp` wrapper, read-only) and `sentry` (hosted, read-only). The two flake wrappers, `scw-mcp` and `sentry-mcp`, are in `.devcontainer/wrappers/`.
 - **Where state goes.** One Docker volume, `velomine-state`, mounted at `~/.state`, holds the logins, settings, sessions and caches of Claude Code (`CLAUDE_CONFIG_DIR`), Pi (`PI_CODING_AGENT_DIR`) and everything that follows the XDG folders. It survives rebuilds; `docker volume rm velomine-state` removes all of it. Build caches (NuGet, pub, Gradle, npm) go to `.dev/` in the repository, as in the dev shell.
 - **Agent defaults.** Non-secret settings for Claude Code and Pi are in `.devcontainer/config/`; `post-create.sh` copies them into the volume and never overwrites a file already there. Never put credentials there (see its `README.md`). Pendant's subagent profiles are VS Code settings, in `customizations.vscode.settings` of `devcontainer.json`.
@@ -337,7 +287,7 @@ There is one way to run Velomine, in development and for a self-hoster alike: `d
 - **Flutter:** change `flutterVersion` and `sha256` in `flake.nix` **and** `FLUTTER_VERSION` and `FLUTTER_SHA256` in `app/Dockerfile`, in the same commit. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). Run `direnv reload`. The new version unpacks into its own `.dev/flutter-<version>` folder, so delete the old one. A new minor version (3.51 rather than 3.50.x) may ask for newer Android SDK or NDK versions, and its template names the Gradle, Android Gradle Plugin and Kotlin versions it is tested with (`packages/flutter_tools/lib/src/android/gradle_utils.dart`): use those in `app/android/`. See *Troubleshooting*.
 - **Everything from nixpkgs** (.NET SDK, Java, Node, CodeGraph, just, the Android packages): `nix flake update nixpkgs`, then commit the new `flake.lock` on its own.
 - **Claude Code:** pinned in `flake.nix` ahead of nixpkgs. Take the version from `https://downloads.claude.ai/claude-code-releases/latest` and the `linux-x64` checksum from `https://downloads.claude.ai/claude-code-releases/<version>/manifest.zst.json`, and set both in `claudeCode`. Then set the VS Code extension's `hash` in `claudeCodeExtension` to `pkgs.lib.fakeHash`, run `nix build .#vscode`, and paste the hash it reports. Commit both together. Drop the overrides once nixpkgs' `claude-code` has caught up.
-- **Agent plugins:** OpenCode updates ponytail with `opencode plugin update @dietrichgebert/ponytail`; change the pinned version in `opencode.json` after reading the changelog. Claude Code's plugins (ponytail, the official Flutter plugin) update through `claude plugin update`.
+- **Agent plugins:** for Pi, change the pinned versions in `.pi/settings.json` after reading the changelog. Claude Code's plugins (ponytail, the official Flutter plugin) update through `claude plugin update`.
 - **Before committing a flake change:** run `nix fmt flake.nix` and `nix flake check --no-build`.
 
 ## Troubleshooting
@@ -352,7 +302,6 @@ There is one way to run Velomine, in development and for a self-hoster alike: `d
 | The emulator window stays black | Start it with software rendering: `emulator -avd velomine -gpu swiftshader_indirect`. |
 | Gradle wants an SDK component or NDK version that is not installed | The SDK in `/nix/store` is read-only, so Gradle cannot install anything into it. Add the exact version it names to the `android` block in `flake.nix` (`platformVersions`, `buildToolsVersions` or `ndkVersions`) and run `direnv reload`. |
 | `flutter run -d chrome` finds no browser | Install Chromium or Chrome on the host. The shell sets `CHROME_EXECUTABLE` to the first one it finds. |
-| The Dart MCP server is missing in OpenCode, or `opencode mcp list` says `NotFound` | OpenCode's background service was started outside the dev shell and is spawning the server without `dart` on PATH. Run `direnv reload`, then `opencode service restart` from the repository, and start a new session. The desktop app must connect to that service (see *OpenCode desktop*), not to the local server it starts itself. |
 | Single sign-on through Dex fails | Dex only accepts `http://localhost:8080/signin-oidc`: keep `VELOMINE_PORT` at 8080, or change the redirect address in `deploy/dex/config.yaml` too. |
 | `port is already allocated` on 8080 | Another program uses the port. Stop it, or set `VELOMINE_PORT` in `.env`. |
 | Something in the shell is broken or stale | `rm -rf .dev .direnv`, then `direnv allow`. Caches download again, and nothing in git is affected. |
