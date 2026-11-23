@@ -9,6 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       openjdk-17-jdk-headless unzip zip xz-utils curl git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# The Docker daemon inside the container (Docker-in-Docker, for just up and Testcontainers) uses Docker's
+# own nftables firewall backend: iptables fails on hosts without the legacy tables, such as CachyOS.
+RUN mkdir -p /etc/docker && echo '{ "firewall-backend": "nftables" }' > /etc/docker/daemon.json
+
 # just, the entry point for everyday commands.
 ARG JUST_VERSION=1.59.0
 RUN curl -fsSL "https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-x86_64-unknown-linux-musl.tar.gz" \

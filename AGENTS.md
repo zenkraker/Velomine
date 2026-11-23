@@ -174,6 +174,7 @@ Rules for code, tests, dependencies and tooling in this repository: server, app,
 ## Development environment
 
 - **`flake.nix` is the toolchain.** A tool needed to develop, build or test goes into the flake; no install scripts or host requirements. Adding a tool is a dependency and follows the dependency rule.
+- **The dev container repeats the flake without Nix.** `.devcontainer/` is an optional second way in that keeps agent logins and caches off the host. A tool added to the flake for development goes into `.devcontainer/Dockerfile` at the same version and checksum, in the same commit.
 - **Running needs Docker only.** `docker compose up --build` works without Nix; the `Dockerfile` and compose stack do not use Nix.
 - **Versions agree everywhere.** The Flutter version and checksum in `flake.nix` and `app/Dockerfile` change in the same commit. The Android SDK, NDK and CMake versions are the ones the pinned Flutter's Gradle plugin asks for.
 - **Commit `flake.lock`**, and update nixpkgs in a commit of its own.
