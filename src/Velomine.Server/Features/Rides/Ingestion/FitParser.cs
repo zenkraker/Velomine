@@ -44,7 +44,7 @@ public static class FitParser
                 record.GetEnhancedAltitude() ?? record.GetAltitude(),
                 record.GetEnhancedSpeed() ?? record.GetSpeed(),
                 record.GetDistance(),
-                record.GetHeartRate(),
+                PlausibleHeartRate(record.GetHeartRate()),
                 record.GetPower() is { } power ? (short?)Math.Min(power, short.MaxValue) : null,
                 record.GetCadence(),
                 record.GetTemperature())));
@@ -227,6 +227,13 @@ public static class FitParser
 
         return new RideDimensions(discipline, assist, environment, commute);
     }
+
+    /// <summary>
+    /// A heart rate a rider can have. A record whose heart-rate field is defined but never set carries the profile's
+    /// "no value" byte, 255, and devices write it for a ride recorded without a strap; without this the ride would
+    /// read 255 bpm in its streams, its average and its maximum.
+    /// </summary>
+    private static short? PlausibleHeartRate(byte? value) => value is >= 30 and <= 250 ? value : null;
 
     /// <summary>Turns timer stop/start events into paused intervals relative to the first sample.</summary>
     private static IReadOnlyList<PauseInterval> BuildPauses(

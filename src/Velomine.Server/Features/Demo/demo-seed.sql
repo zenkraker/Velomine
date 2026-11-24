@@ -78,7 +78,7 @@ DECLARE
     v_gain float8 := 0;
     v_loss float8 := 0;
     v_delta float8;
-    v_durations int[] := ARRAY[1, 5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600];
+    v_durations int[] := ARRAY[1, 5, 15, 30, 60, 120, 300, 480, 600, 1200, 1800, 3600];
     v_d int;
     v_best float8;
     v_lap int;
