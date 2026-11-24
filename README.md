@@ -29,6 +29,7 @@ The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/
 - **Your data is yours.** Export everything, every original file included, or delete everything, whenever you want. Nothing is visible to anyone until you share it, and you can see who looked.
 - **No pro tier.** Every feature is included for everyone. You pay to have it hosted, or host it yourself for free.
 - **No ads, no data sale, no AI training on your rides.** No public feed, no follower graph, no leaderboards by default.
+- **Telemetry is yours to switch on.** Crash and usage data leaves the app only when a member opts in, never carries rides or health data, and can be turned off again. The rest is in [product values](docs/design/values.md).
 - **Cycling first.** Power, components, climbing and club rides, not a generic fitness app.
 - **Open source** under AGPL-3.0. The cloud and a self-hosted server run the same software.
 
@@ -41,7 +42,7 @@ The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/
 
 - **Rides:** FIT, GPX and TCX files, whole folders at once (Zwift's Activities folder too), or your full Strava export; map, charts, laps, heart-rate and power zones.
 - **Clubs and coaches:** join with a code, a coach sees only what each rider shares, planned club rides with a meeting point and a route, and a shared route library.
-- **Android app** that records with the screen off and connects to a heart-rate sensor; the APK is attached to every [release](https://github.com/zenkraker/Velomine/releases/latest). On an iPhone, the web app works in the browser.
+- **Android app** that records with the screen off and connects to a heart-rate sensor over standard Bluetooth LE, with no vendor app and no ANT+; a missing sensor never blocks a ride. The APK is attached to every [release](https://github.com/zenkraker/Velomine/releases/latest). On an iPhone, the web app works in the browser.
 - **Power and endurance analysis:** FTP history with where each value came from, a reminder when the FTP is out of date and a suggestion when a ride shows a higher one, critical power, W′ and peak power, W′ balance through a ride, aerobic decoupling and efficiency factor, easy/moderate/hard time with the polarisation index, and personal power records.
 - **Riders without a power meter:** an effort score on every ride, from power, otherwise from heart rate, otherwise from how hard it felt, otherwise watts estimated from speed and slope, so a strap alone builds the fitness chart; heart-rate zones from your threshold, both zone sets adjustable by hand; maximum and threshold heart rate typed by you, measured on a ride or estimated, each with where it came from; watts estimated from speed, slope and weight, always marked as estimated; and a caution when every day was about as hard or the week was much heavier than usual.
 - **One rider card** at the top of Progress: FTP and W/kg, critical power, W′ and peak power, your best 5 seconds to 20 minutes (each opening its ride), maximum and threshold heart rate, the efficiency trend of the last eight weeks, the last 90 days of riding, today's fitness and form, and the next event — each with a line saying where it came from.
@@ -50,6 +51,15 @@ The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/
 - **Accounts:** optional two-factor sign-in, single sign-on, a list of signed-in devices; English and Italian.
 
 It is early: the interface is rough in places, and there are bugs. The iOS recorder, power and speed sensors and automatic sync from Garmin or Wahoo are not built yet. The [status page](https://velomine.eu/status/) keeps the full list.
+
+## How rides are processed
+
+- **Formats:** FIT, GPX and TCX, gzipped or not, one file or a whole folder at once; a FIT file that holds several activities becomes one ride per activity.
+- **Strava export:** read on the server from the ZIP, one ride per activity, so importing a newer export skips what is already here. Non-cycling activities are skipped and counted, photos and the other files are ignored, and the archive is deleted when the import finishes.
+- **Duplicates:** the same file hash and start time, or the same start within two minutes with the same elapsed time and distance, is the same ride from another app or device. It is kept hidden — a single upload says so, an import counts it — and deleting the ride that was kept reads its hidden copies again.
+- **Speed** comes from a wheel sensor when one is paired, otherwise from GPS; every ride records which.
+- **The numbers** — pauses, normalized power, maximum speed, elevation gain, zones, the effort score and estimated watts — follow [the training models](docs/training-models.md).
+- **The original file** is kept as received, forever, so a parser improvement reads older rides again from their own files.
 
 ## Self-hosting
 
