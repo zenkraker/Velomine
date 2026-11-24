@@ -72,7 +72,7 @@ public static class RideMetrics
 
         var distance = TotalDistance(samples, paused);
         var (gain, loss) = ElevationChange(samples.Select(s => s.Altitude).ToArray());
-        var power = Resample(samples, s => s.Power, pause, paused);
+        var power = Seconds(samples, s => s.Power, pause, paused);
         var heartRate = Resample(samples, s => s.HeartRate, pause, paused);
         var cadence = Resample(samples, s => s.Cadence, pause, paused).Where(c => c > 0).ToArray();
         var normalizedPower = deviceNormalizedPowerW ?? NormalizedPower(power);
@@ -95,7 +95,7 @@ public static class RideMetrics
             moving > 0 ? distance / moving : null,
             speeds.Any(s => s.HasValue) ? RobustMax([.. speeds.OfType<float>()]) : null,
             source,
-            power.Length > 0 ? (int)Math.Round(power.Average()) : null,
+            power.Length > 0 ? (int)Math.Round(power.Average(s => s.Value)) : null,
             samples.Max(s => s.Power) is { } maxPower ? maxPower : null,
             normalizedPower,
             heartRate.Length > 0 ? (int)Math.Round(heartRate.Average()) : null,
@@ -140,7 +140,8 @@ public static class RideMetrics
     /// <summary>The shortest ride, after the warm-up, that says anything about aerobic decoupling.</summary>
     private const int DecouplingWarmupS = 15 * 60;
     private const int DecouplingMinimumS = 40 * 60;
-    private const double DecouplingSteadyVi = 1.10;
+    /// <summary>Friel's steadiness cut for the decoupling test: a variability index above 1.05 is not a steady ride.</summary>
+    private const double DecouplingSteadyVi = 1.05;
 
     /// <summary>
     /// Aerobic decoupling and efficiency factor (Friel): the moving seconds with a heart rate and a pedalling power,
@@ -437,8 +438,8 @@ public static class RideMetrics
     }
 
     /// <summary>
-    /// Normalized power: a 30-second rolling average of the 1 Hz power, raised to the fourth power, averaged,
-    /// then the fourth root. Null for less than 30 seconds of power.
+    /// Normalized power from 1 Hz seconds the caller has already kept: a 30-second rolling average, each raised to the
+    /// fourth power, averaged, then the fourth root. Null under 30 seconds.
     /// </summary>
     public static int? NormalizedPower(IReadOnlyList<double> power1Hz)
     {
@@ -456,6 +457,36 @@ public static class RideMetrics
         }
 
         return (int)Math.Round(Math.Pow(fourthPowers / windows, 0.25));
+    }
+
+    /// <summary>
+    /// The same, with every 30-second window kept inside one stretch, so a pause or a gap never joins two efforts.
+    /// Null when no stretch lasts 30 seconds.
+    /// </summary>
+    public static int? NormalizedPower(IReadOnlyList<(int Stretch, int First, int Last, double Value)> seconds)
+    {
+        double fourthPowers = 0;
+        var windows = 0;
+        var i = 0;
+        while (i < seconds.Count)
+        {
+            var stretch = seconds[i].Stretch;
+            var start = i;
+            while (i < seconds.Count && seconds[i].Stretch == stretch) i++;
+            if (i - start < NormalizedPowerWindowS) continue;
+
+            double windowSum = 0;
+            for (var k = start; k < i; k++)
+            {
+                windowSum += seconds[k].Value;
+                if (k >= start + NormalizedPowerWindowS) windowSum -= seconds[k - NormalizedPowerWindowS].Value;
+                if (k < start + NormalizedPowerWindowS - 1) continue;
+                fourthPowers += Math.Pow(windowSum / NormalizedPowerWindowS, 4);
+                windows++;
+            }
+        }
+
+        return windows == 0 ? null : (int)Math.Round(Math.Pow(fourthPowers / windows, 0.25));
     }
 
     internal static double Median(List<double> values)

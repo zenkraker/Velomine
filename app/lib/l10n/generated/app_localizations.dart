@@ -3866,6 +3866,12 @@ abstract class AppLocalizations {
   /// **'Includes rides scored from heart rate.'**
   String get fitnessHeartRateLoad;
 
+  /// No description provided for @trimpHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'TRIMP weights each heart-rate zone from 1 to 5 (Edwards).'**
+  String get trimpHelp;
+
   /// No description provided for @fitnessFatigueForm.
   ///
   /// In en, this message translates to:

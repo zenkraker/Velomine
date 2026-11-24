@@ -30,13 +30,13 @@ public sealed class TrainingStrainTests
     }
 
     [Fact]
-    public void Monotony_ShouldBe1Point07_WhenHardAndRestDaysAlternate()
+    public void Monotony_ShouldBe1Point15_WhenHardAndRestDaysAlternate()
     {
         var strain = Compute(100, 0, 100, 0, 100, 0, 100);
 
-        // Mean 57.14, sample deviation 53.45, so the week's load of 400 costs 428.
-        Assert.Equal(1.07, strain.Monotony);
-        Assert.Equal(428.0, strain.Strain);
+        // Mean 57.14, population deviation 49.49, so the monotony is 1.15 and the week's load of 400 costs 460.0.
+        Assert.Equal(1.15, strain.Monotony);
+        Assert.Equal(460.0, strain.Strain);
         Assert.False(strain.Monotonous);
     }
 
@@ -45,8 +45,8 @@ public sealed class TrainingStrainTests
     {
         var strain = Compute(60, 60, 60, 60, 60, 60, 0);
 
-        Assert.Equal(2.27, strain.Monotony);
-        Assert.Equal(817.2, strain.Strain);
+        Assert.Equal(2.45, strain.Monotony);
+        Assert.Equal(882.0, strain.Strain);
         Assert.True(strain.Monotonous);
     }
 
@@ -83,12 +83,12 @@ public sealed class TrainingStrainTests
     }
 
     [Fact]
-    public void Monotony_ShouldBe0Point94_WhenTheWeekIsVaried()
+    public void Monotony_ShouldBe1Point01_WhenTheWeekIsVaried()
     {
         var strain = Compute(120, 30, 0, 90, 40, 0, 200);
 
-        Assert.Equal(0.94, strain.Monotony);
-        Assert.Equal(451.2, strain.Strain);
+        Assert.Equal(1.01, strain.Monotony);
+        Assert.Equal(484.8, strain.Strain);
     }
 
     [Fact]
@@ -96,18 +96,18 @@ public sealed class TrainingStrainTests
     {
         var from = End.AddDays(-(TrainingStrain.WindowDays - 1));
         var loads = new Dictionary<DateOnly, double>();
-        // Four earlier weeks alternating hard and rest days: 428.0 each.
+        // Four earlier weeks alternating hard and rest days: 460.0 each.
         for (var block = 1; block <= TrainingStrain.BlocksNeeded; block++)
         {
             var start = from.AddDays(-TrainingStrain.WindowDays * block);
             for (var i = 0; i < TrainingStrain.WindowDays; i++) loads[start.AddDays(i)] = i % 2 == 0 ? 100 : 0;
         }
-        // This week is the same every day: 700 × 7.0 = 4900.0, far above 1.5 × 428.
+        // This week is the same every day: 700 × 7.0 = 4900.0, far above 1.5 × 460.
         for (var i = 0; i < TrainingStrain.WindowDays; i++) loads[from.AddDays(i)] = 100;
 
         var strain = TrainingStrain.Compute(End, loads);
 
-        Assert.Equal(428.0, strain.Usual);
+        Assert.Equal(460.0, strain.Usual);
         Assert.Equal(4900.0, strain.Strain);
         Assert.True(strain.HeavyWeek);
     }
@@ -302,7 +302,7 @@ public sealed class TrainingStrainRangeTests(PostgresFixture postgres)
         var training = await TrainingAsync(member.Client, "days=7");
 
         Assert.Equal(new DateOnly(2026, 11, 3), training.MonotonyTo);
-        Assert.Equal(428.0, training.StrainUsual);
+        Assert.Equal(460.0, training.StrainUsual);
         Assert.Equal(4900.0, training.Strain);
         Assert.True(training.HeavyWeek);
     }

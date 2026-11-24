@@ -687,6 +687,7 @@
   "rangeOneYear": "1 a",
   "trainingLoadHint": "Imposta il tuo FTP o indossa una fascia cardiaca, poi carica un giro per vedere il carico di allenamento.",
   "fitnessHeartRateLoad": "Include giri valutati dalla frequenza cardiaca.",
+  "trimpHelp": "Il TRIMP pesa ogni zona cardiaca da 1 a 5 (Edwards).",
   "fitnessFatigueForm": "Fitness, fatica e forma",
   "fitness": "Fitness",
   "fatigue": "Fatica",

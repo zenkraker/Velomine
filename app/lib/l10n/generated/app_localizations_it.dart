@@ -2226,6 +2226,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Include giri valutati dalla frequenza cardiaca.';
 
   @override
+  String get trimpHelp =>
+      'Il TRIMP pesa ogni zona cardiaca da 1 a 5 (Edwards).';
+
+  @override
   String get fitnessFatigueForm => 'Fitness, fatica e forma';
 
   @override

@@ -19,7 +19,7 @@ using static Velomine.Server.Tests.Rides.TestRideFiles;
 namespace Velomine.Server.Tests.Analytics;
 
 /// <summary>
-/// A ride that shows a higher FTP is noticed once, when it is first read: from its best 20, 30 or 60 minutes, for
+/// A ride that shows a higher FTP is noticed once, when it is first read: from its best 20 or 60 minutes, for
 /// one member's one open suggestion, which they accept in one tap. A coach never sees it.
 /// </summary>
 public sealed class FtpSuggestionTests(PostgresFixture postgres)
@@ -201,20 +201,19 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task FtpSuggestion_ShouldUseHalfAnHour_WhenThirtyMinutesIsHighest()
+    public async Task FtpSuggestion_ShouldUseTheTwentyMinuteBest_WhenTheRideHasNoHour()
     {
         await using var api = await StartAsync();
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
-        // 30 minutes at 280 W: one effort, so the 20-minute best is the same 280 W (266 W) and the 30-minute best
-        // is 272 W. No 60-minute best exists.
+        // 30 minutes at 280 W: the 20-minute best is the same 280 W, so 266 W. The 30-minute factor is not used.
         var ride = await UploadAsync(member.Client, 24, (1800, 280));
         var suggestion = await SuggestionAsync(member.Client);
         Assert.NotNull(suggestion);
-        Assert.Equal(272, suggestion.Watts);
-        Assert.Equal(FtpSuggestionMethods.ThirtyMinutes, suggestion.Method);
-        Assert.Equal(272, ride.FtpSuggestionW);
+        Assert.Equal(266, suggestion.Watts);
+        Assert.Equal(FtpSuggestionMethods.TwentyMinutes, suggestion.Method);
+        Assert.Equal(266, ride.FtpSuggestionW);
     }
 
     [Fact]

@@ -4,7 +4,7 @@ namespace Velomine.Server.Features.Analytics;
 public sealed record StrainWindow(
     DateOnly From,
     DateOnly To,
-    /// <summary>Mean over the sample standard deviation of the seven daily loads, two decimals, capped at 7.</summary>
+    /// <summary>Mean over the population standard deviation of the seven daily loads, two decimals, capped at 7.</summary>
     double? Monotony,
     /// <summary>The week's load times the monotony, one decimal.</summary>
     double? Strain,
@@ -65,13 +65,13 @@ public static class TrainingStrain
     private static double[] DailyLoads(IReadOnlyDictionary<DateOnly, double> loadByDate, DateOnly from) =>
         [.. Enumerable.Range(0, WindowDays).Select(i => loadByDate.GetValueOrDefault(from.AddDays(i)))];
 
-    /// <summary>Mean over the sample standard deviation; 7 when every day is equal, null in a week with no load.</summary>
+    /// <summary>Mean over the population standard deviation; 7 when every day is equal, null in a week with no load.</summary>
     private static double? Monotony(IReadOnlyList<double> loads)
     {
         var weekly = loads.Sum();
         if (weekly <= 0) return null;
         var mean = weekly / loads.Count;
-        var deviation = Math.Sqrt(loads.Sum(load => (load - mean) * (load - mean)) / (loads.Count - 1));
+        var deviation = Math.Sqrt(loads.Sum(load => (load - mean) * (load - mean)) / loads.Count);
         return deviation <= 0 ? MaxMonotony : Math.Round(Math.Min(mean / deviation, MaxMonotony), 2);
     }
 

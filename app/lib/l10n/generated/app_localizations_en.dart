@@ -2212,6 +2212,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fitnessHeartRateLoad => 'Includes rides scored from heart rate.';
 
   @override
+  String get trimpHelp =>
+      'TRIMP weights each heart-rate zone from 1 to 5 (Edwards).';
+
+  @override
   String get fitnessFatigueForm => 'Fitness, fatigue and form';
 
   @override

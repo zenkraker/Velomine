@@ -16,8 +16,8 @@ using Velomine.Server.Features.Sharing;
 namespace Velomine.Server.Tests.Analytics;
 
 /// <summary>
-/// How much W′ is left through a ride (Skiba et al. 2015, differential form), from the rider's current fit: 2, 5, 10
-/// and 20 minute bests over the last 90 days.
+/// How much W′ is left through a ride (Skiba et al. 2012), from the rider's current fit: 2, 5, 10 and 20 minute bests
+/// over the last 90 days.
 /// </summary>
 public sealed class WPrimeBalanceTests(PostgresFixture postgres)
 {
@@ -77,6 +77,18 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
         Assert.NotNull(balance);
         Assert.Equal(61, balance.PerSample.Length);
         Assert.InRange((int)balance.PerSample[^1]!, 13_900, 14_100);
+    }
+
+    [Fact]
+    public void WPrimeBalance_ShouldRecoverWithSkibasTimeConstant_WhenTheRiderGoesBelowCriticalPower()
+    {
+        // 60 s at 350 W takes 6,000 J, then 60 s at 0 W recovers with τ = 546 e^(−0.01 × 250) + 316 = 360.82 s:
+        // 20,000 − 6,000 e^(−60 / 360.82) = 14,919 J.
+        var power = Enumerable.Repeat(350.0, 60).Concat(Enumerable.Repeat(0.0, 60)).ToList();
+
+        var balance = WPrimeBalance.Series(power, Fit);
+
+        Assert.InRange(balance[^1], 14_900, 14_940);
     }
 
     /// <summary>Streams of samples <paramref name="stepS"/> apart, each holding the same power.</summary>
@@ -237,8 +249,9 @@ public sealed class WPrimeBalanceTests(PostgresFixture postgres)
     {
         var balance = WPrimeBalance.Series([.. Enumerable.Repeat(350d, 60), 150d], Fit);
 
-        // 14,000 + (20,000 − 14,000) × (250 − 150) / 20,000 = 14,030
-        Assert.Equal(14_030, balance[^1], 6);
+        // 60 s at 350 W takes 6,000 J, then one second at 150 W recovers with τ = 546 e^(−0.01 × 100) + 316 = 516.86 s:
+        // 14,000 + 6,000 × (1 − e^(−1 / 516.86)) = 14,011.6.
+        Assert.Equal(14_011.6, balance[^1], 1);
     }
 
     [Fact]

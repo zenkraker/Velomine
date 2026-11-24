@@ -175,8 +175,9 @@ public sealed class Ride
     public double? EstimatedTss { get; set; }
 
     /// <summary>
-    /// The heart-rate effort score, on the TSS scale, worked out when the ride was read from the threshold heart rate in
-    /// use then (one hour at the threshold is 100). Null without heart rate or without a threshold.
+    /// Velomine's heart-rate effort score, on the TSS scale, worked out when the ride was read from the threshold heart
+    /// rate in use then (one hour at the threshold is 100). Our own squared-intensity form, not TrainingPeaks' hrTSS.
+    /// Null without heart rate or without a threshold.
     /// </summary>
     public double? HrTss { get; set; }
 

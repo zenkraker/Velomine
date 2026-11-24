@@ -8,7 +8,7 @@ namespace Velomine.Server.Features.Analytics;
 /// <summary>Seconds in each of Seiler's three zones. <see cref="Rides"/> is 0 when no ride contributed.</summary>
 public sealed record IntensityTotals(double EasyS, double ModerateS, double HardS, int Rides);
 
-/// <summary>Seiler's three zones over a range, and the label they add up to (Treff et al. 2019).</summary>
+/// <summary>Seiler's three zones over a range, and Velomine's label for the share they add up to (Treff's index).</summary>
 public sealed record IntensityResponse(
     double EasyS,
     double ModerateS,
@@ -28,9 +28,9 @@ public sealed record IntensityResponse(
 public sealed record IntensityWeek(DateOnly WeekStart, double EasyS, double ModerateS, double HardS);
 
 /// <summary>
-/// How riding splits into easy, moderate and hard (Seiler's three zones, Treff et al. 2019). Worked out on every
-/// request from the current profile: power zones when the ride has power and the member an FTP, heart-rate zones
-/// otherwise. A ride with neither signal adds nothing.
+/// How riding splits into easy, moderate and hard (Seiler's three zones). Velomine's label follows Treff's polarisation
+/// index with share thresholds of our own. Worked out on every request from the current profile: power zones when the
+/// ride has power and the member an FTP, heart-rate zones otherwise. A ride with neither signal adds nothing.
 /// </summary>
 public static class Intensity
 {
@@ -193,8 +193,9 @@ public static class Intensity
             : RoundIndex(Math.Log10((easyPct + hardPct) / moderatePct));
 
     /// <summary>
-    /// The distribution labels of Treff et al. 2019, first match wins. A polarised week needs a real hard pole, not
-    /// only a high index: 80 % easy with 15 % hard is base riding with some efforts.
+    /// Velomine's distribution labels over Treff's polarisation index, first match wins. The index and its 2.00 cut-off
+    /// are Treff et al. 2019; the extra share thresholds are ours. A polarised week needs a real hard pole, not only a
+    /// high index: 80 % easy with 15 % hard is base riding with some efforts.
     /// </summary>
     public static string Label(double easyPct, double moderatePct, double hardPct)
     {

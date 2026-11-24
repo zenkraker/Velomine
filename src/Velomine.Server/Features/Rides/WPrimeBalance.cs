@@ -8,12 +8,19 @@ using Velomine.Server.Features.Sharing;
 namespace Velomine.Server.Features.Rides;
 
 /// <summary>
-/// How much W′ is left through a ride (Skiba et al. 2015, differential form): above critical power the balance drops by
-/// the watts over it; below it the balance recovers a share of what is missing, in proportion to how easy the second
-/// was. Pauses carry the balance over unchanged, and it may go below 0 when the rider beat the model.
+/// How much W′ is left through a ride (Skiba et al. 2012): above critical power the balance drops by the watts over it;
+/// below it the deficit closes exponentially with τ = 546 e^(−0.01(CP − P)) + 316 s. Pauses carry the balance over
+/// unchanged, and it may go below 0 when the rider beat the model.
 /// </summary>
 public static class WPrimeBalance
 {
+    /// <summary>The recovery time constant, in seconds: Skiba et al. 2012.</summary>
+    private static double RecoveryTauS(double belowCpW) => 546 * Math.Exp(-0.01 * belowCpW) + 316;
+
+    /// <summary>One second of recovery below CP: the deficit closes by 1 − e^(−1/τ).</summary>
+    private static double Recover(double balance, double wPrime, double belowCpW) =>
+        Math.Min(wPrime, balance + (wPrime - balance) * (1 - Math.Exp(-1 / RecoveryTauS(belowCpW))));
+
     /// <summary>
     /// The balance of one ride for the rider's current fit: over the last 90 days as of this request. Null when the
     /// rider has no fit, the ride has no power, or the viewer has no analytics grant.
@@ -54,7 +61,7 @@ public static class WPrimeBalance
             }
 
             var over = value - cp.CpW;
-            balance = over > 0 ? balance - over : balance + (wPrime - balance) * -over / wPrime;
+            balance = over > 0 ? balance - over : Recover(balance, wPrime, -over);
             balance = Math.Min(balance, wPrime);
             lowest = Math.Min(lowest, balance);
             perSample[Math.Min(last, perSample.Length - 1)] = (int)Math.Round(balance);
@@ -77,7 +84,7 @@ public static class WPrimeBalance
         for (var i = 0; i < power1Hz.Count; i++)
         {
             var over = power1Hz[i] - cp.CpW;
-            balance = over > 0 ? balance - over : balance + (wPrime - balance) * -over / wPrime;
+            balance = over > 0 ? balance - over : Recover(balance, wPrime, -over);
             result[i] = Math.Min(balance, wPrime);
         }
 

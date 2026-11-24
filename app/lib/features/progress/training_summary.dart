@@ -178,7 +178,7 @@ class TrainingLoadCard extends ConsumerWidget {
                 valueKey: const Key('training-tss'),
               ),
               StatFigure(
-                label: 'TRIMP',
+                label: l10n.statTrimp,
                 value: training.trimp.round().toString(),
                 valueKey: const Key('training-trimp'),
               ),
@@ -197,6 +197,15 @@ class TrainingLoadCard extends ConsumerWidget {
               ),
             ],
           ),
+          // TRIMP is Edwards' zone-weighted score; name the method where the number is shown.
+          if (training.trimp > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: SourceNote(
+                l10n.trimpHelp,
+                key: const Key('training-trimp-note'),
+              ),
+            ),
           // Some rides in the range had no power: their effort came from heart rate.
           if ((training.heartRateLoadRides.orElse(0) ?? 0) > 0)
             Padding(

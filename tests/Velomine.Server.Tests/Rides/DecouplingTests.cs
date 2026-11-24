@@ -82,6 +82,22 @@ public sealed class DecouplingTests
     }
 
     [Fact]
+    public void Decoupling_ShouldBeNull_WhenTheVariabilityIndexIsBetween1Point05And1Point10()
+    {
+        // 5-minute blocks at 250 W and 150 W give NP 216 W over an average of 200 W, a variability index of 1.08:
+        // not the steady ride Friel's test needs, even though it is under 1.10.
+        var seconds = new List<(double, double)>();
+        for (var t = 0; t < 15 * 60; t++) seconds.Add((150, 120));
+        for (var t = 0; t < 60 * 60; t++) seconds.Add(((t / 300) % 2 == 0 ? 250.0 : 150.0, 140));
+
+        var (efficiencyFactor, decoupling, steady) = RideMetrics.Efficiency(seconds);
+
+        Assert.NotNull(efficiencyFactor);
+        Assert.Null(decoupling);
+        Assert.False(steady);
+    }
+
+    [Fact]
     public void EfficiencyFactor_ShouldIgnorePauses_WhenTheRideStopped()
     {
         // Ten minutes with no samples at all: the gap is a pause, and no second of it reaches the kept list.

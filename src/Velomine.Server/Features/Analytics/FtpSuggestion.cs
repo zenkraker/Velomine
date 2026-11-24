@@ -65,7 +65,7 @@ public sealed class FtpSuggestionConfiguration : IEntityTypeConfiguration<FtpSug
     }
 }
 
-/// <summary>The three methods' names, as the API and the app spell them.</summary>
+/// <summary>The method names. <c>30min</c> exists only on suggestions made before the 30-minute path was removed.</summary>
 public static class FtpSuggestionMethods
 {
     public const string TwentyMinutes = "20min";
@@ -83,13 +83,15 @@ public static class FtpSuggestionDetection
 {
     private const int MaxAgeDays = 42;
 
-    /// <summary>The largest of 95 % of the 20 minutes, 97 % of the 30 and the 60 itself; a tie goes to the longer effort.</summary>
+    /// <summary>
+    /// The larger of 95 % of the 20 minutes and the 60 itself; a tie goes to the longer effort. A 30-minute best is not
+    /// used: its factor has no authoritative source.
+    /// </summary>
     public static (int Watts, string Method, int EffortWatts)? Candidate(Ride ride)
     {
         (int Watts, string Method, int Effort)[] attempts =
         [
             (1200, FtpSuggestionMethods.TwentyMinutes, 1200),
-            (1800, FtpSuggestionMethods.ThirtyMinutes, 1800),
             (3600, FtpSuggestionMethods.SixtyMinutes, 3600),
         ];
 
@@ -97,12 +99,9 @@ public static class FtpSuggestionDetection
         foreach (var (durationS, method, effortS) in attempts)
         {
             if (ride.PowerBests.FirstOrDefault(b => b.DurationS == durationS) is not { Watts: > 0 } bestEffort) continue;
-            var watts = method switch
-            {
-                FtpSuggestionMethods.TwentyMinutes => (int)Math.Round(bestEffort.Watts * 0.95),
-                FtpSuggestionMethods.ThirtyMinutes => (int)Math.Round(bestEffort.Watts * 0.97),
-                _ => bestEffort.Watts,
-            };
+            var watts = method == FtpSuggestionMethods.TwentyMinutes
+                ? (int)Math.Round(bestEffort.Watts * 0.95)
+                : bestEffort.Watts;
             // Later durations win a tie, so the longer effort is the one suggested.
             if (best is null || watts >= best.Value.Watts) best = (watts, method, bestEffort.Watts);
         }

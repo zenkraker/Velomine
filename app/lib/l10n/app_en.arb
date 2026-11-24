@@ -1183,6 +1183,7 @@
   "rangeOneYear": "1 y",
   "trainingLoadHint": "Set your FTP or wear a heart-rate strap, then upload a ride to see training load.",
   "fitnessHeartRateLoad": "Includes rides scored from heart rate.",
+  "trimpHelp": "TRIMP weights each heart-rate zone from 1 to 5 (Edwards).",
   "fitnessFatigueForm": "Fitness, fatigue and form",
   "fitness": "Fitness",
   "fatigue": "Fatigue",

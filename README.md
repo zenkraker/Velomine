@@ -56,8 +56,8 @@ It is early: the interface is rough in places, and there are bugs. The iOS recor
 
 - **Formats:** FIT, GPX and TCX, gzipped or not, one file or a whole folder at once; a FIT file that holds several activities becomes one ride per activity.
 - **Strava export:** read on the server from the ZIP, one ride per activity, so importing a newer export skips what is already here. Non-cycling activities are skipped and counted, photos and the other files are ignored, and the archive is deleted when the import finishes.
-- **Duplicates:** the same file hash and start time, or the same start within two minutes with the same elapsed time and distance, is the same ride from another app or device. It is kept hidden — a single upload says so, an import counts it — and deleting the ride that was kept reads its hidden copies again.
-- **Speed** comes from a wheel sensor when one is paired, otherwise from GPS; every ride records which.
+- **Duplicates:** the same file hash and start time, or a start within two minutes with an elapsed time within a minute and a distance within 200 m or 2 %, whichever is larger, is the same ride from another app or device. It is kept hidden — a single upload says so, an import counts it — and deleting the ride that was kept reads its hidden copies again.
+- **Speed** comes from the file's own speed when most samples carry it (a sensor or the device), otherwise from the GPS positions; every ride records which.
 - **The numbers** — pauses, normalized power, maximum speed, elevation gain, zones, the effort score and estimated watts — follow [the training models](docs/training-models.md).
 - **The original file** is kept as received, forever, so a parser improvement reads older rides again from their own files.
 

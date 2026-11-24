@@ -31,7 +31,8 @@ public sealed class TrainingRequest
     public bool? Commute { get; set; }
 }
 
-/// <summary>One day of training: what was ridden and what it cost. Fitness, fatigue and form are the usual CTL, ATL and TSB.</summary>
+/// <summary>One day of training: what was ridden and what it cost. Fitness and fatigue are the usual CTL and ATL; form
+/// is their difference, not TrainingPeaks' TSB.</summary>
 public sealed record TrainingDay(
     DateOnly Date,
     int Rides,
@@ -40,7 +41,7 @@ public sealed record TrainingDay(
     double ElevationGainM,
     double Tss,
     double Trimp,
-    /// <summary>The rides' effort scores: TSS, else hrTSS, else how hard they felt. Fitness and fatigue follow it.</summary>
+    /// <summary>The rides' effort scores: TSS, else Velomine's hrTSS, else the feel score. Fitness and fatigue follow it.</summary>
     double Load,
     double Fitness,
     double Fatigue,

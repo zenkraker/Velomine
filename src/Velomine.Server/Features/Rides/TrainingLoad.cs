@@ -32,7 +32,8 @@ public sealed record HeartRateZoneReference(string Model, int Bpm, string Source
 
 /// <summary>
 /// Training zones and load. Zones are fractions of a reference (maximum heart rate, threshold heart rate or FTP), the
-/// way cycling training books describe them. Power load is TSS; heart-rate load is a zone-weighted TRIMP in points.
+/// way cycling training books describe them. Power load is TSS; heart-rate load is Edwards' zone-weighted TRIMP. The
+/// heart-rate effort score and the feel score are Velomine's own (see docs/training-models.md).
 /// </summary>
 public static class TrainingLoad
 {
@@ -152,7 +153,7 @@ public static class TrainingLoad
         return (Math.Round(intensity, 2), Math.Round(tss, 1));
     }
 
-    /// <summary>Zone-weighted minutes: one point per minute in Z1, five in Z5.</summary>
+    /// <summary>Edwards' zone-weighted TRIMP: one point per minute in Z1, five in Z5. Not Banister's HR-reserve TRIMP.</summary>
     public static double? Trimp(double[]? heartRateZoneSeconds)
     {
         if (heartRateZoneSeconds is null) return null;
@@ -166,9 +167,10 @@ public static class TrainingLoad
     }
 
     /// <summary>
-    /// The heart-rate effort score, on the TSS scale: one hour at the threshold is 100. The threshold is the one in use
-    /// when the ride was first read. A gap of more than 30 s, paused time and a heart rate outside 40–230 bpm are left
-    /// out. Null without heart rate or without a threshold.
+    /// Velomine's heart-rate effort score, on the TSS scale: one hour at the threshold is 100. It is a squared-intensity
+    /// form of our own, not TrainingPeaks' TRIMP-derived hrTSS. The threshold is the one in use when the ride was first
+    /// read. A gap of more than 30 s, paused time and a heart rate outside 40–230 bpm are left out. Null without heart
+    /// rate or without a threshold.
     /// </summary>
     public static double? HrTss(
         IReadOnlyList<Sample> samples,
@@ -192,8 +194,9 @@ public static class TrainingLoad
     }
 
     /// <summary>
-    /// Foster's session RPE on the TSS scale: an hour that felt 7 of 10 is an hour at the threshold. Worked out on
-    /// read, never stored, because the rider can rate the ride after it was read.
+    /// Velomine's feel score on the TSS scale: an hour that felt 7 of 10 is an hour at the threshold. It squares the RPE;
+    /// Foster's session RPE is linear and is not this number. Worked out on read, never stored, because the rider can
+    /// rate the ride after it was read.
     /// </summary>
     public static double? FeelScore(double? movingS, int? rpe)
     {

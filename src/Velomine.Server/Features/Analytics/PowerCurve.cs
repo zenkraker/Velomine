@@ -191,6 +191,7 @@ public static class FitnessQueries
         var best5 = Best(rows, Vo2MaxWindowS);
         if (includeBodyMetrics && weight is { } bodyKg && best5 is not null)
         {
+            // Hawley & Noakes 1992: VO2max = 10.8 x W/kg + 7 (ml/kg/min).
             vo2Max = new Vo2MaxEstimate(
                 Math.Round(10.8 * (best5.Watts / bodyKg) + 7, 1),
                 "5min",
