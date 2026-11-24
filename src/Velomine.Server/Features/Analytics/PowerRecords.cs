@@ -21,8 +21,11 @@ public static class PowerRecords
 
     private const int NinetyDaysS = 90 * 24 * 3600;
 
-    /// <summary>The durations that count: every one a power curve shows except 1 s, which is noise, not an effort.</summary>
-    public static readonly int[] Durations = [.. PowerBests.Durations.Where(d => d > 1)];
+    /// <summary>
+    /// The durations a rider sees as records: the round ones on a power curve. Not 1 s, which is noise rather than an
+    /// effort, and not the 8-minute best, which only the curve's FTP falls back to.
+    /// </summary>
+    public static readonly int[] Durations = [5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600];
 
     /// <summary>The ride's records, by duration. Empty when another ride of the member is already as good or better.</summary>
     /// <param name="start">The ride's start; a ride without one has no time to be compared against.</param>

@@ -8,10 +8,11 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// </summary>
 public static class RideParserVersion
 {
+    // 8: the 8-minute best effort is stored, so the power curve's 8-minute FTP estimate can fire.
     // 7: normalized power keeps its 30-second windows inside one stretch, so a pause can no longer join two efforts,
     // and Friel's steadiness cut is 1.05, so the stored normalized power, intensity factor, TSS and decoupling change
     // and every ride is read again.
-    public const int Current = 7;
+    public const int Current = 8;
 
     /// <summary>Marks a ride as just read with the current parser and records the profile its training load came from.</summary>
     public static void StampRead(this Ride ride, int? ftpW, int? maxHeartRate, int? thresholdHeartRate)

@@ -90,7 +90,7 @@ Source: Coggan/Allen (the seven-zone model). Not Friel's six-zone power table.
 
 ### P5 — Best mean maximal power
 
-The best mean power over 1, 5, 15, 30 s, 1, 2, 5, 10, 20, 30 and 60 minutes. A window MUST stay inside one
+The best mean power over 1, 5, 15, 30 s, 1, 2, 5, 8, 10, 20, 30 and 60 minutes. A window MUST stay inside one
 uninterrupted stretch; a pause or a gap ends the stretch, so a stop never creates an effort across it.
 
 Source: Allen & Coggan.

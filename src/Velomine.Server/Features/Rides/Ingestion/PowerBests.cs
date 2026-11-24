@@ -6,8 +6,11 @@ namespace Velomine.Server.Features.Rides.Ingestion;
 /// </summary>
 public static class PowerBests
 {
-    /// <summary>1 s, 5 s, 15 s, 30 s, 1 m, 2 m, 5 m, 10 m, 20 m, 30 m and 60 m.</summary>
-    public static readonly int[] Durations = [1, 5, 15, 30, 60, 120, 300, 600, 1200, 1800, 3600];
+    /// <summary>
+    /// 1 s, 5 s, 15 s, 30 s, 1 m, 2 m, 5 m, 8 m, 10 m, 20 m, 30 m and 60 m. The 8-minute best is what the power curve
+    /// falls back to when no 20-minute effort exists (`docs/training-models.md` P6).
+    /// </summary>
+    public static readonly int[] Durations = [1, 5, 15, 30, 60, 120, 300, 480, 600, 1200, 1800, 3600];
 
     /// <summary>The rows to store for a ride's bests: one per duration with a positive value.</summary>
     public static IEnumerable<RidePowerBest> Rows(Guid rideId, int[]? bests)

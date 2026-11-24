@@ -23,6 +23,16 @@ public sealed class PowerBestsTests
     }
 
     [Fact]
+    public void PowerBests_ShouldFindTheEightMinuteBest_WhenTheRideIsLongerThanIt()
+    {
+        // The power curve's FTP falls back to the 8-minute best, so it has to be one of the stored durations.
+        var best = PowerBests.Compute(Enumerable.Repeat(200.0, 600).ToList());
+
+        Assert.True(IndexOf(480) >= 0);
+        Assert.Equal(200, best[IndexOf(480)]);
+    }
+
+    [Fact]
     public void PowerBests_ShouldReturnZero_WhenTheSeriesIsShorterThanTheWindow()
     {
         var best = PowerBests.Compute(Enumerable.Repeat(200.0, 30).ToList());
