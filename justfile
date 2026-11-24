@@ -99,7 +99,11 @@ ui-dupes:
 
 # every check to run before a commit
 check:
-    dotnet format Velomine.slnx --verify-no-changes
-    dotnet test --solution Velomine.slnx
+    @just check-server
     cd app && dart run build_runner build && dart format --set-exit-if-changed lib test && flutter analyze && flutter test
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
+
+# the server half of `check`: enough for a change that touches no file under app/
+check-server:
+    dotnet format Velomine.slnx --verify-no-changes
+    dotnet test --solution Velomine.slnx

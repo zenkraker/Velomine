@@ -156,6 +156,7 @@ Run `just` on its own to list every command.
 | `just api-client` | Regenerates the Dart API client after an endpoint change (`tools/generate-api-client.sh`) |
 | `just codegen` | Regenerates the Riverpod providers (`build_runner`). Run it after changing a `@riverpod` provider; the generated `.g.dart` files are committed. |
 | `just check` | Runs every check before a commit: .NET format check, server tests, Riverpod codegen, Dart format, analyzer, Flutter tests and the Android unit tests |
+| `just check-server` | The server half of `just check`: .NET format check and server tests. Enough for a change that touches no file under `app/` |
 
 `just emu` runs the app on an Android emulator and is meant for a machine where one is installed: the dev container has no emulator or system image, so use `just phone` there.
 
