@@ -3,7 +3,7 @@
 # The web image: the Flutter web app, served by nginx, which forwards /api, /health and
 # /openapi to the server. Build it from the repository root:  docker build -f app/Dockerfile .
 #
-# Flutter's official release, pinned by version and checksum (tools/check-versions.sh keeps flake.nix in step). It only
+# Flutter's official release, pinned by version and checksum (tools/check-versions.sh keeps the dev container in step). It only
 # exists for Linux x64; its output is plain files, so on an Apple Silicon host this stage runs emulated.
 FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
 ARG FLUTTER_VERSION=3.50.0

@@ -1,8 +1,8 @@
 {
   // A development container for Velomine: everything the toolchain, the agents and the
   // editor write stays in this container and its volumes, not in your home folder.
-  // The Dockerfile repeats the versions pinned in flake.nix, without Nix.
-  // Setup and limits: docs/development.md, "Dev container".
+  // The image is the toolchain: Dockerfile, devcontainer.json and devcontainer-lock.json pin every version.
+  // Setup and limits: docs/development.md.
   "name": "Velomine",
   "build": {
     "dockerfile": "Dockerfile"
@@ -18,7 +18,7 @@
     },
     // Docker for `just up` (PostgreSQL, Dex, the server) and the tests' Testcontainers.
     // Runs its own daemon inside the container, so the host's Docker is never mounted.
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:4.1.3": {}
   },
   // The container's own Docker daemon needs this; the privilege stays inside the container.
   "privileged": true,

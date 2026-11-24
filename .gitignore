@@ -5,8 +5,7 @@ obj/
 # Written by tools/generate-api-client.sh (the exported OpenAPI document)
 src/Velomine.Server/wwwroot/
 
-# Nix dev environment (docs/development.md): direnv cache and machine-local caches, SDKs and data
-.direnv/
+# Machine-local caches, SDKs and data (docs/development.md)
 .dev/
 
 # Local compose and app secrets (.env.example is the committed template)

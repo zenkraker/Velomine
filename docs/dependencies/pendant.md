@@ -6,7 +6,7 @@ Background evaluation, written from the extension's public pages (Marketplace, G
 A sidebar chat and diffs for Pi inside VS Code. Pi itself runs fine in a terminal; this only adds an editor view. Neither the platform nor an official library offers one.
 
 ## Alternatives considered
-- Pi in the integrated terminal: no new dependency, and the Pi from `flake.nix`. This stays the fallback.
+- Pi in the integrated terminal: no new dependency, and the `pi` that Pendant brings. This stays the fallback.
 - Other community extensions for Pi (`Zetaphor/pi-vscode-extension`, `pithings/pi-vscode`, `m4riok/pi-ide-bridge`): not evaluated.
 - Cline (`saoudrizwan.claude-dev`): a second agent loop that needs its own API key.
 
@@ -32,7 +32,7 @@ VS Code (Marketplace, Open VSX, VSIX). Over SSH, WSL or a container it runs on t
 Not measured.
 
 ## Risk and exit plan
-It bundles its own Pi that cannot be pointed at another, so the Pi version in `flake.nix` and Pendant's can differ. It is closed source with one visible author. Exit: uninstall it and run `pi` in the terminal; sessions stay in Pi's own folder.
+It bundles its own Pi that cannot be pointed at another, so the Pi version it ships and the one in the terminal can differ. It is closed source with one visible author. Exit: uninstall it and run `pi` in the terminal; sessions stay in Pi's own folder.
 
 ## Recommendation
 Approved by the owner on 2026-11-20 for the dev container only, with these conditions: never a requirement of the workflow (Pi in the terminal must keep working), no secrets in prompts, and check which Pi version it runs when `pi-claude-tether` or the `.pi/` setup behaves differently from the terminal.

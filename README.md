@@ -140,9 +140,9 @@ The defaults are for trying it out on your own machine only. Do not expose them 
 
 Not needed to run it.
 
-**Recommended: the Nix dev environment.** `flake.nix` provides every tool below at pinned versions (the Flutter release matches `app/Dockerfile`), plus the Android SDK and emulator, Node for ponytail and CodeGraph, without installing them into your system. With direnv the tools load when you enter the folder, and `just` runs the everyday commands (`just up`, `just logs`, `just emu`, `just phone`, `just check`). The server always runs in Docker, as in the steps above. [docs/development.md](docs/development.md) explains how it works and walks through the one-time setup.
+**Recommended: the dev container.** Open the repository in VS Code and choose *Reopen in Container*: the image has .NET, Flutter with the Android SDK, Node, Java, `just`, CodeGraph and the coding agents at pinned versions, and Docker runs inside it, so the stack and the tests work unchanged. `just` runs the everyday commands (`just up`, `just logs`, `just phone`, `just check`). The server always runs in Docker, as in the steps above. [docs/development.md](docs/development.md) says what is inside and how to work with it.
 
-**Without Nix**, install these yourself:
+**Without the dev container**, install these yourself:
 
 | Install | For |
 |---------|-----|

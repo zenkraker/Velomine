@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# Scaleway's own MCP server, read-only and limited to the hosting namespaces.
-# Same as `scalewayMcp` in flake.nix. Uses the CLI profile in SCW_PROFILE (default velomine-readonly),
-# created once inside the container with `scw init -p velomine-readonly`.
-exec scw -p "${SCW_PROFILE:-velomine-readonly}" mcp server serve \
-  read-only=true namespaces=instance,rdb,dns,object,iam,registry,vpc "$@"

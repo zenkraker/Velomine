@@ -15,11 +15,21 @@
     },
     "sentry": {
       "command": "sentry-mcp",
+      "env": { "MCP_SKILLS": "inspect,triage" },
       "exposure": "deferred",
       "description": "Read-only Sentry: production errors, traces and logs"
     },
     "scaleway": {
-      "command": "scw-mcp",
+      "command": "scw",
+      "args": [
+        "-p",
+        "velomine-readonly",
+        "mcp",
+        "server",
+        "serve",
+        "read-only=true",
+        "namespaces=instance,rdb,dns,object,iam,registry,vpc"
+      ],
       "exposure": "deferred",
       "description": "Read-only Scaleway: the hosting resources"
     }

@@ -2,7 +2,7 @@
 # Runs once when the dev container is created. Everything here stays in the container.
 set -euo pipefail
 
-# Make npm available in this non-interactive shell (the Node feature installs it through nvm).
+# Node comes from the node feature's nvm, which only login shells get on PATH; this script is not one.
 export NVM_DIR="/usr/local/share/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
@@ -26,10 +26,11 @@ seed() { # source folder, target folder
 seed "$here/config/claude" "$HOME/.state/claude"
 seed "$here/config/pi" "$HOME/.state/pi"
 
-# Claude Code, at the version that were current when this was written. Update them deliberately.
-# CodeGraph, Sentry CLI and the Scaleway CLI are in the image (Dockerfile); `sentry-mcp` fetches its
-# pinned package through npx on first use, as in flake.nix.
+# The two agent programs that are npm packages, into the volume so they survive a rebuild and are on PATH through
+# remoteEnv: Claude Code, and the local Sentry MCP server Pi starts. Update them deliberately.
+# CodeGraph, the Sentry CLI and the Scaleway CLI are in the image (Dockerfile).
 npm install -g --prefix "$HOME/.state/npm-global" \
-  @anthropic-ai/claude-code@2.1.329
+  @anthropic-ai/claude-code@2.1.329 \
+  @sentry/mcp-server@0.49.0
 
-echo "velomine: dev container ready. Missing compared with the flake: nixd and the pi command (the Pendant extension brings its own Pi)."
+echo "velomine: dev container ready."

@@ -9,11 +9,10 @@ export COMPOSE_FILE := "docker-compose.yml:compose.development.yaml"
 default:
     @just --list
 
-# one-time setup: .NET tools, Flutter packages, Android emulator
+# one-time setup: .NET tools and Flutter packages
 setup:
     dotnet tool restore
     cd app && flutter pub get
-    avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}" -d {{device}}
 
 # build and start the whole stack, with Dex, in Docker on http://localhost:8080; run it again after any change
 up:
@@ -36,9 +35,11 @@ db:
     docker compose exec postgres psql -U velomine velomine
 
 # run the app on the Android emulator: starts it if needed, then hot-reloads against the stack from `just up`
+# (needs the Android emulator and a system image, which the dev container does not have: use `just phone` there)
 emu:
     #!/usr/bin/env bash
     set -euo pipefail
+    avdmanager list avd -c | grep -qx {{avd}} || echo no | avdmanager create avd -n {{avd}} -k "{{image}}" -d {{device}}
     device=$(adb devices | awk '/^emulator-/ {print $1; exit}')
     if [ -z "$device" ]; then
       flutter emulators --launch {{avd}}
