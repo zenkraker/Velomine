@@ -192,6 +192,7 @@ Class | Method | HTTP request | Description
 *ClubApi* | [**startClub**](doc//ClubApi.md#startclub) | **POST** /api/v1/club | 
 *ClubApi* | [**updateClubRide**](doc//ClubApi.md#updateclubride) | **PUT** /api/v1/club/rides/{id} | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
+*ClubsApi* | [**coachGetCoachPlan**](doc//ClubsApi.md#coachgetcoachplan) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/plan | 
 *ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
 *ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
 *ClubsApi* | [**coachGetCoachRideLaps**](doc//ClubsApi.md#coachgetcoachridelaps) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/laps | 
@@ -245,9 +246,18 @@ Class | Method | HTTP request | Description
 *SupporterApi* | [**getSupporterStatus**](doc//SupporterApi.md#getsupporterstatus) | **GET** /api/v1/supporter | 
 *SupporterApi* | [**setSupporterHidden**](doc//SupporterApi.md#setsupporterhidden) | **PUT** /api/v1/supporter/hidden | 
 *TrainingApi* | [**addEvent**](doc//TrainingApi.md#addevent) | **POST** /api/v1/training/events | 
+*TrainingApi* | [**backToTrainingPlan**](doc//TrainingApi.md#backtotrainingplan) | **DELETE** /api/v1/training/sessions/{id}/easy | 
 *TrainingApi* | [**deleteEvent**](doc//TrainingApi.md#deleteevent) | **DELETE** /api/v1/training/events/{id} | 
+*TrainingApi* | [**getTrainingPlan**](doc//TrainingApi.md#gettrainingplan) | **GET** /api/v1/training/plan | 
+*TrainingApi* | [**getTrainingWeek**](doc//TrainingApi.md#gettrainingweek) | **GET** /api/v1/training/week | 
 *TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
+*TrainingApi* | [**makeSessionEasy**](doc//TrainingApi.md#makesessioneasy) | **POST** /api/v1/training/sessions/{id}/easy | 
+*TrainingApi* | [**matchTrainingSession**](doc//TrainingApi.md#matchtrainingsession) | **POST** /api/v1/training/sessions/{id}/match | 
+*TrainingApi* | [**moveTrainingSession**](doc//TrainingApi.md#movetrainingsession) | **POST** /api/v1/training/sessions/{id}/move | 
+*TrainingApi* | [**saveTrainingPlan**](doc//TrainingApi.md#savetrainingplan) | **PUT** /api/v1/training/plan | 
 *TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
+*TrainingApi* | [**skipTrainingSession**](doc//TrainingApi.md#skiptrainingsession) | **POST** /api/v1/training/sessions/{id}/skip | 
+*TrainingApi* | [**turnOffTrainingPlan**](doc//TrainingApi.md#turnofftrainingplan) | **DELETE** /api/v1/training/plan | 
 *TrainingApi* | [**updateEvent**](doc//TrainingApi.md#updateevent) | **PUT** /api/v1/training/events/{id} | 
 *WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
 *WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
@@ -266,6 +276,7 @@ Class | Method | HTTP request | Description
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
  - [BikeTemplateResponse](doc//BikeTemplateResponse.md)
+ - [BlockTarget](doc//BlockTarget.md)
  - [CalendarFeedAddressResponse](doc//CalendarFeedAddressResponse.md)
  - [CalendarFeedStatusResponse](doc//CalendarFeedStatusResponse.md)
  - [CatalogueAdminResponse](doc//CatalogueAdminResponse.md)
@@ -284,6 +295,8 @@ Class | Method | HTTP request | Description
  - [ClubSupporterResponse](doc//ClubSupporterResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
+ - [CoachPlanResponse](doc//CoachPlanResponse.md)
+ - [CoachPlanSession](doc//CoachPlanSession.md)
  - [CoachRpeResponse](doc//CoachRpeResponse.md)
  - [CoachWellbeingResponse](doc//CoachWellbeingResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)
@@ -334,10 +347,14 @@ Class | Method | HTTP request | Description
  - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [LoginTwoFactorRequest](doc//LoginTwoFactorRequest.md)
+ - [MainSetTarget](doc//MainSetTarget.md)
  - [MaintenanceJob](doc//MaintenanceJob.md)
  - [MaintenanceReminderResponse](doc//MaintenanceReminderResponse.md)
  - [MarkReminderDoneRequest](doc//MarkReminderDoneRequest.md)
+ - [MatchTrainingSessionRequest](doc//MatchTrainingSessionRequest.md)
  - [MeResponse](doc//MeResponse.md)
+ - [MoveDay](doc//MoveDay.md)
+ - [MoveTrainingSessionRequest](doc//MoveTrainingSessionRequest.md)
  - [MyClubResponse](doc//MyClubResponse.md)
  - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
  - [NearbyClubResponse](doc//NearbyClubResponse.md)
@@ -385,10 +402,13 @@ Class | Method | HTTP request | Description
  - [SaveBikeAsTemplateRequest](doc//SaveBikeAsTemplateRequest.md)
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
+ - [SaveTrainingPlanRequest](doc//SaveTrainingPlanRequest.md)
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
+ - [SessionNote](doc//SessionNote.md)
  - [SessionResponse](doc//SessionResponse.md)
+ - [SessionResult](doc//SessionResult.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
@@ -410,6 +430,7 @@ Class | Method | HTTP request | Description
  - [ShareViewResponse](doc//ShareViewResponse.md)
  - [ShareViewsResponse](doc//ShareViewsResponse.md)
  - [SharingResponse](doc//SharingResponse.md)
+ - [SkipTrainingSessionRequest](doc//SkipTrainingSessionRequest.md)
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
@@ -422,7 +443,14 @@ Class | Method | HTTP request | Description
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
  - [TrainingDay](doc//TrainingDay.md)
+ - [TrainingNote](doc//TrainingNote.md)
+ - [TrainingPlanResponse](doc//TrainingPlanResponse.md)
  - [TrainingResponse](doc//TrainingResponse.md)
+ - [TrainingRideMatch](doc//TrainingRideMatch.md)
+ - [TrainingSessionNotice](doc//TrainingSessionNotice.md)
+ - [TrainingWeek](doc//TrainingWeek.md)
+ - [TrainingWeekSession](doc//TrainingWeekSession.md)
+ - [TrainingWeeksResponse](doc//TrainingWeeksResponse.md)
  - [TwoFactorRequiredResponse](doc//TwoFactorRequiredResponse.md)
  - [TwoFactorSetup](doc//TwoFactorSetup.md)
  - [TwoFactorState](doc//TwoFactorState.md)

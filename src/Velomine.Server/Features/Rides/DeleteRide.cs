@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Rides.Ingestion;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -10,7 +11,7 @@ namespace Velomine.Server.Features.Rides;
 /// Deletes a ride and its samples. A hidden copy of it is not deleted: it is read again and becomes visible, so a ride
 /// wrongly hidden as a duplicate can be recovered. The original file goes too, unless another ride still uses it.
 /// </summary>
-public sealed class DeleteRide(VelomineDbContext db, RideFileStore files, IngestionQueue queue) : Endpoint<RideIdRequest>
+public sealed class DeleteRide(VelomineDbContext db, RideFileStore files, IngestionQueue queue, TimeProvider time) : Endpoint<RideIdRequest>
 {
     public override void Configure() => Delete("rides/{id}");
 
@@ -27,6 +28,12 @@ public sealed class DeleteRide(VelomineDbContext db, RideFileStore files, Ingest
         var hidden = await db.Rides
             .Where(r => r.UserId == userId && r.DuplicateOf == ride.Id)
             .ToListAsync(ct);
+        // A session this ride ticked goes back to open, exactly as if the rider said it was not this session.
+        var clock = await MemberClock.ForAsync(db, userId, time, ct);
+        foreach (var session in await db.TrainingSessions
+                     .Where(s => s.UserId == userId && (s.RideId == ride.Id || s.QuestionRideId == ride.Id))
+                     .ToListAsync(ct))
+            SessionMatch.Unlink(session, clock);
         foreach (var copy in hidden)
         {
             copy.Status = RideStatus.Processing;

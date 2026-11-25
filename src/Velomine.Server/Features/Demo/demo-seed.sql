@@ -696,6 +696,34 @@ BEGIN
         END LOOP;
     END LOOP;
 
+    -- The rides the demo rider's auto training week is built from: one the day before yesterday and one three days ago,
+    -- with the day between them left out, and one a week back. A past session of the week is done because its ride is
+    -- here, the day with no ride is the session the week shows as skipped, and the ride a week back keeps the setup's
+    -- own goal rule seeing a regular rider. DemoTrainingWeek works the week out; nothing about it is written here.
+    SELECT dm.user_id, mb.road_bike, u.ftp_w, u.birth_year
+    INTO m
+    FROM demo_members dm
+    JOIN demo_member_bikes mb ON mb.n = dm.n
+    JOIN accounts.users u ON u.id = dm.user_id
+    WHERE u.email = 'demo-rider@velomine.eu';
+
+    IF m.user_id IS NOT NULL THEN
+        FOR i IN 0..2 LOOP
+            v_day := v_today - (CASE i WHEN 0 THEN 1 WHEN 1 THEN 3 ELSE 8 END);
+            v_kind := CASE i WHEN 0 THEN 'recovery' WHEN 1 THEN 'intervals' ELSE 'endurance' END;
+            SELECT * INTO k FROM demo_kinds WHERE kind = v_kind;
+            -- In the morning, so a day that also carries the loop's evening ride holds two rides and not two at once.
+            v_start := (v_day::timestamp + interval '9 hours') AT TIME ZONE 'Europe/Madrid';
+            v_offset := round(extract(epoch FROM
+                ((v_start AT TIME ZONE 'Europe/Madrid') - (v_start AT TIME ZONE 'UTC'))) / 60)::int;
+            v_max_hr := round(208 - 0.7 * (extract(year FROM v_today) - m.birth_year))::int;
+
+            PERFORM pg_temp.demo_seed_ride(
+                m.user_id, m.road_bike, v_start, v_offset, v_kind, k.minutes, k.intensity, k.discipline,
+                k.environment, k.laps, k.gps, k.base_speed, m.ftp_w, v_max_hr, (9000 + i)::int, true, true);
+        END LOOP;
+    END IF;
+
     -- FTP history: the number each member had before history was kept, then one they set by hand a month ago. The
     -- newest row is the current FTP, so the older one comes first.
     INSERT INTO accounts.ftp_history (id, user_id, watts, set_at, source, ride_id)
@@ -758,7 +786,8 @@ BEGIN
     SELECT gen_random_uuid(), dm.user_id, v_club, v_coach, v_coach_name, w.what,
            v_now - make_interval(hours => w.hours)
     FROM demo_members dm
-    CROSS JOIN (VALUES ('summary', 20), ('training', 18), ('ride', 5)) AS w(what, hours)
+    -- The plan look is here so the "who looked" log shows it; the plan and its week the card reads are story 6's.
+    CROSS JOIN (VALUES ('summary', 20), ('training', 18), ('plan', 16), ('ride', 5)) AS w(what, hours)
     WHERE dm.user_id <> v_coach;
 
     -- Notifications: the two latest rides per member, the latest unread.

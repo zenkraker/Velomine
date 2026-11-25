@@ -587,6 +587,31 @@ void main() {
     },
   );
 
+  testWidgets('ClubScreen_ShouldNameAPlanLook_WhenACoachOpenedThePlan', (
+    tester,
+  ) async {
+    final rider = server.add('rider@example.com');
+    server.shareViews.add({
+      'viewerName': 'Marco',
+      'what': 'plan',
+      'at': '2026-11-24T14:10:00Z',
+    });
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+
+    // The rider's "who looked" log says what was read, in their own words: a plan look reads "Plan".
+    final look = find.widgetWithText(ListTile, 'Marco');
+    expect(look, findsOneWidget);
+    expect(
+      find.descendant(of: look, matching: find.text('Plan')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('NoClubPage_ShouldShowOnlyTheWaitingRequest_WhenAskedToJoin', (
     tester,
   ) async {

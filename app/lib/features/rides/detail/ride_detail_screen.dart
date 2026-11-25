@@ -42,6 +42,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/ftp_suggestion_card.dart';
 import '../../../core/widgets/heart_rate_note_card.dart';
+import '../../../core/widgets/training_question_card.dart';
 import '../../../core/widgets/inline_error.dart';
 import '../../../core/widgets/more_details.dart';
 import '../../../core/widgets/page_menu.dart';
@@ -354,7 +355,24 @@ class RideDetailScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final effort = layout.effortWord ? effortWord(heartRateZones) : null;
+    final training = ride.training.orElse(null);
     final items = <(Widget, bool)>[
+      // The session this ride might be asks first: it changes what the ride itself is.
+      if (training != null)
+        (
+          TrainingQuestionCard(
+            match: training,
+            rideStartedAt: ride.startTime,
+            busy: s.action.running,
+            onYes: () =>
+                notifier.answerSession(training.sessionId, ride.id, yes: true),
+            onNo: () =>
+                notifier.answerSession(training.sessionId, ride.id, yes: false),
+            onNotThisSession: () =>
+                notifier.answerSession(training.sessionId, ride.id, yes: false),
+          ),
+          true,
+        ),
       if (ride.ftpSuggestionW.value case final watts?)
         (
           FtpSuggestionCard(

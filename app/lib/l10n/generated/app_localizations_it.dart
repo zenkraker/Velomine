@@ -46,9 +46,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navGroupClub => 'Club';
 
   @override
-  String get navNoClub => 'Nessun club';
-
-  @override
   String get privacyCardTitle => 'I tuoi dati sono tuoi.';
 
   @override
@@ -56,9 +53,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get ridesSubtitle => 'I tuoi giri e le tue gare.';
-
-  @override
-  String get ridesImportMenu => 'Aggiungi giri';
 
   @override
   String get rideDetailTitle => 'Giro';
@@ -93,12 +87,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rideNoData => 'Nessun dato';
-
-  @override
-  String get sessionsNavTitle => 'Sessioni';
-
-  @override
-  String get twoFactorNavTitle => 'Due fattori';
 
   @override
   String get notifications => 'Notifiche';
@@ -319,18 +307,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorStateOn => 'L\'accesso a due fattori è attivo.';
 
   @override
-  String get twoFactorStateOff => 'L\'accesso a due fattori è disattivato.';
-
-  @override
   String get twoFactorIntro =>
       'Dopo la password inserisci un codice della tua app di autenticazione. È facoltativo e puoi disattivarlo quando vuoi.';
 
   @override
   String get twoFactorNoPassword =>
       'Questo account accede con l\'accesso singolo, che è già un secondo passaggio.';
-
-  @override
-  String get twoFactorStart => 'Configura un\'app di autenticazione';
 
   @override
   String get twoFactorStartSetup => 'Inizia la configurazione';
@@ -371,13 +353,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorEnabled => 'L\'accesso a due fattori è attivo.';
 
   @override
-  String get twoFactorDisabled => 'L\'accesso a due fattori è disattivato.';
-
-  @override
-  String get twoFactorCodeWrong =>
-      'Il codice non è corretto. Controlla l\'ora del telefono e prova il successivo.';
-
-  @override
   String get sessionsTitle => 'Dispositivi e sessioni';
 
   @override
@@ -389,9 +364,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sessionLastUsed => 'Ultimo uso';
-
-  @override
-  String get sessionSince => 'Accesso';
 
   @override
   String get sessionRevoke => 'Disconnetti';
@@ -436,9 +408,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get ssoGeneric => 'accesso singolo';
 
   @override
-  String get signingIn => 'Accesso in corso…';
-
-  @override
   String get setupTitle => 'Quale server usa il tuo club?';
 
   @override
@@ -453,9 +422,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get setupInsecure =>
       'Questo indirizzo non è cifrato. Usalo solo su una rete di cui ti fidi, oppure chiedi all\'amministratore un indirizzo https.';
-
-  @override
-  String get setupChecking => 'Verifica…';
 
   @override
   String get setupConnect => 'Connetti';
@@ -916,21 +882,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get viewsEmpty => 'Nessuno ha ancora guardato.';
 
   @override
-  String get viewSummary => 'Riepilogo';
-
-  @override
-  String get viewTraining => 'Allenamento';
-
-  @override
-  String get viewRide => 'Giro';
-
-  @override
-  String get viewRides => 'Elenco giri';
-
-  @override
-  String get viewRoute => 'Percorso';
-
-  @override
   String get athletesTitle => 'Atleti';
 
   @override
@@ -975,6 +926,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get coachNoRides => 'Nessun giro condiviso.';
+
+  @override
+  String get coachPlan => 'Piano';
+
+  @override
+  String coachPlanDone(int done, int total) {
+    return '$done di $total fatte questa settimana';
+  }
+
+  @override
+  String coachPlanPlannedRidden(String planned, String ridden) {
+    return '$planned previsto · $ridden fatto';
+  }
 
   @override
   String get routeNotShared => 'L\'atleta non ha condiviso il percorso.';
@@ -1283,9 +1247,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get delete => 'Elimina';
 
   @override
-  String get rideActions => 'Azioni giro';
-
-  @override
   String get deleteRideTitle => 'Eliminare questo giro?';
 
   @override
@@ -1370,7 +1331,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get momentHint =>
-      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo l\'uscita.';
+      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo il giro.';
 
   @override
   String momentAt(String time, String distance) {
@@ -1534,18 +1495,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get archived => 'Archiviata';
 
   @override
-  String bikeRides(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count giri',
-      one: '1 giro',
-      zero: 'Nessun giro',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get deleteBikeTitle => 'Eliminare questa bici?';
 
   @override
@@ -1571,9 +1520,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String wheelLabel(int mm) {
     return 'ruota $mm mm';
   }
-
-  @override
-  String get metricTrainingLoad => 'Carico di allenamento';
 
   @override
   String get metricPower => 'Potenza';
@@ -1734,9 +1680,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get close => 'Chiudi';
-
-  @override
-  String get openFullMap => 'Apri la mappa intera';
 
   @override
   String get save => 'Salva';
@@ -2139,11 +2082,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String totalsSemantics(String period, String distance) {
-    return 'Distanza per $period. Questo periodo: $distance.';
-  }
-
-  @override
   String chartAverage(String value) {
     return 'Media $value';
   }
@@ -2196,11 +2134,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get totalsTitleYearly => 'Distanza per anno';
-
-  @override
-  String totalsMore(int count) {
-    return '$count periodi precedenti non elencati';
-  }
 
   @override
   String get totalsShowEarlier => 'Mostra precedenti';
@@ -2387,11 +2320,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get approve => 'Approva';
 
   @override
-  String actionsFor(String name) {
-    return 'Azioni per $name';
-  }
-
-  @override
   String get changeRoles => 'Cambia ruoli';
 
   @override
@@ -2469,16 +2397,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non impostato. Imposta VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID e VELOMINE__SSO__CLIENTSECRET.';
 
   @override
-  String statusOn(String title) {
-    return '$title: attivo';
-  }
-
-  @override
-  String statusOff(String title) {
-    return '$title: disattivo';
-  }
-
-  @override
   String get noOverview => 'Nessuna panoramica.';
 
   @override
@@ -2523,20 +2441,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'La frequenza cardiaca massima si stima da qui con la formula di Tanaka (208 − 0,7 × età).';
 
   @override
-  String estimatedMaxHeartRate(int bpm) {
-    return 'Frequenza cardiaca massima stimata: $bpm bpm';
-  }
-
-  @override
-  String get estimatedMaxHeartRateNone =>
-      'Aggiungi il tuo anno di nascita per stimarla.';
-
-  @override
-  String estimatedThresholdHeartRate(int bpm) {
-    return 'Frequenza cardiaca di soglia stimata: $bpm bpm';
-  }
-
-  @override
   String heartRateSourceManual(String date) {
     return 'Impostata da te il $date';
   }
@@ -2575,10 +2479,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get heartRateSourceThresholdEstimate =>
       'Stimata come 89 % della tua massima';
-
-  @override
-  String get heartRateNone =>
-      'Aggiungi il tuo anno di nascita, o scrivila qui sopra.';
 
   @override
   String heartRateMaxMeasured(int bpm) {
@@ -2748,10 +2648,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get recordRide => 'Registra un giro';
-
-  @override
-  String get recordIntro =>
-      'Il telefono continua a registrare anche con lo schermo spento. Il giro viene salvato prima su questo telefono; poi si aggiunge il caricamento.';
 
   @override
   String get starting => 'Avvio…';
@@ -3006,9 +2902,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi il check-in giornaliero per includere come ti senti.';
 
   @override
-  String get readinessWhy => 'Perché';
-
-  @override
   String readinessWhyScore(Object score) {
     return 'Perché $score';
   }
@@ -3104,9 +2997,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingShortSleep => 'Son';
 
   @override
-  String get wellbeingHistory => 'Ultimi 30 giorni';
-
-  @override
   String get wellbeingHistory14 => 'Ultimi 14 giorni';
 
   @override
@@ -3122,9 +3012,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get wellbeingPrivate =>
       'Lo vedi solo tu. Prontezza e note non arrivano mai a un coach.';
-
-  @override
-  String get wellbeingNoHistory => 'Nessun check-in.';
 
   @override
   String get wellbeingRpe => 'Quanto è stata dura?';
@@ -3162,12 +3049,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sharesWellbeing => 'Benessere';
-
-  @override
-  String get viewPowerCurve => 'Curva di potenza';
-
-  @override
-  String get viewWellbeing => 'Benessere';
 
   @override
   String get powerCurve => 'Curva di potenza';
@@ -3214,9 +3095,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String ftpEstimateToday(int watts, String method) {
     return 'Stima di oggi: $watts W, $method.';
   }
-
-  @override
-  String get ftpEstimate => 'FTP stimato';
 
   @override
   String get ftpCurrent => 'FTP attuale';
@@ -3360,9 +3238,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get vo2MaxEstimate => 'VO2max stimato';
-
-  @override
-  String get vo2MaxFrom5Min => 'dalla migliore potenza sui 5 minuti e dal peso';
 
   @override
   String get vo2MaxNeedsWeight => 'Imposta il peso per stimare il VO2max.';
@@ -3684,10 +3559,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo account accede con il single sign-on.';
 
   @override
-  String get passwordChanged =>
-      'Password cambiata. Accedi di nuovo su questo dispositivo.';
-
-  @override
   String get passwordChangeFailed =>
       'Non è stato possibile cambiare la password. Riprova.';
 
@@ -3720,10 +3591,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get linkCopied => 'Copiato';
-
-  @override
-  String get resetPasswordLinkFailed =>
-      'Non è stato possibile creare il link. Riprova.';
 
   @override
   String get actionLoadNearbyClubs => 'trovare i club vicino a te';
@@ -3992,21 +3859,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sharedCatalogue => 'Catalogo condiviso dei componenti';
 
   @override
-  String get shareParts =>
-      'Condividi i nuovi componenti con il catalogo condiviso';
-
-  @override
   String get sharePartsHelp =>
       'I componenti non personalizzati che il catalogo condiviso non elenca vengono inviati all\'editore. I componenti personalizzati restano solo sulla tua bici.';
 
   @override
   String get catalogueNotConfigured =>
       'Questo server non ha un endpoint per i contributi, quindi non viene inviato nulla.';
-
-  @override
-  String catalogueVersion(int version, String date) {
-    return 'Versione catalogo $version, ultimo controllo $date';
-  }
 
   @override
   String get catalogueNeverSynced =>
@@ -4016,15 +3874,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String catalogueSynced(String date) {
     return 'Catalogo condiviso controllato il $date';
   }
-
-  @override
-  String get catalogueConflicts => 'Componenti diversi dal catalogo condiviso';
-
-  @override
-  String get keepMine => 'Tieni il mio';
-
-  @override
-  String get useShared => 'Usa il condiviso';
 
   @override
   String contributionCounts(int pending, int sent, int rejected, int failed) {
@@ -4120,11 +3969,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get importRunning =>
       'Sto leggendo l\'archivio. Può richiedere qualche minuto.';
-
-  @override
-  String importProgress(int done, int total) {
-    return '$done di $total attività lette';
-  }
 
   @override
   String importProgressUnit(Object total) {
@@ -5026,9 +4870,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get supporterKeyVerified => 'Chiave verificata';
 
   @override
-  String get supporterReplay => 'Rivedi';
-
-  @override
   String get supporterReplayLink => 'Rivedi il momento';
 
   @override
@@ -5084,21 +4925,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String intensityShares(String easy, String moderate, String hard) {
     return '$easy % facile · $moderate % moderato · $hard % intenso';
-  }
-
-  @override
-  String intensityEasy(String pct) {
-    return 'Facile $pct %';
-  }
-
-  @override
-  String intensityModerate(String pct) {
-    return 'Moderato $pct %';
-  }
-
-  @override
-  String intensityHard(String pct) {
-    return 'Intenso $pct %';
   }
 
   @override
@@ -5275,11 +5101,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String eventOn(String date) {
-    return '$date';
-  }
-
-  @override
   String get errorEventName => 'Dai un nome all\'evento.';
 
   @override
@@ -5350,9 +5171,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get riderModeElsewhere => 'Scelta su un altro dispositivo';
 
   @override
-  String get moreDetailsAnalysis => 'Mostra più analisi';
-
-  @override
   String get moreDetailsAll => 'Mostra tutti i dettagli';
 
   @override
@@ -5366,4 +5184,496 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rideEffortHard => 'duro';
+
+  @override
+  String get navTraining => 'Allenamento';
+
+  @override
+  String get autoTrainingTitle => 'Allenamento automatico (sperimentale)';
+
+  @override
+  String get autoTrainingSentence =>
+      'Velomine prepara la tua settimana dalle tue uscite. È una novità:';
+
+  @override
+  String get autoTrainingFeedback => 'dicci cosa non va';
+
+  @override
+  String get autoTrainingOffTitle => 'Disattivare l\'allenamento automatico?';
+
+  @override
+  String get autoTrainingOffBody =>
+      'Il piano di questa settimana e delle prossime sparisce. Le sedute già fatte restano.';
+
+  @override
+  String get autoTrainingOffAction => 'Disattiva l\'allenamento automatico';
+
+  @override
+  String get trainingChangeSetup => 'Cambia impostazioni';
+
+  @override
+  String get trainingGoalCard => 'Il tuo obiettivo';
+
+  @override
+  String trainingPlanStarts(String day) {
+    return 'Il tuo piano inizia $day.';
+  }
+
+  @override
+  String trainingHoursLine(int hours) {
+    return '$hours h a settimana';
+  }
+
+  @override
+  String get trainingSetupTitle => 'Imposta l\'allenamento automatico';
+
+  @override
+  String get trainingGoalStep => '1 · Il tuo obiettivo';
+
+  @override
+  String get trainingRideStep => '2 · Quando pedali';
+
+  @override
+  String get trainingHeartStep => '3 · La tua frequenza cardiaca';
+
+  @override
+  String get goalAerobic => 'Pedalare con regolarità';
+
+  @override
+  String get goalFitter => 'Essere più in forma';
+
+  @override
+  String get goalFaster => 'Andare più forte';
+
+  @override
+  String get goalEvent => 'Prepararsi a un evento';
+
+  @override
+  String get goalKeep => 'Restare in forma con meno tempo';
+
+  @override
+  String get goalFasterLine => 'In salita e in pianura';
+
+  @override
+  String get goalSuggested => 'Suggerito';
+
+  @override
+  String get goalReasonNotEnoughRiding =>
+      'Non abbiamo ancora visto abbastanza delle tue uscite: iniziamo facili e costanti.';
+
+  @override
+  String get goalReasonRegularRiding =>
+      'La regolarità viene prima della velocità: un ritmo costante di uscite facili è il modo migliore per iniziare.';
+
+  @override
+  String get goalReasonEventSoon => 'Costruiamo in vista del tuo evento.';
+
+  @override
+  String get goalReasonAfterBreak => 'Bentornato: ripartiamo piano.';
+
+  @override
+  String get goalReasonPowerRides =>
+      'Pedali con regolarità e con il misuratore, quindi puntiamo alla tua soglia.';
+
+  @override
+  String get goalReasonRegularRider =>
+      'Pedali con regolarità. Costruiamo la base e un po\' di velocità.';
+
+  @override
+  String get goalLineAerobic =>
+      'Un ritmo costante di uscite facili, prima di qualsiasi cosa più veloce.';
+
+  @override
+  String get goalLineFitter => 'La tua base, e un po\' di velocità in più.';
+
+  @override
+  String get goalLineEvent =>
+      'Pianificato come essere più in forma, fino al giorno.';
+
+  @override
+  String get goalLineKeep =>
+      'Un paio di uscite a settimana mantengono quello che hai.';
+
+  @override
+  String goalNextEvent(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String get goalAddEvent => 'Aggiungi un evento';
+
+  @override
+  String get trainingDaysLabel => 'Giorni in cui puoi pedalare';
+
+  @override
+  String get trainingHoursLabel => 'Ore a settimana';
+
+  @override
+  String get trainingLongRideLabel => 'Uscita lunga il';
+
+  @override
+  String get trainingLongRidePicks => 'Sceglie Velomine';
+
+  @override
+  String trainingLongRidePicksDay(String day) {
+    return 'Sceglie Velomine ($day)';
+  }
+
+  @override
+  String get trainingHeartUnknown => 'Non lo so';
+
+  @override
+  String get trainingHeartUnknownHelp =>
+      'Lo stimiamo dalla tua età e lo impariamo dalle tue uscite.';
+
+  @override
+  String get trainingMaxHeartRate => 'Frequenza cardiaca massima';
+
+  @override
+  String get trainingBirthYear => 'Anno di nascita';
+
+  @override
+  String get trainingHealthNote =>
+      'Se hai un problema di cuore o non fai attività da molto tempo, parlane prima con un medico.';
+
+  @override
+  String get trainingStart => 'Inizia';
+
+  @override
+  String get errorTrainingDays =>
+      'Scegli almeno un giorno in cui puoi pedalare.';
+
+  @override
+  String get errorTrainingHours => 'Inserisci le ore a settimana: da 1 a 30.';
+
+  @override
+  String get errorTrainingMaxHeartRate =>
+      'Inserisci una frequenza cardiaca massima da 120 a 230.';
+
+  @override
+  String get errorTrainingBirthYear => 'Inserisci il tuo anno di nascita.';
+
+  @override
+  String get actionLoadTraining => 'caricare il tuo piano di allenamento';
+
+  @override
+  String get actionSaveTrainingPlan => 'salvare le tue impostazioni';
+
+  @override
+  String get actionTurnOffTraining => 'disattivare l\'allenamento automatico';
+
+  @override
+  String get actionMatchTrainingSession =>
+      'rispondere alla domanda sulla seduta';
+
+  @override
+  String trainingTodayCaption(String day) {
+    return 'Oggi · $day';
+  }
+
+  @override
+  String get trainingToday => 'oggi';
+
+  @override
+  String trainingTodayStrip(String what) {
+    return 'Oggi · $what';
+  }
+
+  @override
+  String get trainingRestDay => 'Riposo';
+
+  @override
+  String get trainingRestDaySentence =>
+      'Niente oggi. Il riposo fa parte del piano.';
+
+  @override
+  String get trainingThisWeek => 'Questa settimana';
+
+  @override
+  String get trainingNextWeek => 'La prossima settimana (anteprima)';
+
+  @override
+  String get trainingRest => 'Riposo';
+
+  @override
+  String trainingWeekLine(int done, int total, String kind) {
+    return '$done di $total fatte. $kind';
+  }
+
+  @override
+  String trainingWeekLineAll(int done, int total) {
+    return '$done di $total fatte. La settimana è tutta qui.';
+  }
+
+  @override
+  String get trainingWeekKindOnTrack => 'Bella rotta.';
+
+  @override
+  String get trainingWeekKindStarted => 'Un buon inizio di settimana.';
+
+  @override
+  String get trainingWeekKindNothing => 'Ancora niente fatto. C\'è tempo.';
+
+  @override
+  String get trainingStatePlanned => 'In programma';
+
+  @override
+  String get trainingStateDone => 'Fatto';
+
+  @override
+  String trainingStateDoneScore(int score) {
+    return 'Fatta · $score';
+  }
+
+  @override
+  String get trainingStateEasy => 'Facile invece';
+
+  @override
+  String get trainingStateMoved => 'Spostato';
+
+  @override
+  String get trainingStateSkipped => 'Saltato';
+
+  @override
+  String get trainingStateMissed => 'Mancato';
+
+  @override
+  String get trainingOpenSession => 'Apri la seduta';
+
+  @override
+  String get trainingSessionWhy => 'Perché questa seduta';
+
+  @override
+  String get trainingSessionTitle => 'La seduta';
+
+  @override
+  String trainingCoachesCall(String term) {
+    return 'I tecnici la chiamano $term.';
+  }
+
+  @override
+  String get trainingBlockWarmup => 'Riscaldamento';
+
+  @override
+  String get trainingBlockMain => 'Parte principale';
+
+  @override
+  String get trainingBlockRecovery => 'Facile in mezzo';
+
+  @override
+  String get trainingBlockCooldown => 'Defaticamento';
+
+  @override
+  String trainingFeel(String range) {
+    return 'sensazione $range';
+  }
+
+  @override
+  String get trainingFeelExplained =>
+      'Sensazione 7: duro, potresti tenerlo per circa un\'ora.';
+
+  @override
+  String get trainingEstimated => 'stimata';
+
+  @override
+  String get trainingHeartEstimated =>
+      'Frequenza cardiaca stimata dalla tua massima.';
+
+  @override
+  String get trainingSessionMissing =>
+      'Questa seduta non è nel piano di questa settimana.';
+
+  @override
+  String trainingQuestionTitle(String day, String name) {
+    return 'Era questa la tua seduta di $day: $name?';
+  }
+
+  @override
+  String get trainingQuestionYesterday =>
+      'Questa uscita somiglia alla seduta pianificata per ieri.';
+
+  @override
+  String get trainingQuestionTomorrow =>
+      'Questa uscita somiglia alla seduta pianificata per domani.';
+
+  @override
+  String trainingLinkedTitle(String day, String name) {
+    return 'Questa era la tua seduta di $day: $name.';
+  }
+
+  @override
+  String get trainingNotThisSession => 'Non è questa la seduta';
+
+  @override
+  String get actionMakeTrainingEasy => 'rendere facile oggi';
+
+  @override
+  String get actionBackToTrainingPlan => 'rimettere la seduta';
+
+  @override
+  String get actionMoveTrainingSession => 'spostare la seduta';
+
+  @override
+  String get actionSkipTrainingSession => 'saltare la seduta';
+
+  @override
+  String get trainingMakeEasy => 'Rendi facile oggi';
+
+  @override
+  String get trainingBackToPlan => 'Torna al piano';
+
+  @override
+  String get trainingMoveSession => 'Sposta';
+
+  @override
+  String get trainingSkipSession => 'Salta';
+
+  @override
+  String trainingEasyLine(String reason) {
+    return 'Oggi facile: $reason.';
+  }
+
+  @override
+  String trainingEasyMoved(String day) {
+    return 'Il giorno duro si sposta a $day.';
+  }
+
+  @override
+  String get trainingEasySleptPoorly => 'hai dormito male';
+
+  @override
+  String get trainingEasyTired => 'ti senti stanco';
+
+  @override
+  String get trainingEasySore => 'hai i muscoli indolenziti';
+
+  @override
+  String get trainingEasyFormLow => 'la tua forma è bassa';
+
+  @override
+  String get trainingEasyAsked => 'hai chiesto un giorno più facile';
+
+  @override
+  String get trainingMoveTitle => 'Sposta questa seduta';
+
+  @override
+  String get trainingMoveHelp =>
+      'Qualsiasi giorno che resta di questa settimana, che tu pedali quel giorno o no. Un giorno duro non può stare subito prima o dopo un altro giorno duro né l\'uscita lunga.';
+
+  @override
+  String get trainingMoveRefusedHard =>
+      'Subito prima o dopo un altro giorno duro';
+
+  @override
+  String get trainingMoveRefusedLongRide =>
+      'Subito prima o dopo l\'uscita lunga';
+
+  @override
+  String get trainingMoveRefusedSession => 'Quel giorno ha già una seduta';
+
+  @override
+  String get trainingMoveRefusedLoaded => 'Sarebbe un quarto giorno carico';
+
+  @override
+  String trainingMoveNearest(String day) {
+    return 'Il giorno più vicino che va bene è $day';
+  }
+
+  @override
+  String get trainingSkipTitle => 'Salta questa seduta';
+
+  @override
+  String get trainingSkipReasonLabel => 'Perché? (facoltativo)';
+
+  @override
+  String get trainingSkipReasonTired => 'Stanco';
+
+  @override
+  String get trainingSkipReasonIll => 'Malato o infortunato';
+
+  @override
+  String get trainingSkipReasonNoTime => 'Niente tempo';
+
+  @override
+  String get trainingSkipReasonOther => 'Altro';
+
+  @override
+  String get trainingSkipAction => 'Salta';
+
+  @override
+  String get trainingSkipRestOfWeek => 'Saltare il resto di questa settimana?';
+
+  @override
+  String get trainingSkipRestOfWeekBody =>
+      'Vanno anche le sedute che restano di questa settimana, e nessuna si sposta a un altro giorno.';
+
+  @override
+  String notificationTrainingToday(String name) {
+    return 'Oggi: $name.';
+  }
+
+  @override
+  String notificationTrainingMoved(String name, String day) {
+    return '$name si sposta a $day.';
+  }
+
+  @override
+  String notificationTrainingSkipped(String name, String day) {
+    return '$name di $day è saltata.';
+  }
+
+  @override
+  String get sessionHowItWent => 'Com\'è andata';
+
+  @override
+  String get sessionOfHundred => 'su 100';
+
+  @override
+  String get sessionKindSpotOn => 'Perfetta. Seduta da manuale.';
+
+  @override
+  String get sessionKindOnPlan => 'Come previsto. Dovrebbe sentirsi così.';
+
+  @override
+  String get sessionKindClose =>
+      'Bel lavoro: quasi tutto il piano, fatto bene.';
+
+  @override
+  String get sessionKindMost => 'Hai fatto la maggior parte. Conta.';
+
+  @override
+  String get sessionKindAny =>
+      'Sulla carta non è la seduta, ma l\'uscita conta.';
+
+  @override
+  String sessionPlannedDone(String planned, String done) {
+    return '$planned previsti · $done fatti';
+  }
+
+  @override
+  String sessionMainSetWatts(String planned, String done) {
+    return '$planned W previsti · $done W fatti';
+  }
+
+  @override
+  String sessionMainSetBpm(String planned, String done) {
+    return '$planned bpm previsti · $done bpm fatti';
+  }
+
+  @override
+  String sessionMainSetPlannedOnly(String planned) {
+    return '$planned previsti';
+  }
+
+  @override
+  String get sessionOpenRide => 'Apri l\'uscita →';
+
+  @override
+  String get sessionTime => 'Tempo';
+
+  @override
+  String get sessionEffortScore => 'Punteggio di sforzo';
+
+  @override
+  String get sessionMainSet => 'Serie principale';
 }

@@ -47,6 +47,10 @@ class CoachData {
   Future<Result<ListRidesResponse?>> rides(String clubId, String userId) =>
       _api.coachListCoachRides(clubId, userId).guard(FailureAction.loadRides);
 
+  /// The athlete's auto plan for this week, when they share rides with their coaches.
+  Future<Result<CoachPlanResponse?>> plan(String clubId, String userId) =>
+      _api.coachGetCoachPlan(clubId, userId).guard(FailureAction.loadAthlete);
+
   Future<Result<RideResponse?>> ride(
     String clubId,
     String userId,

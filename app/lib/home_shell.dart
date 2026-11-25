@@ -17,6 +17,7 @@ import 'features/notifications/notifications_view_model.dart';
 import 'features/profile/rider_mode_sheet.dart';
 import 'features/profile/rider_mode_view_model.dart';
 import 'features/recording/live_ride_banner.dart';
+import 'features/training/training_view_model.dart';
 import 'features/recording/recording_providers.dart';
 
 /// One tab of the shell: where it goes, its outlined and filled icons and its label.
@@ -33,13 +34,21 @@ class HomeShell extends ConsumerWidget {
   final String location;
   final Widget child;
 
-  List<_Tab> _tabs(BuildContext context) => [
+  /// The destinations of the shell. Training is the fifth, after Rides, and only while auto training is on.
+  List<_Tab> _tabs(BuildContext context, bool autoTraining) => [
     (
       path: '/rides',
       icon: const Icon(Icons.directions_bike_outlined),
       selectedIcon: const Icon(Icons.directions_bike),
       label: context.l10n.navRides,
     ),
+    if (autoTraining)
+      (
+        path: '/training',
+        icon: const Icon(Icons.event_available_outlined),
+        selectedIcon: const Icon(Icons.event_available),
+        label: context.l10n.navTraining,
+      ),
     (
       path: '/progress',
       icon: const Icon(Icons.insights_outlined),
@@ -78,7 +87,11 @@ class HomeShell extends ConsumerWidget {
     final unread = ref.watch(
       notificationsViewModelProvider.select((state) => state.unread),
     );
-    final tabs = _tabs(context);
+    // The operator's switch hides the destination too, whatever the member's own plan says.
+    final autoTraining =
+        ref.watch(trainingViewModelProvider).on &&
+        (state.serverInfo?.autoTrainingEnabled ?? false);
+    final tabs = _tabs(context, autoTraining);
     // The Progress sub-pages are destinations of Progress, not screens pushed over it: Progress stays lit
     // and their back arrow leads to the overview.
     final sectionRoot = _sectionRootOf(location);
@@ -145,6 +158,7 @@ class HomeShell extends ConsumerWidget {
                   if (expanded)
                     NavSidebar(
                       location: location,
+                      autoTraining: autoTraining,
                       clubName: club?.name,
                       unread: unread,
                       name: state.me?.displayName,
@@ -545,6 +559,7 @@ class NavSidebar extends StatefulWidget {
   const NavSidebar({
     super.key,
     required this.location,
+    required this.autoTraining,
     required this.clubName,
     required this.unread,
     required this.name,
@@ -554,6 +569,9 @@ class NavSidebar extends StatefulWidget {
 
   /// The route on screen: the page it names sits on the soft accent ground.
   final String location;
+
+  /// Whether the rider has auto training on: then Training is a destination of its own after Rides.
+  final bool autoTraining;
 
   /// The rider's club, or null when they are in none: then the club entry is one plain link to the join page.
   final String? clubName;
@@ -705,6 +723,16 @@ class _NavSidebarState extends State<NavSidebar> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 children: [
+                  if (widget.autoTraining)
+                    _SidebarLink(
+                      key: const Key('sidebar-training'),
+                      label: l10n.navTraining,
+                      icon: Icons.event_available_outlined,
+                      selected:
+                          widget.location == '/training' ||
+                          widget.location == '/training/setup',
+                      onTap: () => context.go('/training'),
+                    ),
                   for (final section in sections) ...[
                     _SidebarSection(
                       key: Key('rail-${section.id}'),

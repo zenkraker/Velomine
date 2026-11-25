@@ -19,9 +19,11 @@ public static class TrainingRange
         int days,
         CancellationToken ct,
         RideFilter filter = default,
-        bool includeFeel = true)
+        bool includeFeel = true,
+        DateOnly? endingOn = null)
     {
-        var to = clock.Today;
+        // The member's own readiness and week look back from today; a past day's readiness from that day.
+        var to = endingOn ?? clock.Today;
         var from = to.AddDays(-(days - 1));
         var warmup = from.AddDays(-FitnessDays);
         // The strain window is a week plus the eight seven-day blocks before it, so the loads reach 63 days back.

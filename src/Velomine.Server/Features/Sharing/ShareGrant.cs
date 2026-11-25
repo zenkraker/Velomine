@@ -36,6 +36,8 @@ public static class ViewKinds
     public const string Route = "route";
     public const string PowerCurve = "power-curve";
     public const string Wellbeing = "wellbeing";
+    /// <summary>The rider's auto plan for this week, read-only.</summary>
+    public const string Plan = "plan";
 }
 
 /// <summary>One rider's choice for one kind of data, in the club they belong to.</summary>
@@ -68,7 +70,7 @@ public sealed class ShareView
     /// <summary>Kept as it was at the time, so the log still reads well after a rename or a deleted account.</summary>
     public string ViewerName { get; set; } = "";
 
-    /// <summary>summary, training, ride, rides or route.</summary>
+    /// <summary>summary, training, ride, rides, route, power-curve, wellbeing or plan.</summary>
     public string What { get; set; } = "summary";
 
     /// <summary>The ride that was looked at, when the look was at one ride; null for a list, a summary or other data. Cleared when the ride is deleted.</summary>

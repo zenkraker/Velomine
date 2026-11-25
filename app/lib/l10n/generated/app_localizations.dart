@@ -170,12 +170,6 @@ abstract class AppLocalizations {
   /// **'Club'**
   String get navGroupClub;
 
-  /// No description provided for @navNoClub.
-  ///
-  /// In en, this message translates to:
-  /// **'No club'**
-  String get navNoClub;
-
   /// No description provided for @privacyCardTitle.
   ///
   /// In en, this message translates to:
@@ -193,12 +187,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your rides and races.'**
   String get ridesSubtitle;
-
-  /// No description provided for @ridesImportMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'Add rides'**
-  String get ridesImportMenu;
 
   /// No description provided for @rideDetailTitle.
   ///
@@ -265,18 +253,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No data'**
   String get rideNoData;
-
-  /// No description provided for @sessionsNavTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sessions'**
-  String get sessionsNavTitle;
-
-  /// No description provided for @twoFactorNavTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Two-factor'**
-  String get twoFactorNavTitle;
 
   /// No description provided for @notifications.
   ///
@@ -668,12 +644,6 @@ abstract class AppLocalizations {
   /// **'Two-factor sign-in is on.'**
   String get twoFactorStateOn;
 
-  /// No description provided for @twoFactorStateOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Two-factor sign-in is off.'**
-  String get twoFactorStateOff;
-
   /// No description provided for @twoFactorIntro.
   ///
   /// In en, this message translates to:
@@ -685,12 +655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This account signs in with single sign-on, so it already has a second step.'**
   String get twoFactorNoPassword;
-
-  /// No description provided for @twoFactorStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up an authenticator'**
-  String get twoFactorStart;
 
   /// No description provided for @twoFactorStartSetup.
   ///
@@ -764,18 +728,6 @@ abstract class AppLocalizations {
   /// **'Two-factor sign-in is on.'**
   String get twoFactorEnabled;
 
-  /// No description provided for @twoFactorDisabled.
-  ///
-  /// In en, this message translates to:
-  /// **'Two-factor sign-in is off.'**
-  String get twoFactorDisabled;
-
-  /// No description provided for @twoFactorCodeWrong.
-  ///
-  /// In en, this message translates to:
-  /// **'That code did not work. Check the clock on your phone and try the next one.'**
-  String get twoFactorCodeWrong;
-
   /// No description provided for @sessionsTitle.
   ///
   /// In en, this message translates to:
@@ -799,12 +751,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last used'**
   String get sessionLastUsed;
-
-  /// No description provided for @sessionSince.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in'**
-  String get sessionSince;
 
   /// No description provided for @sessionRevoke.
   ///
@@ -878,12 +824,6 @@ abstract class AppLocalizations {
   /// **'single sign-on'**
   String get ssoGeneric;
 
-  /// No description provided for @signingIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Signing you in…'**
-  String get signingIn;
-
   /// No description provided for @setupTitle.
   ///
   /// In en, this message translates to:
@@ -913,12 +853,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.'**
   String get setupInsecure;
-
-  /// No description provided for @setupChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking…'**
-  String get setupChecking;
 
   /// No description provided for @setupConnect.
   ///
@@ -1748,36 +1682,6 @@ abstract class AppLocalizations {
   /// **'Nobody has looked yet.'**
   String get viewsEmpty;
 
-  /// No description provided for @viewSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Summary'**
-  String get viewSummary;
-
-  /// No description provided for @viewTraining.
-  ///
-  /// In en, this message translates to:
-  /// **'Training'**
-  String get viewTraining;
-
-  /// No description provided for @viewRide.
-  ///
-  /// In en, this message translates to:
-  /// **'Ride'**
-  String get viewRide;
-
-  /// No description provided for @viewRides.
-  ///
-  /// In en, this message translates to:
-  /// **'Ride list'**
-  String get viewRides;
-
-  /// No description provided for @viewRoute.
-  ///
-  /// In en, this message translates to:
-  /// **'Route'**
-  String get viewRoute;
-
   /// No description provided for @athletesTitle.
   ///
   /// In en, this message translates to:
@@ -1861,6 +1765,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No rides shared yet.'**
   String get coachNoRides;
+
+  /// No description provided for @coachPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get coachPlan;
+
+  /// No description provided for @coachPlanDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done this week'**
+  String coachPlanDone(int done, int total);
+
+  /// No description provided for @coachPlanPlannedRidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} planned · {ridden} ridden'**
+  String coachPlanPlannedRidden(String planned, String ridden);
 
   /// No description provided for @routeNotShared.
   ///
@@ -2275,12 +2197,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
-
-  /// No description provided for @rideActions.
-  ///
-  /// In en, this message translates to:
-  /// **'Ride actions'**
-  String get rideActions;
 
   /// No description provided for @deleteRideTitle.
   ///
@@ -2714,12 +2630,6 @@ abstract class AppLocalizations {
   /// **'Archived'**
   String get archived;
 
-  /// No description provided for @bikeRides.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}'**
-  String bikeRides(int count);
-
   /// No description provided for @deleteBikeTitle.
   ///
   /// In en, this message translates to:
@@ -2761,12 +2671,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'wheel {mm} mm'**
   String wheelLabel(int mm);
-
-  /// No description provided for @metricTrainingLoad.
-  ///
-  /// In en, this message translates to:
-  /// **'Training load'**
-  String get metricTrainingLoad;
 
   /// No description provided for @metricPower.
   ///
@@ -3043,12 +2947,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
-
-  /// No description provided for @openFullMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Open the full map'**
-  String get openFullMap;
 
   /// No description provided for @save.
   ///
@@ -3734,12 +3632,6 @@ abstract class AppLocalizations {
   /// **'{running, plural, =0{No goals running.} =1{One goal running.} other{{running} goals running.}} {reached, plural, =0{} =1{One reached.} other{{reached} reached.}}'**
   String goalsSummary(num reached, num running);
 
-  /// No description provided for @totalsSemantics.
-  ///
-  /// In en, this message translates to:
-  /// **'Distance per {period}. This {period}: {distance}.'**
-  String totalsSemantics(String period, String distance);
-
   /// No description provided for @chartAverage.
   ///
   /// In en, this message translates to:
@@ -3817,12 +3709,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Distance per year'**
   String get totalsTitleYearly;
-
-  /// No description provided for @totalsMore.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} older periods not listed'**
-  String totalsMore(int count);
 
   /// No description provided for @totalsShowEarlier.
   ///
@@ -4136,12 +4022,6 @@ abstract class AppLocalizations {
   /// **'Approve'**
   String get approve;
 
-  /// No description provided for @actionsFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Actions for {name}'**
-  String actionsFor(String name);
-
   /// No description provided for @changeRoles.
   ///
   /// In en, this message translates to:
@@ -4274,18 +4154,6 @@ abstract class AppLocalizations {
   /// **'Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.'**
   String get ssoNotConfigured;
 
-  /// No description provided for @statusOn.
-  ///
-  /// In en, this message translates to:
-  /// **'{title}: on'**
-  String statusOn(String title);
-
-  /// No description provided for @statusOff.
-  ///
-  /// In en, this message translates to:
-  /// **'{title}: off'**
-  String statusOff(String title);
-
   /// No description provided for @noOverview.
   ///
   /// In en, this message translates to:
@@ -4370,24 +4238,6 @@ abstract class AppLocalizations {
   /// **'Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).'**
   String get birthYearHelper;
 
-  /// No description provided for @estimatedMaxHeartRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated maximum heart rate: {bpm} bpm'**
-  String estimatedMaxHeartRate(int bpm);
-
-  /// No description provided for @estimatedMaxHeartRateNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your year of birth to estimate it.'**
-  String get estimatedMaxHeartRateNone;
-
-  /// No description provided for @estimatedThresholdHeartRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated threshold heart rate: {bpm} bpm'**
-  String estimatedThresholdHeartRate(int bpm);
-
   /// No description provided for @heartRateSourceManual.
   ///
   /// In en, this message translates to:
@@ -4447,12 +4297,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Estimated as 89 % of your maximum'**
   String get heartRateSourceThresholdEstimate;
-
-  /// No description provided for @heartRateNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your year of birth, or type it above.'**
-  String get heartRateNone;
 
   /// No description provided for @heartRateMaxMeasured.
   ///
@@ -4741,12 +4585,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record a ride'**
   String get recordRide;
-
-  /// No description provided for @recordIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.'**
-  String get recordIntro;
 
   /// No description provided for @starting.
   ///
@@ -5204,12 +5042,6 @@ abstract class AppLocalizations {
   /// **'Add a daily check-in to include how you feel.'**
   String get readinessLoadOnly;
 
-  /// No description provided for @readinessWhy.
-  ///
-  /// In en, this message translates to:
-  /// **'Why'**
-  String get readinessWhy;
-
   /// No description provided for @readinessWhyScore.
   ///
   /// In en, this message translates to:
@@ -5390,12 +5222,6 @@ abstract class AppLocalizations {
   /// **'Slp'**
   String get wellbeingShortSleep;
 
-  /// No description provided for @wellbeingHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'Last 30 days'**
-  String get wellbeingHistory;
-
   /// No description provided for @wellbeingHistory14.
   ///
   /// In en, this message translates to:
@@ -5425,12 +5251,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only you see this. Readiness and notes never reach a coach.'**
   String get wellbeingPrivate;
-
-  /// No description provided for @wellbeingNoHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'No check-ins yet.'**
-  String get wellbeingNoHistory;
 
   /// No description provided for @wellbeingRpe.
   ///
@@ -5497,18 +5317,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wellbeing'**
   String get sharesWellbeing;
-
-  /// No description provided for @viewPowerCurve.
-  ///
-  /// In en, this message translates to:
-  /// **'Power curve'**
-  String get viewPowerCurve;
-
-  /// No description provided for @viewWellbeing.
-  ///
-  /// In en, this message translates to:
-  /// **'Wellbeing'**
-  String get viewWellbeing;
 
   /// No description provided for @powerCurve.
   ///
@@ -5581,12 +5389,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Estimate today: {watts} W, {method}.'**
   String ftpEstimateToday(int watts, String method);
-
-  /// No description provided for @ftpEstimate.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated FTP'**
-  String get ftpEstimate;
 
   /// No description provided for @ftpCurrent.
   ///
@@ -5797,12 +5599,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'VO2max estimate'**
   String get vo2MaxEstimate;
-
-  /// No description provided for @vo2MaxFrom5Min.
-  ///
-  /// In en, this message translates to:
-  /// **'from your best 5-minute power and weight'**
-  String get vo2MaxFrom5Min;
 
   /// No description provided for @vo2MaxNeedsWeight.
   ///
@@ -6332,12 +6128,6 @@ abstract class AppLocalizations {
   /// **'This account signs in with single sign-on.'**
   String get passwordNoPassword;
 
-  /// No description provided for @passwordChanged.
-  ///
-  /// In en, this message translates to:
-  /// **'Your password is changed. Sign in again on this device.'**
-  String get passwordChanged;
-
   /// No description provided for @passwordChangeFailed.
   ///
   /// In en, this message translates to:
@@ -6397,12 +6187,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied'**
   String get linkCopied;
-
-  /// No description provided for @resetPasswordLinkFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not make a reset link. Try again.'**
-  String get resetPasswordLinkFailed;
 
   /// No description provided for @actionLoadNearbyClubs.
   ///
@@ -6848,12 +6632,6 @@ abstract class AppLocalizations {
   /// **'Shared parts catalogue'**
   String get sharedCatalogue;
 
-  /// No description provided for @shareParts.
-  ///
-  /// In en, this message translates to:
-  /// **'Share new parts with the shared catalogue'**
-  String get shareParts;
-
   /// No description provided for @sharePartsHelp.
   ///
   /// In en, this message translates to:
@@ -6866,12 +6644,6 @@ abstract class AppLocalizations {
   /// **'This server has no contribution endpoint configured, so nothing is sent.'**
   String get catalogueNotConfigured;
 
-  /// No description provided for @catalogueVersion.
-  ///
-  /// In en, this message translates to:
-  /// **'Catalogue version {version}, last checked {date}'**
-  String catalogueVersion(int version, String date);
-
   /// No description provided for @catalogueNeverSynced.
   ///
   /// In en, this message translates to:
@@ -6883,24 +6655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared catalogue last checked {date}'**
   String catalogueSynced(String date);
-
-  /// No description provided for @catalogueConflicts.
-  ///
-  /// In en, this message translates to:
-  /// **'Parts that differ from the shared catalogue'**
-  String get catalogueConflicts;
-
-  /// No description provided for @keepMine.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep mine'**
-  String get keepMine;
-
-  /// No description provided for @useShared.
-  ///
-  /// In en, this message translates to:
-  /// **'Use shared'**
-  String get useShared;
 
   /// No description provided for @contributionCounts.
   ///
@@ -7057,12 +6811,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reading your archive. This can take a few minutes.'**
   String get importRunning;
-
-  /// No description provided for @importProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} of {total} activities read'**
-  String importProgress(int done, int total);
 
   /// No description provided for @importProgressUnit.
   ///
@@ -8594,12 +8342,6 @@ abstract class AppLocalizations {
   /// **'Key verified'**
   String get supporterKeyVerified;
 
-  /// No description provided for @supporterReplay.
-  ///
-  /// In en, this message translates to:
-  /// **'Replay'**
-  String get supporterReplay;
-
   /// No description provided for @supporterReplayLink.
   ///
   /// In en, this message translates to:
@@ -8689,24 +8431,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{easy} % easy · {moderate} % moderate · {hard} % hard'**
   String intensityShares(String easy, String moderate, String hard);
-
-  /// No description provided for @intensityEasy.
-  ///
-  /// In en, this message translates to:
-  /// **'Easy {pct} %'**
-  String intensityEasy(String pct);
-
-  /// No description provided for @intensityModerate.
-  ///
-  /// In en, this message translates to:
-  /// **'Moderate {pct} %'**
-  String intensityModerate(String pct);
-
-  /// No description provided for @intensityHard.
-  ///
-  /// In en, this message translates to:
-  /// **'Hard {pct} %'**
-  String intensityHard(String pct);
 
   /// No description provided for @intensitySource.
   ///
@@ -8966,12 +8690,6 @@ abstract class AppLocalizations {
   /// **'“{name}” is removed. The ride it was stays.'**
   String eventDeleteBody(String name);
 
-  /// No description provided for @eventOn.
-  ///
-  /// In en, this message translates to:
-  /// **'{date}'**
-  String eventOn(String date);
-
   /// No description provided for @errorEventName.
   ///
   /// In en, this message translates to:
@@ -9098,12 +8816,6 @@ abstract class AppLocalizations {
   /// **'Chosen on another device'**
   String get riderModeElsewhere;
 
-  /// No description provided for @moreDetailsAnalysis.
-  ///
-  /// In en, this message translates to:
-  /// **'Show more analysis'**
-  String get moreDetailsAnalysis;
-
   /// No description provided for @moreDetailsAll.
   ///
   /// In en, this message translates to:
@@ -9133,6 +8845,846 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'hard'**
   String get rideEffortHard;
+
+  /// No description provided for @navTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get navTraining;
+
+  /// No description provided for @autoTrainingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto training (experimental)'**
+  String get autoTrainingTitle;
+
+  /// No description provided for @autoTrainingSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine plans your week from your rides. It is new:'**
+  String get autoTrainingSentence;
+
+  /// No description provided for @autoTrainingFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'tell us what feels wrong'**
+  String get autoTrainingFeedback;
+
+  /// No description provided for @autoTrainingOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off auto training?'**
+  String get autoTrainingOffTitle;
+
+  /// No description provided for @autoTrainingOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan for this week and later goes. Your past sessions stay.'**
+  String get autoTrainingOffBody;
+
+  /// No description provided for @autoTrainingOffAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off auto training'**
+  String get autoTrainingOffAction;
+
+  /// No description provided for @trainingChangeSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Change setup'**
+  String get trainingChangeSetup;
+
+  /// No description provided for @trainingGoalCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Your goal'**
+  String get trainingGoalCard;
+
+  /// No description provided for @trainingPlanStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan starts {day}.'**
+  String trainingPlanStarts(String day);
+
+  /// No description provided for @trainingHoursLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h a week'**
+  String trainingHoursLine(int hours);
+
+  /// No description provided for @trainingSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up auto training'**
+  String get trainingSetupTitle;
+
+  /// No description provided for @trainingGoalStep.
+  ///
+  /// In en, this message translates to:
+  /// **'1 · Your goal'**
+  String get trainingGoalStep;
+
+  /// No description provided for @trainingRideStep.
+  ///
+  /// In en, this message translates to:
+  /// **'2 · When you ride'**
+  String get trainingRideStep;
+
+  /// No description provided for @trainingHeartStep.
+  ///
+  /// In en, this message translates to:
+  /// **'3 · Your heart rate'**
+  String get trainingHeartStep;
+
+  /// No description provided for @goalAerobic.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride more regularly'**
+  String get goalAerobic;
+
+  /// No description provided for @goalFitter.
+  ///
+  /// In en, this message translates to:
+  /// **'Get fitter'**
+  String get goalFitter;
+
+  /// No description provided for @goalFaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Get faster'**
+  String get goalFaster;
+
+  /// No description provided for @goalEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ready for a ride or race'**
+  String get goalEvent;
+
+  /// No description provided for @goalKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay fit with less time'**
+  String get goalKeep;
+
+  /// No description provided for @goalFasterLine.
+  ///
+  /// In en, this message translates to:
+  /// **'On climbs and on the flat'**
+  String get goalFasterLine;
+
+  /// No description provided for @goalSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get goalSuggested;
+
+  /// No description provided for @goalReasonNotEnoughRiding.
+  ///
+  /// In en, this message translates to:
+  /// **'We have not seen enough of your riding yet, so we start easy and steady.'**
+  String get goalReasonNotEnoughRiding;
+
+  /// No description provided for @goalReasonRegularRiding.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular riding comes before faster riding; a steady rhythm of easy rides is the best start.'**
+  String get goalReasonRegularRiding;
+
+  /// No description provided for @goalReasonEventSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'We build toward your event.'**
+  String get goalReasonEventSoon;
+
+  /// No description provided for @goalReasonAfterBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back: we ease in.'**
+  String get goalReasonAfterBreak;
+
+  /// No description provided for @goalReasonPowerRides.
+  ///
+  /// In en, this message translates to:
+  /// **'You ride regularly with power, so we aim at your threshold power.'**
+  String get goalReasonPowerRides;
+
+  /// No description provided for @goalReasonRegularRider.
+  ///
+  /// In en, this message translates to:
+  /// **'You ride regularly. We build both your base and a little speed.'**
+  String get goalReasonRegularRider;
+
+  /// No description provided for @goalLineAerobic.
+  ///
+  /// In en, this message translates to:
+  /// **'A steady rhythm of easy rides, before anything faster.'**
+  String get goalLineAerobic;
+
+  /// No description provided for @goalLineFitter.
+  ///
+  /// In en, this message translates to:
+  /// **'Your base, and a little speed on top.'**
+  String get goalLineFitter;
+
+  /// No description provided for @goalLineEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned like getting fitter, up to the day.'**
+  String get goalLineEvent;
+
+  /// No description provided for @goalLineKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'A couple of rides a week keep what you have.'**
+  String get goalLineKeep;
+
+  /// No description provided for @goalNextEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {date}'**
+  String goalNextEvent(String name, String date);
+
+  /// No description provided for @goalAddEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an event'**
+  String get goalAddEvent;
+
+  /// No description provided for @trainingDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Days you can ride'**
+  String get trainingDaysLabel;
+
+  /// No description provided for @trainingHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours a week'**
+  String get trainingHoursLabel;
+
+  /// No description provided for @trainingLongRideLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Long ride on'**
+  String get trainingLongRideLabel;
+
+  /// No description provided for @trainingLongRidePicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine picks'**
+  String get trainingLongRidePicks;
+
+  /// No description provided for @trainingLongRidePicksDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine picks ({day})'**
+  String trainingLongRidePicksDay(String day);
+
+  /// No description provided for @trainingHeartUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'I don\'t know'**
+  String get trainingHeartUnknown;
+
+  /// No description provided for @trainingHeartUnknownHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'We estimate it from your age and learn it from your rides.'**
+  String get trainingHeartUnknownHelp;
+
+  /// No description provided for @trainingMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum heart rate'**
+  String get trainingMaxHeartRate;
+
+  /// No description provided for @trainingBirthYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year of birth'**
+  String get trainingBirthYear;
+
+  /// No description provided for @trainingHealthNote.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have a heart condition or have not exercised for a long time, check with a doctor first.'**
+  String get trainingHealthNote;
+
+  /// No description provided for @trainingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get trainingStart;
+
+  /// No description provided for @errorTrainingDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one day you can ride.'**
+  String get errorTrainingDays;
+
+  /// No description provided for @errorTrainingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the hours you can ride in a week: 1 to 30.'**
+  String get errorTrainingHours;
+
+  /// No description provided for @errorTrainingMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a maximum heart rate from 120 to 230.'**
+  String get errorTrainingMaxHeartRate;
+
+  /// No description provided for @errorTrainingBirthYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your year of birth.'**
+  String get errorTrainingBirthYear;
+
+  /// No description provided for @actionLoadTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'load your training plan'**
+  String get actionLoadTraining;
+
+  /// No description provided for @actionSaveTrainingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'save your setup'**
+  String get actionSaveTrainingPlan;
+
+  /// No description provided for @actionTurnOffTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'turn off auto training'**
+  String get actionTurnOffTraining;
+
+  /// No description provided for @actionMatchTrainingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'answer the session question'**
+  String get actionMatchTrainingSession;
+
+  /// No description provided for @trainingTodayCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · {day}'**
+  String trainingTodayCaption(String day);
+
+  /// No description provided for @trainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get trainingToday;
+
+  /// No description provided for @trainingTodayStrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · {what}'**
+  String trainingTodayStrip(String what);
+
+  /// No description provided for @trainingRestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest day'**
+  String get trainingRestDay;
+
+  /// No description provided for @trainingRestDaySentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing today. Rest is part of the plan.'**
+  String get trainingRestDaySentence;
+
+  /// No description provided for @trainingThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get trainingThisWeek;
+
+  /// No description provided for @trainingNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week (preview)'**
+  String get trainingNextWeek;
+
+  /// No description provided for @trainingRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get trainingRest;
+
+  /// No description provided for @trainingWeekLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done. {kind}'**
+  String trainingWeekLine(int done, int total, String kind);
+
+  /// No description provided for @trainingWeekLineAll.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done. That is the week, all of it.'**
+  String trainingWeekLineAll(int done, int total);
+
+  /// No description provided for @trainingWeekKindOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Nicely on track.'**
+  String get trainingWeekKindOnTrack;
+
+  /// No description provided for @trainingWeekKindStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'A good start to the week.'**
+  String get trainingWeekKindStarted;
+
+  /// No description provided for @trainingWeekKindNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing done yet. There is time.'**
+  String get trainingWeekKindNothing;
+
+  /// No description provided for @trainingStatePlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get trainingStatePlanned;
+
+  /// No description provided for @trainingStateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get trainingStateDone;
+
+  /// No description provided for @trainingStateDoneScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Done · {score}'**
+  String trainingStateDoneScore(int score);
+
+  /// No description provided for @trainingStateEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy instead'**
+  String get trainingStateEasy;
+
+  /// No description provided for @trainingStateMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved'**
+  String get trainingStateMoved;
+
+  /// No description provided for @trainingStateSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get trainingStateSkipped;
+
+  /// No description provided for @trainingStateMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get trainingStateMissed;
+
+  /// No description provided for @trainingOpenSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Open session'**
+  String get trainingOpenSession;
+
+  /// No description provided for @trainingSessionWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this session'**
+  String get trainingSessionWhy;
+
+  /// No description provided for @trainingSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The session'**
+  String get trainingSessionTitle;
+
+  /// No description provided for @trainingCoachesCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Coaches call this {term}.'**
+  String trainingCoachesCall(String term);
+
+  /// No description provided for @trainingBlockWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get trainingBlockWarmup;
+
+  /// No description provided for @trainingBlockMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main set'**
+  String get trainingBlockMain;
+
+  /// No description provided for @trainingBlockRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy between'**
+  String get trainingBlockRecovery;
+
+  /// No description provided for @trainingBlockCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool-down'**
+  String get trainingBlockCooldown;
+
+  /// No description provided for @trainingFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'feel {range}'**
+  String trainingFeel(String range);
+
+  /// No description provided for @trainingFeelExplained.
+  ///
+  /// In en, this message translates to:
+  /// **'Feel 7: hard, you could hold it about an hour.'**
+  String get trainingFeelExplained;
+
+  /// No description provided for @trainingEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'estimated'**
+  String get trainingEstimated;
+
+  /// No description provided for @trainingHeartEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate estimated from your maximum.'**
+  String get trainingHeartEstimated;
+
+  /// No description provided for @trainingSessionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This session is not in this week\'s plan.'**
+  String get trainingSessionMissing;
+
+  /// No description provided for @trainingQuestionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Was this your {day} {name}?'**
+  String trainingQuestionTitle(String day, String name);
+
+  /// No description provided for @trainingQuestionYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride looks like the session planned for yesterday.'**
+  String get trainingQuestionYesterday;
+
+  /// No description provided for @trainingQuestionTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride looks like the session planned for tomorrow.'**
+  String get trainingQuestionTomorrow;
+
+  /// No description provided for @trainingLinkedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This was your {day} {name}.'**
+  String trainingLinkedTitle(String day, String name);
+
+  /// No description provided for @trainingNotThisSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Not this session'**
+  String get trainingNotThisSession;
+
+  /// No description provided for @actionMakeTrainingEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'make today easy'**
+  String get actionMakeTrainingEasy;
+
+  /// No description provided for @actionBackToTrainingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'put the session back'**
+  String get actionBackToTrainingPlan;
+
+  /// No description provided for @actionMoveTrainingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'move the session'**
+  String get actionMoveTrainingSession;
+
+  /// No description provided for @actionSkipTrainingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'skip the session'**
+  String get actionSkipTrainingSession;
+
+  /// No description provided for @trainingMakeEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Make today easy'**
+  String get trainingMakeEasy;
+
+  /// No description provided for @trainingBackToPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the plan'**
+  String get trainingBackToPlan;
+
+  /// No description provided for @trainingMoveSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get trainingMoveSession;
+
+  /// No description provided for @trainingSkipSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get trainingSkipSession;
+
+  /// No description provided for @trainingEasyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy today: {reason}.'**
+  String trainingEasyLine(String reason);
+
+  /// No description provided for @trainingEasyMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The hard day moves to {day}.'**
+  String trainingEasyMoved(String day);
+
+  /// No description provided for @trainingEasySleptPoorly.
+  ///
+  /// In en, this message translates to:
+  /// **'you slept poorly'**
+  String get trainingEasySleptPoorly;
+
+  /// No description provided for @trainingEasyTired.
+  ///
+  /// In en, this message translates to:
+  /// **'you feel tired'**
+  String get trainingEasyTired;
+
+  /// No description provided for @trainingEasySore.
+  ///
+  /// In en, this message translates to:
+  /// **'you are sore'**
+  String get trainingEasySore;
+
+  /// No description provided for @trainingEasyFormLow.
+  ///
+  /// In en, this message translates to:
+  /// **'your form is low'**
+  String get trainingEasyFormLow;
+
+  /// No description provided for @trainingEasyAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'you asked for an easier day'**
+  String get trainingEasyAsked;
+
+  /// No description provided for @trainingMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move this session'**
+  String get trainingMoveTitle;
+
+  /// No description provided for @trainingMoveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Any day left this week, whether you ride that day or not. A hard day cannot sit next to another hard day or next to the long ride.'**
+  String get trainingMoveHelp;
+
+  /// No description provided for @trainingMoveRefusedHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Next to another hard day'**
+  String get trainingMoveRefusedHard;
+
+  /// No description provided for @trainingMoveRefusedLongRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Next to the long ride'**
+  String get trainingMoveRefusedLongRide;
+
+  /// No description provided for @trainingMoveRefusedSession.
+  ///
+  /// In en, this message translates to:
+  /// **'That day already has a session'**
+  String get trainingMoveRefusedSession;
+
+  /// No description provided for @trainingMoveRefusedLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'That would make a fourth loaded day'**
+  String get trainingMoveRefusedLoaded;
+
+  /// No description provided for @trainingMoveNearest.
+  ///
+  /// In en, this message translates to:
+  /// **'The nearest day that works is {day}'**
+  String trainingMoveNearest(String day);
+
+  /// No description provided for @trainingSkipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this session'**
+  String get trainingSkipTitle;
+
+  /// No description provided for @trainingSkipReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Why? (optional)'**
+  String get trainingSkipReasonLabel;
+
+  /// No description provided for @trainingSkipReasonTired.
+  ///
+  /// In en, this message translates to:
+  /// **'Tired'**
+  String get trainingSkipReasonTired;
+
+  /// No description provided for @trainingSkipReasonIll.
+  ///
+  /// In en, this message translates to:
+  /// **'Ill or injured'**
+  String get trainingSkipReasonIll;
+
+  /// No description provided for @trainingSkipReasonNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No time'**
+  String get trainingSkipReasonNoTime;
+
+  /// No description provided for @trainingSkipReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get trainingSkipReasonOther;
+
+  /// No description provided for @trainingSkipAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get trainingSkipAction;
+
+  /// No description provided for @trainingSkipRestOfWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip the rest of this week?'**
+  String get trainingSkipRestOfWeek;
+
+  /// No description provided for @trainingSkipRestOfWeekBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The sessions left this week go too, and none of them moves to another day.'**
+  String get trainingSkipRestOfWeekBody;
+
+  /// No description provided for @notificationTrainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {name}.'**
+  String notificationTrainingToday(String name);
+
+  /// No description provided for @notificationTrainingMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} moves to {day}.'**
+  String notificationTrainingMoved(String name, String day);
+
+  /// No description provided for @notificationTrainingSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} on {day} is skipped.'**
+  String notificationTrainingSkipped(String name, String day);
+
+  /// No description provided for @sessionHowItWent.
+  ///
+  /// In en, this message translates to:
+  /// **'How it went'**
+  String get sessionHowItWent;
+
+  /// No description provided for @sessionOfHundred.
+  ///
+  /// In en, this message translates to:
+  /// **'of 100'**
+  String get sessionOfHundred;
+
+  /// No description provided for @sessionKindSpotOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Spot on. Textbook session.'**
+  String get sessionKindSpotOn;
+
+  /// No description provided for @sessionKindOnPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Right on plan. That is how it should feel.'**
+  String get sessionKindOnPlan;
+
+  /// No description provided for @sessionKindClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Good work: most of the plan, ridden well.'**
+  String get sessionKindClose;
+
+  /// No description provided for @sessionKindMost.
+  ///
+  /// In en, this message translates to:
+  /// **'You got most of it. It counts.'**
+  String get sessionKindMost;
+
+  /// No description provided for @sessionKindAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the session on paper, but the ride counts.'**
+  String get sessionKindAny;
+
+  /// No description provided for @sessionPlannedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} planned · {done} ridden'**
+  String sessionPlannedDone(String planned, String done);
+
+  /// No description provided for @sessionMainSetWatts.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} W planned · {done} W ridden'**
+  String sessionMainSetWatts(String planned, String done);
+
+  /// No description provided for @sessionMainSetBpm.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} bpm planned · {done} bpm ridden'**
+  String sessionMainSetBpm(String planned, String done);
+
+  /// No description provided for @sessionMainSetPlannedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} planned'**
+  String sessionMainSetPlannedOnly(String planned);
+
+  /// No description provided for @sessionOpenRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the ride →'**
+  String get sessionOpenRide;
+
+  /// No description provided for @sessionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get sessionTime;
+
+  /// No description provided for @sessionEffortScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Effort score'**
+  String get sessionEffortScore;
+
+  /// No description provided for @sessionMainSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Main set'**
+  String get sessionMainSet;
 }
 
 class _AppLocalizationsDelegate

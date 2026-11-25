@@ -454,4 +454,168 @@ void main() {
       },
     );
   }
+
+  /// Opens one athlete's page as a coach, with this week's plan on the fake server.
+  Future<void> openAthletePlan(
+    WidgetTester tester, {
+    List<Map<String, Object?>>? sessions,
+    double width = 1000,
+  }) async {
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    server.coachPlan = coachPlanJson(
+      start: DateTime(2026, 11, 23),
+      sessions:
+          sessions ??
+          [
+            coachPlanSessionJson(
+              DateTime(2026, 11, 24),
+              minutes: 60,
+              state: 'done',
+              riddenMinutes: 64,
+              englishName: 'Easy ride',
+              italianName: 'Giro tranquillo',
+            ),
+            coachPlanSessionJson(
+              DateTime(2026, 11, 26),
+              englishName: 'Strong and steady',
+              italianName: 'Forte e costante',
+            ),
+            // The server hides "Ill or injured" without the wellbeing grant: the row reads Skipped alone.
+            coachPlanSessionJson(
+              DateTime(2026, 11, 27),
+              minutes: 60,
+              state: 'skipped',
+              englishName: 'Easy spin',
+              italianName: 'Giro defaticante',
+            ),
+          ],
+    );
+    tester.view.physicalSize = Size(width, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+    await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+    await tester.pumpAndSettle();
+  }
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'CoachAthleteScreen_ShouldNotOverflow_WhenThePlanIsShownAtWidthIs${width.toInt()}',
+      (tester) async {
+        await openAthletePlan(tester, width: width);
+
+        expect(find.byKey(const Key('coach-plan')), findsOneWidget);
+        // Two cards across on a medium or a desktop window, one under the other on a phone.
+        final plan = tester.getTopLeft(find.byKey(const Key('coach-plan'))).dy;
+        final rides = tester
+            .getTopLeft(find.byKey(const Key('coach-rides-card')))
+            .dy;
+        expect(plan == rides, width >= 600);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('CoachAthleteScreen_ShouldShowThePlan_WhenRidesAreShared', (
+    tester,
+  ) async {
+    await openAthletePlan(tester);
+
+    final card = find.byKey(const Key('coach-plan'));
+    expect(card, findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.text('Get fitter · 6 h a week · 1 of 3 done this week'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('Strong and steady')),
+      findsOneWidget,
+    );
+    // Planned beside done: the time only, as the mock-up draws it.
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.text('1 h planned · 1 h 04 ridden'),
+      ),
+      findsOneWidget,
+    );
+    // The reason was withheld (the illness case without the wellbeing grant): the day reads "Skipped" once, in its
+    // badge, and keeps its length like every other day instead of saying the word twice.
+    expect(
+      find.descendant(of: card, matching: find.text('Skipped')),
+      findsOneWidget,
+    );
+    expect(find.descendant(of: card, matching: find.text('1 h')), findsWidgets);
+    // The score stays with the rider: the badge says Done and nothing more.
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Done ·')),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+    'CoachAthleteScreen_ShouldShowTheSkipReason_WhenTheRidesGrantCarriesIt',
+    (tester) async {
+      await openAthletePlan(
+        tester,
+        sessions: [
+          coachPlanSessionJson(
+            DateTime(2026, 11, 27),
+            minutes: 60,
+            state: 'skipped',
+            skipReason: 'no_time',
+            englishName: 'Easy spin',
+          ),
+        ],
+      );
+
+      // The reason the rides grant carries reads in the row, in the rider's words, as the mock-up writes it.
+      expect(find.text('Skipped · no time'), findsOneWidget);
+      expect(find.byKey(const Key('coach-plan')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'CoachAthleteScreen_ShouldSayTheSkipReasonInTheRidersWords_WhenTheScreenIsItalian',
+    (tester) async {
+      // The rider's own picker says "Stanco", so the coach's card says it too, instead of a noun of its own.
+      tester.platformDispatcher.localesTestValue = [const Locale('it')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      await openAthletePlan(
+        tester,
+        sessions: [
+          coachPlanSessionJson(
+            DateTime(2026, 11, 27),
+            minutes: 60,
+            state: 'skipped',
+            skipReason: 'tired',
+            englishName: 'Easy spin',
+          ),
+        ],
+      );
+
+      expect(find.text('Saltato · stanco'), findsOneWidget);
+      expect(find.textContaining('Stanchezza'), findsNothing);
+    },
+  );
+
+  testWidgets('CoachAthleteScreen_ShouldHideThePlan_WhenTheAthleteHasNone', (
+    tester,
+  ) async {
+    final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
+    server.sharingChoices['rides'] = 'coaches';
+    // No plan on the server: auto training is off, or the athlete never turned it on.
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openAthletes(tester);
+    await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('coach-plan')), findsNothing);
+  });
 }

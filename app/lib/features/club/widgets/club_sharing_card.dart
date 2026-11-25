@@ -22,6 +22,7 @@ String _viewName(AppLocalizations l10n, String what) => switch (what) {
   'analytics' => l10n.shareAnalytics,
   'routes' => l10n.shareRoutes,
   'wellbeing' => l10n.shareWellbeing,
+  'plan' => l10n.coachPlan,
   _ => what,
 };
 

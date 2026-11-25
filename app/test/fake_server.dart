@@ -189,6 +189,9 @@ class FakeServer {
   };
   final shareViews = <Map<String, Object?>>[];
 
+  /// The athlete's auto plan for this week as the coach's endpoint sends it, and the goal it plans for.
+  Map<String, Object?>? coachPlan;
+
   /// What the member hides from every non-owner, and the places whose surroundings are hidden.
   final privacyStreams = <String, bool>{
     'hideHeartRate': false,
@@ -236,6 +239,38 @@ class FakeServer {
     'clubCreationEnabled': false,
   };
   bool smtpConfigured = false;
+
+  /// The operator's switch for auto training, as GET /server says it.
+  bool autoTrainingEnabled = true;
+
+  /// The member's auto-training plan as the server would return it, or null when they have none.
+  Map<String, Object?>? trainingPlan;
+
+  /// This week's sessions as GET /training/week answers them, or null when the rider has no plan.
+  Map<String, Object?>? trainingWeek;
+
+  /// Every answer the app posted to a session's question, newest last: session, ride and yes/no.
+  final sessionAnswers = <Map<String, Object?>>[];
+
+  /// Every change the rider made to a session by hand: its id, what was asked and what was sent with it.
+  final sessionActions = <Map<String, Object?>>[];
+
+  /// The week a change answers with; null answers the week the test set up, unchanged.
+  Map<String, Object?>? trainingChangeAnswer;
+
+  /// The last setup the app sent, so a test can check what Start saved.
+  Map<String, Object?>? lastTrainingSave;
+
+  /// The weeks GET /training/week answers: this week, and next week as the preview on the week's last day.
+  List<Map<String, Object?>> trainingWeeks = const [];
+
+  /// The goal the server suggests, and the reason code it gives for it.
+  String suggestedTrainingGoal = 'fitter';
+  String trainingSuggestionReason = 'regular_rider';
+
+  /// The two heart-rate numbers in use, with where they came from.
+  int? trainingMaxHeartRate;
+  String? trainingMaxHeartRateSource;
 
   /// Whether a new account waits for an admin; off is the server's default now.
   bool requireApproval = false;
@@ -386,6 +421,10 @@ class FakeServer {
     return _cookieUser;
   }
 
+  /// The year of birth the profile holds, as the plan endpoint reports it.
+  int? trainingBirthYearFor(FakeAccount? caller) =>
+      caller == null ? null : profiles[caller.email]?['birthYear'] as int?;
+
   Future<http.Response> _handle(http.Request request) async {
     if (unreachable) {
       throw http.ClientException('The server is unreachable.', request.url);
@@ -420,7 +459,95 @@ class FakeServer {
         'sentryDsn': telemetryEnabled ? sentryDsn : null,
         'telemetryTermsVersion': 1,
         'demo': false,
+        'autoTrainingEnabled': autoTrainingEnabled,
       });
+    }
+
+    if (path == '/api/v1/training/plan') {
+      Map<String, Object?> plan() => {
+        'on': trainingPlan?['on'] ?? false,
+        'goal': trainingPlan?['goal'],
+        'suggestedGoal': suggestedTrainingGoal,
+        'suggestionReason': trainingSuggestionReason,
+        'days': trainingPlan?['days'] ?? <String>[],
+        'hoursPerWeek': trainingPlan?['hoursPerWeek'],
+        'longRideDay': trainingPlan?['longRideDay'],
+        'lastPlannedFor': trainingPlan?['lastPlannedFor'],
+        'maxHeartRate': trainingMaxHeartRate,
+        'maxHeartRateSource': trainingMaxHeartRateSource,
+        'birthYear': trainingPlan?['birthYear'] ?? trainingBirthYearFor(caller),
+        'nextEventName': null,
+        'nextEventDate': null,
+        'firstDayOfWeek':
+            profiles[caller?.email]?['firstDayOfWeek'] as String? ?? 'monday',
+      };
+      if (request.method == 'GET') return json(plan());
+      if (request.method == 'PUT') {
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        lastTrainingSave = body;
+        trainingPlan = {
+          'on': true,
+          'goal': body['goal'],
+          'days': body['days'],
+          'hoursPerWeek': body['hoursPerWeek'],
+          'longRideDay': body['longRideDay'],
+          'birthYear': body['birthYear'] ?? trainingBirthYearFor(caller),
+          'lastPlannedFor': null,
+        };
+        if (body['maxHeartRate'] is int) {
+          trainingMaxHeartRate = body['maxHeartRate'] as int;
+          trainingMaxHeartRateSource = 'manual';
+        } else if (body['maxHeartRateKnown'] == false) {
+          trainingMaxHeartRateSource = 'estimate';
+        }
+        return json(plan());
+      }
+      if (request.method == 'DELETE') {
+        if (trainingPlan == null) {
+          return http.Response('{"title":"Not found."}', 404);
+        }
+        trainingPlan = {...trainingPlan!, 'on': false};
+        return json(plan());
+      }
+      return http.Response('', 405);
+    }
+
+    if (path == '/api/v1/training/week') {
+      // A rider with auto training off has no week: the endpoint answers 404, as the server does.
+      if (trainingPlan?['on'] != true) {
+        return http.Response('{"title":"Not found."}', 404);
+      }
+      return json(trainingWeek ?? {'weeks': trainingWeeks});
+    }
+
+    // A session made easy, put back, moved or skipped. The answer is the week as it now stands.
+    final sessionAction = RegExp(
+      r'^/api/v1/training/sessions/([^/]+)/(easy|move|skip)$',
+    ).firstMatch(path);
+    if (sessionAction != null) {
+      final body = request.body.isEmpty
+          ? <String, Object?>{}
+          : jsonDecode(request.body) as Map<String, Object?>;
+      final what = sessionAction.group(2)!;
+      sessionActions.add({
+        'sessionId': sessionAction.group(1),
+        if (request.method == 'DELETE') ...{'what': 'back'},
+        if (request.method == 'POST') ...{'what': what},
+        ...body,
+      });
+      return json(trainingChangeAnswer ?? {'weeks': trainingWeeks});
+    }
+
+    final sessionMatch = RegExp(r'^/api/v1/training/sessions/([^/]+)/match$')
+        .firstMatch(path);
+    if (sessionMatch != null && request.method == 'POST') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      sessionAnswers.add({
+        'sessionId': sessionMatch.group(1),
+        'rideId': body['rideId'],
+        'answer': body['answer'],
+      });
+      return http.Response('', 204);
     }
 
     if (path == '/api/v1/accounts/sso') {
@@ -969,6 +1096,7 @@ Map<String, Object?> notificationJson(
   String? rideId,
   String? bikeId,
   bool isRead = false,
+  Map<String, Object?>? training,
 }) => {
   'id': id,
   'type': type,
@@ -980,6 +1108,7 @@ Map<String, Object?> notificationJson(
   'plannedRideId': null,
   'createdAt': '2026-11-04T09:00:00Z',
   'isRead': isRead,
+  'training': training,
 };
 
 /// One period's totals as the server sends them.
@@ -2131,6 +2260,16 @@ extension on FakeServer {
       return json({'rides': rides, 'next': null});
     }
 
+    // No plan is no card: without the coaches grant, or with auto training off, the real server answers 404.
+    final plan = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/plan$')
+        .firstMatch(path);
+    if (plan != null) {
+      if (sharingChoices['rides'] == 'none' || coachPlan == null) {
+        return http.Response('', 404);
+      }
+      return json(coachPlan);
+    }
+
     final training = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/training$')
         .firstMatch(path);
     if (training != null) {
@@ -2834,6 +2973,7 @@ Map<String, Object?> rideJson(
   int version = 1,
   String startTime = '2026-11-01T07:30:00Z',
   int? utcOffsetMinutes,
+  Map<String, Object?>? training,
 }) => {
   'id': id,
   'status': status,
@@ -2890,6 +3030,127 @@ Map<String, Object?> rideJson(
   'heartRateZoneModel': heartRateZoneModel,
   'heartRateZoneReferenceBpm': heartRateZoneReferenceBpm,
   'heartRateZoneReferenceSource': heartRateZoneReferenceSource,
+  'training': training,
+};
+
+/// The auto-training session a ride ticked, or the one it is asked about: the ride page's card.
+Map<String, Object?> trainingRideMatchJson(
+  String sessionId, {
+  String localDate = '2026-11-03',
+  String englishName = 'Strong and steady',
+  String italianName = 'Forte e costante',
+  String state = 'planned',
+}) => {
+  'sessionId': sessionId,
+  'localDate': localDate,
+  'recipe': 'R05',
+  'englishName': englishName,
+  'italianName': italianName,
+  'state': state,
+};
+
+/// One session of a week as GET /training/week answers it.
+Map<String, Object?> trainingWeekSessionJson(
+  String id, {
+  String localDate = '2026-11-02',
+  int minutes = 60,
+  String state = 'planned',
+  String? rideId,
+  Map<String, Object?>? result,
+  String englishName = 'Strong and steady',
+  String italianName = 'Forte e costante',
+  String englishLine = 'Long efforts just below your limit.',
+  String italianLine = 'Sforzi lunghi appena sotto il limite.',
+  String? skipReason,
+  List<Map<String, Object?>> move = const [],
+  String? easyReason,
+  String? easyMovedTo,
+  bool canMakeEasy = false,
+}) => {
+  'id': id,
+  'localDate': localDate,
+  'minutes': minutes,
+  'state': state,
+  'skipReason': skipReason,
+  'rideId': rideId,
+  'recipe': 'R05',
+  'technicalName': 'Sweet spot',
+  'englishName': englishName,
+  'italianName': italianName,
+  'englishLine': englishLine,
+  'italianLine': italianLine,
+  'move': move,
+  'easyReason': easyReason,
+  'easyMovedTo': easyMovedTo,
+  'canMakeEasy': canMakeEasy,
+  'blocks': [
+    {
+      'role': 'warmup',
+      'minutes': 15,
+      'wattsLow': 140,
+      'wattsHigh': 175,
+      'heartRateLow': 115,
+      'heartRateHigh': 140,
+      'feelLow': 2,
+      'feelHigh': 3,
+    },
+    {
+      'role': 'main',
+      'minutes': 31,
+      'wattsLow': 220,
+      'wattsHigh': 235,
+      'heartRateLow': 152,
+      'heartRateHigh': 160,
+      'feelLow': 5,
+      'feelHigh': 6,
+    },
+    {
+      'role': 'cooldown',
+      'minutes': 10,
+      'wattsLow': 140,
+      'wattsHigh': 175,
+      'heartRateLow': 115,
+      'heartRateHigh': 140,
+      'feelLow': 2,
+      'feelHigh': 2,
+    },
+  ],
+  'notes': [
+    {
+      'code': 'set_ftp',
+      'english': 'Set your FTP for watt targets',
+      'italian': 'Imposta il tuo FTP per gli obiettivi in watt',
+    },
+  ],
+  'heartRateEstimated': false,
+  'result': result,
+};
+
+/// What a done session's ride did, as GET /training/week carries it.
+/// One day a session can move to, as the move sheet reads it.
+Map<String, Object?> moveDayJson(
+  String localDate, {
+  bool allowed = true,
+  String? reason,
+}) => {'localDate': localDate, 'allowed': allowed, 'reason': reason};
+
+Map<String, Object?> sessionResultJson({
+  int score = 92,
+  int plannedMinutes = 60,
+  double doneMinutes = 60,
+  double plannedEffort = 57.8,
+  double? doneEffort = 56.2,
+  String signal = 'power',
+  int target = 228,
+  int? average = 224,
+}) => {
+  'score': score,
+  'plannedMinutes': plannedMinutes,
+  'doneMinutes': doneMinutes,
+  'plannedEffort': plannedEffort,
+  'doneEffort': doneEffort,
+  'mainSetShare': 0.75,
+  'mainSet': {'signal': signal, 'target': target, 'average': average},
 };
 
 /// One personal power record as the ride detail receives it.
@@ -3110,6 +3371,153 @@ Future<void> goTo(WidgetTester tester, String path) async {
   GoRouter.of(tester.element(find.byType(HomeShell))).go(path);
   await tester.pumpAndSettle();
 }
+
+/// One day of a coach's read of an athlete's plan: the session, how it went and the minutes ridden.
+Map<String, Object?> coachPlanSessionJson(
+  DateTime date, {
+  int minutes = 75,
+  String state = 'planned',
+  String? skipReason,
+  int? riddenMinutes,
+  String englishName = 'Strong and steady',
+  String italianName = 'Forte e costante',
+}) => {
+  'localDate': fakeDay(date),
+  'englishName': englishName,
+  'italianName': italianName,
+  'minutes': minutes,
+  'state': state,
+  'skipReason': skipReason,
+  'riddenMinutes': riddenMinutes,
+};
+
+/// A week as GET /clubs/{clubId}/athletes/{userId}/plan answers it.
+Map<String, Object?> coachPlanJson({
+  required DateTime start,
+  List<Map<String, Object?>> sessions = const [],
+  String goal = 'fitter',
+  int hoursPerWeek = 6,
+}) => {
+  'goal': goal,
+  'hoursPerWeek': hoursPerWeek,
+  'start': fakeDay(start),
+  'end': fakeDay(start.add(const Duration(days: 6))),
+  'sessions': sessions,
+};
+
+/// A day as the server sends a date-only value: "2026-11-27".
+String fakeDay(DateTime date) => date.toIso8601String().substring(0, 10);
+
+/// A week as GET /training/week answers it, with [sessions] on their own days.
+Map<String, Object?> trainingWeekJson({
+  required DateTime start,
+  List<Map<String, Object?>> sessions = const [],
+  String? noteCode,
+  bool lighter = false,
+  int skipsThisWeek = 0,
+}) => {
+  'start': fakeDay(start),
+  'skipsThisWeek': skipsThisWeek,
+  'end': fakeDay(start.add(const Duration(days: 6))),
+  'plannedLoad': 0.0,
+  'isLighterWeek': lighter,
+  'note': noteCode == null
+      ? null
+      : {
+          'code': noteCode,
+          'english': noteCode == 'easy_week'
+              ? 'Easy week: your body gets stronger while it rests.'
+              : 'It gets more personal as your rides come in.',
+          'italian': noteCode == 'easy_week'
+              ? 'Settimana facile: il corpo si rafforza mentre riposa.'
+              : 'Diventa più personale man mano che arrivano i tuoi giri.',
+        },
+  'sessions': sessions,
+};
+
+/// A session as GET /training/week answers it.
+Map<String, Object?> trainingSessionJson({
+  required DateTime date,
+  String id = 'session-1',
+  int minutes = 75,
+  String state = 'planned',
+  String recipe = 'R05',
+  String technicalName = 'Sweet spot',
+  String englishName = 'Strong and steady 3×10',
+  String italianName = 'Forte e costante 3×10',
+  String englishLine = 'Long efforts just below your limit.',
+  String italianLine = 'Sforzi lunghi appena sotto il limite.',
+  List<Map<String, Object?>> blocks = const [],
+  List<Map<String, Object?>> notes = const [],
+  bool heartRateEstimated = false,
+  String? rideId,
+  String? skipReason,
+  List<Map<String, Object?>> move = const [],
+  String? easyReason,
+  DateTime? easyMovedTo,
+  bool canMakeEasy = false,
+}) => {
+  'id': id,
+  'localDate': fakeDay(date),
+  'minutes': minutes,
+  'state': state,
+  'skipReason': skipReason,
+  'rideId': rideId,
+  'recipe': recipe,
+  'technicalName': technicalName,
+  'englishName': englishName,
+  'italianName': italianName,
+  'englishLine': englishLine,
+  'italianLine': italianLine,
+  'blocks': blocks,
+  'notes': notes,
+  'heartRateEstimated': heartRateEstimated,
+  'move': move,
+  'easyReason': easyReason,
+  'easyMovedTo': easyMovedTo == null ? null : fakeDay(easyMovedTo),
+  'canMakeEasy': canMakeEasy,
+};
+
+/// One block of a session: its part, its minutes and the ranges of its three targets.
+Map<String, Object?> trainingBlockJson({
+  String role = 'main',
+  int minutes = 40,
+  int? wattsLow = 220,
+  int? wattsHigh = 235,
+  int? heartRateLow = 152,
+  int? heartRateHigh = 160,
+  int feelLow = 5,
+  int feelHigh = 6,
+}) => {
+  'role': role,
+  'minutes': minutes,
+  'wattsLow': wattsLow,
+  'wattsHigh': wattsHigh,
+  'heartRateLow': heartRateLow,
+  'heartRateHigh': heartRateHigh,
+  'feelLow': feelLow,
+  'feelHigh': feelHigh,
+};
+
+/// A line under a session's targets, as the server sends it in both languages.
+Map<String, Object?> trainingNoteJson(String code) => {
+  'code': code,
+  'english': switch (code) {
+    'add_power_meter' => 'Add a power meter for watt targets',
+    'set_ftp' => 'Set your FTP for watt targets',
+    _ => 'Heart rate lags here: go by watts and feel',
+  },
+  'italian': switch (code) {
+    'add_power_meter' =>
+      'Aggiungi un misuratore di potenza per gli obiettivi in watt',
+    'set_ftp' => 'Imposta il tuo FTP per gli obiettivi in watt',
+    _ => 'Qui la frequenza cardiaca arriva in ritardo: segui watt e sensazioni',
+  },
+};
+
+/// The Monday of the week [today] falls in, for a plan whose week starts on Monday.
+DateTime weekStart(DateTime today) =>
+    DateTime(today.year, today.month, today.day - (today.weekday - 1));
 
 /// Opens the account menu in the page header.
 Future<void> openAccountMenu(WidgetTester tester) async {

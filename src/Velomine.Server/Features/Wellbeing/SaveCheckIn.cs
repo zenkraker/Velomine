@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Wellbeing;
@@ -86,6 +87,16 @@ public sealed class SaveCheckIn(VelomineDbContext db, TimeProvider time)
         checkIn.UpdatedAt = now;
         await db.SaveChangesAsync(ct);
         VelomineMetrics.CheckInsSaved.Add(1);
+
+        // The answers change today at once: the worst of them, or a readiness in F2's rest band, makes today's hard
+        // session an endurance one (W6). Only the reason leaves this slice, never the answers.
+        var plan = await db.TrainingPlans.FirstOrDefaultAsync(p => p.UserId == userId && p.IsOn, ct);
+        if (plan is not null)
+        {
+            var user = await db.Users.FirstAsync(u => u.Id == userId, ct);
+            await SessionAdaptation.AfterCheckInAsync(
+                db, user, plan, clock, time, req.Sleep, req.Fatigue, req.Soreness, ct);
+        }
 
         await Send.OkAsync(CheckInResponse.From(checkIn), ct);
     }

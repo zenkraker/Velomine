@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Notifications;
 
@@ -23,7 +24,11 @@ public sealed record NotificationResponse(
     Guid? AboutUserId,
     Guid? PlannedRideId,
     DateTimeOffset CreatedAt,
-    bool IsRead);
+    bool IsRead,
+    /// <summary>The session a "Was this your …?" notification asks about; null for every other type.</summary>
+    TrainingRideMatch? Training = null,
+    /// <summary>The session a training notification is about: today's, or one made easy, moved or skipped.</summary>
+    TrainingSessionNotice? Notice = null);
 
 /// <summary>Newest first. UnreadCount counts all unread ones, not only those in the list.</summary>
 public sealed record ListNotificationsResponse(NotificationResponse[] Notifications, int UnreadCount);
@@ -45,11 +50,44 @@ public sealed class ListNotifications(VelomineDbContext db) : Endpoint<ListNotif
     {
         var userId = User.UserId();
         var mine = db.Notifications.AsNoTracking().Where(n => n.UserId == userId);
-        var list = await mine
+        var rows = await mine
             .OrderByDescending(n => n.CreatedAt).ThenByDescending(n => n.Id)
             .Take(req.Limit ?? 50)
-            .Select(n => new NotificationResponse(n.Id, n.Type, n.Subject, n.RideId, n.BikeId, n.ComponentId, n.AboutUserId, n.PlannedRideId, n.CreatedAt, n.ReadAt != null))
+            .Select(n => new { Notification = n, n.TrainingSessionId })
             .ToArrayAsync(ct);
+        var list = rows
+            .Select(r => new NotificationResponse(r.Notification.Id, r.Notification.Type, r.Notification.Subject,
+                r.Notification.RideId, r.Notification.BikeId, r.Notification.ComponentId, r.Notification.AboutUserId,
+                r.Notification.PlannedRideId, r.Notification.CreatedAt, r.Notification.ReadAt != null))
+            .ToArray();
+        // The questions in the list carry the session they ask about, so the inbox asks it in the words of the screen
+        // without reading every ride again.
+        var asked = list.Where(n => n.Type == NotificationTypes.TrainingSessionQuestion && n.RideId is not null).ToList();
+        if (asked.Count > 0)
+        {
+            var rides = asked.Select(n => n.RideId!.Value).Distinct().ToList();
+            var sessions = await db.TrainingSessions.AsNoTracking()
+                .Where(s => s.UserId == userId && s.QuestionRideId != null && rides.Contains(s.QuestionRideId.Value))
+                .ToListAsync(ct);
+            var byRide = sessions.ToDictionary(s => s.QuestionRideId!.Value, TrainingRideMatch.Of);
+            list = [.. list.Select(n => n.RideId is { } ride && byRide.TryGetValue(ride, out var match)
+                ? n with { Training = match }
+                : n)];
+        }
+
+        // A training notification carries the session it is about, so the inbox words it in the screen's language and
+        // offers the way back to it. The subject stays as it was, so a session the night has rewritten still speaks.
+        var sessionIds = rows.Where(r => r.TrainingSessionId != null).Select(r => r.TrainingSessionId!.Value).Distinct().ToList();
+        if (sessionIds.Count > 0)
+        {
+            var bySession = (await db.TrainingSessions.AsNoTracking()
+                    .Where(s => s.UserId == userId && sessionIds.Contains(s.Id))
+                    .ToListAsync(ct))
+                .ToDictionary(s => s.Id, TrainingSessionNotice.Of);
+            for (var i = 0; i < rows.Length; i++)
+                if (rows[i].TrainingSessionId is { } id && bySession.TryGetValue(id, out var notice))
+                    list[i] = list[i] with { Notice = notice };
+        }
         var unread = await mine.CountAsync(n => n.ReadAt == null, ct);
         await Send.OkAsync(new ListNotificationsResponse(list, unread), ct);
     }

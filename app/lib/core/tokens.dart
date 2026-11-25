@@ -197,6 +197,14 @@ abstract final class AppProgress {
   static const double dateWidth = 54;
 }
 
+/// The training screens: the shape strip of a session, and the date block of a week's row.
+abstract final class AppTraining {
+  static const double shapeHeight = 40;
+  static const double sessionShapeHeight = 48;
+  static const double dateWidth = 54;
+  static const double stripIcon = 16;
+}
+
 /// The sizes every chart draws with, so a chart looks the same on every page.
 abstract final class AppChart {
   /// The height of a chart.

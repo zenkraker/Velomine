@@ -9,6 +9,7 @@ using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Demo;
 
@@ -96,6 +97,7 @@ public sealed class DemoData(
         db.Clubs.Add(club);
         await db.SaveChangesAsync(ct);
         await SeedAsync(ct);
+        await SeedTrainingAsync(ct);
         await StoreReadMetricsAsync(ct);
         await WriteOriginalFilesAsync(ct);
     }
@@ -125,6 +127,69 @@ public sealed class DemoData(
         {
             await db.Database.CloseConnectionAsync();
         }
+    }
+
+    /// <summary>
+    /// The demo rider's auto training, on with a week in progress. A session is stored as the recipe and the day's
+    /// minutes, exactly as the planner stores one: its block percentages are <see cref="SessionPlan"/>'s, its planned
+    /// effort is worked out from those when the week is read, and a done session's score is
+    /// <see cref="SessionScore"/>'s from the ride the script wrote on its day. Nothing here is a second copy of a
+    /// number the code produces.
+    /// </summary>
+    private async Task SeedTrainingAsync(CancellationToken ct)
+    {
+        var rider = await db.Users.FirstAsync(u => u.Email == Accounts[2].Email, ct);
+        var clock = MemberClock.For(rider.TimeZone, rider.FirstDayOfWeek, time);
+        var today = clock.Today;
+        // The goal is the one the rider's own rides suggest, so the reason the Training page shows is that goal's.
+        var goal = TrainingGoalSuggestion.For(await TrainingGoalSuggestion.ReadAsync(db, rider.Id, clock, null, ct)).Goal;
+        var week = DemoTrainingWeek.For(today, clock.FirstDayOfWeek, goal);
+
+        var rides = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == rider.Id && r.StartTime != null)
+            .Select(r => new { r.Id, r.StartTime, r.UtcOffsetMinutes })
+            .ToListAsync(ct);
+        var rideOn = rides
+            .GroupBy(r => clock.LocalDateOf(r.StartTime!.Value, r.UtcOffsetMinutes))
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(r => r.StartTime).First().Id);
+
+        db.TrainingPlans.Add(new TrainingPlan
+        {
+            UserId = rider.Id,
+            Goal = goal,
+            Days = week.Days,
+            HoursPerWeek = week.HoursPerWeek,
+            LongRideDay = week.LongRideDay,
+            // The seeded week is what the next visitor finds: the sweep plans again on the first local midnight after it,
+            // and the 07:00 reminder is still to come.
+            LastPlannedFor = today,
+            IsOn = true,
+            UpdatedAt = time.GetUtcNow(),
+        });
+
+        foreach (var day in week.Sessions)
+        {
+            var (recipe, blocks) = SessionPlan.For(Recipes.ByCode(day.Recipe), day.Minutes);
+            var ridden = rideOn.TryGetValue(day.LocalDate, out var rideId);
+            var past = day.LocalDate < today;
+            db.TrainingSessions.Add(new TrainingSession
+            {
+                Id = Guid.NewGuid(),
+                UserId = rider.Id,
+                LocalDate = day.LocalDate,
+                Recipe = recipe.Code,
+                Minutes = day.Minutes,
+                BlockPercents = SessionPlan.Percents(blocks),
+                State = !past ? TrainingSessionStates.Planned
+                    : !ridden ? TrainingSessionStates.Skipped
+                    : TrainingSessionStates.Done,
+                SkipReason = past && !ridden ? TrainingSkipReasons.Ill : null,
+                RideId = past && ridden ? rideId : null,
+                CreatedAt = time.GetUtcNow(),
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
     }
 
     /// <summary>

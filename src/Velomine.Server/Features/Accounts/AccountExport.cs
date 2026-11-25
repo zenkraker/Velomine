@@ -9,6 +9,7 @@ using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Features.Routes;
 
 namespace Velomine.Server.Features.Accounts;
@@ -73,6 +74,10 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ThenBy(h => h.Sequence).ToListAsync(ct);
         var events = await db.Events.AsNoTracking()
             .Where(e => e.UserId == userId).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync(ct);
+        var trainingPlan = await db.TrainingPlans.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        var trainingSessions = await db.TrainingSessions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.LocalDate).ThenBy(s => s.Id).ToListAsync(ct);
+        var results = await SessionScore.ForAsync(db, trainingSessions, user, time, ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -223,6 +228,45 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             e.CreatedAt,
         }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
+        // The session score is computed from the ride that was the session and never stored (docs/training-models.md,
+        // L8), so the export works it out here exactly as the app's session page does.
+        await AddJsonAsync(zip, "training-plan.json", new
+        {
+            Plan = trainingPlan is null ? null : new
+            {
+                Goal = trainingPlan.Goal,
+                Days = trainingPlan.Days.Select(d => WeekDays.Name((DayOfWeek)d)),
+                trainingPlan.HoursPerWeek,
+                LongRideDay = trainingPlan.LongRideDay is { } day ? WeekDays.Name((DayOfWeek)day) : null,
+                trainingPlan.LastPlannedFor,
+                trainingPlan.IsOn,
+                // The weeks the planner made lighter, and the ride files the rider said were not the session it asked
+                // about, kept so the same file is never asked about twice.
+                trainingPlan.LighterWeeks,
+                trainingPlan.DeclinedFileHashes,
+                trainingPlan.UpdatedAt,
+            },
+            Sessions = trainingSessions.Select(s => new
+            {
+                s.Id,
+                s.LocalDate,
+                s.Recipe,
+                s.Minutes,
+                s.BlockPercents,
+                s.State,
+                s.SkipReason,
+                s.RideId,
+                // The ride the rider is being asked about ("Was this your Thursday strong and steady?").
+                s.QuestionRideId,
+                // Why the day was made easy, where the hard session went, and the recipe it rode before, so the
+                // export says what the plan did as well as what it holds.
+                s.EasyReason,
+                s.EasyMovedTo,
+                s.OriginalRecipe,
+                Score = results.GetValueOrDefault(s.Id)?.Score,
+                s.CreatedAt,
+            }),
+        }, ct);
         await AddJsonAsync(zip, "imports.json", imports.Select(i => new
         {
             i.Id,
@@ -355,6 +399,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         notifications.json  your notifications
         events.json         the races, sportives and tours you added, with the ride that was each one
         sessions.json       where you are signed in: the device label and the times, never an address
+        training-plan.json  your auto-training setup and every session it planned, with how each went
         imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         privacy.json        your privacy switches, start and end trimming, and your saved zones

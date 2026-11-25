@@ -124,4 +124,37 @@
   <data name="HeartRateSuggested" xml:space="preserve">
     <value>A ride shows a higher heart-rate number than the one you set: {0}. Choose whether to use it.</value>
   </data>
+  <data name="TrainingSessionQuestion" xml:space="preserve">
+    <value>A ride of yours might be your {0} session. Answer in Velomine.</value>
+  </data>
+  <data name="TrainingToday" xml:space="preserve">
+    <value>Today: {0}.</value>
+  </data>
+  <data name="TrainingEasy" xml:space="preserve">
+    <value>Easy today: {0}.</value>
+  </data>
+  <data name="TrainingEasyMoved" xml:space="preserve">
+    <value>The hard day moves to {0}.</value>
+  </data>
+  <data name="TrainingMoved" xml:space="preserve">
+    <value>{0} moves to {1}.</value>
+  </data>
+  <data name="TrainingSkipped" xml:space="preserve">
+    <value>{0} on {1} is skipped.</value>
+  </data>
+  <data name="ReasonSleptPoorly" xml:space="preserve">
+    <value>you slept poorly</value>
+  </data>
+  <data name="ReasonTired" xml:space="preserve">
+    <value>you feel tired</value>
+  </data>
+  <data name="ReasonSore" xml:space="preserve">
+    <value>you are sore</value>
+  </data>
+  <data name="ReasonFormLow" xml:space="preserve">
+    <value>your form is low</value>
+  </data>
+  <data name="ReasonAsked" xml:space="preserve">
+    <value>you asked for an easier day</value>
+  </data>
 </root>

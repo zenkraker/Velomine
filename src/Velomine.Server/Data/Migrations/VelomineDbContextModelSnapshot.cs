@@ -1884,6 +1884,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("subject");
 
+                    b.Property<Guid?>("TrainingSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("training_session_id");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1911,6 +1915,9 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_notifications_ride_id");
+
+                    b.HasIndex("TrainingSessionId")
+                        .HasDatabaseName("ix_notifications_training_session_id");
 
                     b.HasIndex("UserId", "CreatedAt")
                         .HasDatabaseName("ix_notifications_user_id_created_at");
@@ -2882,6 +2889,174 @@ namespace Velomine.Server.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingPlan", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.PrimitiveCollection<int[]>("Days")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("days");
+
+                    b.PrimitiveCollection<string[]>("DeclinedFileHashes")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("declined_file_hashes");
+
+                    b.Property<string>("Goal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<int>("HoursPerWeek")
+                        .HasColumnType("integer")
+                        .HasColumnName("hours_per_week");
+
+                    b.Property<bool>("IsOn")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_on");
+
+                    b.Property<DateOnly?>("LastPlannedFor")
+                        .HasColumnType("date")
+                        .HasColumnName("last_planned_for");
+
+                    b.PrimitiveCollection<DateOnly[]>("LighterWeeks")
+                        .IsRequired()
+                        .HasColumnType("date[]")
+                        .HasColumnName("lighter_weeks");
+
+                    b.Property<int?>("LongRideDay")
+                        .HasColumnType("integer")
+                        .HasColumnName("long_ride_day");
+
+                    b.Property<DateOnly?>("RemindedFor")
+                        .HasColumnType("date")
+                        .HasColumnName("reminded_for");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_plans");
+
+                    b.HasIndex("LastPlannedFor")
+                        .HasDatabaseName("ix_plans_last_planned_for")
+                        .HasFilter("is_on");
+
+                    b.ToTable("plans", "training", t =>
+                        {
+                            t.HasCheckConstraint("ck_training_plans_days", "cardinality(days) BETWEEN 1 AND 7 AND days <@ ARRAY[0,1,2,3,4,5,6]::integer[]");
+
+                            t.HasCheckConstraint("ck_training_plans_declined_files", "cardinality(declined_file_hashes) <= 20");
+
+                            t.HasCheckConstraint("ck_training_plans_goal", "goal IN ('aerobic', 'fitter', 'faster', 'event', 'keep')");
+
+                            t.HasCheckConstraint("ck_training_plans_hours", "hours_per_week BETWEEN 1 AND 30");
+
+                            t.HasCheckConstraint("ck_training_plans_long_ride_day", "long_ride_day IS NULL OR long_ride_day BETWEEN 0 AND 6");
+                        });
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.PrimitiveCollection<int[]>("BlockPercents")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("block_percents");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("EasyMovedTo")
+                        .HasColumnType("date")
+                        .HasColumnName("easy_moved_to");
+
+                    b.Property<string>("EasyReason")
+                        .HasColumnType("text")
+                        .HasColumnName("easy_reason");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<int>("Minutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("minutes");
+
+                    b.Property<string>("OriginalRecipe")
+                        .HasColumnType("text")
+                        .HasColumnName("original_recipe");
+
+                    b.Property<Guid?>("QuestionRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_ride_id");
+
+                    b.Property<string>("Recipe")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("recipe");
+
+                    b.Property<Guid?>("RideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ride_id");
+
+                    b.Property<string>("SkipReason")
+                        .HasColumnType("text")
+                        .HasColumnName("skip_reason");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sessions");
+
+                    b.HasIndex("QuestionRideId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessions_question_ride_id")
+                        .HasFilter("question_ride_id IS NOT NULL");
+
+                    b.HasIndex("RideId")
+                        .HasDatabaseName("ix_sessions_ride_id");
+
+                    b.HasIndex("UserId", "LocalDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessions_user_id_local_date");
+
+                    b.ToTable("sessions", "training", t =>
+                        {
+                            t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
+
+                            t.HasCheckConstraint("ck_training_sessions_easy_reason", "easy_reason IS NULL OR easy_reason IN ('slept_poorly', 'tired', 'sore', 'form_low', 'asked')");
+
+                            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 1 AND 1440");
+
+                            t.HasCheckConstraint("ck_training_sessions_original_recipe", "original_recipe IS NULL OR length(original_recipe) BETWEEN 2 AND 8");
+
+                            t.HasCheckConstraint("ck_training_sessions_recipe", "length(recipe) BETWEEN 2 AND 8");
+
+                            t.HasCheckConstraint("ck_training_sessions_skip_reason", "skip_reason IS NULL OR skip_reason IN ('tired', 'ill', 'no_time', 'other')");
+
+                            t.HasCheckConstraint("ck_training_sessions_skip_reason_only_when_skipped", "skip_reason IS NULL OR state = 'skipped'");
+
+                            t.HasCheckConstraint("ck_training_sessions_state", "state IN ('planned', 'done', 'easy', 'moved', 'skipped', 'missed')");
+                        });
+                });
+
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3358,6 +3533,12 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_notifications_rides_ride_id");
 
+                    b.HasOne("Velomine.Server.Features.Training.TrainingSession", null)
+                        .WithMany()
+                        .HasForeignKey("TrainingSessionId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_notifications_sessions_training_session_id");
+
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -3535,6 +3716,38 @@ namespace Velomine.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_events_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingPlan", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_plans_users_user_id");
+                });
+
+            modelBuilder.Entity("Velomine.Server.Features.Training.TrainingSession", b =>
+                {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_sessions_rides_question_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("RideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_sessions_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sessions_users_user_id");
                 });
 
             modelBuilder.Entity("Velomine.Server.Features.Wellbeing.DailyCheckIn", b =>

@@ -32,6 +32,7 @@ class CoachAthleteState {
     this.training,
     this.powerCurve,
     this.wellbeing,
+    this.plan,
     this.rides = const [],
     this.days = 90,
     this.notFound = false,
@@ -44,6 +45,9 @@ class CoachAthleteState {
   final TrainingResponse? training;
   final PowerCurveResponse? powerCurve;
   final CoachWellbeingResponse? wellbeing;
+
+  /// This week's auto plan, when the athlete shares rides with their coaches and auto training is on.
+  final CoachPlanResponse? plan;
   final List<RideResponse> rides;
   final int days;
   final bool notFound;
@@ -62,6 +66,8 @@ class CoachAthleteState {
     bool clearPowerCurve = false,
     CoachWellbeingResponse? wellbeing,
     bool clearWellbeing = false,
+    CoachPlanResponse? plan,
+    bool clearPlan = false,
     List<RideResponse>? rides,
     int? days,
     bool? notFound,
@@ -73,6 +79,7 @@ class CoachAthleteState {
     training: clearTraining ? null : (training ?? this.training),
     powerCurve: clearPowerCurve ? null : (powerCurve ?? this.powerCurve),
     wellbeing: clearWellbeing ? null : (wellbeing ?? this.wellbeing),
+    plan: clearPlan ? null : (plan ?? this.plan),
     rides: rides ?? this.rides,
     days: days ?? this.days,
     notFound: notFound ?? this.notFound,
