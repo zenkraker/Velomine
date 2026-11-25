@@ -66,8 +66,8 @@ public sealed class TrainingPlan
     public DateOnly? LastPlannedFor { get; set; }
 
     /// <summary>
-    /// The weeks the planner made lighter, newest first, at most the four the ramp's mean looks back over. The cycle
-    /// counts the weeks it built since the last one, and the mean leaves them out.
+    /// The weeks the planner made lighter, newest first, as many as the ramp's mean looks back over. The cycle counts
+    /// the weeks it built since the last one, and the mean leaves them out.
     /// </summary>
     public DateOnly[] LighterWeeks { get; set; } = [];
 
@@ -140,8 +140,9 @@ public sealed class TrainingSessionConfiguration : IEntityTypeConfiguration<Trai
             // PostgreSQL forbids a subquery in a check, so the elements' range is the recipe's own business; here a
             // session has at least one block and at most twenty.
             t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
-            // A session planned before the column existed reads 0; the planner always writes the day's minutes.
-            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 0 AND 1440");
+            // A session's day is at least a minute and never longer than a day; the migration fills in what was
+            // planned before the column existed.
+            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 1 AND 1440");
             t.HasCheckConstraint("ck_training_sessions_state",
                 "state IN ('planned', 'done', 'easy', 'moved', 'skipped', 'missed')");
             t.HasCheckConstraint("ck_training_sessions_skip_reason",

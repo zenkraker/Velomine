@@ -105,12 +105,15 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
 
         // The planner records the weeks it made lighter, so the week says so whether it was planned today or a week ago.
         var lighter = rows.Count > 0 && plan.LighterWeeks.Contains(start);
+        // The gentle block has no record of its own: a week of nothing but the base recipes is one, and it is never
+        // named — the rider reads only that it gets more personal as their rides come in.
+        var gentle = rows.Count > 0 && rows.All(s => WeekPlanner.BaseRecipes.Contains(s.Recipe));
         return new TrainingWeek(
             start,
             end,
             Math.Round(rows.Sum(s => PlannedScore(s.Recipe, s.Minutes)), 1),
             lighter,
-            lighter ? TrainingNotes.EasyWeek : null,
+            lighter ? TrainingNotes.EasyWeek : gentle ? TrainingNotes.MorePersonal : null,
             sessions);
     }
 

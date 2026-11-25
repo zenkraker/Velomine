@@ -60,8 +60,13 @@ public static class WeekPlanning
         var loadOfWeek = dayLoad
             .GroupBy(day => WeekOf(day.Key))
             .ToDictionary(g => g.Key, g => g.Sum(day => day.Value));
+        var hoursOfWeek = rides
+            .GroupBy(ride => WeekOf(ride.LocalDate))
+            .ToDictionary(g => g.Key, g => g.Sum(ride => ride.MovingS) / 3600.0);
 
-        var normal = WeekPlanner.NormalWeekLoads(loadOfWeek, weekStart, plan.LighterWeeks);
+        var normal = WeekPlanner.NormalWeeks(loadOfWeek, weekStart, plan.LighterWeeks);
+        // The same weeks, in the hours they really took: what the gentle base block restarts from after a break.
+        var recentHours = WeekPlanner.NormalWeeks(hoursOfWeek, weekStart, plan.LighterWeeks);
 
         // The cycle counts the weeks it built since the last lighter week before this one.
         var previousLighter = plan.LighterWeeks.Where(start => start < weekStart).OrderByDescending(start => start).FirstOrDefault();
@@ -84,10 +89,11 @@ public static class WeekPlanning
             .Where(s => s.LocalDate < clock.Today || s.State != TrainingSessionStates.Planned)
             .Select(s => new FixedSession(s.LocalDate, s.Recipe, s.Minutes, s.State))
             .ToArray();
-        var fixedDates = fixedSessions.Select(s => s.LocalDate).ToHashSet();
-        // A day ridden without a session is load the week has already spent, and the day is not planned again.
+        var storedDates = weekly.Select(s => s.LocalDate).ToHashSet();
+        // A day ridden without a session is load the week has already spent, and the day is not planned again — today
+        // included, because a ride before the sweep must not be written over.
         var spent = dayLoad
-            .Where(day => day.Key >= weekStart && day.Key < clock.Today && !fixedDates.Contains(day.Key))
+            .Where(day => day.Key >= weekStart && day.Key <= clock.Today && !storedDates.Contains(day.Key))
             .Select(day => new SpentDay(day.Key, Math.Round(day.Value, 1)))
             .ToArray();
 
@@ -107,15 +113,19 @@ public static class WeekPlanning
                 RecordedAsLighter: plan.LighterWeeks.Contains(weekStart),
                 LastWeekFullyDone: lastWeekFullyDone,
                 DaysSinceLastRide: goalHistory.DaysSinceLastRide == int.MaxValue ? null : goalHistory.DaysSinceLastRide,
-                RecentReadinessBands: [.. bands]),
+                RecentReadinessBands: [.. bands],
+                RecentNormalWeekHours: recentHours.Length > 0 ? recentHours.Average() : null),
             Fixed: fixedSessions,
             Spent: spent));
 
-        // The days the sweep may rewrite: today and later, only where nothing is done or moved.
-        await db.TrainingSessions
+        // The days the sweep may rewrite: today and later, only where nothing is done or moved. They are removed rather
+        // than deleted on the spot, so the deletes and the new sessions land in one save: a failure leaves the week it
+        // found instead of an empty one.
+        var rewritable = await db.TrainingSessions
             .Where(s => s.UserId == user.Id && s.LocalDate >= from && s.LocalDate <= weekEnd
                 && s.State == TrainingSessionStates.Planned)
-            .ExecuteDeleteAsync(ct);
+            .ToListAsync(ct);
+        db.TrainingSessions.RemoveRange(rewritable);
 
         foreach (var session in planned.Sessions)
         {
@@ -135,7 +145,7 @@ public static class WeekPlanning
         if (planned.IsLighterWeek && !plan.LighterWeeks.Contains(weekStart))
         {
             plan.LighterWeeks = [.. plan.LighterWeeks.Append(weekStart)
-                .Distinct().OrderByDescending(start => start).Take(4)];
+                .Distinct().OrderByDescending(start => start).Take(WeekPlanner.NormalWeeksLookBack)];
         }
     }
 }

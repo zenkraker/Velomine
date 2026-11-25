@@ -7,9 +7,9 @@ namespace Velomine.Server.Features.Training;
 public sealed record TrainingNote(string Code, string English, string Italian);
 
 /// <summary>
-/// The words the rider reads about a planned week. The planner's own terms never reach the rider: a quality session is
-/// a "hard day" in every line that says why, a lighter week is an "Easy week", and the gentle base block is never named
-/// at all — only the line that it gets more personal as the rides come in (TrainingNames.md).
+/// The words the rider reads about a planned week. The planner's own terms never reach the rider: the lighter week is an
+/// "Easy week", and the gentle base block is never named at all — only the line that it gets more personal as the rides
+/// come in (TrainingNames.md).
 /// </summary>
 public static class TrainingNotes
 {
@@ -24,12 +24,6 @@ public static class TrainingNotes
         "more_personal",
         "It gets more personal as your rides come in",
         "Diventa più personale man mano che arrivano i tuoi giri");
-
-    /// <summary>
-    /// What a quality session is called in every line that says why it is there. Never a "quality session", a
-    /// "sweet spot session" or an "interval day".
-    /// </summary>
-    public const string HardDay = "hard day";
 
     public static readonly TrainingNote[] All = [EasyWeek, MorePersonal];
 

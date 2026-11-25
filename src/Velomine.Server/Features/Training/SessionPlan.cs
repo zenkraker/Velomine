@@ -12,11 +12,14 @@ public static class SessionPlan
     /// <summary>
     /// The recipe's blocks in <paramref name="minutes"/>: the warm-up and the cool-down keep their length and the work,
     /// recovery and steady blocks take up the rest, unless the day is shorter than them, when the whole session scales.
-    /// A day shorter than the recipe's least length gets R02 instead.
+    /// A day shorter than the recipe's least length gets R02 instead — except the gentle base recipes, which ride by
+    /// feel and scale to any day, because the fallback would show the watt and heart-rate targets they have none of.
     /// </summary>
     public static (Recipe Recipe, PlannedBlock[] Blocks) For(Recipe recipe, int minutes)
     {
-        var chosen = minutes < recipe.LeastMinutes ? Recipes.ByCode(Recipes.FallbackCode) : recipe;
+        var chosen = minutes < recipe.LeastMinutes && !WeekPlanner.BaseRecipes.Contains(recipe.Code)
+            ? Recipes.ByCode(Recipes.FallbackCode)
+            : recipe;
         return (chosen, Scale(chosen, minutes));
     }
 

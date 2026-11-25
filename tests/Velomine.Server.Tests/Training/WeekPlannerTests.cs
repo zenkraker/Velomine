@@ -29,14 +29,16 @@ public sealed class WeekPlannerTests
         bool recordedAsLighter = false,
         bool lastWeekFullyDone = true,
         int? daysSinceLastRide = 1,
-        string[]? readiness = null) =>
+        string[]? readiness = null,
+        double? recentHours = null) =>
         new(weeksOfRides,
             normalWeeks ?? [400, 400, 400, 400],
             weeksSinceLighter,
             recordedAsLighter,
             lastWeekFullyDone,
             daysSinceLastRide,
-            readiness ?? [Readiness.Normal, Readiness.Normal, Readiness.Normal]);
+            readiness ?? [Readiness.Normal, Readiness.Normal, Readiness.Normal],
+            recentHours);
 
     private static PlannerInput Input(
         DateOnly today,
@@ -74,10 +76,15 @@ public sealed class WeekPlannerTests
         return loaded;
     }
 
-    /// <summary>The limit every kept week holds: no two hard days in a row, none beside the long ride, no two loaded in a row.</summary>
-    private static void AssertSpacing(PlannedWeek week)
+    /// <summary>
+    /// The limit every kept week holds: no two hard days in a row, none beside the long ride, no two loaded in a row —
+    /// counting the sessions the rider already has this week, which the planner may not move.
+    /// </summary>
+    private static void AssertSpacing(PlannedWeek week, params FixedSession[] fixedSessions)
     {
-        var hard = Hard(week).Select(s => s.LocalDate).ToArray();
+        var hard = Hard(week).Select(s => s.LocalDate)
+            .Concat(fixedSessions.Where(s => Recipes.ByCode(s.Recipe).IsQuality).Select(s => s.LocalDate))
+            .Order().ToArray();
         Assert.True(hard.Length <= 2, $"{hard.Length} hard days");
         for (var i = 1; i < hard.Length; i++)
             Assert.True(Math.Abs(hard[i].DayNumber - hard[i - 1].DayNumber) > 1, "two hard days in a row");
@@ -85,7 +92,10 @@ public sealed class WeekPlannerTests
             Assert.All(hard, day => Assert.True(
                 Math.Abs(day.DayNumber - longRide.DayNumber) > 1, "a hard day beside the long ride"));
 
-        var loaded = LoadedDays(week).Order().ToArray();
+        var loaded = LoadedDays(week)
+            .Concat(fixedSessions.Where(s => Recipes.ByCode(s.Recipe).IsQuality || s.Recipe is "R03" or "R16")
+                .Select(s => s.LocalDate))
+            .Order().ToArray();
         Assert.True(loaded.Distinct().Count() <= 3, "more than three loaded days");
         for (var i = 1; i < loaded.Length; i++)
             Assert.True(Math.Abs(loaded[i].DayNumber - loaded[i - 1].DayNumber) > 1, "two loaded days in a row");
@@ -146,6 +156,20 @@ public sealed class WeekPlannerTests
             var week = WeekPlanner.Plan(Input(Monday, days, hours: 8));
             AssertSpacing(week);
         }
+    }
+
+    [Fact]
+    public void WeekPlanner_ShouldGiveUpTheLongRide_WhenTheOnlyDayLeftIsBesideAHardDayAlreadyRidden()
+    {
+        // Saturday's hard session is done, and Sunday is the last free weekend day: it would sit next to it, which W1
+        // forbids, so the week has a quiet Sunday instead of a long ride and two loaded days in a row.
+        var done = new FixedSession(Monday.AddDays(5), "R05", 60, TrainingSessionStates.Done);
+        var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Saturday, DayOfWeek.Sunday), hours: 6,
+            fixedSessions: [done]));
+
+        Assert.DoesNotContain(week.Sessions, s => s.Recipe == "R03");
+        Assert.Equal(Sunday, Assert.Single(week.Sessions).LocalDate);
+        AssertSpacing(week, done);
     }
 
     [Fact]
@@ -287,7 +311,42 @@ public sealed class WeekPlannerTests
     }
 
     [Fact]
-    public void NormalWeekLoads_ShouldLeaveOutLighterAndEmptyWeeks_WhenTheMeanIsTaken()
+    public void WeekPlanner_ShouldStayInsideTheHours_WhenEveryDayIsFreeAndTheHoursAreSmall()
+    {
+        // Seven days at one hour and at three: the hard day's least length cannot push the week past the hours. At one
+        // hour the days go, at three they shorten, and neither comes out longer than what the rider gave (W4).
+        var everyDay = Days(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday,
+            DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday);
+
+        foreach (var hours in new[] { 1, 3 })
+        {
+            var week = WeekPlanner.Plan(Input(Monday, everyDay, hours: hours));
+            var minutes = week.Sessions.Sum(s => s.Minutes);
+            Assert.True(minutes <= hours * 60, $"{hours} h planned {minutes} minutes");
+            // Hours too small for a floor on every day keep fewer days instead of padding the week with rides too
+            // short to be one.
+            Assert.All(week.Sessions, session => Assert.True(
+                session.Minutes >= WeekPlanner.MinimumDayMinutes, $"a {session.Minutes}-minute day"));
+        }
+    }
+
+    [Fact]
+    public void WeekPlanner_ShouldKeepASessionInsideADay_WhenTheHoursAreMoreThanADayHolds()
+    {
+        // One riding day holds the rider's hours, at any length the setup allows: over a day it is a day long, so the
+        // row the sweep writes always passes the minutes check (W4).
+        foreach (var hours in Enumerable.Range(1, 30))
+        {
+            var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Sunday), hours: hours,
+                history: History(normalWeeks: [2000, 2000, 2000, 2000])));
+
+            var session = Assert.Single(week.Sessions);
+            Assert.Equal(Math.Min(hours * 60, WeekPlanner.MaxDayMinutes), session.Minutes);
+        }
+    }
+
+    [Fact]
+    public void NormalWeeks_ShouldLeaveOutLighterAndEmptyWeeks_WhenTheMeanIsTaken()
     {
         var loads = new Dictionary<DateOnly, double>
         {
@@ -299,7 +358,7 @@ public sealed class WeekPlannerTests
             [Monday.AddDays(-42)] = 100,
         };
 
-        var normal = WeekPlanner.NormalWeekLoads(loads, Monday, [Monday.AddDays(-21)]);
+        var normal = WeekPlanner.NormalWeeks(loads, Monday, [Monday.AddDays(-21)]);
 
         Assert.Equal([400, 300, 200, 100], normal);
     }
@@ -361,6 +420,55 @@ public sealed class WeekPlannerTests
     }
 
     [Fact]
+    public void BaseBlock_ShouldKeepTheRecentWeeksHours_WhenTheRiderIsBackFromABreak()
+    {
+        // Twelve hours asked for, three hours a week before the break: back from it the week is the three, not the
+        // twelve the setup still says (W5).
+        var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Sunday),
+            hours: 12,
+            history: History(weeksOfRides: 20, normalWeeks: [180, 180, 180, 180], daysSinceLastRide: 14,
+                recentHours: 3)));
+
+        Assert.True(week.IsBaseBlock);
+        Assert.All(week.Sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
+        // The week is the hours the recent weeks really took, not the twelve the setup still says.
+        Assert.Equal(3 * 60, week.Sessions.Sum(s => s.Minutes));
+    }
+
+    [Fact]
+    public void BaseBlock_ShouldPlanTheSetupHours_WhenTheRiderHasNeverRiddenMuch()
+    {
+        // A new rider has no recent weeks to restart from: the hours they gave are the week.
+        var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Sunday),
+            hours: 4, history: History(weeksOfRides: 2, normalWeeks: [], daysSinceLastRide: 1, recentHours: null)));
+
+        Assert.True(week.IsBaseBlock);
+        Assert.Equal(4 * 60, week.Sessions.Sum(s => s.Minutes));
+    }
+
+    [Fact]
+    public void BaseBlock_ShouldKeepAShortDayGentle_WhenTheRiderHasThirtyMinuteDays()
+    {
+        // Six days at three hours are thirty-minute days: the gentle recipes ride by feel and scale to them, so no day
+        // becomes the endurance fallback with the watt and heart-rate targets the base block must not show.
+        var week = WeekPlanner.Plan(Input(Monday,
+            Days(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday,
+                DayOfWeek.Saturday),
+            hours: 3, history: History(weeksOfRides: 2, normalWeeks: [])));
+
+        Assert.True(week.IsBaseBlock);
+        Assert.All(week.Sessions, session =>
+        {
+            Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes);
+            Assert.All(Recipes.ByCode(session.Recipe).Blocks, block =>
+            {
+                Assert.Null(block.PercentFtp);
+                Assert.Null(block.PercentThresholdHeartRate);
+            });
+        });
+    }
+
+    [Fact]
     public void WeekPlanner_ShouldScaleTheRestOfTheWeek_WhenItIsSwitchedOnMidWeek()
     {
         var week = WeekPlanner.Plan(Input(Thursday, Days(DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday), hours: 6));
@@ -389,6 +497,41 @@ public sealed class WeekPlannerTests
         Assert.DoesNotContain(week.Sessions, s => s.LocalDate == Monday);
         Assert.True(week.Load <= 385, $"carried {week.Load}");
         Assert.InRange(week.Load, 300, 385);
+    }
+
+    [Fact]
+    public void WeekPlanner_ShouldKeepTheFasterGoalsHardDaysToTheDocumentedRecipes_WhenTheDaysAreShort()
+    {
+        // A short day takes the shortest hard session the goal lists, and the goal's list ends at R08 (W1): never the
+        // 30/15 or the anaerobic bursts, which the document gives no place in a faster week.
+        var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Sunday),
+            hours: 3, goal: TrainingGoals.Faster));
+
+        var hard = Assert.Single(Hard(week));
+        Assert.Equal("R06", hard.Recipe);
+        Assert.DoesNotContain(week.Sessions, s => s.Recipe is "R09" or "R10");
+    }
+
+    [Theory]
+    [InlineData(TrainingGoals.Fitter, "R05,R08,R09")]
+    [InlineData(TrainingGoals.Faster, "R05,R06,R07,R08")]
+    [InlineData(TrainingGoals.Event, "R05,R06,R07,R08")]
+    [InlineData(TrainingGoals.Keep, "R17")]
+    [InlineData(TrainingGoals.Aerobic, "")]
+    public void WeekPlanner_ShouldDrawTheGoalsHardDaysFromTheDocumentedRecipes_WhenTheWeekIsLongEnough(
+        string goal, string documented)
+    {
+        // The order of a goal's hard-day recipes is the document's, the gentlest that fits the day first: R05 → R08 →
+        // R09 for get fitter, R05 → R06 → R07 → R08 for get faster and for get ready, R17 for stay fit, none for ride
+        // more regularly (W1).
+        var expected = documented.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Equal(expected, WeekPlanner.QualityPreferences(goal));
+
+        var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Sunday),
+            hours: 10, goal: goal, history: History(normalWeeks: [2000, 2000, 2000, 2000])));
+
+        Assert.Equal(expected.Take(2), Hard(week).Select(s => s.Recipe));
     }
 
     [Fact]
@@ -427,10 +570,9 @@ public sealed class WeekPlannerTests
     }
 
     [Fact]
-    public void TrainingNotes_ShouldCallAHardDayAHardDay_WhenTheRiderReadsTheWeek()
+    public void TrainingNotes_ShouldKeepThePlannersWordsOffTheWeek_WhenTheRiderReadsIt()
     {
         // The planner's words are the owner's: TrainingNames.md, never "quality session", "base block" or a model's name.
-        Assert.Equal("hard day", TrainingNotes.HardDay);
         Assert.Equal("Easy week: your body gets stronger while it rests", TrainingNotes.EasyWeek.English);
         Assert.Equal("It gets more personal as your rides come in", TrainingNotes.MorePersonal.English);
 

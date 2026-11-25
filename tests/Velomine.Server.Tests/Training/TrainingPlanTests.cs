@@ -318,6 +318,7 @@ public sealed class TrainingPlanTests(PostgresFixture postgres)
             UserId = userId,
             LocalDate = date,
             Recipe = "R05",
+            Minutes = 60,
             BlockPercents = [88],
             State = TrainingSessionStates.Planned,
             CreatedAt = Now,

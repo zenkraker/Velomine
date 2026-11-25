@@ -3002,7 +3002,7 @@ namespace Velomine.Server.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
 
-                            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 0 AND 1440");
+                            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 1 AND 1440");
 
                             t.HasCheckConstraint("ck_training_sessions_recipe", "length(recipe) BETWEEN 2 AND 8");
 

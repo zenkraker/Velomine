@@ -54,6 +54,23 @@ public sealed class SessionPlanTests
         Assert.Equal([10, 35], blocks.Select(b => b.Minutes));
     }
 
+    [Theory]
+    [InlineData("R14")]
+    [InlineData("R15")]
+    [InlineData("R16")]
+    public void SessionPlan_ShouldKeepTheBaseRecipe_WhenTheDayIsShorterThanItsLeastLength(string code)
+    {
+        // The gentle base recipes ride by feel: the easy fallback would give a short day the watt and heart-rate targets
+        // they deliberately have none of, so they scale to whatever the day holds (W5).
+        var recipe = Recipes.ByCode(code);
+
+        var (chosen, blocks) = SessionPlan.For(recipe, recipe.LeastMinutes - 10);
+
+        Assert.Equal(code, chosen.Code);
+        Assert.Equal(recipe.LeastMinutes - 10, blocks.Sum(b => b.Minutes));
+        Assert.All(blocks, block => Assert.Null(block.Block.PercentFtp));
+    }
+
     [Fact]
     public void SessionPlan_ShouldScaleTheWholeSession_WhenTheDayIsShorterThanTheFixedBlocks()
     {

@@ -22,7 +22,9 @@ public sealed record PlannerHistory(
     bool RecordedAsLighter,
     bool LastWeekFullyDone,
     int? DaysSinceLastRide,
-    string[] RecentReadinessBands);
+    string[] RecentReadinessBands,
+    /// <summary>How many hours a week the recent normal weeks took: what the base block restarts from after a break.</summary>
+    double? RecentNormalWeekHours = null);
 
 /// <summary>
 /// Everything a week is planned from: the rider's setup, the day it is planned on, and the week's own past. A week is
@@ -98,6 +100,12 @@ public static class WeekPlanner
     /// <summary>To fit a load cap a day shrinks to this; below it the week keeps fewer days instead.</summary>
     public const int MinimumDayMinutes = 20;
 
+    /// <summary>A day has 1440 minutes, so no session can be longer, whatever the hours per week say.</summary>
+    public const int MaxDayMinutes = 24 * 60;
+
+    /// <summary>The gentle base block's recipes: ridden by feel, so they carry no targets and scale to any day.</summary>
+    public static readonly string[] BaseRecipes = ["R14", "R15", "R16"];
+
     /// <summary>
     /// Two hard days at most, one under 4 hours a week and one in a lighter week, and never more than the goal's
     /// recipes offer.
@@ -109,18 +117,19 @@ public static class WeekPlanner
     }
 
     /// <summary>
-    /// The last four normal weeks, newest first: a completed week that had a ride and was not made lighter. Empty weeks
-    /// and lighter weeks are left out, so a break or an easy week never drags the mean the week grows from.
+    /// The last four normal weeks, newest first — a completed week that had a ride and was not made lighter — as the
+    /// caller holds them: their planned load, or the hours really ridden. Empty weeks and lighter weeks are left out,
+    /// so a break or an easy week never drags down the week the rider grows from.
     /// </summary>
-    public static double[] NormalWeekLoads(
-        IReadOnlyDictionary<DateOnly, double> loadOfWeek, DateOnly weekStart, IReadOnlyCollection<DateOnly> lighterWeeks)
+    public static double[] NormalWeeks(
+        IReadOnlyDictionary<DateOnly, double> ofWeek, DateOnly weekStart, IReadOnlyCollection<DateOnly> lighterWeeks)
     {
         var normal = new List<double>(4);
         for (var back = 1; back <= NormalWeeksLookBack && normal.Count < 4; back++)
         {
             var start = weekStart.AddDays(-7 * back);
-            if (lighterWeeks.Contains(start) || loadOfWeek.GetValueOrDefault(start) <= 0) continue;
-            normal.Add(loadOfWeek[start]);
+            if (lighterWeeks.Contains(start) || ofWeek.GetValueOrDefault(start) <= 0) continue;
+            normal.Add(ofWeek[start]);
         }
         return [.. normal];
     }
@@ -148,12 +157,13 @@ public static class WeekPlanner
         var weekEnd = weekStart.AddDays(6);
         var freeDays = input.FreeDays.Select(d => (DayOfWeek)d).ToHashSet();
         var fixedDates = input.Fixed.Select(s => s.LocalDate).ToHashSet();
+        var spentDates = input.Spent.Select(d => d.LocalDate).ToHashSet();
 
         // The days this run writes: the rider's free days from today to the end of the week, unless the day already
-        // carries a session the sweep may not touch.
+        // carries a session the sweep may not touch or was already ridden with no session planned for it.
         var dates = new List<DateOnly>();
         for (var date = input.Today; date <= weekEnd; date = date.AddDays(1))
-            if (freeDays.Contains(date.DayOfWeek) && !fixedDates.Contains(date))
+            if (freeDays.Contains(date.DayOfWeek) && !fixedDates.Contains(date) && !spentDates.Contains(date))
                 dates.Add(date);
 
         var history = input.History;
@@ -166,13 +176,28 @@ public static class WeekPlanner
         if (dates.Count == 0) return Week(weekStart, [], otherLoad, isLighter, isBaseBlock, false);
 
         var budget = Budget(input, weekStart, freeDays, dates.Count);
+        // Back from a break the block restarts from the real recent load: the week is no longer than the weeks the rider
+        // was really riding before it, whatever hours the setup now says (W5).
+        if (isBaseBlock && FromBreak(history) && history.RecentNormalWeekHours is { } recentHours)
+            budget = Math.Min(budget, (int)Math.Round(recentHours * 60));
         var longIndex = LongRideIndex(input, dates);
+        // The rider's hours are the ceiling and a day has a floor: hours that cannot give every day one keep fewer
+        // days, so the week is shorter rather than longer than the hours (W4).
+        while (dates.Count > 1 && budget < MinimumDayMinutes * dates.Count)
+            DropDate(dates, ref longIndex);
+
         // The gentle base block has no hard day at all, and a hard one the rider already rode spends a slot.
         var slots = isBaseBlock
             ? 0
             : HardDays(input.HoursPerWeek, input.Goal, isLighter)
                 - input.Fixed.Count(s => Recipes.ByCode(s.Recipe).IsQuality);
         var (recipes, minutes) = Assign(input, dates, budget, longIndex, Math.Max(slots, 0), isLighter, isBaseBlock);
+
+        // A hard day's least length can still push the week over the hours: the last easy days go, and one day alone is
+        // trimmed to the hours and to the minutes a day has.
+        while (dates.Count > 1 && minutes.Sum() > budget) DropDay(dates, recipes, minutes, ref longIndex);
+        var ceiling = Math.Max(Math.Min(budget, MaxDayMinutes), 1);
+        for (var i = 0; i < minutes.Count; i++) minutes[i] = Math.Clamp(minutes[i], 1, ceiling);
 
         var (sessions, load) = Build(dates, recipes, minutes);
 
@@ -229,7 +254,14 @@ public static class WeekPlanner
     /// targets only, and never a feel number above 6 (research §3, *Gentle base block*).
     /// </summary>
     private static bool IsBaseBlock(PlannerHistory history) =>
-        history.WeeksOfRides < BaseBlockWeeks || history.DaysSinceLastRide is null or >= BreakDays;
+        history.WeeksOfRides < BaseBlockWeeks || FromBreak(history);
+
+    /// <summary>
+    /// Back from a break rather than new to riding: the rider has weeks behind them but has not ridden for 10 days, so
+    /// the gentle block restarts from the real recent load and not from the hours they used to ride (W5).
+    /// </summary>
+    public static bool FromBreak(PlannerHistory history) =>
+        history.WeeksOfRides >= BaseBlockWeeks && history.DaysSinceLastRide is null or >= BreakDays;
 
     /// <summary>
     /// The cycle: three weeks built then a lighter one, two from age 50, and a lighter week early when the last three
@@ -259,19 +291,31 @@ public static class WeekPlanner
         return Math.Max((int)Math.Round(input.HoursPerWeek * 60 * share) - planned, 0);
     }
 
-    /// <summary>The rider's own long-ride day, else the last free weekend day (Sunday first), else the last free day.</summary>
+    /// <summary>
+    /// The rider's own long-ride day, else the last free weekend day (Sunday first), else the last free day. A day next
+    /// to a hard day the rider already has is never the long ride's, because two loaded days never sit in a row; when
+    /// no day is left that keeps them apart the week has no long ride rather than two loaded days (W1).
+    /// </summary>
     private static int LongRideIndex(PlannerInput input, List<DateOnly> dates)
     {
         // The week already has its long ride: a session the sweep may not touch with R03 is that ride.
         if (input.Fixed.Any(s => s.Recipe == "R03")) return -1;
+        var loaded = input.Fixed
+            .Where(s => Recipes.ByCode(s.Recipe).IsQuality || s.Recipe is "R03" or "R16")
+            .Select(s => s.LocalDate)
+            .ToArray();
+        bool Free(int i) => !NextToHard(dates[i], [.. loaded]);
+
         if (input.LongRideDay is { } own)
             for (var i = 0; i < dates.Count; i++)
-                if ((int)dates[i].DayOfWeek == own) return i;
+                if ((int)dates[i].DayOfWeek == own && Free(i)) return i;
         for (var i = dates.Count - 1; i >= 0; i--)
-            if (dates[i].DayOfWeek == DayOfWeek.Sunday) return i;
+            if (dates[i].DayOfWeek == DayOfWeek.Sunday && Free(i)) return i;
         for (var i = dates.Count - 1; i >= 0; i--)
-            if (dates[i].DayOfWeek == DayOfWeek.Saturday) return i;
-        return dates.Count - 1;
+            if (dates[i].DayOfWeek == DayOfWeek.Saturday && Free(i)) return i;
+        for (var i = dates.Count - 1; i >= 0; i--)
+            if (Free(i)) return i;
+        return -1;
     }
 
     /// <summary>The week's recipes and minutes, day by day.</summary>
@@ -314,12 +358,20 @@ public static class WeekPlanner
             if (hard.TryGetValue(i, out var code)) recipes.Add(code);
             else if (i == longIndex && isBaseBlock) recipes.Add("R16");
             else if (i == longIndex) recipes.Add("R03");
-            else if (isBaseBlock) recipes.Add(i == 1 && input.History.WeeksOfRides >= 2 ? "R15" : "R14");
+            else if (isBaseBlock) recipes.Add(BaseRecipe(minutes[i], i == 1 && input.History.WeeksOfRides >= 2));
             else recipes.Add(NextToHard(dates[i], hardDates) ? "R01" : "R02");
         }
 
         return (recipes, minutes);
     }
+
+    /// <summary>
+    /// The gentle base block's recipe for a day: the steady build only on a day long enough to hold it, and the easy
+    /// start otherwise. A base recipe rides by feel and scales to any day (SessionPlan.For), so a short day stays gentle
+    /// instead of becoming an endurance session with targets it should not have (W5).
+    /// </summary>
+    private static string BaseRecipe(int minutes, bool secondDay) =>
+        secondDay && minutes >= Recipes.ByCode("R15").LeastMinutes ? "R15" : "R14";
 
     /// <summary>
     /// The days a hard session can take: never two in a row, never the day before or after the long ride, and never
@@ -345,11 +397,11 @@ public static class WeekPlanner
 
     /// <summary>
     /// Which recipes a goal draws its hard days from, the gentlest that fits first (research §3, *Which goal uses which
-    /// recipe*). A goal that builds a habit has no hard day at all.
+    /// recipe*, and `docs/training-models.md` *The planned week*). A goal that builds a habit has no hard day at all.
     /// </summary>
-    private static string[] QualityPreferences(string goal) => goal switch
+    public static string[] QualityPreferences(string goal) => goal switch
     {
-        TrainingGoals.Faster => ["R05", "R06", "R07", "R08", "R09", "R10"],
+        TrainingGoals.Faster => ["R05", "R06", "R07", "R08"],
         TrainingGoals.Fitter => ["R05", "R08", "R09"],
         TrainingGoals.Event => ["R05", "R06", "R07", "R08"],
         TrainingGoals.Keep => ["R17"],
@@ -390,12 +442,13 @@ public static class WeekPlanner
             minutes[longIndex] -= fromLongRide;
             excess -= fromLongRide;
         }
-        // A week too short for its own recipes is still the rider's hours: every day shrinks together, and a day under
-        // its recipe's least length is planned as the fallback easy session (SessionPlan.For).
+        // Still over: the days shrink together, down to the 20-minute floor. Hours too small to carry one for every
+        // day already left fewer days (Plan), and each day is then trimmed to the hours and to the 1440 minutes a day
+        // holds, so the week never comes out longer or harder than the rider gave.
         if (excess <= 0) return;
         var total = minutes.Sum();
         for (var i = 0; i < minutes.Count; i++)
-            minutes[i] = Math.Max((int)Math.Floor(minutes[i] * (double)budget / Math.Max(total, 1)), MinimumDayMinutes / 4);
+            minutes[i] = Math.Max((int)Math.Floor(minutes[i] * (double)budget / Math.Max(total, 1)), MinimumDayMinutes);
     }
 
     private static PlannedSession[] SessionList(List<DateOnly> dates, List<string> recipes, List<int> minutes) =>
@@ -422,6 +475,14 @@ public static class WeekPlanner
 
     private static List<int> Scaled(List<int> minutes, double scale) =>
         [.. minutes.Select(m => Math.Max((int)Math.Floor(m * scale), MinimumDayMinutes))];
+
+    /// <summary>Drops the last day that is not the long ride, before the recipes are chosen, so the week keeps its shape.</summary>
+    private static void DropDate(List<DateOnly> dates, ref int longIndex)
+    {
+        var index = longIndex == dates.Count - 1 ? dates.Count - 2 : dates.Count - 1;
+        dates.RemoveAt(index);
+        if (longIndex > index) longIndex--;
+    }
 
     /// <summary>Drops the last day that is neither the long ride nor a hard day, so a capped week keeps its shape.</summary>
     private static void DropDay(List<DateOnly> dates, List<string> recipes, List<int> minutes, ref int longIndex)

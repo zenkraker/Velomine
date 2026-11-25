@@ -27,11 +27,22 @@ namespace Velomine.Server.Data.Migrations
                 nullable: false,
                 defaultValue: new DateOnly[0]);
 
+            // The sessions planned before the column existed read the least length of their own recipe, so the first
+            // week after the upgrade budgets and scores what it carries. The least lengths are the recipe table's.
+            migrationBuilder.Sql("""
+                UPDATE training.sessions SET minutes = CASE recipe
+                    WHEN 'R01' THEN 30 WHEN 'R02' THEN 45 WHEN 'R03' THEN 60 WHEN 'R04' THEN 60 WHEN 'R05' THEN 60
+                    WHEN 'R06' THEN 50 WHEN 'R07' THEN 70 WHEN 'R08' THEN 55 WHEN 'R09' THEN 50 WHEN 'R10' THEN 45
+                    WHEN 'R12' THEN 45 WHEN 'R14' THEN 30 WHEN 'R15' THEN 45 WHEN 'R16' THEN 60 WHEN 'R17' THEN 45
+                    ELSE 45 END
+                WHERE minutes = 0;
+                """);
+
             migrationBuilder.AddCheckConstraint(
                 name: "ck_training_sessions_minutes",
                 schema: "training",
                 table: "sessions",
-                sql: "minutes BETWEEN 0 AND 1440");
+                sql: "minutes BETWEEN 1 AND 1440");
 
             migrationBuilder.CreateIndex(
                 name: "ix_plans_last_planned_for",

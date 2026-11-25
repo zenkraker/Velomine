@@ -55,14 +55,15 @@ public sealed class TrainingWeekTests(PostgresFixture postgres)
                 TrainingGoals.Fitter, days, hours, null, true, 180, 1988, null), Ct);
 
     /// <summary>
-    /// Five weeks of steady riding, a hundred of load on each of five days: a rider past the gentle base block whose
-    /// readiness stays out of the rest band, so the week is planned as a normal building week.
+    /// Weeks of steady riding, a hundred of load on each of five days: a rider past the gentle base block whose
+    /// readiness stays out of the rest band, so the week is planned as a normal building week. <paramref name="firstWeek"/>
+    /// leaves the latest weeks empty, which is a rider who has been away.
     /// </summary>
-    private static async Task WithRidingHistoryAsync(TestApi api, Guid userId, int weeks = 5)
+    private static async Task WithRidingHistoryAsync(TestApi api, Guid userId, int weeks = 5, int firstWeek = 1)
     {
         await using var scope = api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        for (var week = 1; week <= weeks; week++)
+        for (var week = firstWeek; week < firstWeek + weeks; week++)
         {
             for (var day = 0; day < 5; day++)
             {
@@ -123,6 +124,24 @@ public sealed class TrainingWeekTests(PostgresFixture postgres)
             .Where(s => s.UserId == userId && s.LocalDate >= from && s.LocalDate <= to)
             .OrderBy(s => s.LocalDate).ThenBy(s => s.Id)
             .ToListAsync(Ct);
+    }
+
+    /// <summary>Makes every new session row fail, as a database error in the middle of a save would.</summary>
+    private static async Task RefuseSessionInsertsAsync(TestApi api, bool refuse)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        await db.Database.ExecuteSqlRawAsync(refuse
+            ? """
+              CREATE FUNCTION training.refuse_session_insert() RETURNS trigger AS $$
+              BEGIN RAISE EXCEPTION 'refused'; END; $$ LANGUAGE plpgsql;
+              CREATE TRIGGER refuse_session_insert BEFORE INSERT ON training.sessions
+              FOR EACH ROW EXECUTE FUNCTION training.refuse_session_insert();
+              """
+            : """
+              DROP TRIGGER IF EXISTS refuse_session_insert ON training.sessions;
+              DROP FUNCTION IF EXISTS training.refuse_session_insert();
+              """, Ct);
     }
 
     private static async Task<DateOnly?> LastPlannedForAsync(TestApi api, Guid userId)
@@ -248,6 +267,113 @@ public sealed class TrainingWeekTests(PostgresFixture postgres)
         var done = Assert.Single(sessions, s => s.LocalDate == Thursday);
         Assert.Equal(TrainingSessionStates.Done, done.State);
         Assert.Equal(3, sessions.Count);
+    }
+
+    [Fact]
+    public async Task TrainingPlanSweeper_ShouldLeaveTodaysRideAlone_WhenTheRiderRodeBeforeTheSweep()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await StartPlanAsync(api, member, ["tuesday", "thursday", "sunday"]);
+        // Today is a riding day and the rider was out before the plan was written: those points are already spent.
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            db.Rides.Add(new Ride
+            {
+                Id = Guid.NewGuid(),
+                UserId = member.Id,
+                Status = RideStatus.Ready,
+                StartTime = new DateTimeOffset(Tuesday.ToDateTime(new TimeOnly(18, 0)), TimeSpan.Zero),
+                UtcOffsetMinutes = 0,
+                MovingS = 3600,
+                Tss = 300,
+            });
+            await db.SaveChangesAsync(Ct);
+        }
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        var sessions = await SessionsAsync(api, member.Id, Monday, Sunday);
+        Assert.DoesNotContain(sessions, s => s.LocalDate == Tuesday);
+        Assert.Equal([Thursday, Sunday], sessions.Select(s => s.LocalDate));
+    }
+
+    [Fact]
+    public async Task TrainingPlanSweeper_ShouldSaveAWeekOfThirtyHoursOnOneDay_WhenTheRiderAsksForIt()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        // A rider in their first weeks has no ramp and no lighter week to shrink the day: it is a day long and no more.
+        await StartPlanAsync(api, member, ["sunday"], hours: 30, history: false);
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        // Thirty hours is more than a day holds: the row is a day long, which is the most the table allows.
+        var session = Assert.Single(await SessionsAsync(api, member.Id, Monday, Sunday));
+        Assert.Equal(WeekPlanner.MaxDayMinutes, session.Minutes);
+    }
+
+    [Fact]
+    public async Task TrainingPlanSweeper_ShouldKeepTheWeek_WhenTheSaveFails()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await StartPlanAsync(api, member, ["tuesday", "thursday", "sunday"]);
+        var sweeper = Sweeper(api);
+        await sweeper.RunOnceAsync(Ct);
+        var before = await SessionsAsync(api, member.Id, Monday, Sunday);
+
+        ((FakeTime)api.Services.GetRequiredService<TimeProvider>()).Now = Now.AddDays(1);
+        await RefuseSessionInsertsAsync(api, refuse: true);
+        try
+        {
+            // Tomorrow rewrites Thursday and Sunday: the rows go and the new ones are written in one save, so a refusal
+            // leaves the week exactly as it was instead of an empty one.
+            await sweeper.RunOnceAsync(Ct);
+        }
+        finally
+        {
+            await RefuseSessionInsertsAsync(api, refuse: false);
+        }
+
+        var after = await SessionsAsync(api, member.Id, Monday, Sunday);
+        Assert.Equal(before.Select(s => s.Id).Order(), after.Select(s => s.Id).Order());
+        Assert.Equal(before.Select(s => s.Minutes), after.Select(s => s.Minutes));
+    }
+
+    [Fact]
+    public async Task TrainingPlanSweeper_ShouldUseTheRecentWeeksHours_WhenTheRiderIsBackFromABreak()
+    {
+        // Twelve hours in the setup, five an hour a day for five days a week before the break: back from it the week is
+        // the five hours the rider really rode, not the twelve the setup still says (W5).
+        await using var api = await StartAsync(Now.AddDays(14));
+        var member = await NewMemberAsync(api);
+        await WithRidingHistoryAsync(api, member.Id, weeks: 5, firstWeek: 2);
+        (await SaveAsync(member.Client, ["tuesday", "thursday", "sunday"], hours: 12)).EnsureSuccessStatusCode();
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        var sessions = await SessionsAsync(api, member.Id, Monday.AddDays(14), Monday.AddDays(20));
+        Assert.All(sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
+        Assert.Equal(5 * 60, sessions.Sum(s => s.Minutes));
+    }
+
+    [Fact]
+    public async Task GetTrainingWeek_ShouldSayItGetsMorePersonal_WhenTheWeekIsTheGentleBaseBlock()
+    {
+        // A rider in their first weeks: the base block is never named, and the one line it shows is this one.
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await StartPlanAsync(api, member, ["tuesday", "thursday", "sunday"], history: false);
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        var week = Assert.Single((await WeekAsync(member.Client)).Weeks);
+
+        Assert.False(week.IsLighterWeek);
+        Assert.Equal("more_personal", week.Note!.Code);
+        Assert.Equal("It gets more personal as your rides come in", week.Note.English);
+        Assert.All(week.Sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
     }
 
     [Fact]

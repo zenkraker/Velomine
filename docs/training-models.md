@@ -452,7 +452,9 @@ are `RecipesTests`, `SessionPlanTests` and `SessionTargetsTests`.
 **Scaling.** A recipe fills the day's minutes: its warm-up and cool-down keep their length, and its work, recovery and
 steady blocks grow or shrink in proportion, the longest of them taking the minute that rounding leaves over. A day
 too short for those fixed blocks — under about twelve minutes of a recipe with a warm-up — scales the whole session, so
-a day is never run over. A day shorter than the recipe's least length gets **R02** instead, scaled to that day.
+a day is never run over. A day shorter than the recipe's least length gets **R02** instead, scaled to that day — the
+three gentle base recipes (R14–R16) excepted: they are ridden by feel and scale to whatever the day holds, because the
+easy fallback would give a short day the watt and heart-rate targets they deliberately have none of.
 
 **Targets.** A block's watts are its % FTP band against the FTP in use (P6), its heart rate its % threshold band against
 the threshold in use (H3) — the number `HeartRates.For` gives: the one the rider set or a ride measured, else H2's 89 %
@@ -490,12 +492,15 @@ written only for the days it has left. The week's minutes are the rider's hours 
 carries; a week planned for the first time mid-week is scaled to the days left, because the days gone were never planned.
 The **long ride** takes two shares of the week's minutes and every other riding day one, so it is `2 / (days + 1)` of
 the week. A day is never shorter than its recipe's least length: the day grows into the recipe and the easy days give the
-minutes up, down to a floor of 20 minutes. The long-ride day is the rider's own, else the last free weekend day (Sunday,
-else Saturday), else the last free day — and a week whose long ride is already ridden has no second one.
+minutes up, down to a floor of 20 minutes. The rider's hours are the ceiling and a day holds 1440 minutes: hours that
+cannot give every day its floor keep fewer days, a hard day's least length never pushes the week past the hours, and no
+session is longer than a day. The long-ride day is the rider's own, else the last free weekend day (Sunday, else
+Saturday), else the last free day; a week whose long ride is already ridden has no second one, and neither has one whose
+every remaining day sits next to a hard day the rider already has — two loaded days in a row are worse than no long ride.
 
 A session stores its recipe, its block percentages and **the day's minutes**; its planned score is L7's, computed from
 those on read and never stored. A week's planned load is the sum of its sessions' scores, plus what the week has already
-spent: a day before today ridden without a planned session is load the week carries and is not planned again.
+spent: a day ridden without a planned session — today included — is load the week carries and is not planned again.
 
 The order of a goal's hard-day recipes — the gentlest that fits the day first — is `R05 → R08 → R09` for get fitter,
 `R05 → R06 → R07 → R08` for get faster and for get ready for a ride or race, `R17` for stay fit with less time, and none
@@ -515,8 +520,9 @@ the two hard-day slots. The two counts measure different things on purpose: inte
 
 Source: the placement is research §4.2's algorithm and CTS's "two hard days a week, never back to back" (C, coaching
 practice); the 88 % sweet-spot boundary and the 35 % share are Velomine's own. Code: `WeekPlanner.HardDays`,
-`HardIndexes`, `LoadedLongRideShare`. Tests: `WeekPlannerTests` (`ShouldPlanTwoHardDays…`, `ShouldKeepHardDaysApart…`,
-`ShouldNeverPlanLoadedDaysInARow…`, `LongRide_ShouldCountAsLoaded…`).
+`HardIndexes`, `QualityPreferences`, `LoadedLongRideShare`. Tests: `WeekPlannerTests` (`ShouldPlanTwoHardDays…`,
+`ShouldKeepHardDaysApart…`, `ShouldNeverPlanLoadedDaysInARow…`, `LongRide_ShouldCountAsLoaded…`,
+`ShouldGiveUpTheLongRide…`, `ShouldDrawTheGoalsHardDaysFromTheDocumentedRecipes…`).
 
 ### W2 — The build cycle
 
@@ -561,23 +567,29 @@ a **shorter** week and never a harder one. If even the 20-minute floor is over i
 Source: research §1.1 and §4.4 — the 10 % cap is a conservative default with no trial behind it (the one randomised trial
 of a 10 % rule found no benefit, PMID 17940147), and measuring it against the **normal** weeks only is the research's own
 recommendation (D) without which a 2:1 cycle shrinks the load. Velomine MUST NOT present the 10 % as a safety fact.
-Code: `WeekPlanner.LoadCap`, `NormalWeekLoads`, `RampShare`. Tests: `ShouldGrowTenPercent…`, `ShouldNotGrow…`,
-`NormalWeekLoads_ShouldLeaveOutLighterAndEmptyWeeks…`, `ShouldNeverGoOverTheRidersHours…`.
+Code: `WeekPlanner.LoadCap`, `NormalWeeks`, `RampShare`. Tests: `ShouldGrowTenPercent…`, `ShouldNotGrow…`,
+`NormalWeeks_ShouldLeaveOutLighterAndEmptyWeeks…`, `ShouldNeverGoOverTheRidersHours…`,
+`ShouldStayInsideTheHours…`, `ShouldKeepASessionInsideADay…`.
 
 ### W5 — The gentle base block
 
 Owed number 6. Fewer than **4 weeks of rides** (G1's first rule) or **back from a break** — G1's 10 days without a ride —
 the week is the gentle base block: **R14, R15 and R16 only**, feel targets only, **no intervals**, **no feel number above
 6**, and **no ramp** at all. The block is never named to the rider; the one line it shows is "It gets more personal as
-your rides come in". Back from a break the plan restarts from the real recent load, which is what the block is: short,
-easy, by feel.
+your rides come in". Back from a break the plan restarts from the real recent load: the week is no longer than the hours
+the recent normal weeks really took, whatever the setup now says, so a rider who rode three hours a week comes back to
+about three and not to the twelve they used to. A rider whose first weeks these are has no recent weeks to restart from,
+so their own hours are the week, and a base day rides by feel at whatever length it gets (see *Scaling*).
 
 Source: Velomine's own (G1; research §3, *Gentle base block*, D for the exact dose, C/D for the direction). Code:
-`WeekPlanner.IsBaseBlock`, `BaseBlockWeeks`, `BreakDays`. Tests: `ShouldPlanOnlyTheGentleBaseBlock…`,
-`BaseBlock_ShouldHaveNoRamp…`, `BaseBlock_ShouldStartAgain…`.
+`WeekPlanner.IsBaseBlock`, `FromBreak`, `BaseBlockWeeks`, `BreakDays`. Tests: `ShouldPlanOnlyTheGentleBaseBlock…`,
+`BaseBlock_ShouldHaveNoRamp…`, `BaseBlock_ShouldStartAgain…`, `BaseBlock_ShouldKeepTheRecentWeeksHours…`,
+`BaseBlock_ShouldKeepAShortDayGentle…`.
 
-**What the rider reads.** The planner's terms never reach the rider: "hard day", and the lighter week is an "Easy week"
-("Easy week: your body gets stronger while it rests"). Both are `TrainingNotes`; the names themselves are
+**What the rider reads.** The planner's terms never reach the rider: a hard session is a **hard day** in every line that
+says why (the why lines arrive with the week on screen), the lighter week is an "Easy week" ("Easy week: your body gets
+stronger while it rests"), and the gentle base block is never named at all — only that it gets more personal as the rides
+come in. The lines are `TrainingNotes`; the names themselves are
 `docs/design/pages/training/TrainingNames.md`.
 
 ## Estimated power
