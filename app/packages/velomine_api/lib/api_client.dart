@@ -237,6 +237,10 @@ class ApiClient {
           return CoachAthleteResponse.fromJson(value);
         case 'CoachAthletesResponse':
           return CoachAthletesResponse.fromJson(value);
+        case 'CoachPlanResponse':
+          return CoachPlanResponse.fromJson(value);
+        case 'CoachPlanSession':
+          return CoachPlanSession.fromJson(value);
         case 'CoachRpeResponse':
           return CoachRpeResponse.fromJson(value);
         case 'CoachWellbeingResponse':

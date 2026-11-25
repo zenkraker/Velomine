@@ -58,6 +58,8 @@ lib/model/club_ride_summary_response.dart
 lib/model/club_supporter_response.dart
 lib/model/coach_athlete_response.dart
 lib/model/coach_athletes_response.dart
+lib/model/coach_plan_response.dart
+lib/model/coach_plan_session.dart
 lib/model/coach_rpe_response.dart
 lib/model/coach_wellbeing_response.dart
 lib/model/component_response.dart

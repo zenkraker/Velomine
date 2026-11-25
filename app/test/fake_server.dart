@@ -189,6 +189,9 @@ class FakeServer {
   };
   final shareViews = <Map<String, Object?>>[];
 
+  /// The athlete's auto plan for this week as the coach's endpoint sends it, and the goal it plans for.
+  Map<String, Object?>? coachPlan;
+
   /// What the member hides from every non-owner, and the places whose surroundings are hidden.
   final privacyStreams = <String, bool>{
     'hideHeartRate': false,
@@ -2233,6 +2236,16 @@ extension on FakeServer {
       return json({'rides': rides, 'next': null});
     }
 
+    // No plan is no card: without the coaches grant, or with auto training off, the real server answers 404.
+    final plan = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/plan$')
+        .firstMatch(path);
+    if (plan != null) {
+      if (sharingChoices['rides'] == 'none' || coachPlan == null) {
+        return http.Response('', 404);
+      }
+      return json(coachPlan);
+    }
+
     final training = RegExp(r'^/api/v1/clubs/[^/]+/athletes/([^/]+)/training$')
         .firstMatch(path);
     if (training != null) {
@@ -3318,6 +3331,39 @@ Future<void> goTo(WidgetTester tester, String path) async {
   GoRouter.of(tester.element(find.byType(HomeShell))).go(path);
   await tester.pumpAndSettle();
 }
+
+/// One day of a coach's read of an athlete's plan: the session, how it went and the minutes ridden.
+Map<String, Object?> coachPlanSessionJson(
+  DateTime date, {
+  int minutes = 75,
+  String state = 'planned',
+  String? skipReason,
+  int? riddenMinutes,
+  String englishName = 'Strong and steady',
+  String italianName = 'Forte e costante',
+}) => {
+  'localDate': fakeDay(date),
+  'englishName': englishName,
+  'italianName': italianName,
+  'minutes': minutes,
+  'state': state,
+  'skipReason': skipReason,
+  'riddenMinutes': riddenMinutes,
+};
+
+/// A week as GET /clubs/{clubId}/athletes/{userId}/plan answers it.
+Map<String, Object?> coachPlanJson({
+  required DateTime start,
+  List<Map<String, Object?>> sessions = const [],
+  String goal = 'fitter',
+  int hoursPerWeek = 6,
+}) => {
+  'goal': goal,
+  'hoursPerWeek': hoursPerWeek,
+  'start': fakeDay(start),
+  'end': fakeDay(start.add(const Duration(days: 6))),
+  'sessions': sessions,
+};
 
 /// A day as the server sends a date-only value: "2026-11-27".
 String fakeDay(DateTime date) => date.toIso8601String().substring(0, 10);

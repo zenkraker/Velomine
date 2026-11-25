@@ -75,6 +75,8 @@ part 'model/club_ride_summary_response.dart';
 part 'model/club_supporter_response.dart';
 part 'model/coach_athlete_response.dart';
 part 'model/coach_athletes_response.dart';
+part 'model/coach_plan_response.dart';
+part 'model/coach_plan_session.dart';
 part 'model/coach_rpe_response.dart';
 part 'model/coach_wellbeing_response.dart';
 part 'model/component_response.dart';

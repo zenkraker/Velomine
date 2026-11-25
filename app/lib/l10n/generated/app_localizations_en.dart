@@ -970,6 +970,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coachNoRides => 'No rides shared yet.';
 
   @override
+  String get coachPlan => 'Plan';
+
+  @override
+  String coachPlanDone(int done, int total) {
+    return '$done of $total done this week';
+  }
+
+  @override
+  String coachPlanPlannedRidden(String planned, String ridden) {
+    return '$planned planned · $ridden ridden';
+  }
+
+  @override
   String get routeNotShared => 'The athlete has not shared the route.';
 
   @override
@@ -5598,6 +5611,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trainingStateMissed => 'Missed';
+
+  @override
+  String get trainingSkipReasonTired => 'Tired';
+
+  @override
+  String get trainingSkipReasonIll => 'Ill or injured';
+
+  @override
+  String get trainingSkipReasonNoTime => 'No time';
+
+  @override
+  String get trainingSkipReasonOther => 'Other';
 
   @override
   String get trainingOpenSession => 'Open session';

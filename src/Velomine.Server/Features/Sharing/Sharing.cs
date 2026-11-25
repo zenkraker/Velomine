@@ -18,7 +18,8 @@ public static class SharingRules
     /// <summary>
     /// A club member may see [ownerId]'s [dataType] when the owner is in the same club and has shared that kind of
     /// data with an audience that includes the caller: the coaches (owner and coaches) or, later, the whole club.
-    /// Anything else is a no: the endpoint then answers 404, like a missing record.
+    /// Anything else is a no: the endpoint then answers 404, like a missing record. <paramref name="audience"/> asks for
+    /// one audience only, for the data a rider shares with their coaches and with nobody else.
     /// </summary>
     public static async Task<bool> CanViewAsync(
         VelomineDbContext db,
@@ -26,7 +27,8 @@ public static class SharingRules
         Guid viewerId,
         Guid ownerId,
         string dataType,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? audience = null)
     {
         var viewer = await db.ClubMemberships.AsNoTracking()
             .FirstOrDefaultAsync(m => m.ClubId == clubId && m.UserId == viewerId, ct);
@@ -36,7 +38,8 @@ public static class SharingRules
 
         var asked = DataTypes.GrantedBy(dataType);
         var audiences = await db.ShareGrants.AsNoTracking()
-            .Where(g => g.ClubId == clubId && g.MemberId == ownerId && asked.Contains(g.DataType))
+            .Where(g => g.ClubId == clubId && g.MemberId == ownerId && asked.Contains(g.DataType)
+                && (audience == null || g.Audience == audience))
             .Select(g => g.Audience)
             .ToListAsync(ct);
 

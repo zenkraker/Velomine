@@ -99,7 +99,7 @@ String sessionLength(int minutes) {
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
   if (hours == 0) return '$rest min';
-  return rest == 0 ? '$hours h' : '$hours h $rest';
+  return rest == 0 ? '$hours h' : '$hours h ${rest.toString().padLeft(2, '0')}';
 }
 
 /// How a session is going, as the page header says it: "done", "skipped", "planned".
@@ -111,6 +111,21 @@ String sessionStateWord(AppLocalizations l10n, String state) => switch (state) {
   'missed' => l10n.trainingStateMissed,
   _ => l10n.trainingStatePlanned,
 };
+
+/// Why the rider skipped a session, as the API spells it, in the words of the plan. Null when no reason is shared:
+/// "Ill or injured" is health data and comes only with the wellbeing grant, and then the row reads "Skipped" alone.
+String? trainingSkipReason(AppLocalizations l10n, String? reason) =>
+    switch (reason) {
+      'tired' => l10n.trainingSkipReasonTired,
+      'ill' => l10n.trainingSkipReasonIll,
+      'no_time' => l10n.trainingSkipReasonNoTime,
+      'other' => l10n.trainingSkipReasonOther,
+      _ => null,
+    };
+
+/// A word as it reads inside a sentence: "No time" becomes "no time", as the mock-ups write it.
+String lowerFirst(String text) =>
+    text.isEmpty ? text : text[0].toLowerCase() + text.substring(1);
 
 /// The state as the week's badge reads it, with the score once a ride ticked the session: "Done · 92", "Skipped",
 /// or null while it is still planned, because the name alone is the plan.

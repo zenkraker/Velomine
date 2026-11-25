@@ -11,6 +11,8 @@ import '../../core/l10n.dart';
 import '../progress/power_summary.dart';
 import '../rides/ride_title.dart';
 import '../progress/training_summary.dart';
+import '../training/training_goals.dart';
+import '../training/training_text.dart';
 import 'coach_athlete_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/badge.dart';
@@ -79,6 +81,7 @@ class CoachAthleteScreen extends ConsumerWidget {
             columns: 2,
             tabletColumns: 2,
             children: [
+              if (c.plan case final plan?) _CoachPlanCard(plan: plan),
               if (c.training case final training?) ...[
                 TrainingSummary(
                   training: training,
@@ -141,6 +144,135 @@ class CoachAthleteScreen extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// The athlete's auto plan for this week: the goal, the hours and one row per planned day. Read-only, with no score:
+/// the server sends no score, no make-easy reason and no check-in answer, and logs the look as a "Plan".
+class _CoachPlanCard extends StatelessWidget {
+  const _CoachPlanCard({required this.plan});
+
+  final CoachPlanResponse plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final done = plan.sessions
+        .where((session) => session.state == 'done' || session.state == 'easy')
+        .length;
+
+    return SectionCard(
+      key: const Key('coach-plan'),
+      title: l10n.coachPlan,
+      children: [
+        Text(
+          [
+            trainingGoalName(l10n, plan.goal),
+            l10n.trainingHoursLine(plan.hoursPerWeek),
+            l10n.coachPlanDone(done, plan.sessions.length),
+          ].join(' · '),
+          key: const Key('coach-plan-summary'),
+          style: text.bodyMedium,
+        ),
+        Column(
+          spacing: AppSpacing.xs,
+          children: [
+            for (final session in plan.sessions)
+              _CoachPlanRow(session: session),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// One planned day: the date, the session and how it went. A planned day carries no badge, as the Training page's
+/// week does: the name alone is the plan.
+class _CoachPlanRow extends StatelessWidget {
+  const _CoachPlanRow({required this.session});
+
+  final CoachPlanSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final reason = trainingSkipReason(l10n, session.skipReason);
+    final detail = switch (session) {
+      CoachPlanSession(state: 'skipped') => [
+        l10n.trainingStateSkipped,
+        if (reason != null) lowerFirst(reason),
+      ].join(' · '),
+      CoachPlanSession(:final riddenMinutes?) => l10n.coachPlanPlannedRidden(
+        sessionLength(session.minutes),
+        sessionLength(riddenMinutes),
+      ),
+      _ => sessionLength(session.minutes),
+    };
+    final badge = session.state == 'planned'
+        ? null
+        : sessionStateWord(l10n, session.state);
+
+    return Container(
+      key: Key('coach-plan-${session.localDate.toIso8601String()}'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        spacing: AppSpacing.md,
+        children: [
+          SizedBox(
+            width: AppTraining.dateWidth,
+            child: Column(
+              children: [
+                Text(
+                  '${session.localDate.day}',
+                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  DateFormat.E(locale).format(session.localDate),
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  trainingText(
+                    l10n,
+                    english: session.englishName,
+                    italian: session.italianName,
+                  ),
+                  style: text.bodyMedium,
+                ),
+                Text(
+                  detail,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (badge != null)
+            AppBadge(
+              badge,
+              tone: session.state == 'done' || session.state == 'easy'
+                  ? AppBadgeTone.good
+                  : AppBadgeTone.neutral,
+            ),
+        ],
+      ),
     );
   }
 }

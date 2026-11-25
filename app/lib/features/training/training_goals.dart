@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart' show DateUtils;
 import 'package:intl/intl.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import 'training_text.dart';
 
 /// The goals the setup offers, in the order it shows them. The codes stay internal; the names are in TrainingNames.md.
 const trainingGoalIds = ['aerobic', 'fitter', 'faster', 'event', 'keep'];
@@ -71,14 +72,14 @@ List<String> orderedDays(Iterable<String> days) =>
 String trainingQuestion(AppLocalizations l10n, DateTime day, String name) =>
     l10n.trainingQuestionTitle(
       DateFormat.EEEE(l10n.localeName).format(day),
-      _lowerFirst(name),
+      lowerFirst(name),
     );
 
 /// The same session once the rider said the ride was it: "This was your Thursday strong and steady."
 String trainingLinked(AppLocalizations l10n, DateTime day, String name) =>
     l10n.trainingLinkedTitle(
       DateFormat.EEEE(l10n.localeName).format(day),
-      _lowerFirst(name),
+      lowerFirst(name),
     );
 
 /// "This ride looks like the session planned for yesterday", or tomorrow: the question only ever asks about the day
@@ -90,9 +91,6 @@ String trainingQuestionLine(
 ) => DateUtils.isSameDay(day, rideDay.subtract(const Duration(days: 1)))
     ? l10n.trainingQuestionYesterday
     : l10n.trainingQuestionTomorrow;
-
-String _lowerFirst(String text) =>
-    text.isEmpty ? text : text[0].toLowerCase() + text.substring(1);
 
 /// The kind line under this week's rows: never red, never a streak, and nothing to catch up on.
 String trainingWeekKind(AppLocalizations l10n, int done, int total) => switch ((
