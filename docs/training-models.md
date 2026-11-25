@@ -30,7 +30,8 @@ Decided once per number, so a chart that sums a range never recomputes it on eve
   first read, because the dashboard sums and compares them over a range.
 - **Computed on read, never stored:** part wear, goals, weekly, monthly and yearly totals (from each ride's local date
   and the member's first day of the week), zone seconds (from the current profile), the feel score from the rider's own
-  rating, and the effort score and its source (TSS, else hrTSS, else the feel score, else the estimated TSS).
+  rating, the effort score and its source (TSS, else hrTSS, else the feel score, else the estimated TSS), a session's
+  planned effort score (L7) and its session score (L8).
 - Fitness and fatigue follow L1's effort score for each day.
 - A number that moves between those two lists raises `RideParserVersion.Current` (rule 3).
 
@@ -370,9 +371,9 @@ score = round(100 × (50 % × time + 50 % × effort))                   without 
 
 - The **leading signal** is what the rider could follow: power when the ride has power and every main-set block has a
   % FTP band (P4), else heart rate when the ride has heart rate and every main-set block has a % threshold-heart-rate
-  band (H5), else nothing. The gentle base recipes ride by feel and have neither, and neither has a ride without a
-  sensor: without the leading signal the time in target cannot be measured, so time and effort share the score 50/50
-  and a rider without sensors still reaches 100.
+  band (H5), else nothing. The gentle base recipes ride by feel, and a ride without a sensor carries neither signal:
+  without the leading signal the time in target cannot be measured, so time and effort share the score 50/50 and a
+  rider without sensors still reaches 100.
 - **Time in target** counts the seconds whose sampled value is inside any of the main set's own bands, over the main
   set's planned minutes and capped at the whole set. A pause or a gap over 30 s is not time ridden.
 - A part of the plan is never worth more than the whole: a longer or harder ride does not pay for a block left out, and
