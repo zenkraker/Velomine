@@ -1318,7 +1318,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get momentHint =>
-      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo l\'uscita.';
+      'Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo il giro.';
 
   @override
   String momentAt(String time, String distance) {

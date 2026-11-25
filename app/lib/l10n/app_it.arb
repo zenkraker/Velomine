@@ -408,7 +408,6 @@
   "zonesResetBody": "I tuoi limiti vengono rimossi da tutte le zone e tornano quelli standard.",
   "zonesResetAction": "Usa le zone standard",
   "zonesCustom": "Limiti tuoi",
-  "momentHint": "Passa sopra un grafico, oppure tocca e trascina, per vedere i valori lungo l'uscita.",
   "momentAt": "Alle {time}{distance}",
   "rideNumbers": "Numeri",
   "statDistance": "Distanza",
