@@ -63,6 +63,30 @@ class TrainingScreen extends ConsumerWidget {
     final firstLoad =
         state.weeks.isEmpty &&
         (state.load.running || state.week.running || plan == null);
+    // A wide window puts this week and the goal side by side, two to one; a phone stacks them.
+    final expanded =
+        MediaQuery.sizeOf(context).width >= AppBreakpoint.expandedWidth;
+    final weeks = [
+      if (state.thisWeek case final week? when week.sessions.isNotEmpty)
+        _WeekCard(week: week),
+      if (state.nextWeek case final week? when week.sessions.isNotEmpty)
+        _WeekCard(week: week, preview: true),
+    ];
+    final goalCard = SectionCard(
+      key: const Key('training-goal'),
+      title: l10n.trainingGoalCard,
+      children: [
+        Text(
+          trainingGoalName(l10n, goal),
+          style: VelomineText.of(context).stat,
+        ),
+        Text(
+          trainingSuggestionReason(l10n, plan?.suggestionReason ?? ''),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+      ],
+    );
     return PageScaffold(
       title: l10n.navTraining,
       subtitle: [
@@ -98,26 +122,22 @@ class TrainingScreen extends ConsumerWidget {
           const LoadingState.rows()
         else ...[
           _TodayCard(plan: plan, week: state.thisWeek),
-          if (state.thisWeek case final week? when week.sessions.isNotEmpty)
-            _WeekCard(week: week),
-          if (state.nextWeek case final week? when week.sessions.isNotEmpty)
-            _WeekCard(week: week, preview: true),
-          SectionCard(
-            key: const Key('training-goal'),
-            title: l10n.trainingGoalCard,
-            children: [
-              Text(
-                trainingGoalName(l10n, goal),
-                style: VelomineText.of(context).stat,
-              ),
-              Text(
-                trainingSuggestionReason(l10n, plan?.suggestionReason ?? ''),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+          if (expanded && weeks.isNotEmpty)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: AppSpacing.lg,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(spacing: AppSpacing.lg, children: weeks),
                 ),
-              ),
-            ],
-          ),
+                Expanded(child: goalCard),
+              ],
+            )
+          else ...[
+            ...weeks,
+            goalCard,
+          ],
         ],
       ],
     );

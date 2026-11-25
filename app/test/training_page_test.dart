@@ -86,11 +86,37 @@ void main() {
       expect(find.text('Today · ${_weekday(today)}'), findsOneWidget);
       // The today card and today's row of the week both name it.
       expect(find.text('Strong and steady 3×10'), findsWidgets);
-      expect(find.text('1 h 15 min'), findsOneWidget);
+      expect(find.text('1 h 15'), findsOneWidget);
       expect(find.text('Long efforts just below your limit.'), findsOneWidget);
       // The main set's three targets, the watts leading.
       expect(find.text('220–235 W · 152–160 bpm · feel 5–6'), findsOneWidget);
       expect(find.byKey(const Key('training-open-session')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TrainingScreen_ShouldPickTheItaliansWordsTheServerSent_WhenTheLanguageIsItalian',
+    (tester) async {
+      server = FakeServer();
+      server.signInBrowser(server.add('rider@example.com', language: 'it'));
+      server.trainingPlan = {
+        'on': true,
+        'goal': 'fitter',
+        'days': ['tuesday'],
+        'hoursPerWeek': 6,
+        'lastPlannedFor': fakeDay(monday),
+      };
+      await openTraining(tester, sessions: [session()]);
+
+      expect(find.text('Forte e costante 3×10'), findsWidgets);
+      expect(
+        find.text('Sforzi lunghi appena sotto il limite.'),
+        findsOneWidget,
+      );
+      // The app's own words around them are Italian too.
+      expect(find.text('Questa settimana'), findsOneWidget);
+      expect(find.textContaining('Oggi · '), findsOneWidget);
+      expect(find.text('Strong and steady 3×10'), findsNothing);
     },
   );
 
@@ -268,7 +294,7 @@ void main() {
 
     expect(find.byKey(const Key('progress-today-training')), findsOneWidget);
     expect(
-      find.text('Today · Strong and steady 3×10 · 1 h 15 min'),
+      find.text('Today · Strong and steady 3×10 · 1 h 15'),
       findsOneWidget,
     );
     await tester.tap(find.byKey(const Key('progress-today-training')));

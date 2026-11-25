@@ -1,6 +1,5 @@
 import 'package:velomine_api/api.dart';
 
-import '../../core/format.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// The words of the training screens. The server sends every rider-facing session and goal text in English and
@@ -95,8 +94,13 @@ String targetLine(
   feelTarget(l10n, block),
 ].join(' · ');
 
-/// A session's length as the design writes it: "1 h 15", from the day's minutes.
-String sessionLength(int minutes) => duration(minutes * 60.0);
+/// A session's length as the design writes it: "1 h 15", "1 h", "40 min", from the day's minutes.
+String sessionLength(int minutes) {
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  if (hours == 0) return '$rest min';
+  return rest == 0 ? '$hours h' : '$hours h $rest';
+}
 
 /// How a session is going, as the badge and the header say it.
 String sessionState(AppLocalizations l10n, String state) => switch (state) {
