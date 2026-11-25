@@ -2997,8 +2997,8 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("QuestionRideId")
                         .IsUnique()
-                        .HasFilter("question_ride_id IS NOT NULL")
-                        .HasDatabaseName("ix_sessions_question_ride_id");
+                        .HasDatabaseName("ix_sessions_question_ride_id")
+                        .HasFilter("question_ride_id IS NOT NULL");
 
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_sessions_ride_id");
