@@ -493,8 +493,9 @@ carries; a week planned for the first time mid-week is scaled to the days left, 
 The **long ride** takes two shares of the week's minutes and every other riding day one, so it is `2 / (days + 1)` of
 the week. A day is never shorter than its recipe's least length: the day grows into the recipe and the easy days give the
 minutes up, down to a floor of 20 minutes. The rider's hours are the ceiling and a day holds 1440 minutes: hours that
-cannot give every day its floor keep fewer days, a hard day's least length never pushes the week past the hours, and no
-session is longer than a day. The long-ride day is the rider's own, else the last free weekend day (Sunday, else
+cannot give every day its 20-minute floor keep fewer days, hours that cannot hold even one day's floor leave the week
+with what it already spent, a hard day's least length never pushes the week past the hours, and no session is longer
+than a day. The long-ride day is the rider's own, else the last free weekend day (Sunday, else
 Saturday), else the last free day; a week whose long ride is already ridden has no second one, and neither has one whose
 every remaining day sits next to a hard day the rider already has — two loaded days in a row are worse than no long ride.
 
@@ -569,7 +570,7 @@ of a 10 % rule found no benefit, PMID 17940147), and measuring it against the **
 recommendation (D) without which a 2:1 cycle shrinks the load. Velomine MUST NOT present the 10 % as a safety fact.
 Code: `WeekPlanner.LoadCap`, `NormalWeeks`, `RampShare`. Tests: `ShouldGrowTenPercent…`, `ShouldNotGrow…`,
 `NormalWeeks_ShouldLeaveOutLighterAndEmptyWeeks…`, `ShouldNeverGoOverTheRidersHours…`,
-`ShouldStayInsideTheHours…`, `ShouldKeepASessionInsideADay…`.
+`ShouldStayInsideTheHours…`, `ShouldKeepASessionInsideADay…`, `ShouldPlanNothing_WhenTheWeeksHoursAreAlreadySpent`.
 
 ### W5 — The gentle base block
 

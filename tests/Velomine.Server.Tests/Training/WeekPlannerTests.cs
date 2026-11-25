@@ -331,6 +331,19 @@ public sealed class WeekPlannerTests
     }
 
     [Fact]
+    public void WeekPlanner_ShouldPlanNothing_WhenTheWeeksHoursAreAlreadySpent()
+    {
+        // Two hours a week and a two-hour session already done: the hours are gone, so the week carries that session
+        // and no token minute planned to fill Thursday.
+        var done = new FixedSession(Tuesday, "R03", 120, TrainingSessionStates.Done);
+        var week = WeekPlanner.Plan(Input(Thursday, Days(DayOfWeek.Thursday, DayOfWeek.Sunday), hours: 2,
+            fixedSessions: [done]));
+
+        Assert.Empty(week.Sessions);
+        Assert.True(week.Load > 0, "the week still carries the session it spent");
+    }
+
+    [Fact]
     public void WeekPlanner_ShouldKeepASessionInsideADay_WhenTheHoursAreMoreThanADayHolds()
     {
         // One riding day holds the rider's hours, at any length the setup allows: over a day it is a day long, so the

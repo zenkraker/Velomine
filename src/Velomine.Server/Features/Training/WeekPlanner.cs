@@ -181,6 +181,9 @@ public static class WeekPlanner
         if (isBaseBlock && FromBreak(history) && history.RecentNormalWeekHours is { } recentHours)
             budget = Math.Min(budget, (int)Math.Round(recentHours * 60));
         var longIndex = LongRideIndex(input, dates);
+        // The hours cannot hold even the floor of one day: the week carries what it already spent and nothing more,
+        // rather than a token minute planned to fill a day.
+        if (budget < MinimumDayMinutes) return Week(weekStart, [], otherLoad, isLighter, isBaseBlock, false);
         // The rider's hours are the ceiling and a day has a floor: hours that cannot give every day one keep fewer
         // days, so the week is shorter rather than longer than the hours (W4).
         while (dates.Count > 1 && budget < MinimumDayMinutes * dates.Count)
