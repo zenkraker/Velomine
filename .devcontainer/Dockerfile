@@ -37,7 +37,7 @@ RUN curl -fsSL -o /tmp/clt.zip "https://dl.google.com/android/repository/command
          "ndk;28.2.13676358" "cmake;3.22.1" \
     && chown -R vscode:vscode "$ANDROID_HOME"
 
-# Scaleway CLI (`scw`), Sentry CLI and CodeGraph, as checksummed release binaries.
+# Scaleway CLI (`scw`), Sentry CLI, GitHub CLI and CodeGraph, as checksummed release binaries.
 ARG SCW_VERSION=2.67.0
 ARG SCW_SHA256=d845fd1261eaf7819599e505b585c30ea08ad2e3f481c6948ab2d379973c4ff4
 RUN curl -fsSL -o /usr/local/bin/scw "https://github.com/scaleway/scaleway-cli/releases/download/v${SCW_VERSION}/scaleway-cli_${SCW_VERSION}_linux_amd64" \
@@ -47,6 +47,15 @@ ARG SENTRY_CLI_VERSION=3.8.2
 ARG SENTRY_CLI_SHA256=c958865f9d4000183509ea21b1f04925d5390de6d8d87386b9e69f2b305070c3
 RUN curl -fsSL -o /usr/local/bin/sentry-cli "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64" \
     && echo "${SENTRY_CLI_SHA256}  /usr/local/bin/sentry-cli" | sha256sum -c - && chmod +x /usr/local/bin/sentry-cli
+
+# GitHub CLI (`gh`) for releases, tags and pull requests from the container.
+ARG GH_VERSION=2.105.0
+ARG GH_SHA256=79e7ab5db738c48777b696e374f8b428f0647debfb424f44d2f426370407fe2f
+RUN curl -fsSL -o /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
+    && echo "${GH_SHA256}  /tmp/gh.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/gh.tar.gz -C /tmp \
+    && install -m 0755 "/tmp/gh_${GH_VERSION}_linux_amd64/bin/gh" /usr/local/bin/gh \
+    && rm -rf /tmp/gh.tar.gz "/tmp/gh_${GH_VERSION}_linux_amd64"
 
 # CodeGraph ships its own Node, so it does not depend on the Node feature.
 ARG CODEGRAPH_VERSION=1.6.4

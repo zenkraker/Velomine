@@ -38,6 +38,7 @@ The toolchain is a dev container in `.devcontainer/`. It holds the editor, the a
 | CodeGraph | 1.6.4 | `/opt/codegraph` |
 | Sentry CLI | 3.8.2 | `/usr/local/bin`, for releases and debug symbols |
 | Scaleway CLI | 2.67.0 | `/usr/local/bin` |
+| GitHub CLI (`gh`) | 2.105.0 | `/usr/local/bin`, for releases and tags |
 | Claude Code | 2.1.329 | npm, in the volume; the agents' CLI |
 | Sentry MCP | 0.49.0 | npm, in the volume; the local server Pi starts |
 
@@ -168,7 +169,7 @@ Every version is in `.devcontainer/` or, for Flutter, in `app/Dockerfile` too. A
 
 - **Flutter:** change `FLUTTER_VERSION` and `FLUTTER_SHA256` in `app/Dockerfile` **and** `.devcontainer/Dockerfile`, in the same commit; `tools/check-versions.sh` fails when they differ, and CI reads the pin from `app/Dockerfile`. Take both values from Flutter's [release list](https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json). A new minor version (3.51 rather than 3.50.x) may ask for newer Android SDK or NDK versions; its template names the Gradle, Android Gradle Plugin and Kotlin versions it is tested with (`packages/flutter_tools/lib/src/android/gradle_utils.dart`). Use those in `app/android/` and in the Dockerfile's `sdkmanager` line.
 - **.NET, Node, Docker:** change the `version` in the feature list of `devcontainer.json`, rebuild, and commit the `devcontainer-lock.json` the devcontainer CLI updates with it. `dotnet` and `node` name a major (`2`) whose latest the lock pins; `docker-in-docker` names the exact version it was tested at.
-- **Release binaries in the image** (`just`, CodeGraph, Sentry CLI, Scaleway CLI, the Android command-line tools): change the `ARG` version **and** its `*_SHA256` in `.devcontainer/Dockerfile`. Take the checksum from the release's own `SHA256SUMS` or by downloading the asset once. A stale checksum fails the build, which is the point.
+- **Release binaries in the image** (`just`, CodeGraph, Sentry CLI, Scaleway CLI, `gh`, the Android command-line tools): change the `ARG` version **and** its `*_SHA256` in `.devcontainer/Dockerfile`. Take the checksum from the release's own `SHA256SUMS` or by downloading the asset once. A stale checksum fails the build, which is the point.
 - **Claude Code and the Sentry MCP server:** the versions in `post-create.sh`. Run `bash .devcontainer/post-create.sh` to install them again into the volume.
 - **Agent plugins:** for Pi, the pinned versions in `.pi/settings.json` after reading the changelog. Claude Code's plugins (ponytail, the official Flutter plugin) update through `claude plugin update`.
 - **VS Code extensions:** `customizations.vscode.extensions` in `devcontainer.json`.
