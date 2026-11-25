@@ -1,4 +1,4 @@
-using Velomine.Server.Features.Rides;
+using Velomine.Server.Features.Accounts;
 
 namespace Velomine.Server.Features.Training;
 
@@ -9,13 +9,22 @@ public sealed record SessionNote(string Code, string English, string Italian);
 public static class SessionNotes
 {
     /// <summary>
-    /// No power meter and no FTP, so no watt target: the 2.5 W/kg stand-in is never one (*Estimated power*). The
-    /// wording is `docs/design/pages/training/SessionPage.md`.
+    /// No power meter, so no watt target: the 2.5 W/kg stand-in is never one (*Estimated power*). The wording is
+    /// `docs/design/pages/training/SessionPage.md`.
     /// </summary>
     public static readonly SessionNote AddPowerMeter = new(
         "add_power_meter",
         "Add a power meter for watt targets",
         "Aggiungi un misuratore di potenza per gli obiettivi in watt");
+
+    /// <summary>
+    /// A power meter but no FTP, so no watt target yet: the meter's watts are there, the reference they are read
+    /// against is not. There is no watt number to show until the rider sets one or accepts a ride's.
+    /// </summary>
+    public static readonly SessionNote SetFtp = new(
+        "set_ftp",
+        "Set your FTP for watt targets",
+        "Imposta il tuo FTP per gli obiettivi in watt");
 
     /// <summary>
     /// The session has efforts of 2 minutes or less, where heart rate lags by a minute or two. Its wording is
@@ -28,7 +37,7 @@ public static class SessionNotes
 }
 
 /// <summary>
-/// One block with the day's numbers: watts from the FTP in use (P6), heart rate from the zone model in use (H3), feel
+/// One block with the day's numbers: watts from the FTP in use (P6), heart rate from the threshold in use (H3), feel
 /// from F1. A null pair is a block with no target in that signal.
 /// </summary>
 public sealed record BlockTarget(
@@ -45,18 +54,31 @@ public sealed record BlockTarget(
 /// A session's targets for a day, worked out when it is shown and never stored: a session stores its recipe and the
 /// block percentages, never watts.
 /// </summary>
-public sealed record SessionTargets(Recipe Recipe, int Minutes, BlockTarget[] Blocks, SessionNote[] Notes)
+public sealed record SessionTargets(
+    Recipe Recipe,
+    int Minutes,
+    BlockTarget[] Blocks,
+    SessionNote[] Notes,
+    bool HeartRateEstimated)
 {
     /// <summary>
-    /// The recipe scaled to the day, block by block, with the targets as ranges. Heart rate is left off an effort of two
-    /// minutes or less, where it lags, and the session says so once.
+    /// The recipe scaled to the day, block by block, with the targets as ranges. The heart rate is read against the
+    /// threshold in use, which is the value <see cref="HeartRates.For"/> gives — the one the rider set or a ride
+    /// measured, else 89 % of the maximum (H2) — and <see cref="HeartRateEstimated"/> says when it is that estimate, so
+    /// the app can mark every heart-rate number as estimated. Heart rate is left off an effort of two minutes or less,
+    /// where it lags, and the session says so once.
     /// </summary>
-    public static SessionTargets For(Recipe recipe, int minutes, int? ftpW, HeartRateZoneReference? heartRateZones)
+    public static SessionTargets For(
+        Recipe recipe,
+        int minutes,
+        int? ftpW,
+        HeartRate? thresholdHeartRate,
+        bool hasPowerMeter = false)
     {
         var (chosen, planned) = SessionPlan.For(recipe, minutes);
-        var threshold = ThresholdHeartRate(heartRateZones);
+        var threshold = thresholdHeartRate?.Bpm;
         var notes = new List<SessionNote>();
-        if (ftpW is null) notes.Add(SessionNotes.AddPowerMeter);
+        if (ftpW is null) notes.Add(hasPowerMeter ? SessionNotes.SetFtp : SessionNotes.AddPowerMeter);
 
         var lags = false;
         var blocks = planned.Select(plannedBlock =>
@@ -79,19 +101,9 @@ public sealed record SessionTargets(Recipe Recipe, int Minutes, BlockTarget[] Bl
         }).ToArray();
 
         if (lags) notes.Add(SessionNotes.HeartRateLags);
-        return new SessionTargets(chosen, planned.Sum(b => b.Minutes), blocks, [.. notes]);
+        var estimated = threshold is not null && thresholdHeartRate?.Source == FtpSources.Estimate;
+        return new SessionTargets(chosen, planned.Sum(b => b.Minutes), blocks, [.. notes], estimated);
     }
-
-    /// <summary>
-    /// The threshold heart rate the block percentages are read against, from the model in use (H3): the threshold itself
-    /// when the rider set one, else 89 % of the maximum (H2). Null when the rider has neither.
-    /// </summary>
-    public static int? ThresholdHeartRate(HeartRateZoneReference? zones) => zones switch
-    {
-        null => null,
-        { Model: HeartRateZoneModels.Threshold, Bpm: var threshold } => threshold,
-        { Bpm: var max } => (int)Math.Round(max * 0.89),
-    };
 
     private static int Scale(int percent, int reference) => (int)Math.Round(percent / 100.0 * reference);
 }

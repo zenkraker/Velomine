@@ -65,8 +65,8 @@ public sealed record Recipe(
     RecipeBlock[] Blocks)
 {
     /// <summary>
-    /// A quality session: its main set reaches 88 % FTP, the sweet-spot floor (P4's Z4 floor is 90 %; the boundary is
-    /// Velomine's own). R05–R10 are the quality recipes.
+    /// A quality session: its main set starts at 88 % FTP or more, the sweet-spot floor (P4's Z4 floor is 90 %; the
+    /// boundary is Velomine's own). R05–R10 are the quality recipes, and R17 carries a short one for the keep goal.
     /// </summary>
     public bool IsQuality => Blocks.Any(b => b.Role == RecipeRoles.Main && b.PercentFtp is { Low: >= 88 });
 }
@@ -158,7 +158,7 @@ public static class Recipes
             55, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Faster],
             [
                 new(RecipeRoles.Warmup, 20, new(60, 80), new(80, 90), new(3, 4)),
-                new(RecipeRoles.Main, 20, new(106, 120), new(103, 115), new(8, 9), EffortSeconds: 300),
+                new(RecipeRoles.Main, 20, new(106, 120), new(94, 100), new(8, 9), EffortSeconds: 300),
                 new(RecipeRoles.Recovery, 20, new(40, 55), new(70, 80), new(2, 2), EffortSeconds: 300),
                 new(RecipeRoles.Cooldown, 10, new(40, 55), new(70, 80), new(2, 2)),
             ]),
@@ -169,7 +169,7 @@ public static class Recipes
             50, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Faster],
             [
                 new(RecipeRoles.Warmup, 20, new(60, 80), new(80, 90), new(3, 4)),
-                new(RecipeRoles.Main, 10, new(115, 125), new(103, 115), new(8, 9), EffortSeconds: 30),
+                new(RecipeRoles.Main, 10, new(115, 125), new(94, 100), new(8, 9), EffortSeconds: 30),
                 new(RecipeRoles.Recovery, 10, new(40, 55), new(70, 80), new(2, 2), EffortSeconds: 15),
                 new(RecipeRoles.Cooldown, 10, new(40, 55), new(70, 80), new(2, 2)),
             ]),
@@ -196,7 +196,7 @@ public static class Recipes
         new("R14", "Easy start", "First rides", "Primi giri",
             "Short and easy, to build the habit.",
             "Corto e facile, per prendere l'abitudine.",
-            30, [TrainingRecipeGoals.Aerobic, TrainingRecipeGoals.Fitter],
+            30, [TrainingRecipeGoals.Aerobic],
             [
                 new(RecipeRoles.Main, 30, null, null, new(3, 4)),
             ]),
@@ -204,7 +204,7 @@ public static class Recipes
         new("R15", "Steady build", "A little faster", "Un po' più veloce",
             "Mostly easy, with two short steady stretches.",
             "Per lo più facile, con due brevi tratti costanti.",
-            45, [TrainingRecipeGoals.Aerobic, TrainingRecipeGoals.Fitter],
+            45, [TrainingRecipeGoals.Aerobic],
             [
                 new(RecipeRoles.Warmup, 10, null, null, new(2, 3)),
                 new(RecipeRoles.Main, 20, null, null, new(4, 5)),
@@ -225,10 +225,10 @@ public static class Recipes
             "Un giro corto e forte per tenere quello che hai costruito.",
             45, [TrainingRecipeGoals.Keep],
             [
-                // Below the 88 % sweet-spot floor on purpose: decisions confine the quality sessions to R05–R10, so the
-                // short strong ride of a "keep fitness" week is tempo at the top of P4's Z3.
+                // One short quality session, which is what keeps what a rider has built (Spiering et al. 2021, PMID 33629972).
                 new(RecipeRoles.Warmup, 10, new(60, 75), new(80, 88), new(3, 3)),
-                new(RecipeRoles.Main, 25, new(84, 88), new(90, 94), new(5, 5)),
+                new(RecipeRoles.Main, 20, new(88, 94), new(91, 97), new(5, 6)),
+                new(RecipeRoles.Recovery, 5, new(40, 55), new(70, 80), new(2, 2)),
                 new(RecipeRoles.Cooldown, 10, new(40, 55), new(70, 80), new(2, 2)),
             ]),
     ];

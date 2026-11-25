@@ -407,35 +407,42 @@ are `RecipesTests`, `SessionPlanTests` and `SessionTargetsTests`.
 | R05 | Sweet spot | Strong and steady · Forte e costante | 60 | yes | 15 @ 55–70 · 80–88 · 3; 40 @ 88–94 · 91–97 · 5–6; 5 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, faster, event |
 | R06 | Threshold | At your limit · Al limite | 50 | yes | 15 @ 65–80 · 85–92 · 4; 30 @ 95–105 · 94–102 · 6–7; 10 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster, event |
 | R07 | Climbing repeats | Hill repeats · Ripetute in salita | 70 | yes | 15 @ 65–80 · 85–92 · 4; 25 @ 95–105 · 94–102 · 6–7; 20 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster |
-| R08 | VO2max 4–5 min | Hard efforts · Sforzi duri | 55 | yes | 20 @ 60–80 · 80–90 · 3–4; 20 @ 106–120 · 103–115 · 8–9 (5-minute efforts); 20 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, faster |
-| R09 | 30/15 | On and off · Acceso e spento | 50 | yes | 20 @ 60–80 · 80–90 · 3–4; 10 @ 115–125 · 103–115 · 8–9 (30-second efforts); 10 @ 40–55 · 70–80 · 2 (15-second recoveries); 10 @ 40–55 · 70–80 · 2 | fitter, faster |
+| R08 | VO2max 4–5 min | Hard efforts · Sforzi duri | 55 | yes | 20 @ 60–80 · 80–90 · 3–4; 20 @ 106–120 · 94–100 · 8–9 (5-minute efforts); 20 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, faster |
+| R09 | 30/15 | On and off · Acceso e spento | 50 | yes | 20 @ 60–80 · 80–90 · 3–4; 10 @ 115–125 · 94–100 · 8–9 (30-second efforts); 10 @ 40–55 · 70–80 · 2 (15-second recoveries); 10 @ 40–55 · 70–80 · 2 | fitter, faster |
 | R10 | Anaerobic capacity | All-out bursts · Scatti al massimo | 45 | yes | 20 @ 60–80 · 80–90 · 3–4; 4 @ 120–130 · – · 9 (60-second efforts); 12 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster, event |
 | R12 | Cadence | Quick legs · Gambe agili | 45 | no | 60 @ 56–75 · 81–89 · 3–4 | all five |
-| R14 | Easy start | First rides · Primi giri | 30 | no | 30 @ – · – · 3–4 | aerobic, fitter |
-| R15 | Steady build | A little faster · Un po' più veloce | 45 | no | 10 @ – · – · 2–3; 20 @ – · – · 4–5; 5 @ – · – · 2; 10 @ – · – · 2–3 | aerobic, fitter |
+| R14 | Easy start | First rides · Primi giri | 30 | no | 30 @ – · – · 3–4 | aerobic |
+| R15 | Steady build | A little faster · Un po' più veloce | 45 | no | 10 @ – · – · 2–3; 20 @ – · – · 4–5; 5 @ – · – · 2; 10 @ – · – · 2–3 | aerobic |
 | R16 | Long and easy (base) | Longer, still easy · Più lungo, sempre facile | 60 | no | 75 @ – · – · 3–4 | aerobic |
-| R17 | Keep-it | Keep it going · Mantieni il ritmo | 45 | no | 10 @ 60–75 · 80–88 · 3; 25 @ 84–88 · 90–94 · 5; 10 @ 40–55 · 70–80 · 2 | keep |
+| R17 | Keep-it | Keep it going · Mantieni il ritmo | 45 | yes | 10 @ 60–75 · 80–88 · 3; 20 @ 88–94 · 91–97 · 5–6; 5 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | keep |
 
 **Scaling.** A recipe fills the day's minutes: its warm-up and cool-down keep their length, and its work, recovery and
 steady blocks grow or shrink in proportion, the longest of them taking the minute that rounding leaves over. A day
-shorter than the recipe's least length gets **R02** instead, scaled to that day.
+too short for those fixed blocks — under about twelve minutes of a recipe with a warm-up — scales the whole session, so
+a day is never run over. A day shorter than the recipe's least length gets **R02** instead, scaled to that day.
 
 **Targets.** A block's watts are its % FTP band against the FTP in use (P6), its heart rate its % threshold band against
-the threshold in use (H3) — H2's 89 % of the maximum on the maximum model — and its feel is F1's band. A session stores
-its recipe and its percentages, never watts. Without an FTP there is no watt target and the session says "Add a power
-meter for watt targets"; the 2.5 W/kg stand-in is never one. Heart rate is no target on an effort of 2 minutes or less,
-where it lags, and the session says so once.
+the threshold in use (H3) — the number `HeartRates.For` gives: the one the rider set or a ride measured, else H2's 89 %
+of the maximum — and its feel is F1's band. A session stores its recipe and its percentages, never watts. Without an FTP
+there is no watt target: without a power meter the session says "Add a power meter for watt targets", and with one it
+asks for the FTP instead; the 2.5 W/kg stand-in is never a target. Heart rate is no target on an effort of 2 minutes or
+less, where it lags, and the session says so once. Every heart-rate number is marked estimated when the threshold in
+use is H2's estimate rather than a number the rider set or a ride measured.
 
-**A quality session** is one whose main set reaches 88 % FTP, the sweet-spot floor (P4's Z4 floor is 90 %): R05–R10. The
-long ride is load, not intensity, and is never a quality session.
+**A quality session** is one whose main set **starts** at 88 % FTP or more, the sweet-spot floor (P4's Z4 floor is 90 %):
+R05–R10, and R17's short strong block, which is what the keep goal is for. A recipe whose band merely runs into 88 %
+(R04's tempo to 90 %) is not a quality session. The long ride is load, not intensity, and is never a quality session.
 
 **The numbers' sources.** The zone bands are the drafts' rows in `.dev/pack-3-research.md` §3: Coggan's power levels
 (TrainingPeaks, "Cycling Power Zones Explained"), Friel's threshold-heart-rate zones ("Joe Friel's Quick Guide to
 Setting Zones"), sweet spot 88–94 % FTP (TrainingPeaks, "How to Train at Your Sweet Spot"; British Cycling,
 "Understanding intensity 3"), the hard-effort structures of the interval trials (Seiler 2013, PMID 21812820;
-Rønnestad 2020, PMID 31977120) and the talk test for the easy bands. Velomine's own, and never attributed to a published
-session: the warm-up, recovery and cool-down bands, R01's 40 % floor, R17's 84–88 % (kept under the quality floor),
-the gentle base recipes' feel-only targets, and the fifteen recipes themselves in place of a workout library.
+Rønnestad 2020, PMID 31977120), the maintenance finding behind R17 (Spiering et al. 2021, PMID 33629972) and the talk
+test for the easy bands. Velomine's own, and never attributed to a published session: the warm-up, recovery and
+cool-down bands; R01's 40 % floor; **R08 and R09's ceiling of 100 % of the threshold**, where the drafts say only
+"> 103 %" and any figure above the threshold would exceed a rider's maximum on the maximum model; **R10's 130 % FTP**
+where the drafts say only "> 120 %"; **R03's closing block as a scaled main block** rather than the draft's optional
+finish; the gentle base recipes' feel-only targets; and the fifteen recipes themselves in place of a workout library.
 
 ## Estimated power
 

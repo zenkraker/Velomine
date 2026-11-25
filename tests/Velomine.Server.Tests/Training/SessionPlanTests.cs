@@ -29,6 +29,21 @@ public sealed class SessionPlanTests
         Assert.Equal(63, blocks.Sum(b => b.Minutes));
     }
 
+    [Theory]
+    [MemberData(nameof(EveryRecipe))]
+    public void SessionPlan_ShouldFillTheLeastLengthWithWholeMinutes_WhenEveryRecipeIsPlannedAtIt(string code)
+    {
+        var recipe = Recipes.ByCode(code);
+
+        var (chosen, blocks) = SessionPlan.For(recipe, recipe.LeastMinutes);
+
+        Assert.Equal(code, chosen.Code);
+        Assert.Equal(recipe.LeastMinutes, blocks.Sum(b => b.Minutes));
+        Assert.All(blocks, block => Assert.True(block.Minutes >= 1, $"{code} {block.Block.Role} got {block.Minutes} min"));
+    }
+
+    public static TheoryData<string> EveryRecipe() => [.. Recipes.All.Select(r => r.Code)];
+
     [Fact]
     public void SessionPlan_ShouldFallBackToTheEasyRide_WhenTheDayIsShorterThanTheRecipe()
     {
@@ -39,10 +54,21 @@ public sealed class SessionPlanTests
         Assert.Equal([10, 35], blocks.Select(b => b.Minutes));
     }
 
+    [Fact]
+    public void SessionPlan_ShouldScaleTheWholeSession_WhenTheDayIsShorterThanTheFixedBlocks()
+    {
+        // Ten minutes cannot hold R02's ten-minute warm-up and a ride: both shrink, and the day is not run over.
+        var (_, blocks) = SessionPlan.For(Recipes.ByCode("R02"), 10);
+
+        Assert.Equal([2, 8], blocks.Select(b => b.Minutes));
+        Assert.Equal(10, blocks.Sum(b => b.Minutes));
+    }
+
     [Theory]
     [InlineData("R05", 70, 70.6)]
     [InlineData("R02", 60, 40.3)]
     [InlineData("R01", 40, 15.0)]
+    [InlineData("R17", 45, 40.8)]
     public void SessionPlan_ShouldWorkOutThePlannedEffortScore_WhenTheBlocksAreKnown(string code, int minutes, double score)
     {
         var (_, blocks) = SessionPlan.For(Recipes.ByCode(code), minutes);

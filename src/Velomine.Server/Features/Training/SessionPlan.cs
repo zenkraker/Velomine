@@ -11,7 +11,8 @@ public static class SessionPlan
 {
     /// <summary>
     /// The recipe's blocks in <paramref name="minutes"/>: the warm-up and the cool-down keep their length and the work,
-    /// recovery and steady blocks take up the rest. A day shorter than the recipe's least length gets R02 instead.
+    /// recovery and steady blocks take up the rest, unless the day is shorter than them, when the whole session scales.
+    /// A day shorter than the recipe's least length gets R02 instead.
     /// </summary>
     public static (Recipe Recipe, PlannedBlock[] Blocks) For(Recipe recipe, int minutes)
     {
@@ -36,17 +37,24 @@ public static class SessionPlan
 
     private static PlannedBlock[] Scale(Recipe recipe, int minutes)
     {
-        var scaling = recipe.Blocks.Where(b => RecipeRoles.Scales(b.Role)).ToArray();
-        // A minute each at least, so even a very short day keeps every block of the session.
-        var available = Math.Max(minutes - recipe.Blocks.Where(b => !RecipeRoles.Scales(b.Role)).Sum(b => b.Minutes), scaling.Length);
-        var nominal = scaling.Sum(b => b.Minutes);
+        var fixedMinutes = recipe.Blocks.Where(b => !RecipeRoles.Scales(b.Role)).Sum(b => b.Minutes);
+        // A day too short for the fixed blocks and a minute of each other block scales the whole session, so the day's
+        // minutes are never run over: ten minutes of R02 is two easy minutes and eight steady ones.
+        var wholeSession = minutes < fixedMinutes + recipe.Blocks.Count(b => RecipeRoles.Scales(b.Role));
+        var scalable = recipe.Blocks.Select(b => wholeSession || RecipeRoles.Scales(b.Role)).ToArray();
+        var nominal = recipe.Blocks.Where((_, i) => scalable[i]).Sum(b => b.Minutes);
         if (nominal <= 0) return [.. recipe.Blocks.Select(b => new PlannedBlock(b, b.Minutes))];
+        // A minute each at least, so a very short day still keeps every block of the session.
+        var available = wholeSession
+            ? Math.Max(minutes, 0)
+            : Math.Max(minutes - fixedMinutes, scalable.Count(s => s));
 
         var planned = new List<PlannedBlock>(recipe.Blocks.Length);
         int longest = -1, assigned = 0;
-        foreach (var block in recipe.Blocks)
+        for (var i = 0; i < recipe.Blocks.Length; i++)
         {
-            if (!RecipeRoles.Scales(block.Role))
+            var block = recipe.Blocks[i];
+            if (!scalable[i])
             {
                 planned.Add(new(block, block.Minutes));
                 continue;

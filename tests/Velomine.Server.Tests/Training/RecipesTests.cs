@@ -37,18 +37,20 @@ public sealed class RecipesTests
     [InlineData("R14", false)]
     [InlineData("R15", false)]
     [InlineData("R16", false)]
-    [InlineData("R17", false)]
-    public void Recipe_ShouldBeQuality_WhenItsMainSetReachesEightyEightPercent(string code, bool quality) =>
+    [InlineData("R17", true)]
+    public void Recipe_ShouldBeQuality_WhenItsMainSetStartsAtEightyEightPercent(string code, bool quality) =>
         Assert.Equal(quality, Recipes.ByCode(code).IsQuality);
 
     [Fact]
-    public void Recipes_ShouldGiveEveryGoalARecordAndKeepTheKeepGoalToItsOwnRecipe_WhenTheGoalsAreRead()
+    public void Recipes_ShouldGiveEveryGoalItsOwnRecipe_WhenTheGoalsAreRead()
     {
         Assert.All(Recipes.All, recipe => Assert.All(recipe.Goals, goal => Assert.Contains(goal, TrainingRecipeGoals.All)));
         Assert.All(TrainingRecipeGoals.All, goal => Assert.NotEmpty(Recipes.ForGoal(goal)));
 
-        Assert.Contains("R17", Recipes.ForGoal(TrainingRecipeGoals.Keep).Select(r => r.Code));
-        Assert.DoesNotContain(Recipes.Quality, recipe => recipe.Goals.SequenceEqual([TrainingRecipeGoals.Keep]));
+        // Keeping fitness needs one short hard session: the keep goal has a quality recipe of its own.
+        Assert.Contains(Recipes.ForGoal(TrainingRecipeGoals.Keep), recipe => recipe.IsQuality);
+        // The gentle base recipes start a rider off, which is the aerobic goal (research §3, §5 rule 1).
+        Assert.All(["R14", "R15", "R16"], code => Assert.Equal([TrainingRecipeGoals.Aerobic], Recipes.ByCode(code).Goals));
     }
 
     [Fact]
@@ -102,6 +104,7 @@ public sealed class RecipesTests
         var riderText = Recipes.All
             .SelectMany(r => new[] { r.EnglishName, r.ItalianName, r.EnglishLine, r.ItalianLine })
             .Concat([SessionNotes.AddPowerMeter.English, SessionNotes.AddPowerMeter.Italian,
+                SessionNotes.SetFtp.English, SessionNotes.SetFtp.Italian,
                 SessionNotes.HeartRateLags.English, SessionNotes.HeartRateLags.Italian])
             .ToArray();
 
