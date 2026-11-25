@@ -192,6 +192,7 @@ Class | Method | HTTP request | Description
 *ClubApi* | [**startClub**](doc//ClubApi.md#startclub) | **POST** /api/v1/club | 
 *ClubApi* | [**updateClubRide**](doc//ClubApi.md#updateclubride) | **PUT** /api/v1/club/rides/{id} | 
 *ClubsApi* | [**coachGetCoachAthlete**](doc//ClubsApi.md#coachgetcoachathlete) | **GET** /api/v1/clubs/{clubId}/athletes/{userId} | 
+*ClubsApi* | [**coachGetCoachPlan**](doc//ClubsApi.md#coachgetcoachplan) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/plan | 
 *ClubsApi* | [**coachGetCoachPowerCurve**](doc//ClubsApi.md#coachgetcoachpowercurve) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/power-curve | 
 *ClubsApi* | [**coachGetCoachRide**](doc//ClubsApi.md#coachgetcoachride) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId} | 
 *ClubsApi* | [**coachGetCoachRideLaps**](doc//ClubsApi.md#coachgetcoachridelaps) | **GET** /api/v1/clubs/{clubId}/athletes/{userId}/rides/{rideId}/laps | 
@@ -294,6 +295,8 @@ Class | Method | HTTP request | Description
  - [ClubSupporterResponse](doc//ClubSupporterResponse.md)
  - [CoachAthleteResponse](doc//CoachAthleteResponse.md)
  - [CoachAthletesResponse](doc//CoachAthletesResponse.md)
+ - [CoachPlanResponse](doc//CoachPlanResponse.md)
+ - [CoachPlanSession](doc//CoachPlanSession.md)
  - [CoachRpeResponse](doc//CoachRpeResponse.md)
  - [CoachWellbeingResponse](doc//CoachWellbeingResponse.md)
  - [ComponentResponse](doc//ComponentResponse.md)

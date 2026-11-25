@@ -100,7 +100,7 @@ String sessionLength(int minutes) {
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
   if (hours == 0) return '$rest min';
-  return rest == 0 ? '$hours h' : '$hours h $rest';
+  return rest == 0 ? '$hours h' : '$hours h ${rest.toString().padLeft(2, '0')}';
 }
 
 /// How a session is going, as the page header says it: "done", "skipped", "planned".
@@ -112,6 +112,10 @@ String sessionStateWord(AppLocalizations l10n, String state) => switch (state) {
   'missed' => l10n.trainingStateMissed,
   _ => l10n.trainingStatePlanned,
 };
+
+/// A word as it reads inside a sentence: "No time" becomes "no time", as the mock-ups write it.
+String lowerFirst(String text) =>
+    text.isEmpty ? text : text[0].toLowerCase() + text.substring(1);
 
 /// The state as the week's badge reads it, with the score once a ride ticked the session: "Done · 92", "Skipped",
 /// or null while it is still planned, because the name alone is the plan.

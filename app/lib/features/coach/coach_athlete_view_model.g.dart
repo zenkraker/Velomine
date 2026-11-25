@@ -62,7 +62,7 @@ final class CoachAthleteViewModelProvider
 }
 
 String _$coachAthleteViewModelHash() =>
-    r'a232df2efaf185fe179e82b043e0e5891d730f07';
+    r'6aee28a92846c182391dae7fd5b7bcc32617fd82';
 
 /// One athlete: the shared summary, training load, power curve, wellbeing and rides.
 

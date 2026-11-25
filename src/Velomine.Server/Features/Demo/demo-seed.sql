@@ -786,7 +786,8 @@ BEGIN
     SELECT gen_random_uuid(), dm.user_id, v_club, v_coach, v_coach_name, w.what,
            v_now - make_interval(hours => w.hours)
     FROM demo_members dm
-    CROSS JOIN (VALUES ('summary', 20), ('training', 18), ('ride', 5)) AS w(what, hours)
+    -- The plan look is here so the "who looked" log shows it; the plan and its week the card reads are story 6's.
+    CROSS JOIN (VALUES ('summary', 20), ('training', 18), ('plan', 16), ('ride', 5)) AS w(what, hours)
     WHERE dm.user_id <> v_coach;
 
     -- Notifications: the two latest rides per member, the latest unread.

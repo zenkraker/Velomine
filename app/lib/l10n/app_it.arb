@@ -311,6 +311,13 @@
   "coachRideNotFound": "Questo giro non è condiviso con te.",
   "coachReadOnly": "Condivisa dall'atleta, sola lettura.",
   "coachNoRides": "Nessun giro condiviso.",
+  "coachPlan": "Piano",
+  "coachPlanDone": "{done} di {total} fatte questa settimana",
+  "coachPlanPlannedRidden": "{planned} previsto · {ridden} fatto",
+  "coachPlanSkippedTired": "Stanchezza",
+  "coachPlanSkippedIll": "Malattia o infortunio",
+  "coachPlanSkippedNoTime": "Mancanza di tempo",
+  "coachPlanSkippedOther": "Altro",
   "routeNotShared": "L'atleta non ha condiviso il percorso.",
 
   "adminClubs": "Club",

@@ -46,10 +46,16 @@ class AppBadge extends StatelessWidget {
         spacing: AppSpacing.xs,
         children: [
           if (icon case final icon?) Icon(icon, size: 14, color: ink),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: ink, fontWeight: FontWeight.w600),
+          // A badge is one line by design (`docs/design/pages/README.md`): in a narrow card the label shortens
+          // instead of running over the row's edge.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: ink, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),

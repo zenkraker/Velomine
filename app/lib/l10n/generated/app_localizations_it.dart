@@ -928,6 +928,31 @@ class AppLocalizationsIt extends AppLocalizations {
   String get coachNoRides => 'Nessun giro condiviso.';
 
   @override
+  String get coachPlan => 'Piano';
+
+  @override
+  String coachPlanDone(int done, int total) {
+    return '$done di $total fatte questa settimana';
+  }
+
+  @override
+  String coachPlanPlannedRidden(String planned, String ridden) {
+    return '$planned previsto · $ridden fatto';
+  }
+
+  @override
+  String get coachPlanSkippedTired => 'Stanchezza';
+
+  @override
+  String get coachPlanSkippedIll => 'Malattia o infortunio';
+
+  @override
+  String get coachPlanSkippedNoTime => 'Mancanza di tempo';
+
+  @override
+  String get coachPlanSkippedOther => 'Altro';
+
+  @override
   String get routeNotShared => 'L\'atleta non ha condiviso il percorso.';
 
   @override

@@ -38,6 +38,7 @@ class CoachAthleteViewModel extends _$CoachAthleteViewModel {
     TrainingResponse? training;
     PowerCurveResponse? powerCurve;
     CoachWellbeingResponse? wellbeing;
+    CoachPlanResponse? plan;
     List<RideResponse> rides = const [];
 
     if (summary != null) {
@@ -59,6 +60,8 @@ class CoachAthleteViewModel extends _$CoachAthleteViewModel {
       if (summary.sharesRides) {
         rides =
             (await data.rides(clubId, userId)).valueOrNull?.rides ?? const [];
+        // No plan is no card: without the coaches grant, or with auto training off, the endpoint answers 404.
+        plan = (await data.plan(clubId, userId)).valueOrNull;
       }
     }
     if (!ref.mounted) return;
@@ -67,6 +70,7 @@ class CoachAthleteViewModel extends _$CoachAthleteViewModel {
       training: training,
       powerCurve: powerCurve,
       wellbeing: wellbeing,
+      plan: plan,
       rides: rides,
       days: state.days,
       load: state.load.finish(summaryResult),
