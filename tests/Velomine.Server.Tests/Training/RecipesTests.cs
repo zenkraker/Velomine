@@ -44,13 +44,13 @@ public sealed class RecipesTests
     [Fact]
     public void Recipes_ShouldGiveEveryGoalItsOwnRecipe_WhenTheGoalsAreRead()
     {
-        Assert.All(Recipes.All, recipe => Assert.All(recipe.Goals, goal => Assert.Contains(goal, TrainingRecipeGoals.All)));
-        Assert.All(TrainingRecipeGoals.All, goal => Assert.NotEmpty(Recipes.ForGoal(goal)));
+        Assert.All(Recipes.All, recipe => Assert.All(recipe.Goals, goal => Assert.Contains(goal, TrainingGoals.All)));
+        Assert.All(TrainingGoals.All, goal => Assert.NotEmpty(Recipes.ForGoal(goal)));
 
         // Keeping fitness needs one short hard session: the keep goal has a quality recipe of its own.
-        Assert.Contains(Recipes.ForGoal(TrainingRecipeGoals.Keep), recipe => recipe.IsQuality);
+        Assert.Contains(Recipes.ForGoal(TrainingGoals.Keep), recipe => recipe.IsQuality);
         // The gentle base recipes start a rider off, which is the aerobic goal (research §3, §5 rule 1).
-        Assert.All(["R14", "R15", "R16"], code => Assert.Equal([TrainingRecipeGoals.Aerobic], Recipes.ByCode(code).Goals));
+        Assert.All(["R14", "R15", "R16"], code => Assert.Equal([TrainingGoals.Aerobic], Recipes.ByCode(code).Goals));
     }
 
     [Fact]

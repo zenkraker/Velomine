@@ -1,17 +1,5 @@
 namespace Velomine.Server.Features.Training;
 
-/// <summary>The goals the auto-training setup offers, as the API spells them (decisions, *Names the rider sees*).</summary>
-public static class TrainingRecipeGoals
-{
-    public const string Aerobic = "aerobic";
-    public const string Fitter = "fitter";
-    public const string Faster = "faster";
-    public const string Event = "event";
-    public const string Keep = "keep";
-
-    public static readonly string[] All = [Aerobic, Fitter, Faster, Event, Keep];
-}
-
 /// <summary>A target band: a percentage of a reference, or a feel number on F1's 1–10 scale.</summary>
 public sealed record TargetRange(int Low, int High)
 {
@@ -77,7 +65,7 @@ public static class Recipes
     /// <summary>The recipe a day shorter than the chosen one's least length falls back to.</summary>
     public const string FallbackCode = "R02";
 
-    private static readonly string[] EveryGoal = TrainingRecipeGoals.All;
+    private static readonly string[] EveryGoal = TrainingGoals.All;
 
     public static readonly Recipe[] All =
     [
@@ -101,7 +89,7 @@ public static class Recipes
         new("R03", "Long ride", "Long ride", "Uscita lunga",
             "Your longest ride of the week, at an easy pace.",
             "Il tuo giro più lungo della settimana, a ritmo facile.",
-            60, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Faster, TrainingRecipeGoals.Event, TrainingRecipeGoals.Keep],
+            60, [TrainingGoals.Fitter, TrainingGoals.Faster, TrainingGoals.Event, TrainingGoals.Keep],
             [
                 new(RecipeRoles.Warmup, 10, new(45, 60), new(70, 80), new(2, 3)),
                 new(RecipeRoles.Main, 90, new(56, 75), new(81, 89), new(3, 4)),
@@ -111,7 +99,7 @@ public static class Recipes
         new("R04", "Tempo", "Steady pace", "Ritmo costante",
             "A bit faster than easy: talking in short sentences.",
             "Un po' più veloce del facile: parli a frasi brevi.",
-            60, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Event],
+            60, [TrainingGoals.Fitter, TrainingGoals.Event],
             [
                 new(RecipeRoles.Warmup, 15, new(45, 65), new(75, 85), new(2, 3)),
                 new(RecipeRoles.Main, 40, new(76, 90), new(90, 93), new(4, 5)),
@@ -122,7 +110,7 @@ public static class Recipes
         new("R05", "Sweet spot", "Strong and steady", "Forte e costante",
             "Long efforts just below your limit.",
             "Sforzi lunghi appena sotto il limite.",
-            60, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Faster, TrainingRecipeGoals.Event],
+            60, [TrainingGoals.Fitter, TrainingGoals.Faster, TrainingGoals.Event],
             [
                 new(RecipeRoles.Warmup, 15, new(55, 70), new(80, 88), new(3, 3)),
                 new(RecipeRoles.Main, 40, new(88, 94), new(91, 97), new(5, 6)),
@@ -133,7 +121,7 @@ public static class Recipes
         new("R06", "Threshold", "At your limit", "Al limite",
             "Efforts at the pace you could hold for about an hour.",
             "Sforzi al ritmo che riesci a tenere per circa un'ora.",
-            50, [TrainingRecipeGoals.Faster, TrainingRecipeGoals.Event],
+            50, [TrainingGoals.Faster, TrainingGoals.Event],
             [
                 new(RecipeRoles.Warmup, 15, new(65, 80), new(85, 92), new(4, 4)),
                 new(RecipeRoles.Main, 30, new(95, 105), new(94, 102), new(6, 7)),
@@ -144,7 +132,7 @@ public static class Recipes
         new("R07", "Climbing repeats", "Hill repeats", "Ripetute in salita",
             "The same climb, several times, strong.",
             "La stessa salita, più volte, deciso.",
-            70, [TrainingRecipeGoals.Faster],
+            70, [TrainingGoals.Faster],
             [
                 new(RecipeRoles.Warmup, 15, new(65, 80), new(85, 92), new(4, 4)),
                 new(RecipeRoles.Main, 25, new(95, 105), new(94, 102), new(6, 7)),
@@ -155,7 +143,7 @@ public static class Recipes
         new("R08", "VO2max 4–5 min", "Hard efforts", "Sforzi duri",
             "4–5 minutes very hard, with full recovery.",
             "4–5 minuti molto duri, con recupero completo.",
-            55, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Faster],
+            55, [TrainingGoals.Fitter, TrainingGoals.Faster],
             [
                 new(RecipeRoles.Warmup, 20, new(60, 80), new(80, 90), new(3, 4)),
                 new(RecipeRoles.Main, 20, new(106, 120), new(94, 100), new(8, 9), EffortSeconds: 300),
@@ -166,7 +154,7 @@ public static class Recipes
         new("R09", "30/15", "On and off", "Acceso e spento",
             "30 seconds hard, 15 easy, over and over.",
             "30 secondi duri, 15 facili, di nuovo e di nuovo.",
-            50, [TrainingRecipeGoals.Fitter, TrainingRecipeGoals.Faster],
+            50, [TrainingGoals.Fitter, TrainingGoals.Faster],
             [
                 new(RecipeRoles.Warmup, 20, new(60, 80), new(80, 90), new(3, 4)),
                 new(RecipeRoles.Main, 10, new(115, 125), new(94, 100), new(8, 9), EffortSeconds: 30),
@@ -177,7 +165,7 @@ public static class Recipes
         new("R10", "Anaerobic capacity", "All-out bursts", "Scatti al massimo",
             "Short, everything you have, long rest.",
             "Corti, tutto quello che hai, riposo lungo.",
-            45, [TrainingRecipeGoals.Faster, TrainingRecipeGoals.Event],
+            45, [TrainingGoals.Faster, TrainingGoals.Event],
             [
                 new(RecipeRoles.Warmup, 20, new(60, 80), new(80, 90), new(3, 4)),
                 new(RecipeRoles.Main, 4, new(120, 130), null, new(9, 9), EffortSeconds: 60),
@@ -196,7 +184,7 @@ public static class Recipes
         new("R14", "Easy start", "First rides", "Primi giri",
             "Short and easy, to build the habit.",
             "Corto e facile, per prendere l'abitudine.",
-            30, [TrainingRecipeGoals.Aerobic],
+            30, [TrainingGoals.Aerobic],
             [
                 new(RecipeRoles.Main, 30, null, null, new(3, 4)),
             ]),
@@ -204,7 +192,7 @@ public static class Recipes
         new("R15", "Steady build", "A little faster", "Un po' più veloce",
             "Mostly easy, with two short steady stretches.",
             "Per lo più facile, con due brevi tratti costanti.",
-            45, [TrainingRecipeGoals.Aerobic],
+            45, [TrainingGoals.Aerobic],
             [
                 new(RecipeRoles.Warmup, 10, null, null, new(2, 3)),
                 new(RecipeRoles.Main, 20, null, null, new(4, 5)),
@@ -215,7 +203,7 @@ public static class Recipes
         new("R16", "Long and easy (base)", "Longer, still easy", "Più lungo, sempre facile",
             "A bit longer each week, never hard.",
             "Un po' più lungo ogni settimana, mai duro.",
-            60, [TrainingRecipeGoals.Aerobic],
+            60, [TrainingGoals.Aerobic],
             [
                 new(RecipeRoles.Main, 75, null, null, new(3, 4)),
             ]),
@@ -223,7 +211,7 @@ public static class Recipes
         new("R17", "Keep-it", "Keep it going", "Mantieni il ritmo",
             "One short strong ride to keep what you've built.",
             "Un giro corto e forte per tenere quello che hai costruito.",
-            45, [TrainingRecipeGoals.Keep],
+            45, [TrainingGoals.Keep],
             [
                 // One short quality session, which is what keeps what a rider has built (Spiering et al. 2021, PMID 33629972).
                 new(RecipeRoles.Warmup, 10, new(60, 75), new(80, 88), new(3, 3)),

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Analytics;
 using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Training;
@@ -140,9 +141,9 @@ public static class TrainingGoalSuggestion
 
         // The weeks the rules count: this one and the three, or seven, before it. A date's own week start decides,
         // so a Saturday after today's weekday in the same calendar week is still last week.
-        var todayOffset = WeekStartOffset(today, clock.FirstDayOfWeek);
+        var todayStart = Periods.StartOf(today, Periods.Week, clock.FirstDayOfWeek);
         int WeekIndex(DateOnly date) =>
-            (today.DayNumber - date.DayNumber + WeekStartOffset(date, clock.FirstDayOfWeek) - todayOffset) / 7;
+            (todayStart.DayNumber - Periods.StartOf(date, Periods.Week, clock.FirstDayOfWeek).DayNumber) / 7;
 
         var last4 = local.Where(r => WeekIndex(r.Date) < 4).ToList();
         var last8 = local.Where(r => WeekIndex(r.Date) < 8).ToList();
@@ -161,8 +162,4 @@ public static class TrainingGoalSuggestion
             RidesWithPowerInLast8Weeks: last8.Count(r => r.HasPower),
             NextEventDate: nextEventDate);
     }
-
-    /// <summary>How many days into its own week a date is, the member's first day of the week being 0.</summary>
-    private static int WeekStartOffset(DateOnly date, DayOfWeek firstDayOfWeek) =>
-        ((int)date.DayOfWeek - (int)firstDayOfWeek + 7) % 7;
 }
