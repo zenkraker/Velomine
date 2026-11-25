@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
 import '../../core/command.dart';
+import '../../core/failure.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/user_message.dart';
@@ -55,6 +56,51 @@ class TrainingViewModel extends _$TrainingViewModel {
     state = state.copyWith(plan: plan);
     if (plan.on_) Future.microtask(loadWeek);
   }
+
+  /// "Make today easy" on today's session: the answer is the week as it now stands, so nothing is asked twice.
+  Future<void> makeEasy(String sessionId) =>
+      _change(() => ref.read(trainingDataProvider).makeEasy(sessionId));
+
+  /// "Back to the plan", the same day, while nothing has ticked the session.
+  Future<void> backToPlan(String sessionId) =>
+      _change(() => ref.read(trainingDataProvider).backToPlan(sessionId));
+
+  /// Moves a session to another day left this week.
+  Future<void> move(String sessionId, DateTime localDate) =>
+      _change(() => ref.read(trainingDataProvider).move(sessionId, localDate));
+
+  /// Skips a session, or the rest of the week after it.
+  Future<void> skip(
+    String sessionId, {
+    String? reason,
+    bool restOfWeek = false,
+  }) => _change(
+    () => ref
+        .read(trainingDataProvider)
+        .skip(sessionId, reason: reason, restOfWeek: restOfWeek),
+  );
+
+  /// One change to a session: the week it answers replaces the one on screen, and a refusal is said once.
+  Future<void> _change(
+    Future<Result<TrainingWeeksResponse?>> Function() call,
+  ) async {
+    if (state.action.running) return;
+    state = state.copyWith(action: state.action.start());
+    final result = await call();
+    if (!ref.mounted) return;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return;
+    }
+    if (result.valueOrNull case final changed?) {
+      state = state.copyWith(weeks: changed.weeks);
+    }
+  }
+
+  void _fail(Failure failure) => state = state.copyWith(
+    messages: [...state.messages, FailureMessage(_messageId++, failure)],
+  );
 
   /// Turns auto training off: today's and later sessions go on the server, the past ones stay.
   Future<bool> turnOff() async {

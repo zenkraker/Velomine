@@ -31,6 +31,21 @@ public static class TrainingSessionStates
     public static readonly string[] All = [Planned, Done, Easy, Moved, Skipped, Missed];
 }
 
+/// <summary>
+/// Why a session was made easy, as the API spells it. The rider reads one of four lines about how they feel, or that
+/// they asked for it: a check-in's answers themselves are never returned to anyone but the owner.
+/// </summary>
+public static class TrainingEasyReasons
+{
+    public const string SleptPoorly = "slept_poorly";
+    public const string Tired = "tired";
+    public const string Sore = "sore";
+    public const string FormLow = "form_low";
+    public const string Asked = "asked";
+
+    public static readonly string[] All = [SleptPoorly, Tired, Sore, FormLow, Asked];
+}
+
 /// <summary>Why the rider skipped a session, as the API spells it.</summary>
 public static class TrainingSkipReasons
 {
@@ -81,6 +96,12 @@ public sealed class TrainingPlan
     /// <summary>How many declined files are remembered: a ride is answered within days, and the list must stay small.</summary>
     public const int DeclinedFilesKept = 20;
 
+    /// <summary>
+    /// The local date the 07:00 reminder was written for; null until the first one. The sweep reads it so a session day
+    /// is announced once and not at every run.
+    /// </summary>
+    public DateOnly? RemindedFor { get; set; }
+
     /// <summary>False when the rider turned auto training off: the setup stays, so turning it on is pre-filled.</summary>
     public bool IsOn { get; set; }
 
@@ -125,6 +146,21 @@ public sealed class TrainingSession
     /// </summary>
     public Guid? QuestionRideId { get; set; }
 
+    /// <summary>
+    /// One of <see cref="TrainingEasyReasons"/> when the session was made easy, and null otherwise. It is the line the
+    /// rider reads about why today changed; the check-in's own answers are never copied here.
+    /// </summary>
+    public string? EasyReason { get; set; }
+
+    /// <summary>The day the replaced hard session went to when it moved, so the rider reads where it went; else null.</summary>
+    public DateOnly? EasyMovedTo { get; set; }
+
+    /// <summary>
+    /// The recipe the session rode before it was made easy, so "Back to the plan" can put the hard session back. Null
+    /// on every session that was never made easy.
+    /// </summary>
+    public string? OriginalRecipe { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }
 
@@ -168,6 +204,10 @@ public sealed class TrainingSessionConfiguration : IEntityTypeConfiguration<Trai
             // Only a skipped session has a reason.
             t.HasCheckConstraint("ck_training_sessions_skip_reason_only_when_skipped",
                 "skip_reason IS NULL OR state = 'skipped'");
+            t.HasCheckConstraint("ck_training_sessions_easy_reason",
+                "easy_reason IS NULL OR easy_reason IN ('slept_poorly', 'tired', 'sore', 'form_low', 'asked')");
+            t.HasCheckConstraint("ck_training_sessions_original_recipe",
+                "original_recipe IS NULL OR length(original_recipe) BETWEEN 2 AND 8");
         });
         b.HasKey(s => s.Id);
         // One session per day: a second sweep or a race can never plan the same day twice.

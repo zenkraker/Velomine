@@ -16,7 +16,7 @@ public static class Notify
     /// <summary>Adds one notification and returns it, so a caller that may have to take it back again holds it.</summary>
     public static Notification Add(VelomineDbContext db, TimeProvider time, Guid userId, string type, string subject,
         Guid? rideId = null, Guid? bikeId = null, Guid? componentId = null, Guid? aboutUserId = null,
-        Guid? plannedRideId = null) =>
+        Guid? plannedRideId = null, Guid? trainingSessionId = null) =>
         db.Notifications.Add(new Notification
         {
             Id = Guid.CreateVersion7(),
@@ -28,6 +28,7 @@ public static class Notify
             ComponentId = componentId,
             AboutUserId = aboutUserId,
             PlannedRideId = plannedRideId,
+            TrainingSessionId = trainingSessionId,
             CreatedAt = time.GetUtcNow(),
         }).Entity;
 

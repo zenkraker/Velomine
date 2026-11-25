@@ -114,6 +114,8 @@ lib/model/maintenance_reminder_response.dart
 lib/model/mark_reminder_done_request.dart
 lib/model/match_training_session_request.dart
 lib/model/me_response.dart
+lib/model/move_day.dart
+lib/model/move_training_session_request.dart
 lib/model/my_club_response.dart
 lib/model/my_join_request_response.dart
 lib/model/nearby_club_response.dart
@@ -189,6 +191,7 @@ lib/model/settings_response.dart
 lib/model/share_view_response.dart
 lib/model/share_views_response.dart
 lib/model/sharing_response.dart
+lib/model/skip_training_session_request.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart
@@ -205,6 +208,7 @@ lib/model/training_note.dart
 lib/model/training_plan_response.dart
 lib/model/training_response.dart
 lib/model/training_ride_match.dart
+lib/model/training_session_notice.dart
 lib/model/training_week.dart
 lib/model/training_week_session.dart
 lib/model/training_weeks_response.dart

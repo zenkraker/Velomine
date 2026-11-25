@@ -252,6 +252,11 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 s.State,
                 s.SkipReason,
                 s.RideId,
+                // Why the day was made easy, where the hard session went, and the recipe it rode before, so the
+                // export says what the plan did as well as what it holds.
+                s.EasyReason,
+                s.EasyMovedTo,
+                s.OriginalRecipe,
                 Score = results.GetValueOrDefault(s.Id)?.Score,
                 s.CreatedAt,
             }),

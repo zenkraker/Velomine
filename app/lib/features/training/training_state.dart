@@ -12,6 +12,7 @@ class TrainingState {
     this.load = const CommandState.idle(),
     this.week = const CommandState.idle(),
     this.turnOff = const CommandState.idle(),
+    this.action = const CommandState.idle(),
     this.messages = const [],
   });
 
@@ -23,6 +24,10 @@ class TrainingState {
   final CommandState<TrainingPlanResponse?> load;
   final CommandState<TrainingWeeksResponse?> week;
   final CommandState<TrainingPlanResponse?> turnOff;
+
+  /// The last change to a session: made easy, put back, moved or skipped.
+  final CommandState<TrainingWeeksResponse?> action;
+
   final List<UserMessage> messages;
 
   /// Whether the rider turned auto training on. An operator's switch is the server's answer, not this one.
@@ -40,6 +45,7 @@ class TrainingState {
     CommandState<TrainingPlanResponse?>? load,
     CommandState<TrainingWeeksResponse?>? week,
     CommandState<TrainingPlanResponse?>? turnOff,
+    CommandState<TrainingWeeksResponse?>? action,
     List<UserMessage>? messages,
   }) => TrainingState(
     plan: plan ?? this.plan,
@@ -47,6 +53,7 @@ class TrainingState {
     load: load ?? this.load,
     week: week ?? this.week,
     turnOff: turnOff ?? this.turnOff,
+    action: action ?? this.action,
     messages: messages ?? this.messages,
   );
 }

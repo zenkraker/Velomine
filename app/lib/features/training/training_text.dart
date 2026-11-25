@@ -1,4 +1,5 @@
 import 'package:velomine_api/api.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 import '../../l10n/generated/app_localizations.dart';
 
@@ -124,3 +125,44 @@ String? sessionState(AppLocalizations l10n, TrainingWeekSession session) {
   }
   return sessionStateWord(l10n, session.state);
 }
+
+/// Why today was made easy, in the four ways the owner approved. The check-in's own answers never reach the app: the
+/// server sends this reason and nothing else.
+String easyReasonText(AppLocalizations l10n, String reason) => switch (reason) {
+  'slept_poorly' => l10n.trainingEasySleptPoorly,
+  'tired' => l10n.trainingEasyTired,
+  'sore' => l10n.trainingEasySore,
+  'asked' => l10n.trainingEasyAsked,
+  _ => l10n.trainingEasyFormLow,
+};
+
+/// "Easy today: you slept poorly. The hard day moves to Thursday.": the one line that says why today changed, on the
+/// today card and in the notification.
+String easyLine(AppLocalizations l10n, String reason, {DateTime? movedTo}) {
+  final line = l10n.trainingEasyLine(easyReasonText(l10n, reason));
+  if (movedTo == null) return line;
+  return '$line ${l10n.trainingEasyMoved(_weekday(l10n, movedTo))}';
+}
+
+/// A day as a line names it: "Thursday", "giovedì".
+String _weekday(AppLocalizations l10n, DateTime date) =>
+    DateFormat('EEEE', l10n.localeName).format(date);
+
+/// Why a day cannot take a session, as the move sheet says it under the day.
+String moveRefusalText(AppLocalizations l10n, String reason) =>
+    switch (reason) {
+      'next_to_hard' => l10n.trainingMoveRefusedHard,
+      'next_to_long_ride' => l10n.trainingMoveRefusedLongRide,
+      'too_many_loaded_days' => l10n.trainingMoveRefusedLoaded,
+      _ => l10n.trainingMoveRefusedSession,
+    };
+
+/// Why the rider skipped a session, in the words their own picker offers: "Tired", "Ill or injured", "No time",
+/// "Other". The same words a coach reads beside a skipped day, so they live here once and both screens use them.
+String trainingSkipReason(AppLocalizations l10n, String reason) =>
+    switch (reason) {
+      'tired' => l10n.trainingSkipReasonTired,
+      'ill' => l10n.trainingSkipReasonIll,
+      'no_time' => l10n.trainingSkipReasonNoTime,
+      _ => l10n.trainingSkipReasonOther,
+    };

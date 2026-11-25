@@ -5492,6 +5492,124 @@ class AppLocalizationsIt extends AppLocalizations {
   String get trainingNotThisSession => 'Non è questa la seduta';
 
   @override
+  String get actionMakeTrainingEasy => 'rendere facile oggi';
+
+  @override
+  String get actionBackToTrainingPlan => 'rimettere la seduta';
+
+  @override
+  String get actionMoveTrainingSession => 'spostare la seduta';
+
+  @override
+  String get actionSkipTrainingSession => 'saltare la seduta';
+
+  @override
+  String get trainingMakeEasy => 'Rendi facile oggi';
+
+  @override
+  String get trainingBackToPlan => 'Torna al piano';
+
+  @override
+  String get trainingMoveSession => 'Sposta';
+
+  @override
+  String get trainingSkipSession => 'Salta';
+
+  @override
+  String trainingEasyLine(String reason) {
+    return 'Oggi facile: $reason.';
+  }
+
+  @override
+  String trainingEasyMoved(String day) {
+    return 'Il giorno duro si sposta a $day.';
+  }
+
+  @override
+  String get trainingEasySleptPoorly => 'hai dormito male';
+
+  @override
+  String get trainingEasyTired => 'ti senti stanco';
+
+  @override
+  String get trainingEasySore => 'hai i muscoli indolenziti';
+
+  @override
+  String get trainingEasyFormLow => 'la tua forma è bassa';
+
+  @override
+  String get trainingEasyAsked => 'hai chiesto un giorno più facile';
+
+  @override
+  String get trainingMoveTitle => 'Sposta questa seduta';
+
+  @override
+  String get trainingMoveHelp =>
+      'Qualsiasi giorno che resta di questa settimana, che tu pedali quel giorno o no. Un giorno duro non può stare subito prima o dopo un altro giorno duro né l\'uscita lunga.';
+
+  @override
+  String get trainingMoveRefusedHard =>
+      'Subito prima o dopo un altro giorno duro';
+
+  @override
+  String get trainingMoveRefusedLongRide =>
+      'Subito prima o dopo l\'uscita lunga';
+
+  @override
+  String get trainingMoveRefusedSession => 'Quel giorno ha già una seduta';
+
+  @override
+  String get trainingMoveRefusedLoaded => 'Sarebbe un quarto giorno carico';
+
+  @override
+  String trainingMoveNearest(String day) {
+    return 'Il giorno più vicino che va bene è $day';
+  }
+
+  @override
+  String get trainingSkipTitle => 'Salta questa seduta';
+
+  @override
+  String get trainingSkipReasonLabel => 'Perché? (facoltativo)';
+
+  @override
+  String get trainingSkipReasonTired => 'Stanco';
+
+  @override
+  String get trainingSkipReasonIll => 'Malato o infortunato';
+
+  @override
+  String get trainingSkipReasonNoTime => 'Niente tempo';
+
+  @override
+  String get trainingSkipReasonOther => 'Altro';
+
+  @override
+  String get trainingSkipAction => 'Salta';
+
+  @override
+  String get trainingSkipRestOfWeek => 'Saltare il resto di questa settimana?';
+
+  @override
+  String get trainingSkipRestOfWeekBody =>
+      'Vanno anche le sedute che restano di questa settimana, e nessuna si sposta a un altro giorno.';
+
+  @override
+  String notificationTrainingToday(String name) {
+    return 'Oggi: $name.';
+  }
+
+  @override
+  String notificationTrainingMoved(String name, String day) {
+    return '$name si sposta a $day.';
+  }
+
+  @override
+  String notificationTrainingSkipped(String name, String day) {
+    return '$name di $day è saltata.';
+  }
+
+  @override
   String get sessionHowItWent => 'Com\'è andata';
 
   @override

@@ -461,7 +461,7 @@ public static class WeekPlanner
             date,
             chosen.Code,
             minutes,
-            [.. blocks.Select(b => (int)Math.Round(SessionPlan.Intensity(b.Block) * 100))],
+            SessionPlan.Percents(blocks),
             SessionPlan.PlannedScore(blocks));
     }
 

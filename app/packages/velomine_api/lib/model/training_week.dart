@@ -19,6 +19,7 @@ class TrainingWeek {
     required this.isLighterWeek,
     required this.note,
     this.sessions = const [],
+    required this.skipsThisWeek,
   });
 
   final DateTime start;
@@ -33,6 +34,8 @@ class TrainingWeek {
 
   final List<TrainingWeekSession> sessions;
 
+  final int skipsThisWeek;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is TrainingWeek &&
     other.start == start &&
@@ -40,7 +43,8 @@ class TrainingWeek {
     other.plannedLoad == plannedLoad &&
     other.isLighterWeek == isLighterWeek &&
     other.note == note &&
-    _deepEquality.equals(other.sessions, sessions);
+    _deepEquality.equals(other.sessions, sessions) &&
+    other.skipsThisWeek == skipsThisWeek;
 
   @override
   int get hashCode =>
@@ -50,10 +54,11 @@ class TrainingWeek {
     (plannedLoad.hashCode) +
     (isLighterWeek.hashCode) +
     (note == null ? 0 : note!.hashCode) +
-    (sessions.hashCode);
+    (sessions.hashCode) +
+    (skipsThisWeek.hashCode);
 
   @override
-  String toString() => 'TrainingWeek[start=$start, end=$end, plannedLoad=$plannedLoad, isLighterWeek=$isLighterWeek, note=$note, sessions=$sessions]';
+  String toString() => 'TrainingWeek[start=$start, end=$end, plannedLoad=$plannedLoad, isLighterWeek=$isLighterWeek, note=$note, sessions=$sessions, skipsThisWeek=$skipsThisWeek]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -67,6 +72,7 @@ class TrainingWeek {
       json[r'note'] = null;
     }
       json[r'sessions'] = this.sessions;
+      json[r'skipsThisWeek'] = this.skipsThisWeek;
     return json;
   }
 
@@ -80,6 +86,7 @@ class TrainingWeek {
     TrainingNote? note,
     bool noteSetToNull = false,
     List<TrainingWeekSession>? sessions,
+    int? skipsThisWeek,
   }) => TrainingWeek(
     start: start ?? this.start,
     end: end ?? this.end,
@@ -87,6 +94,7 @@ class TrainingWeek {
     isLighterWeek: isLighterWeek ?? this.isLighterWeek,
     note: noteSetToNull ? null : note ?? this.note,
     sessions: sessions ?? this.sessions,
+    skipsThisWeek: skipsThisWeek ?? this.skipsThisWeek,
   );
 
   /// Returns a new [TrainingWeek] instance and imports its values from
@@ -111,6 +119,8 @@ class TrainingWeek {
         assert(json.containsKey(r'note'), 'Required key "TrainingWeek[note]" is missing from JSON.');
         assert(json.containsKey(r'sessions'), 'Required key "TrainingWeek[sessions]" is missing from JSON.');
         assert(json[r'sessions'] != null, 'Required key "TrainingWeek[sessions]" has a null value in JSON.');
+        assert(json.containsKey(r'skipsThisWeek'), 'Required key "TrainingWeek[skipsThisWeek]" is missing from JSON.');
+        assert(json[r'skipsThisWeek'] != null, 'Required key "TrainingWeek[skipsThisWeek]" has a null value in JSON.');
         return true;
       }());
 
@@ -121,6 +131,7 @@ class TrainingWeek {
         isLighterWeek: mapValueOfType<bool>(json, r'isLighterWeek')!,
         note: TrainingNote.fromJson(json[r'note']),
         sessions: TrainingWeekSession.listFromJson(json[r'sessions']),
+        skipsThisWeek: mapValueOfType<int>(json, r'skipsThisWeek')!,
       );
     }
     return null;
@@ -174,6 +185,7 @@ class TrainingWeek {
     'isLighterWeek',
     'note',
     'sessions',
+    'skipsThisWeek',
   };
 }
 

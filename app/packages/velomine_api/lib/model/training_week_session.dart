@@ -28,6 +28,10 @@ class TrainingWeekSession {
     this.blocks = const [],
     this.notes = const [],
     required this.heartRateEstimated,
+    this.move = const [],
+    required this.easyReason,
+    required this.easyMovedTo,
+    required this.canMakeEasy,
     this.result = const Optional.absent(),
   });
 
@@ -61,6 +65,14 @@ class TrainingWeekSession {
 
   final bool heartRateEstimated;
 
+  final List<MoveDay> move;
+
+  final String? easyReason;
+
+  final DateTime? easyMovedTo;
+
+  final bool canMakeEasy;
+
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
   /// does not include a default value (using the "default:" property), however, the generated
@@ -86,6 +98,10 @@ class TrainingWeekSession {
     _deepEquality.equals(other.blocks, blocks) &&
     _deepEquality.equals(other.notes, notes) &&
     other.heartRateEstimated == heartRateEstimated &&
+    _deepEquality.equals(other.move, move) &&
+    other.easyReason == easyReason &&
+    other.easyMovedTo == easyMovedTo &&
+    other.canMakeEasy == canMakeEasy &&
     other.result == result;
 
   @override
@@ -106,10 +122,14 @@ class TrainingWeekSession {
     (blocks.hashCode) +
     (notes.hashCode) +
     (heartRateEstimated.hashCode) +
+    (move.hashCode) +
+    (easyReason == null ? 0 : easyReason!.hashCode) +
+    (easyMovedTo == null ? 0 : easyMovedTo!.hashCode) +
+    (canMakeEasy.hashCode) +
     (result == null ? 0 : result!.hashCode);
 
   @override
-  String toString() => 'TrainingWeekSession[id=$id, localDate=$localDate, minutes=$minutes, state=$state, skipReason=$skipReason, rideId=$rideId, recipe=$recipe, technicalName=$technicalName, englishName=$englishName, italianName=$italianName, englishLine=$englishLine, italianLine=$italianLine, blocks=$blocks, notes=$notes, heartRateEstimated=$heartRateEstimated, result=$result]';
+  String toString() => 'TrainingWeekSession[id=$id, localDate=$localDate, minutes=$minutes, state=$state, skipReason=$skipReason, rideId=$rideId, recipe=$recipe, technicalName=$technicalName, englishName=$englishName, italianName=$italianName, englishLine=$englishLine, italianLine=$italianLine, blocks=$blocks, notes=$notes, heartRateEstimated=$heartRateEstimated, move=$move, easyReason=$easyReason, easyMovedTo=$easyMovedTo, canMakeEasy=$canMakeEasy, result=$result]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -136,6 +156,18 @@ class TrainingWeekSession {
       json[r'blocks'] = this.blocks;
       json[r'notes'] = this.notes;
       json[r'heartRateEstimated'] = this.heartRateEstimated;
+      json[r'move'] = this.move;
+    if (this.easyReason != null) {
+      json[r'easyReason'] = this.easyReason;
+    } else {
+      json[r'easyReason'] = null;
+    }
+    if (this.easyMovedTo != null) {
+      json[r'easyMovedTo'] = _dateFormatter.format(this.easyMovedTo!);
+    } else {
+      json[r'easyMovedTo'] = null;
+    }
+      json[r'canMakeEasy'] = this.canMakeEasy;
     if (this.result.isPresent) {
       final value = this.result.value;
       json[r'result'] = value;
@@ -163,6 +195,12 @@ class TrainingWeekSession {
     List<BlockTarget>? blocks,
     List<SessionNote>? notes,
     bool? heartRateEstimated,
+    List<MoveDay>? move,
+    String? easyReason,
+    bool easyReasonSetToNull = false,
+    DateTime? easyMovedTo,
+    bool easyMovedToSetToNull = false,
+    bool? canMakeEasy,
     Optional<SessionResult?>? result,
   }) => TrainingWeekSession(
     id: id ?? this.id,
@@ -180,6 +218,10 @@ class TrainingWeekSession {
     blocks: blocks ?? this.blocks,
     notes: notes ?? this.notes,
     heartRateEstimated: heartRateEstimated ?? this.heartRateEstimated,
+    move: move ?? this.move,
+    easyReason: easyReasonSetToNull ? null : easyReason ?? this.easyReason,
+    easyMovedTo: easyMovedToSetToNull ? null : easyMovedTo ?? this.easyMovedTo,
+    canMakeEasy: canMakeEasy ?? this.canMakeEasy,
     result: result ?? this.result,
   );
 
@@ -222,6 +264,12 @@ class TrainingWeekSession {
         assert(json[r'notes'] != null, 'Required key "TrainingWeekSession[notes]" has a null value in JSON.');
         assert(json.containsKey(r'heartRateEstimated'), 'Required key "TrainingWeekSession[heartRateEstimated]" is missing from JSON.');
         assert(json[r'heartRateEstimated'] != null, 'Required key "TrainingWeekSession[heartRateEstimated]" has a null value in JSON.');
+        assert(json.containsKey(r'move'), 'Required key "TrainingWeekSession[move]" is missing from JSON.');
+        assert(json[r'move'] != null, 'Required key "TrainingWeekSession[move]" has a null value in JSON.');
+        assert(json.containsKey(r'easyReason'), 'Required key "TrainingWeekSession[easyReason]" is missing from JSON.');
+        assert(json.containsKey(r'easyMovedTo'), 'Required key "TrainingWeekSession[easyMovedTo]" is missing from JSON.');
+        assert(json.containsKey(r'canMakeEasy'), 'Required key "TrainingWeekSession[canMakeEasy]" is missing from JSON.');
+        assert(json[r'canMakeEasy'] != null, 'Required key "TrainingWeekSession[canMakeEasy]" has a null value in JSON.');
         return true;
       }());
 
@@ -241,6 +289,10 @@ class TrainingWeekSession {
         blocks: BlockTarget.listFromJson(json[r'blocks']),
         notes: SessionNote.listFromJson(json[r'notes']),
         heartRateEstimated: mapValueOfType<bool>(json, r'heartRateEstimated')!,
+        move: MoveDay.listFromJson(json[r'move']),
+        easyReason: mapValueOfType<String>(json, r'easyReason'),
+        easyMovedTo: mapDateTime(json, r'easyMovedTo', r''),
+        canMakeEasy: mapValueOfType<bool>(json, r'canMakeEasy')!,
         result: json.containsKey(r'result') ? Optional.present(SessionResult.fromJson(json[r'result'])) : const Optional.absent(),
       );
     }
@@ -304,6 +356,10 @@ class TrainingWeekSession {
     'blocks',
     'notes',
     'heartRateEstimated',
+    'move',
+    'easyReason',
+    'easyMovedTo',
+    'canMakeEasy',
   };
 }
 

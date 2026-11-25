@@ -28,16 +28,52 @@ public sealed record TrainingWeekSession(
     BlockTarget[] Blocks,
     SessionNote[] Notes,
     bool HeartRateEstimated,
+    /// <summary>The days it can move to, as the move sheet reads them: empty for a session that cannot move.</summary>
+    MoveDay[] Move,
+    /// <summary>Why the session was made easy (<see cref="TrainingEasyReasons"/>), or null when it never was.</summary>
+    string? EasyReason,
+    /// <summary>The day the replaced hard session went to, which the reason's line names; null when it was dropped.</summary>
+    DateOnly? EasyMovedTo,
+    /// <summary>Whether "make today easy" applies to it: today's session, still planned, a hard day or the long ride.</summary>
+    bool CanMakeEasy,
     SessionResult? Result = null);
 
-/// <summary>One week of the plan: its days, the load they plan and the one line the rider reads about it.</summary>
+/// <summary>
+/// The session a training notification is about, as the inbox reads it: the app words the sentence from the reason,
+/// never from the check-in's own answers, which nobody but the owner ever receives.
+/// </summary>
+public sealed record TrainingSessionNotice(
+    Guid SessionId,
+    DateOnly LocalDate,
+    int Minutes,
+    string Recipe,
+    string EnglishName,
+    string ItalianName,
+    string State,
+    string? SkipReason,
+    string? EasyReason,
+    DateOnly? EasyMovedTo)
+{
+    public static TrainingSessionNotice Of(TrainingSession session)
+    {
+        var recipe = Recipes.ByCode(session.Recipe);
+        return new(session.Id, session.LocalDate, session.Minutes, recipe.Code, recipe.EnglishName,
+            recipe.ItalianName, session.State, session.SkipReason, session.EasyReason, session.EasyMovedTo);
+    }
+}
+
+/// <summary>
+/// One week of the plan: its days, the load they plan, the one line the rider reads about it, and how many sessions the
+/// rider has skipped, which is what the skip sheet offers the rest of the week from.
+/// </summary>
 public sealed record TrainingWeek(
     DateOnly Start,
     DateOnly End,
     double PlannedLoad,
     bool IsLighterWeek,
     TrainingNote? Note,
-    TrainingWeekSession[] Sessions);
+    TrainingWeekSession[] Sessions,
+    int SkipsThisWeek);
 
 /// <summary>
 /// This week, and on its last day next week as the preview the rider sees that evening. The plan is keyed by the caller,
@@ -70,21 +106,38 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
 
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
         var clock = MemberClock.For(user.TimeZone, user.FirstDayOfWeek, time);
-        var weekStart = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek);
-        var weeks = new List<TrainingWeek> { await OfWeekAsync(user, plan, clock, weekStart, ct) };
-        // A preview is what the last day's planning already wrote; the app shows its card that evening.
-        if (clock.Today == weekStart.AddDays(6)) weeks.Add(await OfWeekAsync(user, plan, clock, weekStart.AddDays(7), ct));
+        await Send.OkAsync(await TrainingWeekView.OfAsync(db, user, plan, clock, time, ct), ct);
+    }
+}
 
-        await Send.OkAsync(new TrainingWeeksResponse([.. weeks]), ct);
+/// <summary>
+/// The weeks the app reads, built once for the endpoint that reads them and for every change to a session, so a change
+/// answers exactly what the week would answer afterwards and the app never asks twice.
+/// </summary>
+public static class TrainingWeekView
+{
+    /// <summary>This week, and on its last day next week as the preview the rider sees that evening.</summary>
+    public static async Task<TrainingWeeksResponse> OfAsync(
+        VelomineDbContext db, User user, TrainingPlan plan, MemberClock clock, TimeProvider time, CancellationToken ct)
+    {
+        var weekStart = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek);
+        var weeks = new List<TrainingWeek> { await OfWeekAsync(db, user, plan, clock, time, weekStart, ct) };
+        // A preview is what the last day's planning already wrote; the app shows its card that evening.
+        if (clock.Today == weekStart.AddDays(6))
+            weeks.Add(await OfWeekAsync(db, user, plan, clock, time, weekStart.AddDays(7), ct));
+        return new TrainingWeeksResponse([.. weeks]);
     }
 
     /// <summary>
     /// A week as its sessions are stored: the targets are worked out here, never stored, because watts follow the FTP in
     /// use and heart rate the zone model in use.
     /// </summary>
-    private async Task<TrainingWeek> OfWeekAsync(User user, TrainingPlan plan, MemberClock clock, DateOnly start, CancellationToken ct)
+    private static async Task<TrainingWeek> OfWeekAsync(
+        VelomineDbContext db, User user, TrainingPlan plan, MemberClock clock, TimeProvider time, DateOnly start,
+        CancellationToken ct)
     {
         var end = start.AddDays(6);
+        var todayWeekEnd = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek).AddDays(6);
         var rows = await db.TrainingSessions.AsNoTracking()
             .Where(s => s.UserId == user.Id && s.LocalDate >= start && s.LocalDate <= end)
             .OrderBy(s => s.LocalDate)
@@ -95,16 +148,31 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
             .AnyAsync(r => r.UserId == user.Id && r.AvgPowerW != null, ct);
         // The score of every session a ride did, worked out here and never stored (L8).
         var results = await SessionScore.ForAsync(db, rows, user, time, ct);
+        // The days each session can move to, and the days around the week a hard day is kept apart from: the days
+        // either side belong to the weeks next to this one.
+        var around = await db.TrainingSessions.AsNoTracking()
+            .Where(s => s.UserId == user.Id && s.LocalDate >= start.AddDays(-1) && s.LocalDate <= end.AddDays(1))
+            .OrderBy(s => s.LocalDate).ThenBy(s => s.Id)
+            .ToListAsync(ct);
 
         var sessions = rows.Select(s =>
         {
             var recipe = Recipes.ByCode(s.Recipe);
             var targets = SessionTargets.For(recipe, s.Minutes, user.FtpW, threshold, hasPowerMeter);
+            // The move sheet offers the days left this week; next week's preview is not moved from here, and a session
+            // already ridden, skipped or missed stays put.
+            var movable = s.LocalDate >= clock.Today && s.LocalDate <= todayWeekEnd
+                && s.State is TrainingSessionStates.Planned or TrainingSessionStates.Moved;
             return new TrainingWeekSession(
                 s.Id, s.LocalDate, s.Minutes, s.State, s.SkipReason, s.RideId,
                 recipe.Code, recipe.TechnicalName, recipe.EnglishName, recipe.ItalianName,
                 recipe.EnglishLine, recipe.ItalianLine,
                 targets.Blocks, targets.Notes, targets.HeartRateEstimated,
+                movable ? SessionAdaptation.Days(around, s, clock) : [],
+                s.EasyReason,
+                s.EasyMovedTo,
+                s.LocalDate == clock.Today && s.State == TrainingSessionStates.Planned
+                    && SessionAdaptation.IsReplacedByEasy(s.Recipe),
                 results.GetValueOrDefault(s.Id));
         }).ToArray();
 
@@ -115,22 +183,24 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
         var gentle = rows.Any(s => s.LocalDate >= clock.Today)
             && rows.All(s => s.LocalDate < clock.Today || WeekPlanner.BaseRecipes.Contains(s.Recipe));
         var planned = rows.Sum(s => PlannedScore(s.Recipe, s.Minutes));
-        var spent = await SpentLoadAsync(user, clock, rows, start, end, ct);
+        var spent = await SpentLoadAsync(db, user, clock, rows, start, end, ct);
         return new TrainingWeek(
             start,
             end,
             Math.Round(planned + spent, 1),
             lighter,
             lighter ? TrainingNotes.EasyWeek : gentle ? TrainingNotes.MorePersonal : null,
-            sessions);
+            sessions,
+            rows.Count(s => s.State == TrainingSessionStates.Skipped));
     }
 
     /// <summary>
     /// What the week has already spent: a ride on a day it has no session for is load the week carries, as the planner
     /// counts it, so the load the rider reads and the load the planner budgets against are the same number.
     /// </summary>
-    private async Task<double> SpentLoadAsync(
-        User user, MemberClock clock, List<TrainingSession> rows, DateOnly start, DateOnly end, CancellationToken ct)
+    private static async Task<double> SpentLoadAsync(
+        VelomineDbContext db, User user, MemberClock clock, List<TrainingSession> rows, DateOnly start, DateOnly end,
+        CancellationToken ct)
     {
         var stored = rows.Select(s => s.LocalDate).ToHashSet();
         var rides = await RideDays.LoadAsync(db, user.Id, clock, start, end.AddDays(1), ct, ftpW: user.FtpW);

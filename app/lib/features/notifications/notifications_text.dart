@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
@@ -29,6 +30,20 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'ftp_suggested' => l10n.notificationFtpSuggested(n.subject),
       'heart_rate_measured' => _heartRate(l10n, n.subject, measured: true),
       'heart_rate_suggested' => _heartRate(l10n, n.subject, measured: false),
+      // The day's session, a session made easy, moved or skipped: the notice carries the session and its reason, so
+      // the app words the sentence in the language on screen.
+      'training_today' => l10n.notificationTrainingToday(
+        _trainingName(l10n, n),
+      ),
+      'training_easy' => _trainingEasy(l10n, n),
+      'training_moved' => l10n.notificationTrainingMoved(
+        _trainingName(l10n, n),
+        _trainingDay(l10n, n.notice.orElse(null)?.localDate),
+      ),
+      'training_skipped' => l10n.notificationTrainingSkipped(
+        _trainingName(l10n, n),
+        _trainingDay(l10n, n.notice.orElse(null)?.localDate),
+      ),
       // "Was this your Thursday strong and steady?": the same question the ride's page asks, answered there.
       'training_session_question' => switch (n.training.orElse(null)) {
         final question? => trainingQuestion(
@@ -44,6 +59,32 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       },
       _ => n.subject,
     };
+
+/// The session a training notice is about, in the language on screen; the subject keeps the account's own name.
+String _trainingName(AppLocalizations l10n, NotificationResponse n) =>
+    switch (n.notice.orElse(null)) {
+      final notice? => trainingText(
+        l10n,
+        english: notice.englishName,
+        italian: notice.italianName,
+      ),
+      null => n.subject.split('|').first,
+    };
+
+/// "Thursday": the day a training notice is about, from the session when the notice still has it.
+String _trainingDay(AppLocalizations l10n, DateTime? day) =>
+    day == null ? '' : DateFormat('EEEE', l10n.localeName).format(day);
+
+/// "Easy today: you slept poorly. The hard day moves to Thursday.", the same line the today card shows.
+String _trainingEasy(AppLocalizations l10n, NotificationResponse n) {
+  final notice = n.notice.orElse(null);
+  final reason = notice?.easyReason ?? n.subject.split('|').first;
+  // A subject of "reason|yyyy-MM-dd" carries the day the hard session moved to, for a session that has since gone.
+  final moved =
+      notice?.easyMovedTo ??
+      DateTime.tryParse(n.subject.split('|').skip(1).firstOrNull ?? '');
+  return easyLine(l10n, reason, movedTo: moved);
+}
 
 /// A heart-rate notice's subject is "Maximum 192 bpm" or "Threshold 165 bpm", the same in every language.
 String _heartRate(
@@ -68,6 +109,10 @@ String _day(String subject) => dateOnly(DateTime.tryParse(subject));
 
 /// Where tapping a notification goes, or null when there is nowhere to go.
 String? notificationTarget(NotificationResponse n) => switch (n.type) {
+  'training_easy' || 'training_moved' || 'training_skipped'
+      when n.notice.orElse(null) != null =>
+    '/training/sessions/${n.notice.orElse(null)!.sessionId}',
+  'training_today' => '/training',
   'ride_ready' ||
   'ride_failed' ||
   'ride_duplicate' ||

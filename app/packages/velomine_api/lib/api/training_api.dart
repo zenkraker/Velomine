@@ -64,6 +64,55 @@ class TrainingApi {
     return null;
   }
 
+  /// Performs an HTTP 'DELETE /api/v1/training/sessions/{id}/easy' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> backToTrainingPlanWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/training/sessions/{id}/easy'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<TrainingWeeksResponse?> backToTrainingPlan(String id, { Future<void>? abortTrigger, }) async {
+    final response = await backToTrainingPlanWithHttpInfo(id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TrainingWeeksResponse',) as TrainingWeeksResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'DELETE /api/v1/training/events/{id}' operation and returns the [Response].
   /// Parameters:
   ///
@@ -231,6 +280,55 @@ class TrainingApi {
     return null;
   }
 
+  /// Performs an HTTP 'POST /api/v1/training/sessions/{id}/easy' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> makeSessionEasyWithHttpInfo(String id, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/training/sessions/{id}/easy'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<TrainingWeeksResponse?> makeSessionEasy(String id, { Future<void>? abortTrigger, }) async {
+    final response = await makeSessionEasyWithHttpInfo(id, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TrainingWeeksResponse',) as TrainingWeeksResponse;
+    
+    }
+    return null;
+  }
+
   /// Performs an HTTP 'POST /api/v1/training/sessions/{id}/match' operation and returns the [Response].
   /// Parameters:
   ///
@@ -274,6 +372,59 @@ class TrainingApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Performs an HTTP 'POST /api/v1/training/sessions/{id}/move' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [MoveTrainingSessionRequest] moveTrainingSessionRequest (required):
+  Future<Response> moveTrainingSessionWithHttpInfo(String id, MoveTrainingSessionRequest moveTrainingSessionRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/training/sessions/{id}/move'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = moveTrainingSessionRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [MoveTrainingSessionRequest] moveTrainingSessionRequest (required):
+  Future<TrainingWeeksResponse?> moveTrainingSession(String id, MoveTrainingSessionRequest moveTrainingSessionRequest, { Future<void>? abortTrigger, }) async {
+    final response = await moveTrainingSessionWithHttpInfo(id, moveTrainingSessionRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TrainingWeeksResponse',) as TrainingWeeksResponse;
+    
+    }
+    return null;
   }
 
   /// Performs an HTTP 'PUT /api/v1/training/plan' operation and returns the [Response].
@@ -372,6 +523,59 @@ class TrainingApi {
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'EventResponse',) as EventResponse;
+    
+    }
+    return null;
+  }
+
+  /// Performs an HTTP 'POST /api/v1/training/sessions/{id}/skip' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SkipTrainingSessionRequest] skipTrainingSessionRequest (required):
+  Future<Response> skipTrainingSessionWithHttpInfo(String id, SkipTrainingSessionRequest skipTrainingSessionRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/training/sessions/{id}/skip'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = skipTrainingSessionRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [SkipTrainingSessionRequest] skipTrainingSessionRequest (required):
+  Future<TrainingWeeksResponse?> skipTrainingSession(String id, SkipTrainingSessionRequest skipTrainingSessionRequest, { Future<void>? abortTrigger, }) async {
+    final response = await skipTrainingSessionWithHttpInfo(id, skipTrainingSessionRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'TrainingWeeksResponse',) as TrainingWeeksResponse;
     
     }
     return null;
