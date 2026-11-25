@@ -23,7 +23,8 @@ public sealed record TrainingPlanResponse(
     string? MaxHeartRateSource,
     int? BirthYear,
     string? NextEventName,
-    DateOnly? NextEventDate);
+    DateOnly? NextEventDate,
+    string FirstDayOfWeek);
 
 /// <summary>One builder for the plan response, so reading it and saving it answer the same shape.</summary>
 public static class TrainingPlanView
@@ -53,7 +54,8 @@ public static class TrainingPlanView
             MaxHeartRateSource: max?.Source,
             BirthYear: user.BirthYear,
             NextEventName: nextEvent?.Name,
-            NextEventDate: nextEvent?.Date);
+            NextEventDate: nextEvent?.Date,
+            FirstDayOfWeek: WeekDays.Name(clock.FirstDayOfWeek));
     }
 }
 

@@ -44,17 +44,6 @@ String trainingSuggestionReason(AppLocalizations l10n, String reason) =>
       _ => l10n.goalReasonRegularRider,
     };
 
-/// The member's own name for a day, as the long-ride choice reads it.
-String trainingDayName(AppLocalizations l10n, String day) => switch (day) {
-  'monday' => l10n.monday,
-  'tuesday' => l10n.tuesday,
-  'wednesday' => l10n.wednesday,
-  'thursday' => l10n.thursday,
-  'friday' => l10n.friday,
-  'saturday' => l10n.saturday,
-  _ => l10n.sunday,
-};
-
 /// "Mon", "Tue": a chip's label, in the language on screen.
 String trainingDayShort(AppLocalizations l10n, String day) {
   // 2024-01-01 was a Monday, so the index into the week is the offset from it.

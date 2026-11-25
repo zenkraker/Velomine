@@ -5397,7 +5397,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get trainingGoalCard => 'Il tuo obiettivo';
 
   @override
-  String get trainingPlanStarts => 'Il tuo piano inizia lunedì.';
+  String trainingPlanStarts(String day) {
+    return 'Il tuo piano inizia $day.';
+  }
 
   @override
   String trainingHoursLine(int hours) {
@@ -5531,7 +5533,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get errorTrainingMaxHeartRate =>
-      'Inserisci una frequenza cardiaca massima da 120 a 220.';
+      'Inserisci una frequenza cardiaca massima da 120 a 230.';
 
   @override
   String get errorTrainingBirthYear => 'Inserisci il tuo anno di nascita.';

@@ -1,8 +1,9 @@
 namespace Velomine.Server.Features.Training;
 
 /// <summary>
-/// The member's zone, from what their device could say. The browser sends the zone's own name; a phone reports only its
-/// current offset, so the closest zone with that offset is taken, preferring one that keeps daylight saving (a rider in
+/// The member's zone, from what their device could say: the zone's own name when the browser sends it, otherwise the
+/// zone matching the offset the device reports. The offset alone cannot say whether the rider's zone keeps daylight
+/// saving, so this is a fallback and the closest zone with that offset is taken, preferring one that does (a rider in
 /// Rome at +60 is in Europe/Amsterdam's kind of zone, not Lagos's). Null when neither is usable: the account keeps UTC.
 /// </summary>
 public static class DeviceZone

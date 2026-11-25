@@ -26,6 +26,7 @@ class TrainingPlanResponse {
     required this.birthYear,
     required this.nextEventName,
     required this.nextEventDate,
+    required this.firstDayOfWeek,
   });
 
   final bool on_;
@@ -54,6 +55,8 @@ class TrainingPlanResponse {
 
   final DateTime? nextEventDate;
 
+  final String firstDayOfWeek;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is TrainingPlanResponse &&
     other.on_ == on_ &&
@@ -68,7 +71,8 @@ class TrainingPlanResponse {
     other.maxHeartRateSource == maxHeartRateSource &&
     other.birthYear == birthYear &&
     other.nextEventName == nextEventName &&
-    other.nextEventDate == nextEventDate;
+    other.nextEventDate == nextEventDate &&
+    other.firstDayOfWeek == firstDayOfWeek;
 
   @override
   int get hashCode =>
@@ -85,10 +89,11 @@ class TrainingPlanResponse {
     (maxHeartRateSource == null ? 0 : maxHeartRateSource!.hashCode) +
     (birthYear == null ? 0 : birthYear!.hashCode) +
     (nextEventName == null ? 0 : nextEventName!.hashCode) +
-    (nextEventDate == null ? 0 : nextEventDate!.hashCode);
+    (nextEventDate == null ? 0 : nextEventDate!.hashCode) +
+    (firstDayOfWeek.hashCode);
 
   @override
-  String toString() => 'TrainingPlanResponse[on_=$on_, goal=$goal, suggestedGoal=$suggestedGoal, suggestionReason=$suggestionReason, days=$days, hoursPerWeek=$hoursPerWeek, longRideDay=$longRideDay, lastPlannedFor=$lastPlannedFor, maxHeartRate=$maxHeartRate, maxHeartRateSource=$maxHeartRateSource, birthYear=$birthYear, nextEventName=$nextEventName, nextEventDate=$nextEventDate]';
+  String toString() => 'TrainingPlanResponse[on_=$on_, goal=$goal, suggestedGoal=$suggestedGoal, suggestionReason=$suggestionReason, days=$days, hoursPerWeek=$hoursPerWeek, longRideDay=$longRideDay, lastPlannedFor=$lastPlannedFor, maxHeartRate=$maxHeartRate, maxHeartRateSource=$maxHeartRateSource, birthYear=$birthYear, nextEventName=$nextEventName, nextEventDate=$nextEventDate, firstDayOfWeek=$firstDayOfWeek]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -141,6 +146,7 @@ class TrainingPlanResponse {
     } else {
       json[r'nextEventDate'] = null;
     }
+      json[r'firstDayOfWeek'] = this.firstDayOfWeek;
     return json;
   }
 
@@ -169,6 +175,7 @@ class TrainingPlanResponse {
     bool nextEventNameSetToNull = false,
     DateTime? nextEventDate,
     bool nextEventDateSetToNull = false,
+    String? firstDayOfWeek,
   }) => TrainingPlanResponse(
     on_: on_ ?? this.on_,
     goal: goalSetToNull ? null : goal ?? this.goal,
@@ -183,6 +190,7 @@ class TrainingPlanResponse {
     birthYear: birthYearSetToNull ? null : birthYear ?? this.birthYear,
     nextEventName: nextEventNameSetToNull ? null : nextEventName ?? this.nextEventName,
     nextEventDate: nextEventDateSetToNull ? null : nextEventDate ?? this.nextEventDate,
+    firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
   );
 
   /// Returns a new [TrainingPlanResponse] instance and imports its values from
@@ -213,6 +221,8 @@ class TrainingPlanResponse {
         assert(json.containsKey(r'birthYear'), 'Required key "TrainingPlanResponse[birthYear]" is missing from JSON.');
         assert(json.containsKey(r'nextEventName'), 'Required key "TrainingPlanResponse[nextEventName]" is missing from JSON.');
         assert(json.containsKey(r'nextEventDate'), 'Required key "TrainingPlanResponse[nextEventDate]" is missing from JSON.');
+        assert(json.containsKey(r'firstDayOfWeek'), 'Required key "TrainingPlanResponse[firstDayOfWeek]" is missing from JSON.');
+        assert(json[r'firstDayOfWeek'] != null, 'Required key "TrainingPlanResponse[firstDayOfWeek]" has a null value in JSON.');
         return true;
       }());
 
@@ -232,6 +242,7 @@ class TrainingPlanResponse {
         birthYear: mapValueOfType<int>(json, r'birthYear'),
         nextEventName: mapValueOfType<String>(json, r'nextEventName'),
         nextEventDate: mapDateTime(json, r'nextEventDate', r''),
+        firstDayOfWeek: mapValueOfType<String>(json, r'firstDayOfWeek')!,
       );
     }
     return null;
@@ -292,6 +303,7 @@ class TrainingPlanResponse {
     'birthYear',
     'nextEventName',
     'nextEventDate',
+    'firstDayOfWeek',
   };
 }
 

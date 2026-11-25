@@ -202,9 +202,12 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       if (path == '/reset-password' || path == '/verify-email') return null;
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
-      // The Training destination exists only while auto training is on; the setup is how it is turned on.
+      // The Training destination exists only while auto training is on; the setup is how it is turned on. Before
+      // the plan has loaded nothing is known, so a deep link waits on the page instead of losing its address.
+      final training = ref.read(trainingViewModelProvider);
       if (path == '/training' &&
-          !(ref.read(trainingViewModelProvider).on &&
+          training.load.completed &&
+          !(training.on &&
               (session.serverInfo?.autoTrainingEnabled ?? false))) {
         return '/rides';
       }

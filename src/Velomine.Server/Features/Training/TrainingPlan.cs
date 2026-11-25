@@ -138,7 +138,8 @@ public sealed class TrainingSessionConfiguration : IEntityTypeConfiguration<Trai
                 "skip_reason IS NULL OR state = 'skipped'");
         });
         b.HasKey(s => s.Id);
-        b.HasIndex(s => new { s.UserId, s.LocalDate });
+        // One session per day: a second sweep or a race can never plan the same day twice.
+        b.HasIndex(s => new { s.UserId, s.LocalDate }).IsUnique();
         b.HasOne<User>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<Ride>().WithMany().HasForeignKey(s => s.RideId).OnDelete(DeleteBehavior.SetNull);
     }

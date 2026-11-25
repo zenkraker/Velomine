@@ -47,7 +47,7 @@ final class TrainingViewModelProvider
   }
 }
 
-String _$trainingViewModelHash() => r'91d9da0e6cb971a4c25aa40c0108ae0a4216584a';
+String _$trainingViewModelHash() => r'335abd3d4b232529716ad8e91a4c248edbcac8df';
 
 /// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
 /// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.

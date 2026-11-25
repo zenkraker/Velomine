@@ -460,6 +460,8 @@ class FakeServer {
         'birthYear': trainingPlan?['birthYear'] ?? trainingBirthYearFor(caller),
         'nextEventName': null,
         'nextEventDate': null,
+        'firstDayOfWeek':
+            profiles[caller?.email]?['firstDayOfWeek'] as String? ?? 'monday',
       };
       if (request.method == 'GET') return json(plan());
       if (request.method == 'PUT') {

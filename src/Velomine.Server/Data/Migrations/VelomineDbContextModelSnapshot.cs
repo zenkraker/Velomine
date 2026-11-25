@@ -2982,7 +2982,8 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_sessions_ride_id");
 
                     b.HasIndex("UserId", "LocalDate")
-                        .HasDatabaseName("ix_sessions_user_id_local_date");
+                        .HasDatabaseName("ix_sessions_user_id_local_date")
+                        .IsUnique();
 
                     b.ToTable("sessions", "training", t =>
                         {

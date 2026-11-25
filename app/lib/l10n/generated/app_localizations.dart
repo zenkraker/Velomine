@@ -9191,8 +9191,8 @@ abstract class AppLocalizations {
   /// No description provided for @trainingPlanStarts.
   ///
   /// In en, this message translates to:
-  /// **'Your plan starts Monday.'**
-  String get trainingPlanStarts;
+  /// **'Your plan starts {day}.'**
+  String trainingPlanStarts(String day);
 
   /// No description provided for @trainingHoursLine.
   ///
@@ -9425,7 +9425,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorTrainingMaxHeartRate.
   ///
   /// In en, this message translates to:
-  /// **'Enter a maximum heart rate from 120 to 220.'**
+  /// **'Enter a maximum heart rate from 120 to 230.'**
   String get errorTrainingMaxHeartRate;
 
   /// No description provided for @errorTrainingBirthYear.

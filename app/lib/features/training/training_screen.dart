@@ -11,6 +11,7 @@ import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
+import '../profile/profile_screen.dart' show weekDayName;
 import 'training_goals.dart';
 import 'training_view_model.dart';
 
@@ -102,7 +103,9 @@ class TrainingScreen extends ConsumerWidget {
             ],
           ),
           Text(
-            l10n.trainingPlanStarts,
+            l10n.trainingPlanStarts(
+              weekDayName(l10n, plan?.firstDayOfWeek ?? 'monday'),
+            ),
             key: const Key('training-plan-starts'),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/device_time_zone.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
 import 'training_data.dart';
@@ -85,9 +86,8 @@ class TrainingSetupViewModel extends _$TrainingSetupViewModel {
                 ? null
                 : int.tryParse(state.maxHeartRate),
             birthYear: int.tryParse(state.birthYear),
-            timeZone: null,
-            // The phone reports only its offset; the server keeps the zone that matches it.
-            // shortcut: an exact IANA name needs a package or a native channel, when one is approved.
+            // The browser's own zone, precise; a phone sends its offset and the server maps it.
+            timeZone: deviceTimeZone(),
             utcOffsetMinutes: Optional.present(
               DateTime.now().timeZoneOffset.inMinutes,
             ),
@@ -136,7 +136,8 @@ class TrainingSetupViewModel extends _$TrainingSetupViewModel {
     }
     if (!state.maxHeartRateUnknown) {
       final max = int.tryParse(state.maxHeartRate);
-      if (max == null || max < 120 || max > 220) {
+      // The same range the account and HeartRates keep: a typed 225 is a number Start must accept.
+      if (max == null || max < 120 || max > 230) {
         return TrainingSetupProblem.maxHeartRate;
       }
     }

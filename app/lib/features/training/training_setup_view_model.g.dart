@@ -48,7 +48,7 @@ final class TrainingSetupViewModelProvider
 }
 
 String _$trainingSetupViewModelHash() =>
-    r'67b0d4df8f8985748c32b4b3e8406f93114e2a8a';
+    r'391c6cc8ed2e5eca358dd5d867d474962450f948';
 
 /// The setup the rider answers to start auto training, and to change it later. It opens pre-filled from the plan;
 /// Start saves it, and a typed maximum goes through the account's heart-rate rules on the server.

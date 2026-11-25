@@ -90,7 +90,8 @@ namespace Velomine.Server.Data.Migrations
                 name: "ix_sessions_user_id_local_date",
                 schema: "training",
                 table: "sessions",
-                columns: new[] { "user_id", "local_date" });
+                columns: new[] { "user_id", "local_date" },
+                unique: true);
         }
 
         /// <inheritdoc />

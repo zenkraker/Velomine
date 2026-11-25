@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'fake_server.dart';
 
@@ -132,6 +133,95 @@ void main() {
       expect(saved['birthYear'], 1988);
       // The plan is on, so Training is a destination now (the rail at this width).
       expect(find.byKey(const Key('rail-training')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TrainingSetupScreen_ShouldSaveATypedMaximumOfTwoHundredAndTwentyFive_WhenTheRiderTypesIt',
+    (tester) async {
+      // The account keeps 120-230 (HeartRates.MaxMax), so the setup must accept the same range.
+      await openSetup(tester);
+      await chooseDays(tester);
+      await reveal(tester, find.byKey(const Key('training-hours')));
+      await tester.enterText(find.byKey(const Key('training-hours')), '6');
+      await tester.enterText(
+        find.byKey(const Key('training-birth-year')),
+        '1988',
+      );
+      await tester.tap(find.byKey(const Key('training-heart-unknown')));
+      await tester.pumpAndSettle();
+      await reveal(tester, find.byKey(const Key('training-max-heart-rate')));
+      await tester.enterText(
+        find.byKey(const Key('training-max-heart-rate')),
+        '225',
+      );
+      await tester.pumpAndSettle();
+      await reveal(tester, find.byKey(const Key('training-start')));
+      await tester.tap(find.byKey(const Key('training-start')));
+      await tester.pumpAndSettle();
+
+      expect(server.lastTrainingSave!['maxHeartRate'], 225);
+      expect(server.trainingMaxHeartRate, 225);
+    },
+  );
+
+  testWidgets(
+    'TrainingScreen_ShouldNameTheMembersFirstDayOfTheWeek_WhenThePlanHasNotStarted',
+    (tester) async {
+      server.trainingPlan = {
+        'on': true,
+        'goal': 'fitter',
+        'days': ['tuesday', 'sunday'],
+        'hoursPerWeek': 6,
+        'longRideDay': null,
+        'birthYear': 1988,
+      };
+      server.profiles['rider@example.com'] = {
+        'displayName': 'Test Rider',
+        'birthYear': 1988,
+        'firstDayOfWeek': 'sunday',
+      };
+
+      tester.view.physicalSize = const Size(700, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/training');
+
+      expect(find.text('Your plan starts Sunday.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TrainingScreen_ShouldStayOnAColdStart_WhenThePlanHasNotLoadedYet',
+    (tester) async {
+      server.trainingPlan = {
+        'on': true,
+        'goal': 'fitter',
+        'days': ['tuesday'],
+        'hoursPerWeek': 6,
+        'longRideDay': null,
+        'birthYear': 1988,
+      };
+      final gate = server.delayNext('/api/v1/training/plan');
+
+      tester.view.physicalSize = const Size(700, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      late GoRouter router;
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        onRouter: (created) => router = created,
+      );
+      // A deep link opened before the plan answered: the address must not be replaced by /rides.
+      router.go('/training');
+      await tester.pumpAndSettle();
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('training-plan-starts')), findsOneWidget);
+      expect(find.byKey(const Key('training-goal')), findsOneWidget);
     },
   );
 

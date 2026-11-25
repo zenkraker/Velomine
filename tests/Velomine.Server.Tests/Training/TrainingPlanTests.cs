@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Tests.Training;
@@ -223,6 +224,88 @@ public sealed class TrainingPlanTests(PostgresFixture postgres)
         Assert.True(mine.On);
         Assert.Equal(TrainingGoals.Faster, mine.Goal);
         Assert.Equal(9, mine.HoursPerWeek);
+    }
+
+    /// <summary>
+    /// A member in UTC whose week starts on Sunday: the boundary a Saturday ride tests, because a Saturday is later
+    /// in its week than the Tuesday "today" is in this one.
+    /// </summary>
+    private static async Task<TestMember> NewSundayMemberAsync(TestApi api, string name = "Test Rider")
+    {
+        var member = await api.NewMemberAsync(name);
+        (await member.Client.PutAsJsonAsync("/api/v1/accounts/me/profile",
+            new UpdateProfileRequest(name, null, null, null, "UTC", "sunday"), Ct)).EnsureSuccessStatusCode();
+        return member;
+    }
+
+    private static async Task AddRideAsync(TestApi api, Guid userId, DateTimeOffset start, int minutes)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        db.Rides.Add(new Ride
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Status = RideStatus.Ready,
+            StartTime = start,
+            UtcOffsetMinutes = 0,
+            MovingS = minutes * 60,
+        });
+        await db.SaveChangesAsync(Ct);
+    }
+
+    [Fact]
+    public async Task TrainingHistory_ShouldCountWeeksFromTheMembersFirstDay_WhenRidesCrossTheWeekBoundary()
+    {
+        await using var api = await StartAsync();
+        var member = await NewSundayMemberAsync(api);
+
+        // Two rides in each of the last four of the member's weeks, ninety minutes each, and one ride in the fifth,
+        // which the last four weeks leave out. Saturdays are the boundary case: a week runs Sunday to Saturday.
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 22, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 22, 15, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 21, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 15, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 14, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 8, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 7, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 11, 1, 9, 0, 0, TimeSpan.Zero), 90);
+        await AddRideAsync(api, member.Id, new DateTimeOffset(2026, 10, 31, 9, 0, 0, TimeSpan.Zero), 90);
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        var clock = MemberClock.For("UTC", DayOfWeek.Sunday, new FixedTime(Now));
+        var history = await TrainingGoalSuggestion.ReadAsync(db, member.Id, clock, null, Ct);
+        Assert.Equal(4, history.WeeksOfRides);
+        Assert.Equal(8, history.RidesInLast4Weeks);
+        Assert.Equal(720, history.MinutesInLast4Weeks);
+        Assert.Equal(0, history.EmptyWeeksInLast4);
+        Assert.Equal(9, history.RidesInLast8Weeks);
+        // Five weeks of the eight hold a ride; the four of the last four weeks hold all eight counted rides.
+        Assert.Equal(5, history.ActiveWeeksInLast8);
+        Assert.Equal(2, history.DaysSinceLastRide);
+
+        // The same answers the setup's suggestion shows.
+        var plan = await PlanAsync(member.Client);
+        Assert.Equal(TrainingGoals.Fitter, plan.SuggestedGoal);
+        Assert.Equal(TrainingGoalReasons.RegularRider, plan.SuggestionReason);
+        Assert.Equal("sunday", plan.FirstDayOfWeek);
+    }
+
+    [Fact]
+    public async Task SaveTrainingPlan_ShouldKeepOnePlan_WhenTwoSavesArriveAtOnce()
+    {
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+
+        var answers = await Task.WhenAll(
+            SaveAsync(member.Client, Setup(hours: 5)),
+            SaveAsync(member.Client, Setup(hours: 7)));
+
+        Assert.All(answers, answer => Assert.Equal(HttpStatusCode.OK, answer.StatusCode));
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        Assert.Equal(1, await db.TrainingPlans.CountAsync(p => p.UserId == member.Id, Ct));
     }
 
     private static async Task AddSessionAsync(TestApi api, Guid userId, DateOnly date)

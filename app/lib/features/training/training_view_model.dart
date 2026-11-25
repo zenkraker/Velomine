@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
-import '../../core/command.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/user_message.dart';
@@ -36,8 +35,7 @@ class TrainingViewModel extends _$TrainingViewModel {
   }
 
   /// Takes the plan a screen has just saved, so the destination and the switch apply without asking again.
-  void adopt(TrainingPlanResponse plan) =>
-      state = state.copyWith(plan: plan, load: const CommandState.idle());
+  void adopt(TrainingPlanResponse plan) => state = state.copyWith(plan: plan);
 
   /// Turns auto training off: today's and later sessions go on the server, the past ones stay.
   Future<bool> turnOff() async {

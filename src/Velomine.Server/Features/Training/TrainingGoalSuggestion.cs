@@ -111,14 +111,21 @@ public static class TrainingGoalSuggestion
     public static async Task<TrainingHistory> ReadAsync(
         VelomineDbContext db, Guid userId, MemberClock clock, DateOnly? nextEventDate, CancellationToken ct)
     {
-        var rides = await db.Rides.AsNoTracking()
-            .Where(r => r.UserId == userId && r.Status == RideStatus.Ready && r.StartTime != null)
+        var ready = db.Rides.AsNoTracking()
+            .Where(r => r.UserId == userId && r.Status == RideStatus.Ready && r.StartTime != null);
+        var today = clock.Today;
+        // The history's length needs the first ride only, not the whole history: one row.
+        var firstRide = await ready.OrderBy(r => r.StartTime)
+            .Select(r => new { r.StartTime, r.UtcOffsetMinutes })
+            .FirstOrDefaultAsync(ct);
+        // The eight weeks the rules count, with a day's margin for the offset a ride carries.
+        var since = new DateTimeOffset(today.AddDays(-(8 * 7 + 1)).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var rides = await ready.Where(r => r.StartTime >= since)
             .Select(r => new { r.StartTime, r.UtcOffsetMinutes, r.MovingS, r.AvgPowerW })
             .ToListAsync(ct);
         var riderSetAnFtp = await db.Users.AsNoTracking()
             .AnyAsync(u => u.Id == userId && u.FtpW != null, ct);
 
-        var today = clock.Today;
         var local = rides
             .Select(r => new
             {
@@ -127,10 +134,15 @@ public static class TrainingGoalSuggestion
                 HasPower = r.AvgPowerW != null,
             })
             .ToList();
-        var first = local.Count == 0 ? (DateOnly?)null : local.Min(r => r.Date);
+        var first = firstRide is null
+            ? (DateOnly?)null
+            : clock.LocalDateOf(firstRide.StartTime!.Value, firstRide.UtcOffsetMinutes);
 
-        // The weeks the rules count: this one and the three, or seven, before it, as the member's calendar has them.
-        int WeekIndex(DateOnly date) => (today.DayNumber - date.DayNumber + WeekStartOffset(today, clock.FirstDayOfWeek)) / 7;
+        // The weeks the rules count: this one and the three, or seven, before it. A date's own week start decides,
+        // so a Saturday after today's weekday in the same calendar week is still last week.
+        var todayOffset = WeekStartOffset(today, clock.FirstDayOfWeek);
+        int WeekIndex(DateOnly date) =>
+            (today.DayNumber - date.DayNumber + WeekStartOffset(date, clock.FirstDayOfWeek) - todayOffset) / 7;
 
         var last4 = local.Where(r => WeekIndex(r.Date) < 4).ToList();
         var last8 = local.Where(r => WeekIndex(r.Date) < 8).ToList();
@@ -140,7 +152,8 @@ public static class TrainingGoalSuggestion
             RidesInLast4Weeks: last4.Count,
             MinutesInLast4Weeks: last4.Sum(r => r.MovingS) / 60,
             EmptyWeeksInLast4: 4 - last4.Select(r => WeekIndex(r.Date)).Distinct().Count(),
-            DaysSinceLastRide: local.Count == 0 ? int.MaxValue : local.Max(r => today.DayNumber - r.Date.DayNumber),
+            // The smallest distance back is the last ride; the largest would be the first one counted.
+            DaysSinceLastRide: local.Count == 0 ? int.MaxValue : local.Min(r => today.DayNumber - r.Date.DayNumber),
             RidesInLast8Weeks: last8.Count,
             HoursInLast8Weeks: last8.Sum(r => r.MovingS) / 3600,
             ActiveWeeksInLast8: last8.Select(r => WeekIndex(r.Date)).Distinct().Count(),
@@ -149,7 +162,7 @@ public static class TrainingGoalSuggestion
             NextEventDate: nextEventDate);
     }
 
-    /// <summary>How many days into the member's week today is, so the week's own first day is index 0.</summary>
-    private static int WeekStartOffset(DateOnly today, DayOfWeek firstDayOfWeek) =>
-        ((int)today.DayOfWeek - (int)firstDayOfWeek + 7) % 7;
+    /// <summary>How many days into its own week a date is, the member's first day of the week being 0.</summary>
+    private static int WeekStartOffset(DateOnly date, DayOfWeek firstDayOfWeek) =>
+        ((int)date.DayOfWeek - (int)firstDayOfWeek + 7) % 7;
 }

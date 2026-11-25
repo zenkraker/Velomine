@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 
@@ -111,6 +112,28 @@ public sealed class SaveTrainingPlan(
             db.TrainingPlans.Add(plan);
         }
 
+        Apply(plan, req, days, time);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+        { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            // Two saves at once: the other one created the plan first. The same answers go onto that row.
+            db.Entry(plan).State = EntityState.Detached;
+            plan = await db.TrainingPlans.FirstAsync(p => p.UserId == userId, ct);
+            Apply(plan, req, days, time);
+            await db.SaveChangesAsync(ct);
+        }
+
+        var clock = await MemberClock.ForAsync(db, userId, time, ct);
+        await Send.OkAsync(await TrainingPlanView.OfAsync(db, user, clock, time, ct), ct);
+    }
+
+    /// <summary>The rider's answers, as starting and changing both write them.</summary>
+    private static void Apply(TrainingPlan plan, SaveTrainingPlanRequest req, int[] days, TimeProvider time)
+    {
         plan.Goal = req.Goal;
         plan.Days = days;
         plan.HoursPerWeek = req.HoursPerWeek;
@@ -119,9 +142,5 @@ public sealed class SaveTrainingPlan(
             : null;
         plan.IsOn = true;
         plan.UpdatedAt = time.GetUtcNow();
-        await db.SaveChangesAsync(ct);
-
-        var clock = await MemberClock.ForAsync(db, userId, time, ct);
-        await Send.OkAsync(await TrainingPlanView.OfAsync(db, user, clock, time, ct), ct);
     }
 }
