@@ -1,4 +1,6 @@
+import 'package:material_ui/material_ui.dart' show DateUtils;
 import 'package:intl/intl.dart';
+import 'package:velomine_api/api.dart' show TrainingWeekSession;
 
 import '../../l10n/generated/app_localizations.dart';
 
@@ -64,3 +66,70 @@ String? defaultLongRideDay(Iterable<String> days) {
 /// The days of the plan in the order the setup shows them.
 List<String> orderedDays(Iterable<String> days) =>
     trainingDayIds.where(days.contains).toList();
+
+/// A session's name in the language on screen. The server sends both, because a recipe's names live in its own table.
+String sessionName(
+  AppLocalizations l10n, {
+  required String english,
+  required String italian,
+}) => l10n.localeName.startsWith('it') ? italian : english;
+
+/// The session a ride might be, in the words the mock-up gives: "Was this your Thursday strong and steady?" A session
+/// name is lowercase inside the sentence, as every name in TrainingNames.md reads there.
+String trainingQuestion(AppLocalizations l10n, DateTime day, String name) =>
+    l10n.trainingQuestionTitle(
+      DateFormat.EEEE(l10n.localeName).format(day),
+      _lowerFirst(name),
+    );
+
+/// The same session once the rider said the ride was it: "This was your Thursday strong and steady."
+String trainingLinked(AppLocalizations l10n, DateTime day, String name) =>
+    l10n.trainingLinkedTitle(
+      DateFormat.EEEE(l10n.localeName).format(day),
+      _lowerFirst(name),
+    );
+
+/// "This ride looks like the session planned for yesterday", or tomorrow: the question only ever asks about the day
+/// before or after.
+String trainingQuestionLine(
+  AppLocalizations l10n,
+  DateTime day,
+  DateTime rideDay,
+) => DateUtils.isSameDay(day, rideDay.subtract(const Duration(days: 1)))
+    ? l10n.trainingQuestionYesterday
+    : l10n.trainingQuestionTomorrow;
+
+String _lowerFirst(String text) =>
+    text.isEmpty ? text : text[0].toLowerCase() + text.substring(1);
+
+/// The state of a session as a word for its badge: "Done · 92", "Skipped", or null for one still planned.
+String? trainingStateText(AppLocalizations l10n, TrainingWeekSession session) =>
+    switch (session.state) {
+      'done' => l10n.trainingStateDone(session.result.orElse(null)?.score ?? 0),
+      'easy' => l10n.trainingStateEasy,
+      'moved' => l10n.trainingStateMoved,
+      'skipped' => l10n.trainingStateSkipped,
+      'missed' => l10n.trainingStateMissed,
+      _ => null,
+    };
+
+/// The kind line under this week's rows: never red, never a streak, and nothing to catch up on.
+String trainingWeekKind(AppLocalizations l10n, int done, int total) => switch ((
+  done,
+  total,
+)) {
+  (0, _) => l10n.trainingWeekKindNothing,
+  (final done, final total) when done >= total => l10n.trainingWeekKindOnTrack,
+  (final done, final total) when done * 2 >= total =>
+    l10n.trainingWeekKindOnTrack,
+  _ => l10n.trainingWeekKindStarted,
+};
+
+/// The score's own kind line, from how it went: praise for a session ridden to plan, and never a complaint.
+String sessionScoreKind(AppLocalizations l10n, int score) => switch (score) {
+  >= 95 => l10n.sessionKindSpotOn,
+  >= 85 => l10n.sessionKindOnPlan,
+  >= 70 => l10n.sessionKindClose,
+  >= 50 => l10n.sessionKindMost,
+  _ => l10n.sessionKindAny,
+};

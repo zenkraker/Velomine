@@ -14,10 +14,10 @@ public sealed class MatchTrainingSessionRequest
     public Guid Id { get; set; }
 
     /// <summary>The ride the question is about.</summary>
-    public Guid RideId { get; set; }
+    public required Guid RideId { get; set; }
 
     /// <summary>"yes": this ride was that session. "no": it was not, and it never will be.</summary>
-    public string Answer { get; set; } = "";
+    public required string Answer { get; set; }
 }
 
 /// <summary>The two answers to "Was this your Thursday strong and steady?".</summary>

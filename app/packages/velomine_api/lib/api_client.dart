@@ -337,12 +337,16 @@ class ApiClient {
           return LoginRequest.fromJson(value);
         case 'LoginTwoFactorRequest':
           return LoginTwoFactorRequest.fromJson(value);
+        case 'MainSetTarget':
+          return MainSetTarget.fromJson(value);
         case 'MaintenanceJob':
           return MaintenanceJob.fromJson(value);
         case 'MaintenanceReminderResponse':
           return MaintenanceReminderResponse.fromJson(value);
         case 'MarkReminderDoneRequest':
           return MarkReminderDoneRequest.fromJson(value);
+        case 'MatchTrainingSessionRequest':
+          return MatchTrainingSessionRequest.fromJson(value);
         case 'MeResponse':
           return MeResponse.fromJson(value);
         case 'MyClubResponse':
@@ -451,6 +455,8 @@ class ApiClient {
           return SessionNote.fromJson(value);
         case 'SessionResponse':
           return SessionResponse.fromJson(value);
+        case 'SessionResult':
+          return SessionResult.fromJson(value);
         case 'SetClubLocationRequest':
           return SetClubLocationRequest.fromJson(value);
         case 'SetClubMemberRoleRequest':
@@ -523,6 +529,8 @@ class ApiClient {
           return TrainingPlanResponse.fromJson(value);
         case 'TrainingResponse':
           return TrainingResponse.fromJson(value);
+        case 'TrainingRideMatch':
+          return TrainingRideMatch.fromJson(value);
         case 'TrainingWeek':
           return TrainingWeek.fromJson(value);
         case 'TrainingWeekSession':

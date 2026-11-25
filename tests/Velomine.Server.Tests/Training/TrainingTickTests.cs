@@ -1,0 +1,368 @@
+using System.Net;
+using System.Net.Http.Json;
+using Dynastream.Fit;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Velomine.Server.Data;
+using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Notifications;
+using Velomine.Server.Features.Rides;
+using Velomine.Server.Features.Rides.Ingestion;
+using Velomine.Server.Features.Training;
+using Velomine.Server.Features.Wellbeing;
+using static Velomine.Server.Tests.Rides.TestRideFiles;
+
+namespace Velomine.Server.Tests.Training;
+
+/// <summary>
+/// A ride ticks the session of its day as soon as it is ready, or asks about one the day before or after. The score it
+/// then earns is computed on read, the rider's own, and a re-read, a duplicate and a deleted ride each leave the
+/// session exactly where they should.
+/// </summary>
+public sealed class TrainingTickTests(PostgresFixture postgres)
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    /// <summary>The local day of a ride read from <see cref="TestRideFiles.Start"/>: the file says +2 hours.</summary>
+    private static readonly DateOnly Day = new(2026, 10, 3);
+
+    private static readonly DateTimeOffset Now = new(2026, 10, 3, 20, 0, 0, TimeSpan.Zero);
+
+    private Task<TestApi> StartAsync(DateTimeOffset? now = null) =>
+        TestApi.StartAsync(postgres, b =>
+        {
+            b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+            b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FakeTime { Now = now ?? Now }));
+        });
+
+    /// <summary>A rider with an FTP, a plan that is on, and one open session on the day.</summary>
+    private static async Task<(TestMember Member, Guid SessionId)> RiderAsync(
+        TestApi api, DateOnly day, string recipe = "R05", int minutes = 60, int? ftpW = 250, int[]? days = null)
+    {
+        var member = await api.NewMemberAsync("Rider");
+        if (ftpW is { } ftp)
+            (await member.Client.PutAsJsonAsync("/api/v1/accounts/me/ftp", new SetFtpRequest(ftp), Ct)).EnsureSuccessStatusCode();
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        db.TrainingPlans.Add(new TrainingPlan
+        {
+            UserId = member.Id,
+            Goal = TrainingGoals.Fitter,
+            Days = days ?? [1, 3, 5],
+            HoursPerWeek = 6,
+            IsOn = true,
+            LastPlannedFor = day,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        var session = new TrainingSession
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = member.Id,
+            LocalDate = day,
+            Recipe = recipe,
+            Minutes = minutes,
+            BlockPercents = [91],
+            State = TrainingSessionStates.Planned,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+        db.TrainingSessions.Add(session);
+        await db.SaveChangesAsync(Ct);
+        return (member, session.Id);
+    }
+
+    private static async Task<RideResponse> UploadAsync(HttpClient client, byte[] file, string key = "ride-1")
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/rides/uploads")
+        {
+            Content = new MultipartFormDataContent { { new ByteArrayContent(file), "file", "ride.fit" } },
+        };
+        request.Headers.Add("Idempotency-Key", key);
+        var accepted = await client.SendAsync(request, Ct);
+        Assert.Equal(HttpStatusCode.Accepted, accepted.StatusCode);
+        var id = (await accepted.Content.ReadFromJsonAsync<UploadRideResponse>(Ct))!.RideId;
+        return await TestApi.WaitForReadAsync(client, id);
+    }
+
+    private static async Task<TrainingSession> SessionAsync(TestApi api, Guid id)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        return await db.TrainingSessions.AsNoTracking().SingleAsync(s => s.Id == id, Ct);
+    }
+
+    private static async Task<TrainingWeek> WeekAsync(TestMember member)
+    {
+        var weeks = await member.Client.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct);
+        return Assert.Single(weeks!.Weeks);
+    }
+
+    private static async Task<NotificationResponse[]> NotificationsAsync(TestMember member) =>
+        (await member.Client.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct))!.Notifications;
+
+    [Theory]
+    [InlineData(SubSport.Generic)]
+    [InlineData(SubSport.IndoorCycling)]
+    [InlineData(SubSport.VirtualActivity)]
+    public async Task Ride_ShouldTickTheSessionOfItsDay_WhenItIsReady(SubSport subSport)
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, SubSport: subSport)));
+
+        Assert.Equal("ready", ride.Status);
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Done, session.State);
+        Assert.Equal(ride.Id, session.RideId);
+        Assert.Equal(Day, session.LocalDate);
+    }
+
+    [Fact]
+    public async Task Week_ShouldCarryTheScoreAndTheMainSet_WhenTheSessionIsDone()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day);
+        // A steady 150 W for the hour: 36 of effort against the 57.8 the hour plans, and nothing in the 220–235 W band.
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, Power: _ => 150)));
+
+        var week = await WeekAsync(member);
+        var session = Assert.Single(week.Sessions);
+
+        Assert.Equal(TrainingSessionStates.Done, session.State);
+        var result = Assert.IsType<SessionResult>(session.Result);
+        Assert.Equal(65, result.Score);
+        Assert.Equal(60, result.PlannedMinutes);
+        Assert.Equal(60, result.DoneMinutes, 1);
+        Assert.Equal(57.8, result.PlannedEffort);
+        Assert.Equal(36, result.DoneEffort!.Value, 1);
+        Assert.Equal(0, result.MainSetShare!.Value, 3);
+        Assert.Equal(new MainSetTarget("power", 228, 150), result.MainSet);
+    }
+
+    [Fact]
+    public async Task Week_ShouldReachOneHundred_WhenTheRideIsThePlan()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day);
+        // 228 W is the middle of the main set's band: the whole hour in target, more effort than planned.
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, Power: _ => 228)));
+
+        var session = Assert.Single((await WeekAsync(member)).Sessions);
+
+        Assert.Equal(100, session.Result!.Score);
+        Assert.Equal(1, session.Result.MainSetShare!.Value, 3);
+    }
+
+    [Fact]
+    public async Task Week_ShouldScoreTimeAndEffortFiftyFifty_WhenTheRiderHasNoSensors()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day, recipe: "R14", minutes: 30);
+        // No power meter and no strap: the gentle base recipe has no watt or heart-rate target, so only time and how
+        // hard it felt can count it. Half an hour rated 7 is 50 of effort against the 12.5 the session plans.
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 1800, NoPower: true, NoHeartRate: true)));
+        (await member.Client.PostAsJsonAsync("/api/v1/wellbeing/consent", new WellbeingConsentRequest(true), Ct))
+            .EnsureSuccessStatusCode();
+        (await member.Client.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/feel", new SaveRideFeelRequest { Id = ride.Id, Rpe = 7 }, Ct))
+            .EnsureSuccessStatusCode();
+
+        var session = Assert.Single((await WeekAsync(member)).Sessions);
+
+        Assert.NotNull(session.Result);
+        Assert.Equal(100, session.Result!.Score);
+        Assert.Null(session.Result.MainSetShare);
+        Assert.Null(session.Result.MainSet);
+    }
+
+    [Fact]
+    public async Task Ride_ShouldAskOnTheRidePageAndInTheInbox_WhenItIsCloseToTheSessionBeforeIt()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
+
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        var question = Assert.IsType<TrainingRideMatch>(ride.Training);
+        Assert.Equal(TrainingSessionStates.Planned, question.State);
+        Assert.Equal(sessionId, question.SessionId);
+        Assert.Equal(Day.AddDays(-1), question.LocalDate);
+        // The question is in the inbox, and the session is still open where it was planned.
+        var notification = Assert.Single(await NotificationsAsync(member),
+            n => n.Type == NotificationTypes.TrainingSessionQuestion);
+        Assert.Equal(ride.Id, notification.RideId);
+        Assert.Equal(sessionId, notification.Training!.SessionId);
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Planned, session.State);
+        Assert.Equal(sessionId, session.Id);
+        Assert.Equal(Day.AddDays(-1), session.LocalDate);
+        Assert.Equal(ride.Id, session.QuestionRideId);
+    }
+
+    [Fact]
+    public async Task Session_ShouldTickAndMoveToTheRidesDay_WhenTheRiderAnswersYes()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        var answer = await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{sessionId}/match",
+            new MatchTrainingSessionRequest { Id = sessionId, RideId = ride.Id, Answer = SessionMatchAnswers.Yes }, Ct);
+
+        Assert.Equal(HttpStatusCode.NoContent, answer.StatusCode);
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Done, session.State);
+        Assert.Equal(ride.Id, session.RideId);
+        Assert.Equal(Day, session.LocalDate);
+        Assert.Null(session.QuestionRideId);
+        // The question is answered, so the inbox does not keep it.
+        Assert.DoesNotContain(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingSessionQuestion);
+        // The week shows it where it happened, with the score.
+        var week = await WeekAsync(member);
+        Assert.Equal(Day, Assert.Single(week.Sessions).LocalDate);
+        Assert.NotNull(week.Sessions[0].Result);
+    }
+
+    [Fact]
+    public async Task Ride_ShouldNeverAskAgain_WhenTheRiderAnswersNo()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        var answer = await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{sessionId}/match",
+            new MatchTrainingSessionRequest { Id = sessionId, RideId = ride.Id, Answer = SessionMatchAnswers.No }, Ct);
+
+        Assert.Equal(HttpStatusCode.NoContent, answer.StatusCode);
+        var session = await SessionAsync(api, sessionId);
+        Assert.Null(session.QuestionRideId);
+        // Its day was yesterday, so saying no leaves it missed rather than open.
+        Assert.Equal(TrainingSessionStates.Missed, session.State);
+        Assert.Null((await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!.Training);
+        Assert.DoesNotContain(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingSessionQuestion);
+        // A re-read is not a first read: the question stays answered.
+        await api.Services.GetRequiredService<RideReparseService>().RunAsync(Ct, RideParserVersion.Current + 1);
+        Assert.Null((await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!.Training);
+    }
+
+    [Fact]
+    public async Task Session_ShouldGoBackToOpen_WhenTheRideIsDeleted()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+        Assert.Equal(TrainingSessionStates.Done, (await SessionAsync(api, sessionId)).State);
+
+        (await member.Client.DeleteAsync($"/api/v1/rides/{ride.Id}", Ct)).EnsureSuccessStatusCode();
+
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Planned, session.State);
+        Assert.Null(session.RideId);
+    }
+
+    [Fact]
+    public async Task Session_ShouldGoBackToMissed_WhenItsDayHasPassedAndItsRideIsDeleted()
+    {
+        await using var api = await StartAsync(Now.AddDays(2));
+        var (member, sessionId) = await RiderAsync(api, Day);
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        (await member.Client.DeleteAsync($"/api/v1/rides/{ride.Id}", Ct)).EnsureSuccessStatusCode();
+
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Missed, session.State);
+        Assert.Null(session.RideId);
+    }
+
+    [Fact]
+    public async Task Session_ShouldNotTickAgain_WhenTheRideIsReadAgain()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+        var ticked = await SessionAsync(api, sessionId);
+        var notifications = (await NotificationsAsync(member)).Length;
+
+        // A better parser reads the same file again: the ride keeps the session it ticked, and asks nothing new.
+        await api.Services.GetRequiredService<RideReparseService>().RunAsync(Ct, RideParserVersion.Current + 1);
+
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(ticked.RideId, session.RideId);
+        Assert.Equal(TrainingSessionStates.Done, session.State);
+        Assert.Equal(notifications, (await NotificationsAsync(member)).Length);
+        Assert.Null(session.QuestionRideId);
+    }
+
+    [Fact]
+    public async Task Session_ShouldTickOnce_WhenTheSameFileIsUploadedTwice()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+        var file = Fit(new FitSession(Start, 3600));
+
+        var first = await UploadAsync(member.Client, file, key: "first");
+        var second = await UploadAsync(member.Client, file, key: "second");
+
+        Assert.Equal("duplicate", second.Status);
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Done, session.State);
+        Assert.Equal(first.Id, session.RideId);
+    }
+
+    [Fact]
+    public async Task Session_ShouldNotAsk_WhenTheRideIsFurtherFromThePlanThanAQuarter()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
+
+        // Two hours and a half against the hour planned: outside a quarter in duration.
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 9000)));
+
+        Assert.Null(ride.Training);
+        Assert.Null((await SessionAsync(api, sessionId)).QuestionRideId);
+        Assert.DoesNotContain(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingSessionQuestion);
+    }
+
+    [Fact]
+    public async Task Session_ShouldNotBeVisibleToAnotherMember_WhenTheyReadTheirOwnWeek()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day);
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+        var other = await api.NewMemberAsync("Other Rider");
+
+        // The week and the score are the rider's own: the other member has no plan, so no week, and no ride either.
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await other.Client.GetAsync("/api/v1/training/week", Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await other.Client.GetAsync($"/api/v1/rides/{ride.Id}", Ct)).StatusCode);
+        Assert.Equal(1, (await WeekAsync(member)).Sessions.Count(s => s.Result is not null));
+    }
+
+    [Fact]
+    public async Task Session_ShouldStayWhereItIs_WhenTheSweepPlansTheWeekWithAQuestionOpen()
+    {
+        await using var api = await StartAsync();
+        // The session is tomorrow, a day the sweep may rewrite, and the ride that might be it is today.
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(1), days: [0, 1, 2, 3, 4, 5, 6]);
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+        Assert.NotNull((await SessionAsync(api, sessionId)).QuestionRideId);
+
+        // The nightly planning leaves a session the rider is being asked about where it is, so the question survives
+        // the night and its answer has a session to move.
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var user = await db.Users.AsNoTracking().SingleAsync(u => u.Id == member.Id, Ct);
+            var plan = await db.TrainingPlans.SingleAsync(p => p.UserId == member.Id, Ct);
+            await WeekPlanning.PlanAsync(db, user, plan, MemberClock.For(user.TimeZone, user.FirstDayOfWeek,
+                scope.ServiceProvider.GetRequiredService<TimeProvider>()),
+                scope.ServiceProvider.GetRequiredService<TimeProvider>(), Ct);
+        }
+
+        var session = await SessionAsync(api, sessionId);
+        Assert.NotNull(session.QuestionRideId);
+        Assert.Equal(Day.AddDays(1), session.LocalDate);
+    }
+}

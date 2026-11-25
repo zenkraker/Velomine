@@ -5,7 +5,8 @@ normative: **MUST** and **MUST NOT** are requirements, and a deviation is a bug,
 
 The code that implements it lives in `Features/Rides/TrainingLoad.cs`, `Features/Rides/Ingestion/{RideMetrics,
 PowerBests,EstimatedPower}.cs`, `Features/Analytics/` (`Readiness.cs` for F2), `Features/Accounts/HeartRates.cs` and
-`Features/Training/` (`Recipes.cs`, `SessionPlan.cs`, `SessionTargets.cs`, `WeekPlanner.cs` for the planned week).
+`Features/Training/` (`Recipes.cs`, `SessionPlan.cs`, `SessionTargets.cs`, `WeekPlanner.cs` for the planned week,
+`SessionMatch.cs` for ticking and `SessionScore.cs` for L7).
 
 ## Rules for changing a model
 
@@ -353,6 +354,35 @@ Velomine's own choice, and a session ridden at the top of the band scores a few 
 Source: Allen & Coggan's TSS form (P3) applied to a plan; the band's middle is Velomine's own. Code:
 `Features/Training/SessionPlan.cs` (`PlannedScore`), test `SessionPlanTests`.
 
+### L8 — Session score
+
+Velomine's own score for one planned session against the ride that was it, 0–100, computed on read from the session and
+the ride's stored numbers and never stored (see *Stored or computed*):
+
+```
+time   = clamp(moving time / planned minutes, 0, 1)
+effort = clamp(ride effort score (L1) / the session's planned effort score (L7), 0, 1)
+target = clamp(seconds inside the main set's target / the main set's planned seconds, 0, 1)
+
+score = round(100 × (40 % × time + 40 % × effort + 20 % × target))   with the leading signal
+score = round(100 × (50 % × time + 50 % × effort))                   without it
+```
+
+- The **leading signal** is what the rider could follow: power when the ride has power and every main-set block has a
+  % FTP band (P4), else heart rate when the ride has heart rate and every main-set block has a % threshold-heart-rate
+  band (H5), else nothing. The gentle base recipes ride by feel and have neither, and neither has a ride without a
+  sensor: without the leading signal the time in target cannot be measured, so time and effort share the score 50/50
+  and a rider without sensors still reaches 100.
+- **Time in target** counts the seconds whose sampled value is inside any of the main set's own bands, over the main
+  set's planned minutes and capped at the whole set. A pause or a gap over 30 s is not time ridden.
+- A part of the plan is never worth more than the whole: a longer or harder ride does not pay for a block left out, and
+  the score is never negative or above 100.
+
+**Where Velomine defines its own score.** The three weights, the 50/50 fallback and the cap at the whole plan are
+Velomine's own (owner, 24 Nov 2026). No other platform's execution or compliance score is this number and it MUST NOT be
+presented as one. It is the rider's private number: it MUST NOT be shown to anyone but the rider, or compared between
+riders. Code: `Features/Training/SessionScore.cs`, tests `SessionScoreTests` and `TrainingTickTests`.
+
 ## Feel and readiness
 
 ### F1 — Feel score
@@ -638,6 +668,8 @@ another platform's number:
 - the intensity labels (L5) — thresholds added to Treff's PI.
 - "heavy week" (L3) — 1.5 × the usual strain.
 - the planned effort score (L7) — P3's form with the middle of a recipe's band as the block's intensity.
+- the session score (L8) — time 40 %, effort 40 % and time in target 20 %, or time and effort 50/50 without the leading
+  signal.
 - the planned week (W1–W5) — the hard-day and loaded-day limits, the cycle, the 65 % lighter week, the 10 % ramp and the
   gentle base block. The coaching practice behind their shape is cited, but no published algorithm plans a week this way,
   so none of it is presented as one.

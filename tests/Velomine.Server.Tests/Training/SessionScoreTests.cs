@@ -3,7 +3,7 @@ using Velomine.Server.Features.Training;
 namespace Velomine.Server.Tests.Training;
 
 /// <summary>
-/// Velomine's session score (L7): time 40 %, effort 40 % and time in target on the main set 20 % when the ride carries
+/// Velomine's session score (L8): time 40 %, effort 40 % and time in target on the main set 20 % when the ride carries
 /// the leading signal; without it, time 50 % and effort 50 %, so a rider without sensors still reaches 100.
 /// </summary>
 public sealed class SessionScoreTests

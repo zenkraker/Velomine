@@ -249,6 +249,7 @@ Class | Method | HTTP request | Description
 *TrainingApi* | [**getTrainingPlan**](doc//TrainingApi.md#gettrainingplan) | **GET** /api/v1/training/plan | 
 *TrainingApi* | [**getTrainingWeek**](doc//TrainingApi.md#gettrainingweek) | **GET** /api/v1/training/week | 
 *TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
+*TrainingApi* | [**matchTrainingSession**](doc//TrainingApi.md#matchtrainingsession) | **POST** /api/v1/training/sessions/{id}/match | 
 *TrainingApi* | [**saveTrainingPlan**](doc//TrainingApi.md#savetrainingplan) | **PUT** /api/v1/training/plan | 
 *TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
 *TrainingApi* | [**turnOffTrainingPlan**](doc//TrainingApi.md#turnofftrainingplan) | **DELETE** /api/v1/training/plan | 
@@ -339,9 +340,11 @@ Class | Method | HTTP request | Description
  - [ListTemplatesResponse](doc//ListTemplatesResponse.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [LoginTwoFactorRequest](doc//LoginTwoFactorRequest.md)
+ - [MainSetTarget](doc//MainSetTarget.md)
  - [MaintenanceJob](doc//MaintenanceJob.md)
  - [MaintenanceReminderResponse](doc//MaintenanceReminderResponse.md)
  - [MarkReminderDoneRequest](doc//MarkReminderDoneRequest.md)
+ - [MatchTrainingSessionRequest](doc//MatchTrainingSessionRequest.md)
  - [MeResponse](doc//MeResponse.md)
  - [MyClubResponse](doc//MyClubResponse.md)
  - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
@@ -396,6 +399,7 @@ Class | Method | HTTP request | Description
  - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
  - [SessionNote](doc//SessionNote.md)
  - [SessionResponse](doc//SessionResponse.md)
+ - [SessionResult](doc//SessionResult.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
  - [SetClubOwnerRequest](doc//SetClubOwnerRequest.md)
@@ -432,6 +436,7 @@ Class | Method | HTTP request | Description
  - [TrainingNote](doc//TrainingNote.md)
  - [TrainingPlanResponse](doc//TrainingPlanResponse.md)
  - [TrainingResponse](doc//TrainingResponse.md)
+ - [TrainingRideMatch](doc//TrainingRideMatch.md)
  - [TrainingWeek](doc//TrainingWeek.md)
  - [TrainingWeekSession](doc//TrainingWeekSession.md)
  - [TrainingWeeksResponse](doc//TrainingWeeksResponse.md)

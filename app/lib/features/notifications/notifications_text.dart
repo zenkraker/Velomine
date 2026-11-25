@@ -2,6 +2,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../training/training_goals.dart';
 
 /// The sentence for a notification. The server sends its type and subject; wording lives in the app.
 String notificationText(AppLocalizations l10n, NotificationResponse n) =>
@@ -27,6 +28,19 @@ String notificationText(AppLocalizations l10n, NotificationResponse n) =>
       'ftp_suggested' => l10n.notificationFtpSuggested(n.subject),
       'heart_rate_measured' => _heartRate(l10n, n.subject, measured: true),
       'heart_rate_suggested' => _heartRate(l10n, n.subject, measured: false),
+      // "Was this your Thursday strong and steady?": the same question the ride's page asks, answered there.
+      'training_session_question' => switch (n.training.orElse(null)) {
+        final question? => trainingQuestion(
+          l10n,
+          question.localDate,
+          sessionName(
+            l10n,
+            english: question.englishName,
+            italian: question.italianName,
+          ),
+        ),
+        null => n.subject,
+      },
       _ => n.subject,
     };
 
@@ -59,7 +73,8 @@ String? notificationTarget(NotificationResponse n) => switch (n.type) {
   'power_record' ||
   'ftp_suggested' ||
   'heart_rate_measured' ||
-  'heart_rate_suggested' when n.rideId != null => '/rides/${n.rideId}',
+  'heart_rate_suggested' ||
+  'training_session_question' when n.rideId != null => '/rides/${n.rideId}',
   'part_soon' ||
   'part_worn' ||
   'reminder_soon' ||

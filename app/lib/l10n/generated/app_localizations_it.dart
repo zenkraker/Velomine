@@ -5546,4 +5546,177 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionTurnOffTraining => 'disattivare l\'allenamento automatico';
+
+  @override
+  String get trainingWeekCard => 'Questa settimana';
+
+  @override
+  String get trainingWeekRest => 'Riposo';
+
+  @override
+  String get trainingWeekToday => 'oggi';
+
+  @override
+  String trainingWeekLine(int done, int total, String kind) {
+    return '$done di $total fatte. $kind';
+  }
+
+  @override
+  String trainingWeekLineAll(int done, int total) {
+    return '$done di $total fatte. La settimana è tutta qui.';
+  }
+
+  @override
+  String get trainingWeekKindOnTrack => 'Bella rotta.';
+
+  @override
+  String get trainingWeekKindStarted => 'Un buon inizio di settimana.';
+
+  @override
+  String get trainingWeekKindNothing => 'Ancora niente fatto. C\'è tempo.';
+
+  @override
+  String trainingStateDone(int score) {
+    return 'Fatta · $score';
+  }
+
+  @override
+  String get trainingStateEasy => 'Resa facile';
+
+  @override
+  String get trainingStateMoved => 'Spostata';
+
+  @override
+  String get trainingStateSkipped => 'Saltata';
+
+  @override
+  String get trainingStateMissed => 'Persa';
+
+  @override
+  String get trainingStatePlanned => 'In programma';
+
+  @override
+  String get sessionHowItWent => 'Com\'è andata';
+
+  @override
+  String get sessionOfHundred => 'su 100';
+
+  @override
+  String get sessionKindSpotOn => 'Perfetta. Seduta da manuale.';
+
+  @override
+  String get sessionKindOnPlan => 'Come previsto. Dovrebbe sentirsi così.';
+
+  @override
+  String get sessionKindClose =>
+      'Bel lavoro: quasi tutto il piano, fatto bene.';
+
+  @override
+  String get sessionKindMost => 'Hai fatto la maggior parte. Conta.';
+
+  @override
+  String get sessionKindAny =>
+      'Sulla carta non è la seduta, ma l\'uscita conta.';
+
+  @override
+  String sessionPlannedDone(String planned, String done) {
+    return '$planned previsti · $done fatti';
+  }
+
+  @override
+  String sessionMainSetWatts(String planned, String done) {
+    return '$planned W previsti · $done W fatti';
+  }
+
+  @override
+  String sessionMainSetBpm(String planned, String done) {
+    return '$planned bpm previsti · $done bpm fatti';
+  }
+
+  @override
+  String sessionMainSetPlannedOnly(String planned) {
+    return '$planned previsti';
+  }
+
+  @override
+  String get sessionOpenRide => 'Apri l\'uscita →';
+
+  @override
+  String get sessionWhy => 'Perché questa seduta';
+
+  @override
+  String sessionTechnical(String term) {
+    return 'Gli allenatori la chiamano $term.';
+  }
+
+  @override
+  String get sessionBlocks => 'La seduta';
+
+  @override
+  String get sessionFeelExplanation =>
+      'Sensazione 7: duro, lo tieni per circa un\'ora.';
+
+  @override
+  String sessionFeel(int low, int high) {
+    return 'sensazione $low–$high';
+  }
+
+  @override
+  String sessionWatts(int low, int high) {
+    return '$low–$high W';
+  }
+
+  @override
+  String sessionBpm(int low, int high) {
+    return '$low–$high bpm';
+  }
+
+  @override
+  String get sessionEstimated => 'stimati';
+
+  @override
+  String trainingQuestionTitle(String day, String name) {
+    return 'Era questa la tua seduta di $day: $name?';
+  }
+
+  @override
+  String get trainingQuestionYesterday =>
+      'Questa uscita somiglia alla seduta pianificata per ieri.';
+
+  @override
+  String get trainingQuestionTomorrow =>
+      'Questa uscita somiglia alla seduta pianificata per domani.';
+
+  @override
+  String trainingLinkedTitle(String day, String name) {
+    return 'Questa era la tua seduta di $day: $name.';
+  }
+
+  @override
+  String get trainingNotThisSession => 'Non è questa la seduta';
+
+  @override
+  String get actionMatchTrainingSession =>
+      'rispondere alla domanda sulla seduta';
+
+  @override
+  String get sessionTime => 'Tempo';
+
+  @override
+  String get sessionEffortScore => 'Punteggio di sforzo';
+
+  @override
+  String get sessionMainSet => 'Serie principale';
+
+  @override
+  String get sessionBlockWarmup => 'Riscaldamento';
+
+  @override
+  String get sessionBlockRecovery => 'Facile in mezzo';
+
+  @override
+  String get sessionBlockCooldown => 'Defaticamento';
+
+  @override
+  String get sessionGone => 'Questa seduta non è più nella tua settimana.';
 }

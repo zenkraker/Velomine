@@ -21,9 +21,6 @@ public sealed record TrainingRideMatch(
     string ItalianName,
     string State)
 {
-    /// <summary>True while the rider still has to answer: the session waits for this ride to be its own.</summary>
-    public bool Asks => SessionMatch.IsOpen(State);
-
     public static TrainingRideMatch Of(TrainingSession session)
     {
         var recipe = Recipes.ByCode(session.Recipe);

@@ -5510,4 +5510,174 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionTurnOffTraining => 'turn off auto training';
+
+  @override
+  String get trainingWeekCard => 'This week';
+
+  @override
+  String get trainingWeekRest => 'Rest';
+
+  @override
+  String get trainingWeekToday => 'today';
+
+  @override
+  String trainingWeekLine(int done, int total, String kind) {
+    return '$done of $total done. $kind';
+  }
+
+  @override
+  String trainingWeekLineAll(int done, int total) {
+    return '$done of $total done. That is the week, all of it.';
+  }
+
+  @override
+  String get trainingWeekKindOnTrack => 'Nicely on track.';
+
+  @override
+  String get trainingWeekKindStarted => 'A good start to the week.';
+
+  @override
+  String get trainingWeekKindNothing => 'Nothing done yet. There is time.';
+
+  @override
+  String trainingStateDone(int score) {
+    return 'Done · $score';
+  }
+
+  @override
+  String get trainingStateEasy => 'Easy instead';
+
+  @override
+  String get trainingStateMoved => 'Moved';
+
+  @override
+  String get trainingStateSkipped => 'Skipped';
+
+  @override
+  String get trainingStateMissed => 'Missed';
+
+  @override
+  String get trainingStatePlanned => 'Planned';
+
+  @override
+  String get sessionHowItWent => 'How it went';
+
+  @override
+  String get sessionOfHundred => 'of 100';
+
+  @override
+  String get sessionKindSpotOn => 'Spot on. Textbook session.';
+
+  @override
+  String get sessionKindOnPlan => 'Right on plan. That is how it should feel.';
+
+  @override
+  String get sessionKindClose => 'Good work: most of the plan, ridden well.';
+
+  @override
+  String get sessionKindMost => 'You got most of it. It counts.';
+
+  @override
+  String get sessionKindAny => 'Not the session on paper, but the ride counts.';
+
+  @override
+  String sessionPlannedDone(String planned, String done) {
+    return '$planned planned · $done ridden';
+  }
+
+  @override
+  String sessionMainSetWatts(String planned, String done) {
+    return '$planned W planned · $done W ridden';
+  }
+
+  @override
+  String sessionMainSetBpm(String planned, String done) {
+    return '$planned bpm planned · $done bpm ridden';
+  }
+
+  @override
+  String sessionMainSetPlannedOnly(String planned) {
+    return '$planned planned';
+  }
+
+  @override
+  String get sessionOpenRide => 'Open the ride →';
+
+  @override
+  String get sessionWhy => 'Why this session';
+
+  @override
+  String sessionTechnical(String term) {
+    return 'Coaches call this $term.';
+  }
+
+  @override
+  String get sessionBlocks => 'The session';
+
+  @override
+  String get sessionFeelExplanation =>
+      'Feel 7: hard, you could hold it about an hour.';
+
+  @override
+  String sessionFeel(int low, int high) {
+    return 'feel $low–$high';
+  }
+
+  @override
+  String sessionWatts(int low, int high) {
+    return '$low–$high W';
+  }
+
+  @override
+  String sessionBpm(int low, int high) {
+    return '$low–$high bpm';
+  }
+
+  @override
+  String get sessionEstimated => 'estimated';
+
+  @override
+  String trainingQuestionTitle(String day, String name) {
+    return 'Was this your $day $name?';
+  }
+
+  @override
+  String get trainingQuestionYesterday =>
+      'This ride looks like the session planned for yesterday.';
+
+  @override
+  String get trainingQuestionTomorrow =>
+      'This ride looks like the session planned for tomorrow.';
+
+  @override
+  String trainingLinkedTitle(String day, String name) {
+    return 'This was your $day $name.';
+  }
+
+  @override
+  String get trainingNotThisSession => 'Not this session';
+
+  @override
+  String get actionMatchTrainingSession => 'answer the session question';
+
+  @override
+  String get sessionTime => 'Time';
+
+  @override
+  String get sessionEffortScore => 'Effort score';
+
+  @override
+  String get sessionMainSet => 'Main set';
+
+  @override
+  String get sessionBlockWarmup => 'Warm-up';
+
+  @override
+  String get sessionBlockRecovery => 'Easy between';
+
+  @override
+  String get sessionBlockCooldown => 'Cool-down';
+
+  @override
+  String get sessionGone => 'This session is not in your week any more.';
 }

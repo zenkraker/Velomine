@@ -108,9 +108,11 @@ lib/model/list_service_jobs_response.dart
 lib/model/list_templates_response.dart
 lib/model/login_request.dart
 lib/model/login_two_factor_request.dart
+lib/model/main_set_target.dart
 lib/model/maintenance_job.dart
 lib/model/maintenance_reminder_response.dart
 lib/model/mark_reminder_done_request.dart
+lib/model/match_training_session_request.dart
 lib/model/me_response.dart
 lib/model/my_club_response.dart
 lib/model/my_join_request_response.dart
@@ -165,6 +167,7 @@ lib/model/server_info_response.dart
 lib/model/service_entry_response.dart
 lib/model/session_note.dart
 lib/model/session_response.dart
+lib/model/session_result.dart
 lib/model/set_club_location_request.dart
 lib/model/set_club_member_role_request.dart
 lib/model/set_club_owner_request.dart
@@ -201,6 +204,7 @@ lib/model/training_day.dart
 lib/model/training_note.dart
 lib/model/training_plan_response.dart
 lib/model/training_response.dart
+lib/model/training_ride_match.dart
 lib/model/training_week.dart
 lib/model/training_week_session.dart
 lib/model/training_weeks_response.dart

@@ -246,6 +246,29 @@ class RideDetailViewModel extends _$RideDetailViewModel {
     return result.valueOrNull;
   }
 
+  /// Answers the auto-training session's question about this ride, then reads the ride again so the card says what
+  /// became of it: the session it is, or nothing at all.
+  Future<bool> answerSession(
+    String sessionId,
+    String rideId, {
+    required bool yes,
+  }) async {
+    if (state.action.running) return false;
+    state = state.copyWith(action: state.action.start());
+    final result = await ref
+        .read(rideDetailDataProvider)
+        .answerSession(sessionId, rideId, yes: yes);
+    if (!ref.mounted) return false;
+    state = state.copyWith(action: state.action.finish(result));
+    if (result case Failed(:final failure)) {
+      _fail(failure);
+      return false;
+    }
+    final fresh = (await ref.read(rideDetailDataProvider).ride(id)).valueOrNull;
+    if (ref.mounted && fresh != null) state = state.copyWith(ride: fresh);
+    return true;
+  }
+
   /// Returns whether the ride was deleted.
   Future<bool> deleteRide() async {
     if (state.action.running) return false;

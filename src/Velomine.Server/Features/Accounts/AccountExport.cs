@@ -229,7 +229,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
         // The session score is computed from the ride that was the session and never stored (docs/training-models.md,
-        // L7), so the export works it out here exactly as the app's session page does.
+        // L8), so the export works it out here exactly as the app's session page does.
         await AddJsonAsync(zip, "training-plan.json", new
         {
             Plan = trainingPlan is null ? null : new

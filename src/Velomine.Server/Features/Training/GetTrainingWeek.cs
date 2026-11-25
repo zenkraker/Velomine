@@ -93,7 +93,7 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
         var (max, threshold) = HeartRates.For(user, time);
         var hasPowerMeter = await db.Rides.AsNoTracking()
             .AnyAsync(r => r.UserId == user.Id && r.AvgPowerW != null, ct);
-        // The score of every session a ride did, worked out here and never stored (L7).
+        // The score of every session a ride did, worked out here and never stored (L8).
         var results = await SessionScore.ForAsync(db, rows, user, time, ct);
 
         var sessions = rows.Select(s =>

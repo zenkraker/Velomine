@@ -9,7 +9,7 @@ namespace Velomine.Server.Features.Training;
 public sealed record MainSetTarget(string Signal, int Target, int? Average);
 
 /// <summary>
-/// What a done session's ride did against the plan, and the score it earned: Velomine's own 0–100 (L7 in
+/// What a done session's ride did against the plan, and the score it earned: Velomine's own 0–100 (L8 in
 /// `docs/training-models.md`). Computed on read from the session and the ride's stored numbers, never stored, so a ride
 /// read again scores with its new numbers and no parser version moves.
 /// </summary>
@@ -28,7 +28,7 @@ public readonly record struct MainBand(int Low, int High);
 /// <summary>
 /// Velomine's session score, from the time a session planned against the time ridden, the effort score it planned
 /// against the ride's L1 score, and the share of the main set ridden inside its target. The weights are Velomine's own
-/// and are never presented as a published method (see `docs/training-models.md`, *L7 — Session score*).
+/// and are never presented as a published method (see `docs/training-models.md`, *L8 — Session score*).
 /// </summary>
 public static class SessionScore
 {

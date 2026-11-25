@@ -231,6 +231,51 @@ class TrainingApi {
     return null;
   }
 
+  /// Performs an HTTP 'POST /api/v1/training/sessions/{id}/match' operation and returns the [Response].
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [MatchTrainingSessionRequest] matchTrainingSessionRequest (required):
+  Future<Response> matchTrainingSessionWithHttpInfo(String id, MatchTrainingSessionRequest matchTrainingSessionRequest, { Future<void>? abortTrigger, }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/v1/training/sessions/{id}/match'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = matchTrainingSessionRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [MatchTrainingSessionRequest] matchTrainingSessionRequest (required):
+  Future<void> matchTrainingSession(String id, MatchTrainingSessionRequest matchTrainingSessionRequest, { Future<void>? abortTrigger, }) async {
+    final response = await matchTrainingSessionWithHttpInfo(id, matchTrainingSessionRequest, abortTrigger: abortTrigger,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'PUT /api/v1/training/plan' operation and returns the [Response].
   /// Parameters:
   ///
