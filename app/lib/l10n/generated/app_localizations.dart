@@ -9854,29 +9854,29 @@ abstract class AppLocalizations {
   /// **'Why? (optional)'**
   String get trainingSkipReasonLabel;
 
-  /// No description provided for @trainingSkipTired.
+  /// No description provided for @trainingSkipReasonTired.
   ///
   /// In en, this message translates to:
   /// **'Tired'**
-  String get trainingSkipTired;
+  String get trainingSkipReasonTired;
 
-  /// No description provided for @trainingSkipIll.
+  /// No description provided for @trainingSkipReasonIll.
   ///
   /// In en, this message translates to:
   /// **'Ill or injured'**
-  String get trainingSkipIll;
+  String get trainingSkipReasonIll;
 
-  /// No description provided for @trainingSkipNoTime.
+  /// No description provided for @trainingSkipReasonNoTime.
   ///
   /// In en, this message translates to:
   /// **'No time'**
-  String get trainingSkipNoTime;
+  String get trainingSkipReasonNoTime;
 
-  /// No description provided for @trainingSkipOther.
+  /// No description provided for @trainingSkipReasonOther.
   ///
   /// In en, this message translates to:
   /// **'Other'**
-  String get trainingSkipOther;
+  String get trainingSkipReasonOther;
 
   /// No description provided for @trainingSkipAction.
   ///

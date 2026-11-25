@@ -5746,16 +5746,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trainingSkipReasonLabel => 'Why? (optional)';
 
   @override
-  String get trainingSkipTired => 'Tired';
+  String get trainingSkipReasonTired => 'Tired';
 
   @override
-  String get trainingSkipIll => 'Ill or injured';
+  String get trainingSkipReasonIll => 'Ill or injured';
 
   @override
-  String get trainingSkipNoTime => 'No time';
+  String get trainingSkipReasonNoTime => 'No time';
 
   @override
-  String get trainingSkipOther => 'Other';
+  String get trainingSkipReasonOther => 'Other';
 
   @override
   String get trainingSkipAction => 'Skip';

@@ -478,7 +478,7 @@ class _SkipSheetState extends State<_SkipSheet> {
             for (final reason in _skipReasons)
               ChoiceChip(
                 key: Key('skip-$reason'),
-                label: Text(skipReasonText(l10n, reason)),
+                label: Text(trainingSkipReason(l10n, reason)),
                 selected: _reason == reason,
                 onSelected: (chosen) =>
                     setState(() => _reason = chosen ? reason : null),

@@ -5785,16 +5785,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get trainingSkipReasonLabel => 'Perché? (facoltativo)';
 
   @override
-  String get trainingSkipTired => 'Stanco';
+  String get trainingSkipReasonTired => 'Stanco';
 
   @override
-  String get trainingSkipIll => 'Malato o infortunato';
+  String get trainingSkipReasonIll => 'Malato o infortunato';
 
   @override
-  String get trainingSkipNoTime => 'Niente tempo';
+  String get trainingSkipReasonNoTime => 'Niente tempo';
 
   @override
-  String get trainingSkipOther => 'Altro';
+  String get trainingSkipReasonOther => 'Altro';
 
   @override
   String get trainingSkipAction => 'Salta';

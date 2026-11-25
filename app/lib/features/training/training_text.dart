@@ -157,10 +157,12 @@ String moveRefusalText(AppLocalizations l10n, String reason) =>
       _ => l10n.trainingMoveRefusedSession,
     };
 
-/// One of the reasons the skip sheet offers, or null for "no reason given".
-String skipReasonText(AppLocalizations l10n, String reason) => switch (reason) {
-  'tired' => l10n.trainingSkipTired,
-  'ill' => l10n.trainingSkipIll,
-  'no_time' => l10n.trainingSkipNoTime,
-  _ => l10n.trainingSkipOther,
-};
+/// Why the rider skipped a session, in the words their own picker offers: "Tired", "Ill or injured", "No time",
+/// "Other". The same words a coach reads beside a skipped day, so they live here once and both screens use them.
+String trainingSkipReason(AppLocalizations l10n, String reason) =>
+    switch (reason) {
+      'tired' => l10n.trainingSkipReasonTired,
+      'ill' => l10n.trainingSkipReasonIll,
+      'no_time' => l10n.trainingSkipReasonNoTime,
+      _ => l10n.trainingSkipReasonOther,
+    };

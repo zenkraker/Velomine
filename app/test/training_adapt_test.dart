@@ -4,6 +4,7 @@ import 'package:intl/intl.dart' show Intl;
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 import 'package:velomine/features/notifications/notifications_text.dart';
+import 'package:velomine/features/training/training_text.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
@@ -301,6 +302,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+  });
+
+  test('TrainingSkipReason_ShouldNameEveryReasonInTheRidersWords_WhenASessionWasSkipped', () {
+    // The picker's own words, which the rider's screens and a coach's plan card share.
+    const codes = ['tired', 'ill', 'no_time', 'other'];
+
+    expect(
+      codes.map(
+        (code) => trainingSkipReason(
+          lookupAppLocalizations(const Locale('en')),
+          code,
+        ),
+      ),
+      ['Tired', 'Ill or injured', 'No time', 'Other'],
+    );
+    expect(
+      codes.map(
+        (code) => trainingSkipReason(
+          lookupAppLocalizations(const Locale('it')),
+          code,
+        ),
+      ),
+      ['Stanco', 'Malato o infortunato', 'Niente tempo', 'Altro'],
+    );
   });
 
   test(
