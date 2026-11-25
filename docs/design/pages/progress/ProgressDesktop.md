@@ -7,7 +7,7 @@ The Progress overview from 1200 dp: it answers only "How am I today and this wee
 **Layout**
 - Sidebar (240 px) with Progress open and Overview current; content at most 1160 px wide.
 - Title row: `page-title` and the `⋯` menu. Under it, the sport filter chips, for the whole page.
-- With auto training on, a slim **Today** strip under the chips: "Today · Sweet spot 3×10 · 1 h 15", linking to Training ("Training →"). On a rest day it reads "Today · Rest day"; with auto training off it is not there. It is a link, not a fact card: it adds no number to the page.
+- With auto training on, a slim **Today** strip under the chips: "Today · Strong and steady 3×10 · 1 h 15", linking to Training ("Training →"). On a rest day it reads "Today · Rest day"; with auto training off it is not there. It is a link, not a fact card: it adds no number to the page.
 - Row 1, four stat cards, each linking to its sub-page:
   - **Readiness** (score and state) → Wellbeing
   - **Form** (today's form, "Building", fitness and fatigue in the sentence) → Fitness

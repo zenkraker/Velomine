@@ -6,7 +6,7 @@ One planned session: what to ride and why, and, once ridden, how it went. Route 
 
 **Layout**
 - Title row: the `caption` "Training" above the `page-title` (the session's name), a sub-line with the day, the length and the state ("Thursday 27 Nov · 1 h 15 · planned"), and the `⋯` menu: Make today easy (today only; "Back to the plan" when it was made easy), Move, Skip. None is destructive. No main action.
-- **Why this session**: one or two sentences of purpose, in plain words.
+- **Why this session**: one or two sentences of purpose, in plain words, then the technical term as one `caption` in `ink-muted` ("Coaches call this sweet spot"). Names and lines come from `TrainingNames.md`; no other jargon on the page.
 - **The session**: one row per block (warm-up, each main-set block or repeat group, recoveries, cool-down) with its length and the three targets: watts, heart rate and feel. The leading number is bold. Estimated numbers say "estimated". On efforts of 2 minutes or less the heart-rate part reads "heart rate lags here: go by watts and feel". Without a power meter (and no climb estimate), the watts part reads "Add a power meter for watt targets". In the gentle base block, feel leads and watts and heart rate are shown after it, marked estimated.
 - The session's shape as a bar strip above the rows (block heights by intensity, hard blocks in `accent-strong`).
 - One `caption` line under the rows explains feel once: "Feel 7: hard, you could hold it about an hour."
