@@ -16,6 +16,10 @@ class TrainingData {
   Future<Result<TrainingPlanResponse?>> plan() =>
       _api.getTrainingPlan().guard(FailureAction.loadTraining);
 
+  /// This week and, on its last day, next week as the preview. The server answers 404 while auto training is off.
+  Future<Result<TrainingWeeksResponse?>> week() =>
+      _api.getTrainingWeek().guard(FailureAction.loadTraining);
+
   Future<Result<TrainingPlanResponse?>> save(SaveTrainingPlanRequest request) =>
       _api.saveTrainingPlan(request).guard(FailureAction.saveTrainingPlan);
 

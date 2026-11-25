@@ -9451,6 +9451,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'turn off auto training'**
   String get actionTurnOffTraining;
+
+  /// No description provided for @trainingTodayCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · {day}'**
+  String trainingTodayCaption(String day);
+
+  /// No description provided for @trainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get trainingToday;
+
+  /// No description provided for @trainingRestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest day'**
+  String get trainingRestDay;
+
+  /// No description provided for @trainingRestDaySentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing today. Rest is part of the plan.'**
+  String get trainingRestDaySentence;
+
+  /// No description provided for @trainingThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get trainingThisWeek;
+
+  /// No description provided for @trainingNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week (preview)'**
+  String get trainingNextWeek;
+
+  /// No description provided for @trainingRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get trainingRest;
+
+  /// No description provided for @trainingWeekDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String trainingWeekDone(int done, int total);
+
+  /// No description provided for @trainingStatePlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get trainingStatePlanned;
+
+  /// No description provided for @trainingStateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get trainingStateDone;
+
+  /// No description provided for @trainingStateEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy instead'**
+  String get trainingStateEasy;
+
+  /// No description provided for @trainingStateMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved'**
+  String get trainingStateMoved;
+
+  /// No description provided for @trainingStateSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get trainingStateSkipped;
+
+  /// No description provided for @trainingStateMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get trainingStateMissed;
+
+  /// No description provided for @trainingOpenSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Open session'**
+  String get trainingOpenSession;
+
+  /// No description provided for @trainingSessionWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this session'**
+  String get trainingSessionWhy;
+
+  /// No description provided for @trainingSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The session'**
+  String get trainingSessionTitle;
+
+  /// No description provided for @trainingCoachesCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Coaches call this {term}.'**
+  String trainingCoachesCall(String term);
+
+  /// No description provided for @trainingBlockWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get trainingBlockWarmup;
+
+  /// No description provided for @trainingBlockMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main set'**
+  String get trainingBlockMain;
+
+  /// No description provided for @trainingBlockRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy between'**
+  String get trainingBlockRecovery;
+
+  /// No description provided for @trainingBlockCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool-down'**
+  String get trainingBlockCooldown;
+
+  /// No description provided for @trainingFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'feel {range}'**
+  String trainingFeel(String range);
+
+  /// No description provided for @trainingFeelExplained.
+  ///
+  /// In en, this message translates to:
+  /// **'Feel 7: hard, you could hold it about an hour.'**
+  String get trainingFeelExplained;
+
+  /// No description provided for @trainingEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'estimated'**
+  String get trainingEstimated;
+
+  /// No description provided for @trainingHeartEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate estimated from your maximum.'**
+  String get trainingHeartEstimated;
+
+  /// No description provided for @trainingSessionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This session is not in this week\'s plan.'**
+  String get trainingSessionMissing;
+
+  /// No description provided for @trainingTodayStrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · {what}'**
+  String trainingTodayStrip(String what);
 }
 
 class _AppLocalizationsDelegate

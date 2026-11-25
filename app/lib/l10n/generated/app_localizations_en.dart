@@ -5510,4 +5510,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionTurnOffTraining => 'turn off auto training';
+
+  @override
+  String trainingTodayCaption(String day) {
+    return 'Today · $day';
+  }
+
+  @override
+  String get trainingToday => 'today';
+
+  @override
+  String get trainingRestDay => 'Rest day';
+
+  @override
+  String get trainingRestDaySentence =>
+      'Nothing today. Rest is part of the plan.';
+
+  @override
+  String get trainingThisWeek => 'This week';
+
+  @override
+  String get trainingNextWeek => 'Next week (preview)';
+
+  @override
+  String get trainingRest => 'Rest';
+
+  @override
+  String trainingWeekDone(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String get trainingStatePlanned => 'Planned';
+
+  @override
+  String get trainingStateDone => 'Done';
+
+  @override
+  String get trainingStateEasy => 'Easy instead';
+
+  @override
+  String get trainingStateMoved => 'Moved';
+
+  @override
+  String get trainingStateSkipped => 'Skipped';
+
+  @override
+  String get trainingStateMissed => 'Missed';
+
+  @override
+  String get trainingOpenSession => 'Open session';
+
+  @override
+  String get trainingSessionWhy => 'Why this session';
+
+  @override
+  String get trainingSessionTitle => 'The session';
+
+  @override
+  String trainingCoachesCall(String term) {
+    return 'Coaches call this $term.';
+  }
+
+  @override
+  String get trainingBlockWarmup => 'Warm-up';
+
+  @override
+  String get trainingBlockMain => 'Main set';
+
+  @override
+  String get trainingBlockRecovery => 'Easy between';
+
+  @override
+  String get trainingBlockCooldown => 'Cool-down';
+
+  @override
+  String trainingFeel(String range) {
+    return 'feel $range';
+  }
+
+  @override
+  String get trainingFeelExplained =>
+      'Feel 7: hard, you could hold it about an hour.';
+
+  @override
+  String get trainingEstimated => 'estimated';
+
+  @override
+  String get trainingHeartEstimated =>
+      'Heart rate estimated from your maximum.';
+
+  @override
+  String get trainingSessionMissing =>
+      'This session is not in this week\'s plan.';
+
+  @override
+  String trainingTodayStrip(String what) {
+    return 'Today · $what';
+  }
 }

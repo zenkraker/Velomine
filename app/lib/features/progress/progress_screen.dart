@@ -5,11 +5,13 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:velomine_api/api.dart';
 
 import '../../core/failure.dart';
+import '../../core/providers.dart';
 import '../accounts/ftp_source_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/placeholder_block.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/units.dart';
 import '../../core/widgets/app_card.dart';
@@ -20,6 +22,8 @@ import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/segmented_control.dart';
 import '../../core/widgets/stat_card.dart';
 import '../rides/ride_type_chips.dart';
+import '../training/training_text.dart';
+import '../training/training_view_model.dart' as auto_training;
 import 'events.dart';
 import 'progress_filter_sheet.dart';
 import 'progress_tabs.dart';
@@ -50,6 +54,12 @@ class ProgressScreen extends ConsumerWidget {
     final filters = ref.watch(progressFiltersViewModelProvider);
     final totals = ref.watch(totalsViewModelProvider);
     final training = ref.watch(trainingViewModelProvider);
+    // The auto-training week behind the Today strip, which is there only while the rider turned it on.
+    final plan = ref.watch(auto_training.trainingViewModelProvider);
+    final autoTraining =
+        plan.on &&
+        (ref.watch(sessionProvider).serverInfo?.autoTrainingEnabled ?? false);
+    final todayWeek = autoTraining ? plan.thisWeek : null;
     final readiness = ref.watch(readinessViewModelProvider);
     final events = ref.watch(eventsViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
@@ -244,6 +254,8 @@ class ProgressScreen extends ConsumerWidget {
             ],
           ),
         ],
+        // Under the chips: today's session, a link to Training, and only while auto training is on.
+        if (todayWeek != null) _TodayTrainingStrip(week: todayWeek),
         // A wide window puts the four facts in one row; a phone leads with readiness, puts Form and this
         // period side by side under it and ends with the next event, as the phone mock-up draws them.
         if (wide)
@@ -349,6 +361,61 @@ class _NextEventCard extends ConsumerWidget {
           '${eventDetail(l10n, units, event).isEmpty ? '' : ' · ${eventDetail(l10n, units, event)}'}',
       link: l10n.navGoalsAndEvents,
       onLink: () => context.go('/goals'),
+    );
+  }
+}
+
+/// Today's session as one slim line: "Today · Strong and steady 3×10 · 1 h 15", linking to Training. It is a link,
+/// not a fact card, and it is not there while auto training is off.
+class _TodayTrainingStrip extends StatelessWidget {
+  const _TodayTrainingStrip({required this.week});
+
+  final TrainingWeek week;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final palette = VelomineColors.of(context);
+    final today = DateUtils.dateOnly(DateTime.now());
+    final session = week.sessions
+        .where((session) => DateUtils.isSameDay(session.localDate, today))
+        .firstOrNull;
+    return AppCard(
+      key: const Key('progress-today-training'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      onTap: () => context.go('/training'),
+      child: Row(
+        spacing: AppSpacing.md,
+        children: [
+          Expanded(
+            child: Text(
+              l10n.trainingTodayStrip(
+                session == null
+                    ? l10n.trainingRestDay
+                    : '${sessionName(l10n, session)} · ${sessionLength(session.minutes)}',
+              ),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          Text(
+            l10n.navTraining,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: palette.accentStrong,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          ExcludeSemantics(
+            child: Icon(
+              Icons.arrow_forward,
+              size: AppTraining.stripIcon,
+              color: palette.accentStrong,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

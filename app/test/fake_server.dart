@@ -246,6 +246,9 @@ class FakeServer {
   /// The last setup the app sent, so a test can check what Start saved.
   Map<String, Object?>? lastTrainingSave;
 
+  /// The weeks GET /training/week answers: this week, and next week as the preview on the week's last day.
+  List<Map<String, Object?>> trainingWeeks = const [];
+
   /// The goal the server suggests, and the reason code it gives for it.
   String suggestedTrainingGoal = 'fitter';
   String trainingSuggestionReason = 'regular_rider';
@@ -492,6 +495,13 @@ class FakeServer {
         return json(plan());
       }
       return http.Response('', 405);
+    }
+
+    if (path == '/api/v1/training/week') {
+      if (trainingPlan?['on'] != true) {
+        return http.Response('{"title":"Not found."}', 404);
+      }
+      return json({'weeks': trainingWeeks});
     }
 
     if (path == '/api/v1/accounts/sso') {
@@ -3181,6 +3191,110 @@ Future<void> goTo(WidgetTester tester, String path) async {
   GoRouter.of(tester.element(find.byType(HomeShell))).go(path);
   await tester.pumpAndSettle();
 }
+
+/// A day as the server sends a date-only value: "2026-11-27".
+String fakeDay(DateTime date) => date.toIso8601String().substring(0, 10);
+
+/// A week as GET /training/week answers it, with [sessions] on their own days.
+Map<String, Object?> trainingWeekJson({
+  required DateTime start,
+  List<Map<String, Object?>> sessions = const [],
+  String? noteCode,
+  bool lighter = false,
+}) => {
+  'start': fakeDay(start),
+  'end': fakeDay(start.add(const Duration(days: 6))),
+  'plannedLoad': 0.0,
+  'isLighterWeek': lighter,
+  'note': noteCode == null
+      ? null
+      : {
+          'code': noteCode,
+          'english': noteCode == 'easy_week'
+              ? 'Easy week: your body gets stronger while it rests.'
+              : 'It gets more personal as your rides come in.',
+          'italian': noteCode == 'easy_week'
+              ? 'Settimana facile: il corpo si rafforza mentre riposa.'
+              : 'Diventa più personale man mano che arrivano i tuoi giri.',
+        },
+  'sessions': sessions,
+};
+
+/// A session as GET /training/week answers it.
+Map<String, Object?> trainingSessionJson({
+  required DateTime date,
+  String id = 'session-1',
+  int minutes = 75,
+  String state = 'planned',
+  String recipe = 'R05',
+  String technicalName = 'Sweet spot',
+  String englishName = 'Strong and steady 3×10',
+  String italianName = 'Forte e costante 3×10',
+  String englishLine = 'Long efforts just below your limit.',
+  String italianLine = 'Sforzi lunghi appena sotto il limite.',
+  List<Map<String, Object?>> blocks = const [],
+  List<Map<String, Object?>> notes = const [],
+  bool heartRateEstimated = false,
+  String? rideId,
+  String? skipReason,
+}) => {
+  'id': id,
+  'localDate': fakeDay(date),
+  'minutes': minutes,
+  'state': state,
+  'skipReason': skipReason,
+  'rideId': rideId,
+  'recipe': recipe,
+  'technicalName': technicalName,
+  'englishName': englishName,
+  'italianName': italianName,
+  'englishLine': englishLine,
+  'italianLine': italianLine,
+  'blocks': blocks,
+  'notes': notes,
+  'heartRateEstimated': heartRateEstimated,
+};
+
+/// One block of a session: its part, its minutes and the ranges of its three targets.
+Map<String, Object?> trainingBlockJson({
+  String role = 'main',
+  int minutes = 40,
+  int? wattsLow = 220,
+  int? wattsHigh = 235,
+  int? heartRateLow = 152,
+  int? heartRateHigh = 160,
+  int feelLow = 5,
+  int feelHigh = 6,
+}) => {
+  'role': role,
+  'minutes': minutes,
+  'wattsLow': wattsLow,
+  'wattsHigh': wattsHigh,
+  'heartRateLow': heartRateLow,
+  'heartRateHigh': heartRateHigh,
+  'feelLow': feelLow,
+  'feelHigh': feelHigh,
+};
+
+/// A line under a session's targets, as the server sends it in both languages.
+Map<String, Object?> trainingNoteJson(String code) => {
+  'code': code,
+  'english': switch (code) {
+    'add_power_meter' => 'Add a power meter for watt targets',
+    'set_ftp' => 'Set your FTP for watt targets',
+    _ => 'Heart rate lags here: go by watts and feel',
+  },
+  'italian': switch (code) {
+    'add_power_meter' =>
+      'Aggiungi un misuratore di potenza per gli obiettivi in watt',
+    'set_ftp' => 'Imposta il tuo FTP per gli obiettivi in watt',
+    _ => 'Qui la frequenza cardiaca arriva in ritardo: segui watt e sensazioni',
+  },
+};
+
+/// The Monday of the week [today] falls in, for a plan whose week starts on Monday.
+DateTime weekStart(DateTime today) =>
+    DateTime(today.year, today.month, today.day - (today.weekday - 1));
 
 /// Opens the account menu in the page header.
 Future<void> openAccountMenu(WidgetTester tester) async {
