@@ -26,6 +26,7 @@ public static class NotificationText
         NotificationTypes.FtpSuggested => EmailStrings.Format("FtpSuggested", n.Subject),
         NotificationTypes.HeartRateMeasured => EmailStrings.Format("HeartRateMeasured", n.Subject),
         NotificationTypes.HeartRateSuggested => EmailStrings.Format("HeartRateSuggested", n.Subject),
+        NotificationTypes.TrainingSessionQuestion => EmailStrings.Format("TrainingSessionQuestion", n.Subject),
         _ => n.Subject,
     };
 

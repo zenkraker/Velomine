@@ -30,6 +30,12 @@ public static class SessionPlan
     public static double PlannedScore(IEnumerable<PlannedBlock> blocks) =>
         Math.Round(blocks.Sum(b => b.Minutes / 60.0 * Math.Pow(Intensity(b.Block), 2) * 100), 1);
 
+    /// <summary>The planned effort score of a stored session, from its recipe code and the day's minutes.</summary>
+    public static double PlannedScore(string recipe, int minutes) => PlannedScore(For(Recipes.ByCode(recipe), minutes).Blocks);
+
+    /// <summary>The minutes a stored session plans, which is the day's minutes unless the recipe had to fall back.</summary>
+    public static int PlannedMinutes(string recipe, int minutes) => For(Recipes.ByCode(recipe), minutes).Blocks.Sum(b => b.Minutes);
+
     /// <summary>
     /// A block's intensity factor: the middle of its % FTP band (the drafts work their TSS from the aim inside the
     /// zone), or the middle of its feel band over 7 where it has no FTP target, because an hour ridden at feel 7 is one

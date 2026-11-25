@@ -288,7 +288,13 @@ class _WeekCard extends StatelessWidget {
         ),
         if (week.sessions.isNotEmpty)
           Text(
-            l10n.trainingWeekDone(done, week.sessions.length),
+            done == week.sessions.length
+                ? l10n.trainingWeekLineAll(done, week.sessions.length)
+                : l10n.trainingWeekLine(
+                    done,
+                    week.sessions.length,
+                    trainingWeekKind(l10n, done, week.sessions.length),
+                  ),
             key: const Key('training-week-summary'),
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -317,72 +323,79 @@ class _DayRow extends StatelessWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final isToday = DateUtils.isSameDay(date, today);
     final session = this.session;
-    final state = session == null ? null : sessionState(l10n, session.state);
+    final state = session == null ? null : sessionState(l10n, session);
 
-    return Container(
-      key: Key('training-day-${date.day}'),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: isToday ? VelomineColors.of(context).cardRaised : null,
-        borderRadius: BorderRadius.circular(AppRadius.small),
-      ),
-      child: Row(
-        spacing: AppSpacing.md,
-        children: [
-          SizedBox(
-            width: AppTraining.dateWidth,
-            child: Column(
-              children: [
-                Text(
-                  '${date.day}',
-                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  DateFormat.E(locale).format(date),
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // The name and the length wrap onto a second line rather than running under the badge.
-          Expanded(
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  session == null
-                      ? l10n.trainingRest
-                      : sessionName(l10n, session),
-                  style: text.bodyMedium,
-                ),
-                if (session != null)
+    return InkWell(
+      key: Key('training-day-${DateFormat('yyyy-MM-dd').format(date)}'),
+      onTap: session == null
+          ? null
+          : () => context.push('/training/sessions/${session.id}'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: isToday ? VelomineColors.of(context).cardRaised : null,
+          borderRadius: BorderRadius.circular(AppRadius.small),
+        ),
+        child: Row(
+          spacing: AppSpacing.md,
+          children: [
+            SizedBox(
+              width: AppTraining.dateWidth,
+              child: Column(
+                children: [
                   Text(
-                    [
-                      sessionLength(session.minutes),
-                      if (isToday) l10n.trainingToday,
-                    ].join(' · '),
+                    '${date.day}',
+                    style: text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    DateFormat.E(locale).format(date),
                     style: text.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
-          // A planned day carries no badge: the name alone is the plan.
-          if (state != null && session!.state != 'planned')
-            AppBadge(
-              state,
-              tone: session.state == 'done'
-                  ? AppBadgeTone.good
-                  : AppBadgeTone.neutral,
+            // The name and the length wrap onto a second line rather than running under the badge.
+            Expanded(
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    session == null
+                        ? l10n.trainingRest
+                        : sessionName(l10n, session),
+                    style: text.bodyMedium,
+                  ),
+                  if (session != null)
+                    Text(
+                      [
+                        sessionLength(session.minutes),
+                        if (isToday) l10n.trainingToday,
+                      ].join(' · '),
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
             ),
-        ],
+            // A planned day carries no badge: the name alone is the plan.
+            if (state != null)
+              AppBadge(
+                state,
+                tone: session!.state == 'done' || session.state == 'easy'
+                    ? AppBadgeTone.good
+                    : AppBadgeTone.neutral,
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Rides;
 
@@ -43,6 +44,12 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
             ride.HrTss,
             TrainingLoad.FeelScore(ride.MovingS, rpe),
             ride.EstimatedTss);
+        // The session this ride was, or the one the rider is being asked about. With auto training off there is none:
+        // the sessions are gone with the plan.
+        var session = await db.TrainingSessions.AsNoTracking()
+            .Where(s => s.UserId == userId && (s.RideId == ride.Id || s.QuestionRideId == ride.Id))
+            .OrderByDescending(s => s.RideId == ride.Id)
+            .FirstOrDefaultAsync(ct);
         await Send.OkAsync(
             (await RideDetails.BuildAsync(db, time, ride, ct)) with
             {
@@ -54,6 +61,7 @@ public sealed class GetRide(VelomineDbContext db, TimeProvider time) : Endpoint<
                 FtpSuggestionId = suggestion?.Id,
                 EffortScore = effortScore,
                 EffortSource = effortSource,
+                Training = session is null ? null : TrainingRideMatch.Of(session),
             },
             ct);
     }

@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Notifications;
 
 namespace Velomine.Server.Features.Training;
 
@@ -34,6 +35,13 @@ public sealed class TurnOffTrainingPlan(VelomineDbContext db, TimeProvider time)
             .Where(s => s.UserId == userId && s.LocalDate >= clock.Today)
             .ToListAsync(ct);
         db.TrainingSessions.RemoveRange(today);
+        // A question about a session that is going cannot be answered any more, so it goes too. So does one on a past
+        // session, which stays: with the week gone there is nothing to answer it against, and no week to read.
+        await db.TrainingSessions
+            .Where(s => s.UserId == userId && s.QuestionRideId != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.QuestionRideId, (Guid?)null), ct);
+        db.Notifications.RemoveRange(db.Notifications.Where(n =>
+            n.UserId == userId && n.Type == NotificationTypes.TrainingSessionQuestion));
         plan.IsOn = false;
         // Turned on again, the sweep plans the week afresh rather than leaving today as it was left.
         plan.LastPlannedFor = null;

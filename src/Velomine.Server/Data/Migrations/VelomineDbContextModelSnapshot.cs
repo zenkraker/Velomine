@@ -2893,6 +2893,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer[]")
                         .HasColumnName("days");
 
+                    b.PrimitiveCollection<string[]>("DeclinedFileHashes")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("declined_file_hashes");
+
                     b.Property<string>("Goal")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2934,6 +2939,8 @@ namespace Velomine.Server.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_training_plans_days", "cardinality(days) BETWEEN 1 AND 7 AND days <@ ARRAY[0,1,2,3,4,5,6]::integer[]");
 
+                            t.HasCheckConstraint("ck_training_plans_declined_files", "cardinality(declined_file_hashes) <= 20");
+
                             t.HasCheckConstraint("ck_training_plans_goal", "goal IN ('aerobic', 'fitter', 'faster', 'event', 'keep')");
 
                             t.HasCheckConstraint("ck_training_plans_hours", "hours_per_week BETWEEN 1 AND 30");
@@ -2966,6 +2973,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("minutes");
 
+                    b.Property<Guid?>("QuestionRideId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_ride_id");
+
                     b.Property<string>("Recipe")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2990,6 +3001,11 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_sessions");
+
+                    b.HasIndex("QuestionRideId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessions_question_ride_id")
+                        .HasFilter("question_ride_id IS NOT NULL");
 
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_sessions_ride_id");
@@ -3681,6 +3697,12 @@ namespace Velomine.Server.Data.Migrations
 
             modelBuilder.Entity("Velomine.Server.Features.Training.TrainingSession", b =>
                 {
+                    b.HasOne("Velomine.Server.Features.Rides.Ride", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionRideId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_sessions_rides_question_ride_id");
+
                     b.HasOne("Velomine.Server.Features.Rides.Ride", null)
                         .WithMany()
                         .HasForeignKey("RideId")

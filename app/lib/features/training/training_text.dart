@@ -102,8 +102,8 @@ String sessionLength(int minutes) {
   return rest == 0 ? '$hours h' : '$hours h $rest';
 }
 
-/// How a session is going, as the badge and the header say it.
-String sessionState(AppLocalizations l10n, String state) => switch (state) {
+/// How a session is going, as the page header says it: "done", "skipped", "planned".
+String sessionStateWord(AppLocalizations l10n, String state) => switch (state) {
   'done' => l10n.trainingStateDone,
   'easy' => l10n.trainingStateEasy,
   'moved' => l10n.trainingStateMoved,
@@ -111,3 +111,16 @@ String sessionState(AppLocalizations l10n, String state) => switch (state) {
   'missed' => l10n.trainingStateMissed,
   _ => l10n.trainingStatePlanned,
 };
+
+/// The state as the week's badge reads it, with the score once a ride ticked the session: "Done · 92", "Skipped",
+/// or null while it is still planned, because the name alone is the plan.
+String? sessionState(AppLocalizations l10n, TrainingWeekSession session) {
+  if (session.state == 'planned') return null;
+  if (session.state == 'done') {
+    final score = session.result.orElse(null)?.score;
+    return score == null
+        ? l10n.trainingStateDone
+        : l10n.trainingStateDoneScore(score);
+  }
+  return sessionStateWord(l10n, session.state);
+}

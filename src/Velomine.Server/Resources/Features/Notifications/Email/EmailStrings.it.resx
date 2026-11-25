@@ -124,4 +124,7 @@
   <data name="HeartRateSuggested" xml:space="preserve">
     <value>Un'uscita mostra un valore di frequenza cardiaca più alto di quello che hai impostato: {0}. Scegli se usarlo.</value>
   </data>
+  <data name="TrainingSessionQuestion" xml:space="preserve">
+    <value>Una tua uscita potrebbe essere la seduta {0}. Rispondi in Velomine.</value>
+  </data>
 </root>

@@ -71,6 +71,16 @@ public sealed class TrainingPlan
     /// </summary>
     public DateOnly[] LighterWeeks { get; set; } = [];
 
+    /// <summary>
+    /// The SHA-256 of the ride files the rider said were not the session asked about, newest last and at most
+    /// <see cref="DeclinedFilesKept"/>. Matching skips them: deleting a ride brings its hidden duplicate back to be read
+    /// as a new one, and "no" means no for that ride however it comes back.
+    /// </summary>
+    public string[] DeclinedFileHashes { get; set; } = [];
+
+    /// <summary>How many declined files are remembered: a ride is answered within days, and the list must stay small.</summary>
+    public const int DeclinedFilesKept = 20;
+
     /// <summary>False when the rider turned auto training off: the setup stays, so turning it on is pre-filled.</summary>
     public bool IsOn { get; set; }
 
@@ -108,6 +118,13 @@ public sealed class TrainingSession
     /// <summary>The ride that was this session; null until one is linked.</summary>
     public Guid? RideId { get; set; }
 
+    /// <summary>
+    /// The ride the rider is being asked about ("Was this your Thursday strong and steady?"), or null. A ride on the
+    /// day before or after that came close to this session's plan sets it; answering yes moves the session to that
+    /// day, answering no clears it. A session with a question waits where it is, so the nightly planning leaves it be.
+    /// </summary>
+    public Guid? QuestionRideId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }
 
@@ -121,6 +138,7 @@ public sealed class TrainingPlanConfiguration : IEntityTypeConfiguration<Trainin
             t.HasCheckConstraint("ck_training_plans_days", "cardinality(days) BETWEEN 1 AND 7 AND days <@ ARRAY[0,1,2,3,4,5,6]::integer[]");
             t.HasCheckConstraint("ck_training_plans_hours", "hours_per_week BETWEEN 1 AND 30");
             t.HasCheckConstraint("ck_training_plans_long_ride_day", "long_ride_day IS NULL OR long_ride_day BETWEEN 0 AND 6");
+            t.HasCheckConstraint("ck_training_plans_declined_files", "cardinality(declined_file_hashes) <= 20");
         });
         // One plan per member: the member is the key.
         b.HasKey(p => p.UserId);
@@ -156,5 +174,8 @@ public sealed class TrainingSessionConfiguration : IEntityTypeConfiguration<Trai
         b.HasIndex(s => new { s.UserId, s.LocalDate }).IsUnique();
         b.HasOne<User>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<Ride>().WithMany().HasForeignKey(s => s.RideId).OnDelete(DeleteBehavior.SetNull);
+        // One question per ride, and the question goes with the ride.
+        b.HasOne<Ride>().WithMany().HasForeignKey(s => s.QuestionRideId).OnDelete(DeleteBehavior.SetNull);
+        b.HasIndex(s => s.QuestionRideId).IsUnique().HasFilter("question_ride_id IS NOT NULL");
     }
 }

@@ -9,6 +9,7 @@ using Velomine.Server.Features.Clubs;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Features.Routes;
 
 namespace Velomine.Server.Features.Accounts;
@@ -76,6 +77,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         var trainingPlan = await db.TrainingPlans.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, ct);
         var trainingSessions = await db.TrainingSessions.AsNoTracking()
             .Where(s => s.UserId == userId).OrderBy(s => s.LocalDate).ThenBy(s => s.Id).ToListAsync(ct);
+        var results = await SessionScore.ForAsync(db, trainingSessions, user, time, ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -226,8 +228,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             e.CreatedAt,
         }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
-        // The score is computed from the ride that was the session (docs/training-models.md), so it is null until a
-        // session is done; it is carried here so the file's shape does not change when that arrives.
+        // The session score is computed from the ride that was the session and never stored (docs/training-models.md,
+        // L8), so the export works it out here exactly as the app's session page does.
         await AddJsonAsync(zip, "training-plan.json", new
         {
             Plan = trainingPlan is null ? null : new
@@ -250,7 +252,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 s.State,
                 s.SkipReason,
                 s.RideId,
-                Score = (int?)null,
+                Score = results.GetValueOrDefault(s.Id)?.Score,
                 s.CreatedAt,
             }),
         }, ct);

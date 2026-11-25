@@ -9452,6 +9452,12 @@ abstract class AppLocalizations {
   /// **'turn off auto training'**
   String get actionTurnOffTraining;
 
+  /// No description provided for @actionMatchTrainingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'answer the session question'**
+  String get actionMatchTrainingSession;
+
   /// No description provided for @trainingTodayCaption.
   ///
   /// In en, this message translates to:
@@ -9463,6 +9469,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'today'**
   String get trainingToday;
+
+  /// No description provided for @trainingTodayStrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · {what}'**
+  String trainingTodayStrip(String what);
 
   /// No description provided for @trainingRestDay.
   ///
@@ -9482,6 +9494,12 @@ abstract class AppLocalizations {
   /// **'This week'**
   String get trainingThisWeek;
 
+  /// No description provided for @trainingWeekCard.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get trainingWeekCard;
+
   /// No description provided for @trainingNextWeek.
   ///
   /// In en, this message translates to:
@@ -9494,11 +9512,53 @@ abstract class AppLocalizations {
   /// **'Rest'**
   String get trainingRest;
 
+  /// No description provided for @trainingWeekRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get trainingWeekRest;
+
+  /// No description provided for @trainingWeekToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get trainingWeekToday;
+
   /// No description provided for @trainingWeekDone.
   ///
   /// In en, this message translates to:
   /// **'{done} of {total} done'**
   String trainingWeekDone(int done, int total);
+
+  /// No description provided for @trainingWeekLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done. {kind}'**
+  String trainingWeekLine(int done, int total, String kind);
+
+  /// No description provided for @trainingWeekLineAll.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done. That is the week, all of it.'**
+  String trainingWeekLineAll(int done, int total);
+
+  /// No description provided for @trainingWeekKindOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Nicely on track.'**
+  String get trainingWeekKindOnTrack;
+
+  /// No description provided for @trainingWeekKindStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'A good start to the week.'**
+  String get trainingWeekKindStarted;
+
+  /// No description provided for @trainingWeekKindNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing done yet. There is time.'**
+  String get trainingWeekKindNothing;
 
   /// No description provided for @trainingStatePlanned.
   ///
@@ -9511,6 +9571,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get trainingStateDone;
+
+  /// No description provided for @trainingStateDoneScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Done · {score}'**
+  String trainingStateDoneScore(int score);
 
   /// No description provided for @trainingStateEasy.
   ///
@@ -9614,11 +9680,197 @@ abstract class AppLocalizations {
   /// **'This session is not in this week\'s plan.'**
   String get trainingSessionMissing;
 
-  /// No description provided for @trainingTodayStrip.
+  /// No description provided for @trainingQuestionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Today · {what}'**
-  String trainingTodayStrip(String what);
+  /// **'Was this your {day} {name}?'**
+  String trainingQuestionTitle(String day, String name);
+
+  /// No description provided for @trainingQuestionYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride looks like the session planned for yesterday.'**
+  String get trainingQuestionYesterday;
+
+  /// No description provided for @trainingQuestionTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride looks like the session planned for tomorrow.'**
+  String get trainingQuestionTomorrow;
+
+  /// No description provided for @trainingLinkedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This was your {day} {name}.'**
+  String trainingLinkedTitle(String day, String name);
+
+  /// No description provided for @trainingNotThisSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Not this session'**
+  String get trainingNotThisSession;
+
+  /// No description provided for @sessionHowItWent.
+  ///
+  /// In en, this message translates to:
+  /// **'How it went'**
+  String get sessionHowItWent;
+
+  /// No description provided for @sessionOfHundred.
+  ///
+  /// In en, this message translates to:
+  /// **'of 100'**
+  String get sessionOfHundred;
+
+  /// No description provided for @sessionKindSpotOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Spot on. Textbook session.'**
+  String get sessionKindSpotOn;
+
+  /// No description provided for @sessionKindOnPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Right on plan. That is how it should feel.'**
+  String get sessionKindOnPlan;
+
+  /// No description provided for @sessionKindClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Good work: most of the plan, ridden well.'**
+  String get sessionKindClose;
+
+  /// No description provided for @sessionKindMost.
+  ///
+  /// In en, this message translates to:
+  /// **'You got most of it. It counts.'**
+  String get sessionKindMost;
+
+  /// No description provided for @sessionKindAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the session on paper, but the ride counts.'**
+  String get sessionKindAny;
+
+  /// No description provided for @sessionPlannedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} planned · {done} ridden'**
+  String sessionPlannedDone(String planned, String done);
+
+  /// No description provided for @sessionMainSetWatts.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} W planned · {done} W ridden'**
+  String sessionMainSetWatts(String planned, String done);
+
+  /// No description provided for @sessionMainSetBpm.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} bpm planned · {done} bpm ridden'**
+  String sessionMainSetBpm(String planned, String done);
+
+  /// No description provided for @sessionMainSetPlannedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'{planned} planned'**
+  String sessionMainSetPlannedOnly(String planned);
+
+  /// No description provided for @sessionOpenRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the ride →'**
+  String get sessionOpenRide;
+
+  /// No description provided for @sessionWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this session'**
+  String get sessionWhy;
+
+  /// No description provided for @sessionTechnical.
+  ///
+  /// In en, this message translates to:
+  /// **'Coaches call this {term}.'**
+  String sessionTechnical(String term);
+
+  /// No description provided for @sessionBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'The session'**
+  String get sessionBlocks;
+
+  /// No description provided for @sessionFeelExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Feel 7: hard, you could hold it about an hour.'**
+  String get sessionFeelExplanation;
+
+  /// No description provided for @sessionFeel.
+  ///
+  /// In en, this message translates to:
+  /// **'feel {low}–{high}'**
+  String sessionFeel(int low, int high);
+
+  /// No description provided for @sessionWatts.
+  ///
+  /// In en, this message translates to:
+  /// **'{low}–{high} W'**
+  String sessionWatts(int low, int high);
+
+  /// No description provided for @sessionBpm.
+  ///
+  /// In en, this message translates to:
+  /// **'{low}–{high} bpm'**
+  String sessionBpm(int low, int high);
+
+  /// No description provided for @sessionEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'estimated'**
+  String get sessionEstimated;
+
+  /// No description provided for @sessionTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get sessionTime;
+
+  /// No description provided for @sessionEffortScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Effort score'**
+  String get sessionEffortScore;
+
+  /// No description provided for @sessionMainSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Main set'**
+  String get sessionMainSet;
+
+  /// No description provided for @sessionBlockWarmup.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm-up'**
+  String get sessionBlockWarmup;
+
+  /// No description provided for @sessionBlockRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy between'**
+  String get sessionBlockRecovery;
+
+  /// No description provided for @sessionBlockCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool-down'**
+  String get sessionBlockCooldown;
+
+  /// No description provided for @sessionGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This session is not in your week any more.'**
+  String get sessionGone;
 }
 
 class _AppLocalizationsDelegate

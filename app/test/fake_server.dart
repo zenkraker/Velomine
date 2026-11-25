@@ -243,6 +243,12 @@ class FakeServer {
   /// The member's auto-training plan as the server would return it, or null when they have none.
   Map<String, Object?>? trainingPlan;
 
+  /// This week's sessions as GET /training/week answers them, or null when the rider has no plan.
+  Map<String, Object?>? trainingWeek;
+
+  /// Every answer the app posted to a session's question, newest last: session, ride and yes/no.
+  final sessionAnswers = <Map<String, Object?>>[];
+
   /// The last setup the app sent, so a test can check what Start saved.
   Map<String, Object?>? lastTrainingSave;
 
@@ -498,10 +504,23 @@ class FakeServer {
     }
 
     if (path == '/api/v1/training/week') {
+      // A rider with auto training off has no week: the endpoint answers 404, as the server does.
       if (trainingPlan?['on'] != true) {
         return http.Response('{"title":"Not found."}', 404);
       }
-      return json({'weeks': trainingWeeks});
+      return json(trainingWeek ?? {'weeks': trainingWeeks});
+    }
+
+    final sessionMatch = RegExp(r'^/api/v1/training/sessions/([^/]+)/match$')
+        .firstMatch(path);
+    if (sessionMatch != null && request.method == 'POST') {
+      final body = jsonDecode(request.body) as Map<String, Object?>;
+      sessionAnswers.add({
+        'sessionId': sessionMatch.group(1),
+        'rideId': body['rideId'],
+        'answer': body['answer'],
+      });
+      return http.Response('', 204);
     }
 
     if (path == '/api/v1/accounts/sso') {
@@ -1050,6 +1069,7 @@ Map<String, Object?> notificationJson(
   String? rideId,
   String? bikeId,
   bool isRead = false,
+  Map<String, Object?>? training,
 }) => {
   'id': id,
   'type': type,
@@ -1061,6 +1081,7 @@ Map<String, Object?> notificationJson(
   'plannedRideId': null,
   'createdAt': '2026-11-04T09:00:00Z',
   'isRead': isRead,
+  'training': training,
 };
 
 /// One period's totals as the server sends them.
@@ -2915,6 +2936,7 @@ Map<String, Object?> rideJson(
   int version = 1,
   String startTime = '2026-11-01T07:30:00Z',
   int? utcOffsetMinutes,
+  Map<String, Object?>? training,
 }) => {
   'id': id,
   'status': status,
@@ -2971,6 +2993,111 @@ Map<String, Object?> rideJson(
   'heartRateZoneModel': heartRateZoneModel,
   'heartRateZoneReferenceBpm': heartRateZoneReferenceBpm,
   'heartRateZoneReferenceSource': heartRateZoneReferenceSource,
+  'training': training,
+};
+
+/// The auto-training session a ride ticked, or the one it is asked about: the ride page's card.
+Map<String, Object?> trainingRideMatchJson(
+  String sessionId, {
+  String localDate = '2026-11-03',
+  String englishName = 'Strong and steady',
+  String italianName = 'Forte e costante',
+  String state = 'planned',
+}) => {
+  'sessionId': sessionId,
+  'localDate': localDate,
+  'recipe': 'R05',
+  'englishName': englishName,
+  'italianName': italianName,
+  'state': state,
+};
+
+/// One session of a week as GET /training/week answers it.
+Map<String, Object?> trainingWeekSessionJson(
+  String id, {
+  String localDate = '2026-11-02',
+  int minutes = 60,
+  String state = 'planned',
+  String? rideId,
+  Map<String, Object?>? result,
+  String englishName = 'Strong and steady',
+  String italianName = 'Forte e costante',
+  String englishLine = 'Long efforts just below your limit.',
+  String italianLine = 'Sforzi lunghi appena sotto il limite.',
+}) => {
+  'id': id,
+  'localDate': localDate,
+  'minutes': minutes,
+  'state': state,
+  'skipReason': null,
+  'rideId': rideId,
+  'recipe': 'R05',
+  'technicalName': 'Sweet spot',
+  'englishName': englishName,
+  'italianName': italianName,
+  'englishLine': englishLine,
+  'italianLine': italianLine,
+  'blocks': [
+    {
+      'role': 'warmup',
+      'minutes': 15,
+      'wattsLow': 140,
+      'wattsHigh': 175,
+      'heartRateLow': 115,
+      'heartRateHigh': 140,
+      'feelLow': 2,
+      'feelHigh': 3,
+    },
+    {
+      'role': 'main',
+      'minutes': 31,
+      'wattsLow': 220,
+      'wattsHigh': 235,
+      'heartRateLow': 152,
+      'heartRateHigh': 160,
+      'feelLow': 5,
+      'feelHigh': 6,
+    },
+    {
+      'role': 'cooldown',
+      'minutes': 10,
+      'wattsLow': 140,
+      'wattsHigh': 175,
+      'heartRateLow': 115,
+      'heartRateHigh': 140,
+      'feelLow': 2,
+      'feelHigh': 2,
+    },
+  ],
+  'notes': [
+    {
+      'code': 'set_ftp',
+      'english': 'Set your FTP for watt targets',
+      'italian': 'Imposta il tuo FTP per gli obiettivi in watt',
+    },
+  ],
+  'heartRateEstimated': false,
+  'result': result,
+};
+
+/// What a done session's ride did, as GET /training/week carries it.
+Map<String, Object?> sessionResultJson({
+  int score = 92,
+  int plannedMinutes = 60,
+  double doneMinutes = 60,
+  double plannedEffort = 57.8,
+  double? doneEffort = 56.2,
+  String signal = 'power',
+  int target = 228,
+  int? average = 224,
+}) => {
+  'score': score,
+  'plannedMinutes': plannedMinutes,
+  'doneMinutes': doneMinutes,
+  'plannedEffort': plannedEffort,
+  'doneEffort': doneEffort,
+  'mainSetShare': 0.75,
+  'mainSet': {'signal': signal, 'target': target, 'average': average},
 };
 
 /// One personal power record as the ride detail receives it.

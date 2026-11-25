@@ -235,25 +235,91 @@ public sealed class RideIngestionService(
                 await EventRideLink.AddAsync(db, clock, r, ct);
 
         foreach (var r in read.Where(r => r.NotifiesMember)) Notify.RideRead(db, time, r);
-
+        // A ride ticks the session of its day, or asks about one beside it: in this save, next to the event link, so a
+        // ride is never ready without the tick it earned. A failure is logged and swallowed, and the ride lands anyway.
+        var matched = await MatchSessionsAsync(db, ride.UserId, [.. read.Where(r => r.Status == RideStatus.Ready)], ct);
+        bool saved;
         try
         {
-            await db.SaveChangesAsync(ct);
+            saved = await SaveReadAsync(db, ride, read, ct);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-        { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
+        catch (DbUpdateConcurrencyException) when (matched is not null)
         {
-            // Two reads of the same file finished together. The unique index lets one in; the other becomes a
-            // duplicate of it, exactly as when it is seen later.
-            await MarkDuplicateAsync(db, ride.Id, ride.UserId, read.FirstOrDefault()?.DedupKey, ct);
-            return;
+            // The week was planned under a session the matching changed, so this save finds no row to update. The ride
+            // comes first: the sessions go back as they were, the ride is saved on its own, and the matching is tried
+            // once more from the sessions that are there now.
+            matched.Restore(db);
+            saved = await SaveReadAsync(db, ride, read, ct);
+            if (saved)
+                await RematchAsync(db, ride.UserId, [.. read.Where(r => r.Status == RideStatus.Ready)], ct);
         }
+        if (!saved) return;
 
         // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
         VelomineMetrics.RidesIngested.Add(read.Count(r => r.Status == RideStatus.Ready));
         // An import warns once when it finishes, not once per ride: wear is recomputed from every ride each time.
         if (ride.NotifiesMember) await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
+    }
+
+    /// <summary>
+    /// The matching again, after the week was planned under it. The ride is saved and ready by now, so this save losing
+    /// too costs the tick and nothing else: the sessions go back as they were and the reason is logged.
+    /// </summary>
+    private async Task RematchAsync(VelomineDbContext db, Guid userId, IReadOnlyList<Ride> rides, CancellationToken ct)
+    {
+        var edits = await MatchSessionsAsync(db, userId, rides, ct);
+        if (edits is null) return;
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex)
+        {
+            edits.Restore(db);
+            logger.LogWarning("Could not match a ride to its training session ({Exception}).", ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// The read's one save. False when another read of the same file got there first: the unique index lets one in and
+    /// this one becomes a duplicate of it, exactly as when it is seen later.
+    /// </summary>
+    private async Task<bool> SaveReadAsync(VelomineDbContext db, Ride ride, List<Ride> read, CancellationToken ct)
+    {
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+        { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: DedupIndex })
+        {
+            await MarkDuplicateAsync(db, ride.Id, ride.UserId, read.FirstOrDefault()?.DedupKey, ct);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Ticks or asks about the sessions of the rides that were just read, changing them in this context so they save
+    /// with the rides. Every read happens before the first change: an exception here leaves the save untouched, and the
+    /// ride still becomes ready.
+    /// </summary>
+    private async Task<SessionMatch.Edits?> MatchSessionsAsync(
+        VelomineDbContext db, Guid userId, IReadOnlyList<Ride> rides, CancellationToken ct)
+    {
+        if (rides.Count == 0) return null;
+        try
+        {
+            return await SessionMatch.AddAsync(db, time, userId, rides, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The rider keeps the ride and every number of it; the tick or the question is what is lost, and matching
+            // never runs again for this ride. Nothing of the ride or the rider goes in the log.
+            logger.LogWarning("Could not match a ride to its training session ({Exception}).", ex.GetType().Name);
+            return null;
+        }
     }
 
     /// <summary>

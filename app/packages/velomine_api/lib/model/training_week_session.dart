@@ -28,6 +28,7 @@ class TrainingWeekSession {
     this.blocks = const [],
     this.notes = const [],
     required this.heartRateEstimated,
+    this.result = const Optional.absent(),
   });
 
   final String id;
@@ -60,6 +61,14 @@ class TrainingWeekSession {
 
   final bool heartRateEstimated;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  final Optional<SessionResult?> result;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is TrainingWeekSession &&
     other.id == id &&
@@ -76,7 +85,8 @@ class TrainingWeekSession {
     other.italianLine == italianLine &&
     _deepEquality.equals(other.blocks, blocks) &&
     _deepEquality.equals(other.notes, notes) &&
-    other.heartRateEstimated == heartRateEstimated;
+    other.heartRateEstimated == heartRateEstimated &&
+    other.result == result;
 
   @override
   int get hashCode =>
@@ -95,10 +105,11 @@ class TrainingWeekSession {
     (italianLine.hashCode) +
     (blocks.hashCode) +
     (notes.hashCode) +
-    (heartRateEstimated.hashCode);
+    (heartRateEstimated.hashCode) +
+    (result == null ? 0 : result!.hashCode);
 
   @override
-  String toString() => 'TrainingWeekSession[id=$id, localDate=$localDate, minutes=$minutes, state=$state, skipReason=$skipReason, rideId=$rideId, recipe=$recipe, technicalName=$technicalName, englishName=$englishName, italianName=$italianName, englishLine=$englishLine, italianLine=$italianLine, blocks=$blocks, notes=$notes, heartRateEstimated=$heartRateEstimated]';
+  String toString() => 'TrainingWeekSession[id=$id, localDate=$localDate, minutes=$minutes, state=$state, skipReason=$skipReason, rideId=$rideId, recipe=$recipe, technicalName=$technicalName, englishName=$englishName, italianName=$italianName, englishLine=$englishLine, italianLine=$italianLine, blocks=$blocks, notes=$notes, heartRateEstimated=$heartRateEstimated, result=$result]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -125,6 +136,10 @@ class TrainingWeekSession {
       json[r'blocks'] = this.blocks;
       json[r'notes'] = this.notes;
       json[r'heartRateEstimated'] = this.heartRateEstimated;
+    if (this.result.isPresent) {
+      final value = this.result.value;
+      json[r'result'] = value;
+    }
     return json;
   }
 
@@ -148,6 +163,7 @@ class TrainingWeekSession {
     List<BlockTarget>? blocks,
     List<SessionNote>? notes,
     bool? heartRateEstimated,
+    Optional<SessionResult?>? result,
   }) => TrainingWeekSession(
     id: id ?? this.id,
     localDate: localDate ?? this.localDate,
@@ -164,6 +180,7 @@ class TrainingWeekSession {
     blocks: blocks ?? this.blocks,
     notes: notes ?? this.notes,
     heartRateEstimated: heartRateEstimated ?? this.heartRateEstimated,
+    result: result ?? this.result,
   );
 
   /// Returns a new [TrainingWeekSession] instance and imports its values from
@@ -224,6 +241,7 @@ class TrainingWeekSession {
         blocks: BlockTarget.listFromJson(json[r'blocks']),
         notes: SessionNote.listFromJson(json[r'notes']),
         heartRateEstimated: mapValueOfType<bool>(json, r'heartRateEstimated')!,
+        result: json.containsKey(r'result') ? Optional.present(SessionResult.fromJson(json[r'result'])) : const Optional.absent(),
       );
     }
     return null;

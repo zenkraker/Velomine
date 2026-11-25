@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Features.Notifications;
 
@@ -23,7 +24,9 @@ public sealed record NotificationResponse(
     Guid? AboutUserId,
     Guid? PlannedRideId,
     DateTimeOffset CreatedAt,
-    bool IsRead);
+    bool IsRead,
+    /// <summary>The session a "Was this your …?" notification asks about; null for every other type.</summary>
+    TrainingRideMatch? Training = null);
 
 /// <summary>Newest first. UnreadCount counts all unread ones, not only those in the list.</summary>
 public sealed record ListNotificationsResponse(NotificationResponse[] Notifications, int UnreadCount);
@@ -50,6 +53,22 @@ public sealed class ListNotifications(VelomineDbContext db) : Endpoint<ListNotif
             .Take(req.Limit ?? 50)
             .Select(n => new NotificationResponse(n.Id, n.Type, n.Subject, n.RideId, n.BikeId, n.ComponentId, n.AboutUserId, n.PlannedRideId, n.CreatedAt, n.ReadAt != null))
             .ToArrayAsync(ct);
+        // The questions in the list carry the session they ask about, so the inbox asks it in the words of the screen
+        // without reading every ride again.
+        var asked = list.Where(n => n.Type == NotificationTypes.TrainingSessionQuestion && n.RideId is not null)
+            .Select(n => n.RideId!.Value)
+            .Distinct()
+            .ToList();
+        if (asked.Count > 0)
+        {
+            var sessions = await db.TrainingSessions.AsNoTracking()
+                .Where(s => s.UserId == userId && s.QuestionRideId != null && asked.Contains(s.QuestionRideId.Value))
+                .ToListAsync(ct);
+            var byRide = sessions.ToDictionary(s => s.QuestionRideId!.Value, TrainingRideMatch.Of);
+            list = [.. list.Select(n => n.RideId is { } ride && byRide.TryGetValue(ride, out var match)
+                ? n with { Training = match }
+                : n)];
+        }
         var unread = await mine.CountAsync(n => n.ReadAt == null, ct);
         await Send.OkAsync(new ListNotificationsResponse(list, unread), ct);
     }

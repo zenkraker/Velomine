@@ -9,7 +9,8 @@ namespace Velomine.Server.Features.Training;
 
 /// <summary>
 /// One session of a week with its targets: the day, the recipe as the rider reads it (never the R code alone), the day's
-/// minutes, how it is going, and the numbers of each block from <see cref="SessionTargets"/>.
+/// minutes, how it is going, and the numbers of each block from <see cref="SessionTargets"/>. A done session also
+/// carries what its ride did and the score it earned (<see cref="SessionResult"/>), which is the rider's own.
 /// </summary>
 public sealed record TrainingWeekSession(
     Guid Id,
@@ -26,7 +27,8 @@ public sealed record TrainingWeekSession(
     string ItalianLine,
     BlockTarget[] Blocks,
     SessionNote[] Notes,
-    bool HeartRateEstimated);
+    bool HeartRateEstimated,
+    SessionResult? Result = null);
 
 /// <summary>One week of the plan: its days, the load they plan and the one line the rider reads about it.</summary>
 public sealed record TrainingWeek(
@@ -91,6 +93,8 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
         var (max, threshold) = HeartRates.For(user, time);
         var hasPowerMeter = await db.Rides.AsNoTracking()
             .AnyAsync(r => r.UserId == user.Id && r.AvgPowerW != null, ct);
+        // The score of every session a ride did, worked out here and never stored (L8).
+        var results = await SessionScore.ForAsync(db, rows, user, time, ct);
 
         var sessions = rows.Select(s =>
         {
@@ -100,7 +104,8 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
                 s.Id, s.LocalDate, s.Minutes, s.State, s.SkipReason, s.RideId,
                 recipe.Code, recipe.TechnicalName, recipe.EnglishName, recipe.ItalianName,
                 recipe.EnglishLine, recipe.ItalianLine,
-                targets.Blocks, targets.Notes, targets.HeartRateEstimated);
+                targets.Blocks, targets.Notes, targets.HeartRateEstimated,
+                results.GetValueOrDefault(s.Id));
         }).ToArray();
 
         // The planner records the weeks it made lighter, so the week says so whether it was planned today or a week ago.
@@ -135,6 +140,5 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
     }
 
     /// <summary>A stored session's planned effort score: the recipe scaled to its day, as Story 2a's formula reads it.</summary>
-    private static double PlannedScore(string recipe, int minutes) =>
-        SessionPlan.PlannedScore(SessionPlan.For(Recipes.ByCode(recipe), minutes).Blocks);
+    private static double PlannedScore(string recipe, int minutes) => SessionPlan.PlannedScore(recipe, minutes);
 }

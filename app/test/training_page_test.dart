@@ -212,7 +212,10 @@ void main() {
       expect(find.text('Done'), findsOneWidget);
       expect(find.text('Moved'), findsOneWidget);
       expect(find.text('Skipped'), findsOneWidget);
-      expect(find.text('1 of 4 done'), findsOneWidget);
+      expect(
+        find.text('1 of 4 done. A good start to the week.'),
+        findsOneWidget,
+      );
       // A planned day carries no badge, and a day without a session says Rest.
       expect(find.text('Planned'), findsNothing);
       expect(find.text('Rest'), findsWidgets);

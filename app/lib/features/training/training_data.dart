@@ -25,6 +25,14 @@ class TrainingData {
 
   Future<Result<TrainingPlanResponse?>> turnOff() =>
       _api.turnOffTrainingPlan().guard(FailureAction.turnOffTraining);
+
+  /// Answers "Was this your …?" and takes a ride back off a session, in one call.
+  Future<Result<void>> answer(String sessionId, String rideId, bool yes) => _api
+      .matchTrainingSession(
+        sessionId,
+        MatchTrainingSessionRequest(rideId: rideId, answer: yes ? 'yes' : 'no'),
+      )
+      .guard(FailureAction.matchTrainingSession);
 }
 
 @Riverpod(keepAlive: true)
