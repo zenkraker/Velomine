@@ -246,8 +246,11 @@ Class | Method | HTTP request | Description
 *SupporterApi* | [**setSupporterHidden**](doc//SupporterApi.md#setsupporterhidden) | **PUT** /api/v1/supporter/hidden | 
 *TrainingApi* | [**addEvent**](doc//TrainingApi.md#addevent) | **POST** /api/v1/training/events | 
 *TrainingApi* | [**deleteEvent**](doc//TrainingApi.md#deleteevent) | **DELETE** /api/v1/training/events/{id} | 
+*TrainingApi* | [**getTrainingPlan**](doc//TrainingApi.md#gettrainingplan) | **GET** /api/v1/training/plan | 
 *TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
+*TrainingApi* | [**saveTrainingPlan**](doc//TrainingApi.md#savetrainingplan) | **PUT** /api/v1/training/plan | 
 *TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
+*TrainingApi* | [**turnOffTrainingPlan**](doc//TrainingApi.md#turnofftrainingplan) | **DELETE** /api/v1/training/plan | 
 *TrainingApi* | [**updateEvent**](doc//TrainingApi.md#updateevent) | **PUT** /api/v1/training/events/{id} | 
 *WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
 *WellbeingApi* | [**giveWellbeingConsent**](doc//WellbeingApi.md#givewellbeingconsent) | **POST** /api/v1/wellbeing/consent | 
@@ -385,6 +388,7 @@ Class | Method | HTTP request | Description
  - [SaveBikeAsTemplateRequest](doc//SaveBikeAsTemplateRequest.md)
  - [SaveCheckInRequest](doc//SaveCheckInRequest.md)
  - [SaveRideFeelRequest](doc//SaveRideFeelRequest.md)
+ - [SaveTrainingPlanRequest](doc//SaveTrainingPlanRequest.md)
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
@@ -422,6 +426,7 @@ Class | Method | HTTP request | Description
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
  - [TrainingDay](doc//TrainingDay.md)
+ - [TrainingPlanResponse](doc//TrainingPlanResponse.md)
  - [TrainingResponse](doc//TrainingResponse.md)
  - [TwoFactorRequiredResponse](doc//TwoFactorRequiredResponse.md)
  - [TwoFactorSetup](doc//TwoFactorSetup.md)

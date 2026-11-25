@@ -23,6 +23,7 @@ ServerInfoResponse info() => ServerInfoResponse(
   sentryDsn: null,
   telemetryTermsVersion: 1,
   demo: false,
+  autoTrainingEnabled: true,
 );
 
 class _MemoryStore implements ServerConfigStore {

@@ -22,6 +22,7 @@ class ServerInfoResponse {
     required this.sentryDsn,
     required this.telemetryTermsVersion,
     required this.demo,
+    required this.autoTrainingEnabled,
   });
 
   final String name;
@@ -42,6 +43,8 @@ class ServerInfoResponse {
 
   final bool demo;
 
+  final bool autoTrainingEnabled;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ServerInfoResponse &&
     other.name == name &&
@@ -52,7 +55,8 @@ class ServerInfoResponse {
     other.telemetryEnabled == telemetryEnabled &&
     other.sentryDsn == sentryDsn &&
     other.telemetryTermsVersion == telemetryTermsVersion &&
-    other.demo == demo;
+    other.demo == demo &&
+    other.autoTrainingEnabled == autoTrainingEnabled;
 
   @override
   int get hashCode =>
@@ -65,10 +69,11 @@ class ServerInfoResponse {
     (telemetryEnabled.hashCode) +
     (sentryDsn == null ? 0 : sentryDsn!.hashCode) +
     (telemetryTermsVersion.hashCode) +
-    (demo.hashCode);
+    (demo.hashCode) +
+    (autoTrainingEnabled.hashCode);
 
   @override
-  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution, emailAvailable=$emailAvailable, telemetryEnabled=$telemetryEnabled, sentryDsn=$sentryDsn, telemetryTermsVersion=$telemetryTermsVersion, demo=$demo]';
+  String toString() => 'ServerInfoResponse[name=$name, version=$version, mapTileUrl=$mapTileUrl, mapAttribution=$mapAttribution, emailAvailable=$emailAvailable, telemetryEnabled=$telemetryEnabled, sentryDsn=$sentryDsn, telemetryTermsVersion=$telemetryTermsVersion, demo=$demo, autoTrainingEnabled=$autoTrainingEnabled]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -85,6 +90,7 @@ class ServerInfoResponse {
     }
       json[r'telemetryTermsVersion'] = this.telemetryTermsVersion;
       json[r'demo'] = this.demo;
+      json[r'autoTrainingEnabled'] = this.autoTrainingEnabled;
     return json;
   }
 
@@ -101,6 +107,7 @@ class ServerInfoResponse {
     bool sentryDsnSetToNull = false,
     int? telemetryTermsVersion,
     bool? demo,
+    bool? autoTrainingEnabled,
   }) => ServerInfoResponse(
     name: name ?? this.name,
     version: version ?? this.version,
@@ -111,6 +118,7 @@ class ServerInfoResponse {
     sentryDsn: sentryDsnSetToNull ? null : sentryDsn ?? this.sentryDsn,
     telemetryTermsVersion: telemetryTermsVersion ?? this.telemetryTermsVersion,
     demo: demo ?? this.demo,
+    autoTrainingEnabled: autoTrainingEnabled ?? this.autoTrainingEnabled,
   );
 
   /// Returns a new [ServerInfoResponse] instance and imports its values from
@@ -141,6 +149,8 @@ class ServerInfoResponse {
         assert(json[r'telemetryTermsVersion'] != null, 'Required key "ServerInfoResponse[telemetryTermsVersion]" has a null value in JSON.');
         assert(json.containsKey(r'demo'), 'Required key "ServerInfoResponse[demo]" is missing from JSON.');
         assert(json[r'demo'] != null, 'Required key "ServerInfoResponse[demo]" has a null value in JSON.');
+        assert(json.containsKey(r'autoTrainingEnabled'), 'Required key "ServerInfoResponse[autoTrainingEnabled]" is missing from JSON.');
+        assert(json[r'autoTrainingEnabled'] != null, 'Required key "ServerInfoResponse[autoTrainingEnabled]" has a null value in JSON.');
         return true;
       }());
 
@@ -154,6 +164,7 @@ class ServerInfoResponse {
         sentryDsn: mapValueOfType<String>(json, r'sentryDsn'),
         telemetryTermsVersion: mapValueOfType<int>(json, r'telemetryTermsVersion')!,
         demo: mapValueOfType<bool>(json, r'demo')!,
+        autoTrainingEnabled: mapValueOfType<bool>(json, r'autoTrainingEnabled')!,
       );
     }
     return null;
@@ -210,6 +221,7 @@ class ServerInfoResponse {
     'sentryDsn',
     'telemetryTermsVersion',
     'demo',
+    'autoTrainingEnabled',
   };
 }
 

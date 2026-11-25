@@ -437,6 +437,8 @@ class ApiClient {
           return SaveCheckInRequest.fromJson(value);
         case 'SaveRideFeelRequest':
           return SaveRideFeelRequest.fromJson(value);
+        case 'SaveTrainingPlanRequest':
+          return SaveTrainingPlanRequest.fromJson(value);
         case 'SearchPartsResponse':
           return SearchPartsResponse.fromJson(value);
         case 'ServerInfoResponse':
@@ -511,6 +513,8 @@ class ApiClient {
           return TotalsResponse.fromJson(value);
         case 'TrainingDay':
           return TrainingDay.fromJson(value);
+        case 'TrainingPlanResponse':
+          return TrainingPlanResponse.fromJson(value);
         case 'TrainingResponse':
           return TrainingResponse.fromJson(value);
         case 'TwoFactorRequiredResponse':

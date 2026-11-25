@@ -73,6 +73,9 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             .Where(h => h.UserId == userId).OrderBy(h => h.SetAt).ThenBy(h => h.Sequence).ToListAsync(ct);
         var events = await db.Events.AsNoTracking()
             .Where(e => e.UserId == userId).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync(ct);
+        var trainingPlan = await db.TrainingPlans.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        var trainingSessions = await db.TrainingSessions.AsNoTracking()
+            .Where(s => s.UserId == userId).OrderBy(s => s.LocalDate).ThenBy(s => s.Id).ToListAsync(ct);
 
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
@@ -223,6 +226,33 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
             e.CreatedAt,
         }), ct);
         await AddJsonAsync(zip, "sessions.json", sessions.Select(s => new { s.Id, s.Label, s.CreatedAt, s.LastUsedAt, s.RevokedAt }), ct);
+        // The score is computed from the ride that was the session (docs/training-models.md), so it is null until a
+        // session is done; it is carried here so the file's shape does not change when that arrives.
+        await AddJsonAsync(zip, "training-plan.json", new
+        {
+            Plan = trainingPlan is null ? null : new
+            {
+                Goal = trainingPlan.Goal,
+                Days = trainingPlan.Days.Select(d => WeekDays.Name((DayOfWeek)d)),
+                trainingPlan.HoursPerWeek,
+                LongRideDay = trainingPlan.LongRideDay is { } day ? WeekDays.Name((DayOfWeek)day) : null,
+                trainingPlan.LastPlannedFor,
+                trainingPlan.IsOn,
+                trainingPlan.UpdatedAt,
+            },
+            Sessions = trainingSessions.Select(s => new
+            {
+                s.Id,
+                s.LocalDate,
+                s.Recipe,
+                s.BlockPercents,
+                s.State,
+                s.SkipReason,
+                s.RideId,
+                Score = (int?)null,
+                s.CreatedAt,
+            }),
+        }, ct);
         await AddJsonAsync(zip, "imports.json", imports.Select(i => new
         {
             i.Id,
@@ -355,6 +385,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
         notifications.json  your notifications
         events.json         the races, sportives and tours you added, with the ride that was each one
         sessions.json       where you are signed in: the device label and the times, never an address
+        training-plan.json  your auto-training setup and every session it planned, with how each went
         imports.json        the archives you brought in from another app, and how many rides they held
         wellbeing.json      your daily check-ins, your RPE and notes for rides, and your consent
         privacy.json        your privacy switches, start and end trimming, and your saved zones

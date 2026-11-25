@@ -2,6 +2,7 @@ using FastEndpoints;
 using Microsoft.Extensions.Options;
 using Velomine.Server.Features.Admin;
 using Velomine.Server.Features.Demo;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Observability;
 
 namespace Velomine.Server.Features.Server;
@@ -16,13 +17,15 @@ public sealed record ServerInfoResponse(
     bool TelemetryEnabled,
     string? SentryDsn,
     int TelemetryTermsVersion,
-    bool Demo);
+    bool Demo,
+    bool AutoTrainingEnabled);
 
 public sealed class GetServerInfo(
     IOptions<MapOptions> map,
     IOptions<SmtpOptions> smtp,
     IOptions<TelemetryOptions> telemetry,
-    IOptions<DemoOptions> demo) : EndpointWithoutRequest<ServerInfoResponse>
+    IOptions<DemoOptions> demo,
+    IOptions<TrainingOptions> training) : EndpointWithoutRequest<ServerInfoResponse>
 {
     public override void Configure()
     {
@@ -43,6 +46,7 @@ public sealed class GetServerInfo(
             options.IsAppActive,
             options.IsAppActive ? options.AppDsn : null,
             TelemetryTerms.Version,
-            demo.Value.Enabled), ct);
+            demo.Value.Enabled,
+            training.Value.AutoEnabled), ct);
     }
 }

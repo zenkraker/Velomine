@@ -72,6 +72,9 @@ import 'features/rides/incoming/incoming_rides_area.dart';
 import 'features/rides/import/import_screen.dart';
 import 'features/rides/rides_view_model.dart';
 import 'features/rides/rides_screen.dart';
+import 'features/training/training_screen.dart';
+import 'features/training/training_setup_screen.dart';
+import 'features/training/training_view_model.dart';
 import 'home_shell.dart';
 import 'core/l10n.dart';
 
@@ -199,6 +202,12 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       if (path == '/reset-password' || path == '/verify-email') return null;
       if (open.contains(path) || path == '/') return '/rides';
       if (path == '/record' && kIsWeb) return '/rides';
+      // The Training destination exists only while auto training is on; the setup is how it is turned on.
+      if (path == '/training' &&
+          !(ref.read(trainingViewModelProvider).on &&
+              (session.serverInfo?.autoTrainingEnabled ?? false))) {
+        return '/rides';
+      }
       if (path == '/admin' && !session.isAdmin) return '/rides';
       return null;
     },
@@ -331,6 +340,11 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
             ),
           ),
           GoRoute(path: '/record', builder: (_, _) => const RecordingScreen()),
+          GoRoute(path: '/training', builder: (_, _) => const TrainingScreen()),
+          GoRoute(
+            path: '/training/setup',
+            builder: (_, _) => const TrainingSetupScreen(),
+          ),
           GoRoute(path: '/progress', builder: (_, _) => const ProgressScreen()),
           GoRoute(
             path: '/progress/fitness',
@@ -671,6 +685,8 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       _followSession();
     });
     ref.listen(clubViewModelProvider, (_, _) => _router.refresh());
+    // Turning auto training on or off adds or removes the Training destination.
+    ref.listen(trainingViewModelProvider, (_, _) => _router.refresh());
     return MaterialApp.router(
       title: 'Velomine',
       theme: dayTheme(),

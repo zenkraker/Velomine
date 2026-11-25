@@ -627,6 +627,7 @@ void main() {
     WidgetTester tester,
     ValueNotifier<String> location, {
     String? clubName = 'Test Club',
+    bool autoTraining = false,
   }) async {
     tester.view.physicalSize = const Size(1300, 1000);
     tester.view.devicePixelRatio = 1;
@@ -647,6 +648,7 @@ void main() {
                   valueListenable: location,
                   builder: (context, value, _) => NavSidebar(
                     location: value,
+                    autoTraining: autoTraining,
                     clubName: clubName,
                     unread: 0,
                     name: 'Rider',
