@@ -173,6 +173,21 @@ public sealed class WeekPlannerTests
     }
 
     [Fact]
+    public void WeekPlanner_ShouldKeepTheLongRideAndDropTheHardDay_WhenNoEasyDayIsLeftToDrop()
+    {
+        // Free Monday, Wednesday and Saturday, Wednesday the rider's own long-ride day, one hour a week planned on
+        // Wednesday: the hour holds Wednesday at its floor and nothing more, and no easy day is left to go. The hard day
+        // is the day that goes — the long ride never is, and the week keeps Wednesday's day (W1, W4).
+        var week = WeekPlanner.Plan(Input(Monday.AddDays(2),
+            Days(DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Saturday), hours: 1,
+            longRideDay: (int)DayOfWeek.Wednesday));
+
+        Assert.Equal(Monday.AddDays(2), Assert.Single(week.Sessions).LocalDate);
+        Assert.DoesNotContain(week.Sessions, s => Recipes.ByCode(s.Recipe).IsQuality);
+        Assert.True(week.Sessions.Sum(s => s.Minutes) <= 60, $"planned {week.Sessions.Sum(s => s.Minutes)} minutes");
+    }
+
+    [Fact]
     public void WeekPlanner_ShouldDropTheSecondHardDay_WhenTheDaysCannotKeepTheSpacing()
     {
         // Friday is the day before the long ride on Sunday? No: Saturday is. Friday is the day before Saturday, and
@@ -223,7 +238,6 @@ public sealed class WeekPlannerTests
 
         Assert.False(built.IsLighterWeek);
         Assert.True(lighter.IsLighterWeek);
-        Assert.Equal(TrainingNotes.EasyWeek, lighter.Note);
     }
 
     [Fact]
@@ -391,8 +405,6 @@ public sealed class WeekPlannerTests
         var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Sunday),
             hours: 6, history: History(weeksOfRides: 3, normalWeeks: [])));
 
-        Assert.True(week.IsBaseBlock);
-        Assert.Equal(TrainingNotes.MorePersonal, week.Note);
         Assert.All(week.Sessions, session =>
         {
             Assert.Contains(session.Recipe, new[] { "R14", "R15", "R16" });
@@ -426,10 +438,9 @@ public sealed class WeekPlannerTests
         var back = WeekPlanner.Plan(Input(Monday, days, history: History(daysSinceLastRide: 14)));
         var riding = WeekPlanner.Plan(Input(Monday, days, history: History(daysSinceLastRide: 9)));
 
-        Assert.True(back.IsBaseBlock);
         // Back from a break the plan restarts from the real recent load: the gentle base block, not the old hours.
-        Assert.All(back.Sessions, session => Assert.Contains(session.Recipe, new[] { "R14", "R15", "R16" }));
-        Assert.False(riding.IsBaseBlock);
+        Assert.All(back.Sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
+        Assert.DoesNotContain(riding.Sessions, session => WeekPlanner.BaseRecipes.Contains(session.Recipe));
     }
 
     [Fact]
@@ -442,7 +453,6 @@ public sealed class WeekPlannerTests
             history: History(weeksOfRides: 20, normalWeeks: [180, 180, 180, 180], daysSinceLastRide: 14,
                 recentHours: 3)));
 
-        Assert.True(week.IsBaseBlock);
         Assert.All(week.Sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
         // The week is the hours the recent weeks really took, not the twelve the setup still says.
         Assert.Equal(3 * 60, week.Sessions.Sum(s => s.Minutes));
@@ -455,7 +465,7 @@ public sealed class WeekPlannerTests
         var week = WeekPlanner.Plan(Input(Monday, Days(DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Sunday),
             hours: 4, history: History(weeksOfRides: 2, normalWeeks: [], daysSinceLastRide: 1, recentHours: null)));
 
-        Assert.True(week.IsBaseBlock);
+        Assert.All(week.Sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
         Assert.Equal(4 * 60, week.Sessions.Sum(s => s.Minutes));
     }
 
@@ -469,7 +479,6 @@ public sealed class WeekPlannerTests
                 DayOfWeek.Saturday),
             hours: 3, history: History(weeksOfRides: 2, normalWeeks: [])));
 
-        Assert.True(week.IsBaseBlock);
         Assert.All(week.Sessions, session =>
         {
             Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes);

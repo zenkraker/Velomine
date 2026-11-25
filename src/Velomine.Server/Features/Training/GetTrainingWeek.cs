@@ -69,9 +69,9 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
         var user = await db.Users.AsNoTracking().FirstAsync(u => u.Id == userId, ct);
         var clock = MemberClock.For(user.TimeZone, user.FirstDayOfWeek, time);
         var weekStart = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek);
-        var weeks = new List<TrainingWeek> { await OfWeekAsync(user, plan, weekStart, ct) };
+        var weeks = new List<TrainingWeek> { await OfWeekAsync(user, plan, clock, weekStart, ct) };
         // A preview is what the last day's planning already wrote; the app shows its card that evening.
-        if (clock.Today == weekStart.AddDays(6)) weeks.Add(await OfWeekAsync(user, plan, weekStart.AddDays(7), ct));
+        if (clock.Today == weekStart.AddDays(6)) weeks.Add(await OfWeekAsync(user, plan, clock, weekStart.AddDays(7), ct));
 
         await Send.OkAsync(new TrainingWeeksResponse([.. weeks]), ct);
     }
@@ -80,7 +80,7 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
     /// A week as its sessions are stored: the targets are worked out here, never stored, because watts follow the FTP in
     /// use and heart rate the zone model in use.
     /// </summary>
-    private async Task<TrainingWeek> OfWeekAsync(User user, TrainingPlan plan, DateOnly start, CancellationToken ct)
+    private async Task<TrainingWeek> OfWeekAsync(User user, TrainingPlan plan, MemberClock clock, DateOnly start, CancellationToken ct)
     {
         var end = start.AddDays(6);
         var rows = await db.TrainingSessions.AsNoTracking()
@@ -105,16 +105,33 @@ public sealed class GetTrainingWeek(VelomineDbContext db, TimeProvider time)
 
         // The planner records the weeks it made lighter, so the week says so whether it was planned today or a week ago.
         var lighter = rows.Count > 0 && plan.LighterWeeks.Contains(start);
-        // The gentle block has no record of its own: a week of nothing but the base recipes is one, and it is never
-        // named — the rider reads only that it gets more personal as their rides come in.
-        var gentle = rows.Count > 0 && rows.All(s => WeekPlanner.BaseRecipes.Contains(s.Recipe));
+        // The gentle block has no record of its own: every day from today on is one of the base recipes. The days before
+        // today are not read, so a break that began mid-week still shows the line for the rest of the week.
+        var gentle = rows.Any(s => s.LocalDate >= clock.Today)
+            && rows.All(s => s.LocalDate < clock.Today || WeekPlanner.BaseRecipes.Contains(s.Recipe));
+        var planned = rows.Sum(s => PlannedScore(s.Recipe, s.Minutes));
+        var spent = await SpentLoadAsync(user, clock, rows, start, end, ct);
         return new TrainingWeek(
             start,
             end,
-            Math.Round(rows.Sum(s => PlannedScore(s.Recipe, s.Minutes)), 1),
+            Math.Round(planned + spent, 1),
             lighter,
             lighter ? TrainingNotes.EasyWeek : gentle ? TrainingNotes.MorePersonal : null,
             sessions);
+    }
+
+    /// <summary>
+    /// What the week has already spent: a ride on a day it has no session for is load the week carries, as the planner
+    /// counts it, so the load the rider reads and the load the planner budgets against are the same number.
+    /// </summary>
+    private async Task<double> SpentLoadAsync(
+        User user, MemberClock clock, List<TrainingSession> rows, DateOnly start, DateOnly end, CancellationToken ct)
+    {
+        var stored = rows.Select(s => s.LocalDate).ToHashSet();
+        var rides = await RideDays.LoadAsync(db, user.Id, clock, start, end.AddDays(1), ct, ftpW: user.FtpW);
+        return rides
+            .Where(ride => ride.LocalDate <= clock.Today && !stored.Contains(ride.LocalDate))
+            .Sum(ride => ride.Load);
     }
 
     /// <summary>A stored session's planned effort score: the recipe scaled to its day, as Story 2a's formula reads it.</summary>

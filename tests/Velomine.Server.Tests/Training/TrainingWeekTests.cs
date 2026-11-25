@@ -83,6 +83,43 @@ public sealed class TrainingWeekTests(PostgresFixture postgres)
         await db.SaveChangesAsync(Ct);
     }
 
+    /// <summary>One session the sweep may not rewrite: the week already has that day.</summary>
+    private static async Task AddSessionAsync(TestApi api, Guid userId, DateOnly date, string recipe, int minutes)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        db.TrainingSessions.Add(new TrainingSession
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            LocalDate = date,
+            Recipe = recipe,
+            Minutes = minutes,
+            BlockPercents = [90],
+            State = TrainingSessionStates.Planned,
+            CreatedAt = Now,
+        });
+        await db.SaveChangesAsync(Ct);
+    }
+
+    /// <summary>One ride on a day, with the effort score L1 reads first.</summary>
+    private static async Task AddRideAsync(TestApi api, Guid userId, DateOnly date, double tss)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        db.Rides.Add(new Ride
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Status = RideStatus.Ready,
+            StartTime = new DateTimeOffset(date.ToDateTime(new TimeOnly(9, 0)), TimeSpan.Zero),
+            UtcOffsetMinutes = 0,
+            MovingS = 3600,
+            Tss = tss,
+        });
+        await db.SaveChangesAsync(Ct);
+    }
+
     /// <summary>The rider rides the week that was planned: one finished ride on each of its days.</summary>
     private static async Task RodeAsync(TestApi api, Guid userId, IEnumerable<TrainingWeekSession> sessions)
     {
@@ -357,6 +394,63 @@ public sealed class TrainingWeekTests(PostgresFixture postgres)
         var sessions = await SessionsAsync(api, member.Id, Monday.AddDays(14), Monday.AddDays(20));
         Assert.All(sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
         Assert.Equal(5 * 60, sessions.Sum(s => s.Minutes));
+    }
+
+    [Fact]
+    public async Task TrainingPlanSweeper_ShouldRestartFromTheHoursLastRode_WhenTheBreakOutlastsTheReadWindow()
+    {
+        // Twelve hours in the setup and five hours a week up to eleven weeks ago: the week the rider last rode sits
+        // before the eight the mean reads, and the gentle block restarts from its hours all the same (W5).
+        await using var api = await StartAsync(Now.AddDays(77));
+        var member = await NewMemberAsync(api);
+        // Rides in the five weeks from the old Monday: eleven to fifteen weeks before the week planned now.
+        await WithRidingHistoryAsync(api, member.Id, weeks: 5, firstWeek: 0);
+        (await SaveAsync(member.Client, ["tuesday", "thursday", "sunday"], hours: 12)).EnsureSuccessStatusCode();
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        var weekStart = Monday.AddDays(77);
+        var sessions = await SessionsAsync(api, member.Id, weekStart, weekStart.AddDays(6));
+        Assert.All(sessions, session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
+        Assert.Equal(5 * 60, sessions.Sum(s => s.Minutes));
+    }
+
+    [Fact]
+    public async Task GetTrainingWeek_ShouldSayItGetsMorePersonal_WhenTheBreakStartedMidWeek()
+    {
+        // A break of thirteen days, and Monday of this week still carries the hard session the plan gave it before the
+        // break: from today on every day is a base recipe, so the line shows for the rest of the week (W5).
+        await using var api = await StartAsync(Now.AddDays(2));
+        var member = await NewMemberAsync(api);
+        await WithRidingHistoryAsync(api, member.Id, weeks: 5, firstWeek: 2);
+        (await SaveAsync(member.Client, ["tuesday", "thursday", "sunday"], hours: 12)).EnsureSuccessStatusCode();
+        await AddSessionAsync(api, member.Id, Monday, "R05", 60);
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        var week = Assert.Single((await WeekAsync(member.Client)).Weeks);
+
+        Assert.Equal("more_personal", week.Note!.Code);
+        Assert.Equal(Monday, week.Sessions[0].LocalDate);
+        Assert.Equal("R05", week.Sessions[0].Recipe);
+        Assert.All(week.Sessions.Skip(1), session => Assert.Contains(session.Recipe, WeekPlanner.BaseRecipes));
+    }
+
+    [Fact]
+    public async Task GetTrainingWeek_ShouldCountTheSpentDay_WhenTheRiderRodeADayItDoesNotPlan()
+    {
+        // Monday is not a riding day, so the planner carries the ride as load the week already spent: the load the
+        // endpoint answers is the same number the planner budgets against.
+        await using var api = await StartAsync();
+        var member = await NewMemberAsync(api);
+        await StartPlanAsync(api, member, ["tuesday", "thursday", "sunday"]);
+        await AddRideAsync(api, member.Id, Monday, tss: 300);
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        var week = Assert.Single((await WeekAsync(member.Client)).Weeks);
+        var planned = week.Sessions.Sum(s => SessionScore(s.Recipe, s.Minutes));
+        Assert.Equal(Math.Round(planned + 300, 1), week.PlannedLoad);
     }
 
     [Fact]

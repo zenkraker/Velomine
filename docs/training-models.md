@@ -498,6 +498,7 @@ with what it already spent, a hard day's least length never pushes the week past
 than a day. The long-ride day is the rider's own, else the last free weekend day (Sunday, else
 Saturday), else the last free day; a week whose long ride is already ridden has no second one, and neither has one whose
 every remaining day sits next to a hard day the rider already has — two loaded days in a row are worse than no long ride.
+A week too long for its hours or its cap drops its easy days, then its hard days, and never the long ride.
 
 A session stores its recipe, its block percentages and **the day's minutes**; its planned score is L7's, computed from
 those on read and never stored. A week's planned load is the sum of its sessions' scores, plus what the week has already
@@ -523,7 +524,8 @@ Source: the placement is research §4.2's algorithm and CTS's "two hard days a w
 practice); the 88 % sweet-spot boundary and the 35 % share are Velomine's own. Code: `WeekPlanner.HardDays`,
 `HardIndexes`, `QualityPreferences`, `LoadedLongRideShare`. Tests: `WeekPlannerTests` (`ShouldPlanTwoHardDays…`,
 `ShouldKeepHardDaysApart…`, `ShouldNeverPlanLoadedDaysInARow…`, `LongRide_ShouldCountAsLoaded…`,
-`ShouldGiveUpTheLongRide…`, `ShouldDrawTheGoalsHardDaysFromTheDocumentedRecipes…`).
+`ShouldGiveUpTheLongRide…`, `ShouldKeepTheLongRideAndDropTheHardDay…`,
+`ShouldDrawTheGoalsHardDaysFromTheDocumentedRecipes…`).
 
 ### W2 — The build cycle
 
@@ -545,7 +547,9 @@ rest-band days are Velomine's own and read F2's band, not a new number. Code: `W
 ### W3 — The lighter week
 
 Owed number 4. A lighter week carries **65 % of the last normal week's load at most**, on the same riding days, and it
-keeps **one short hard day, at most 60 minutes**. It is not growth, so it never counts towards W4's mean.
+keeps **one short hard day, at most 60 minutes**. It is not growth, so it never counts towards W4's mean. The hard day is
+kept only while the cap can hold it: the shortest hard session alone can carry more than 65 % of a small last normal
+week, and the week is then planned without it, because a lighter week is never made harder to keep a hard day.
 
 Source: research §4.3 — no source gives a verified figure for how much lighter; the drafts' 70 % of the previous build
 week (D) becomes 65 % here, and the short hard day is Friel's "two or three days of short, higher-intensity sessions"
@@ -563,7 +567,8 @@ are left out of the mean, so neither drags down the week the rider grows from. W
 all — a new rider is in the gentle base block below.
 
 When the cap binds, the days shrink together: the planner finds the longest week still under the cap, so a capped week is
-a **shorter** week and never a harder one. If even the 20-minute floor is over it, the last easy day goes.
+a **shorter** week and never a harder one. If even the 20-minute floor is over it, the last easy day goes, then a hard day;
+the long ride's day is never the one that goes, because W1 gives up the hard days and keeps the long ride.
 
 Source: research §1.1 and §4.4 — the 10 % cap is a conservative default with no trial behind it (the one randomised trial
 of a 10 % rule found no benefit, PMID 17940147), and measuring it against the **normal** weeks only is the research's own
@@ -578,14 +583,16 @@ Owed number 6. Fewer than **4 weeks of rides** (G1's first rule) or **back from 
 the week is the gentle base block: **R14, R15 and R16 only**, feel targets only, **no intervals**, **no feel number above
 6**, and **no ramp** at all. The block is never named to the rider; the one line it shows is "It gets more personal as
 your rides come in". Back from a break the plan restarts from the real recent load: the week is no longer than the hours
-the recent normal weeks really took, whatever the setup now says, so a rider who rode three hours a week comes back to
-about three and not to the twelve they used to. A rider whose first weeks these are has no recent weeks to restart from,
-so their own hours are the week, and a base day rides by feel at whatever length it gets (see *Scaling*).
+the recent normal weeks really took, however far back the last of them was, whatever the setup now says, so a rider who
+rode three hours a week comes back to about three and not to the twelve they used to. A rider whose first weeks these are
+has no recent weeks to restart from, so their own hours are the week, and a base day rides by feel at whatever length it
+gets (see *Scaling*).
 
 Source: Velomine's own (G1; research §3, *Gentle base block*, D for the exact dose, C/D for the direction). Code:
-`WeekPlanner.IsBaseBlock`, `FromBreak`, `BaseBlockWeeks`, `BreakDays`. Tests: `ShouldPlanOnlyTheGentleBaseBlock…`,
-`BaseBlock_ShouldHaveNoRamp…`, `BaseBlock_ShouldStartAgain…`, `BaseBlock_ShouldKeepTheRecentWeeksHours…`,
-`BaseBlock_ShouldKeepAShortDayGentle…`.
+`WeekPlanner.IsBaseBlock`, `FromBreak`, `BaseBlockWeeks`, `BreakDays`, `NormalWeeks`. Tests:
+`ShouldPlanOnlyTheGentleBaseBlock…`, `BaseBlock_ShouldHaveNoRamp…`, `BaseBlock_ShouldStartAgain…`,
+`BaseBlock_ShouldKeepTheRecentWeeksHours…`, `ShouldRestartFromTheHoursLastRode…`, `BaseBlock_ShouldKeepAShortDayGentle…`,
+`GetTrainingWeek_ShouldSayItGetsMorePersonal…`.
 
 **What the rider reads.** The planner's terms never reach the rider: a hard session is a **hard day** in every line that
 says why (the why lines arrive with the week on screen), the lighter week is an "Easy week" ("Easy week: your body gets

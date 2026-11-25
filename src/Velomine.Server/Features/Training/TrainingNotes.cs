@@ -26,6 +26,4 @@ public static class TrainingNotes
         "Diventa più personale man mano che arrivano i tuoi giri");
 
     public static readonly TrainingNote[] All = [EasyWeek, MorePersonal];
-
-    public static TrainingNote? ByCode(string? code) => All.FirstOrDefault(n => n.Code == code);
 }

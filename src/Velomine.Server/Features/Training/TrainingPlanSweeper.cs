@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Analytics;
+using Velomine.Server.Features.Rides;
 
 namespace Velomine.Server.Features.Training;
 
@@ -13,9 +14,6 @@ namespace Velomine.Server.Features.Training;
 /// </summary>
 public static class WeekPlanning
 {
-    /// <summary>How many weeks back the loads are read: the mean looks back four, and the cycle a month.</summary>
-    public const int LoadWeeks = 8;
-
     /// <summary>
     /// This week from today, and on the week's last day next week too, so the rider sees the preview that evening. Only
     /// today and later days that are neither done nor moved are rewritten.
@@ -48,12 +46,16 @@ public static class WeekPlanning
         CancellationToken ct)
     {
         var weekEnd = weekStart.AddDays(6);
-        var historyFrom = weekStart.AddDays(-7 * LoadWeeks);
+        var historyFrom = weekStart.AddDays(-7 * WeekPlanner.NormalWeeksLookBack);
         var sessions = await db.TrainingSessions.AsNoTracking()
             .Where(s => s.UserId == user.Id && s.LocalDate >= historyFrom && s.LocalDate <= weekEnd)
             .Select(s => new { s.LocalDate, s.State, s.Recipe, s.Minutes })
             .ToListAsync(ct);
         var rides = await RideDays.LoadAsync(db, user.Id, clock, historyFrom, weekEnd.AddDays(1), ct, ftpW: user.FtpW);
+        // A rider back from a break longer than that window restarts from the week they really last rode, which sits
+        // before it: that week is read too, so the gentle block is never left without the hours to restart from (W5).
+        if (await LastWeekWithRidesAsync(db, clock, user.Id, historyFrom, ct) is { } lastRode)
+            rides = [.. rides, .. await RideDays.LoadAsync(db, user.Id, clock, lastRode, lastRode.AddDays(7), ct, ftpW: user.FtpW)];
         var dayLoad = rides.GroupBy(r => r.LocalDate).ToDictionary(g => g.Key, g => g.Sum(r => r.Load));
 
         DateOnly WeekOf(DateOnly date) => Periods.StartOf(date, Periods.Week, clock.FirstDayOfWeek);
@@ -147,6 +149,27 @@ public static class WeekPlanning
             plan.LighterWeeks = [.. plan.LighterWeeks.Append(weekStart)
                 .Distinct().OrderByDescending(start => start).Take(WeekPlanner.NormalWeeksLookBack)];
         }
+    }
+
+    /// <summary>
+    /// The start of the last week before <paramref name="before"/> with a ride: the week a rider back from a break last
+    /// rode, which can sit before the window the mean reads.
+    /// </summary>
+    private static async Task<DateOnly?> LastWeekWithRidesAsync(
+        VelomineDbContext db, MemberClock clock, Guid userId, DateOnly before, CancellationToken ct)
+    {
+        // A local date is at most a day from UTC's, so one day's margin catches every ride of the day before it.
+        var utcBefore = new DateTimeOffset(before.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var last = await db.Rides.AsNoTracking()
+            .Where(r => r.UserId == userId && r.Status == RideStatus.Ready
+                && r.StartTime != null && r.StartTime < utcBefore)
+            .OrderByDescending(r => r.StartTime)
+            .Select(r => new { r.StartTime, r.UtcOffsetMinutes })
+            .FirstOrDefaultAsync(ct);
+        if (last?.StartTime is not { } start) return null;
+        var local = clock.LocalDateOf(start, last.UtcOffsetMinutes);
+        // A ride the window already reads is not a second read.
+        return local < before ? Periods.StartOf(local, Periods.Week, clock.FirstDayOfWeek) : null;
     }
 }
 

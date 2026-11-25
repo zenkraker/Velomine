@@ -47,16 +47,14 @@ public sealed record PlannedSession(DateOnly LocalDate, string Recipe, int Minut
 
 /// <summary>
 /// A planned week: its sessions, the load they plan (the sum of their effort scores plus what the week already spent),
-/// whether it is a lighter week or the gentle base block, and the one line the rider reads about it.
+/// whether it is a lighter week, and whether its long ride is a loaded day.
 /// </summary>
 public sealed record PlannedWeek(
     DateOnly WeekStart,
     PlannedSession[] Sessions,
     double Load,
     bool IsLighterWeek,
-    bool IsBaseBlock,
-    bool LongRideIsLoaded,
-    TrainingNote? Note);
+    bool LongRideIsLoaded);
 
 /// <summary>
 /// The week's plan, as pure functions (`docs/training-models.md`, *The planned week*): the setup, the last weeks and
@@ -117,24 +115,21 @@ public static class WeekPlanner
     }
 
     /// <summary>
-    /// The last four normal weeks, newest first — a completed week that had a ride and was not made lighter — as the
-    /// caller holds them: their planned load, or the hours really ridden. Empty weeks and lighter weeks are left out,
-    /// so a break or an easy week never drags down the week the rider grows from.
+    /// The last four normal weeks, newest first — a week that had a ride and was not made lighter — as the caller holds
+    /// them: their planned load, or the hours really ridden. A week the caller has no entry for had no ride; a week it
+    /// holds as zero and a lighter week are left out, so a break or an easy week never drags down the week the rider
+    /// grows from. It walks the weeks the caller read instead of a fixed window, so a rider back from a long break
+    /// restarts from the week they last rode and not from the hours the setup says (W5).
     /// </summary>
     public static double[] NormalWeeks(
-        IReadOnlyDictionary<DateOnly, double> ofWeek, DateOnly weekStart, IReadOnlyCollection<DateOnly> lighterWeeks)
-    {
-        var normal = new List<double>(4);
-        for (var back = 1; back <= NormalWeeksLookBack && normal.Count < 4; back++)
-        {
-            var start = weekStart.AddDays(-7 * back);
-            if (lighterWeeks.Contains(start) || ofWeek.GetValueOrDefault(start) <= 0) continue;
-            normal.Add(ofWeek[start]);
-        }
-        return [.. normal];
-    }
+        IReadOnlyDictionary<DateOnly, double> ofWeek, DateOnly weekStart, IReadOnlyCollection<DateOnly> lighterWeeks) =>
+        [.. ofWeek
+            .Where(week => week.Key < weekStart && week.Value > 0 && !lighterWeeks.Contains(week.Key))
+            .OrderByDescending(week => week.Key)
+            .Take(4)
+            .Select(week => week.Value)];
 
-    /// <summary>How far back the normal weeks are looked for: four of them are always inside a couple of months.</summary>
+    /// <summary>How many weeks of history the caller reads: enough for four normal weeks and the easier weeks around them.</summary>
     public const int NormalWeeksLookBack = 8;
 
     /// <summary>
@@ -173,7 +168,7 @@ public static class WeekPlanner
         var otherLoad = Math.Round(input.Fixed.Sum(s => Session(s.LocalDate, s.Recipe, s.Minutes).Score)
             + input.Spent.Sum(s => s.Load), 1);
 
-        if (dates.Count == 0) return Week(weekStart, [], otherLoad, isLighter, isBaseBlock, false);
+        if (dates.Count == 0) return Week(weekStart, [], otherLoad, isLighter, false);
 
         var budget = Budget(input, weekStart, freeDays, dates.Count);
         // Back from a break the block restarts from the real recent load: the week is no longer than the weeks the rider
@@ -183,7 +178,7 @@ public static class WeekPlanner
         var longIndex = LongRideIndex(input, dates);
         // The hours cannot hold even the floor of one day: the week carries what it already spent and nothing more,
         // rather than a token minute planned to fill a day.
-        if (budget < MinimumDayMinutes) return Week(weekStart, [], otherLoad, isLighter, isBaseBlock, false);
+        if (budget < MinimumDayMinutes) return Week(weekStart, [], otherLoad, isLighter, false);
         // The rider's hours are the ceiling and a day has a floor: hours that cannot give every day one keep fewer
         // days, so the week is shorter rather than longer than the hours (W4).
         while (dates.Count > 1 && budget < MinimumDayMinutes * dates.Count)
@@ -196,9 +191,10 @@ public static class WeekPlanner
                 - input.Fixed.Count(s => Recipes.ByCode(s.Recipe).IsQuality);
         var (recipes, minutes) = Assign(input, dates, budget, longIndex, Math.Max(slots, 0), isLighter, isBaseBlock);
 
-        // A hard day's least length can still push the week over the hours: the last easy days go, and one day alone is
-        // trimmed to the hours and to the minutes a day has.
-        while (dates.Count > 1 && minutes.Sum() > budget) DropDay(dates, recipes, minutes, ref longIndex);
+        // A hard day's least length can still push the week over the hours: the easy days go, then the hard days, and
+        // one day alone is trimmed to the hours and to the minutes a day has.
+        while (dates.Count > 1 && minutes.Sum() > budget)
+            if (!DropDay(dates, recipes, minutes, ref longIndex)) break;
         var ceiling = Math.Max(Math.Min(budget, MaxDayMinutes), 1);
         for (var i = 0; i < minutes.Count; i++) minutes[i] = Math.Clamp(minutes[i], 1, ceiling);
 
@@ -225,7 +221,7 @@ public static class WeekPlanner
         // A cap below even the shortest week of these days keeps fewer days: a shorter week, never a harder one.
         while (cap is { } tight && otherLoad + load > tight && dates.Count > 1)
         {
-            DropDay(dates, recipes, minutes, ref longIndex);
+            if (!DropDay(dates, recipes, minutes, ref longIndex)) break;
             (sessions, load) = Build(dates, recipes, minutes);
         }
 
@@ -234,7 +230,7 @@ public static class WeekPlanner
             ? sessions.FirstOrDefault(s => s.LocalDate == dates[longIndex])
             : null;
         var longRideLoaded = longRide is not null && weekLoad > 0 && longRide.Score / weekLoad > LoadedLongRideShare;
-        return Week(weekStart, sessions, weekLoad, isLighter, isBaseBlock, longRideLoaded);
+        return Week(weekStart, sessions, weekLoad, isLighter, longRideLoaded);
     }
 
     private static PlannedWeek Week(
@@ -242,15 +238,8 @@ public static class WeekPlanner
         PlannedSession[] sessions,
         double load,
         bool isLighter,
-        bool isBaseBlock,
         bool longRideLoaded) =>
-        new(weekStart,
-            sessions,
-            Math.Round(load, 1),
-            isLighter,
-            isBaseBlock,
-            longRideLoaded,
-            isLighter ? TrainingNotes.EasyWeek : isBaseBlock ? TrainingNotes.MorePersonal : null);
+        new(weekStart, sessions, Math.Round(load, 1), isLighter, longRideLoaded);
 
     /// <summary>
     /// Fewer than four weeks of rides, or back from a break, is the gentle base block: no ramp, no intervals, feel
@@ -487,18 +476,23 @@ public static class WeekPlanner
         if (longIndex > index) longIndex--;
     }
 
-    /// <summary>Drops the last day that is neither the long ride nor a hard day, so a capped week keeps its shape.</summary>
-    private static void DropDay(List<DateOnly> dates, List<string> recipes, List<int> minutes, ref int longIndex)
+    /// <summary>
+    /// Drops one day so a week too long for its hours or its cap keeps its shape: the last easy day first, then the last
+    /// hard day. The long ride's day is never dropped — W1 gives the hard days up and keeps the long ride — so a week
+    /// whose only day left is the long ride is left alone and the caller stops. False when nothing could go.
+    /// </summary>
+    private static bool DropDay(List<DateOnly> dates, List<string> recipes, List<int> minutes, ref int longIndex)
     {
         var keep = longIndex;
-        var index = Enumerable.Range(0, dates.Count)
-            .Where(i => i != keep && !Recipes.ByCode(recipes[i]).IsQuality)
-            .DefaultIfEmpty(0)
-            .Max();
+        var droppable = Enumerable.Range(0, dates.Count).Where(i => i != keep).ToArray();
+        var easy = droppable.Where(i => !Recipes.ByCode(recipes[i]).IsQuality).DefaultIfEmpty(-1).Max();
+        var index = easy >= 0 ? easy : droppable.DefaultIfEmpty(-1).Max();
+        if (index < 0) return false;
         dates.RemoveAt(index);
         recipes.RemoveAt(index);
         minutes.RemoveAt(index);
         if (longIndex > index) longIndex--;
+        return true;
     }
 
     private static bool NextToHard(DateOnly date, List<DateOnly> hardDates) =>
