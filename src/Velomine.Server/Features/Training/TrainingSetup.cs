@@ -15,6 +15,9 @@ public static class TrainingSetup
     {
         // ValidateOnStart makes a value that is not a boolean fail at startup instead of on the first request.
         services.AddOptions<TrainingOptions>().BindConfiguration("Velomine:Training").ValidateOnStart();
+        // The sweep is the only writer of the week: it runs where background work is on, and only while the switch is on.
+        if (configuration.GetValue("Velomine:Background:Enabled", true))
+            services.AddHostedService<TrainingPlanSweeper>();
         return services;
     }
 }

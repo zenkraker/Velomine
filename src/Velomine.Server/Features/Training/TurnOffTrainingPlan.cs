@@ -35,6 +35,8 @@ public sealed class TurnOffTrainingPlan(VelomineDbContext db, TimeProvider time)
             .ToListAsync(ct);
         db.TrainingSessions.RemoveRange(today);
         plan.IsOn = false;
+        // Turned on again, the sweep plans the week afresh rather than leaving today as it was left.
+        plan.LastPlannedFor = null;
         plan.UpdatedAt = time.GetUtcNow();
         await db.SaveChangesAsync(ct);
 

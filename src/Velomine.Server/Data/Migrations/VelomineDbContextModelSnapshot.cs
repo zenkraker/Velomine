@@ -2910,6 +2910,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("last_planned_for");
 
+                    b.PrimitiveCollection<DateOnly[]>("LighterWeeks")
+                        .IsRequired()
+                        .HasColumnType("date[]")
+                        .HasColumnName("lighter_weeks");
+
                     b.Property<int?>("LongRideDay")
                         .HasColumnType("integer")
                         .HasColumnName("long_ride_day");
@@ -2920,6 +2925,10 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasKey("UserId")
                         .HasName("pk_plans");
+
+                    b.HasIndex("LastPlannedFor")
+                        .HasDatabaseName("ix_plans_last_planned_for")
+                        .HasFilter("is_on");
 
                     b.ToTable("plans", "training", t =>
                         {
@@ -2953,6 +2962,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("local_date");
 
+                    b.Property<int>("Minutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("minutes");
+
                     b.Property<string>("Recipe")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2982,12 +2995,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasDatabaseName("ix_sessions_ride_id");
 
                     b.HasIndex("UserId", "LocalDate")
-                        .HasDatabaseName("ix_sessions_user_id_local_date")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessions_user_id_local_date");
 
                     b.ToTable("sessions", "training", t =>
                         {
                             t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
+
+                            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 0 AND 1440");
 
                             t.HasCheckConstraint("ck_training_sessions_recipe", "length(recipe) BETWEEN 2 AND 8");
 

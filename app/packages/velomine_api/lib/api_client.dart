@@ -199,6 +199,8 @@ class ApiClient {
           return BikeResponse.fromJson(value);
         case 'BikeTemplateResponse':
           return BikeTemplateResponse.fromJson(value);
+        case 'BlockTarget':
+          return BlockTarget.fromJson(value);
         case 'CalendarFeedAddressResponse':
           return CalendarFeedAddressResponse.fromJson(value);
         case 'CalendarFeedStatusResponse':
@@ -445,6 +447,8 @@ class ApiClient {
           return ServerInfoResponse.fromJson(value);
         case 'ServiceEntryResponse':
           return ServiceEntryResponse.fromJson(value);
+        case 'SessionNote':
+          return SessionNote.fromJson(value);
         case 'SessionResponse':
           return SessionResponse.fromJson(value);
         case 'SetClubLocationRequest':
@@ -513,10 +517,18 @@ class ApiClient {
           return TotalsResponse.fromJson(value);
         case 'TrainingDay':
           return TrainingDay.fromJson(value);
+        case 'TrainingNote':
+          return TrainingNote.fromJson(value);
         case 'TrainingPlanResponse':
           return TrainingPlanResponse.fromJson(value);
         case 'TrainingResponse':
           return TrainingResponse.fromJson(value);
+        case 'TrainingWeek':
+          return TrainingWeek.fromJson(value);
+        case 'TrainingWeekSession':
+          return TrainingWeekSession.fromJson(value);
+        case 'TrainingWeeksResponse':
+          return TrainingWeeksResponse.fromJson(value);
         case 'TwoFactorRequiredResponse':
           return TwoFactorRequiredResponse.fromJson(value);
         case 'TwoFactorSetup':

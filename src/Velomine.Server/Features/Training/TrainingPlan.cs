@@ -65,6 +65,12 @@ public sealed class TrainingPlan
     /// <summary>The local date this plan was last written for; null until the first planning run.</summary>
     public DateOnly? LastPlannedFor { get; set; }
 
+    /// <summary>
+    /// The weeks the planner made lighter, newest first, at most the four the ramp's mean looks back over. The cycle
+    /// counts the weeks it built since the last one, and the mean leaves them out.
+    /// </summary>
+    public DateOnly[] LighterWeeks { get; set; } = [];
+
     /// <summary>False when the rider turned auto training off: the setup stays, so turning it on is pre-filled.</summary>
     public bool IsOn { get; set; }
 
@@ -86,6 +92,9 @@ public sealed class TrainingSession
 
     /// <summary>The recipe code, such as <c>R05</c>.</summary>
     public string Recipe { get; set; } = "";
+
+    /// <summary>The minutes the day gets: a session's length on the day, which the planner, the week and the score read.</summary>
+    public int Minutes { get; set; }
 
     /// <summary>The main set's blocks as a percentage of FTP, in order; the recipe gives their lengths.</summary>
     public int[] BlockPercents { get; set; } = [];
@@ -115,6 +124,8 @@ public sealed class TrainingPlanConfiguration : IEntityTypeConfiguration<Trainin
         });
         // One plan per member: the member is the key.
         b.HasKey(p => p.UserId);
+        // The sweep reads the plans that are on and due; nothing else reads this table by date.
+        b.HasIndex(p => p.LastPlannedFor).HasFilter("is_on");
         b.HasOne<User>().WithMany().HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }
@@ -129,6 +140,8 @@ public sealed class TrainingSessionConfiguration : IEntityTypeConfiguration<Trai
             // PostgreSQL forbids a subquery in a check, so the elements' range is the recipe's own business; here a
             // session has at least one block and at most twenty.
             t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
+            // A session planned before the column existed reads 0; the planner always writes the day's minutes.
+            t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 0 AND 1440");
             t.HasCheckConstraint("ck_training_sessions_state",
                 "state IN ('planned', 'done', 'easy', 'moved', 'skipped', 'missed')");
             t.HasCheckConstraint("ck_training_sessions_skip_reason",

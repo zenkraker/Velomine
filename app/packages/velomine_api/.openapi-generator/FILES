@@ -39,6 +39,7 @@ lib/model/apply_template_request.dart
 lib/model/bike_detail_response.dart
 lib/model/bike_response.dart
 lib/model/bike_template_response.dart
+lib/model/block_target.dart
 lib/model/calendar_feed_address_response.dart
 lib/model/calendar_feed_status_response.dart
 lib/model/catalogue_admin_response.dart
@@ -162,6 +163,7 @@ lib/model/save_training_plan_request.dart
 lib/model/search_parts_response.dart
 lib/model/server_info_response.dart
 lib/model/service_entry_response.dart
+lib/model/session_note.dart
 lib/model/session_response.dart
 lib/model/set_club_location_request.dart
 lib/model/set_club_member_role_request.dart
@@ -196,8 +198,12 @@ lib/model/template_part_response.dart
 lib/model/token_response.dart
 lib/model/totals_response.dart
 lib/model/training_day.dart
+lib/model/training_note.dart
 lib/model/training_plan_response.dart
 lib/model/training_response.dart
+lib/model/training_week.dart
+lib/model/training_week_session.dart
+lib/model/training_weeks_response.dart
 lib/model/two_factor_required_response.dart
 lib/model/two_factor_setup.dart
 lib/model/two_factor_state.dart

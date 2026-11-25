@@ -247,6 +247,7 @@ Class | Method | HTTP request | Description
 *TrainingApi* | [**addEvent**](doc//TrainingApi.md#addevent) | **POST** /api/v1/training/events | 
 *TrainingApi* | [**deleteEvent**](doc//TrainingApi.md#deleteevent) | **DELETE** /api/v1/training/events/{id} | 
 *TrainingApi* | [**getTrainingPlan**](doc//TrainingApi.md#gettrainingplan) | **GET** /api/v1/training/plan | 
+*TrainingApi* | [**getTrainingWeek**](doc//TrainingApi.md#gettrainingweek) | **GET** /api/v1/training/week | 
 *TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
 *TrainingApi* | [**saveTrainingPlan**](doc//TrainingApi.md#savetrainingplan) | **PUT** /api/v1/training/plan | 
 *TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
@@ -269,6 +270,7 @@ Class | Method | HTTP request | Description
  - [BikeDetailResponse](doc//BikeDetailResponse.md)
  - [BikeResponse](doc//BikeResponse.md)
  - [BikeTemplateResponse](doc//BikeTemplateResponse.md)
+ - [BlockTarget](doc//BlockTarget.md)
  - [CalendarFeedAddressResponse](doc//CalendarFeedAddressResponse.md)
  - [CalendarFeedStatusResponse](doc//CalendarFeedStatusResponse.md)
  - [CatalogueAdminResponse](doc//CatalogueAdminResponse.md)
@@ -392,6 +394,7 @@ Class | Method | HTTP request | Description
  - [SearchPartsResponse](doc//SearchPartsResponse.md)
  - [ServerInfoResponse](doc//ServerInfoResponse.md)
  - [ServiceEntryResponse](doc//ServiceEntryResponse.md)
+ - [SessionNote](doc//SessionNote.md)
  - [SessionResponse](doc//SessionResponse.md)
  - [SetClubLocationRequest](doc//SetClubLocationRequest.md)
  - [SetClubMemberRoleRequest](doc//SetClubMemberRoleRequest.md)
@@ -426,8 +429,12 @@ Class | Method | HTTP request | Description
  - [TokenResponse](doc//TokenResponse.md)
  - [TotalsResponse](doc//TotalsResponse.md)
  - [TrainingDay](doc//TrainingDay.md)
+ - [TrainingNote](doc//TrainingNote.md)
  - [TrainingPlanResponse](doc//TrainingPlanResponse.md)
  - [TrainingResponse](doc//TrainingResponse.md)
+ - [TrainingWeek](doc//TrainingWeek.md)
+ - [TrainingWeekSession](doc//TrainingWeekSession.md)
+ - [TrainingWeeksResponse](doc//TrainingWeeksResponse.md)
  - [TwoFactorRequiredResponse](doc//TwoFactorRequiredResponse.md)
  - [TwoFactorSetup](doc//TwoFactorSetup.md)
  - [TwoFactorState](doc//TwoFactorState.md)

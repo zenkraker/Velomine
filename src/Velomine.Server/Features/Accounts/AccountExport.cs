@@ -245,6 +245,7 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 s.Id,
                 s.LocalDate,
                 s.Recipe,
+                s.Minutes,
                 s.BlockPercents,
                 s.State,
                 s.SkipReason,

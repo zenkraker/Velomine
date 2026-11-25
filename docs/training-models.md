@@ -4,8 +4,8 @@ Every number Velomine shows about training load, zones, power, heart rate or rea
 normative: **MUST** and **MUST NOT** are requirements, and a deviation is a bug, not a preference.
 
 The code that implements it lives in `Features/Rides/TrainingLoad.cs`, `Features/Rides/Ingestion/{RideMetrics,
-PowerBests,EstimatedPower}.cs`, `Features/Analytics/`, `Features/Accounts/HeartRates.cs` and `Features/Training/`
-(`Recipes.cs`, `SessionPlan.cs`, `SessionTargets.cs`).
+PowerBests,EstimatedPower}.cs`, `Features/Analytics/` (`Readiness.cs` for F2), `Features/Accounts/HeartRates.cs` and
+`Features/Training/` (`Recipes.cs`, `SessionPlan.cs`, `SessionTargets.cs`, `WeekPlanner.cs` for the planned week).
 
 ## Rules for changing a model
 
@@ -477,6 +477,109 @@ cool-down bands; R01's 40 % floor; **R08 and R09's ceiling of 100 % of the thres
 where the drafts say only "> 120 %"; **R03's closing block as a scaled main block** rather than the draft's optional
 finish; the gentle base recipes' feel-only targets; and the fifteen recipes themselves in place of a workout library.
 
+## The planned week
+
+Auto training fills the rider's own riding days with the recipes above, one week at a time, and the rules of this section
+are what keeps a week safe. They are pure functions: the setup, the last weeks and today go in, the sessions come out
+(`Features/Training/WeekPlanner.cs`). The weeks the decisions owe this document are numbered as they are there: owed
+number 2 is W1, 3 is W2, 4 is W3, 5 is W4 and 6 is W5.
+
+**What a week is.** The week runs from the member's first day of the week (`MemberClock`, as everywhere). A session is
+written for each of the rider's riding days from today to the end of that week, and a week already met mid-way is
+written only for the days it has left. The week's minutes are the rider's hours per week, less what the week already
+carries; a week planned for the first time mid-week is scaled to the days left, because the days gone were never planned.
+The **long ride** takes two shares of the week's minutes and every other riding day one, so it is `2 / (days + 1)` of
+the week. A day is never shorter than its recipe's least length: the day grows into the recipe and the easy days give the
+minutes up, down to a floor of 20 minutes. The long-ride day is the rider's own, else the last free weekend day (Sunday,
+else Saturday), else the last free day — and a week whose long ride is already ridden has no second one.
+
+A session stores its recipe, its block percentages and **the day's minutes**; its planned score is L7's, computed from
+those on read and never stored. A week's planned load is the sum of its sessions' scores, plus what the week has already
+spent: a day before today ridden without a planned session is load the week carries and is not planned again.
+
+The order of a goal's hard-day recipes — the gentlest that fits the day first — is `R05 → R08 → R09` for get fitter,
+`R05 → R06 → R07 → R08` for get faster and for get ready for a ride or race, `R17` for stay fit with less time, and none
+for ride more regularly (research §3, *Which goal uses which recipe*).
+
+### W1 — Two hard days and three loaded days
+
+Owed number 2. A **hard day** is a quality session (see *Session recipes*). A week has **two** of them, **one** under 4
+hours a week, **never on consecutive days**, **never the day before or after the long ride**, and never next to a hard day
+the week already has. When the rider's days cannot keep that apart, the second hard day goes, and then the first: a week
+with no hard day is a correct week. The rider never reads the word quality: it is a **hard day** in every line that says
+why.
+
+A **loaded day** is a hard day, or the long ride when it carries **more than 35 %** of the week's planned load. A week has
+**three loaded days at most, never on consecutive days**. The long ride is load, not intensity, so it never spends one of
+the two hard-day slots. The two counts measure different things on purpose: intensity and load.
+
+Source: the placement is research §4.2's algorithm and CTS's "two hard days a week, never back to back" (C, coaching
+practice); the 88 % sweet-spot boundary and the 35 % share are Velomine's own. Code: `WeekPlanner.HardDays`,
+`HardIndexes`, `LoadedLongRideShare`. Tests: `WeekPlannerTests` (`ShouldPlanTwoHardDays…`, `ShouldKeepHardDaysApart…`,
+`ShouldNeverPlanLoadedDaysInARow…`, `LongRide_ShouldCountAsLoaded…`).
+
+### W2 — The build cycle
+
+Owed number 3. Three weeks are built and the fourth is lighter; from the year of birth 50 the cycle is two and one. The
+count is the weeks that carry sessions since the **last lighter week**, which the plan records, so a rider who is away
+for a month does not come back to a lighter week by arithmetic alone. A week once recorded as lighter **stays lighter**,
+so a rewrite in the middle of it cannot turn it back into a build week.
+
+An **early lighter week** follows **three completed days in a row in F2's rest band** (below 35), whether or not the cycle
+has reached its lighter week. Today's own readiness is not part of it: the week is planned in the morning, and the three
+days it reads are the ones already ridden.
+
+Source: 3:1 is research §4.3 (C: the recovery week of the British Cycling beginner plan, Rutberg's week 4 of 8, TrainingPeaks
+and CTS); 2:1 from 50 is Friel's "older athletes need longer recovery" with the 50 cut as Velomine's own; the three
+rest-band days are Velomine's own and read F2's band, not a new number. Code: `WeekPlanner.IsLighterWeek`,
+`OlderRiderAge`, `RestDaysInARow`. Tests: `ShouldPlanALighterWeek…`, `ShouldPlanALighterWeekAfterTwo…`,
+`ShouldPlanALighterWeekEarly…`, `ShouldKeepALighterWeekLighter…`.
+
+### W3 — The lighter week
+
+Owed number 4. A lighter week carries **65 % of the last normal week's load at most**, on the same riding days, and it
+keeps **one short hard day, at most 60 minutes**. It is not growth, so it never counts towards W4's mean.
+
+Source: research §4.3 — no source gives a verified figure for how much lighter; the drafts' 70 % of the previous build
+week (D) becomes 65 % here, and the short hard day is Friel's "two or three days of short, higher-intensity sessions"
+(C). Code: `WeekPlanner.LighterWeekShare`, `ShortHardSessionMinutes`. Tests:
+`LighterWeek_ShouldCarrySixtyFivePercentOfTheLastNormalWeek…`, `LighterWeek_ShouldKeepOneShortHardDay…`.
+
+### W4 — The ramp
+
+Owed number 5. A week grows by **10 %** past the **mean of the last four normal weeks**, and **only after a week where
+everything planned was done** (every session `done`, or `easy` and ridden); otherwise it is held to that mean. It is
+never above the rider's hours, which is the week's ceiling whatever the mean says.
+
+A **normal week** is a completed week that has a ride and was not made lighter. Empty weeks (a break) and lighter weeks
+are left out of the mean, so neither drags down the week the rider grows from. Without a normal week there is no ramp at
+all — a new rider is in the gentle base block below.
+
+When the cap binds, the days shrink together: the planner finds the longest week still under the cap, so a capped week is
+a **shorter** week and never a harder one. If even the 20-minute floor is over it, the last easy day goes.
+
+Source: research §1.1 and §4.4 — the 10 % cap is a conservative default with no trial behind it (the one randomised trial
+of a 10 % rule found no benefit, PMID 17940147), and measuring it against the **normal** weeks only is the research's own
+recommendation (D) without which a 2:1 cycle shrinks the load. Velomine MUST NOT present the 10 % as a safety fact.
+Code: `WeekPlanner.LoadCap`, `NormalWeekLoads`, `RampShare`. Tests: `ShouldGrowTenPercent…`, `ShouldNotGrow…`,
+`NormalWeekLoads_ShouldLeaveOutLighterAndEmptyWeeks…`, `ShouldNeverGoOverTheRidersHours…`.
+
+### W5 — The gentle base block
+
+Owed number 6. Fewer than **4 weeks of rides** (G1's first rule) or **back from a break** — G1's 10 days without a ride —
+the week is the gentle base block: **R14, R15 and R16 only**, feel targets only, **no intervals**, **no feel number above
+6**, and **no ramp** at all. The block is never named to the rider; the one line it shows is "It gets more personal as
+your rides come in". Back from a break the plan restarts from the real recent load, which is what the block is: short,
+easy, by feel.
+
+Source: Velomine's own (G1; research §3, *Gentle base block*, D for the exact dose, C/D for the direction). Code:
+`WeekPlanner.IsBaseBlock`, `BaseBlockWeeks`, `BreakDays`. Tests: `ShouldPlanOnlyTheGentleBaseBlock…`,
+`BaseBlock_ShouldHaveNoRamp…`, `BaseBlock_ShouldStartAgain…`.
+
+**What the rider reads.** The planner's terms never reach the rider: "hard day", and the lighter week is an "Easy week"
+("Easy week: your body gets stronger while it rests"). Both are `TrainingNotes`; the names themselves are
+`docs/design/pages/training/TrainingNames.md`.
+
 ## Estimated power
 
 For a ride with no power at all, outdoors or unknown, not an e-bike, with a rider weight:
@@ -522,6 +625,9 @@ another platform's number:
 - the intensity labels (L5) — thresholds added to Treff's PI.
 - "heavy week" (L3) — 1.5 × the usual strain.
 - the planned effort score (L7) — P3's form with the middle of a recipe's band as the block's intensity.
+- the planned week (W1–W5) — the hard-day and loaded-day limits, the cycle, the 65 % lighter week, the 10 % ramp and the
+  gentle base block. The coaching practice behind their shape is cited, but no published algorithm plans a week this way,
+  so none of it is presented as one.
 
 ## Known non-compliance
 

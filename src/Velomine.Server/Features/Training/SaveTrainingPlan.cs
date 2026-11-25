@@ -141,6 +141,8 @@ public sealed class SaveTrainingPlan(
             ? (int)longRideDay
             : null;
         plan.IsOn = true;
+        // The next sweep writes the week again from the new answers, instead of waiting for tomorrow.
+        plan.LastPlannedFor = null;
         plan.UpdatedAt = time.GetUtcNow();
     }
 }
