@@ -131,7 +131,11 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
         member.Client.PutAsJsonAsync("/api/v1/wellbeing/check-ins/today",
             new SaveCheckInRequest
             {
-                Fatigue = fatigue, Soreness = soreness, Mood = mood, Stress = stress, Motivation = motivation,
+                Fatigue = fatigue,
+                Soreness = soreness,
+                Mood = mood,
+                Stress = stress,
+                Motivation = motivation,
                 Sleep = sleep,
             }, Ct);
 
