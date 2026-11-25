@@ -170,12 +170,6 @@ abstract class AppLocalizations {
   /// **'Club'**
   String get navGroupClub;
 
-  /// No description provided for @navNoClub.
-  ///
-  /// In en, this message translates to:
-  /// **'No club'**
-  String get navNoClub;
-
   /// No description provided for @privacyCardTitle.
   ///
   /// In en, this message translates to:
@@ -193,12 +187,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your rides and races.'**
   String get ridesSubtitle;
-
-  /// No description provided for @ridesImportMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'Add rides'**
-  String get ridesImportMenu;
 
   /// No description provided for @rideDetailTitle.
   ///
@@ -265,18 +253,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No data'**
   String get rideNoData;
-
-  /// No description provided for @sessionsNavTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sessions'**
-  String get sessionsNavTitle;
-
-  /// No description provided for @twoFactorNavTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Two-factor'**
-  String get twoFactorNavTitle;
 
   /// No description provided for @notifications.
   ///
@@ -668,12 +644,6 @@ abstract class AppLocalizations {
   /// **'Two-factor sign-in is on.'**
   String get twoFactorStateOn;
 
-  /// No description provided for @twoFactorStateOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Two-factor sign-in is off.'**
-  String get twoFactorStateOff;
-
   /// No description provided for @twoFactorIntro.
   ///
   /// In en, this message translates to:
@@ -685,12 +655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This account signs in with single sign-on, so it already has a second step.'**
   String get twoFactorNoPassword;
-
-  /// No description provided for @twoFactorStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up an authenticator'**
-  String get twoFactorStart;
 
   /// No description provided for @twoFactorStartSetup.
   ///
@@ -764,18 +728,6 @@ abstract class AppLocalizations {
   /// **'Two-factor sign-in is on.'**
   String get twoFactorEnabled;
 
-  /// No description provided for @twoFactorDisabled.
-  ///
-  /// In en, this message translates to:
-  /// **'Two-factor sign-in is off.'**
-  String get twoFactorDisabled;
-
-  /// No description provided for @twoFactorCodeWrong.
-  ///
-  /// In en, this message translates to:
-  /// **'That code did not work. Check the clock on your phone and try the next one.'**
-  String get twoFactorCodeWrong;
-
   /// No description provided for @sessionsTitle.
   ///
   /// In en, this message translates to:
@@ -799,12 +751,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last used'**
   String get sessionLastUsed;
-
-  /// No description provided for @sessionSince.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in'**
-  String get sessionSince;
 
   /// No description provided for @sessionRevoke.
   ///
@@ -878,12 +824,6 @@ abstract class AppLocalizations {
   /// **'single sign-on'**
   String get ssoGeneric;
 
-  /// No description provided for @signingIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Signing you in…'**
-  String get signingIn;
-
   /// No description provided for @setupTitle.
   ///
   /// In en, this message translates to:
@@ -913,12 +853,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.'**
   String get setupInsecure;
-
-  /// No description provided for @setupChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking…'**
-  String get setupChecking;
 
   /// No description provided for @setupConnect.
   ///
@@ -1748,36 +1682,6 @@ abstract class AppLocalizations {
   /// **'Nobody has looked yet.'**
   String get viewsEmpty;
 
-  /// No description provided for @viewSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Summary'**
-  String get viewSummary;
-
-  /// No description provided for @viewTraining.
-  ///
-  /// In en, this message translates to:
-  /// **'Training'**
-  String get viewTraining;
-
-  /// No description provided for @viewRide.
-  ///
-  /// In en, this message translates to:
-  /// **'Ride'**
-  String get viewRide;
-
-  /// No description provided for @viewRides.
-  ///
-  /// In en, this message translates to:
-  /// **'Ride list'**
-  String get viewRides;
-
-  /// No description provided for @viewRoute.
-  ///
-  /// In en, this message translates to:
-  /// **'Route'**
-  String get viewRoute;
-
   /// No description provided for @athletesTitle.
   ///
   /// In en, this message translates to:
@@ -2276,12 +2180,6 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
-  /// No description provided for @rideActions.
-  ///
-  /// In en, this message translates to:
-  /// **'Ride actions'**
-  String get rideActions;
-
   /// No description provided for @deleteRideTitle.
   ///
   /// In en, this message translates to:
@@ -2714,12 +2612,6 @@ abstract class AppLocalizations {
   /// **'Archived'**
   String get archived;
 
-  /// No description provided for @bikeRides.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}'**
-  String bikeRides(int count);
-
   /// No description provided for @deleteBikeTitle.
   ///
   /// In en, this message translates to:
@@ -2761,12 +2653,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'wheel {mm} mm'**
   String wheelLabel(int mm);
-
-  /// No description provided for @metricTrainingLoad.
-  ///
-  /// In en, this message translates to:
-  /// **'Training load'**
-  String get metricTrainingLoad;
 
   /// No description provided for @metricPower.
   ///
@@ -3043,12 +2929,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
-
-  /// No description provided for @openFullMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Open the full map'**
-  String get openFullMap;
 
   /// No description provided for @save.
   ///
@@ -3734,12 +3614,6 @@ abstract class AppLocalizations {
   /// **'{running, plural, =0{No goals running.} =1{One goal running.} other{{running} goals running.}} {reached, plural, =0{} =1{One reached.} other{{reached} reached.}}'**
   String goalsSummary(num reached, num running);
 
-  /// No description provided for @totalsSemantics.
-  ///
-  /// In en, this message translates to:
-  /// **'Distance per {period}. This {period}: {distance}.'**
-  String totalsSemantics(String period, String distance);
-
   /// No description provided for @chartAverage.
   ///
   /// In en, this message translates to:
@@ -3817,12 +3691,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Distance per year'**
   String get totalsTitleYearly;
-
-  /// No description provided for @totalsMore.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} older periods not listed'**
-  String totalsMore(int count);
 
   /// No description provided for @totalsShowEarlier.
   ///
@@ -4136,12 +4004,6 @@ abstract class AppLocalizations {
   /// **'Approve'**
   String get approve;
 
-  /// No description provided for @actionsFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Actions for {name}'**
-  String actionsFor(String name);
-
   /// No description provided for @changeRoles.
   ///
   /// In en, this message translates to:
@@ -4274,18 +4136,6 @@ abstract class AppLocalizations {
   /// **'Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.'**
   String get ssoNotConfigured;
 
-  /// No description provided for @statusOn.
-  ///
-  /// In en, this message translates to:
-  /// **'{title}: on'**
-  String statusOn(String title);
-
-  /// No description provided for @statusOff.
-  ///
-  /// In en, this message translates to:
-  /// **'{title}: off'**
-  String statusOff(String title);
-
   /// No description provided for @noOverview.
   ///
   /// In en, this message translates to:
@@ -4370,24 +4220,6 @@ abstract class AppLocalizations {
   /// **'Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).'**
   String get birthYearHelper;
 
-  /// No description provided for @estimatedMaxHeartRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated maximum heart rate: {bpm} bpm'**
-  String estimatedMaxHeartRate(int bpm);
-
-  /// No description provided for @estimatedMaxHeartRateNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your year of birth to estimate it.'**
-  String get estimatedMaxHeartRateNone;
-
-  /// No description provided for @estimatedThresholdHeartRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated threshold heart rate: {bpm} bpm'**
-  String estimatedThresholdHeartRate(int bpm);
-
   /// No description provided for @heartRateSourceManual.
   ///
   /// In en, this message translates to:
@@ -4447,12 +4279,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Estimated as 89 % of your maximum'**
   String get heartRateSourceThresholdEstimate;
-
-  /// No description provided for @heartRateNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your year of birth, or type it above.'**
-  String get heartRateNone;
 
   /// No description provided for @heartRateMaxMeasured.
   ///
@@ -4741,12 +4567,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record a ride'**
   String get recordRide;
-
-  /// No description provided for @recordIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.'**
-  String get recordIntro;
 
   /// No description provided for @starting.
   ///
@@ -5204,12 +5024,6 @@ abstract class AppLocalizations {
   /// **'Add a daily check-in to include how you feel.'**
   String get readinessLoadOnly;
 
-  /// No description provided for @readinessWhy.
-  ///
-  /// In en, this message translates to:
-  /// **'Why'**
-  String get readinessWhy;
-
   /// No description provided for @readinessWhyScore.
   ///
   /// In en, this message translates to:
@@ -5390,12 +5204,6 @@ abstract class AppLocalizations {
   /// **'Slp'**
   String get wellbeingShortSleep;
 
-  /// No description provided for @wellbeingHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'Last 30 days'**
-  String get wellbeingHistory;
-
   /// No description provided for @wellbeingHistory14.
   ///
   /// In en, this message translates to:
@@ -5425,12 +5233,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only you see this. Readiness and notes never reach a coach.'**
   String get wellbeingPrivate;
-
-  /// No description provided for @wellbeingNoHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'No check-ins yet.'**
-  String get wellbeingNoHistory;
 
   /// No description provided for @wellbeingRpe.
   ///
@@ -5497,18 +5299,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wellbeing'**
   String get sharesWellbeing;
-
-  /// No description provided for @viewPowerCurve.
-  ///
-  /// In en, this message translates to:
-  /// **'Power curve'**
-  String get viewPowerCurve;
-
-  /// No description provided for @viewWellbeing.
-  ///
-  /// In en, this message translates to:
-  /// **'Wellbeing'**
-  String get viewWellbeing;
 
   /// No description provided for @powerCurve.
   ///
@@ -5581,12 +5371,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Estimate today: {watts} W, {method}.'**
   String ftpEstimateToday(int watts, String method);
-
-  /// No description provided for @ftpEstimate.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated FTP'**
-  String get ftpEstimate;
 
   /// No description provided for @ftpCurrent.
   ///
@@ -5797,12 +5581,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'VO2max estimate'**
   String get vo2MaxEstimate;
-
-  /// No description provided for @vo2MaxFrom5Min.
-  ///
-  /// In en, this message translates to:
-  /// **'from your best 5-minute power and weight'**
-  String get vo2MaxFrom5Min;
 
   /// No description provided for @vo2MaxNeedsWeight.
   ///
@@ -6332,12 +6110,6 @@ abstract class AppLocalizations {
   /// **'This account signs in with single sign-on.'**
   String get passwordNoPassword;
 
-  /// No description provided for @passwordChanged.
-  ///
-  /// In en, this message translates to:
-  /// **'Your password is changed. Sign in again on this device.'**
-  String get passwordChanged;
-
   /// No description provided for @passwordChangeFailed.
   ///
   /// In en, this message translates to:
@@ -6397,12 +6169,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied'**
   String get linkCopied;
-
-  /// No description provided for @resetPasswordLinkFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not make a reset link. Try again.'**
-  String get resetPasswordLinkFailed;
 
   /// No description provided for @actionLoadNearbyClubs.
   ///
@@ -6848,12 +6614,6 @@ abstract class AppLocalizations {
   /// **'Shared parts catalogue'**
   String get sharedCatalogue;
 
-  /// No description provided for @shareParts.
-  ///
-  /// In en, this message translates to:
-  /// **'Share new parts with the shared catalogue'**
-  String get shareParts;
-
   /// No description provided for @sharePartsHelp.
   ///
   /// In en, this message translates to:
@@ -6866,12 +6626,6 @@ abstract class AppLocalizations {
   /// **'This server has no contribution endpoint configured, so nothing is sent.'**
   String get catalogueNotConfigured;
 
-  /// No description provided for @catalogueVersion.
-  ///
-  /// In en, this message translates to:
-  /// **'Catalogue version {version}, last checked {date}'**
-  String catalogueVersion(int version, String date);
-
   /// No description provided for @catalogueNeverSynced.
   ///
   /// In en, this message translates to:
@@ -6883,24 +6637,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared catalogue last checked {date}'**
   String catalogueSynced(String date);
-
-  /// No description provided for @catalogueConflicts.
-  ///
-  /// In en, this message translates to:
-  /// **'Parts that differ from the shared catalogue'**
-  String get catalogueConflicts;
-
-  /// No description provided for @keepMine.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep mine'**
-  String get keepMine;
-
-  /// No description provided for @useShared.
-  ///
-  /// In en, this message translates to:
-  /// **'Use shared'**
-  String get useShared;
 
   /// No description provided for @contributionCounts.
   ///
@@ -7057,12 +6793,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reading your archive. This can take a few minutes.'**
   String get importRunning;
-
-  /// No description provided for @importProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} of {total} activities read'**
-  String importProgress(int done, int total);
 
   /// No description provided for @importProgressUnit.
   ///
@@ -8594,12 +8324,6 @@ abstract class AppLocalizations {
   /// **'Key verified'**
   String get supporterKeyVerified;
 
-  /// No description provided for @supporterReplay.
-  ///
-  /// In en, this message translates to:
-  /// **'Replay'**
-  String get supporterReplay;
-
   /// No description provided for @supporterReplayLink.
   ///
   /// In en, this message translates to:
@@ -8689,24 +8413,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{easy} % easy · {moderate} % moderate · {hard} % hard'**
   String intensityShares(String easy, String moderate, String hard);
-
-  /// No description provided for @intensityEasy.
-  ///
-  /// In en, this message translates to:
-  /// **'Easy {pct} %'**
-  String intensityEasy(String pct);
-
-  /// No description provided for @intensityModerate.
-  ///
-  /// In en, this message translates to:
-  /// **'Moderate {pct} %'**
-  String intensityModerate(String pct);
-
-  /// No description provided for @intensityHard.
-  ///
-  /// In en, this message translates to:
-  /// **'Hard {pct} %'**
-  String intensityHard(String pct);
 
   /// No description provided for @intensitySource.
   ///
@@ -8966,12 +8672,6 @@ abstract class AppLocalizations {
   /// **'“{name}” is removed. The ride it was stays.'**
   String eventDeleteBody(String name);
 
-  /// No description provided for @eventOn.
-  ///
-  /// In en, this message translates to:
-  /// **'{date}'**
-  String eventOn(String date);
-
   /// No description provided for @errorEventName.
   ///
   /// In en, this message translates to:
@@ -9097,12 +8797,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chosen on another device'**
   String get riderModeElsewhere;
-
-  /// No description provided for @moreDetailsAnalysis.
-  ///
-  /// In en, this message translates to:
-  /// **'Show more analysis'**
-  String get moreDetailsAnalysis;
 
   /// No description provided for @moreDetailsAll.
   ///
@@ -9314,12 +9008,6 @@ abstract class AppLocalizations {
   /// **'Your base, and a little speed on top.'**
   String get goalLineFitter;
 
-  /// No description provided for @goalLineFaster.
-  ///
-  /// In en, this message translates to:
-  /// **'On climbs and on the flat.'**
-  String get goalLineFaster;
-
   /// No description provided for @goalLineEvent.
   ///
   /// In en, this message translates to:
@@ -9494,12 +9182,6 @@ abstract class AppLocalizations {
   /// **'This week'**
   String get trainingThisWeek;
 
-  /// No description provided for @trainingWeekCard.
-  ///
-  /// In en, this message translates to:
-  /// **'This week'**
-  String get trainingWeekCard;
-
   /// No description provided for @trainingNextWeek.
   ///
   /// In en, this message translates to:
@@ -9511,24 +9193,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rest'**
   String get trainingRest;
-
-  /// No description provided for @trainingWeekRest.
-  ///
-  /// In en, this message translates to:
-  /// **'Rest'**
-  String get trainingWeekRest;
-
-  /// No description provided for @trainingWeekToday.
-  ///
-  /// In en, this message translates to:
-  /// **'today'**
-  String get trainingWeekToday;
-
-  /// No description provided for @trainingWeekDone.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} of {total} done'**
-  String trainingWeekDone(int done, int total);
 
   /// No description provided for @trainingWeekLine.
   ///
@@ -9782,54 +9446,6 @@ abstract class AppLocalizations {
   /// **'Open the ride →'**
   String get sessionOpenRide;
 
-  /// No description provided for @sessionWhy.
-  ///
-  /// In en, this message translates to:
-  /// **'Why this session'**
-  String get sessionWhy;
-
-  /// No description provided for @sessionTechnical.
-  ///
-  /// In en, this message translates to:
-  /// **'Coaches call this {term}.'**
-  String sessionTechnical(String term);
-
-  /// No description provided for @sessionBlocks.
-  ///
-  /// In en, this message translates to:
-  /// **'The session'**
-  String get sessionBlocks;
-
-  /// No description provided for @sessionFeelExplanation.
-  ///
-  /// In en, this message translates to:
-  /// **'Feel 7: hard, you could hold it about an hour.'**
-  String get sessionFeelExplanation;
-
-  /// No description provided for @sessionFeel.
-  ///
-  /// In en, this message translates to:
-  /// **'feel {low}–{high}'**
-  String sessionFeel(int low, int high);
-
-  /// No description provided for @sessionWatts.
-  ///
-  /// In en, this message translates to:
-  /// **'{low}–{high} W'**
-  String sessionWatts(int low, int high);
-
-  /// No description provided for @sessionBpm.
-  ///
-  /// In en, this message translates to:
-  /// **'{low}–{high} bpm'**
-  String sessionBpm(int low, int high);
-
-  /// No description provided for @sessionEstimated.
-  ///
-  /// In en, this message translates to:
-  /// **'estimated'**
-  String get sessionEstimated;
-
   /// No description provided for @sessionTime.
   ///
   /// In en, this message translates to:
@@ -9847,30 +9463,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Main set'**
   String get sessionMainSet;
-
-  /// No description provided for @sessionBlockWarmup.
-  ///
-  /// In en, this message translates to:
-  /// **'Warm-up'**
-  String get sessionBlockWarmup;
-
-  /// No description provided for @sessionBlockRecovery.
-  ///
-  /// In en, this message translates to:
-  /// **'Easy between'**
-  String get sessionBlockRecovery;
-
-  /// No description provided for @sessionBlockCooldown.
-  ///
-  /// In en, this message translates to:
-  /// **'Cool-down'**
-  String get sessionBlockCooldown;
-
-  /// No description provided for @sessionGone.
-  ///
-  /// In en, this message translates to:
-  /// **'This session is not in your week any more.'**
-  String get sessionGone;
 }
 
 class _AppLocalizationsDelegate

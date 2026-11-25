@@ -46,9 +46,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navGroupClub => 'Club';
 
   @override
-  String get navNoClub => 'No club';
-
-  @override
   String get privacyCardTitle => 'Your data is yours.';
 
   @override
@@ -56,9 +53,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ridesSubtitle => 'Your rides and races.';
-
-  @override
-  String get ridesImportMenu => 'Add rides';
 
   @override
   String get rideDetailTitle => 'Ride';
@@ -93,12 +87,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rideNoData => 'No data';
-
-  @override
-  String get sessionsNavTitle => 'Sessions';
-
-  @override
-  String get twoFactorNavTitle => 'Two-factor';
 
   @override
   String get notifications => 'Notifications';
@@ -318,18 +306,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoFactorStateOn => 'Two-factor sign-in is on.';
 
   @override
-  String get twoFactorStateOff => 'Two-factor sign-in is off.';
-
-  @override
   String get twoFactorIntro =>
       'After your password, you enter a code from your authenticator app. It is optional, and you can turn it off again.';
 
   @override
   String get twoFactorNoPassword =>
       'This account signs in with single sign-on, so it already has a second step.';
-
-  @override
-  String get twoFactorStart => 'Set up an authenticator';
 
   @override
   String get twoFactorStartSetup => 'Start setup';
@@ -370,13 +352,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoFactorEnabled => 'Two-factor sign-in is on.';
 
   @override
-  String get twoFactorDisabled => 'Two-factor sign-in is off.';
-
-  @override
-  String get twoFactorCodeWrong =>
-      'That code did not work. Check the clock on your phone and try the next one.';
-
-  @override
   String get sessionsTitle => 'Devices and sessions';
 
   @override
@@ -388,9 +363,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionLastUsed => 'Last used';
-
-  @override
-  String get sessionSince => 'Signed in';
 
   @override
   String get sessionRevoke => 'Sign out';
@@ -434,9 +406,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ssoGeneric => 'single sign-on';
 
   @override
-  String get signingIn => 'Signing you in…';
-
-  @override
   String get setupTitle => 'Which server does your club use?';
 
   @override
@@ -451,9 +420,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setupInsecure =>
       'This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.';
-
-  @override
-  String get setupChecking => 'Checking…';
 
   @override
   String get setupConnect => 'Connect';
@@ -909,21 +875,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewsEmpty => 'Nobody has looked yet.';
 
   @override
-  String get viewSummary => 'Summary';
-
-  @override
-  String get viewTraining => 'Training';
-
-  @override
-  String get viewRide => 'Ride';
-
-  @override
-  String get viewRides => 'Ride list';
-
-  @override
-  String get viewRoute => 'Route';
-
-  @override
   String get athletesTitle => 'Athletes';
 
   @override
@@ -1274,9 +1225,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
-  String get rideActions => 'Ride actions';
-
-  @override
   String get deleteRideTitle => 'Delete this ride?';
 
   @override
@@ -1525,18 +1473,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archived => 'Archived';
 
   @override
-  String bikeRides(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count rides',
-      one: '1 ride',
-      zero: 'No rides',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get deleteBikeTitle => 'Delete this bike?';
 
   @override
@@ -1562,9 +1498,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String wheelLabel(int mm) {
     return 'wheel $mm mm';
   }
-
-  @override
-  String get metricTrainingLoad => 'Training load';
 
   @override
   String get metricPower => 'Power';
@@ -1724,9 +1657,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
-
-  @override
-  String get openFullMap => 'Open the full map';
 
   @override
   String get save => 'Save';
@@ -2126,11 +2056,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String totalsSemantics(String period, String distance) {
-    return 'Distance per $period. This $period: $distance.';
-  }
-
-  @override
   String chartAverage(String value) {
     return 'Average $value';
   }
@@ -2183,11 +2108,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get totalsTitleYearly => 'Distance per year';
-
-  @override
-  String totalsMore(int count) {
-    return '$count older periods not listed';
-  }
 
   @override
   String get totalsShowEarlier => 'Show earlier';
@@ -2372,11 +2292,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get approve => 'Approve';
 
   @override
-  String actionsFor(String name) {
-    return 'Actions for $name';
-  }
-
-  @override
   String get changeRoles => 'Change roles';
 
   @override
@@ -2454,16 +2369,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.';
 
   @override
-  String statusOn(String title) {
-    return '$title: on';
-  }
-
-  @override
-  String statusOff(String title) {
-    return '$title: off';
-  }
-
-  @override
   String get noOverview => 'No overview.';
 
   @override
@@ -2508,20 +2413,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).';
 
   @override
-  String estimatedMaxHeartRate(int bpm) {
-    return 'Estimated maximum heart rate: $bpm bpm';
-  }
-
-  @override
-  String get estimatedMaxHeartRateNone =>
-      'Add your year of birth to estimate it.';
-
-  @override
-  String estimatedThresholdHeartRate(int bpm) {
-    return 'Estimated threshold heart rate: $bpm bpm';
-  }
-
-  @override
   String heartRateSourceManual(String date) {
     return 'Set by you on $date';
   }
@@ -2559,9 +2450,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get heartRateSourceThresholdEstimate =>
       'Estimated as 89 % of your maximum';
-
-  @override
-  String get heartRateNone => 'Add your year of birth, or type it above.';
 
   @override
   String heartRateMaxMeasured(int bpm) {
@@ -2730,10 +2618,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordRide => 'Record a ride';
-
-  @override
-  String get recordIntro =>
-      'The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.';
 
   @override
   String get starting => 'Starting…';
@@ -2982,9 +2866,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a daily check-in to include how you feel.';
 
   @override
-  String get readinessWhy => 'Why';
-
-  @override
   String readinessWhyScore(Object score) {
     return 'Why $score';
   }
@@ -3079,9 +2960,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wellbeingShortSleep => 'Slp';
 
   @override
-  String get wellbeingHistory => 'Last 30 days';
-
-  @override
   String get wellbeingHistory14 => 'Last 14 days';
 
   @override
@@ -3097,9 +2975,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wellbeingPrivate =>
       'Only you see this. Readiness and notes never reach a coach.';
-
-  @override
-  String get wellbeingNoHistory => 'No check-ins yet.';
 
   @override
   String get wellbeingRpe => 'How hard was it?';
@@ -3137,12 +3012,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharesWellbeing => 'Wellbeing';
-
-  @override
-  String get viewPowerCurve => 'Power curve';
-
-  @override
-  String get viewWellbeing => 'Wellbeing';
 
   @override
   String get powerCurve => 'Power curve';
@@ -3189,9 +3058,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String ftpEstimateToday(int watts, String method) {
     return 'Estimate today: $watts W, $method.';
   }
-
-  @override
-  String get ftpEstimate => 'Estimated FTP';
 
   @override
   String get ftpCurrent => 'Current FTP';
@@ -3335,9 +3201,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vo2MaxEstimate => 'VO2max estimate';
-
-  @override
-  String get vo2MaxFrom5Min => 'from your best 5-minute power and weight';
 
   @override
   String get vo2MaxNeedsWeight => 'Set your weight to estimate VO2max.';
@@ -3659,10 +3522,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordNoPassword => 'This account signs in with single sign-on.';
 
   @override
-  String get passwordChanged =>
-      'Your password is changed. Sign in again on this device.';
-
-  @override
   String get passwordChangeFailed =>
       'Could not change the password. Try again.';
 
@@ -3695,10 +3554,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkCopied => 'Copied';
-
-  @override
-  String get resetPasswordLinkFailed =>
-      'Could not make a reset link. Try again.';
 
   @override
   String get actionLoadNearbyClubs => 'find clubs near you';
@@ -3963,20 +3818,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedCatalogue => 'Shared parts catalogue';
 
   @override
-  String get shareParts => 'Share new parts with the shared catalogue';
-
-  @override
   String get sharePartsHelp =>
       'Non-custom parts that the shared catalogue does not list are sent to the publisher. Custom parts stay only on your bike.';
 
   @override
   String get catalogueNotConfigured =>
       'This server has no contribution endpoint configured, so nothing is sent.';
-
-  @override
-  String catalogueVersion(int version, String date) {
-    return 'Catalogue version $version, last checked $date';
-  }
 
   @override
   String get catalogueNeverSynced =>
@@ -3986,16 +3833,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String catalogueSynced(String date) {
     return 'Shared catalogue last checked $date';
   }
-
-  @override
-  String get catalogueConflicts =>
-      'Parts that differ from the shared catalogue';
-
-  @override
-  String get keepMine => 'Keep mine';
-
-  @override
-  String get useShared => 'Use shared';
 
   @override
   String contributionCounts(int pending, int sent, int rejected, int failed) {
@@ -4090,11 +3927,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get importRunning =>
       'Reading your archive. This can take a few minutes.';
-
-  @override
-  String importProgress(int done, int total) {
-    return '$done of $total activities read';
-  }
 
   @override
   String importProgressUnit(Object total) {
@@ -4992,9 +4824,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supporterKeyVerified => 'Key verified';
 
   @override
-  String get supporterReplay => 'Replay';
-
-  @override
   String get supporterReplayLink => 'Play the celebration again';
 
   @override
@@ -5050,21 +4879,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String intensityShares(String easy, String moderate, String hard) {
     return '$easy % easy · $moderate % moderate · $hard % hard';
-  }
-
-  @override
-  String intensityEasy(String pct) {
-    return 'Easy $pct %';
-  }
-
-  @override
-  String intensityModerate(String pct) {
-    return 'Moderate $pct %';
-  }
-
-  @override
-  String intensityHard(String pct) {
-    return 'Hard $pct %';
   }
 
   @override
@@ -5241,11 +5055,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String eventOn(String date) {
-    return '$date';
-  }
-
-  @override
   String get errorEventName => 'Give the event a name.';
 
   @override
@@ -5314,9 +5123,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get riderModeElsewhere => 'Chosen on another device';
-
-  @override
-  String get moreDetailsAnalysis => 'Show more analysis';
 
   @override
   String get moreDetailsAll => 'Show all details';
@@ -5435,9 +5241,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalLineFitter => 'Your base, and a little speed on top.';
 
   @override
-  String get goalLineFaster => 'On climbs and on the flat.';
-
-  @override
   String get goalLineEvent => 'Planned like getting fitter, up to the day.';
 
   @override
@@ -5538,24 +5341,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trainingThisWeek => 'This week';
 
   @override
-  String get trainingWeekCard => 'This week';
-
-  @override
   String get trainingNextWeek => 'Next week (preview)';
 
   @override
   String get trainingRest => 'Rest';
-
-  @override
-  String get trainingWeekRest => 'Rest';
-
-  @override
-  String get trainingWeekToday => 'today';
-
-  @override
-  String trainingWeekDone(int done, int total) {
-    return '$done of $total done';
-  }
 
   @override
   String trainingWeekLine(int done, int total, String kind) {
@@ -5711,39 +5500,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionOpenRide => 'Open the ride →';
 
   @override
-  String get sessionWhy => 'Why this session';
-
-  @override
-  String sessionTechnical(String term) {
-    return 'Coaches call this $term.';
-  }
-
-  @override
-  String get sessionBlocks => 'The session';
-
-  @override
-  String get sessionFeelExplanation =>
-      'Feel 7: hard, you could hold it about an hour.';
-
-  @override
-  String sessionFeel(int low, int high) {
-    return 'feel $low–$high';
-  }
-
-  @override
-  String sessionWatts(int low, int high) {
-    return '$low–$high W';
-  }
-
-  @override
-  String sessionBpm(int low, int high) {
-    return '$low–$high bpm';
-  }
-
-  @override
-  String get sessionEstimated => 'estimated';
-
-  @override
   String get sessionTime => 'Time';
 
   @override
@@ -5751,16 +5507,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionMainSet => 'Main set';
-
-  @override
-  String get sessionBlockWarmup => 'Warm-up';
-
-  @override
-  String get sessionBlockRecovery => 'Easy between';
-
-  @override
-  String get sessionBlockCooldown => 'Cool-down';
-
-  @override
-  String get sessionGone => 'This session is not in your week any more.';
 }

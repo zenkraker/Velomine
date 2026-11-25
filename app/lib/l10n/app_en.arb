@@ -13,11 +13,9 @@
   "dayUnit": "day",
   "daysUnit": "days",
   "navGroupClub": "Club",
-  "navNoClub": "No club",
   "privacyCardTitle": "Your data is yours.",
   "privacyCardBody": "Private unless you share it.",
   "ridesSubtitle": "Your rides and races.",
-  "ridesImportMenu": "Add rides",
   "rideDetailTitle": "Ride",
   "startRide": "Start ride",
   "navRecord": "Record",
@@ -29,8 +27,6 @@
   "accountMenu": "Account",
   "recordPermissionHelp": "Starting asks for your position and shows a notification while the ride records, even with the screen off.",
   "rideNoData": "No data",
-  "sessionsNavTitle": "Sessions",
-  "twoFactorNavTitle": "Two-factor",
 
   "notifications": "Notifications",
   "notificationsUnread": "Notifications, {count} unread",
@@ -142,10 +138,8 @@
   "twoFactorVerify": "Verify",
   "twoFactorUseAnother": "Use another account",
   "twoFactorStateOn": "Two-factor sign-in is on.",
-  "twoFactorStateOff": "Two-factor sign-in is off.",
   "twoFactorIntro": "After your password, you enter a code from your authenticator app. It is optional, and you can turn it off again.",
   "twoFactorNoPassword": "This account signs in with single sign-on, so it already has a second step.",
-  "twoFactorStart": "Set up an authenticator",
   "twoFactorStartSetup": "Start setup",
   "twoFactorKeyHelp": "Type this key into your authenticator app, then enter the code it shows.",
   "twoFactorKey": "Key",
@@ -158,13 +152,10 @@
   "twoFactorRecoveryHelp": "Save them somewhere safe. Each works once, in place of the app code.",
   "twoFactorSetupTitle": "Set up an authenticator",
   "twoFactorEnabled": "Two-factor sign-in is on.",
-  "twoFactorDisabled": "Two-factor sign-in is off.",
-  "twoFactorCodeWrong": "That code did not work. Check the clock on your phone and try the next one.",
   "sessionsTitle": "Devices and sessions",
   "sessionsIntro": "Where you are signed in now. Signing a device out asks for the password again there.",
   "sessionThisDevice": "This device",
   "sessionLastUsed": "Last used",
-  "sessionSince": "Signed in",
   "sessionRevoke": "Sign out",
   "sessionLogoutOthers": "Log out other devices",
   "sessionLogoutOthersBody": "This signs out every device except this one. They will need to sign in again.",
@@ -177,14 +168,12 @@
   "ssoNoEmail": "Your sign-in provider did not share an email address.",
   "ssoFailed": "Single sign-on did not work. Try again.",
   "ssoGeneric": "single sign-on",
-  "signingIn": "Signing you in…",
 
   "setupTitle": "Which server does your club use?",
   "setupCaption": "Server",
   "setupServerAddress": "Server address",
   "setupServerHint": "https://velomine.club.example",
   "setupInsecure": "This address is not encrypted. Use it only on a network you trust, or ask your admin for an https address.",
-  "setupChecking": "Checking…",
   "setupConnect": "Connect",
   "setupHelp": "Ask your club admin for the address. It usually looks like https://velomine.your-club.example.",
   "setupInvalidAddress": "Enter an address that starts with http:// or https://, for example https://velomine.club.example.",
@@ -352,11 +341,6 @@
   "privacyRidePrivacyHelp": "What your coach and shared links see.",
   "viewsTitle": "Who looked",
   "viewsEmpty": "Nobody has looked yet.",
-  "viewSummary": "Summary",
-  "viewTraining": "Training",
-  "viewRide": "Ride",
-  "viewRides": "Ride list",
-  "viewRoute": "Route",
 
   "athletesTitle": "Athletes",
   "coachViewAthletes": "View athletes",
@@ -581,7 +565,6 @@
   "loadMore": "Load more",
   "readingFile": "Reading the file…",
   "delete": "Delete",
-  "rideActions": "Ride actions",
   "deleteRideTitle": "Delete this ride?",
   "deleteRideBody": "The ride, its charts and the file you uploaded are removed. This cannot be undone.",
   "keepIt": "Keep it",
@@ -765,14 +748,6 @@
   "noBikes": "No bikes yet. Add one to keep track of its distance and the wear on its parts. New rides are given your default bike.",
   "defaultBike": "Default",
   "archived": "Archived",
-  "bikeRides": "{count, plural, =0{No rides} =1{1 ride} other{{count} rides}}",
-  "@bikeRides": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "deleteBikeTitle": "Delete this bike?",
   "deleteBikeBody": "The bike and its parts are removed. Your rides stay, but they will no longer say which bike you rode. To keep the history, archive the bike instead.",
   "removePartTitle": "Remove {name} from the list?",
@@ -794,7 +769,6 @@
       }
     }
   },
-  "metricTrainingLoad": "Training load",
   "metricPower": "Power",
   "statRides": "Rides",
   "edit": "Edit",
@@ -913,7 +887,6 @@
   "errorInitialDistance": "Distance before Velomine must be 0 or more.",
   "cancel": "Cancel",
   "close": "Close",
-  "openFullMap": "Open the full map",
   "save": "Save",
 
   "replacePartTitle": "Replace {name}",
@@ -1104,7 +1077,6 @@
       }
     }
   },
-  "totalsSemantics": "Distance per {period}. This {period}: {distance}.",
   "chartAverage": "Average {value}",
   "totalsSemanticsMeasure": "{measure} per {period}. This {period}: {value}.",
   "@totalsSemanticsMeasure": {
@@ -1158,25 +1130,7 @@
   "totalsTitleWeekly": "Distance per week",
   "totalsTitleMonthly": "Distance per month",
   "totalsTitleYearly": "Distance per year",
-  "totalsMore": "{count} older periods not listed",
   "totalsShowEarlier": "Show earlier",
-  "@totalsMore": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@totalsSemantics": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      },
-      "distance": {
-        "type": "String"
-      }
-    }
-  },
   "trainingLoad": "Training load",
   "range30Days": "30 d",
   "range90Days": "90 d",
@@ -1279,14 +1233,6 @@
   "roleCoach": "Coach",
   "roleAdmin": "Admin",
   "approve": "Approve",
-  "actionsFor": "Actions for {name}",
-  "@actionsFor": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "changeRoles": "Change roles",
   "unlockAccount": "Unlock account",
   "lockAccount": "Lock account",
@@ -1342,22 +1288,6 @@
     }
   },
   "ssoNotConfigured": "Not set up. Set VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID and VELOMINE__SSO__CLIENTSECRET.",
-  "statusOn": "{title}: on",
-  "@statusOn": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "statusOff": "{title}: off",
-  "@statusOff": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "noOverview": "No overview.",
   "noSettings": "No settings.",  "rideFilesOnDisk": "Ride files on disk",
   "serverVersion": "Server version",
@@ -1372,23 +1302,6 @@
   "weight": "Weight",
   "birthYear": "Year of birth",
   "birthYearHelper": "Maximum heart rate is estimated from it with the Tanaka formula (208 − 0.7 × age).",
-  "estimatedMaxHeartRate": "Estimated maximum heart rate: {bpm} bpm",
-  "@estimatedMaxHeartRate": {
-    "placeholders": {
-      "bpm": {
-        "type": "int"
-      }
-    }
-  },
-  "estimatedMaxHeartRateNone": "Add your year of birth to estimate it.",
-  "estimatedThresholdHeartRate": "Estimated threshold heart rate: {bpm} bpm",
-  "@estimatedThresholdHeartRate": {
-    "placeholders": {
-      "bpm": {
-        "type": "int"
-      }
-    }
-  },
   "heartRateSourceManual": "Set by you on {date}",
   "@heartRateSourceManual": {
     "placeholders": {
@@ -1420,7 +1333,6 @@
   },
   "heartRateSourceMaxEstimate": "Estimated from your age (208 − 0.7 × age)",
   "heartRateSourceThresholdEstimate": "Estimated as 89 % of your maximum",
-  "heartRateNone": "Add your year of birth, or type it above.",
   "heartRateMaxMeasured": "New maximum heart rate: {bpm} bpm. Your zones now use it.",
   "@heartRateMaxMeasured": {
     "placeholders": {
@@ -1517,7 +1429,6 @@
   "unread": "Unread",
 
   "recordRide": "Record a ride",
-  "recordIntro": "The phone keeps recording with the screen off. Your ride is saved on this phone first; uploads are added next.",
   "starting": "Starting…",
   "startRecording": "Start recording",
   "pauseWhenStopped": "Pause when stopped",
@@ -1602,7 +1513,6 @@
   "readinessAdviceRest": "Rest or move very easily. You are carrying a lot of fatigue.",
   "readinessNoData": "Record a ride to see readiness.",
   "readinessLoadOnly": "Add a daily check-in to include how you feel.",
-  "readinessWhy": "Why",
   "readinessWhyScore": "Why {score}",
   "readinessNotMedical": "A training guide, not a medical measure.",
   "readinessFactorForm": "Form",
@@ -1634,13 +1544,11 @@
   "wellbeingShortStress": "Str",
   "wellbeingShortMotivation": "Mot",
   "wellbeingShortSleep": "Slp",
-  "wellbeingHistory": "Last 30 days",
   "wellbeingHistory14": "Last 14 days",
   "wellbeingCheckIn": "Check in",
   "wellbeingHowYouFeel": "How you feel",
   "wellbeingNoToday": "No check-in today. Your readiness is measured from your rides alone.",
   "wellbeingPrivate": "Only you see this. Readiness and notes never reach a coach.",
-  "wellbeingNoHistory": "No check-ins yet.",
   "wellbeingRpe": "How hard was it?",
   "wellbeingRpeHint": "1 easy, 10 maximal",
   "wellbeingNotes": "Notes (optional)",
@@ -1660,8 +1568,6 @@
   "shareWellbeingHelper": "Check-in scores and ride RPE; notes stay private.",
   "shareRidesHelper": "Your rides and the training built from them.",
   "sharesWellbeing": "Wellbeing",
-  "viewPowerCurve": "Power curve",
-  "viewWellbeing": "Wellbeing",
 
   "powerCurve": "Power curve",
   "powerCurveEmpty": "No power data in this range. Upload a ride with a power meter.",
@@ -1685,7 +1591,6 @@
       }
     }
   },
-  "ftpEstimate": "Estimated FTP",
   "ftpCurrent": "Current FTP",
   "ftpMethod20": "95 % of your best 20-minute power",
   "ftpMethod8": "90 % of your best 8-minute power",
@@ -1843,7 +1748,6 @@
     }
   },
   "vo2MaxEstimate": "VO2max estimate",
-  "vo2MaxFrom5Min": "from your best 5-minute power and weight",
   "vo2MaxNeedsWeight": "Set your weight to estimate VO2max.",
   "vo2MaxNeedsEffort": "A 5-minute effort is needed to estimate VO2max.",
   "ftpEstimateSource20": "95 % of your best 20 minutes, on {date}",
@@ -2039,7 +1943,6 @@
   "currentPassword": "Current password",
   "passwordWrongCurrent": "The current password is not right.",
   "passwordNoPassword": "This account signs in with single sign-on.",
-  "passwordChanged": "Your password is changed. Sign in again on this device.",
   "passwordChangeFailed": "Could not change the password. Try again.",
   "actionChangePassword": "change your password",
   "actionResetPassword": "reset this password",
@@ -2057,7 +1960,6 @@
   "resetPasswordLinkHelp": "Send this link to the member. It works once and expires in 30 minutes.",
   "copyLink": "Copy link",
   "linkCopied": "Copied",
-  "resetPasswordLinkFailed": "Could not make a reset link. Try again.",
 
   "actionLoadNearbyClubs": "find clubs near you",
   "actionRequestJoinClub": "ask to join the club",
@@ -2226,20 +2128,8 @@
   "errorTemplateName": "Give the template a name.",
 
   "sharedCatalogue": "Shared parts catalogue",
-  "shareParts": "Share new parts with the shared catalogue",
   "sharePartsHelp": "Non-custom parts that the shared catalogue does not list are sent to the publisher. Custom parts stay only on your bike.",
   "catalogueNotConfigured": "This server has no contribution endpoint configured, so nothing is sent.",
-  "catalogueVersion": "Catalogue version {version}, last checked {date}",
-  "@catalogueVersion": {
-    "placeholders": {
-      "version": {
-        "type": "int"
-      },
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "catalogueNeverSynced": "The shared catalogue has not been checked yet.",
   "catalogueSynced": "Shared catalogue last checked {date}",
   "@catalogueSynced": {
@@ -2249,9 +2139,6 @@
       }
     }
   },
-  "catalogueConflicts": "Parts that differ from the shared catalogue",
-  "keepMine": "Keep mine",
-  "useShared": "Use shared",
   "contributionCounts": "{pending} waiting · {sent} sent · {rejected} rejected · {failed} failed",
   "@contributionCounts": {
     "placeholders": {
@@ -2329,18 +2216,7 @@
   "importStarting": "Starting import…",
   "importTitle": "Import from Strava",
   "importRunning": "Reading your archive. This can take a few minutes.",
-  "importProgress": "{done} of {total} activities read",
   "importProgressUnit": "of {total} activities read",
-  "@importProgress": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "importFinished": "Import finished",
   "importSummaryImported": "{count, plural, =1{1 ride imported} other{{count} rides imported}}",
   "@importSummaryImported": {
@@ -2839,7 +2715,6 @@
     }
   },
   "supporterKeyVerified": "Key verified",
-  "supporterReplay": "Replay",
   "supporterReplayLink": "Play the celebration again",
   "supporterBadgeReplayHint": "Plays the licence moment again. Three quick taps.",
   "supporterContinue": "Continue",
@@ -2863,12 +2738,6 @@
       "hard": {"type": "String"}
     }
   },
-  "intensityEasy": "Easy {pct} %",
-  "@intensityEasy": {"placeholders": {"pct": {"type": "String"}}},
-  "intensityModerate": "Moderate {pct} %",
-  "@intensityModerate": {"placeholders": {"pct": {"type": "String"}}},
-  "intensityHard": "Hard {pct} %",
-  "@intensityHard": {"placeholders": {"pct": {"type": "String"}}},
   "intensitySource": "From power where you have it, otherwise heart rate.",
   "intensityLabelPolarised": "Polarised: mostly easy, a real share of hard, little in between",
   "intensityLabelPyramidal": "Pyramidal: most easy, less moderate, least hard",
@@ -2946,8 +2815,6 @@
   "eventDeleteTitle": "Delete this event?",
   "eventDeleteBody": "“{name}” is removed. The ride it was stays.",
   "@eventDeleteBody": {"placeholders": {"name": {"type": "String"}}},
-  "eventOn": "{date}",
-  "@eventOn": {"placeholders": {"date": {"type": "String"}}},
   "errorEventName": "Give the event a name.",
   "actionAddEvent": "add the event",
   "actionSaveEvent": "save the event",
@@ -2969,7 +2836,6 @@
   "riderModeTrainingBody": "I train or race. I want power, training load, fitness and form, and every number.",
   "riderModeLater": "Decide later",
   "riderModeElsewhere": "Chosen on another device",
-  "moreDetailsAnalysis": "Show more analysis",
   "moreDetailsAll": "Show all details",
   "showLess": "Show less",
   "rideEffortEasy": "mostly easy",
@@ -3007,7 +2873,6 @@
   "goalReasonRegularRider": "You ride regularly. We build both your base and a little speed.",
   "goalLineAerobic": "A steady rhythm of easy rides, before anything faster.",
   "goalLineFitter": "Your base, and a little speed on top.",
-  "goalLineFaster": "On climbs and on the flat.",
   "goalLineEvent": "Planned like getting fitter, up to the day.",
   "goalLineKeep": "A couple of rides a week keep what you have.",
   "goalNextEvent": "{name} · {date}",
@@ -3041,13 +2906,8 @@
   "trainingRestDay": "Rest day",
   "trainingRestDaySentence": "Nothing today. Rest is part of the plan.",
   "trainingThisWeek": "This week",
-  "trainingWeekCard": "This week",
   "trainingNextWeek": "Next week (preview)",
   "trainingRest": "Rest",
-  "trainingWeekRest": "Rest",
-  "trainingWeekToday": "today",
-  "trainingWeekDone": "{done} of {total} done",
-  "@trainingWeekDone": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
   "trainingWeekLine": "{done} of {total} done. {kind}",
   "@trainingWeekLine": {"placeholders": {"done": {"type": "int"},"total": {"type": "int"},"kind": {"type": "String"}}},
   "trainingWeekLineAll": "{done} of {total} done. That is the week, all of it.",
@@ -3101,23 +2961,7 @@
   "sessionMainSetPlannedOnly": "{planned} planned",
   "@sessionMainSetPlannedOnly": {"placeholders": {"planned": {"type": "String"}}},
   "sessionOpenRide": "Open the ride →",
-  "sessionWhy": "Why this session",
-  "sessionTechnical": "Coaches call this {term}.",
-  "@sessionTechnical": {"placeholders": {"term": {"type": "String"}}},
-  "sessionBlocks": "The session",
-  "sessionFeelExplanation": "Feel 7: hard, you could hold it about an hour.",
-  "sessionFeel": "feel {low}–{high}",
-  "@sessionFeel": {"placeholders": {"low": {"type": "int"},"high": {"type": "int"}}},
-  "sessionWatts": "{low}–{high} W",
-  "@sessionWatts": {"placeholders": {"low": {"type": "int"},"high": {"type": "int"}}},
-  "sessionBpm": "{low}–{high} bpm",
-  "@sessionBpm": {"placeholders": {"low": {"type": "int"},"high": {"type": "int"}}},
-  "sessionEstimated": "estimated",
   "sessionTime": "Time",
   "sessionEffortScore": "Effort score",
-  "sessionMainSet": "Main set",
-  "sessionBlockWarmup": "Warm-up",
-  "sessionBlockRecovery": "Easy between",
-  "sessionBlockCooldown": "Cool-down",
-  "sessionGone": "This session is not in your week any more."
+  "sessionMainSet": "Main set"
 }

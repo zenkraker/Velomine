@@ -46,9 +46,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navGroupClub => 'Club';
 
   @override
-  String get navNoClub => 'Nessun club';
-
-  @override
   String get privacyCardTitle => 'I tuoi dati sono tuoi.';
 
   @override
@@ -56,9 +53,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get ridesSubtitle => 'I tuoi giri e le tue gare.';
-
-  @override
-  String get ridesImportMenu => 'Aggiungi giri';
 
   @override
   String get rideDetailTitle => 'Giro';
@@ -93,12 +87,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rideNoData => 'Nessun dato';
-
-  @override
-  String get sessionsNavTitle => 'Sessioni';
-
-  @override
-  String get twoFactorNavTitle => 'Due fattori';
 
   @override
   String get notifications => 'Notifiche';
@@ -319,18 +307,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorStateOn => 'L\'accesso a due fattori è attivo.';
 
   @override
-  String get twoFactorStateOff => 'L\'accesso a due fattori è disattivato.';
-
-  @override
   String get twoFactorIntro =>
       'Dopo la password inserisci un codice della tua app di autenticazione. È facoltativo e puoi disattivarlo quando vuoi.';
 
   @override
   String get twoFactorNoPassword =>
       'Questo account accede con l\'accesso singolo, che è già un secondo passaggio.';
-
-  @override
-  String get twoFactorStart => 'Configura un\'app di autenticazione';
 
   @override
   String get twoFactorStartSetup => 'Inizia la configurazione';
@@ -371,13 +353,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get twoFactorEnabled => 'L\'accesso a due fattori è attivo.';
 
   @override
-  String get twoFactorDisabled => 'L\'accesso a due fattori è disattivato.';
-
-  @override
-  String get twoFactorCodeWrong =>
-      'Il codice non è corretto. Controlla l\'ora del telefono e prova il successivo.';
-
-  @override
   String get sessionsTitle => 'Dispositivi e sessioni';
 
   @override
@@ -389,9 +364,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sessionLastUsed => 'Ultimo uso';
-
-  @override
-  String get sessionSince => 'Accesso';
 
   @override
   String get sessionRevoke => 'Disconnetti';
@@ -436,9 +408,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get ssoGeneric => 'accesso singolo';
 
   @override
-  String get signingIn => 'Accesso in corso…';
-
-  @override
   String get setupTitle => 'Quale server usa il tuo club?';
 
   @override
@@ -453,9 +422,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get setupInsecure =>
       'Questo indirizzo non è cifrato. Usalo solo su una rete di cui ti fidi, oppure chiedi all\'amministratore un indirizzo https.';
-
-  @override
-  String get setupChecking => 'Verifica…';
 
   @override
   String get setupConnect => 'Connetti';
@@ -916,21 +882,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get viewsEmpty => 'Nessuno ha ancora guardato.';
 
   @override
-  String get viewSummary => 'Riepilogo';
-
-  @override
-  String get viewTraining => 'Allenamento';
-
-  @override
-  String get viewRide => 'Giro';
-
-  @override
-  String get viewRides => 'Elenco giri';
-
-  @override
-  String get viewRoute => 'Percorso';
-
-  @override
   String get athletesTitle => 'Atleti';
 
   @override
@@ -1283,9 +1234,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get delete => 'Elimina';
 
   @override
-  String get rideActions => 'Azioni giro';
-
-  @override
   String get deleteRideTitle => 'Eliminare questo giro?';
 
   @override
@@ -1534,18 +1482,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get archived => 'Archiviata';
 
   @override
-  String bikeRides(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count giri',
-      one: '1 giro',
-      zero: 'Nessun giro',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get deleteBikeTitle => 'Eliminare questa bici?';
 
   @override
@@ -1571,9 +1507,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String wheelLabel(int mm) {
     return 'ruota $mm mm';
   }
-
-  @override
-  String get metricTrainingLoad => 'Carico di allenamento';
 
   @override
   String get metricPower => 'Potenza';
@@ -1734,9 +1667,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get close => 'Chiudi';
-
-  @override
-  String get openFullMap => 'Apri la mappa intera';
 
   @override
   String get save => 'Salva';
@@ -2139,11 +2069,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String totalsSemantics(String period, String distance) {
-    return 'Distanza per $period. Questo periodo: $distance.';
-  }
-
-  @override
   String chartAverage(String value) {
     return 'Media $value';
   }
@@ -2196,11 +2121,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get totalsTitleYearly => 'Distanza per anno';
-
-  @override
-  String totalsMore(int count) {
-    return '$count periodi precedenti non elencati';
-  }
 
   @override
   String get totalsShowEarlier => 'Mostra precedenti';
@@ -2387,11 +2307,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get approve => 'Approva';
 
   @override
-  String actionsFor(String name) {
-    return 'Azioni per $name';
-  }
-
-  @override
   String get changeRoles => 'Cambia ruoli';
 
   @override
@@ -2469,16 +2384,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non impostato. Imposta VELOMINE__SSO__AUTHORITY, VELOMINE__SSO__CLIENTID e VELOMINE__SSO__CLIENTSECRET.';
 
   @override
-  String statusOn(String title) {
-    return '$title: attivo';
-  }
-
-  @override
-  String statusOff(String title) {
-    return '$title: disattivo';
-  }
-
-  @override
   String get noOverview => 'Nessuna panoramica.';
 
   @override
@@ -2523,20 +2428,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'La frequenza cardiaca massima si stima da qui con la formula di Tanaka (208 − 0,7 × età).';
 
   @override
-  String estimatedMaxHeartRate(int bpm) {
-    return 'Frequenza cardiaca massima stimata: $bpm bpm';
-  }
-
-  @override
-  String get estimatedMaxHeartRateNone =>
-      'Aggiungi il tuo anno di nascita per stimarla.';
-
-  @override
-  String estimatedThresholdHeartRate(int bpm) {
-    return 'Frequenza cardiaca di soglia stimata: $bpm bpm';
-  }
-
-  @override
   String heartRateSourceManual(String date) {
     return 'Impostata da te il $date';
   }
@@ -2575,10 +2466,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get heartRateSourceThresholdEstimate =>
       'Stimata come 89 % della tua massima';
-
-  @override
-  String get heartRateNone =>
-      'Aggiungi il tuo anno di nascita, o scrivila qui sopra.';
 
   @override
   String heartRateMaxMeasured(int bpm) {
@@ -2748,10 +2635,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get recordRide => 'Registra un giro';
-
-  @override
-  String get recordIntro =>
-      'Il telefono continua a registrare anche con lo schermo spento. Il giro viene salvato prima su questo telefono; poi si aggiunge il caricamento.';
 
   @override
   String get starting => 'Avvio…';
@@ -3006,9 +2889,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Aggiungi il check-in giornaliero per includere come ti senti.';
 
   @override
-  String get readinessWhy => 'Perché';
-
-  @override
   String readinessWhyScore(Object score) {
     return 'Perché $score';
   }
@@ -3104,9 +2984,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wellbeingShortSleep => 'Son';
 
   @override
-  String get wellbeingHistory => 'Ultimi 30 giorni';
-
-  @override
   String get wellbeingHistory14 => 'Ultimi 14 giorni';
 
   @override
@@ -3122,9 +2999,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get wellbeingPrivate =>
       'Lo vedi solo tu. Prontezza e note non arrivano mai a un coach.';
-
-  @override
-  String get wellbeingNoHistory => 'Nessun check-in.';
 
   @override
   String get wellbeingRpe => 'Quanto è stata dura?';
@@ -3162,12 +3036,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sharesWellbeing => 'Benessere';
-
-  @override
-  String get viewPowerCurve => 'Curva di potenza';
-
-  @override
-  String get viewWellbeing => 'Benessere';
 
   @override
   String get powerCurve => 'Curva di potenza';
@@ -3214,9 +3082,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String ftpEstimateToday(int watts, String method) {
     return 'Stima di oggi: $watts W, $method.';
   }
-
-  @override
-  String get ftpEstimate => 'FTP stimato';
 
   @override
   String get ftpCurrent => 'FTP attuale';
@@ -3360,9 +3225,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get vo2MaxEstimate => 'VO2max stimato';
-
-  @override
-  String get vo2MaxFrom5Min => 'dalla migliore potenza sui 5 minuti e dal peso';
 
   @override
   String get vo2MaxNeedsWeight => 'Imposta il peso per stimare il VO2max.';
@@ -3684,10 +3546,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo account accede con il single sign-on.';
 
   @override
-  String get passwordChanged =>
-      'Password cambiata. Accedi di nuovo su questo dispositivo.';
-
-  @override
   String get passwordChangeFailed =>
       'Non è stato possibile cambiare la password. Riprova.';
 
@@ -3720,10 +3578,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get linkCopied => 'Copiato';
-
-  @override
-  String get resetPasswordLinkFailed =>
-      'Non è stato possibile creare il link. Riprova.';
 
   @override
   String get actionLoadNearbyClubs => 'trovare i club vicino a te';
@@ -3992,21 +3846,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sharedCatalogue => 'Catalogo condiviso dei componenti';
 
   @override
-  String get shareParts =>
-      'Condividi i nuovi componenti con il catalogo condiviso';
-
-  @override
   String get sharePartsHelp =>
       'I componenti non personalizzati che il catalogo condiviso non elenca vengono inviati all\'editore. I componenti personalizzati restano solo sulla tua bici.';
 
   @override
   String get catalogueNotConfigured =>
       'Questo server non ha un endpoint per i contributi, quindi non viene inviato nulla.';
-
-  @override
-  String catalogueVersion(int version, String date) {
-    return 'Versione catalogo $version, ultimo controllo $date';
-  }
 
   @override
   String get catalogueNeverSynced =>
@@ -4016,15 +3861,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String catalogueSynced(String date) {
     return 'Catalogo condiviso controllato il $date';
   }
-
-  @override
-  String get catalogueConflicts => 'Componenti diversi dal catalogo condiviso';
-
-  @override
-  String get keepMine => 'Tieni il mio';
-
-  @override
-  String get useShared => 'Usa il condiviso';
 
   @override
   String contributionCounts(int pending, int sent, int rejected, int failed) {
@@ -4120,11 +3956,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get importRunning =>
       'Sto leggendo l\'archivio. Può richiedere qualche minuto.';
-
-  @override
-  String importProgress(int done, int total) {
-    return '$done di $total attività lette';
-  }
 
   @override
   String importProgressUnit(Object total) {
@@ -5026,9 +4857,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get supporterKeyVerified => 'Chiave verificata';
 
   @override
-  String get supporterReplay => 'Rivedi';
-
-  @override
   String get supporterReplayLink => 'Rivedi il momento';
 
   @override
@@ -5084,21 +4912,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String intensityShares(String easy, String moderate, String hard) {
     return '$easy % facile · $moderate % moderato · $hard % intenso';
-  }
-
-  @override
-  String intensityEasy(String pct) {
-    return 'Facile $pct %';
-  }
-
-  @override
-  String intensityModerate(String pct) {
-    return 'Moderato $pct %';
-  }
-
-  @override
-  String intensityHard(String pct) {
-    return 'Intenso $pct %';
   }
 
   @override
@@ -5275,11 +5088,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String eventOn(String date) {
-    return '$date';
-  }
-
-  @override
   String get errorEventName => 'Dai un nome all\'evento.';
 
   @override
@@ -5348,9 +5156,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get riderModeElsewhere => 'Scelta su un altro dispositivo';
-
-  @override
-  String get moreDetailsAnalysis => 'Mostra più analisi';
 
   @override
   String get moreDetailsAll => 'Mostra tutti i dettagli';
@@ -5469,9 +5274,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get goalLineFitter => 'La tua base, e un po\' di velocità in più.';
 
   @override
-  String get goalLineFaster => 'In salita e in pianura.';
-
-  @override
   String get goalLineEvent =>
       'Pianificato come essere più in forma, fino al giorno.';
 
@@ -5575,24 +5377,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get trainingThisWeek => 'Questa settimana';
 
   @override
-  String get trainingWeekCard => 'Questa settimana';
-
-  @override
   String get trainingNextWeek => 'La prossima settimana (anteprima)';
 
   @override
   String get trainingRest => 'Riposo';
-
-  @override
-  String get trainingWeekRest => 'Riposo';
-
-  @override
-  String get trainingWeekToday => 'oggi';
-
-  @override
-  String trainingWeekDone(int done, int total) {
-    return '$done di $total fatte';
-  }
 
   @override
   String trainingWeekLine(int done, int total, String kind) {
@@ -5750,39 +5538,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sessionOpenRide => 'Apri l\'uscita →';
 
   @override
-  String get sessionWhy => 'Perché questa seduta';
-
-  @override
-  String sessionTechnical(String term) {
-    return 'Gli allenatori la chiamano $term.';
-  }
-
-  @override
-  String get sessionBlocks => 'La seduta';
-
-  @override
-  String get sessionFeelExplanation =>
-      'Sensazione 7: duro, lo tieni per circa un\'ora.';
-
-  @override
-  String sessionFeel(int low, int high) {
-    return 'sensazione $low–$high';
-  }
-
-  @override
-  String sessionWatts(int low, int high) {
-    return '$low–$high W';
-  }
-
-  @override
-  String sessionBpm(int low, int high) {
-    return '$low–$high bpm';
-  }
-
-  @override
-  String get sessionEstimated => 'stimati';
-
-  @override
   String get sessionTime => 'Tempo';
 
   @override
@@ -5790,16 +5545,4 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sessionMainSet => 'Serie principale';
-
-  @override
-  String get sessionBlockWarmup => 'Riscaldamento';
-
-  @override
-  String get sessionBlockRecovery => 'Facile in mezzo';
-
-  @override
-  String get sessionBlockCooldown => 'Defaticamento';
-
-  @override
-  String get sessionGone => 'Questa seduta non è più nella tua settimana.';
 }
