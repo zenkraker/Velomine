@@ -1,3 +1,4 @@
+using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Tests.Training;
@@ -38,6 +39,32 @@ public sealed class SessionMatchTests
 
     private static MatchRide Ride(DateOnly date, double movingS, double? effort, Guid? id = null) =>
         new(id ?? Guid.CreateVersion7(), date, movingS, effort);
+
+    [Fact]
+    public void SessionMatch_ShouldTickTheMovedSession_WhenTheRideIsOnTheDayTheRiderGaveIt()
+    {
+        // A session the rider moved is still the session to ride, on its new day.
+        var session = Session(Tuesday, state: TrainingSessionStates.Moved);
+        var ride = Ride(Tuesday, PlannedS, PlannedEffort);
+
+        var match = SessionMatch.Decide([session], [ride], ride);
+
+        Assert.NotNull(match);
+        Assert.Equal(session.Id, match.Value.Session.Id);
+        Assert.False(match.Value.Asks);
+    }
+
+    [Fact]
+    public void SessionMatch_ShouldKeepTheDay_WhenTheRideOfAMovedSessionGoesAway()
+    {
+        var rideId = Guid.CreateVersion7();
+        var session = Session(Tuesday, state: TrainingSessionStates.Moved, rideId: rideId);
+
+        SessionMatch.Unlink(session, new MemberClock(TimeZoneInfo.Utc, DayOfWeek.Monday, Wednesday));
+
+        Assert.Equal(TrainingSessionStates.Moved, session.State);
+        Assert.Equal(Tuesday, session.LocalDate);
+    }
 
     [Fact]
     public void SessionMatch_ShouldTickTheSessionOfItsDay_WhenTheRideIsReady()
