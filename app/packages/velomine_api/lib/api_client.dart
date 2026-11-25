@@ -505,8 +505,6 @@ class ApiClient {
           return SharingResponse.fromJson(value);
         case 'SkipTrainingSessionRequest':
           return SkipTrainingSessionRequest.fromJson(value);
-        case 'SkipTrainingSessionResponse':
-          return SkipTrainingSessionResponse.fromJson(value);
         case 'SmtpStatus':
           return SmtpStatus.fromJson(value);
         case 'SsoInfoResponse':

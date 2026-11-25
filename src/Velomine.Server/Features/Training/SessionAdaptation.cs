@@ -245,6 +245,12 @@ public static class SessionAdaptation
         session.OriginalRecipe = null;
         session.EasyReason = null;
         session.EasyMovedTo = null;
+        // The inbox says today is easy; it is not any more.
+        var said = await db.Notifications
+            .Where(n => n.UserId == session.UserId && n.TrainingSessionId == session.Id
+                && n.Type == NotificationTypes.TrainingEasy)
+            .ToListAsync(ct);
+        db.Notifications.RemoveRange(said);
         return true;
     }
 

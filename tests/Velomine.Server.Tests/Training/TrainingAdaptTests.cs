@@ -360,6 +360,8 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
         Assert.Equal("R05", restored.Recipe);
         Assert.Equal(TrainingSessionStates.Planned, restored.State);
         Assert.Null(restored.EasyReason);
+        // The inbox no longer says today is easy, because it is not.
+        Assert.DoesNotContain(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingEasy);
     }
 
     [Fact]
@@ -465,18 +467,18 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
             new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Tired }, Ct);
 
         Assert.Equal(HttpStatusCode.OK, answer.StatusCode);
-        var body = (await answer.Content.ReadFromJsonAsync<SkipTrainingSessionResponse>(Ct))!;
-        Assert.False(body.AskRestOfWeek);
-        var skipped = Assert.Single(body.Week.Weeks[0].Sessions, s => s.LocalDate == Tuesday);
+        var week = (await answer.Content.ReadFromJsonAsync<TrainingWeeksResponse>(Ct))!.Weeks[0];
+        var skipped = Assert.Single(week.Sessions, s => s.LocalDate == Tuesday);
         Assert.Equal(TrainingSessionStates.Skipped, skipped.State);
         Assert.Equal(TrainingSkipReasons.Tired, skipped.SkipReason);
         // Nothing is piled onto a later day.
-        Assert.Equal(2, body.Week.Weeks[0].Sessions.Length);
+        Assert.Equal(2, week.Sessions.Length);
+        Assert.Equal(1, week.SkipsThisWeek);
         Assert.Contains(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingSkipped);
     }
 
     [Fact]
-    public async Task SkipTrainingSession_ShouldOfferTheRestOfTheWeek_WhenItIsTheSecondSkip()
+    public async Task SkipTrainingSession_ShouldSayHowManyWereSkipped_WhenItIsTheSecondSkip()
     {
         await using var api = await StartAsync();
         var member = await RiderAsync(api, (Monday, "R05", 60), (Tuesday, "R06", 60), (Thursday, "R02", 60),
@@ -490,14 +492,15 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
         var answer = await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{second.Id}/skip",
             new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Ill }, Ct);
 
-        var asked = (await answer.Content.ReadFromJsonAsync<SkipTrainingSessionResponse>(Ct))!;
-        Assert.True(asked.AskRestOfWeek);
+        // The week says how many have been skipped, and the app asks about the rest from the second one.
+        var asked = (await answer.Content.ReadFromJsonAsync<TrainingWeeksResponse>(Ct))!.Weeks[0];
+        Assert.Equal(2, asked.SkipsThisWeek);
 
         var rest = await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{second.Id}/skip",
             new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Ill, RestOfWeek = true }, Ct);
 
-        var done = (await rest.Content.ReadFromJsonAsync<SkipTrainingSessionResponse>(Ct))!;
-        Assert.All(done.Week.Weeks[0].Sessions, s => Assert.Equal(TrainingSessionStates.Skipped, s.State));
+        var done = (await rest.Content.ReadFromJsonAsync<TrainingWeeksResponse>(Ct))!.Weeks[0];
+        Assert.All(done.Sessions, s => Assert.Equal(TrainingSessionStates.Skipped, s.State));
     }
 
     [Fact]

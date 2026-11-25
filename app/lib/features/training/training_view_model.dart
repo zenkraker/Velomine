@@ -69,30 +69,16 @@ class TrainingViewModel extends _$TrainingViewModel {
   Future<void> move(String sessionId, DateTime localDate) =>
       _change(() => ref.read(trainingDataProvider).move(sessionId, localDate));
 
-  /// Skips a session and answers whether the app should ask about the rest of the week.
-  Future<bool> skip(
+  /// Skips a session, or the rest of the week after it.
+  Future<void> skip(
     String sessionId, {
     String? reason,
     bool restOfWeek = false,
-  }) async {
-    if (state.action.running) return false;
-    state = state.copyWith(action: state.action.start());
-    final result = await ref
+  }) => _change(
+    () => ref
         .read(trainingDataProvider)
-        .skip(sessionId, reason: reason, restOfWeek: restOfWeek);
-    if (!ref.mounted) return false;
-    state = state.copyWith(
-      action: state.action.finish(result.map((_) => null)),
-    );
-    if (result.failureOrNull case final failure?) {
-      _fail(failure);
-      return false;
-    }
-    if (result.valueOrNull?.week case final week?) {
-      state = state.copyWith(weeks: week.weeks);
-    }
-    return result.valueOrNull?.askRestOfWeek ?? false;
-  }
+        .skip(sessionId, reason: reason, restOfWeek: restOfWeek),
+  );
 
   /// One change to a session: the week it answers replaces the one on screen, and a refusal is said once.
   Future<void> _change(

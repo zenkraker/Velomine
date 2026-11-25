@@ -62,14 +62,18 @@ public sealed record TrainingSessionNotice(
     }
 }
 
-/// <summary>One week of the plan: its days, the load they plan and the one line the rider reads about it.</summary>
+/// <summary>
+/// One week of the plan: its days, the load they plan, the one line the rider reads about it, and how many sessions the
+/// rider has skipped, which is what the skip sheet offers the rest of the week from.
+/// </summary>
 public sealed record TrainingWeek(
     DateOnly Start,
     DateOnly End,
     double PlannedLoad,
     bool IsLighterWeek,
     TrainingNote? Note,
-    TrainingWeekSession[] Sessions);
+    TrainingWeekSession[] Sessions,
+    int SkipsThisWeek);
 
 /// <summary>
 /// This week, and on its last day next week as the preview the rider sees that evening. The plan is keyed by the caller,
@@ -186,7 +190,8 @@ public static class TrainingWeekView
             Math.Round(planned + spent, 1),
             lighter,
             lighter ? TrainingNotes.EasyWeek : gentle ? TrainingNotes.MorePersonal : null,
-            sessions);
+            sessions,
+            rows.Count(s => s.State == TrainingSessionStates.Skipped));
     }
 
     /// <summary>

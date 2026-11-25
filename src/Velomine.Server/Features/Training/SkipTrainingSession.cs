@@ -29,22 +29,18 @@ public sealed class SkipTrainingSessionValidator : Validator<SkipTrainingSession
 }
 
 /// <summary>
-/// Skipping a session, with the reason the rider chose when they gave one. A skipped session stays where it is and is
-/// never piled onto a later day; on the second skip in a week the answer asks whether the rest of the week goes too.
-/// </summary>
-public sealed record SkipTrainingSessionResponse(bool AskRestOfWeek, TrainingWeeksResponse Week);
-
-/// <summary>
-/// Skip one session, or the rest of the week after it. Owner only: the session is the caller's own.
+/// Skipping a session, with the reason the rider chose when they gave one, or the rest of the week after it. A skipped
+/// session stays where it is and is never piled onto a later day; the week the answer carries says how many have been
+/// skipped, which is what the app offers the rest of the week from. Owner only: the session is the caller's own.
 /// </summary>
 public sealed class SkipTrainingSession(VelomineDbContext db, TimeProvider time)
-    : Endpoint<SkipTrainingSessionRequest, SkipTrainingSessionResponse>
+    : Endpoint<SkipTrainingSessionRequest, TrainingWeeksResponse>
 {
     public override void Configure()
     {
         Post("training/sessions/{id}/skip");
         Description(d => d.Accepts<SkipTrainingSessionRequest>("application/json")
-            .Produces<SkipTrainingSessionResponse>(200).ProducesProblem(400).ProducesProblem(401).Produces(404)
+            .Produces<TrainingWeeksResponse>(200).ProducesProblem(400).ProducesProblem(401).Produces(404)
             .ProducesProblem(409), clearDefaults: true);
     }
 
@@ -85,16 +81,13 @@ public sealed class SkipTrainingSession(VelomineDbContext db, TimeProvider time)
             foreach (var other in open) Skip(other, req.Reason);
 
         // One notification for the change the rider made, not one per session it took with it.
-        var skips = week.Count(s => s.State == TrainingSessionStates.Skipped);
         var recipe = Recipes.ByCode(session.Recipe);
         var name = EmailLanguage.Resolve(user.Language) == "it" ? recipe.ItalianName : recipe.EnglishName;
         Notify.Add(db, time, user.Id, NotificationTypes.TrainingSkipped,
             TrainingNoticeSubject.Skipped(name, session.LocalDate), trainingSessionId: session.Id);
 
         await db.SaveChangesAsync(ct);
-        await Send.OkAsync(new SkipTrainingSessionResponse(
-            !req.RestOfWeek && skips >= 2 && open.Count > 0,
-            await TrainingWeekView.OfAsync(db, user, plan, clock, time, ct)), ct);
+        await Send.OkAsync(await TrainingWeekView.OfAsync(db, user, plan, clock, time, ct), ct);
     }
 
     /// <summary>One session skipped, with its reason kept as the rider gave it; it stays on its own day.</summary>

@@ -192,7 +192,6 @@ lib/model/share_view_response.dart
 lib/model/share_views_response.dart
 lib/model/sharing_response.dart
 lib/model/skip_training_session_request.dart
-lib/model/skip_training_session_response.dart
 lib/model/smtp_status.dart
 lib/model/sso_info_response.dart
 lib/model/sso_status.dart

@@ -261,9 +261,6 @@ class FakeServer {
   /// The weeks GET /training/week answers: this week, and next week as the preview on the week's last day.
   List<Map<String, Object?>> trainingWeeks = const [];
 
-  /// What a skip answers to "Skip the rest of this week?"; the app asks when the server says so.
-  bool askRestOfWeekOnSkip = false;
-
   /// The goal the server suggests, and the reason code it gives for it.
   String suggestedTrainingGoal = 'fitter';
   String trainingSuggestionReason = 'regular_rider';
@@ -535,11 +532,7 @@ class FakeServer {
         if (request.method == 'POST') ...{'what': what},
         ...body,
       });
-      final week = trainingChangeAnswer ?? {'weeks': trainingWeeks};
-      if (what == 'skip') {
-        return json({'askRestOfWeek': askRestOfWeekOnSkip, 'week': week});
-      }
-      return json(week);
+      return json(trainingChangeAnswer ?? {'weeks': trainingWeeks});
     }
 
     final sessionMatch = RegExp(r'^/api/v1/training/sessions/([^/]+)/match$')
@@ -3375,8 +3368,10 @@ Map<String, Object?> trainingWeekJson({
   List<Map<String, Object?>> sessions = const [],
   String? noteCode,
   bool lighter = false,
+  int skipsThisWeek = 0,
 }) => {
   'start': fakeDay(start),
+  'skipsThisWeek': skipsThisWeek,
   'end': fakeDay(start.add(const Duration(days: 6))),
   'plannedLoad': 0.0,
   'isLighterWeek': lighter,

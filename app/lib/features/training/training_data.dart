@@ -54,8 +54,8 @@ class TrainingData {
       )
       .guard(FailureAction.moveTrainingSession);
 
-  /// Skipping a session, or the rest of the week after it. The answer says whether to ask about the rest.
-  Future<Result<SkipTrainingSessionResponse?>> skip(
+  /// Skipping a session, or the rest of the week after it; the answer is the week as it is now.
+  Future<Result<TrainingWeeksResponse?>> skip(
     String sessionId, {
     String? reason,
     bool restOfWeek = false,

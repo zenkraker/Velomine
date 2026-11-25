@@ -428,7 +428,6 @@ Class | Method | HTTP request | Description
  - [ShareViewsResponse](doc//ShareViewsResponse.md)
  - [SharingResponse](doc//SharingResponse.md)
  - [SkipTrainingSessionRequest](doc//SkipTrainingSessionRequest.md)
- - [SkipTrainingSessionResponse](doc//SkipTrainingSessionResponse.md)
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)

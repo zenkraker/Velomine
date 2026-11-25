@@ -52,34 +52,22 @@ class SessionScreen extends ConsumerWidget {
     await ref.read(trainingViewModelProvider.notifier).move(session.id, day);
   }
 
-  /// The skip sheet: an optional reason, and the answer to "Skip the rest of this week?" once a second session goes.
+  /// The skip sheet: an optional reason, and — from the second skip of the week — the rest of the week as well.
   Future<void> _skip(
     BuildContext context,
     WidgetRef ref,
     TrainingWeekSession session,
   ) async {
+    final week = ref.read(trainingViewModelProvider).thisWeek;
     final answer = await showSheet<_Skip>(
       context,
-      builder: (_) => _SkipSheet(),
+      builder: (_) =>
+          _SkipSheet(offerRestOfWeek: (week?.skipsThisWeek ?? 0) >= 1),
     );
     if (answer == null) return;
-    final notifier = ref.read(trainingViewModelProvider.notifier);
-    final ask = await notifier.skip(session.id, reason: answer.reason);
-    if (!ask || !context.mounted) return;
-    final l10n = context.l10n;
-    final sure = await showSheet<bool>(
-      context,
-      builder: (context) => FormSheet(
-        title: l10n.trainingSkipRestOfWeek,
-        saveKey: const Key('skip-rest-of-week'),
-        saveLabel: l10n.trainingSkipAction,
-        onSave: () => Navigator.pop(context, true),
-        children: [Text(l10n.trainingSkipRestOfWeekBody)],
-      ),
-    );
-    if (sure ?? false) {
-      await notifier.skip(session.id, reason: answer.reason, restOfWeek: true);
-    }
+    await ref
+        .read(trainingViewModelProvider.notifier)
+        .skip(session.id, reason: answer.reason, restOfWeek: answer.restOfWeek);
   }
 
   @override
@@ -389,11 +377,12 @@ class _BlockRow extends StatelessWidget {
   }
 }
 
-/// The answer the skip sheet gives: the reason the rider chose, or none at all.
+/// The answer the skip sheet gives: the reason the rider chose, or none at all, and whether the rest of the week goes.
 class _Skip {
-  const _Skip(this.reason);
+  const _Skip(this.reason, {this.restOfWeek = false});
 
   final String? reason;
+  final bool restOfWeek;
 }
 
 /// The days left this week, each disabled with the reason it cannot take a session, with the nearest day that works
@@ -455,7 +444,10 @@ const _skipReasons = ['tired', 'ill', 'no_time', 'other'];
 
 /// The skip sheet: an optional reason and Skip. Skipping is not destructive, so it is not in the error colour.
 class _SkipSheet extends StatefulWidget {
-  const _SkipSheet();
+  const _SkipSheet({this.offerRestOfWeek = false});
+
+  /// True from the second skip of a week, when the sheet also offers to skip the rest of it.
+  final bool offerRestOfWeek;
 
   @override
   State<_SkipSheet> createState() => _SkipSheetState();
@@ -463,6 +455,7 @@ class _SkipSheet extends StatefulWidget {
 
 class _SkipSheetState extends State<_SkipSheet> {
   String? _reason;
+  bool _restOfWeek = false;
 
   @override
   Widget build(BuildContext context) {
@@ -471,7 +464,8 @@ class _SkipSheetState extends State<_SkipSheet> {
       title: l10n.trainingSkipTitle,
       saveKey: const Key('skip-session'),
       saveLabel: l10n.trainingSkipAction,
-      onSave: () => Navigator.pop(context, _Skip(_reason)),
+      onSave: () =>
+          Navigator.pop(context, _Skip(_reason, restOfWeek: _restOfWeek)),
       children: [
         Text(
           l10n.trainingSkipReasonLabel,
@@ -491,6 +485,16 @@ class _SkipSheetState extends State<_SkipSheet> {
               ),
           ],
         ),
+        if (widget.offerRestOfWeek)
+          CheckboxListTile(
+            key: const Key('skip-rest-of-week'),
+            contentPadding: EdgeInsets.zero,
+            value: _restOfWeek,
+            onChanged: (chosen) =>
+                setState(() => _restOfWeek = chosen ?? false),
+            title: Text(l10n.trainingSkipRestOfWeek),
+            subtitle: Text(l10n.trainingSkipRestOfWeekBody),
+          ),
       ],
     );
   }

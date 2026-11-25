@@ -30,9 +30,14 @@ void main() {
     WidgetTester tester, {
     required List<Map<String, Object?>> sessions,
     double width = 390,
+    int skipsThisWeek = 0,
   }) async {
     server.trainingWeeks = [
-      trainingWeekJson(start: monday, sessions: sessions),
+      trainingWeekJson(
+        start: monday,
+        sessions: sessions,
+        skipsThisWeek: skipsThisWeek,
+      ),
     ];
     tester.view.physicalSize = Size(width, 2400);
     tester.view.devicePixelRatio = 1;
@@ -233,29 +238,34 @@ void main() {
     expect(server.sessionActions.single['what'], 'skip');
     expect(server.sessionActions.single['reason'], 'tired');
     expect(server.sessionActions.single['restOfWeek'], false);
+    // The first skip of a week is one session: nothing is offered about the rest of it.
+    expect(find.byKey(const Key('skip-rest-of-week')), findsNothing);
   });
 
   testWidgets(
-    'SessionScreen_ShouldAskAboutTheRestOfTheWeek_WhenTheServerSaysItIsTheSecondSkip',
+    'SessionScreen_ShouldOfferTheRestOfTheWeek_WhenTheWeekAlreadySkippedOne',
     (tester) async {
-      server.askRestOfWeekOnSkip = true;
-      await openTraining(tester, sessions: [trainingSessionJson(date: today)]);
+      await openTraining(
+        tester,
+        sessions: [trainingSessionJson(date: today)],
+        skipsThisWeek: 1,
+      );
       await tester.tap(find.byKey(const Key('training-open-session')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('session-menu')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('skip-session')));
-      await tester.pumpAndSettle();
 
-      // "Skip the rest of this week?" is asked, and saying yes skips the week.
+      // The sheet itself asks "Skip the rest of this week?", and saying yes sends it with the skip.
       expect(find.text('Skip the rest of this week?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('skip-rest-of-week')));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('skip-session')));
+      await tester.pumpAndSettle();
 
-      expect(server.sessionActions, hasLength(2));
-      expect(server.sessionActions.last['restOfWeek'], true);
+      expect(server.sessionActions, hasLength(1));
+      expect(server.sessionActions.single['restOfWeek'], true);
     },
   );
 

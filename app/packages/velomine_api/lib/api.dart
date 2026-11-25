@@ -209,7 +209,6 @@ part 'model/share_view_response.dart';
 part 'model/share_views_response.dart';
 part 'model/sharing_response.dart';
 part 'model/skip_training_session_request.dart';
-part 'model/skip_training_session_response.dart';
 part 'model/smtp_status.dart';
 part 'model/sso_info_response.dart';
 part 'model/sso_status.dart';
