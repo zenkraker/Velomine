@@ -35,7 +35,6 @@ class SessionScreen extends ConsumerWidget {
     if (state.week.failure case final failure?) {
       return PageScaffold(
         parent: l10n.navTraining,
-        title: l10n.navTraining,
         children: [
           ErrorState(
             message: failureText(l10n, failure),
@@ -48,7 +47,6 @@ class SessionScreen extends ConsumerWidget {
     if (session == null) {
       return PageScaffold(
         parent: l10n.navTraining,
-        title: l10n.navTraining,
         children: state.week.idle || state.week.running
             ? const [LoadingState.rows()]
             : [Text(l10n.trainingSessionMissing)],

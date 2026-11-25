@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/widgets/loading_state.dart';
 
 import 'fake_server.dart';
 
@@ -95,7 +96,7 @@ void main() {
   );
 
   testWidgets(
-    'TrainingScreen_ShouldPickTheItaliansWordsTheServerSent_WhenTheLanguageIsItalian',
+    'TrainingScreen_ShouldShowTheServersItalianWords_WhenTheLanguageIsItalian',
     (tester) async {
       server = FakeServer();
       server.signInBrowser(server.add('rider@example.com', language: 'it'));
@@ -119,6 +120,42 @@ void main() {
       expect(find.text('Strong and steady 3×10'), findsNothing);
     },
   );
+
+  testWidgets(
+    'TrainingScreen_ShouldShowTheLoadingState_WhenTheWeekHasNotAnsweredYet',
+    (tester) async {
+      final gate = server.delayNext('/api/v1/training/week');
+      await openTraining(tester, sessions: [session()]);
+      expect(find.byType(LoadingState), findsOneWidget);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoadingState), findsNothing);
+      expect(find.byKey(const Key('training-today')), findsOneWidget);
+    },
+  );
+
+  testWidgets('TrainingScreen_ShouldOfferToTryAgain_WhenTheWeekDidNotArrive', (
+    tester,
+  ) async {
+    server.broken.add('/api/v1/training/week');
+    addTearDown(server.broken.clear);
+    await openTraining(tester, sessions: [session()]);
+
+    expect(find.byKey(const Key('training-error')), findsOneWidget);
+    expect(
+      find.text('Could not load your training plan (500). Try again.'),
+      findsOneWidget,
+    );
+
+    server.broken.remove('/api/v1/training/week');
+    await tester.tap(find.byKey(const Key('training-error')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('training-error')), findsNothing);
+    expect(find.byKey(const Key('training-today')), findsOneWidget);
+  });
 
   testWidgets('TrainingScreen_ShouldSayRestDay_WhenTodayHasNoSession', (
     tester,
