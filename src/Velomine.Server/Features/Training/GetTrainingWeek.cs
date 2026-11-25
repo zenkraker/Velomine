@@ -133,6 +133,7 @@ public static class TrainingWeekView
         CancellationToken ct)
     {
         var end = start.AddDays(6);
+        var todayWeekEnd = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek).AddDays(6);
         var rows = await db.TrainingSessions.AsNoTracking()
             .Where(s => s.UserId == user.Id && s.LocalDate >= start && s.LocalDate <= end)
             .OrderBy(s => s.LocalDate)
@@ -154,8 +155,9 @@ public static class TrainingWeekView
         {
             var recipe = Recipes.ByCode(s.Recipe);
             var targets = SessionTargets.For(recipe, s.Minutes, user.FtpW, threshold, hasPowerMeter);
-            // The move sheet offers every day left this week; a session already ridden, skipped or missed stays put.
-            var movable = s.LocalDate >= clock.Today
+            // The move sheet offers the days left this week; next week's preview is not moved from here, and a session
+            // already ridden, skipped or missed stays put.
+            var movable = s.LocalDate >= clock.Today && s.LocalDate <= todayWeekEnd
                 && s.State is TrainingSessionStates.Planned or TrainingSessionStates.Moved;
             return new TrainingWeekSession(
                 s.Id, s.LocalDate, s.Minutes, s.State, s.SkipReason, s.RideId,

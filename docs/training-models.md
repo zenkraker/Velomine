@@ -6,7 +6,7 @@ normative: **MUST** and **MUST NOT** are requirements, and a deviation is a bug,
 The code that implements it lives in `Features/Rides/TrainingLoad.cs`, `Features/Rides/Ingestion/{RideMetrics,
 PowerBests,EstimatedPower}.cs`, `Features/Analytics/` (`Readiness.cs` for F2), `Features/Accounts/HeartRates.cs` and
 `Features/Training/` (`Recipes.cs`, `SessionPlan.cs`, `SessionTargets.cs`, `WeekPlanner.cs` for the planned week,
-`SessionMatch.cs` for ticking and `SessionScore.cs` for L7).
+`SessionMatch.cs` for ticking, `SessionAdaptation.cs` for W6 and `SessionScore.cs` for L7).
 
 ## Rules for changing a model
 
@@ -523,7 +523,7 @@ finish; the gentle base recipes' feel-only targets; and the fifteen recipes them
 Auto training fills the rider's own riding days with the recipes above, one week at a time, and the rules of this section
 are what keeps a week safe. They are pure functions: the setup, the last weeks and today go in, the sessions come out
 (`Features/Training/WeekPlanner.cs`). The weeks the decisions owe this document are numbered as they are there: owed
-number 2 is W1, 3 is W2, 4 is W3, 5 is W4 and 6 is W5.
+number 2 is W1, 3 is W2, 4 is W3, 5 is W4, 6 is W5 and 9 is W6.
 
 **What a week is.** The week runs from the member's first day of the week (`MemberClock`, as everywhere). A session is
 written for each of the rider's riding days from today to the end of that week, and a week already met mid-way is
@@ -639,6 +639,56 @@ stronger while it rests"), and the gentle base block is never named at all — o
 come in. The lines are `TrainingNotes`; the names themselves are
 `docs/design/pages/training/TrainingNames.md`.
 
+### W6 — Making today easy
+
+Owed number 9. Today adapts to the morning, and the rider can change the day by hand.
+
+**The triggers.** A check-in that answers F2's worst on one of its items — **sleep 1**, **fatigue 5** or **soreness 5**
+(F2 keeps higher-is-better, so these are the bottom of the scale) — or a **readiness below 35**, which is F2's rest band,
+makes **today's hard session** an endurance one at once, when the check-in is saved. Without a check-in, or without the
+wellbeing terms accepted, **L2's form below −30** makes the next hard day easy in the night's own run. A triggering
+answer is taken as sleep first, then fatigue, then soreness, so one line is always the reason.
+
+**The replacement.** The hard session becomes **R02** — P4's zone 2 (56–75 % FTP in its main set) at **feel 3–4** — at
+**the same minutes**: the same length or shorter, never longer, so a long ride stays long and only gets easier.
+
+**Where the hard work goes.** The replaced hard session moves to the first **later free day** of the week where W1 still
+holds — it is not the day before or after another hard day, and not the day before or after the long ride — and where
+the week keeps **three loaded days at most**. A free day is one of the rider's own riding days. When no free day fits,
+the hard session is **dropped**: it is never piled onto another day, and a week is never made harder to keep it.
+
+**By hand.** "Make today easy" applies to today's session only — nothing else in the week moves — and "Back to the plan"
+undoes it the same day, unless a ride has ticked the session; it also takes back the copy a check-in had moved. **Move**
+takes a session to any day left this week, a day the rider rides or not; a hard day is refused the day before or after
+another hard day or the long ride, and the refusal names the nearest day that works. A session the rider moved is never
+rewritten at night. **Skip** takes an optional reason (tired, ill or injured, no time, other) and leaves the session on
+its own day; nothing is moved to a later day, and from the second skip of a week the app offers to skip the rest of it.
+
+**What the rider reads.** One line on the today card and the same words in an in-app notification ("Easy today: you
+slept poorly. The hard day moves to Thursday."). The reason is one of five: you slept poorly, you feel tired, you are
+sore, your form is low, or you asked for it. **A check-in's answers themselves are never returned to anyone but the
+owner through the plan** — the owner-only week endpoint carries the reason code and nothing else, so a coach with a
+wellbeing grant still reads check-in scores and RPE only.
+
+**Where Velomine defines its own score.** The trigger set, the endurance replacement and the rule that the hard work
+moves rather than piles up are Velomine's own. F2's rest band and L2's form floor are this document's numbers, and W1's
+spacing and loaded days are the planned week's.
+
+Code: `Features/Training/SessionAdaptation.cs` (the triggers, the replacement, the spacing and the night rule),
+`MakeSessionEasy.cs`, `MoveTrainingSession.cs`, `SkipTrainingSession.cs`, and the check-in's own
+`Features/Wellbeing/SaveCheckIn.cs`. Tests: `SessionAdaptationTests`,
+`SaveCheckIn_ShouldMakeTodaysHardSessionEndurance_WhenSleepIsTheWorstAnswer`,
+`SaveCheckIn_ShouldMakeTodayEasy_WhenTheReadinessIsInTheRestBand`,
+`SaveCheckIn_ShouldKeepTheLongRideLong_WhenItIsMadeEasy`,
+`TrainingPlanSweeper_ShouldMakeTheNextHardDayEasy_WhenTheFormIsBelowTheFloorAndThereIsNoCheckIn`,
+`MoveTrainingSession_ShouldRefuseTheDayBesideAnotherHardDay_WhenTheSessionIsHard`,
+`MoveTrainingSession_ShouldRefuseTheDayBesideTheLongRide_WhenTheSessionIsHard`,
+`MoveTrainingSession_ShouldLeaveAMovedSessionAlone_WhenTheNightWritesTheWeekAgain`,
+`SkipTrainingSession_ShouldKeepItOnItsOwnDay_WhenTheRiderSkipsIt`,
+`SkipTrainingSession_ShouldOfferTheRestOfTheWeek_WhenItIsTheSecondSkip`,
+`BackToTrainingPlan_ShouldBringTheMovedHardSessionBack_WhenACheckInMovedIt`,
+`GetTrainingWeek_ShouldNotReturnTheCheckInAnswers_WhenTheDayWasMadeEasy`.
+
 ## Estimated power
 
 For a ride with no power at all, outdoors or unknown, not an e-bike, with a rider weight:
@@ -689,6 +739,8 @@ another platform's number:
 - the planned week (W1–W5) — the hard-day and loaded-day limits, the cycle, the 65 % lighter week, the 10 % ramp and the
   gentle base block. The coaching practice behind their shape is cited, but no published algorithm plans a week this way,
   so none of it is presented as one.
+- making today easy (W6) — the trigger set, the endurance replacement and the rule that the hard work moves to another
+  day or goes. Its pieces are F2's band, L2's form floor and W1's spacing, but the adaptation itself is Velomine's own.
 
 ## Known non-compliance
 

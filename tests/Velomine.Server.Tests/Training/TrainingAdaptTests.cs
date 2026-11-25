@@ -339,6 +339,10 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
         // "Make today easy" is today's session only: nothing else in the week moved.
         Assert.Equal(2, week.Weeks[0].Sessions.Length);
         Assert.DoesNotContain(week.Weeks[0].Sessions, s => s.LocalDate != Tuesday && s.LocalDate != Thursday);
+        // The change says why in the inbox too, and the copy the change would have moved is not there.
+        Assert.Equal(TrainingEasyReasons.Asked, Assert.Single(await NotificationsAsync(member),
+            n => n.Type == NotificationTypes.TrainingEasy).Notice!.EasyReason);
+        Assert.Null(changed.EasyMovedTo);
     }
 
     [Fact]

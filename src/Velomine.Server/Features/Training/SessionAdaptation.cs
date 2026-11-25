@@ -296,9 +296,11 @@ public static class SessionAdaptation
         var training = await TrainingRange.LoadAsync(db, user.Id, clock, time, 1, ct);
         if (training.Days[^1].Form >= FormFloor) return;
 
+        // This week only: the preview of next week is not made easy by a form that is low this morning.
+        var weekEnd = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek).AddDays(6);
         var next = await db.TrainingSessions
             .Where(s => s.UserId == user.Id && s.LocalDate >= clock.Today
-                && s.LocalDate <= clock.Today.AddDays(7) && s.State == TrainingSessionStates.Planned)
+                && s.LocalDate <= weekEnd && s.State == TrainingSessionStates.Planned)
             .OrderBy(s => s.LocalDate).ThenBy(s => s.Id)
             .ToListAsync(ct);
         if (next.FirstOrDefault(s => Recipes.ByCode(s.Recipe).IsQuality) is not { } hard) return;
