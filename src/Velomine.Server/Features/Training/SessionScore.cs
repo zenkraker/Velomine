@@ -41,20 +41,31 @@ public static class SessionScore
     /// <summary>Time in target on the main set, when the ride carries the leading signal.</summary>
     public const double TargetWeight = 0.2;
 
-    /// <summary>Without the leading signal there is no time in target to measure: time and effort share it.</summary>
-    public const double TimeWeightWithoutTarget = 0.5;
-
-    /// <summary>See <see cref="TimeWeightWithoutTarget"/>.</summary>
-    public const double EffortWeightWithoutTarget = 0.5;
-
     /// <summary>A sample gap longer than this is not time ridden: the same cut every other stream sum makes.</summary>
     private const double MaxSampleGapS = 30;
 
-    /// <summary>The score, 0 to 100, from the three shares; the target one is null without the leading signal.</summary>
-    public static int Score(double timeShare, double effortShare, double? targetShare) =>
-        (int)Math.Round(100 * (targetShare is { } target
-            ? TimeWeight * timeShare + EffortWeight * effortShare + TargetWeight * target
-            : TimeWeightWithoutTarget * timeShare + EffortWeightWithoutTarget * effortShare));
+    /// <summary>
+    /// The score, 0 to 100, from the shares a ride can be measured on. A part the ride has no number for is left out
+    /// and its weight is shared among the others instead of counting as nothing done: without the leading signal, time
+    /// and effort are 50 % each; without an effort score at all — no power, no strap, no estimate and no rating — the
+    /// score is the time alone, so a rider without sensors still reaches 100.
+    /// </summary>
+    public static int Score(double timeShare, double? effortShare, double? targetShare)
+    {
+        var weighted = TimeWeight * timeShare;
+        var total = TimeWeight;
+        if (effortShare is { } effort)
+        {
+            weighted += EffortWeight * effort;
+            total += EffortWeight;
+        }
+        if (targetShare is { } target)
+        {
+            weighted += TargetWeight * target;
+            total += TargetWeight;
+        }
+        return (int)Math.Round(100 * weighted / total);
+    }
 
     /// <summary>
     /// How much of a plan a ride did: never more than all of it, so a longer or harder ride cannot pay for a part the
@@ -163,7 +174,10 @@ public static class SessionScore
 
             var target = signal is null ? null : new MainSetTarget(signal, (int)Math.Round(WeightedMiddle(plan.Main, bands)), average);
             results[session.Id] = new SessionResult(
-                Score(Share(ride.MovingS ?? 0, plan.PlannedMinutes * 60.0), effort is { } doneEffort ? Share(doneEffort, plan.PlannedEffort) : 0, share),
+                Score(
+                    Share(ride.MovingS ?? 0, plan.PlannedMinutes * 60.0),
+                    effort is { } doneEffort ? Share(doneEffort, plan.PlannedEffort) : null,
+                    share),
                 plan.PlannedMinutes,
                 Math.Round((ride.MovingS ?? 0) / 60.0, 1),
                 plan.PlannedEffort,

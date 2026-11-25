@@ -103,6 +103,43 @@ void main() {
   );
 
   testWidgets(
+    'TrainingScreen_ShouldCountASessionMadeEasyAsDone_WhenItWasRidden',
+    (tester) async {
+      // A session made easy on the day and ticked by a ride is done: the week counts it, and the row says so.
+      server.trainingWeek = {
+        'weeks': [
+          {
+            'start': '2026-11-02',
+            'end': '2026-11-08',
+            'plannedLoad': 120.0,
+            'isLighterWeek': false,
+            'note': null,
+            'sessions': [
+              trainingWeekSessionJson(
+                's-mon',
+                localDate: '2026-11-02',
+                state: 'easy',
+                rideId: 'r1',
+                result: sessionResultJson(score: 80),
+              ),
+              trainingWeekSessionJson(
+                's-thu',
+                localDate: '2026-11-05',
+                state: 'planned',
+              ),
+            ],
+          },
+        ],
+      };
+
+      await openTraining(tester);
+
+      expect(find.text('Easy instead'), findsOneWidget);
+      expect(find.text('1 of 2 done. Nicely on track.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'SessionScreen_ShouldShowTheScoreAndPlannedBesideDone_WhenTheSessionIsDone',
     (tester) async {
       server.trainingWeek = week();

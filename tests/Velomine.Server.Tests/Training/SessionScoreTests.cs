@@ -32,6 +32,23 @@ public sealed class SessionScoreTests
     }
 
     [Fact]
+    public void Score_ShouldBeTheTimeAlone_WhenTheRideHasNoEffortScore()
+    {
+        // No power, no strap, no estimate and no rating: nothing else can be measured, so a plan ridden is 100 and
+        // 94 % of it is 94, never the 47 that counting the missing effort as nothing would give.
+        Assert.Equal(100, SessionScore.Score(timeShare: 1, effortShare: null, targetShare: null));
+        Assert.Equal(94, SessionScore.Score(timeShare: 0.94, effortShare: null, targetShare: null));
+        Assert.Equal(0, SessionScore.Score(timeShare: 0, effortShare: null, targetShare: null));
+    }
+
+    [Fact]
+    public void Score_ShouldShareTheWeightsOutAmongThePartsThatExist_WhenOneOfThemIsMissing()
+    {
+        // The effort missing while the target is there: time is 40 of the 60 that can be measured, the target 20.
+        Assert.Equal(83, SessionScore.Score(timeShare: 1, effortShare: null, targetShare: 0.5));
+    }
+
+    [Fact]
     public void Score_ShouldRoundToTheNearestWholeNumber_WhenTheSharesAreNotExact()
     {
         // An hour of R05 planned at 57.8 ridden at a steady 150 W: effort 36, so 40 + 40 × 36 / 57.8 + 0 = 64.9.

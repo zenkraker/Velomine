@@ -145,7 +145,10 @@ class _ThisWeek extends StatelessWidget {
       for (final session in week.sessions)
         DateUtils.dateOnly(session.localDate): session,
     };
-    final done = week.sessions.where((s) => s.state == 'done').length;
+    // A session made easy and ridden is done: the week counts it, as the sweep's own "last week fully done" does.
+    final done = week.sessions
+        .where((s) => s.state == 'done' || s.state == 'easy')
+        .length;
     final total = week.sessions.length;
     return AppCard(
       key: const Key('training-week'),

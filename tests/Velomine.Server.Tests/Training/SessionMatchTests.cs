@@ -165,11 +165,26 @@ public sealed class SessionMatchTests
     }
 
     [Fact]
-    public void SessionMatch_ShouldNotAskOnAnEasySessionOfTheDay()
+    public void SessionMatch_ShouldTickAnEasySessionOfTheDay_WhenTheRideIsReady()
     {
+        // A session made easy is still the session the rider rides: the ride of its day is ticked against it, and the
+        // session stays easy — never asked about, and never thrown away.
         var easy = Session(Tuesday, TrainingSessionStates.Easy);
-        var beside = Session(Monday);
+        var ride = Ride(Tuesday, PlannedS, PlannedEffort);
 
-        Assert.Null(SessionMatch.Decide([easy, beside], [], Ride(Tuesday, PlannedS, PlannedEffort)));
+        var match = SessionMatch.Decide([easy], [ride], ride);
+
+        Assert.NotNull(match);
+        Assert.Equal(easy.Id, match.Value.Session.Id);
+        Assert.False(match.Value.Asks);
+    }
+
+    [Fact]
+    public void SessionMatch_ShouldNotAskAboutAnEasySessionOfAnotherDay_WhenTheRideIsBesideIt()
+    {
+        // The question moves the session to the ride's day, and a session made easy on its own day is not moved.
+        var easy = Session(Monday, TrainingSessionStates.Easy);
+
+        Assert.Null(SessionMatch.Decide([easy], [], Ride(Tuesday, PlannedS, PlannedEffort)));
     }
 }

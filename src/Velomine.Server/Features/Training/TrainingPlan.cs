@@ -71,6 +71,16 @@ public sealed class TrainingPlan
     /// </summary>
     public DateOnly[] LighterWeeks { get; set; } = [];
 
+    /// <summary>
+    /// The SHA-256 of the ride files the rider said were not the session asked about, newest last and at most
+    /// <see cref="DeclinedFilesKept"/>. Matching skips them: deleting a ride brings its hidden duplicate back to be read
+    /// as a new one, and "no" means no for that ride however it comes back.
+    /// </summary>
+    public string[] DeclinedFileHashes { get; set; } = [];
+
+    /// <summary>How many declined files are remembered: a ride is answered within days, and the list must stay small.</summary>
+    public const int DeclinedFilesKept = 20;
+
     /// <summary>False when the rider turned auto training off: the setup stays, so turning it on is pre-filled.</summary>
     public bool IsOn { get; set; }
 
@@ -128,6 +138,7 @@ public sealed class TrainingPlanConfiguration : IEntityTypeConfiguration<Trainin
             t.HasCheckConstraint("ck_training_plans_days", "cardinality(days) BETWEEN 1 AND 7 AND days <@ ARRAY[0,1,2,3,4,5,6]::integer[]");
             t.HasCheckConstraint("ck_training_plans_hours", "hours_per_week BETWEEN 1 AND 30");
             t.HasCheckConstraint("ck_training_plans_long_ride_day", "long_ride_day IS NULL OR long_ride_day BETWEEN 0 AND 6");
+            t.HasCheckConstraint("ck_training_plans_declined_files", "cardinality(declined_file_hashes) <= 20");
         });
         // One plan per member: the member is the key.
         b.HasKey(p => p.UserId);

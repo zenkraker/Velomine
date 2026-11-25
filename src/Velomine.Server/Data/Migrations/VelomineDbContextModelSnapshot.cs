@@ -2893,6 +2893,11 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer[]")
                         .HasColumnName("days");
 
+                    b.PrimitiveCollection<string[]>("DeclinedFileHashes")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("declined_file_hashes");
+
                     b.Property<string>("Goal")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2933,6 +2938,8 @@ namespace Velomine.Server.Data.Migrations
                     b.ToTable("plans", "training", t =>
                         {
                             t.HasCheckConstraint("ck_training_plans_days", "cardinality(days) BETWEEN 1 AND 7 AND days <@ ARRAY[0,1,2,3,4,5,6]::integer[]");
+
+                            t.HasCheckConstraint("ck_training_plans_declined_files", "cardinality(declined_file_hashes) <= 20");
 
                             t.HasCheckConstraint("ck_training_plans_goal", "goal IN ('aerobic', 'fitter', 'faster', 'event', 'keep')");
 

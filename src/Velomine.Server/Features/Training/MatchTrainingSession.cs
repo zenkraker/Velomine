@@ -59,6 +59,15 @@ public sealed class MatchTrainingSession(VelomineDbContext db, TimeProvider time
             return;
         }
 
+        if (req.Answer == SessionMatchAnswers.No)
+        {
+            // The file is remembered as declined, so a copy of it coming back — a restored duplicate after a delete,
+            // for one — is never asked about again.
+            var plan = await db.TrainingPlans.FirstOrDefaultAsync(p => p.UserId == userId, ct);
+            if (plan is not null && !plan.DeclinedFileHashes.Contains(ride.FileSha256))
+                plan.DeclinedFileHashes = [.. plan.DeclinedFileHashes.Append(ride.FileSha256).TakeLast(TrainingPlan.DeclinedFilesKept)];
+        }
+
         if (req.Answer == SessionMatchAnswers.Yes)
         {
             var clock = await MemberClock.ForAsync(db, userId, time, ct);

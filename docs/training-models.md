@@ -371,16 +371,24 @@ score = round(100 × (50 % × time + 50 % × effort))                   without 
 
 - The **leading signal** is what the rider could follow: power when the ride has power and every main-set block has a
   % FTP band (P4), else heart rate when the ride has heart rate and every main-set block has a % threshold-heart-rate
-  band (H5), else nothing. The gentle base recipes ride by feel, and a ride without a sensor carries neither signal:
-  without the leading signal the time in target cannot be measured, so time and effort share the score 50/50 and a
-  rider without sensors still reaches 100.
+  band (H5), else nothing. The gentle base recipes ride by feel, and a ride without a sensor carries neither signal.
 - **Time in target** counts the seconds whose sampled value is inside any of the main set's own bands, over the main
   set's planned minutes and capped at the whole set. A pause or a gap over 30 s is not time ridden.
+- **A part the ride has no number for is left out, and its weight is shared among the others.** Without the leading
+  signal the time in target cannot be measured, so time and effort are 50 % each. A ride with no effort score at all —
+  no power, no heart rate, no estimated TSS and no rating — is scored on its time alone, so a rider without sensors who
+  rode the plan still reaches 100; that ride is null in `doneEffort`, and it is the only case where the score has one
+  part.
 - A part of the plan is never worth more than the whole: a longer or harder ride does not pay for a block left out, and
   the score is never negative or above 100.
+- **The bands and the planned effort are the ones in use when the session is read**, not the ones in force when the
+  ride was: watts from today's FTP (P6), heart rate from today's threshold (H3), and L7's planned effort from those same
+  bands. A rider who raises their FTP therefore sees a finished session score differently against the same ride, which
+  is deliberate: a session is scored against the plan as the rider would read it now. It is also why the score is never
+  stored.
 
-**Where Velomine defines its own score.** The three weights, the 50/50 fallback and the cap at the whole plan are
-Velomine's own (owner, 24 Nov 2026). No other platform's execution or compliance score is this number and it MUST NOT be
+**Where Velomine defines its own score.** The three weights, how a missing part shares its weight with the others, and
+the cap at the whole plan are Velomine's own (owner, 24 Nov 2026). No other platform's execution or compliance score is this number and it MUST NOT be
 presented as one. It is the rider's private number: it MUST NOT be shown to anyone but the rider, or compared between
 riders. Code: `Features/Training/SessionScore.cs`, tests `SessionScoreTests` and `TrainingTickTests`.
 

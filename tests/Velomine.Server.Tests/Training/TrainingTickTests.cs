@@ -41,7 +41,8 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
 
     /// <summary>A rider with an FTP, a plan that is on, and one open session on the day.</summary>
     private static async Task<(TestMember Member, Guid SessionId)> RiderAsync(
-        TestApi api, DateOnly day, string recipe = "R05", int minutes = 60, int? ftpW = 250, int[]? days = null)
+        TestApi api, DateOnly day, string recipe = "R05", int minutes = 60, int? ftpW = 250, int[]? days = null,
+        bool on = true, string state = TrainingSessionStates.Planned)
     {
         var member = await api.NewMemberAsync("Rider");
         if (ftpW is { } ftp)
@@ -54,7 +55,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
             Goal = TrainingGoals.Fitter,
             Days = days ?? [1, 3, 5],
             HoursPerWeek = 6,
-            IsOn = true,
+            IsOn = on,
             LastPlannedFor = day,
             UpdatedAt = DateTimeOffset.UtcNow,
         });
@@ -66,7 +67,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
             Recipe = recipe,
             Minutes = minutes,
             BlockPercents = [91],
-            State = TrainingSessionStates.Planned,
+            State = state,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         db.TrainingSessions.Add(session);
@@ -348,6 +349,147 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
         var session = Assert.Single(document.RootElement.GetProperty("sessions").EnumerateArray());
         Assert.Equal(65, session.GetProperty("score").GetInt32());
         Assert.Equal(TrainingSessionStates.Done, session.GetProperty("state").GetString());
+    }
+
+
+    [Fact]
+    public async Task Week_ShouldScoreOneHundredOnTimeAlone_WhenTheRideHasNoSensorsAndNoRating()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day, recipe: "R14", minutes: 30);
+        // No meter, no strap, no estimate and no rating: nothing but the time can be measured, and the time was the
+        // plan. Half a score because the other half has no number would be the whole plan counted as half.
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 1800, NoPower: true, NoHeartRate: true)));
+
+        var session = Assert.Single((await WeekAsync(member)).Sessions);
+
+        Assert.NotNull(session.Result);
+        Assert.Null(session.Result!.DoneEffort);
+        Assert.Equal(100, session.Result.Score);
+        Assert.Null(session.Result.MainSet);
+    }
+
+    [Fact]
+    public async Task Session_ShouldNotTick_WhenAutoTrainingIsOffAndAnOldRideIsImported()
+    {
+        // Auto training off: the past sessions stay as history, and an import of last month must not write into them.
+        await using var api = await StartAsync(Now.AddDays(10));
+        var (member, sessionId) = await RiderAsync(api, Day, on: false);
+
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Planned, session.State);
+        Assert.Null(session.RideId);
+        Assert.Null(ride.Training);
+        Assert.DoesNotContain(await NotificationsAsync(member),
+            n => n.Type == NotificationTypes.TrainingSessionQuestion);
+    }
+
+    [Fact]
+    public async Task Session_ShouldTickAndStayEasy_WhenTheRideIsOnTheDayOfASessionMadeEasy()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day, state: TrainingSessionStates.Easy);
+
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(ride.Id, session.RideId);
+        // Made easy on the day is still the session the rider rode: it is ticked, and it stays easy.
+        Assert.Equal(TrainingSessionStates.Easy, session.State);
+    }
+
+    [Fact]
+    public async Task Session_ShouldTickOnTheSecondTry_WhenTheFirstSaveLosesTheSession()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+        await LoseFirstSessionUpdateAsync(api);
+
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        // The ride's save lost the session row it was changing — what the nightly planning does when it deletes and
+        // re-adds the day — and the matching was tried again afterwards, instead of the tick being thrown away.
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Done, session.State);
+        Assert.NotNull(session.RideId);
+    }
+
+    private static async Task LoseFirstSessionUpdateAsync(TestApi api)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        // The first update of a session lands on no row at all, which is what EF reports as a concurrency failure.
+        // A sequence, not a row: the save's transaction rolls back, and the marker has to survive it.
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE SEQUENCE training.update_once;
+            CREATE FUNCTION training.skip_one_update() RETURNS trigger AS $$
+            BEGIN
+                IF nextval('training.update_once') = 1 THEN RETURN NULL; END IF;
+                RETURN NEW;
+            END; $$ LANGUAGE plpgsql;
+            CREATE TRIGGER skip_one_update BEFORE UPDATE ON training.sessions
+            FOR EACH ROW EXECUTE FUNCTION training.skip_one_update();
+            """, Ct);
+    }
+
+    [Fact]
+    public async Task Question_ShouldNameTheSessionInTheRidersOwnLanguage_WhenTheMemberReadsItalian()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day.AddDays(-1));
+        (await member.Client.PutAsJsonAsync("/api/v1/accounts/me/language",
+            new SetMyLanguageRequest { Language = "it" }, Ct)).EnsureSuccessStatusCode();
+
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        // The email says the subject, so it is the Italian name of R05 ("Strong and steady" in English).
+        var notification = Assert.Single(await NotificationsAsync(member),
+            n => n.Type == NotificationTypes.TrainingSessionQuestion);
+        Assert.Equal("Forte e costante", notification.Subject);
+    }
+
+    [Fact]
+    public async Task Notifications_ShouldLoseTheQuestion_WhenTheRiderTurnsAutoTrainingOff()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+        Assert.NotNull((await SessionAsync(api, sessionId)).QuestionRideId);
+
+        (await member.Client.DeleteAsync("/api/v1/training/plan", Ct)).EnsureSuccessStatusCode();
+
+        // The questions go with the switch: the session of today and later is gone, and one on a past session has
+        // nothing left to be answered against. The ride page shows no card, and the inbox keeps no bare subject.
+        Assert.DoesNotContain(await NotificationsAsync(member),
+            n => n.Type == NotificationTypes.TrainingSessionQuestion);
+        Assert.Null((await member.Client.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!.Training);
+    }
+
+    [Fact]
+    public async Task Ride_ShouldNotBeAskedAboutAgain_WhenItsDuplicateIsReadAfterTheAnswerIsNo()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
+        var file = Fit(new FitSession(Start, 3600));
+        var first = await UploadAsync(member.Client, file, key: "first");
+        var copy = await UploadAsync(member.Client, file, key: "copy");
+        Assert.Equal("duplicate", copy.Status);
+
+        (await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{sessionId}/match",
+            new MatchTrainingSessionRequest { Id = sessionId, RideId = first.Id, Answer = SessionMatchAnswers.No }, Ct))
+            .EnsureSuccessStatusCode();
+
+        // Deleting the ride brings the hidden copy back to be read as a new ride: the same file is not asked about
+        // again, because the rider already said it was not this session.
+        (await member.Client.DeleteAsync($"/api/v1/rides/{first.Id}", Ct)).EnsureSuccessStatusCode();
+        var reread = await TestApi.WaitForReadAsync(member.Client, copy.Id);
+
+        Assert.Equal("ready", reread.Status);
+        Assert.Null(reread.Training);
+        Assert.DoesNotContain(await NotificationsAsync(member),
+            n => n.Type == NotificationTypes.TrainingSessionQuestion);
     }
 
     [Fact]
