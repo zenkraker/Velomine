@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Velomine.Server.Data;
 using Velomine.Server.Features.Accounts;
@@ -343,5 +344,51 @@ public sealed class CoachPlanTests(PostgresFixture postgres)
 
         // The rider's own club still reads it, so the answer is about the viewer and not a broken endpoint.
         Assert.Equal(HttpStatusCode.OK, (await first.Client.GetAsync(path, Ct)).StatusCode);
+    }
+
+    [Fact]
+    public async Task CoachPlan_ShouldIgnoreAGrantOfAnotherClub_WhenTheRiderHasOne()
+    {
+        await using var api = await StartAsync();
+        var coach = await NewRiderAsync(api, "Coach Rina");
+        var club = await TestClubs.CreateAsync(api, coach);
+        var rider = await NewRiderAsync(api, "Rider Luca");
+        await TestClubs.JoinAsync(rider, club);
+        await PlanWeekAsync(api, rider.Id);
+
+        // One account belongs to one club (`clubs.memberships` has one row per account, and leaving deletes the
+        // grants), so a reader never holds two memberships to tell apart. What the grant's own club defends against is
+        // a row left pointing at a club the rider is no longer in — inserted here the way a membership removed without
+        // its grants would leave it.
+        var other = await NewRiderAsync(api, "Other Owner");
+        var otherClub = await TestClubs.CreateAsync(api, other);
+        var grant = new ShareGrant
+        {
+            Id = Guid.NewGuid(),
+            MemberId = rider.Id,
+            ClubId = otherClub.Id,
+            DataType = DataTypes.Rides,
+            Audience = Audiences.Coaches,
+            UpdatedAt = Now,
+        };
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            db.ShareGrants.Add(grant);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        Assert.Equal(HttpStatusCode.NotFound, (await coach.Client.GetAsync(PlanPath(club, rider), Ct)).StatusCode);
+
+        // The same row pointing at the rider's own club reads: the club on the grant is the only difference.
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var stored = await db.ShareGrants.FirstAsync(g => g.Id == grant.Id, Ct);
+            stored.ClubId = club.Id;
+            await db.SaveChangesAsync(Ct);
+        }
+
+        Assert.Equal(HttpStatusCode.OK, (await coach.Client.GetAsync(PlanPath(club, rider), Ct)).StatusCode);
     }
 }

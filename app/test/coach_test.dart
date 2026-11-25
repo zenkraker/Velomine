@@ -506,6 +506,12 @@ void main() {
         await openAthletePlan(tester, width: width);
 
         expect(find.byKey(const Key('coach-plan')), findsOneWidget);
+        // Two cards across on a medium or a desktop window, one under the other on a phone.
+        final plan = tester.getTopLeft(find.byKey(const Key('coach-plan'))).dy;
+        final rides = tester
+            .getTopLeft(find.byKey(const Key('coach-rides-card')))
+            .dy;
+        expect(plan == rides, width >= 600);
         expect(tester.takeException(), isNull);
       },
     );
@@ -537,11 +543,13 @@ void main() {
       ),
       findsOneWidget,
     );
-    // "Skipped · no time" needs a reason; here the server sent none, so the state stands alone.
+    // The reason was withheld (the illness case without the wellbeing grant): the day reads "Skipped" once, in its
+    // badge, and keeps its length like every other day instead of saying the word twice.
     expect(
       find.descendant(of: card, matching: find.text('Skipped')),
-      findsWidgets,
+      findsOneWidget,
     );
+    expect(find.descendant(of: card, matching: find.text('1 h')), findsWidgets);
     // The score stays with the rider: the badge says Done and nothing more.
     expect(
       find.descendant(of: card, matching: find.textContaining('Done ·')),

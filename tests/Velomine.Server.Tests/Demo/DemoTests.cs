@@ -16,6 +16,7 @@ using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Server;
+using Velomine.Server.Features.Sharing;
 
 namespace Velomine.Server.Tests.Demo;
 
@@ -70,6 +71,12 @@ public sealed class DemoTests(PostgresFixture postgres)
             var rides = await client.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
             Assert.NotEmpty(rides!.Rides);
         }
+
+        // The coach's read of the plan is in the log the rider reads; the plan and the week themselves are story 6's.
+        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
+        var views = await rider.GetFromJsonAsync<ShareViewsResponse>("/api/v1/sharing/views", Ct);
+        var plan = Assert.Single(views!.Views, v => v.What == ViewKinds.Plan);
+        Assert.Equal("Giulia Rossi", plan.ViewerName);
     }
 
     [Fact]

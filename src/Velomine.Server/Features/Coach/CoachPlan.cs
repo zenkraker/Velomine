@@ -72,8 +72,8 @@ public sealed class GetCoachPlan(VelomineDbContext db, TimeProvider time)
         var canWellbeing = await SharingRules.CanViewAsync(
             db, req.ClubId, viewerId, req.UserId, DataTypes.Wellbeing, ct);
 
-        // Planned against done is the time alone: the effort of a ride is training load, which the rides grant does not
-        // carry to a coach who was not given analytics.
+        // Planned against done is the time alone: the card is time-only, as the story and the athlete page's mock-up
+        // say. Training load and the ride's effort score stay off it.
         var rideIds = rows.Where(s => s.RideId is not null).Select(s => s.RideId!.Value).ToList();
         var ridden = await db.Rides.AsNoTracking()
             .Where(r => rideIds.Contains(r.Id))

@@ -1880,6 +1880,30 @@ abstract class AppLocalizations {
   /// **'{planned} planned · {ridden} ridden'**
   String coachPlanPlannedRidden(String planned, String ridden);
 
+  /// No description provided for @coachPlanSkippedTired.
+  ///
+  /// In en, this message translates to:
+  /// **'Tired'**
+  String get coachPlanSkippedTired;
+
+  /// No description provided for @coachPlanSkippedIll.
+  ///
+  /// In en, this message translates to:
+  /// **'Ill or injured'**
+  String get coachPlanSkippedIll;
+
+  /// No description provided for @coachPlanSkippedNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No time'**
+  String get coachPlanSkippedNoTime;
+
+  /// No description provided for @coachPlanSkippedOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get coachPlanSkippedOther;
+
   /// No description provided for @routeNotShared.
   ///
   /// In en, this message translates to:
@@ -9619,30 +9643,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Missed'**
   String get trainingStateMissed;
-
-  /// No description provided for @trainingSkipReasonTired.
-  ///
-  /// In en, this message translates to:
-  /// **'Tired'**
-  String get trainingSkipReasonTired;
-
-  /// No description provided for @trainingSkipReasonIll.
-  ///
-  /// In en, this message translates to:
-  /// **'Ill or injured'**
-  String get trainingSkipReasonIll;
-
-  /// No description provided for @trainingSkipReasonNoTime.
-  ///
-  /// In en, this message translates to:
-  /// **'No time'**
-  String get trainingSkipReasonNoTime;
-
-  /// No description provided for @trainingSkipReasonOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get trainingSkipReasonOther;
 
   /// No description provided for @trainingOpenSession.
   ///

@@ -983,6 +983,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get coachPlanSkippedTired => 'Tired';
+
+  @override
+  String get coachPlanSkippedIll => 'Ill or injured';
+
+  @override
+  String get coachPlanSkippedNoTime => 'No time';
+
+  @override
+  String get coachPlanSkippedOther => 'Other';
+
+  @override
   String get routeNotShared => 'The athlete has not shared the route.';
 
   @override
@@ -5611,18 +5623,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trainingStateMissed => 'Missed';
-
-  @override
-  String get trainingSkipReasonTired => 'Tired';
-
-  @override
-  String get trainingSkipReasonIll => 'Ill or injured';
-
-  @override
-  String get trainingSkipReasonNoTime => 'No time';
-
-  @override
-  String get trainingSkipReasonOther => 'Other';
 
   @override
   String get trainingOpenSession => 'Open session';

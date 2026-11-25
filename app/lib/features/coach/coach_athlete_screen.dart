@@ -21,7 +21,9 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/section_card.dart';
+import '../../core/widgets/week_day_row.dart';
 import '../../core/units.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// One athlete as their coach sees them: shared summary, training load and recent rides.
 class CoachAthleteScreen extends ConsumerWidget {
@@ -75,10 +77,11 @@ class CoachAthleteScreen extends ConsumerWidget {
               message: failureText(l10n, failure),
               actionKey: const Key('coach-athlete-error'),
             ),
-          // Two columns on a desktop window, one below it, as the design's own grid collapses under 900 dp.
+          // Each shared part has its card, paired two by two on a wider window.
           CardGrid(
             key: const Key('coach-athlete-parts'),
             columns: 2,
+            tabletColumns: 2,
             children: [
               if (c.plan case final plan?) _CoachPlanCard(plan: plan),
               if (c.training case final training?) ...[
@@ -189,8 +192,8 @@ class _CoachPlanCard extends StatelessWidget {
   }
 }
 
-/// One planned day: the date, the session and how it went. A planned day carries no badge, as the Training page's
-/// week does: the name alone is the plan.
+/// One planned day, as the week's rows read it: [WeekDayRow] with the session's own detail line. A skipped day says why
+/// the rides grant carries; a skipped day whose reason is withheld says how long it was, like every other day.
 class _CoachPlanRow extends StatelessWidget {
   const _CoachPlanRow({required this.session});
 
@@ -199,14 +202,11 @@ class _CoachPlanRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final reason = trainingSkipReason(l10n, session.skipReason);
+    final reason = _coachPlanSkipReason(l10n, session.skipReason);
     final detail = switch (session) {
-      CoachPlanSession(state: 'skipped') => [
+      CoachPlanSession(state: 'skipped') when reason != null => [
         l10n.trainingStateSkipped,
-        if (reason != null) lowerFirst(reason),
+        lowerFirst(reason),
       ].join(' · '),
       CoachPlanSession(:final riddenMinutes?) => l10n.coachPlanPlannedRidden(
         sessionLength(session.minutes),
@@ -214,71 +214,38 @@ class _CoachPlanRow extends StatelessWidget {
       ),
       _ => sessionLength(session.minutes),
     };
-    final badge = session.state == 'planned'
-        ? null
-        : sessionStateWord(l10n, session.state);
 
-    return Container(
+    return WeekDayRow(
       key: Key(
         'coach-plan-${DateFormat('yyyy-MM-dd').format(session.localDate)}',
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
+      date: session.localDate,
+      title: trainingText(
+        l10n,
+        english: session.englishName,
+        italian: session.italianName,
       ),
-      child: Row(
-        spacing: AppSpacing.md,
-        children: [
-          SizedBox(
-            width: AppTraining.dateWidth,
-            child: Column(
-              children: [
-                Text(
-                  '${session.localDate.day}',
-                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  DateFormat.E(locale).format(session.localDate),
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trainingText(
-                    l10n,
-                    english: session.englishName,
-                    italian: session.italianName,
-                  ),
-                  style: text.bodyMedium,
-                ),
-                Text(
-                  detail,
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (badge != null)
-            AppBadge(
-              badge,
-              tone: session.state == 'done' || session.state == 'easy'
-                  ? AppBadgeTone.good
-                  : AppBadgeTone.neutral,
-            ),
-        ],
-      ),
+      detail: detail,
+      state: session.state == 'planned'
+          ? null
+          : sessionStateWord(l10n, session.state),
+      tone: session.state == 'done' || session.state == 'easy'
+          ? AppBadgeTone.good
+          : AppBadgeTone.neutral,
     );
   }
 }
+
+/// Why the rider skipped a session, in the coach's own words. Null when the server withheld it, which is the "Ill or
+/// injured" case without the wellbeing grant: the row then reads "Skipped" and its length.
+String? _coachPlanSkipReason(AppLocalizations l10n, String? reason) =>
+    switch (reason) {
+      'tired' => l10n.coachPlanSkippedTired,
+      'ill' => l10n.coachPlanSkippedIll,
+      'no_time' => l10n.coachPlanSkippedNoTime,
+      'other' => l10n.coachPlanSkippedOther,
+      _ => null,
+    };
 
 /// What a coach may see of wellbeing: daily scores and per-ride RPE, never the member's notes.
 class _CoachWellbeingCard extends StatelessWidget {

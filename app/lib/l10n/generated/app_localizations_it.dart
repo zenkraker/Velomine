@@ -990,6 +990,18 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get coachPlanSkippedTired => 'Stanchezza';
+
+  @override
+  String get coachPlanSkippedIll => 'Malattia o infortunio';
+
+  @override
+  String get coachPlanSkippedNoTime => 'Mancanza di tempo';
+
+  @override
+  String get coachPlanSkippedOther => 'Altro';
+
+  @override
   String get routeNotShared => 'L\'atleta non ha condiviso il percorso.';
 
   @override
@@ -5648,18 +5660,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get trainingStateMissed => 'Mancato';
-
-  @override
-  String get trainingSkipReasonTired => 'Stanchezza';
-
-  @override
-  String get trainingSkipReasonIll => 'Malattia o infortunio';
-
-  @override
-  String get trainingSkipReasonNoTime => 'Mancanza di tempo';
-
-  @override
-  String get trainingSkipReasonOther => 'Altro';
 
   @override
   String get trainingOpenSession => 'Apri la seduta';
