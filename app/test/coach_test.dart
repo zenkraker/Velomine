@@ -459,6 +459,7 @@ void main() {
   Future<void> openAthletePlan(
     WidgetTester tester, {
     List<Map<String, Object?>>? sessions,
+    double width = 1000,
   }) async {
     final athlete = server.add('athlete@example.com', name: 'Athlete Luca');
     server.sharingChoices['rides'] = 'coaches';
@@ -490,12 +491,24 @@ void main() {
             ),
           ],
     );
-    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.physicalSize = Size(width, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await openAthletes(tester);
     await tester.tap(find.byKey(Key('athlete-${athlete.id}')));
     await tester.pumpAndSettle();
+  }
+
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'CoachAthleteScreen_ShouldNotOverflow_WhenThePlanIsShownAtWidthIs${width.toInt()}',
+      (tester) async {
+        await openAthletePlan(tester, width: width);
+
+        expect(find.byKey(const Key('coach-plan')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
   testWidgets('CoachAthleteScreen_ShouldShowThePlan_WhenRidesAreShared', (

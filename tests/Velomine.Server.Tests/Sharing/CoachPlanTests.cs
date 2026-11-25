@@ -48,7 +48,10 @@ public sealed class CoachPlanTests(PostgresFixture postgres)
         (await rider.Client.PutAsJsonAsync("/api/v1/sharing",
             new UpdateSharingRequest
             {
-                Rides = Audiences.Coaches, Analytics = "none", Routes = "none", Wellbeing = "none",
+                Rides = Audiences.Coaches,
+                Analytics = "none",
+                Routes = "none",
+                Wellbeing = "none",
             }, Ct)).EnsureSuccessStatusCode();
 
     /// <summary>
@@ -187,7 +190,10 @@ public sealed class CoachPlanTests(PostgresFixture postgres)
         (await rider.Client.PutAsJsonAsync("/api/v1/sharing",
             new UpdateSharingRequest
             {
-                Rides = Audiences.Coaches, Analytics = "none", Routes = "none", Wellbeing = Audiences.Coaches,
+                Rides = Audiences.Coaches,
+                Analytics = "none",
+                Routes = "none",
+                Wellbeing = Audiences.Coaches,
             }, Ct)).EnsureSuccessStatusCode();
 
         var plan = await coach.Client.GetFromJsonAsync<CoachPlanResponse>(PlanPath(club, rider), Ct);
@@ -250,7 +256,10 @@ public sealed class CoachPlanTests(PostgresFixture postgres)
         (await rider.Client.PutAsJsonAsync("/api/v1/sharing",
             new UpdateSharingRequest
             {
-                Rides = "none", Analytics = "none", Routes = "none", Wellbeing = "none",
+                Rides = "none",
+                Analytics = "none",
+                Routes = "none",
+                Wellbeing = "none",
             }, Ct)).EnsureSuccessStatusCode();
 
         Assert.Equal(HttpStatusCode.NotFound, (await coach.Client.GetAsync(PlanPath(club, rider), Ct)).StatusCode);

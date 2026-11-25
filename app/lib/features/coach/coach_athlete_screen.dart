@@ -75,11 +75,10 @@ class CoachAthleteScreen extends ConsumerWidget {
               message: failureText(l10n, failure),
               actionKey: const Key('coach-athlete-error'),
             ),
-          // Each shared part has its card, paired two by two on a wider window.
+          // Two columns on a desktop window, one below it, as the design's own grid collapses under 900 dp.
           CardGrid(
             key: const Key('coach-athlete-parts'),
             columns: 2,
-            tabletColumns: 2,
             children: [
               if (c.plan case final plan?) _CoachPlanCard(plan: plan),
               if (c.training case final training?) ...[
@@ -171,7 +170,9 @@ class _CoachPlanCard extends StatelessWidget {
           [
             trainingGoalName(l10n, plan.goal),
             l10n.trainingHoursLine(plan.hoursPerWeek),
-            l10n.coachPlanDone(done, plan.sessions.length),
+            // A week the planner has not written yet has no count to give.
+            if (plan.sessions.isNotEmpty)
+              l10n.coachPlanDone(done, plan.sessions.length),
           ].join(' · '),
           key: const Key('coach-plan-summary'),
           style: text.bodyMedium,
@@ -218,7 +219,9 @@ class _CoachPlanRow extends StatelessWidget {
         : sessionStateWord(l10n, session.state);
 
     return Container(
-      key: Key('coach-plan-${session.localDate.toIso8601String()}'),
+      key: Key(
+        'coach-plan-${DateFormat('yyyy-MM-dd').format(session.localDate)}',
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
