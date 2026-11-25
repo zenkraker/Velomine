@@ -17,6 +17,7 @@ Rules for code, tests, dependencies, tooling, CI and deployment in this reposito
 | `docs/development.md` | How to set up and use the development environment |
 | `docs/demo.md` | How the public demo is deployed, checked and backed up |
 | `docs/stories/` | User stories for work in progress, written for agents in the format its `README.md` gives; a file is deleted when its work ships |
+| `docs/agents/` | Where the engineering skills find the issue tracker (the stories above), the triage roles and the layout of the domain docs; indexed by the `## Agent skills` block in `CLAUDE.md` |
 | `docs/dependencies/` | Background evaluations of community libraries |
 | `docs/training-models.md` | Every training, load and physiology formula, its constants and its source. Binding: the code must match it |
 | `README.md` | What Velomine is and how to run it |

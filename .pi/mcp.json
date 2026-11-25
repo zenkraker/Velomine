@@ -31,7 +31,8 @@
         "namespaces=instance,rdb,dns,object,iam,registry,vpc"
       ],
       "exposure": "deferred",
-      "description": "Read-only Scaleway: the hosting resources"
+      "description": "Read-only Scaleway: the hosting resources",
+      "enabled": false
     }
   }
 }
