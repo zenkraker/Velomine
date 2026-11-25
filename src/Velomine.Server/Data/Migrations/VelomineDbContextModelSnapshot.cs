@@ -1884,6 +1884,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("subject");
 
+                    b.Property<Guid?>("TrainingSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("training_session_id");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1911,6 +1915,9 @@ namespace Velomine.Server.Data.Migrations
 
                     b.HasIndex("RideId")
                         .HasDatabaseName("ix_notifications_ride_id");
+
+                    b.HasIndex("TrainingSessionId")
+                        .HasDatabaseName("ix_notifications_training_session_id");
 
                     b.HasIndex("UserId", "CreatedAt")
                         .HasDatabaseName("ix_notifications_user_id_created_at");
@@ -2924,6 +2931,10 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("long_ride_day");
 
+                    b.Property<DateOnly?>("RemindedFor")
+                        .HasColumnType("date")
+                        .HasColumnName("reminded_for");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -2965,6 +2976,14 @@ namespace Velomine.Server.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateOnly?>("EasyMovedTo")
+                        .HasColumnType("date")
+                        .HasColumnName("easy_moved_to");
+
+                    b.Property<string>("EasyReason")
+                        .HasColumnType("text")
+                        .HasColumnName("easy_reason");
+
                     b.Property<DateOnly>("LocalDate")
                         .HasColumnType("date")
                         .HasColumnName("local_date");
@@ -2972,6 +2991,10 @@ namespace Velomine.Server.Data.Migrations
                     b.Property<int>("Minutes")
                         .HasColumnType("integer")
                         .HasColumnName("minutes");
+
+                    b.Property<string>("OriginalRecipe")
+                        .HasColumnType("text")
+                        .HasColumnName("original_recipe");
 
                     b.Property<Guid?>("QuestionRideId")
                         .HasColumnType("uuid")
@@ -3018,7 +3041,11 @@ namespace Velomine.Server.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_training_sessions_blocks", "cardinality(block_percents) BETWEEN 1 AND 20");
 
+                            t.HasCheckConstraint("ck_training_sessions_easy_reason", "easy_reason IS NULL OR easy_reason IN ('slept_poorly', 'tired', 'sore', 'form_low', 'asked')");
+
                             t.HasCheckConstraint("ck_training_sessions_minutes", "minutes BETWEEN 1 AND 1440");
+
+                            t.HasCheckConstraint("ck_training_sessions_original_recipe", "original_recipe IS NULL OR length(original_recipe) BETWEEN 2 AND 8");
 
                             t.HasCheckConstraint("ck_training_sessions_recipe", "length(recipe) BETWEEN 2 AND 8");
 
@@ -3505,6 +3532,12 @@ namespace Velomine.Server.Data.Migrations
                         .HasForeignKey("RideId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_notifications_rides_ride_id");
+
+                    b.HasOne("Velomine.Server.Features.Training.TrainingSession", null)
+                        .WithMany()
+                        .HasForeignKey("TrainingSessionId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_notifications_sessions_training_session_id");
 
                     b.HasOne("Velomine.Server.Features.Accounts.User", null)
                         .WithMany()

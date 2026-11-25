@@ -127,4 +127,34 @@
   <data name="TrainingSessionQuestion" xml:space="preserve">
     <value>Una tua uscita potrebbe essere la seduta {0}. Rispondi in Velomine.</value>
   </data>
+  <data name="TrainingToday" xml:space="preserve">
+    <value>Oggi: {0}.</value>
+  </data>
+  <data name="TrainingEasy" xml:space="preserve">
+    <value>Oggi facile: {0}.</value>
+  </data>
+  <data name="TrainingEasyMoved" xml:space="preserve">
+    <value>Il giorno duro si sposta a {0}.</value>
+  </data>
+  <data name="TrainingMoved" xml:space="preserve">
+    <value>{0} si sposta a {1}.</value>
+  </data>
+  <data name="TrainingSkipped" xml:space="preserve">
+    <value>{0} di {1} è saltata.</value>
+  </data>
+  <data name="ReasonSleptPoorly" xml:space="preserve">
+    <value>hai dormito male</value>
+  </data>
+  <data name="ReasonTired" xml:space="preserve">
+    <value>ti senti stanco</value>
+  </data>
+  <data name="ReasonSore" xml:space="preserve">
+    <value>hai i muscoli indolenziti</value>
+  </data>
+  <data name="ReasonFormLow" xml:space="preserve">
+    <value>la tua forma è bassa</value>
+  </data>
+  <data name="ReasonAsked" xml:space="preserve">
+    <value>hai chiesto un giorno più facile</value>
+  </data>
 </root>

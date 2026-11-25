@@ -187,13 +187,18 @@ public static class SessionMatch
     {
         session.RideId = null;
         session.QuestionRideId = null;
-        // A session made easy stays made easy; one still waiting goes back to open, missed once its day has passed.
-        if (session.State != TrainingSessionStates.Easy)
+        // A session made easy stays made easy and a moved one stays on the day the rider gave it; one still waiting
+        // goes back to open, missed once its day has passed.
+        if (session.State is not (TrainingSessionStates.Easy or TrainingSessionStates.Moved))
             session.State = session.LocalDate < clock.Today ? TrainingSessionStates.Missed : TrainingSessionStates.Planned;
     }
 
-    /// <summary>A session still waiting for a ride: planned, or missed because its day went by open.</summary>
-    public static bool IsOpen(string state) => state is TrainingSessionStates.Planned or TrainingSessionStates.Missed;
+    /// <summary>
+    /// A session still waiting for a ride: planned, missed because its day went by open, or moved by the rider to
+    /// another day of this week.
+    /// </summary>
+    public static bool IsOpen(string state) =>
+        state is TrainingSessionStates.Planned or TrainingSessionStates.Missed or TrainingSessionStates.Moved;
 
     /// <summary>
     /// A session a ride of its own day ticks: one still waiting, or one made easy that day, which is the session the

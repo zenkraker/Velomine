@@ -32,6 +32,8 @@ public static class WeekPlanning
             await WeekAsync(db, user, plan, clock, time, weekStart.AddDays(7), weekStart.AddDays(7), ct);
         plan.LastPlannedFor = clock.Today;
         await db.SaveChangesAsync(ct);
+        // The night's own rule: a form that is still low, with no check-in to say why, makes the next hard day easy.
+        await SessionAdaptation.NightAsync(db, user, plan, clock, time, ct);
     }
 
     /// <summary>Plans one week from <paramref name="from"/> and replaces the days the sweep may rewrite.</summary>
@@ -209,20 +211,23 @@ public sealed class TrainingPlanSweeper(
         // The operator's switch: off, nothing is planned and the stored plans stay exactly as they are.
         if (!options.Value.AutoEnabled) return;
 
-        List<Guid> due;
+        List<(Guid UserId, DateOnly? LastPlannedFor, DateOnly? RemindedFor)> plans;
         await using (var scope = scopes.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
             var time = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-            // A local date is at most a day from UTC's, so this reads every member whose day may have passed the plan's.
+            // A local date is at most a day from UTC's, so this reads every member whose day may have passed the plan's
+            // or whose 07:00 may have come.
             var utcToday = DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime);
-            due = await db.TrainingPlans.AsNoTracking()
-                .Where(p => p.IsOn && (p.LastPlannedFor == null || p.LastPlannedFor < utcToday.AddDays(2)))
-                .Select(p => p.UserId)
+            plans = await db.TrainingPlans.AsNoTracking()
+                .Where(p => p.IsOn && (
+                    p.LastPlannedFor == null || p.LastPlannedFor < utcToday.AddDays(2)
+                    || p.RemindedFor == null || p.RemindedFor < utcToday.AddDays(2)))
+                .Select(p => new ValueTuple<Guid, DateOnly?, DateOnly?>(p.UserId, p.LastPlannedFor, p.RemindedFor))
                 .ToListAsync(ct);
         }
 
-        foreach (var userId in due)
+        foreach (var (userId, lastPlannedFor, remindedFor) in plans)
         {
             try
             {
@@ -231,6 +236,8 @@ public sealed class TrainingPlanSweeper(
                     scope.ServiceProvider.GetRequiredService<VelomineDbContext>(),
                     scope.ServiceProvider.GetRequiredService<TimeProvider>(),
                     userId,
+                    lastPlannedFor,
+                    remindedFor,
                     ct);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -242,14 +249,22 @@ public sealed class TrainingPlanSweeper(
     }
 
     private static async Task PlanOneAsync(
-        VelomineDbContext db, TimeProvider time, Guid userId, CancellationToken ct)
+        VelomineDbContext db, TimeProvider time, Guid userId, DateOnly? lastPlannedFor, DateOnly? remindedFor,
+        CancellationToken ct)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
         var plan = await db.TrainingPlans.FirstOrDefaultAsync(p => p.UserId == userId, ct);
         if (user is null || plan is null || !plan.IsOn) return;
 
         var clock = MemberClock.For(user.TimeZone, user.FirstDayOfWeek, time);
-        if (plan.LastPlannedFor is { } written && written >= clock.Today) return;
-        await WeekPlanning.PlanAsync(db, user, plan, clock, time, ct);
+        if (lastPlannedFor is not { } written || written < clock.Today)
+        {
+            await WeekPlanning.PlanAsync(db, user, plan, clock, time, ct);
+            // The night may have changed today's session, so the reminder reads what the week now holds.
+            remindedFor = plan.RemindedFor;
+        }
+
+        if (remindedFor is null || remindedFor < clock.Today)
+            await SessionAdaptation.RemindAsync(db, user, plan, clock, time, ct);
     }
 }

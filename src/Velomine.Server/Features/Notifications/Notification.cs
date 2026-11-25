@@ -76,6 +76,18 @@ public static class NotificationTypes
     /// Refers to the ride; the session it asks about comes with the list, and an answer takes the notification away.
     /// </summary>
     public const string TrainingSessionQuestion = "training_session_question";
+
+    /// <summary>The day's session, announced at 07:00 the rider's time on a session day. Refers to that session.</summary>
+    public const string TrainingToday = "training_today";
+
+    /// <summary>Today's hard session was made easy, by a check-in, by a low form at night or by the rider. Refers to it.</summary>
+    public const string TrainingEasy = "training_easy";
+
+    /// <summary>The rider moved a session to another day of this week. Refers to it, on its new day.</summary>
+    public const string TrainingMoved = "training_moved";
+
+    /// <summary>The rider skipped a session, with the reason they chose when they gave one. Refers to it.</summary>
+    public const string TrainingSkipped = "training_skipped";
 }
 
 /// <summary>
@@ -117,6 +129,10 @@ public static class NotificationKinds
         NotificationTypes.HeartRateMeasured,
         NotificationTypes.HeartRateSuggested,
         NotificationTypes.TrainingSessionQuestion,
+        NotificationTypes.TrainingToday,
+        NotificationTypes.TrainingEasy,
+        NotificationTypes.TrainingMoved,
+        NotificationTypes.TrainingSkipped,
     ];
 
     /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>
@@ -150,6 +166,9 @@ public sealed class Notification
     /// <summary>A club ride it is about; its title is the subject.</summary>
     public Guid? PlannedRideId { get; set; }
 
+    /// <summary>The planned session a training notification is about; null when the session has gone.</summary>
+    public Guid? TrainingSessionId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? ReadAt { get; set; }
@@ -175,6 +194,9 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         n.HasOne<BikeComponent>().WithMany().HasForeignKey(x => x.ComponentId).OnDelete(DeleteBehavior.Cascade);
         n.HasOne<Velomine.Server.Features.Clubs.PlannedRide>().WithMany().HasForeignKey(x => x.PlannedRideId)
             .OnDelete(DeleteBehavior.Cascade);
+        // The week is rewritten every night, so a training notification keeps its words and only loses the session.
+        n.HasOne<Velomine.Server.Features.Training.TrainingSession>().WithMany()
+            .HasForeignKey(x => x.TrainingSessionId).OnDelete(DeleteBehavior.SetNull);
 
         n.HasIndex(x => new { x.UserId, x.CreatedAt });
         n.HasIndex(x => x.RideId);
@@ -182,5 +204,6 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         n.HasIndex(x => x.ComponentId);
         n.HasIndex(x => x.AboutUserId);
         n.HasIndex(x => x.PlannedRideId);
+        n.HasIndex(x => x.TrainingSessionId);
     }
 }

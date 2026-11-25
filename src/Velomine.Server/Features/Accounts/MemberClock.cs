@@ -32,6 +32,10 @@ public sealed record MemberClock(TimeZoneInfo Zone, DayOfWeek FirstDayOfWeek, Da
     public DateOnly LocalDateOf(DateTimeOffset start, int? utcOffsetMinutes) => utcOffsetMinutes is { } offset
         ? DateOnly.FromDateTime(start.UtcDateTime.AddMinutes(offset))
         : DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(start, Zone).DateTime);
+
+    /// <summary>The member's own clock time, for a rule written in their day: "at 07:00 rider time".</summary>
+    public TimeOnly TimeOf(TimeProvider time) =>
+        TimeOnly.FromDateTime(TimeZoneInfo.ConvertTime(time.GetUtcNow(), Zone).DateTime);
 }
 
 /// <summary>Days of the week as the API spells them.</summary>

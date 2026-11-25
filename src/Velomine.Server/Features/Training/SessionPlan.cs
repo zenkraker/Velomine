@@ -36,6 +36,10 @@ public static class SessionPlan
     /// <summary>The minutes a stored session plans, which is the day's minutes unless the recipe had to fall back.</summary>
     public static int PlannedMinutes(string recipe, int minutes) => For(Recipes.ByCode(recipe), minutes).Blocks.Sum(b => b.Minutes);
 
+    /// <summary>The block percentages a session stores: the middle of each block's band, as a whole percent.</summary>
+    public static int[] Percents(IEnumerable<PlannedBlock> blocks) =>
+        [.. blocks.Select(b => (int)Math.Round(Intensity(b.Block) * 100))];
+
     /// <summary>
     /// A block's intensity factor: the middle of its % FTP band (the drafts work their TSS from the aim inside the
     /// zone), or the middle of its feel band over 7 where it has no FTP target, because an hour ridden at feel 7 is one
