@@ -145,7 +145,7 @@ public static class SessionAdaptation
         var today = clock.Today;
         var end = Periods.StartOf(moving.LocalDate, Periods.Week, clock.FirstDayOfWeek).AddDays(6);
         var days = new List<MoveDay>();
-        for (var date = today > moving.LocalDate ? today : moving.LocalDate; date <= end; date = date.AddDays(1))
+        for (var date = today; date <= end; date = date.AddDays(1))
         {
             if (date == moving.LocalDate) continue;
             var refusal = Refusal(week, moving, date);

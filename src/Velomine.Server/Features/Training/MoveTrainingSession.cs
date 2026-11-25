@@ -53,6 +53,7 @@ public sealed class MoveTrainingSession(VelomineDbContext db, TimeProvider time)
         var weekStart = Periods.StartOf(clock.Today, Periods.Week, clock.FirstDayOfWeek);
         var weekEnd = weekStart.AddDays(6);
         if (session.State is not (TrainingSessionStates.Planned or TrainingSessionStates.Moved)
+            || session.LocalDate < clock.Today
             || req.LocalDate < clock.Today || req.LocalDate > weekEnd || req.LocalDate == session.LocalDate)
         {
             AddError("Move a session still to be ridden to another day of this week.");
