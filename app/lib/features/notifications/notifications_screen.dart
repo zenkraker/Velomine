@@ -117,7 +117,11 @@ class NotificationsScreen extends ConsumerWidget {
     'ftp_suggested' ||
     'heart_rate_measured' ||
     'heart_rate_suggested' ||
-    'training_session_question' => 'rides',
+    'training_session_question' ||
+    'training_today' ||
+    'training_easy' ||
+    'training_moved' ||
+    'training_skipped' => 'rides',
     'club_join_request' ||
     'club_join_approved' ||
     'club_join_declined' => 'club',
@@ -179,7 +183,11 @@ class _NotificationTile extends StatelessWidget {
     'power_record' => Icons.emoji_events_outlined,
     'ftp_suggested' => Icons.speed_outlined,
     'heart_rate_measured' || 'heart_rate_suggested' => Icons.favorite_border,
-    'training_session_question' => Icons.event_available_outlined,
+    'training_session_question' ||
+    'training_today' => Icons.event_available_outlined,
+    'training_easy' => Icons.spa_outlined,
+    'training_moved' => Icons.event_outlined,
+    'training_skipped' => Icons.skip_next_outlined,
     'signup_waiting' => Icons.person_add_alt,
     'part_soon' || 'part_worn' => Icons.build_outlined,
     'club_join_request' => Icons.person_add_alt,

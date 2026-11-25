@@ -349,6 +349,10 @@ class ApiClient {
           return MatchTrainingSessionRequest.fromJson(value);
         case 'MeResponse':
           return MeResponse.fromJson(value);
+        case 'MoveDay':
+          return MoveDay.fromJson(value);
+        case 'MoveTrainingSessionRequest':
+          return MoveTrainingSessionRequest.fromJson(value);
         case 'MyClubResponse':
           return MyClubResponse.fromJson(value);
         case 'MyJoinRequestResponse':
@@ -499,6 +503,10 @@ class ApiClient {
           return ShareViewsResponse.fromJson(value);
         case 'SharingResponse':
           return SharingResponse.fromJson(value);
+        case 'SkipTrainingSessionRequest':
+          return SkipTrainingSessionRequest.fromJson(value);
+        case 'SkipTrainingSessionResponse':
+          return SkipTrainingSessionResponse.fromJson(value);
         case 'SmtpStatus':
           return SmtpStatus.fromJson(value);
         case 'SsoInfoResponse':
@@ -531,6 +539,8 @@ class ApiClient {
           return TrainingResponse.fromJson(value);
         case 'TrainingRideMatch':
           return TrainingRideMatch.fromJson(value);
+        case 'TrainingSessionNotice':
+          return TrainingSessionNotice.fromJson(value);
         case 'TrainingWeek':
           return TrainingWeek.fromJson(value);
         case 'TrainingWeekSession':

@@ -249,11 +249,20 @@ class FakeServer {
   /// Every answer the app posted to a session's question, newest last: session, ride and yes/no.
   final sessionAnswers = <Map<String, Object?>>[];
 
+  /// Every change the rider made to a session by hand: its id, what was asked and what was sent with it.
+  final sessionActions = <Map<String, Object?>>[];
+
+  /// The week a change answers with; null answers the week the test set up, unchanged.
+  Map<String, Object?>? trainingChangeAnswer;
+
   /// The last setup the app sent, so a test can check what Start saved.
   Map<String, Object?>? lastTrainingSave;
 
   /// The weeks GET /training/week answers: this week, and next week as the preview on the week's last day.
   List<Map<String, Object?>> trainingWeeks = const [];
+
+  /// What a skip answers to "Skip the rest of this week?"; the app asks when the server says so.
+  bool askRestOfWeekOnSkip = false;
 
   /// The goal the server suggests, and the reason code it gives for it.
   String suggestedTrainingGoal = 'fitter';
@@ -509,6 +518,28 @@ class FakeServer {
         return http.Response('{"title":"Not found."}', 404);
       }
       return json(trainingWeek ?? {'weeks': trainingWeeks});
+    }
+
+    // A session made easy, put back, moved or skipped. The answer is the week as it now stands.
+    final sessionAction = RegExp(
+      r'^/api/v1/training/sessions/([^/]+)/(easy|move|skip)$',
+    ).firstMatch(path);
+    if (sessionAction != null) {
+      final body = request.body.isEmpty
+          ? <String, Object?>{}
+          : jsonDecode(request.body) as Map<String, Object?>;
+      final what = sessionAction.group(2)!;
+      sessionActions.add({
+        'sessionId': sessionAction.group(1),
+        if (request.method == 'DELETE') ...{'what': 'back'},
+        if (request.method == 'POST') ...{'what': what},
+        ...body,
+      });
+      final week = trainingChangeAnswer ?? {'weeks': trainingWeeks};
+      if (what == 'skip') {
+        return json({'askRestOfWeek': askRestOfWeekOnSkip, 'week': week});
+      }
+      return json(week);
     }
 
     final sessionMatch = RegExp(r'^/api/v1/training/sessions/([^/]+)/match$')
@@ -3024,12 +3055,17 @@ Map<String, Object?> trainingWeekSessionJson(
   String italianName = 'Forte e costante',
   String englishLine = 'Long efforts just below your limit.',
   String italianLine = 'Sforzi lunghi appena sotto il limite.',
+  String? skipReason,
+  List<Map<String, Object?>> move = const [],
+  String? easyReason,
+  String? easyMovedTo,
+  bool canMakeEasy = false,
 }) => {
   'id': id,
   'localDate': localDate,
   'minutes': minutes,
   'state': state,
-  'skipReason': null,
+  'skipReason': skipReason,
   'rideId': rideId,
   'recipe': 'R05',
   'technicalName': 'Sweet spot',
@@ -3037,6 +3073,10 @@ Map<String, Object?> trainingWeekSessionJson(
   'italianName': italianName,
   'englishLine': englishLine,
   'italianLine': italianLine,
+  'move': move,
+  'easyReason': easyReason,
+  'easyMovedTo': easyMovedTo,
+  'canMakeEasy': canMakeEasy,
   'blocks': [
     {
       'role': 'warmup',
@@ -3081,6 +3121,13 @@ Map<String, Object?> trainingWeekSessionJson(
 };
 
 /// What a done session's ride did, as GET /training/week carries it.
+/// One day a session can move to, as the move sheet reads it.
+Map<String, Object?> moveDayJson(
+  String localDate, {
+  bool allowed = true,
+  String? reason,
+}) => {'localDate': localDate, 'allowed': allowed, 'reason': reason};
+
 Map<String, Object?> sessionResultJson({
   int score = 92,
   int plannedMinutes = 60,
@@ -3364,6 +3411,10 @@ Map<String, Object?> trainingSessionJson({
   bool heartRateEstimated = false,
   String? rideId,
   String? skipReason,
+  List<Map<String, Object?>> move = const [],
+  String? easyReason,
+  DateTime? easyMovedTo,
+  bool canMakeEasy = false,
 }) => {
   'id': id,
   'localDate': fakeDay(date),
@@ -3380,6 +3431,10 @@ Map<String, Object?> trainingSessionJson({
   'blocks': blocks,
   'notes': notes,
   'heartRateEstimated': heartRateEstimated,
+  'move': move,
+  'easyReason': easyReason,
+  'easyMovedTo': easyMovedTo == null ? null : fakeDay(easyMovedTo),
+  'canMakeEasy': canMakeEasy,
 };
 
 /// One block of a session: its part, its minutes and the ranges of its three targets.

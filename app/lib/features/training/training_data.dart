@@ -33,6 +33,41 @@ class TrainingData {
         MatchTrainingSessionRequest(rideId: rideId, answer: yes ? 'yes' : 'no'),
       )
       .guard(FailureAction.matchTrainingSession);
+
+  /// "Make today easy": today's hard session becomes an endurance one. The answer is the week as it is now.
+  Future<Result<TrainingWeeksResponse?>> makeEasy(String sessionId) =>
+      _api.makeSessionEasy(sessionId).guard(FailureAction.makeTrainingEasy);
+
+  /// "Back to the plan": the hard session comes back, the same day, as long as nothing ticked it.
+  Future<Result<TrainingWeeksResponse?>> backToPlan(String sessionId) => _api
+      .backToTrainingPlan(sessionId)
+      .guard(FailureAction.backToTrainingPlan);
+
+  /// Moving a session to another day left this week; a day the week refuses comes back as a conflict.
+  Future<Result<TrainingWeeksResponse?>> move(
+    String sessionId,
+    DateTime localDate,
+  ) => _api
+      .moveTrainingSession(
+        sessionId,
+        MoveTrainingSessionRequest(localDate: localDate),
+      )
+      .guard(FailureAction.moveTrainingSession);
+
+  /// Skipping a session, or the rest of the week after it. The answer says whether to ask about the rest.
+  Future<Result<SkipTrainingSessionResponse?>> skip(
+    String sessionId, {
+    String? reason,
+    bool restOfWeek = false,
+  }) => _api
+      .skipTrainingSession(
+        sessionId,
+        SkipTrainingSessionRequest(
+          reason: Optional.present(reason),
+          restOfWeek: Optional.present(restOfWeek),
+        ),
+      )
+      .guard(FailureAction.skipTrainingSession);
 }
 
 @Riverpod(keepAlive: true)

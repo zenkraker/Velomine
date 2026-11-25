@@ -145,15 +145,15 @@ class TrainingScreen extends ConsumerWidget {
 }
 
 /// Today: the session with its length, one sentence of purpose, the main set's targets and the session's shape, or
-/// a rest day, or the day the plan starts.
-class _TodayCard extends StatelessWidget {
+/// a rest day, or the day the plan starts. When it changed, one line says why above the targets.
+class _TodayCard extends ConsumerWidget {
   const _TodayCard({required this.plan, required this.week});
 
   final TrainingPlanResponse? plan;
   final TrainingWeek? week;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
@@ -188,6 +188,13 @@ class _TodayCard extends StatelessWidget {
             ],
           ),
           Text(sessionLine(l10n, session), style: text.bodyMedium),
+          // Why today is not what the plan said this morning: the reason, and where the hard day went.
+          if (session.easyReason case final reason?)
+            Text(
+              easyLine(l10n, reason, movedTo: session.easyMovedTo),
+              key: const Key('training-today-reason'),
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
           if (block != null)
             Text(
               targetLine(l10n, block, estimated: session.heartRateEstimated),
@@ -195,13 +202,26 @@ class _TodayCard extends StatelessWidget {
               style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           SessionShape(blocks: session.blocks),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: CardLink(
-              l10n.trainingOpenSession,
-              key: const Key('training-open-session'),
-              onPressed: () => context.push('/training/sessions/${session.id}'),
-            ),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.lg,
+            children: [
+              // The one action a today card has by hand: no full page, and "Back to the plan" lives on the session.
+              if (session.canMakeEasy)
+                TextButton(
+                  key: const Key('training-make-easy'),
+                  onPressed: () => ref
+                      .read(trainingViewModelProvider.notifier)
+                      .makeEasy(session.id),
+                  child: Text(l10n.trainingMakeEasy),
+                ),
+              CardLink(
+                l10n.trainingOpenSession,
+                key: const Key('training-open-session'),
+                onPressed: () =>
+                    context.push('/training/sessions/${session.id}'),
+              ),
+            ],
           ),
         ],
       );

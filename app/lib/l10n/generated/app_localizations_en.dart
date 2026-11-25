@@ -5667,6 +5667,122 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trainingNotThisSession => 'Not this session';
 
   @override
+  String get actionMakeTrainingEasy => 'make today easy';
+
+  @override
+  String get actionBackToTrainingPlan => 'put the session back';
+
+  @override
+  String get actionMoveTrainingSession => 'move the session';
+
+  @override
+  String get actionSkipTrainingSession => 'skip the session';
+
+  @override
+  String get trainingMakeEasy => 'Make today easy';
+
+  @override
+  String get trainingBackToPlan => 'Back to the plan';
+
+  @override
+  String get trainingMoveSession => 'Move';
+
+  @override
+  String get trainingSkipSession => 'Skip';
+
+  @override
+  String trainingEasyLine(String reason) {
+    return 'Easy today: $reason.';
+  }
+
+  @override
+  String trainingEasyMoved(String day) {
+    return 'The hard day moves to $day.';
+  }
+
+  @override
+  String get trainingEasySleptPoorly => 'you slept poorly';
+
+  @override
+  String get trainingEasyTired => 'you feel tired';
+
+  @override
+  String get trainingEasySore => 'you are sore';
+
+  @override
+  String get trainingEasyFormLow => 'your form is low';
+
+  @override
+  String get trainingEasyAsked => 'you asked for an easier day';
+
+  @override
+  String get trainingMoveTitle => 'Move this session';
+
+  @override
+  String get trainingMoveHelp =>
+      'Any day left this week, whether you ride that day or not. A hard day cannot sit next to another hard day or next to the long ride.';
+
+  @override
+  String get trainingMoveRefusedHard => 'Next to another hard day';
+
+  @override
+  String get trainingMoveRefusedLongRide => 'Next to the long ride';
+
+  @override
+  String get trainingMoveRefusedSession => 'That day already has a session';
+
+  @override
+  String get trainingMoveRefusedLoaded => 'That would make a fourth loaded day';
+
+  @override
+  String trainingMoveNearest(String day) {
+    return 'The nearest day that works is $day';
+  }
+
+  @override
+  String get trainingSkipTitle => 'Skip this session';
+
+  @override
+  String get trainingSkipReasonLabel => 'Why? (optional)';
+
+  @override
+  String get trainingSkipTired => 'Tired';
+
+  @override
+  String get trainingSkipIll => 'Ill or injured';
+
+  @override
+  String get trainingSkipNoTime => 'No time';
+
+  @override
+  String get trainingSkipOther => 'Other';
+
+  @override
+  String get trainingSkipAction => 'Skip';
+
+  @override
+  String get trainingSkipRestOfWeek => 'Skip the rest of this week?';
+
+  @override
+  String get trainingSkipRestOfWeekBody =>
+      'The sessions left this week go too, and none of them moves to another day.';
+
+  @override
+  String notificationTrainingToday(String name) {
+    return 'Today: $name.';
+  }
+
+  @override
+  String notificationTrainingMoved(String name, String day) {
+    return '$name moves to $day.';
+  }
+
+  @override
+  String notificationTrainingSkipped(String name, String day) {
+    return '$name on $day is skipped.';
+  }
+
+  @override
   String get sessionHowItWent => 'How it went';
 
   @override

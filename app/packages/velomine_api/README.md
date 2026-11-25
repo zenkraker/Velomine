@@ -245,13 +245,17 @@ Class | Method | HTTP request | Description
 *SupporterApi* | [**getSupporterStatus**](doc//SupporterApi.md#getsupporterstatus) | **GET** /api/v1/supporter | 
 *SupporterApi* | [**setSupporterHidden**](doc//SupporterApi.md#setsupporterhidden) | **PUT** /api/v1/supporter/hidden | 
 *TrainingApi* | [**addEvent**](doc//TrainingApi.md#addevent) | **POST** /api/v1/training/events | 
+*TrainingApi* | [**backToTrainingPlan**](doc//TrainingApi.md#backtotrainingplan) | **DELETE** /api/v1/training/sessions/{id}/easy | 
 *TrainingApi* | [**deleteEvent**](doc//TrainingApi.md#deleteevent) | **DELETE** /api/v1/training/events/{id} | 
 *TrainingApi* | [**getTrainingPlan**](doc//TrainingApi.md#gettrainingplan) | **GET** /api/v1/training/plan | 
 *TrainingApi* | [**getTrainingWeek**](doc//TrainingApi.md#gettrainingweek) | **GET** /api/v1/training/week | 
 *TrainingApi* | [**listEvents**](doc//TrainingApi.md#listevents) | **GET** /api/v1/training/events | 
+*TrainingApi* | [**makeSessionEasy**](doc//TrainingApi.md#makesessioneasy) | **POST** /api/v1/training/sessions/{id}/easy | 
 *TrainingApi* | [**matchTrainingSession**](doc//TrainingApi.md#matchtrainingsession) | **POST** /api/v1/training/sessions/{id}/match | 
+*TrainingApi* | [**moveTrainingSession**](doc//TrainingApi.md#movetrainingsession) | **POST** /api/v1/training/sessions/{id}/move | 
 *TrainingApi* | [**saveTrainingPlan**](doc//TrainingApi.md#savetrainingplan) | **PUT** /api/v1/training/plan | 
 *TrainingApi* | [**setEventRide**](doc//TrainingApi.md#seteventride) | **PUT** /api/v1/training/events/{id}/ride | 
+*TrainingApi* | [**skipTrainingSession**](doc//TrainingApi.md#skiptrainingsession) | **POST** /api/v1/training/sessions/{id}/skip | 
 *TrainingApi* | [**turnOffTrainingPlan**](doc//TrainingApi.md#turnofftrainingplan) | **DELETE** /api/v1/training/plan | 
 *TrainingApi* | [**updateEvent**](doc//TrainingApi.md#updateevent) | **PUT** /api/v1/training/events/{id} | 
 *WellbeingApi* | [**getWellbeing**](doc//WellbeingApi.md#getwellbeing) | **GET** /api/v1/wellbeing | 
@@ -346,6 +350,8 @@ Class | Method | HTTP request | Description
  - [MarkReminderDoneRequest](doc//MarkReminderDoneRequest.md)
  - [MatchTrainingSessionRequest](doc//MatchTrainingSessionRequest.md)
  - [MeResponse](doc//MeResponse.md)
+ - [MoveDay](doc//MoveDay.md)
+ - [MoveTrainingSessionRequest](doc//MoveTrainingSessionRequest.md)
  - [MyClubResponse](doc//MyClubResponse.md)
  - [MyJoinRequestResponse](doc//MyJoinRequestResponse.md)
  - [NearbyClubResponse](doc//NearbyClubResponse.md)
@@ -421,6 +427,8 @@ Class | Method | HTTP request | Description
  - [ShareViewResponse](doc//ShareViewResponse.md)
  - [ShareViewsResponse](doc//ShareViewsResponse.md)
  - [SharingResponse](doc//SharingResponse.md)
+ - [SkipTrainingSessionRequest](doc//SkipTrainingSessionRequest.md)
+ - [SkipTrainingSessionResponse](doc//SkipTrainingSessionResponse.md)
  - [SmtpStatus](doc//SmtpStatus.md)
  - [SsoInfoResponse](doc//SsoInfoResponse.md)
  - [SsoStatus](doc//SsoStatus.md)
@@ -437,6 +445,7 @@ Class | Method | HTTP request | Description
  - [TrainingPlanResponse](doc//TrainingPlanResponse.md)
  - [TrainingResponse](doc//TrainingResponse.md)
  - [TrainingRideMatch](doc//TrainingRideMatch.md)
+ - [TrainingSessionNotice](doc//TrainingSessionNotice.md)
  - [TrainingWeek](doc//TrainingWeek.md)
  - [TrainingWeekSession](doc//TrainingWeekSession.md)
  - [TrainingWeeksResponse](doc//TrainingWeeksResponse.md)

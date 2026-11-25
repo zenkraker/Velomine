@@ -31,11 +31,11 @@ public sealed record TrainingWeekSession(
     /// <summary>The days it can move to, as the move sheet reads them: empty for a session that cannot move.</summary>
     MoveDay[] Move,
     /// <summary>Why the session was made easy (<see cref="TrainingEasyReasons"/>), or null when it never was.</summary>
-    string? EasyReason = null,
+    string? EasyReason,
     /// <summary>The day the replaced hard session went to, which the reason's line names; null when it was dropped.</summary>
-    DateOnly? EasyMovedTo = null,
+    DateOnly? EasyMovedTo,
     /// <summary>Whether "make today easy" applies to it: today's session, still planned, a hard day or the long ride.</summary>
-    bool CanMakeEasy = false,
+    bool CanMakeEasy,
     SessionResult? Result = null);
 
 /// <summary>
@@ -162,12 +162,12 @@ public static class TrainingWeekView
                 recipe.Code, recipe.TechnicalName, recipe.EnglishName, recipe.ItalianName,
                 recipe.EnglishLine, recipe.ItalianLine,
                 targets.Blocks, targets.Notes, targets.HeartRateEstimated,
-                Move: movable ? SessionAdaptation.Days(around, s, clock) : [],
-                EasyReason: s.EasyReason,
-                EasyMovedTo: s.EasyMovedTo,
-                CanMakeEasy: s.LocalDate == clock.Today && s.State == TrainingSessionStates.Planned
+                movable ? SessionAdaptation.Days(around, s, clock) : [],
+                s.EasyReason,
+                s.EasyMovedTo,
+                s.LocalDate == clock.Today && s.State == TrainingSessionStates.Planned
                     && SessionAdaptation.IsReplacedByEasy(s.Recipe),
-                Result: results.GetValueOrDefault(s.Id));
+                results.GetValueOrDefault(s.Id));
         }).ToArray();
 
         // The planner records the weeks it made lighter, so the week says so whether it was planned today or a week ago.

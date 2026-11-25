@@ -9710,6 +9710,210 @@ abstract class AppLocalizations {
   /// **'Not this session'**
   String get trainingNotThisSession;
 
+  /// No description provided for @actionMakeTrainingEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'make today easy'**
+  String get actionMakeTrainingEasy;
+
+  /// No description provided for @actionBackToTrainingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'put the session back'**
+  String get actionBackToTrainingPlan;
+
+  /// No description provided for @actionMoveTrainingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'move the session'**
+  String get actionMoveTrainingSession;
+
+  /// No description provided for @actionSkipTrainingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'skip the session'**
+  String get actionSkipTrainingSession;
+
+  /// No description provided for @trainingMakeEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Make today easy'**
+  String get trainingMakeEasy;
+
+  /// No description provided for @trainingBackToPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the plan'**
+  String get trainingBackToPlan;
+
+  /// No description provided for @trainingMoveSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get trainingMoveSession;
+
+  /// No description provided for @trainingSkipSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get trainingSkipSession;
+
+  /// No description provided for @trainingEasyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy today: {reason}.'**
+  String trainingEasyLine(String reason);
+
+  /// No description provided for @trainingEasyMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The hard day moves to {day}.'**
+  String trainingEasyMoved(String day);
+
+  /// No description provided for @trainingEasySleptPoorly.
+  ///
+  /// In en, this message translates to:
+  /// **'you slept poorly'**
+  String get trainingEasySleptPoorly;
+
+  /// No description provided for @trainingEasyTired.
+  ///
+  /// In en, this message translates to:
+  /// **'you feel tired'**
+  String get trainingEasyTired;
+
+  /// No description provided for @trainingEasySore.
+  ///
+  /// In en, this message translates to:
+  /// **'you are sore'**
+  String get trainingEasySore;
+
+  /// No description provided for @trainingEasyFormLow.
+  ///
+  /// In en, this message translates to:
+  /// **'your form is low'**
+  String get trainingEasyFormLow;
+
+  /// No description provided for @trainingEasyAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'you asked for an easier day'**
+  String get trainingEasyAsked;
+
+  /// No description provided for @trainingMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move this session'**
+  String get trainingMoveTitle;
+
+  /// No description provided for @trainingMoveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Any day left this week, whether you ride that day or not. A hard day cannot sit next to another hard day or next to the long ride.'**
+  String get trainingMoveHelp;
+
+  /// No description provided for @trainingMoveRefusedHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Next to another hard day'**
+  String get trainingMoveRefusedHard;
+
+  /// No description provided for @trainingMoveRefusedLongRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Next to the long ride'**
+  String get trainingMoveRefusedLongRide;
+
+  /// No description provided for @trainingMoveRefusedSession.
+  ///
+  /// In en, this message translates to:
+  /// **'That day already has a session'**
+  String get trainingMoveRefusedSession;
+
+  /// No description provided for @trainingMoveRefusedLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'That would make a fourth loaded day'**
+  String get trainingMoveRefusedLoaded;
+
+  /// No description provided for @trainingMoveNearest.
+  ///
+  /// In en, this message translates to:
+  /// **'The nearest day that works is {day}'**
+  String trainingMoveNearest(String day);
+
+  /// No description provided for @trainingSkipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this session'**
+  String get trainingSkipTitle;
+
+  /// No description provided for @trainingSkipReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Why? (optional)'**
+  String get trainingSkipReasonLabel;
+
+  /// No description provided for @trainingSkipTired.
+  ///
+  /// In en, this message translates to:
+  /// **'Tired'**
+  String get trainingSkipTired;
+
+  /// No description provided for @trainingSkipIll.
+  ///
+  /// In en, this message translates to:
+  /// **'Ill or injured'**
+  String get trainingSkipIll;
+
+  /// No description provided for @trainingSkipNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No time'**
+  String get trainingSkipNoTime;
+
+  /// No description provided for @trainingSkipOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get trainingSkipOther;
+
+  /// No description provided for @trainingSkipAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get trainingSkipAction;
+
+  /// No description provided for @trainingSkipRestOfWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip the rest of this week?'**
+  String get trainingSkipRestOfWeek;
+
+  /// No description provided for @trainingSkipRestOfWeekBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The sessions left this week go too, and none of them moves to another day.'**
+  String get trainingSkipRestOfWeekBody;
+
+  /// No description provided for @notificationTrainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {name}.'**
+  String notificationTrainingToday(String name);
+
+  /// No description provided for @notificationTrainingMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} moves to {day}.'**
+  String notificationTrainingMoved(String name, String day);
+
+  /// No description provided for @notificationTrainingSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} on {day} is skipped.'**
+  String notificationTrainingSkipped(String name, String day);
+
   /// No description provided for @sessionHowItWent.
   ///
   /// In en, this message translates to:

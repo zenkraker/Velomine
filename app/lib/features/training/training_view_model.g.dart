@@ -50,7 +50,7 @@ final class TrainingViewModelProvider
   }
 }
 
-String _$trainingViewModelHash() => r'a017a6862728e5fe3e82f344564607b5a7f831b8';
+String _$trainingViewModelHash() => r'295714fcdf2322baeff0892cf81525182cbfaa30';
 
 /// The member's auto-training plan and week for the session: the shell reads the plan to show the Training
 /// destination, the profile for its switch, the Training page for today and the week, and Progress for its Today
