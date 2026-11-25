@@ -124,4 +124,7 @@
   <data name="HeartRateSuggested" xml:space="preserve">
     <value>A ride shows a higher heart-rate number than the one you set: {0}. Choose whether to use it.</value>
   </data>
+  <data name="TrainingSessionQuestion" xml:space="preserve">
+    <value>A ride of yours might be your {0} session. Answer in Velomine.</value>
+  </data>
 </root>

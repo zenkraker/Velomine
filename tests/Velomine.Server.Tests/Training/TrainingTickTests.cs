@@ -1,5 +1,7 @@
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Dynastream.Fit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -322,6 +324,30 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
         Assert.Null(ride.Training);
         Assert.Null((await SessionAsync(api, sessionId)).QuestionRideId);
         Assert.DoesNotContain(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingSessionQuestion);
+    }
+
+    [Fact]
+    public async Task Export_ShouldCarryTheComputedScore_WhenASessionIsDone()
+    {
+        await using var api = await StartAsync();
+        var (member, _) = await RiderAsync(api, Day);
+        await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, Power: _ => 150)));
+
+        // The export writes the score the app's session page shows, worked out from the ride: nothing about it is stored.
+        await using var scope = api.Services.CreateAsyncScope();
+        var export = ActivatorUtilities.CreateInstance<AccountExport>(scope.ServiceProvider);
+        using var output = new MemoryStream();
+        await export.WriteAsync(member.Id, output, scope.ServiceProvider.GetRequiredService<TimeProvider>(), Ct);
+        output.Position = 0;
+
+        using var zip = new ZipArchive(output, ZipArchiveMode.Read);
+        var entry = zip.GetEntry("training-plan.json");
+        Assert.NotNull(entry);
+        using var stream = entry.Open();
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: Ct);
+        var session = Assert.Single(document.RootElement.GetProperty("sessions").EnumerateArray());
+        Assert.Equal(65, session.GetProperty("score").GetInt32());
+        Assert.Equal(TrainingSessionStates.Done, session.GetProperty("state").GetString());
     }
 
     [Fact]

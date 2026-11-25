@@ -93,33 +93,35 @@ class TrainingScreen extends ConsumerWidget {
             actionKey: const Key('training-error'),
           )
         else ...[
-          if (week != null) _ThisWeek(week: week),
-          SectionCard(
-            key: const Key('training-goal'),
-            title: l10n.trainingGoalCard,
-            children: [
-              Text(
-                trainingGoalName(l10n, goal),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              Text(
-                trainingGoalLine(l10n, goal),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+          // A week with no session yet is one the planning has not written: the page says when the plan starts.
+          if (week != null && week.sessions.isNotEmpty)
+            _ThisWeek(week: week)
+          else
+            SectionCard(
+              key: const Key('training-goal'),
+              title: l10n.trainingGoalCard,
+              children: [
+                Text(
+                  trainingGoalName(l10n, goal),
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-              ),
-            ],
-          ),
-          if (week == null)
-            Text(
-              l10n.trainingPlanStarts(
-                weekDayName(l10n, plan?.firstDayOfWeek ?? 'monday'),
-              ),
-              key: const Key('training-plan-starts'),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                Text(
+                  trainingGoalLine(l10n, goal),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
+          Text(
+            l10n.trainingPlanStarts(
+              weekDayName(l10n, plan?.firstDayOfWeek ?? 'monday'),
+            ),
+            key: const Key('training-plan-starts'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ],
     );

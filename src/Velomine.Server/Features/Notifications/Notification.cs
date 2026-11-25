@@ -116,6 +116,7 @@ public static class NotificationKinds
         NotificationTypes.FtpSuggested,
         NotificationTypes.HeartRateMeasured,
         NotificationTypes.HeartRateSuggested,
+        NotificationTypes.TrainingSessionQuestion,
     ];
 
     /// <summary>Null for an unknown type: nobody classified it, so it is never emailed.</summary>

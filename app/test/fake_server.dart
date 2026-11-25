@@ -501,8 +501,9 @@ class FakeServer {
     }
 
     if (path == '/api/v1/training/week') {
-      if (trainingWeek == null)
+      if (trainingWeek == null) {
         return http.Response('{"title":"Not found."}', 404);
+      }
       return json(trainingWeek!);
     }
 

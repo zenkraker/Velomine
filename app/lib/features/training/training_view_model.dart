@@ -10,8 +10,8 @@ import 'training_state.dart';
 part 'training_view_model.g.dart';
 
 /// The member's auto-training plan and this week: the shell reads it to show the Training destination, the profile
-/// for its switch, the Training page for the goal and the week, the session page for one session, and the ride page
-/// to answer a session's question. A sign-out rebuilds it empty.
+/// for its switch, the Training page for the goal and the week, and the session page for one session. A sign-out
+/// rebuilds it empty.
 @Riverpod(keepAlive: true)
 class TrainingViewModel extends _$TrainingViewModel {
   int _messageId = 0;
@@ -39,30 +39,6 @@ class TrainingViewModel extends _$TrainingViewModel {
       plan: result.valueOrNull,
       weeks: weeks?.valueOrNull,
     );
-  }
-
-  /// Answers the question a ride asked, then reads the week again so the session shows where it went. False when it
-  /// could not be answered, with the reason in the messages.
-  Future<bool> answer(
-    String sessionId,
-    String rideId, {
-    required bool yes,
-  }) async {
-    if (state.answer.running) return false;
-    state = state.copyWith(answer: state.answer.start());
-    final result = await ref
-        .read(trainingDataProvider)
-        .answer(sessionId, rideId, yes);
-    if (!ref.mounted) return false;
-    state = switch (result) {
-      Ok() => state.copyWith(answer: state.answer.finish(result)),
-      Failed(:final failure) => state.copyWith(
-        answer: state.answer.finish(result),
-        messages: [...state.messages, FailureMessage(_messageId++, failure)],
-      ),
-    };
-    if (result.isOk) await load();
-    return result.isOk;
   }
 
   /// Takes the plan a screen has just saved, so the destination and the switch apply without asking again.
