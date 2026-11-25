@@ -579,6 +579,30 @@ void main() {
     },
   );
 
+  testWidgets(
+    'CoachAthleteScreen_ShouldSayTheSkipReasonInTheRidersWords_WhenTheScreenIsItalian',
+    (tester) async {
+      // The rider's own picker says "Stanco", so the coach's card says it too, instead of a noun of its own.
+      tester.platformDispatcher.localesTestValue = [const Locale('it')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      await openAthletePlan(
+        tester,
+        sessions: [
+          coachPlanSessionJson(
+            DateTime(2026, 11, 27),
+            minutes: 60,
+            state: 'skipped',
+            skipReason: 'tired',
+            englishName: 'Easy spin',
+          ),
+        ],
+      );
+
+      expect(find.text('Saltato · stanco'), findsOneWidget);
+      expect(find.textContaining('Stanchezza'), findsNothing);
+    },
+  );
+
   testWidgets('CoachAthleteScreen_ShouldHideThePlan_WhenTheAthleteHasNone', (
     tester,
   ) async {

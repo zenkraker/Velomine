@@ -1784,30 +1784,6 @@ abstract class AppLocalizations {
   /// **'{planned} planned · {ridden} ridden'**
   String coachPlanPlannedRidden(String planned, String ridden);
 
-  /// No description provided for @coachPlanSkippedTired.
-  ///
-  /// In en, this message translates to:
-  /// **'Tired'**
-  String get coachPlanSkippedTired;
-
-  /// No description provided for @coachPlanSkippedIll.
-  ///
-  /// In en, this message translates to:
-  /// **'Ill or injured'**
-  String get coachPlanSkippedIll;
-
-  /// No description provided for @coachPlanSkippedNoTime.
-  ///
-  /// In en, this message translates to:
-  /// **'No time'**
-  String get coachPlanSkippedNoTime;
-
-  /// No description provided for @coachPlanSkippedOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get coachPlanSkippedOther;
-
   /// No description provided for @routeNotShared.
   ///
   /// In en, this message translates to:

@@ -368,10 +368,6 @@
   "@coachPlanDone": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
   "coachPlanPlannedRidden": "{planned} planned · {ridden} ridden",
   "@coachPlanPlannedRidden": {"placeholders": {"planned": {"type": "String"}, "ridden": {"type": "String"}}},
-  "coachPlanSkippedTired": "Tired",
-  "coachPlanSkippedIll": "Ill or injured",
-  "coachPlanSkippedNoTime": "No time",
-  "coachPlanSkippedOther": "Other",
   "routeNotShared": "The athlete has not shared the route.",
 
   "adminClubs": "Clubs",

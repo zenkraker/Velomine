@@ -934,18 +934,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get coachPlanSkippedTired => 'Tired';
-
-  @override
-  String get coachPlanSkippedIll => 'Ill or injured';
-
-  @override
-  String get coachPlanSkippedNoTime => 'No time';
-
-  @override
-  String get coachPlanSkippedOther => 'Other';
-
-  @override
   String get routeNotShared => 'The athlete has not shared the route.';
 
   @override

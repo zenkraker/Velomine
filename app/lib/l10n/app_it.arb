@@ -314,10 +314,6 @@
   "coachPlan": "Piano",
   "coachPlanDone": "{done} di {total} fatte questa settimana",
   "coachPlanPlannedRidden": "{planned} previsto · {ridden} fatto",
-  "coachPlanSkippedTired": "Stanchezza",
-  "coachPlanSkippedIll": "Malattia o infortunio",
-  "coachPlanSkippedNoTime": "Mancanza di tempo",
-  "coachPlanSkippedOther": "Altro",
   "routeNotShared": "L'atleta non ha condiviso il percorso.",
 
   "adminClubs": "Club",

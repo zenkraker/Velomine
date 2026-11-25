@@ -236,16 +236,11 @@ class _CoachPlanRow extends StatelessWidget {
   }
 }
 
-/// Why the rider skipped a session, in the coach's own words. Null when the server withheld it, which is the "Ill or
-/// injured" case without the wellbeing grant: the row then reads "Skipped" and its length.
+/// Why the rider skipped a session, in the words the rider's own picker offered, so a reason is spelled the same on
+/// both screens. Null when the server withheld it, which is the "Ill or injured" case without the wellbeing grant: the
+/// row then reads "Skipped" and its length.
 String? _coachPlanSkipReason(AppLocalizations l10n, String? reason) =>
-    switch (reason) {
-      'tired' => l10n.coachPlanSkippedTired,
-      'ill' => l10n.coachPlanSkippedIll,
-      'no_time' => l10n.coachPlanSkippedNoTime,
-      'other' => l10n.coachPlanSkippedOther,
-      _ => null,
-    };
+    reason == null ? null : trainingSkipReason(l10n, reason);
 
 /// What a coach may see of wellbeing: daily scores and per-ride RPE, never the member's notes.
 class _CoachWellbeingCard extends StatelessWidget {

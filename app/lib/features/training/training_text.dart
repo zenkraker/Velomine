@@ -162,7 +162,7 @@ String moveRefusalText(AppLocalizations l10n, String reason) =>
     };
 
 /// Why the rider skipped a session, in the words their own picker offers: "Tired", "Ill or injured", "No time",
-/// "Other". The same words a coach reads beside a skipped day, so they live here once and both screens use them.
+/// "Other". A coach's plan card reads a skipped day through this same function, so the two screens spell it alike.
 String trainingSkipReason(AppLocalizations l10n, String reason) =>
     switch (reason) {
       'tired' => l10n.trainingSkipReasonTired,
