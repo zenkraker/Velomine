@@ -4,7 +4,8 @@ Every number Velomine shows about training load, zones, power, heart rate or rea
 normative: **MUST** and **MUST NOT** are requirements, and a deviation is a bug, not a preference.
 
 The code that implements it lives in `Features/Rides/TrainingLoad.cs`, `Features/Rides/Ingestion/{RideMetrics,
-PowerBests,EstimatedPower}.cs`, `Features/Analytics/` and `Features/Accounts/HeartRates.cs`.
+PowerBests,EstimatedPower}.cs`, `Features/Analytics/`, `Features/Accounts/HeartRates.cs` and `Features/Training/`
+(`Recipes.cs`, `SessionPlan.cs`, `SessionTargets.cs`).
 
 ## Rules for changing a model
 
@@ -110,7 +111,11 @@ The power curve uses the 20-minute best, else the 8-minute one. The FTP a finish
 minute best, whichever gives the higher result (a tie goes to the longer effort), and only when it is at least 3 %
 above the FTP in use.
 
-Source: Allen & Coggan (20 min × 0.95, 8 min × 0.90, FTP ≈ 60 min).
+A suggestion comes only from a ride of the last **42 days** on the member's calendar, and never from an e-bike. Both
+are Velomine's own rules, not Allen & Coggan's: `Features/Analytics/FtpSuggestion.cs` (`MaxAgeDays`, and the
+`Assists.EBike` test).
+
+Source: Allen & Coggan (20 min × 0.95, 8 min × 0.90, FTP ≈ 60 min); the window is Velomine's own.
 
 ### P7 — Critical power and W′
 
@@ -330,6 +335,24 @@ get a decoupling number. Positive decoupling means heart rate drifted up for the
 
 Source: Friel, *The Cyclist's Training Bible* (aerobic decoupling, Pw:HR).
 
+### L7 — A planned session's effort score
+
+P3's form over the blocks of a planned session, with each block's intensity factor instead of the ride's:
+
+```
+plannedScore = Σ(hours_block × IF_block² × 100)
+```
+
+`IF_block` is the middle of the block's % FTP band over 100. A block with no % FTP — the gentle base recipes, which are
+ridden by feel — takes the middle of its feel band over 7, the same form as F1. A week's planned load is the sum of its
+sessions' scores.
+
+The published number is one intensity for one effort; a recipe gives a range, so using the middle of the band is
+Velomine's own choice, and a session ridden at the top of the band scores a few points more than the middle.
+
+Source: Allen & Coggan's TSS form (P3) applied to a plan; the band's middle is Velomine's own. Code:
+`Features/Training/SessionPlan.cs` (`PlannedScore`), test `SessionPlanTests`.
+
 ## Feel and readiness
 
 ### F1 — Feel score
@@ -367,6 +390,52 @@ from Hooper & Mackinnon's index, with the signs flipped so a higher number is be
 MUST be labelled a guide, not a medical measure.
 
 Source: Hooper SL, Mackinnon LT. *Monitoring overtraining in athletes.* Sports Med 1995 (PMID 8571005).
+
+## Session recipes
+
+Every planned session is one of these fifteen recipes, scaled to the day. Each block has a length, a % FTP band (P4), a
+% threshold heart-rate band (H5) and a feel band (F1); a `–` is a block that has no target in that signal. The code is
+`Features/Training/Recipes.cs`, the rider-facing names are `docs/design/pages/training/TrainingNames.md`, and the tests
+are `RecipesTests`, `SessionPlanTests` and `SessionTargetsTests`.
+
+| Code | Coaches call it | Rider sees (English · Italian) | Least | Quality | Blocks: minutes @ % FTP · % threshold HR · feel | Goals |
+|------|-----------------|-------------------------------|-------|---------|--------------------------------------------------|-------|
+| R01 | Easy spin (recovery) | Easy spin · Giro defaticante | 30 | no | 30 @ 40–55 · 60–80 · 1–2 | all five |
+| R02 | Endurance | Easy ride · Giro tranquillo | 45 | no | 10 @ 45–60 · 70–80 · 2–3; 50 @ 56–75 · 81–89 · 3–4 | all five |
+| R03 | Long ride | Long ride · Uscita lunga | 60 | no | 10 @ 45–60 · 70–80 · 2–3; 90 @ 56–75 · 81–89 · 3–4; 20 @ 70–80 · 88–93 · 4 | fitter, faster, event, keep |
+| R04 | Tempo | Steady pace · Ritmo costante | 60 | no | 15 @ 45–65 · 75–85 · 2–3; 40 @ 76–90 · 90–93 · 4–5; 5 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, event |
+| R05 | Sweet spot | Strong and steady · Forte e costante | 60 | yes | 15 @ 55–70 · 80–88 · 3; 40 @ 88–94 · 91–97 · 5–6; 5 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, faster, event |
+| R06 | Threshold | At your limit · Al limite | 50 | yes | 15 @ 65–80 · 85–92 · 4; 30 @ 95–105 · 94–102 · 6–7; 10 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster, event |
+| R07 | Climbing repeats | Hill repeats · Ripetute in salita | 70 | yes | 15 @ 65–80 · 85–92 · 4; 25 @ 95–105 · 94–102 · 6–7; 20 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster |
+| R08 | VO2max 4–5 min | Hard efforts · Sforzi duri | 55 | yes | 20 @ 60–80 · 80–90 · 3–4; 20 @ 106–120 · 103–115 · 8–9 (5-minute efforts); 20 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, faster |
+| R09 | 30/15 | On and off · Acceso e spento | 50 | yes | 20 @ 60–80 · 80–90 · 3–4; 10 @ 115–125 · 103–115 · 8–9 (30-second efforts); 10 @ 40–55 · 70–80 · 2 (15-second recoveries); 10 @ 40–55 · 70–80 · 2 | fitter, faster |
+| R10 | Anaerobic capacity | All-out bursts · Scatti al massimo | 45 | yes | 20 @ 60–80 · 80–90 · 3–4; 4 @ 120–130 · – · 9 (60-second efforts); 12 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster, event |
+| R12 | Cadence | Quick legs · Gambe agili | 45 | no | 60 @ 56–75 · 81–89 · 3–4 | all five |
+| R14 | Easy start | First rides · Primi giri | 30 | no | 30 @ – · – · 3–4 | aerobic, fitter |
+| R15 | Steady build | A little faster · Un po' più veloce | 45 | no | 10 @ – · – · 2–3; 20 @ – · – · 4–5; 5 @ – · – · 2; 10 @ – · – · 2–3 | aerobic, fitter |
+| R16 | Long and easy (base) | Longer, still easy · Più lungo, sempre facile | 60 | no | 75 @ – · – · 3–4 | aerobic |
+| R17 | Keep-it | Keep it going · Mantieni il ritmo | 45 | no | 10 @ 60–75 · 80–88 · 3; 25 @ 84–88 · 90–94 · 5; 10 @ 40–55 · 70–80 · 2 | keep |
+
+**Scaling.** A recipe fills the day's minutes: its warm-up and cool-down keep their length, and its work, recovery and
+steady blocks grow or shrink in proportion, the longest of them taking the minute that rounding leaves over. A day
+shorter than the recipe's least length gets **R02** instead, scaled to that day.
+
+**Targets.** A block's watts are its % FTP band against the FTP in use (P6), its heart rate its % threshold band against
+the threshold in use (H3) — H2's 89 % of the maximum on the maximum model — and its feel is F1's band. A session stores
+its recipe and its percentages, never watts. Without an FTP there is no watt target and the session says "Add a power
+meter for watt targets"; the 2.5 W/kg stand-in is never one. Heart rate is no target on an effort of 2 minutes or less,
+where it lags, and the session says so once.
+
+**A quality session** is one whose main set reaches 88 % FTP, the sweet-spot floor (P4's Z4 floor is 90 %): R05–R10. The
+long ride is load, not intensity, and is never a quality session.
+
+**The numbers' sources.** The zone bands are the drafts' rows in `.dev/pack-3-research.md` §3: Coggan's power levels
+(TrainingPeaks, "Cycling Power Zones Explained"), Friel's threshold-heart-rate zones ("Joe Friel's Quick Guide to
+Setting Zones"), sweet spot 88–94 % FTP (TrainingPeaks, "How to Train at Your Sweet Spot"; British Cycling,
+"Understanding intensity 3"), the hard-effort structures of the interval trials (Seiler 2013, PMID 21812820;
+Rønnestad 2020, PMID 31977120) and the talk test for the easy bands. Velomine's own, and never attributed to a published
+session: the warm-up, recovery and cool-down bands, R01's 40 % floor, R17's 84–88 % (kept under the quality floor),
+the gentle base recipes' feel-only targets, and the fifteen recipes themselves in place of a workout library.
 
 ## Estimated power
 
@@ -412,6 +481,7 @@ another platform's number:
 - readiness (F2) — the weighted sum above.
 - the intensity labels (L5) — thresholds added to Treff's PI.
 - "heavy week" (L3) — 1.5 × the usual strain.
+- the planned effort score (L7) — P3's form with the middle of a recipe's band as the block's intensity.
 
 ## Known non-compliance
 
