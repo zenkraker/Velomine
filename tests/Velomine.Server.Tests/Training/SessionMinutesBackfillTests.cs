@@ -40,7 +40,8 @@ public sealed class SessionMinutesBackfillTests(PostgresFixture postgres)
             db.Users.Add(user);
             await db.SaveChangesAsync(Ct);
 
-            // One session of every kind the planner writes, planned when nothing recorded their length.
+            // One session per recipe the planner writes, and one it never writes, planned when nothing recorded their
+            // length.
             var planned = new[] { "R01", "R02", "R03", "R05", "R16", "R17", "R99" };
             for (var day = 0; day < planned.Length; day++)
                 await db.Database.ExecuteSqlAsync($"""
