@@ -154,6 +154,9 @@ public static class TrainingWeekView
             .Where(s => s.UserId == user.Id && s.LocalDate >= start.AddDays(-1) && s.LocalDate <= end.AddDays(1))
             .OrderBy(s => s.LocalDate).ThenBy(s => s.Id)
             .ToListAsync(ct);
+        // What the week has already spent, which the planner counts in the week's load and a move is judged by.
+        var planned = rows.Sum(s => SessionPlan.PlannedScore(s.Recipe, s.Minutes));
+        var spent = await SpentLoadAsync(db, user, clock, rows, start, end, ct);
 
         var sessions = rows.Select(s =>
         {
@@ -168,7 +171,7 @@ public static class TrainingWeekView
                 recipe.Code, recipe.TechnicalName, recipe.EnglishName, recipe.ItalianName,
                 recipe.EnglishLine, recipe.ItalianLine,
                 targets.Blocks, targets.Notes, targets.HeartRateEstimated,
-                movable ? SessionAdaptation.Days(around, s, clock) : [],
+                movable ? SessionAdaptation.Days(around, s, clock, spent) : [],
                 s.EasyReason,
                 s.EasyMovedTo,
                 s.LocalDate == clock.Today && s.State == TrainingSessionStates.Planned
@@ -182,8 +185,6 @@ public static class TrainingWeekView
         // today are not read, so a break that began mid-week still shows the line for the rest of the week.
         var gentle = rows.Any(s => s.LocalDate >= clock.Today)
             && rows.All(s => s.LocalDate < clock.Today || WeekPlanner.BaseRecipes.Contains(s.Recipe));
-        var planned = rows.Sum(s => PlannedScore(s.Recipe, s.Minutes));
-        var spent = await SpentLoadAsync(db, user, clock, rows, start, end, ct);
         return new TrainingWeek(
             start,
             end,
@@ -196,11 +197,12 @@ public static class TrainingWeekView
 
     /// <summary>
     /// What the week has already spent: a ride on a day it has no session for is load the week carries, as the planner
-    /// counts it, so the load the rider reads and the load the planner budgets against are the same number.
+    /// counts it, so the load the rider reads, the load the planner budgets against and the week a move is judged by are
+    /// the same number.
     /// </summary>
-    private static async Task<double> SpentLoadAsync(
-        VelomineDbContext db, User user, MemberClock clock, List<TrainingSession> rows, DateOnly start, DateOnly end,
-        CancellationToken ct)
+    internal static async Task<double> SpentLoadAsync(
+        VelomineDbContext db, User user, MemberClock clock, IEnumerable<TrainingSession> rows, DateOnly start,
+        DateOnly end, CancellationToken ct)
     {
         var stored = rows.Select(s => s.LocalDate).ToHashSet();
         var rides = await RideDays.LoadAsync(db, user.Id, clock, start, end.AddDays(1), ct, ftpW: user.FtpW);
@@ -208,7 +210,4 @@ public static class TrainingWeekView
             .Where(ride => ride.LocalDate <= clock.Today && !stored.Contains(ride.LocalDate))
             .Sum(ride => ride.Load);
     }
-
-    /// <summary>A stored session's planned effort score: the recipe scaled to its day, as Story 2a's formula reads it.</summary>
-    private static double PlannedScore(string recipe, int minutes) => SessionPlan.PlannedScore(recipe, minutes);
 }

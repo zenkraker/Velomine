@@ -51,7 +51,7 @@ public static class WeekPlanning
         var historyFrom = weekStart.AddDays(-7 * WeekPlanner.NormalWeeksLookBack);
         var sessions = await db.TrainingSessions.AsNoTracking()
             .Where(s => s.UserId == user.Id && s.LocalDate >= historyFrom && s.LocalDate <= weekEnd)
-            .Select(s => new { s.LocalDate, s.State, s.Recipe, s.Minutes, s.QuestionRideId })
+            .Select(s => new { s.LocalDate, s.State, s.Recipe, s.Minutes, s.QuestionRideId, s.RideId })
             .ToListAsync(ct);
         var rides = await RideDays.LoadAsync(db, user.Id, clock, historyFrom, weekEnd.AddDays(1), ct, ftpW: user.FtpW);
         // A rider back from a break longer than that window restarts from the week they really last rode, which sits
@@ -90,8 +90,10 @@ public static class WeekPlanning
 
         var weekly = sessions.Where(s => s.LocalDate >= weekStart && s.LocalDate <= weekEnd).ToList();
         var fixedSessions = weekly
-            // A session with a question of its own stays where it is: the rider is being asked about it by name.
-            .Where(s => s.LocalDate < clock.Today || s.State != TrainingSessionStates.Planned || s.QuestionRideId is not null)
+            // A session with a question of its own stays where it is: the rider is being asked about it by name. So
+            // does one a ride has ticked, whatever its state says: the ride is that day's, and the week keeps it.
+            .Where(s => s.LocalDate < clock.Today || s.State != TrainingSessionStates.Planned
+                || s.QuestionRideId is not null || s.RideId is not null)
             .Select(s => new FixedSession(s.LocalDate, s.Recipe, s.Minutes, s.State))
             .ToArray();
         var storedDates = weekly.Select(s => s.LocalDate).ToHashSet();
@@ -123,12 +125,12 @@ public static class WeekPlanning
             Fixed: fixedSessions,
             Spent: spent));
 
-        // The days the sweep may rewrite: today and later, only where nothing is done or moved. They are removed rather
-        // than deleted on the spot, so the deletes and the new sessions land in one save: a failure leaves the week it
-        // found instead of an empty one.
+        // The days the sweep may rewrite: today and later, only where nothing is done, moved or ticked. They are removed
+        // rather than deleted on the spot, so the deletes and the new sessions land in one save: a failure leaves the week
+        // it found instead of an empty one.
         var rewritable = await db.TrainingSessions
             .Where(s => s.UserId == user.Id && s.LocalDate >= from && s.LocalDate <= weekEnd
-                && s.State == TrainingSessionStates.Planned && s.QuestionRideId == null)
+                && s.State == TrainingSessionStates.Planned && s.QuestionRideId == null && s.RideId == null)
             .ToListAsync(ct);
         db.TrainingSessions.RemoveRange(rewritable);
 

@@ -240,6 +240,10 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 LongRideDay = trainingPlan.LongRideDay is { } day ? WeekDays.Name((DayOfWeek)day) : null,
                 trainingPlan.LastPlannedFor,
                 trainingPlan.IsOn,
+                // The weeks the planner made lighter, and the ride files the rider said were not the session it asked
+                // about, kept so the same file is never asked about twice.
+                trainingPlan.LighterWeeks,
+                trainingPlan.DeclinedFileHashes,
                 trainingPlan.UpdatedAt,
             },
             Sessions = trainingSessions.Select(s => new
@@ -252,6 +256,8 @@ public sealed class AccountExport(VelomineDbContext db, RideFileStore files)
                 s.State,
                 s.SkipReason,
                 s.RideId,
+                // The ride the rider is being asked about ("Was this your Thursday strong and steady?").
+                s.QuestionRideId,
                 // Why the day was made easy, where the hard session went, and the recipe it rode before, so the
                 // export says what the plan did as well as what it holds.
                 s.EasyReason,

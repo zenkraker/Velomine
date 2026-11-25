@@ -54,7 +54,17 @@ public sealed class MakeSessionEasy(VelomineDbContext db, TimeProvider time)
             return;
         }
 
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The night's planning removed and re-added the week's sessions, so the row this change touched is gone.
+            AddError("That session cannot be made easier.");
+            await Send.ErrorsAsync(StatusCodes.Status409Conflict, ct);
+            return;
+        }
         await Send.OkAsync(await TrainingWeekView.OfAsync(db, user, plan, clock, time, ct), ct);
     }
 }
@@ -99,7 +109,17 @@ public sealed class BackToTrainingPlan(VelomineDbContext db, TimeProvider time)
             return;
         }
 
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The night's planning removed and re-added the week's sessions, so the row this change touched is gone.
+            AddError("That session cannot go back to the plan.");
+            await Send.ErrorsAsync(StatusCodes.Status409Conflict, ct);
+            return;
+        }
         await Send.OkAsync(await TrainingWeekView.OfAsync(db, user, plan, clock, time, ct), ct);
     }
 }

@@ -82,7 +82,7 @@ public sealed class SessionAdaptationTests
         var hard = Session(Thursday);
         var week = new[] { Session(Tuesday), Session(Wednesday, "R06") };
 
-        Assert.Equal(MoveRefusals.NextToHard, SessionAdaptation.Refusal(week, hard, Thursday));
+        Assert.Equal(MoveRefusals.NextToHard, SessionAdaptation.Refusal(week, hard, Thursday, Clock(Thursday)));
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class SessionAdaptationTests
         var hard = Session(Wednesday);
         var week = new[] { Session(Sunday, "R03", 180) };
 
-        Assert.Equal(MoveRefusals.NextToLongRide, SessionAdaptation.Refusal(week, hard, Saturday));
+        Assert.Equal(MoveRefusals.NextToLongRide, SessionAdaptation.Refusal(week, hard, Saturday, Clock(Thursday)));
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class SessionAdaptationTests
         var hard = Session(Wednesday);
         var week = new[] { Session(Tuesday, "R02") };
 
-        Assert.Null(SessionAdaptation.Refusal(week, hard, Thursday));
+        Assert.Null(SessionAdaptation.Refusal(week, hard, Thursday, Clock(Thursday)));
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public sealed class SessionAdaptationTests
         var session = Session(Tuesday, "R02");
         var week = new[] { Session(Thursday) };
 
-        Assert.Equal(MoveRefusals.HasSession, SessionAdaptation.Refusal(week, session, Thursday));
+        Assert.Equal(MoveRefusals.HasSession, SessionAdaptation.Refusal(week, session, Thursday, Clock(Thursday)));
     }
 
     [Fact]
@@ -124,8 +124,8 @@ public sealed class SessionAdaptationTests
             session,
         ];
 
-        Assert.True(SessionAdaptation.LongRideLoaded(week));
-        Assert.Equal(MoveRefusals.TooManyLoadedDays, SessionAdaptation.Refusal(week, session, Thursday));
+        Assert.True(SessionAdaptation.LongRideLoaded(week, Clock(Sunday), Sunday));
+        Assert.Equal(MoveRefusals.TooManyLoadedDays, SessionAdaptation.Refusal(week, session, Thursday, Clock(Thursday)));
     }
 
     [Fact]
@@ -167,6 +167,47 @@ public sealed class SessionAdaptationTests
         Assert.Equal([Monday, Tuesday, Wednesday, Friday, Saturday, Sunday], days.Select(d => d.LocalDate));
         Assert.All(days, day => Assert.Equal(day.Allowed, day.Reason is null));
     }
+
+    [Fact]
+    public void SessionAdaptation_ShouldReadTheLongRideAsThePlannerDid_WhenTheWeekIsJudged()
+    {
+        // One W1 rule: the long ride is loaded when it carries more than its share of the week's load — the planned
+        // scores of its sessions plus what the week already spent — and never the days of the week next door, which the
+        // window a move is judged against holds.
+        var planned = PlanWeek(0);
+        Assert.True(planned.LongRideIsLoaded);
+        var window = planned.Sessions.Select(s => Session(s.LocalDate, s.Recipe, s.Minutes))
+            .Append(Session(Sunday.AddDays(1)))
+            .ToArray();
+
+        Assert.Equal(planned.LongRideIsLoaded, SessionAdaptation.LongRideLoaded(window, Clock(Monday), Monday));
+
+        // A day the week rode with no session planned is load it already spent, in both readings.
+        var withSpent = PlanWeek(400);
+        Assert.False(withSpent.LongRideIsLoaded);
+        Assert.Equal(withSpent.LongRideIsLoaded,
+            SessionAdaptation.LongRideLoaded(window, Clock(Monday), Monday, spentLoad: 400));
+    }
+
+    /// <summary>A week of eight hours on Monday, Wednesday and Sunday, with <paramref name="spentLoad"/> already ridden.</summary>
+    private static PlannedWeek PlanWeek(double spentLoad) => WeekPlanner.Plan(new PlannerInput(
+        Today: Monday,
+        FirstDayOfWeek: DayOfWeek.Monday,
+        FreeDays: [(int)DayOfWeek.Monday, (int)DayOfWeek.Wednesday, (int)DayOfWeek.Sunday],
+        LongRideDay: null,
+        HoursPerWeek: 8,
+        Goal: TrainingGoals.Fitter,
+        Age: null,
+        History: new PlannerHistory(
+            WeeksOfRides: 20,
+            NormalWeekLoads: [],
+            WeeksSinceLighter: 0,
+            RecordedAsLighter: false,
+            LastWeekFullyDone: true,
+            DaysSinceLastRide: 1,
+            RecentReadinessBands: []),
+        Fixed: [],
+        Spent: [new SpentDay(Tuesday, spentLoad)]));
 
     [Fact]
     public void TrainingNoticeSubject_ShouldKeepTheReasonAndTheDay_WhenASessionIsMadeEasy()

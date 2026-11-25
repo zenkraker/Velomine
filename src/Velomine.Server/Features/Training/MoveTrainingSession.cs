@@ -64,9 +64,12 @@ public sealed class MoveTrainingSession(VelomineDbContext db, TimeProvider time)
         var week = await db.TrainingSessions.AsNoTracking()
             .Where(s => s.UserId == userId && s.LocalDate >= weekStart.AddDays(-1) && s.LocalDate <= weekEnd.AddDays(1))
             .ToListAsync(ct);
-        if (SessionAdaptation.Refusal(week, session, req.LocalDate) is { } refusal)
+        // What the week has already ridden without a session, so the week a move is judged by is the one it was planned
+        // with: the same load the planner divides the long ride by (W1).
+        var spent = await TrainingWeekView.SpentLoadAsync(db, user, clock, week, weekStart, weekEnd, ct);
+        if (SessionAdaptation.Refusal(week, session, req.LocalDate, clock, spent) is { } refusal)
         {
-            var nearest = SessionAdaptation.Days(week, session, clock)
+            var nearest = SessionAdaptation.Days(week, session, clock, spent)
                 .Where(d => d.Allowed)
                 .OrderBy(d => Math.Abs(d.LocalDate.DayNumber - req.LocalDate.DayNumber))
                 .ThenBy(d => d.LocalDate.DayNumber)
@@ -83,7 +86,18 @@ public sealed class MoveTrainingSession(VelomineDbContext db, TimeProvider time)
         }
 
         SessionAdaptation.Move(user, time, db, session, req.LocalDate);
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The night's planning removed and re-added the week's sessions, so the row this move changed is gone: the
+            // rider is told what the app already says when the week refuses a change.
+            AddError("Move a session still to be ridden to another day of this week.");
+            await Send.ErrorsAsync(StatusCodes.Status409Conflict, ct);
+            return;
+        }
         await Send.OkAsync(await TrainingWeekView.OfAsync(db, user, plan, clock, time, ct), ct);
     }
 }

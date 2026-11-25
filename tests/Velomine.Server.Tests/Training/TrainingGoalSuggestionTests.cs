@@ -26,7 +26,7 @@ public sealed class TrainingGoalSuggestionTests
         NextEventDate: null);
 
     [Fact]
-    public void GoalSuggestion_ShouldPickAerobicExercise_WhenThereAreFewerThanFourWeeksOfRides()
+    public void TrainingGoalSuggestion_ShouldPickAerobicExercise_WhenThereAreFewerThanFourWeeksOfRides()
     {
         var suggestion = TrainingGoalSuggestion.For(TrainingHistory.Empty(Today) with { WeeksOfRides = 3 });
 
@@ -35,7 +35,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickAerobicExercise_WhenTheLastFourWeeksAreUnderOneHundredAndFiftyMinutes()
+    public void TrainingGoalSuggestion_ShouldPickAerobicExercise_WhenTheLastFourWeeksAreUnderOneHundredAndFiftyMinutes()
     {
         // 4 weeks, 12 rides, 140 minutes a week: 560 minutes in the four weeks, one short of the WHO floor.
         var suggestion = TrainingGoalSuggestion.For(Established() with { RidesInLast4Weeks = 12, MinutesInLast4Weeks = 4 * 140 });
@@ -45,7 +45,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickAerobicExercise_WhenTwoOfTheLastFourWeeksAreEmpty()
+    public void TrainingGoalSuggestion_ShouldPickAerobicExercise_WhenTwoOfTheLastFourWeeksAreEmpty()
     {
         var suggestion = TrainingGoalSuggestion.For(Established() with { EmptyWeeksInLast4 = 2 });
 
@@ -54,7 +54,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickTheEvent_WhenAnEventIsWithinTwentyWeeks()
+    public void TrainingGoalSuggestion_ShouldPickTheEvent_WhenAnEventIsWithinTwentyWeeks()
     {
         // 140 days is twenty weeks; the same ride history is "get fitter" without the event.
         var suggestion = TrainingGoalSuggestion.For(Established() with { NextEventDate = Today.AddDays(140) });
@@ -66,7 +66,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickGetFitter_WhenTheLastRideWasTenDaysAgo()
+    public void TrainingGoalSuggestion_ShouldPickGetFitter_WhenTheLastRideWasTenDaysAgo()
     {
         var suggestion = TrainingGoalSuggestion.For(Established() with { DaysSinceLastRide = 10 });
 
@@ -75,7 +75,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickGetFaster_WhenAnEstablishedRiderHasPowerInHalfTheRecentRides()
+    public void TrainingGoalSuggestion_ShouldPickGetFaster_WhenAnEstablishedRiderHasPowerInHalfTheRecentRides()
     {
         var suggestion = TrainingGoalSuggestion.For(Established() with { RidesWithPowerInLast8Weeks = 16 });
 
@@ -84,7 +84,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickGetFitter_WhenAnEstablishedRiderHasNotSetAnFtp()
+    public void TrainingGoalSuggestion_ShouldPickGetFitter_WhenAnEstablishedRiderHasNotSetAnFtp()
     {
         var suggestion = TrainingGoalSuggestion.For(Established(riderSetAnFtp: false));
 
@@ -93,7 +93,7 @@ public sealed class TrainingGoalSuggestionTests
     }
 
     [Fact]
-    public void GoalSuggestion_ShouldPickGetFitter_WhenThreeHoursAWeeksIsAllTheRiderHas()
+    public void TrainingGoalSuggestion_ShouldPickGetFitter_WhenThreeHoursAWeeksIsAllTheRiderHas()
     {
         // 24 hours over 8 weeks is 3 a week, under the 4 that an established rider needs.
         var suggestion = TrainingGoalSuggestion.For(Established() with { HoursInLast8Weeks = 24 });

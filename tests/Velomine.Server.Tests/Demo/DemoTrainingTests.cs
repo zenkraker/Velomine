@@ -262,4 +262,33 @@ public sealed class DemoTrainingTests(PostgresFixture postgres)
         Assert.Contains(DemoLock.Code, await off.Content.ReadAsStringAsync(Ct));
         Assert.True((await rider.GetFromJsonAsync<TrainingPlanResponse>("/api/v1/training/plan", Ct))!.On);
     }
+
+    [Fact]
+    public async Task SkipTrainingSession_ShouldRefuseTheRestOfTheWeek_WhenTheServerIsADemo()
+    {
+        await using var api = await StartDemoAsync();
+        await ResetAsync(api);
+        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
+        var weeks = (await rider.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!;
+        var week = weeks.Weeks[0];
+
+        // Skipping one day is a thing to try, so the demo lets a visitor do it.
+        var open = week.Sessions.First(s => s.State is TrainingSessionStates.Planned or TrainingSessionStates.Easy);
+        var one = await rider.PostAsJsonAsync($"/api/v1/training/sessions/{open.Id}/skip",
+            new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Tired }, Ct);
+        Assert.Equal(HttpStatusCode.OK, one.StatusCode);
+
+        // The rest of the week would leave the demo with no session for every visitor until 03:00 UTC, so it is refused.
+        var left = (await one.Content.ReadFromJsonAsync<TrainingWeeksResponse>(Ct))!.Weeks[0]
+            .Sessions.FirstOrDefault(s => s.State == TrainingSessionStates.Planned);
+        if (left is not null)
+        {
+            var rest = await rider.PostAsJsonAsync($"/api/v1/training/sessions/{left.Id}/skip",
+                new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.NoTime, RestOfWeek = true }, Ct);
+            Assert.Equal(HttpStatusCode.Forbidden, rest.StatusCode);
+            Assert.Contains(DemoLock.Code, await rest.Content.ReadAsStringAsync(Ct));
+            var after = (await rider.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!.Weeks[0];
+            Assert.Contains(after.Sessions, s => s.State == TrainingSessionStates.Planned);
+        }
+    }
 }

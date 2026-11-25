@@ -67,8 +67,16 @@ public static class WeekPlanner
     /// <summary>The long ride takes two shares of the week's minutes and every other riding day one (research §3, R03).</summary>
     public const int LongRideShares = 2;
 
-    /// <summary>A long ride carrying more of the week's planned load than this is a loaded day as well (research §4.2).</summary>
+    /// <summary>A long ride carrying more of the week's load than this is a loaded day as well (research §4.2).</summary>
     public const double LoadedLongRideShare = 0.35;
+
+    /// <summary>
+    /// W1's loaded long ride: the long ride is a loaded day when it carries more than its share of the week's load —
+    /// the planned scores of the week's sessions plus what the week already spent. The planner writes a week with this
+    /// and a move judges a week with it, so the two read the same number.
+    /// </summary>
+    public static bool IsLongRideLoaded(double longRideScore, double weekLoad) =>
+        weekLoad > 0 && longRideScore / weekLoad > LoadedLongRideShare;
 
     /// <summary>Fewer weeks of rides than G1's first rule needs is the gentle base block.</summary>
     public const int BaseBlockWeeks = TrainingGoalSuggestion.EnoughWeeks;
@@ -229,7 +237,7 @@ public static class WeekPlanner
         var longRide = longIndex >= 0 && longIndex < dates.Count
             ? sessions.FirstOrDefault(s => s.LocalDate == dates[longIndex])
             : null;
-        var longRideLoaded = longRide is not null && weekLoad > 0 && longRide.Score / weekLoad > LoadedLongRideShare;
+        var longRideLoaded = longRide is not null && IsLongRideLoaded(longRide.Score, weekLoad);
         return Week(weekStart, sessions, weekLoad, isLighter, longRideLoaded);
     }
 

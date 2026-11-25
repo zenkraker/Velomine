@@ -139,6 +139,73 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
                 Sleep = sleep,
             }, Ct);
 
+    [Fact]
+    public async Task MakeSessionEasy_ShouldAnswerAConflict_WhenTheNightReplacedTheSession()
+    {
+        await using var api = await StartAsync();
+        var member = await RiderAsync(api, (Tuesday, "R05", 60));
+        var session = await TodayAsync(member);
+        await LoseFirstSessionUpdateAsync(api);
+
+        var answer = await member.Client.PostAsync($"/api/v1/training/sessions/{session.Id}/easy", null, Ct);
+
+        // The sweep removed and re-added the week's session, so the change lands on no row: the rider reads the sentence
+        // a refusal already carries, not a server error.
+        Assert.Equal(HttpStatusCode.Conflict, answer.StatusCode);
+        Assert.Contains("cannot be made easier", await answer.Content.ReadAsStringAsync(Ct));
+    }
+
+    [Fact]
+    public async Task MoveTrainingSession_ShouldAnswerAConflict_WhenTheNightReplacedTheSession()
+    {
+        await using var api = await StartAsync();
+        var member = await RiderAsync(api, (Tuesday, "R05", 60));
+        var session = await TodayAsync(member);
+        await LoseFirstSessionUpdateAsync(api);
+
+        var answer = await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{session.Id}/move",
+            new MoveTrainingSessionRequest { LocalDate = Wednesday }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, answer.StatusCode);
+        Assert.Contains("another day of this week", await answer.Content.ReadAsStringAsync(Ct));
+    }
+
+    [Fact]
+    public async Task SkipTrainingSession_ShouldAnswerAConflict_WhenTheNightReplacedTheSession()
+    {
+        await using var api = await StartAsync();
+        var member = await RiderAsync(api, (Tuesday, "R05", 60));
+        var session = await TodayAsync(member);
+        await LoseFirstSessionUpdateAsync(api);
+
+        var answer = await member.Client.PostAsJsonAsync($"/api/v1/training/sessions/{session.Id}/skip",
+            new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Tired }, Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, answer.StatusCode);
+        Assert.Contains("already behind", await answer.Content.ReadAsStringAsync(Ct));
+    }
+
+    /// <summary>
+    /// The first update of a session lands on no row at all, which is what the night's planning does when it removes the
+    /// week's sessions and writes them again with new ids.
+    /// </summary>
+    private static async Task LoseFirstSessionUpdateAsync(TestApi api)
+    {
+        await using var scope = api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+        // A sequence, not a row: the save's transaction rolls back, and the marker has to survive it.
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE SEQUENCE training.update_once;
+            CREATE FUNCTION training.skip_one_update() RETURNS trigger AS $$
+            BEGIN
+                IF nextval('training.update_once') = 1 THEN RETURN NULL; END IF;
+                RETURN NEW;
+            END; $$ LANGUAGE plpgsql;
+            CREATE TRIGGER skip_one_update BEFORE UPDATE ON training.sessions
+            FOR EACH ROW EXECUTE FUNCTION training.skip_one_update();
+            """, Ct);
+    }
+
     private static TrainingPlanSweeper Sweeper(TestApi api) => new(
         api.Services.GetRequiredService<IServiceScopeFactory>(),
         Options.Create(new TrainingOptions()),
@@ -439,6 +506,47 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task TrainingPlanSweeper_ShouldNeverRewriteATickedSession_WhenTheNightWritesTheWeekAgain()
+    {
+        await using var api = await StartAsync();
+        var member = await RiderAsync(api, (Tuesday, "R05", 60));
+        // The row a stale page leaves behind: still planned, and already carrying the ride that was that day.
+        Guid sessionId;
+        Guid rideId;
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var ride = new Ride
+            {
+                Id = Guid.NewGuid(),
+                UserId = member.Id,
+                Status = RideStatus.Ready,
+                StartTime = new DateTimeOffset(Tuesday.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero),
+                UtcOffsetMinutes = 0,
+                MovingS = 3600,
+                Tss = 100,
+            };
+            db.Rides.Add(ride);
+            var session = await db.TrainingSessions.FirstAsync(s => s.UserId == member.Id, Ct);
+            session.RideId = ride.Id;
+            sessionId = session.Id;
+            rideId = ride.Id;
+            // The week is due again: the sweep plans today and the days after it.
+            (await db.TrainingPlans.FirstAsync(p => p.UserId == member.Id, Ct)).LastPlannedFor = Monday;
+            await db.SaveChangesAsync(Ct);
+        }
+
+        await Sweeper(api).RunOnceAsync(Ct);
+
+        // The night removes and re-adds the days it writes, and a day a ride has ticked is not one of them: the ride
+        // and its session are still there, instead of a blank day planned over them.
+        var sessions = await SessionsAsync(api, member.Id);
+        var kept = Assert.Single(sessions, s => s.LocalDate == Tuesday);
+        Assert.Equal(sessionId, kept.Id);
+        Assert.Equal(rideId, kept.RideId);
+    }
+
+    [Fact]
     public async Task MoveTrainingSession_ShouldLeaveAMovedSessionAlone_WhenTheNightWritesTheWeekAgain()
     {
         await using var api = await StartAsync();
@@ -478,7 +586,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SkipTrainingSession_ShouldSayHowManyWereSkipped_WhenItIsTheSecondSkip()
+    public async Task SkipTrainingSession_ShouldSkipTheRestOfTheWeek_WhenTheSecondSkipAsksForIt()
     {
         await using var api = await StartAsync();
         var member = await RiderAsync(api, (Monday, "R05", 60), (Tuesday, "R06", 60), (Thursday, "R02", 60),

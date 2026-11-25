@@ -474,7 +474,7 @@ are `RecipesTests`, `SessionPlanTests` and `SessionTargetsTests`.
 |------|-----------------|-------------------------------|-------|---------|--------------------------------------------------|-------|
 | R01 | Easy spin (recovery) | Easy spin · Giro defaticante | 30 | no | 30 @ 40–55 · 60–80 · 1–2 | all five |
 | R02 | Endurance | Easy ride · Giro tranquillo | 45 | no | 10 @ 45–60 · 70–80 · 2–3; 50 @ 56–75 · 81–89 · 3–4 | all five |
-| R03 | Long ride | Long ride · Uscita lunga | 60 | no | 10 @ 45–60 · 70–80 · 2–3; 90 @ 56–75 · 81–89 · 3–4; 20 @ 70–80 · 88–93 · 4 | fitter, faster, event, keep |
+| R03 | Long ride | Long ride · Uscita lunga | 60 | no | 10 @ 45–60 · 70–80 · 2–3; 90 @ 56–75 · 81–89 · 3–4; 20 @ 70–80 · 88–93 · 4 | all five |
 | R04 | Tempo | Steady pace · Ritmo costante | 60 | no | 15 @ 45–65 · 75–85 · 2–3; 40 @ 76–90 · 90–93 · 4–5; 5 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, event |
 | R05 | Sweet spot | Strong and steady · Forte e costante | 60 | yes | 15 @ 55–70 · 80–88 · 3; 40 @ 88–94 · 91–97 · 5–6; 5 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | fitter, faster, event |
 | R06 | Threshold | At your limit · Al limite | 50 | yes | 15 @ 65–80 · 85–92 · 4; 30 @ 95–105 · 94–102 · 6–7; 10 @ 40–55 · 70–80 · 2; 10 @ 40–55 · 70–80 · 2 | faster, event |
@@ -505,7 +505,8 @@ use is H2's estimate rather than a number the rider set or a ride measured.
 
 **A quality session** is one whose main set **starts** at 88 % FTP or more, the sweet-spot floor (P4's Z4 floor is 90 %):
 R05–R10, and R17's short strong block, which is what the keep goal is for. A recipe whose band merely runs into 88 %
-(R04's tempo to 90 %) is not a quality session. The long ride is load, not intensity, and is never a quality session.
+(R04's tempo to 90 %) is not a quality session. The long ride is load, not intensity, and is never a quality session. It
+is every goal's ride, because the planner gives it to every week: R03 outside the gentle base block, and R16 in it.
 
 **The numbers' sources.** The zone bands are the drafts' rows in `.dev/pack-3-research.md` §3: Coggan's power levels
 (TrainingPeaks, "Cycling Power Zones Explained"), Friel's threshold-heart-rate zones ("Joe Friel's Quick Guide to
@@ -559,12 +560,18 @@ A **loaded day** is a hard day, or the long ride when it carries **more than 35 
 **three loaded days at most, never on consecutive days**. The long ride is load, not intensity, so it never spends one of
 the two hard-day slots. The two counts measure different things on purpose: intensity and load.
 
+The share is one rule and one function, `WeekPlanner.IsLongRideLoaded`: the planner writes a week with it and a move
+judges a week with it, over the same load — the week's sessions plus what the week already spent — so a week never has two
+answers about its own long ride. The days either side of the week belong to the weeks next to it, whatever window a move
+is checked against.
+
 Source: the placement is research §4.2's algorithm and CTS's "two hard days a week, never back to back" (C, coaching
 practice); the 88 % sweet-spot boundary and the 35 % share are Velomine's own. Code: `WeekPlanner.HardDays`,
-`HardIndexes`, `QualityPreferences`, `LoadedLongRideShare`. Tests: `WeekPlannerTests` (`ShouldPlanTwoHardDays…`,
-`ShouldKeepHardDaysApart…`, `ShouldNeverPlanLoadedDaysInARow…`, `LongRide_ShouldCountAsLoaded…`,
-`ShouldGiveUpTheLongRide…`, `ShouldKeepTheLongRideAndDropTheHardDay…`,
-`ShouldDrawTheGoalsHardDaysFromTheDocumentedRecipes…`).
+`HardIndexes`, `QualityPreferences`, `LoadedLongRideShare`, `IsLongRideLoaded`, `SessionAdaptation.LongRideLoaded`. Tests:
+`WeekPlannerTests` (`ShouldPlanTwoHardDays…`, `ShouldKeepHardDaysApart…`, `ShouldNeverPlanLoadedDaysInARow…`,
+`LongRide_ShouldCountAsLoaded…`, `ShouldGiveUpTheLongRide…`, `ShouldKeepTheLongRideAndDropTheHardDay…`,
+`ShouldDrawTheGoalsHardDaysFromTheDocumentedRecipes…`), and
+`SessionAdaptation_ShouldReadTheLongRideAsThePlannerDid_WhenTheWeekIsJudged`.
 
 ### W2 — The build cycle
 
@@ -674,19 +681,32 @@ wellbeing grant still reads check-in scores and RPE only.
 moves rather than piles up are Velomine's own. F2's rest band and L2's form floor are this document's numbers, and W1's
 spacing and loaded days are the planned week's.
 
+**A ticked session is never undone.** "Back to the plan" refuses once a ride has answered the session, and the night's
+planning never removes a session a ride has ticked, whatever its state says: a page left open cannot put a day the rider
+rode back to planned, and the week cannot plan a blank day over it.
+
+**A change that loses its row answers 409.** The night removes and re-adds every planned session of today and later, with
+new ids, so an easy, a move or a skip issued at that moment updates no row. Each endpoint catches the concurrency failure
+and answers 409 with the sentence its own refusal carries, as a ride's own edit does.
+
 Code: `Features/Training/SessionAdaptation.cs` (the triggers, the replacement, the spacing and the night rule),
-`MakeSessionEasy.cs`, `MoveTrainingSession.cs`, `SkipTrainingSession.cs`, and the check-in's own
+`MakeSessionEasy.cs`, `MoveTrainingSession.cs`, `SkipTrainingSession.cs`, `TrainingPlanSweeper.cs`, and the check-in's own
 `Features/Wellbeing/SaveCheckIn.cs`. Tests: `SessionAdaptationTests`,
 `SaveCheckIn_ShouldMakeTodaysHardSessionEndurance_WhenSleepIsTheWorstAnswer`,
 `SaveCheckIn_ShouldMakeTodayEasy_WhenTheReadinessIsInTheRestBand`,
 `SaveCheckIn_ShouldKeepTheLongRideLong_WhenItIsMadeEasy`,
 `TrainingPlanSweeper_ShouldMakeTheNextHardDayEasy_WhenTheFormIsBelowTheFloorAndThereIsNoCheckIn`,
+`TrainingPlanSweeper_ShouldNeverRewriteATickedSession_WhenTheNightWritesTheWeekAgain`,
 `MoveTrainingSession_ShouldRefuseTheDayBesideAnotherHardDay_WhenTheSessionIsHard`,
 `MoveTrainingSession_ShouldRefuseTheDayBesideTheLongRide_WhenTheSessionIsHard`,
 `MoveTrainingSession_ShouldLeaveAMovedSessionAlone_WhenTheNightWritesTheWeekAgain`,
 `SkipTrainingSession_ShouldKeepItOnItsOwnDay_WhenTheRiderSkipsIt`,
-`SkipTrainingSession_ShouldOfferTheRestOfTheWeek_WhenItIsTheSecondSkip`,
+`SkipTrainingSession_ShouldSkipTheRestOfTheWeek_WhenTheSecondSkipAsksForIt`,
 `BackToTrainingPlan_ShouldBringTheMovedHardSessionBack_WhenACheckInMovedIt`,
+`BackToTrainingPlan_ShouldRefuse_WhenARideHasTickedTheEasySession`,
+`MakeSessionEasy_ShouldAnswerAConflict_WhenTheNightReplacedTheSession`,
+`MoveTrainingSession_ShouldAnswerAConflict_WhenTheNightReplacedTheSession`,
+`SkipTrainingSession_ShouldAnswerAConflict_WhenTheNightReplacedTheSession`,
 `GetTrainingWeek_ShouldNotReturnTheCheckInAnswers_WhenTheDayWasMadeEasy`.
 
 ## Estimated power

@@ -353,6 +353,39 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
 
 
     [Fact]
+    public async Task Export_ShouldCarryTheWeeksThePlanMadeLighterAndItsDeclinedFiles_WhenItHasThem()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+        await using (var scope = api.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
+            var plan = await db.TrainingPlans.FirstAsync(p => p.UserId == member.Id, Ct);
+            plan.LighterWeeks = [new DateOnly(2026, 9, 28)];
+            plan.DeclinedFileHashes = ["declined-file-hash"];
+            // The rider is being asked whether that ride was this session.
+            (await db.TrainingSessions.FirstAsync(s => s.Id == sessionId, Ct)).QuestionRideId = ride.Id;
+            await db.SaveChangesAsync(Ct);
+        }
+
+        // Every column the plan and its sessions hold is the member's data, so the export carries all three.
+        await using var read = api.Services.CreateAsyncScope();
+        var export = ActivatorUtilities.CreateInstance<AccountExport>(read.ServiceProvider);
+        using var output = new MemoryStream();
+        await export.WriteAsync(member.Id, output, read.ServiceProvider.GetRequiredService<TimeProvider>(), Ct);
+        output.Position = 0;
+
+        using var zip = new ZipArchive(output, ZipArchiveMode.Read);
+        using var document = await JsonDocument.ParseAsync(zip.GetEntry("training-plan.json")!.Open(), cancellationToken: Ct);
+        var plan0 = document.RootElement.GetProperty("plan");
+        Assert.Equal("2026-09-28", plan0.GetProperty("lighterWeeks")[0].GetString());
+        Assert.Equal("declined-file-hash", plan0.GetProperty("declinedFileHashes")[0].GetString());
+        var session = Assert.Single(document.RootElement.GetProperty("sessions").EnumerateArray());
+        Assert.Equal(ride.Id, session.GetProperty("questionRideId").GetGuid());
+    }
+
+    [Fact]
     public async Task Week_ShouldScoreOneHundredOnTimeAlone_WhenTheRideHasNoSensorsAndNoRating()
     {
         await using var api = await StartAsync();
@@ -398,6 +431,25 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
         Assert.Equal(ride.Id, session.RideId);
         // Made easy on the day is still the session the rider rode: it is ticked, and it stays easy.
         Assert.Equal(TrainingSessionStates.Easy, session.State);
+    }
+
+    [Fact]
+    public async Task BackToTrainingPlan_ShouldRefuse_WhenARideHasTickedTheEasySession()
+    {
+        await using var api = await StartAsync();
+        var (member, sessionId) = await RiderAsync(api, Day);
+        (await member.Client.PostAsync($"/api/v1/training/sessions/{sessionId}/easy", null, Ct)).EnsureSuccessStatusCode();
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
+
+        // The ride ticked the easy session (W6). A page left open must not undo the day the rider rode, so the answer is
+        // the conflict the app already shows for a refusal, and the day stays as it was ridden.
+        var answer = await member.Client.DeleteAsync($"/api/v1/training/sessions/{sessionId}/easy", Ct);
+
+        Assert.Equal(HttpStatusCode.Conflict, answer.StatusCode);
+        var session = await SessionAsync(api, sessionId);
+        Assert.Equal(TrainingSessionStates.Easy, session.State);
+        Assert.Equal(SessionAdaptation.EasyRecipe, session.Recipe);
+        Assert.Equal(ride.Id, session.RideId);
     }
 
     [Fact]

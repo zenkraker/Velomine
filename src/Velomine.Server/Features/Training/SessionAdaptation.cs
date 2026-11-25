@@ -101,21 +101,39 @@ public static class SessionAdaptation
     public static bool IsLoaded(TrainingSession session, bool longRideLoaded) =>
         Recipes.ByCode(session.Recipe).IsQuality || (IsLongRide(session.Recipe) && longRideLoaded);
 
-    /// <summary>Whether the week's long ride carries more than its share of the week's planned load (W1).</summary>
-    public static bool LongRideLoaded(IReadOnlyCollection<TrainingSession> week)
+    /// <summary>
+    /// Whether the week's long ride carries more than its share of the week's load (W1), read with the planner's own rule.
+    /// <paramref name="week"/> is a session's week and the days either side of it, which a move is judged against; the
+    /// share counts the sessions of that week alone, plus what the week already spent.
+    /// </summary>
+    public static bool LongRideLoaded(
+        IReadOnlyCollection<TrainingSession> week, MemberClock clock, DateOnly date, double spentLoad = 0) =>
+        LongRideIsLoaded(ThisWeek(week, clock, date), spentLoad);
+
+    /// <summary>The sessions of the week <paramref name="date"/> falls in: the days either side belong to their own week.</summary>
+    private static List<TrainingSession> ThisWeek(
+        IReadOnlyCollection<TrainingSession> week, MemberClock clock, DateOnly date)
     {
-        var total = week.Sum(s => SessionPlan.PlannedScore(s.Recipe, s.Minutes));
-        var longRide = week.FirstOrDefault(s => IsLongRide(s.Recipe));
-        return longRide is not null && total > 0
-            && SessionPlan.PlannedScore(longRide.Recipe, longRide.Minutes) / total > WeekPlanner.LoadedLongRideShare;
+        var start = Periods.StartOf(date, Periods.Week, clock.FirstDayOfWeek);
+        return week.Where(s => s.LocalDate >= start && s.LocalDate <= start.AddDays(6)).ToList();
     }
+
+    /// <summary>W1's loaded long ride, over one week's sessions and what that week already spent.</summary>
+    private static bool LongRideIsLoaded(List<TrainingSession> thisWeek, double spentLoad) =>
+        thisWeek.FirstOrDefault(s => IsLongRide(s.Recipe)) is { } longRide
+        && WeekPlanner.IsLongRideLoaded(
+            SessionPlan.PlannedScore(longRide.Recipe, longRide.Minutes),
+            spentLoad + thisWeek.Sum(s => SessionPlan.PlannedScore(s.Recipe, s.Minutes)));
 
     /// <summary>
     /// Why <paramref name="moving"/> cannot go on <paramref name="date"/>, or null when it can. The day has to be free,
     /// and a hard day is never next to another hard day or next to the long ride, and never makes a fourth loaded day
-    /// (W1). A week's own day is checked against the sessions around it, which may be in the next week.
+    /// (W1). A week's own day is checked against the sessions around it, which may be in the next week;
+    /// <paramref name="spentLoad"/> is what the week has already ridden without a session.
     /// </summary>
-    public static string? Refusal(IReadOnlyList<TrainingSession> week, TrainingSession moving, DateOnly date)
+    public static string? Refusal(
+        IReadOnlyList<TrainingSession> week, TrainingSession moving, DateOnly date, MemberClock clock,
+        double spentLoad = 0)
     {
         if (week.Any(s => s.Id != moving.Id && s.LocalDate == date)) return MoveRefusals.HasSession;
 
@@ -128,8 +146,10 @@ public static class SessionAdaptation
             if (Beside(IsLongRide)) return MoveRefusals.NextToLongRide;
         }
 
-        var longRideLoaded = LongRideLoaded(week);
-        var loadedAfter = week.Count(s => s.Id != moving.Id && IsLoaded(s, longRideLoaded))
+        // The loaded days are the week's own: the day after it belongs to the next week's count.
+        var thisWeek = ThisWeek(week, clock, date);
+        var longRideLoaded = LongRideIsLoaded(thisWeek, spentLoad);
+        var loadedAfter = thisWeek.Count(s => s.Id != moving.Id && IsLoaded(s, longRideLoaded))
             + (IsLoaded(moving, longRideLoaded) ? 1 : 0);
         if (loadedAfter > LoadedDays) return MoveRefusals.TooManyLoadedDays;
         return null;
@@ -140,7 +160,7 @@ public static class SessionAdaptation
     /// free days or not, with the reason it cannot take the session when it cannot.
     /// </summary>
     public static MoveDay[] Days(
-        IReadOnlyList<TrainingSession> week, TrainingSession moving, MemberClock clock)
+        IReadOnlyList<TrainingSession> week, TrainingSession moving, MemberClock clock, double spentLoad = 0)
     {
         var today = clock.Today;
         var end = Periods.StartOf(moving.LocalDate, Periods.Week, clock.FirstDayOfWeek).AddDays(6);
@@ -148,7 +168,7 @@ public static class SessionAdaptation
         for (var date = today; date <= end; date = date.AddDays(1))
         {
             if (date == moving.LocalDate) continue;
-            var refusal = Refusal(week, moving, date);
+            var refusal = Refusal(week, moving, date, clock, spentLoad);
             days.Add(new MoveDay(date, refusal is null, refusal));
         }
         return [.. days];
@@ -160,13 +180,14 @@ public static class SessionAdaptation
     /// piled onto another day (W6).
     /// </summary>
     public static DateOnly? FreeDayFor(
-        IReadOnlyList<TrainingSession> week, TrainingSession moving, int[] freeDays, MemberClock clock)
+        IReadOnlyList<TrainingSession> week, TrainingSession moving, int[] freeDays, MemberClock clock,
+        double spentLoad = 0)
     {
         var end = Periods.StartOf(moving.LocalDate, Periods.Week, clock.FirstDayOfWeek).AddDays(6);
         for (var date = moving.LocalDate.AddDays(1); date <= end; date = date.AddDays(1))
         {
             if (!freeDays.Contains((int)date.DayOfWeek)) continue;
-            if (Refusal(week, moving, date) is null) return date;
+            if (Refusal(week, moving, date, clock, spentLoad) is null) return date;
         }
         return null;
     }
@@ -191,8 +212,11 @@ public static class SessionAdaptation
         if (session.State != TrainingSessionStates.Planned) return false;
 
         var week = await WeekAsync(db, user.Id, session.LocalDate, clock, ct);
+        var weekStart = Periods.StartOf(session.LocalDate, Periods.Week, clock.FirstDayOfWeek);
+        var spent = await TrainingWeekView.SpentLoadAsync(
+            db, user, clock, week, weekStart, weekStart.AddDays(6), ct);
         DateOnly? movedTo = null;
-        if (moveTheHardSession && FreeDayFor(week, session, plan.Days, clock) is { } date)
+        if (moveTheHardSession && FreeDayFor(week, session, plan.Days, clock, spent) is { } date)
         {
             movedTo = date;
             db.TrainingSessions.Add(new TrainingSession
@@ -221,13 +245,15 @@ public static class SessionAdaptation
 
     /// <summary>
     /// "Back to the plan": the hard session comes back on today's day, and the copy the change moved to another day
-    /// goes with it, as long as nobody has ridden it. False when there is nothing to undo.
+    /// goes with it, as long as nobody has ridden it. False when there is nothing to undo, or when a ride has ticked the
+    /// session: what the rider rode is not undone by a page left open (W6).
     /// </summary>
     public static async Task<bool> BackToPlanAsync(
         VelomineDbContext db, MemberClock clock, TrainingSession session, CancellationToken ct)
     {
         if (session.State != TrainingSessionStates.Easy || session.EasyReason is null || session.OriginalRecipe is null)
             return false;
+        if (session.RideId is not null) return false;
 
         if (session.EasyMovedTo is { } movedTo)
         {

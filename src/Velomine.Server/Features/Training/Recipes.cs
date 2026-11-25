@@ -89,7 +89,7 @@ public static class Recipes
         new("R03", "Long ride", "Long ride", "Uscita lunga",
             "Your longest ride of the week, at an easy pace.",
             "Il tuo giro più lungo della settimana, a ritmo facile.",
-            60, [TrainingGoals.Fitter, TrainingGoals.Faster, TrainingGoals.Event, TrainingGoals.Keep],
+            60, EveryGoal,
             [
                 new(RecipeRoles.Warmup, 10, new(45, 60), new(70, 80), new(2, 3)),
                 new(RecipeRoles.Main, 90, new(56, 75), new(81, 89), new(3, 4)),
@@ -225,10 +225,4 @@ public static class Recipes
     public static Recipe ByCode(string code) =>
         All.FirstOrDefault(r => r.Code == code)
         ?? throw new ArgumentOutOfRangeException(nameof(code), code, "Not a session recipe.");
-
-    /// <summary>The recipes a goal draws on.</summary>
-    public static Recipe[] ForGoal(string goal) => [.. All.Where(r => r.Goals.Contains(goal))];
-
-    /// <summary>The quality recipes: the ones whose main set reaches the sweet-spot floor.</summary>
-    public static Recipe[] Quality => [.. All.Where(r => r.IsQuality)];
 }

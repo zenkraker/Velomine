@@ -45,12 +45,14 @@ public sealed class RecipesTests
     public void Recipes_ShouldGiveEveryGoalItsOwnRecipe_WhenTheGoalsAreRead()
     {
         Assert.All(Recipes.All, recipe => Assert.All(recipe.Goals, goal => Assert.Contains(goal, TrainingGoals.All)));
-        Assert.All(TrainingGoals.All, goal => Assert.NotEmpty(Recipes.ForGoal(goal)));
+        Assert.All(TrainingGoals.All, goal => Assert.Contains(Recipes.All, recipe => recipe.Goals.Contains(goal)));
 
         // Keeping fitness needs one short hard session: the keep goal has a quality recipe of its own.
-        Assert.Contains(Recipes.ForGoal(TrainingGoals.Keep), recipe => recipe.IsQuality);
+        Assert.Contains(Recipes.All, recipe => recipe.Goals.Contains(TrainingGoals.Keep) && recipe.IsQuality);
         // The gentle base recipes start a rider off, which is the aerobic goal (research §3, §5 rule 1).
         Assert.All(["R14", "R15", "R16"], code => Assert.Equal([TrainingGoals.Aerobic], Recipes.ByCode(code).Goals));
+        // The long ride is every goal's, because the planner hands R03 to every week outside the gentle base block.
+        Assert.All(TrainingGoals.All, goal => Assert.Contains(goal, Recipes.ByCode("R03").Goals));
     }
 
     [Fact]
