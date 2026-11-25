@@ -70,6 +70,12 @@ public static class NotificationTypes
 
     /// <summary>A ride shows a higher maximum or threshold heart rate than the rider typed. The subject is "Threshold 171 bpm".</summary>
     public const string HeartRateSuggested = "heart_rate_suggested";
+
+    /// <summary>
+    /// A ride may have been a planned session of the day before or after: "Was this your Thursday strong and steady?".
+    /// Refers to the ride; the session it asks about comes with the list, and an answer takes the notification away.
+    /// </summary>
+    public const string TrainingSessionQuestion = "training_session_question";
 }
 
 /// <summary>

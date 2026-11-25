@@ -108,6 +108,13 @@ public sealed class TrainingSession
     /// <summary>The ride that was this session; null until one is linked.</summary>
     public Guid? RideId { get; set; }
 
+    /// <summary>
+    /// The ride the rider is being asked about ("Was this your Thursday strong and steady?"), or null. A ride on the
+    /// day before or after that came close to this session's plan sets it; answering yes moves the session to that
+    /// day, answering no clears it. A session with a question waits where it is, so the nightly planning leaves it be.
+    /// </summary>
+    public Guid? QuestionRideId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }
 
@@ -156,5 +163,8 @@ public sealed class TrainingSessionConfiguration : IEntityTypeConfiguration<Trai
         b.HasIndex(s => new { s.UserId, s.LocalDate }).IsUnique();
         b.HasOne<User>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<Ride>().WithMany().HasForeignKey(s => s.RideId).OnDelete(DeleteBehavior.SetNull);
+        // One question per ride, and the question goes with the ride.
+        b.HasOne<Ride>().WithMany().HasForeignKey(s => s.QuestionRideId).OnDelete(DeleteBehavior.SetNull);
+        b.HasIndex(s => s.QuestionRideId).IsUnique().HasFilter("question_ride_id IS NOT NULL");
     }
 }

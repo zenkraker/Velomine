@@ -77,7 +77,11 @@ public sealed record RideResponse(
     double? EffortScore = null,
     string? EffortSource = null,
     // Watts estimated from speed, slope and weight when the ride has no power at all. A coach sees them too.
-    int? EstimatedAvgPowerW = null)
+    int? EstimatedAvgPowerW = null,
+    // The auto-training session this ride ticked, or the open one the rider is asked about ("Was this your Thursday
+    // strong and steady?"). Set by GetRide only, so no other viewer of the ride — a coach, a share link, a club —
+    // ever carries it.
+    Training.TrainingRideMatch? Training = null)
 {
     public static RideResponse From(Ride r) => new(
         r.Id,

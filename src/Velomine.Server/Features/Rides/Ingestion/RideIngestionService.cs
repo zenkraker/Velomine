@@ -252,8 +252,28 @@ public sealed class RideIngestionService(
         // The new rides add wear to their bike's parts; warn when one is nearly or fully worn.
         var bikes = read.Where(r => r.Status == RideStatus.Ready && r.BikeId != null).Select(r => r.BikeId!.Value).Distinct().ToList();
         VelomineMetrics.RidesIngested.Add(read.Count(r => r.Status == RideStatus.Ready));
+        // A ride ticks the session of its day, or asks about one beside it. After the save and in a context of its own,
+        // so nothing here — not even a booking error — can stop a ride becoming ready.
+        await MatchSessionsAsync(ride.UserId, [.. read.Where(r => r.Status == RideStatus.Ready).Select(r => r.Id)], ct);
         // An import warns once when it finishes, not once per ride: wear is recomputed from every ride each time.
         if (ride.NotifiesMember) await Notify.WornPartsAsync(db, time, ride.UserId, bikes, ct);
+    }
+
+    private async Task MatchSessionsAsync(Guid userId, IReadOnlyList<Guid> rideIds, CancellationToken ct)
+    {
+        if (rideIds.Count == 0) return;
+        try
+        {
+            await using var scope = services.CreateAsyncScope();
+            await SessionMatch.AddAsync(
+                scope.ServiceProvider.GetRequiredService<VelomineDbContext>(), time, userId, rideIds, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The ride is saved and ready; the session it might have been is worked out again the next time one is
+            // read, and the rider loses nothing but the tick. Nothing of the ride or the rider goes in the log.
+            logger.LogWarning("Could not match a ride to its training session ({Exception}).", ex.GetType().Name);
+        }
     }
 
     /// <summary>
