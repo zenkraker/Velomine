@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:velomine_api/api.dart';
 
+import '../../core/command.dart';
 import '../../core/providers.dart';
 import '../../core/result.dart';
 import '../../core/user_message.dart';
@@ -9,12 +10,14 @@ import 'training_state.dart';
 
 part 'training_view_model.g.dart';
 
-/// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
-/// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.
+/// The member's auto-training plan and week for the session: the shell reads the plan to show the Training
+/// destination, the profile for its switch, the Training page for today and the week, and Progress for its Today
+/// strip. A sign-out rebuilds it empty.
 @Riverpod(keepAlive: true)
 class TrainingViewModel extends _$TrainingViewModel {
   int _messageId = 0;
   int _loadGeneration = 0;
+  int _weekGeneration = 0;
 
   @override
   TrainingState build() {
@@ -23,6 +26,7 @@ class TrainingViewModel extends _$TrainingViewModel {
     return const TrainingState();
   }
 
+  /// The plan, and then the week it needs: the week endpoint answers 404 while auto training is off.
   Future<void> load() async {
     final generation = ++_loadGeneration;
     state = state.copyWith(load: state.load.start());
@@ -32,10 +36,25 @@ class TrainingViewModel extends _$TrainingViewModel {
       load: state.load.finish(result),
       plan: result.valueOrNull,
     );
+    if (result.isOk && state.on) await loadWeek();
+  }
+
+  Future<void> loadWeek() async {
+    final generation = ++_weekGeneration;
+    state = state.copyWith(week: state.week.start());
+    final result = await ref.read(trainingDataProvider).week();
+    if (!ref.mounted || generation != _weekGeneration) return;
+    state = state.copyWith(
+      week: state.week.finish(result),
+      weeks: result.valueOrNull?.weeks ?? const [],
+    );
   }
 
   /// Takes the plan a screen has just saved, so the destination and the switch apply without asking again.
-  void adopt(TrainingPlanResponse plan) => state = state.copyWith(plan: plan);
+  void adopt(TrainingPlanResponse plan) {
+    state = state.copyWith(plan: plan);
+    if (plan.on_) Future.microtask(loadWeek);
+  }
 
   /// Turns auto training off: today's and later sessions go on the server, the past ones stay.
   Future<bool> turnOff() async {
@@ -46,6 +65,8 @@ class TrainingViewModel extends _$TrainingViewModel {
     state = switch (result) {
       Ok(:final value) => state.copyWith(
         plan: value,
+        weeks: const [],
+        week: const CommandState.idle(),
         turnOff: state.turnOff.finish(result),
       ),
       Failed(:final failure) => state.copyWith(

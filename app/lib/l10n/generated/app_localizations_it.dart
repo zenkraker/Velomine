@@ -5546,4 +5546,102 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get actionTurnOffTraining => 'disattivare l\'allenamento automatico';
+
+  @override
+  String trainingTodayCaption(String day) {
+    return 'Oggi · $day';
+  }
+
+  @override
+  String get trainingToday => 'oggi';
+
+  @override
+  String get trainingRestDay => 'Riposo';
+
+  @override
+  String get trainingRestDaySentence =>
+      'Niente oggi. Il riposo fa parte del piano.';
+
+  @override
+  String get trainingThisWeek => 'Questa settimana';
+
+  @override
+  String get trainingNextWeek => 'La prossima settimana (anteprima)';
+
+  @override
+  String get trainingRest => 'Riposo';
+
+  @override
+  String trainingWeekDone(int done, int total) {
+    return '$done di $total fatte';
+  }
+
+  @override
+  String get trainingStatePlanned => 'In programma';
+
+  @override
+  String get trainingStateDone => 'Fatto';
+
+  @override
+  String get trainingStateEasy => 'Facile invece';
+
+  @override
+  String get trainingStateMoved => 'Spostato';
+
+  @override
+  String get trainingStateSkipped => 'Saltato';
+
+  @override
+  String get trainingStateMissed => 'Mancato';
+
+  @override
+  String get trainingOpenSession => 'Apri la seduta';
+
+  @override
+  String get trainingSessionWhy => 'Perché questa seduta';
+
+  @override
+  String get trainingSessionTitle => 'La seduta';
+
+  @override
+  String trainingCoachesCall(String term) {
+    return 'I tecnici la chiamano $term.';
+  }
+
+  @override
+  String get trainingBlockWarmup => 'Riscaldamento';
+
+  @override
+  String get trainingBlockMain => 'Parte principale';
+
+  @override
+  String get trainingBlockRecovery => 'Facile in mezzo';
+
+  @override
+  String get trainingBlockCooldown => 'Defaticamento';
+
+  @override
+  String trainingFeel(String range) {
+    return 'sensazione $range';
+  }
+
+  @override
+  String get trainingFeelExplained =>
+      'Sensazione 7: duro, potresti tenerlo per circa un\'ora.';
+
+  @override
+  String get trainingEstimated => 'stimata';
+
+  @override
+  String get trainingHeartEstimated =>
+      'Frequenza cardiaca stimata dalla tua massima.';
+
+  @override
+  String get trainingSessionMissing =>
+      'Questa seduta non è nel piano di questa settimana.';
+
+  @override
+  String trainingTodayStrip(String what) {
+    return 'Oggi · $what';
+  }
 }

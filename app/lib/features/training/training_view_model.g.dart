@@ -8,18 +8,21 @@ part of 'training_view_model.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
-/// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.
+/// The member's auto-training plan and week for the session: the shell reads the plan to show the Training
+/// destination, the profile for its switch, the Training page for today and the week, and Progress for its Today
+/// strip. A sign-out rebuilds it empty.
 
 @ProviderFor(TrainingViewModel)
 final trainingViewModelProvider = TrainingViewModelProvider._();
 
-/// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
-/// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.
+/// The member's auto-training plan and week for the session: the shell reads the plan to show the Training
+/// destination, the profile for its switch, the Training page for today and the week, and Progress for its Today
+/// strip. A sign-out rebuilds it empty.
 final class TrainingViewModelProvider
     extends $NotifierProvider<TrainingViewModel, TrainingState> {
-  /// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
-  /// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.
+  /// The member's auto-training plan and week for the session: the shell reads the plan to show the Training
+  /// destination, the profile for its switch, the Training page for today and the week, and Progress for its Today
+  /// strip. A sign-out rebuilds it empty.
   TrainingViewModelProvider._()
     : super(
         from: null,
@@ -47,10 +50,11 @@ final class TrainingViewModelProvider
   }
 }
 
-String _$trainingViewModelHash() => r'335abd3d4b232529716ad8e91a4c248edbcac8df';
+String _$trainingViewModelHash() => r'a017a6862728e5fe3e82f344564607b5a7f831b8';
 
-/// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
-/// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.
+/// The member's auto-training plan and week for the session: the shell reads the plan to show the Training
+/// destination, the profile for its switch, the Training page for today and the week, and Progress for its Today
+/// strip. A sign-out rebuilds it empty.
 
 abstract class _$TrainingViewModel extends $Notifier<TrainingState> {
   TrainingState build();

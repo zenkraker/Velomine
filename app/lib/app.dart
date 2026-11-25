@@ -72,6 +72,7 @@ import 'features/rides/incoming/incoming_rides_area.dart';
 import 'features/rides/import/import_screen.dart';
 import 'features/rides/rides_view_model.dart';
 import 'features/rides/rides_screen.dart';
+import 'features/training/session_screen.dart';
 import 'features/training/training_screen.dart';
 import 'features/training/training_setup_screen.dart';
 import 'features/training/training_view_model.dart';
@@ -205,7 +206,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       // The Training destination exists only while auto training is on; the setup is how it is turned on. Before
       // the plan has loaded nothing is known, so a deep link waits on the page instead of losing its address.
       final training = ref.read(trainingViewModelProvider);
-      if (path == '/training' &&
+      if ((path == '/training' || path.startsWith('/training/sessions')) &&
           training.load.completed &&
           !(training.on &&
               (session.serverInfo?.autoTrainingEnabled ?? false))) {
@@ -347,6 +348,13 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           GoRoute(
             path: '/training/setup',
             builder: (_, _) => const TrainingSetupScreen(),
+          ),
+          GoRoute(
+            path: '/training/sessions/:id',
+            builder: (context, state) => SessionScreen(
+              key: ValueKey(state.pathParameters['id']),
+              id: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(path: '/progress', builder: (_, _) => const ProgressScreen()),
           GoRoute(
