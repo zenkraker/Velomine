@@ -80,7 +80,6 @@ void main() {
             'plannedLoad': 120.0,
             'isLighterWeek': false,
             'skipsThisWeek': 0,
-            'skipsThisWeek': 0,
             'note': null,
             'sessions': [
               trainingWeekSessionJson(
@@ -116,7 +115,6 @@ void main() {
             'end': '2026-11-08',
             'plannedLoad': 120.0,
             'isLighterWeek': false,
-            'skipsThisWeek': 0,
             'skipsThisWeek': 0,
             'note': null,
             'sessions': [
