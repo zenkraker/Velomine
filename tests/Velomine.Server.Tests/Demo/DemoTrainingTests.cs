@@ -278,17 +278,13 @@ public sealed class DemoTrainingTests(PostgresFixture postgres)
             new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Tired }, Ct);
         Assert.Equal(HttpStatusCode.OK, one.StatusCode);
 
-        // The rest of the week would leave the demo with no session for every visitor until 03:00 UTC, so it is refused.
-        var left = (await one.Content.ReadFromJsonAsync<TrainingWeeksResponse>(Ct))!.Weeks[0]
-            .Sessions.FirstOrDefault(s => s.State == TrainingSessionStates.Planned);
-        if (left is not null)
-        {
-            var rest = await rider.PostAsJsonAsync($"/api/v1/training/sessions/{left.Id}/skip",
-                new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.NoTime, RestOfWeek = true }, Ct);
-            Assert.Equal(HttpStatusCode.Forbidden, rest.StatusCode);
-            Assert.Contains(DemoLock.Code, await rest.Content.ReadAsStringAsync(Ct));
-            var after = (await rider.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!.Weeks[0];
-            Assert.Contains(after.Sessions, s => s.State == TrainingSessionStates.Planned);
-        }
+        // The rest of the week would leave the demo with no session for every visitor until 03:00 UTC, so it is refused,
+        // and nothing beyond the one day the visitor chose is skipped.
+        var rest = await rider.PostAsJsonAsync($"/api/v1/training/sessions/{open.Id}/skip",
+            new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.NoTime, RestOfWeek = true }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, rest.StatusCode);
+        Assert.Contains(DemoLock.Code, await rest.Content.ReadAsStringAsync(Ct));
+        var after = (await rider.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!.Weeks[0];
+        Assert.Equal(week.SkipsThisWeek + 1, after.SkipsThisWeek);
     }
 }
