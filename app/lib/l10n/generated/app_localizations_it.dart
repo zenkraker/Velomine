@@ -5366,4 +5366,184 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rideEffortHard => 'duro';
+
+  @override
+  String get navTraining => 'Allenamento';
+
+  @override
+  String get autoTrainingTitle => 'Allenamento automatico (sperimentale)';
+
+  @override
+  String get autoTrainingSentence =>
+      'Velomine prepara la tua settimana dalle tue uscite. È una novità:';
+
+  @override
+  String get autoTrainingFeedback => 'dicci cosa non va';
+
+  @override
+  String get autoTrainingOffTitle => 'Disattivare l\'allenamento automatico?';
+
+  @override
+  String get autoTrainingOffBody =>
+      'Il piano di questa settimana e delle prossime sparisce. Le sedute già fatte restano.';
+
+  @override
+  String get autoTrainingOffAction => 'Disattiva l\'allenamento automatico';
+
+  @override
+  String get trainingChangeSetup => 'Cambia impostazioni';
+
+  @override
+  String get trainingGoalCard => 'Il tuo obiettivo';
+
+  @override
+  String trainingPlanStarts(String day) {
+    return 'Il tuo piano inizia $day.';
+  }
+
+  @override
+  String trainingHoursLine(int hours) {
+    return '$hours h a settimana';
+  }
+
+  @override
+  String get trainingSetupTitle => 'Imposta l\'allenamento automatico';
+
+  @override
+  String get trainingGoalStep => '1 · Il tuo obiettivo';
+
+  @override
+  String get trainingRideStep => '2 · Quando pedali';
+
+  @override
+  String get trainingHeartStep => '3 · La tua frequenza cardiaca';
+
+  @override
+  String get goalAerobic => 'Pedalare con regolarità';
+
+  @override
+  String get goalFitter => 'Essere più in forma';
+
+  @override
+  String get goalFaster => 'Andare più forte';
+
+  @override
+  String get goalEvent => 'Prepararsi a un evento';
+
+  @override
+  String get goalKeep => 'Restare in forma con meno tempo';
+
+  @override
+  String get goalFasterLine => 'In salita e in pianura';
+
+  @override
+  String get goalSuggested => 'Suggerito';
+
+  @override
+  String get goalReasonNotEnoughRiding =>
+      'Non abbiamo ancora visto abbastanza delle tue uscite: iniziamo facili e costanti.';
+
+  @override
+  String get goalReasonRegularRiding =>
+      'La regolarità viene prima della velocità: un ritmo costante di uscite facili è il modo migliore per iniziare.';
+
+  @override
+  String get goalReasonEventSoon => 'Costruiamo in vista del tuo evento.';
+
+  @override
+  String get goalReasonAfterBreak => 'Bentornato: ripartiamo piano.';
+
+  @override
+  String get goalReasonPowerRides =>
+      'Pedali con regolarità e con il misuratore, quindi puntiamo alla tua soglia.';
+
+  @override
+  String get goalReasonRegularRider =>
+      'Pedali con regolarità. Costruiamo la base e un po\' di velocità.';
+
+  @override
+  String get goalLineAerobic =>
+      'Un ritmo costante di uscite facili, prima di qualsiasi cosa più veloce.';
+
+  @override
+  String get goalLineFitter => 'La tua base, e un po\' di velocità in più.';
+
+  @override
+  String get goalLineFaster => 'In salita e in pianura.';
+
+  @override
+  String get goalLineEvent =>
+      'Pianificato come essere più in forma, fino al giorno.';
+
+  @override
+  String get goalLineKeep =>
+      'Un paio di uscite a settimana mantengono quello che hai.';
+
+  @override
+  String goalNextEvent(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String get goalAddEvent => 'Aggiungi un evento';
+
+  @override
+  String get trainingDaysLabel => 'Giorni in cui puoi pedalare';
+
+  @override
+  String get trainingHoursLabel => 'Ore a settimana';
+
+  @override
+  String get trainingLongRideLabel => 'Uscita lunga il';
+
+  @override
+  String get trainingLongRidePicks => 'Sceglie Velomine';
+
+  @override
+  String trainingLongRidePicksDay(String day) {
+    return 'Sceglie Velomine ($day)';
+  }
+
+  @override
+  String get trainingHeartUnknown => 'Non lo so';
+
+  @override
+  String get trainingHeartUnknownHelp =>
+      'Lo stimiamo dalla tua età e lo impariamo dalle tue uscite.';
+
+  @override
+  String get trainingMaxHeartRate => 'Frequenza cardiaca massima';
+
+  @override
+  String get trainingBirthYear => 'Anno di nascita';
+
+  @override
+  String get trainingHealthNote =>
+      'Se hai un problema di cuore o non fai attività da molto tempo, parlane prima con un medico.';
+
+  @override
+  String get trainingStart => 'Inizia';
+
+  @override
+  String get errorTrainingDays =>
+      'Scegli almeno un giorno in cui puoi pedalare.';
+
+  @override
+  String get errorTrainingHours => 'Inserisci le ore a settimana: da 1 a 30.';
+
+  @override
+  String get errorTrainingMaxHeartRate =>
+      'Inserisci una frequenza cardiaca massima da 120 a 230.';
+
+  @override
+  String get errorTrainingBirthYear => 'Inserisci il tuo anno di nascita.';
+
+  @override
+  String get actionLoadTraining => 'caricare il tuo piano di allenamento';
+
+  @override
+  String get actionSaveTrainingPlan => 'salvare le tue impostazioni';
+
+  @override
+  String get actionTurnOffTraining => 'disattivare l\'allenamento automatico';
 }

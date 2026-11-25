@@ -9133,6 +9133,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'hard'**
   String get rideEffortHard;
+
+  /// No description provided for @navTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get navTraining;
+
+  /// No description provided for @autoTrainingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto training (experimental)'**
+  String get autoTrainingTitle;
+
+  /// No description provided for @autoTrainingSentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine plans your week from your rides. It is new:'**
+  String get autoTrainingSentence;
+
+  /// No description provided for @autoTrainingFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'tell us what feels wrong'**
+  String get autoTrainingFeedback;
+
+  /// No description provided for @autoTrainingOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off auto training?'**
+  String get autoTrainingOffTitle;
+
+  /// No description provided for @autoTrainingOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan for this week and later goes. Your past sessions stay.'**
+  String get autoTrainingOffBody;
+
+  /// No description provided for @autoTrainingOffAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off auto training'**
+  String get autoTrainingOffAction;
+
+  /// No description provided for @trainingChangeSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Change setup'**
+  String get trainingChangeSetup;
+
+  /// No description provided for @trainingGoalCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Your goal'**
+  String get trainingGoalCard;
+
+  /// No description provided for @trainingPlanStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan starts {day}.'**
+  String trainingPlanStarts(String day);
+
+  /// No description provided for @trainingHoursLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h a week'**
+  String trainingHoursLine(int hours);
+
+  /// No description provided for @trainingSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up auto training'**
+  String get trainingSetupTitle;
+
+  /// No description provided for @trainingGoalStep.
+  ///
+  /// In en, this message translates to:
+  /// **'1 · Your goal'**
+  String get trainingGoalStep;
+
+  /// No description provided for @trainingRideStep.
+  ///
+  /// In en, this message translates to:
+  /// **'2 · When you ride'**
+  String get trainingRideStep;
+
+  /// No description provided for @trainingHeartStep.
+  ///
+  /// In en, this message translates to:
+  /// **'3 · Your heart rate'**
+  String get trainingHeartStep;
+
+  /// No description provided for @goalAerobic.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride more regularly'**
+  String get goalAerobic;
+
+  /// No description provided for @goalFitter.
+  ///
+  /// In en, this message translates to:
+  /// **'Get fitter'**
+  String get goalFitter;
+
+  /// No description provided for @goalFaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Get faster'**
+  String get goalFaster;
+
+  /// No description provided for @goalEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ready for a ride or race'**
+  String get goalEvent;
+
+  /// No description provided for @goalKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay fit with less time'**
+  String get goalKeep;
+
+  /// No description provided for @goalFasterLine.
+  ///
+  /// In en, this message translates to:
+  /// **'On climbs and on the flat'**
+  String get goalFasterLine;
+
+  /// No description provided for @goalSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get goalSuggested;
+
+  /// No description provided for @goalReasonNotEnoughRiding.
+  ///
+  /// In en, this message translates to:
+  /// **'We have not seen enough of your riding yet, so we start easy and steady.'**
+  String get goalReasonNotEnoughRiding;
+
+  /// No description provided for @goalReasonRegularRiding.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular riding comes before faster riding; a steady rhythm of easy rides is the best start.'**
+  String get goalReasonRegularRiding;
+
+  /// No description provided for @goalReasonEventSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'We build toward your event.'**
+  String get goalReasonEventSoon;
+
+  /// No description provided for @goalReasonAfterBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back: we ease in.'**
+  String get goalReasonAfterBreak;
+
+  /// No description provided for @goalReasonPowerRides.
+  ///
+  /// In en, this message translates to:
+  /// **'You ride regularly with power, so we aim at your threshold power.'**
+  String get goalReasonPowerRides;
+
+  /// No description provided for @goalReasonRegularRider.
+  ///
+  /// In en, this message translates to:
+  /// **'You ride regularly. We build both your base and a little speed.'**
+  String get goalReasonRegularRider;
+
+  /// No description provided for @goalLineAerobic.
+  ///
+  /// In en, this message translates to:
+  /// **'A steady rhythm of easy rides, before anything faster.'**
+  String get goalLineAerobic;
+
+  /// No description provided for @goalLineFitter.
+  ///
+  /// In en, this message translates to:
+  /// **'Your base, and a little speed on top.'**
+  String get goalLineFitter;
+
+  /// No description provided for @goalLineFaster.
+  ///
+  /// In en, this message translates to:
+  /// **'On climbs and on the flat.'**
+  String get goalLineFaster;
+
+  /// No description provided for @goalLineEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned like getting fitter, up to the day.'**
+  String get goalLineEvent;
+
+  /// No description provided for @goalLineKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'A couple of rides a week keep what you have.'**
+  String get goalLineKeep;
+
+  /// No description provided for @goalNextEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {date}'**
+  String goalNextEvent(String name, String date);
+
+  /// No description provided for @goalAddEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an event'**
+  String get goalAddEvent;
+
+  /// No description provided for @trainingDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Days you can ride'**
+  String get trainingDaysLabel;
+
+  /// No description provided for @trainingHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours a week'**
+  String get trainingHoursLabel;
+
+  /// No description provided for @trainingLongRideLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Long ride on'**
+  String get trainingLongRideLabel;
+
+  /// No description provided for @trainingLongRidePicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine picks'**
+  String get trainingLongRidePicks;
+
+  /// No description provided for @trainingLongRidePicksDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Velomine picks ({day})'**
+  String trainingLongRidePicksDay(String day);
+
+  /// No description provided for @trainingHeartUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'I don\'t know'**
+  String get trainingHeartUnknown;
+
+  /// No description provided for @trainingHeartUnknownHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'We estimate it from your age and learn it from your rides.'**
+  String get trainingHeartUnknownHelp;
+
+  /// No description provided for @trainingMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum heart rate'**
+  String get trainingMaxHeartRate;
+
+  /// No description provided for @trainingBirthYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year of birth'**
+  String get trainingBirthYear;
+
+  /// No description provided for @trainingHealthNote.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have a heart condition or have not exercised for a long time, check with a doctor first.'**
+  String get trainingHealthNote;
+
+  /// No description provided for @trainingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get trainingStart;
+
+  /// No description provided for @errorTrainingDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one day you can ride.'**
+  String get errorTrainingDays;
+
+  /// No description provided for @errorTrainingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the hours you can ride in a week: 1 to 30.'**
+  String get errorTrainingHours;
+
+  /// No description provided for @errorTrainingMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a maximum heart rate from 120 to 230.'**
+  String get errorTrainingMaxHeartRate;
+
+  /// No description provided for @errorTrainingBirthYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your year of birth.'**
+  String get errorTrainingBirthYear;
+
+  /// No description provided for @actionLoadTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'load your training plan'**
+  String get actionLoadTraining;
+
+  /// No description provided for @actionSaveTrainingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'save your setup'**
+  String get actionSaveTrainingPlan;
+
+  /// No description provided for @actionTurnOffTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'turn off auto training'**
+  String get actionTurnOffTraining;
 }
 
 class _AppLocalizationsDelegate

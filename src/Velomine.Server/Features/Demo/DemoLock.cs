@@ -33,6 +33,8 @@ public static class DemoLock
         ("POST", "club/leave"),
         ("POST", "club/join-code"),
         ("PUT", "club/members/{userId}/role"),
+        // A visitor must not turn the demo rider's auto training off for the next visitor.
+        ("DELETE", "training/plan"),
     ];
 
     public static bool Refuses(string method, string? routeTemplate)

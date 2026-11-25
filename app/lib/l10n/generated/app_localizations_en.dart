@@ -5332,4 +5332,182 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rideEffortHard => 'hard';
+
+  @override
+  String get navTraining => 'Training';
+
+  @override
+  String get autoTrainingTitle => 'Auto training (experimental)';
+
+  @override
+  String get autoTrainingSentence =>
+      'Velomine plans your week from your rides. It is new:';
+
+  @override
+  String get autoTrainingFeedback => 'tell us what feels wrong';
+
+  @override
+  String get autoTrainingOffTitle => 'Turn off auto training?';
+
+  @override
+  String get autoTrainingOffBody =>
+      'Your plan for this week and later goes. Your past sessions stay.';
+
+  @override
+  String get autoTrainingOffAction => 'Turn off auto training';
+
+  @override
+  String get trainingChangeSetup => 'Change setup';
+
+  @override
+  String get trainingGoalCard => 'Your goal';
+
+  @override
+  String trainingPlanStarts(String day) {
+    return 'Your plan starts $day.';
+  }
+
+  @override
+  String trainingHoursLine(int hours) {
+    return '$hours h a week';
+  }
+
+  @override
+  String get trainingSetupTitle => 'Set up auto training';
+
+  @override
+  String get trainingGoalStep => '1 · Your goal';
+
+  @override
+  String get trainingRideStep => '2 · When you ride';
+
+  @override
+  String get trainingHeartStep => '3 · Your heart rate';
+
+  @override
+  String get goalAerobic => 'Ride more regularly';
+
+  @override
+  String get goalFitter => 'Get fitter';
+
+  @override
+  String get goalFaster => 'Get faster';
+
+  @override
+  String get goalEvent => 'Get ready for a ride or race';
+
+  @override
+  String get goalKeep => 'Stay fit with less time';
+
+  @override
+  String get goalFasterLine => 'On climbs and on the flat';
+
+  @override
+  String get goalSuggested => 'Suggested';
+
+  @override
+  String get goalReasonNotEnoughRiding =>
+      'We have not seen enough of your riding yet, so we start easy and steady.';
+
+  @override
+  String get goalReasonRegularRiding =>
+      'Regular riding comes before faster riding; a steady rhythm of easy rides is the best start.';
+
+  @override
+  String get goalReasonEventSoon => 'We build toward your event.';
+
+  @override
+  String get goalReasonAfterBreak => 'Welcome back: we ease in.';
+
+  @override
+  String get goalReasonPowerRides =>
+      'You ride regularly with power, so we aim at your threshold power.';
+
+  @override
+  String get goalReasonRegularRider =>
+      'You ride regularly. We build both your base and a little speed.';
+
+  @override
+  String get goalLineAerobic =>
+      'A steady rhythm of easy rides, before anything faster.';
+
+  @override
+  String get goalLineFitter => 'Your base, and a little speed on top.';
+
+  @override
+  String get goalLineFaster => 'On climbs and on the flat.';
+
+  @override
+  String get goalLineEvent => 'Planned like getting fitter, up to the day.';
+
+  @override
+  String get goalLineKeep => 'A couple of rides a week keep what you have.';
+
+  @override
+  String goalNextEvent(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String get goalAddEvent => 'Add an event';
+
+  @override
+  String get trainingDaysLabel => 'Days you can ride';
+
+  @override
+  String get trainingHoursLabel => 'Hours a week';
+
+  @override
+  String get trainingLongRideLabel => 'Long ride on';
+
+  @override
+  String get trainingLongRidePicks => 'Velomine picks';
+
+  @override
+  String trainingLongRidePicksDay(String day) {
+    return 'Velomine picks ($day)';
+  }
+
+  @override
+  String get trainingHeartUnknown => 'I don\'t know';
+
+  @override
+  String get trainingHeartUnknownHelp =>
+      'We estimate it from your age and learn it from your rides.';
+
+  @override
+  String get trainingMaxHeartRate => 'Maximum heart rate';
+
+  @override
+  String get trainingBirthYear => 'Year of birth';
+
+  @override
+  String get trainingHealthNote =>
+      'If you have a heart condition or have not exercised for a long time, check with a doctor first.';
+
+  @override
+  String get trainingStart => 'Start';
+
+  @override
+  String get errorTrainingDays => 'Choose at least one day you can ride.';
+
+  @override
+  String get errorTrainingHours =>
+      'Enter the hours you can ride in a week: 1 to 30.';
+
+  @override
+  String get errorTrainingMaxHeartRate =>
+      'Enter a maximum heart rate from 120 to 230.';
+
+  @override
+  String get errorTrainingBirthYear => 'Enter your year of birth.';
+
+  @override
+  String get actionLoadTraining => 'load your training plan';
+
+  @override
+  String get actionSaveTrainingPlan => 'save your setup';
+
+  @override
+  String get actionTurnOffTraining => 'turn off auto training';
 }

@@ -1,0 +1,65 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:velomine_api/api.dart';
+
+import '../../core/providers.dart';
+import '../../core/result.dart';
+import '../../core/user_message.dart';
+import 'training_data.dart';
+import 'training_state.dart';
+
+part 'training_view_model.g.dart';
+
+/// The member's auto-training plan for the session: the shell reads it to show the Training destination, the
+/// profile for its switch and the Training page for the goal. A sign-out rebuilds it empty.
+@Riverpod(keepAlive: true)
+class TrainingViewModel extends _$TrainingViewModel {
+  int _messageId = 0;
+  int _loadGeneration = 0;
+
+  @override
+  TrainingState build() {
+    if (ref.watch(signedInUserIdProvider) == null) return const TrainingState();
+    Future.microtask(load);
+    return const TrainingState();
+  }
+
+  Future<void> load() async {
+    final generation = ++_loadGeneration;
+    state = state.copyWith(load: state.load.start());
+    final result = await ref.read(trainingDataProvider).plan();
+    if (!ref.mounted || generation != _loadGeneration) return;
+    state = state.copyWith(
+      load: state.load.finish(result),
+      plan: result.valueOrNull,
+    );
+  }
+
+  /// Takes the plan a screen has just saved, so the destination and the switch apply without asking again.
+  void adopt(TrainingPlanResponse plan) => state = state.copyWith(plan: plan);
+
+  /// Turns auto training off: today's and later sessions go on the server, the past ones stay.
+  Future<bool> turnOff() async {
+    if (state.turnOff.running) return false;
+    state = state.copyWith(turnOff: state.turnOff.start());
+    final result = await ref.read(trainingDataProvider).turnOff();
+    if (!ref.mounted) return false;
+    state = switch (result) {
+      Ok(:final value) => state.copyWith(
+        plan: value,
+        turnOff: state.turnOff.finish(result),
+      ),
+      Failed(:final failure) => state.copyWith(
+        turnOff: state.turnOff.finish(result),
+        messages: [...state.messages, FailureMessage(_messageId++, failure)],
+      ),
+    };
+    return result.isOk;
+  }
+
+  void messageShown(int id) => state = state.copyWith(
+    messages: [
+      for (final message in state.messages)
+        if (message.id != id) message,
+    ],
+  );
+}

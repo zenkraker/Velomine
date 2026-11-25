@@ -104,6 +104,10 @@ public sealed partial class VelomineDbContext(DbContextOptions<VelomineDbContext
 
     public DbSet<TrainingEvent> Events => Set<TrainingEvent>();
 
+    public DbSet<TrainingPlan> TrainingPlans => Set<TrainingPlan>();
+
+    public DbSet<TrainingSession> TrainingSessions => Set<TrainingSession>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

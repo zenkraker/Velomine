@@ -9,6 +9,7 @@ using Velomine.Server.Features.Bikes;
 using Velomine.Server.Features.Privacy;
 using Velomine.Server.Features.Rides;
 using Velomine.Server.Features.Rides.Import;
+using Velomine.Server.Features.Training;
 using Velomine.Server.Features.Wellbeing;
 using static Velomine.Server.Tests.Rides.TestRideFiles;
 
@@ -36,6 +37,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         ["HeartRateSuggestion"] = "heart-rate-suggestions.json",
         ["Notification"] = "notifications.json",
         ["TrainingEvent"] = "events.json",
+        ["TrainingPlan"] = "training-plan.json",
+        ["TrainingSession"] = "training-plan.json",
         ["UserSession"] = "sessions.json",
         ["DailyCheckIn"] = "wellbeing.json",
         ["PrivacySettings"] = "privacy.json",
@@ -77,6 +80,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bikeId}/templates", new SaveBikeAsTemplateRequest { BikeId = bikeId, Name = "Mine" }, Ct);
         await member.Client.PostAsJsonAsync("/api/v1/training/events",
             new { Name = "Gran Fondo", Date = "2026-05-10", Kind = "sportive" }, Ct);
+        (await member.Client.PutAsJsonAsync("/api/v1/training/plan",
+            new SaveTrainingPlanRequest("fitter", ["tuesday", "sunday"], 6, null, true, 180, 1988, null), Ct)).EnsureSuccessStatusCode();
         await member.Client.GetAsync("/api/v1/notifications", Ct);
 
         await using var scope = api.Services.CreateAsyncScope();
@@ -94,6 +99,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             ["HeartRateSuggestion"] = (context, id) => context.HeartRateSuggestions.CountAsync(s => s.UserId == id, Ct),
             ["Notification"] = (context, id) => context.Notifications.CountAsync(r => r.UserId == id, Ct),
             ["TrainingEvent"] = (context, id) => context.Events.CountAsync(e => e.UserId == id, Ct),
+            ["TrainingPlan"] = (context, id) => context.TrainingPlans.CountAsync(p => p.UserId == id, Ct),
+            ["TrainingSession"] = (context, id) => context.TrainingSessions.CountAsync(s => s.UserId == id, Ct),
             ["UserSession"] = (context, id) => context.UserSessions.CountAsync(r => r.UserId == id, Ct),
             ["DailyCheckIn"] = (context, id) => context.DailyCheckIns.CountAsync(r => r.UserId == id, Ct),
             ["PrivacySettings"] = (context, id) => context.PrivacySettings.CountAsync(r => r.UserId == id, Ct),
@@ -156,6 +163,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             new CreatePrivacyZoneRequest { Name = "Home", Latitude = 46, Longitude = 11, RadiusM = 500 }, Ct);
         await member.Client.PostAsJsonAsync("/api/v1/analytics/goals", new { Period = "week", Metric = "distance", Target = 100000.0 }, Ct);
         await member.Client.PostAsJsonAsync($"/api/v1/bikes/{bikeId}/templates", new SaveBikeAsTemplateRequest { BikeId = bikeId, Name = "Mine" }, Ct);
+        (await member.Client.PutAsJsonAsync("/api/v1/training/plan",
+            new SaveTrainingPlanRequest("fitter", ["tuesday", "sunday"], 6, null, true, 180, 1988, null), Ct)).EnsureSuccessStatusCode();
 
         await member.Client.PostAsJsonAsync("/api/v1/accounts/me/delete", new DeleteMyAccountRequest(TestApi.MemberPassword, null), Ct);
 
@@ -174,6 +183,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
             ["HeartRateSuggestion"] = await db.HeartRateSuggestions.CountAsync(s => s.UserId == member.Id, Ct),
             ["Notification"] = await db.Notifications.CountAsync(r => r.UserId == member.Id, Ct),
             ["TrainingEvent"] = await db.Events.CountAsync(e => e.UserId == member.Id, Ct),
+            ["TrainingPlan"] = await db.TrainingPlans.CountAsync(p => p.UserId == member.Id, Ct),
+            ["TrainingSession"] = await db.TrainingSessions.CountAsync(s => s.UserId == member.Id, Ct),
             ["UserSession"] = await db.UserSessions.CountAsync(r => r.UserId == member.Id, Ct),
             ["DailyCheckIn"] = await db.DailyCheckIns.CountAsync(r => r.UserId == member.Id, Ct),
             ["PrivacySettings"] = await db.PrivacySettings.CountAsync(r => r.UserId == member.Id, Ct),
@@ -202,6 +213,8 @@ public sealed class MemberDataCoverageTests(PostgresFixture postgres)
         Assert.Equal(0, counts["HeartRateHistory"]);
         Assert.Equal(0, counts["HeartRateSuggestion"]);
         Assert.Equal(0, counts["TrainingEvent"]);
+        Assert.Equal(0, counts["TrainingPlan"]);
+        Assert.Equal(0, counts["TrainingSession"]);
     }
 
     private static async Task<Guid> AddBikeAsync(HttpClient client, Guid userId)

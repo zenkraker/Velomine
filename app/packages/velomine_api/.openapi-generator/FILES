@@ -158,6 +158,7 @@ lib/model/route_summary_response.dart
 lib/model/save_bike_as_template_request.dart
 lib/model/save_check_in_request.dart
 lib/model/save_ride_feel_request.dart
+lib/model/save_training_plan_request.dart
 lib/model/search_parts_response.dart
 lib/model/server_info_response.dart
 lib/model/service_entry_response.dart
@@ -195,6 +196,7 @@ lib/model/template_part_response.dart
 lib/model/token_response.dart
 lib/model/totals_response.dart
 lib/model/training_day.dart
+lib/model/training_plan_response.dart
 lib/model/training_response.dart
 lib/model/two_factor_required_response.dart
 lib/model/two_factor_setup.dart

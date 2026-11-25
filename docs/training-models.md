@@ -368,6 +368,39 @@ MUST be labelled a guide, not a medical measure.
 
 Source: Hooper SL, Mackinnon LT. *Monitoring overtraining in athletes.* Sports Med 1995 (PMID 8571005).
 
+## Goals
+
+### G1 — Goal pre-selection
+
+The setup opens with one of the five goals pre-selected and one line saying why. These rules decide which goal and which
+reason; the rider always wins, so this only pre-selects. **The first rule that matches wins.**
+
+| # | Condition, from the rider's own rides and events | Goal | Reason code | Support |
+|---|---|---|---|---|
+| 1 | Fewer than 4 calendar weeks of rides (the week of the first ride counts as one) | `aerobic` | `not_enough_riding` | Velomine's own; BC-BEG, WHO, Friel (a chart needs ~6 weeks of data) |
+| 2 | Over the last 4 weeks: under 2 rides a week, or under 150 minutes a week, or 2 or more weeks with no ride | `aerobic` | `regular_riding` | WHO/ACSM's 150 minutes a week; the two-ride and empty-week thresholds are Velomine's own |
+| 3 | An event in the next 20 weeks (140 days) | `event` | `event_soon` | Velomine's own; the goal is planned as `fitter` (the taper is a later story) |
+| 4 | The last ride was 10 or more days ago | `fitter` | `after_break` | Velomine's own; TrainingPeaks on a 10–14 day break |
+| 5 | 26 or more weeks of rides, and over the last 8 weeks 3 rides and 4 hours a week and a ride in 6 of the 8 weeks, and the rider set an FTP, and half their rides carry power | `faster` | `power_rides` | Velomine's own; Friel (advanced riders gain most from intensity), Laursen & Jenkins |
+| 6 | Everything else | `fitter` | `regular_rider` | Velomine's own; pyramidal-leaning practice (BC-WIN, CTS-WEEK, Friel) |
+
+Weeks are the member's own: a week starts on their first day of the week and a ride counts on its local date, as
+everywhere else. "A rides a week" is the count in the window divided by the window's weeks; hours are moving time.
+Rule 4's "stay fit with less time" (`keep`) needs the hours the rider is about to give, which the setup asks for after
+the goal: it is not pre-selected until a later story reads those hours.
+
+**Every rule and every threshold above is Velomine's own.** No published algorithm picks a plan goal from ride history;
+what exists is coaching practice, named in *Support*. The goal pick MUST NOT be presented as a published method, a
+coaching guarantee or a medical assessment, and the rider's own choice always replaces it. Code:
+`Features/Training/TrainingGoalSuggestion.cs`; the reason codes become the app's one-line sentences.
+
+Tests: `TrainingGoalSuggestion_ShouldPickAerobicExercise_WhenThereAreFewerThanFourWeeksOfRides`,
+`…_WhenTheLastFourWeeksAreUnderOneHundredAndFiftyMinutes`, `…_WhenTwoOfTheLastFourWeeksAreEmpty`,
+`…_ShouldPickTheEvent_WhenAnEventIsWithinTwentyWeeks`, `…_ShouldPickGetFitter_WhenTheLastRideWasTenDaysAgo`,
+`…_ShouldPickGetFaster_WhenAnEstablishedRiderHasPowerInHalfTheRecentRides`,
+`…_ShouldPickGetFitter_WhenAnEstablishedRiderHasNotSetAnFtp`,
+`…_ShouldPickGetFitter_WhenThreeHoursAWeeksIsAllTheRiderHas`.
+
 ## Estimated power
 
 For a ride with no power at all, outdoors or unknown, not an e-bike, with a rider weight:

@@ -237,6 +237,23 @@ class FakeServer {
   };
   bool smtpConfigured = false;
 
+  /// The operator's switch for auto training, as GET /server says it.
+  bool autoTrainingEnabled = true;
+
+  /// The member's auto-training plan as the server would return it, or null when they have none.
+  Map<String, Object?>? trainingPlan;
+
+  /// The last setup the app sent, so a test can check what Start saved.
+  Map<String, Object?>? lastTrainingSave;
+
+  /// The goal the server suggests, and the reason code it gives for it.
+  String suggestedTrainingGoal = 'fitter';
+  String trainingSuggestionReason = 'regular_rider';
+
+  /// The two heart-rate numbers in use, with where they came from.
+  int? trainingMaxHeartRate;
+  String? trainingMaxHeartRateSource;
+
   /// Whether a new account waits for an admin; off is the server's default now.
   bool requireApproval = false;
 
@@ -386,6 +403,10 @@ class FakeServer {
     return _cookieUser;
   }
 
+  /// The year of birth the profile holds, as the plan endpoint reports it.
+  int? trainingBirthYearFor(FakeAccount? caller) =>
+      caller == null ? null : profiles[caller.email]?['birthYear'] as int?;
+
   Future<http.Response> _handle(http.Request request) async {
     if (unreachable) {
       throw http.ClientException('The server is unreachable.', request.url);
@@ -420,7 +441,57 @@ class FakeServer {
         'sentryDsn': telemetryEnabled ? sentryDsn : null,
         'telemetryTermsVersion': 1,
         'demo': false,
+        'autoTrainingEnabled': autoTrainingEnabled,
       });
+    }
+
+    if (path == '/api/v1/training/plan') {
+      Map<String, Object?> plan() => {
+        'on': trainingPlan?['on'] ?? false,
+        'goal': trainingPlan?['goal'],
+        'suggestedGoal': suggestedTrainingGoal,
+        'suggestionReason': trainingSuggestionReason,
+        'days': trainingPlan?['days'] ?? <String>[],
+        'hoursPerWeek': trainingPlan?['hoursPerWeek'],
+        'longRideDay': trainingPlan?['longRideDay'],
+        'lastPlannedFor': trainingPlan?['lastPlannedFor'],
+        'maxHeartRate': trainingMaxHeartRate,
+        'maxHeartRateSource': trainingMaxHeartRateSource,
+        'birthYear': trainingPlan?['birthYear'] ?? trainingBirthYearFor(caller),
+        'nextEventName': null,
+        'nextEventDate': null,
+        'firstDayOfWeek':
+            profiles[caller?.email]?['firstDayOfWeek'] as String? ?? 'monday',
+      };
+      if (request.method == 'GET') return json(plan());
+      if (request.method == 'PUT') {
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        lastTrainingSave = body;
+        trainingPlan = {
+          'on': true,
+          'goal': body['goal'],
+          'days': body['days'],
+          'hoursPerWeek': body['hoursPerWeek'],
+          'longRideDay': body['longRideDay'],
+          'birthYear': body['birthYear'] ?? trainingBirthYearFor(caller),
+          'lastPlannedFor': null,
+        };
+        if (body['maxHeartRate'] is int) {
+          trainingMaxHeartRate = body['maxHeartRate'] as int;
+          trainingMaxHeartRateSource = 'manual';
+        } else if (body['maxHeartRateKnown'] == false) {
+          trainingMaxHeartRateSource = 'estimate';
+        }
+        return json(plan());
+      }
+      if (request.method == 'DELETE') {
+        if (trainingPlan == null) {
+          return http.Response('{"title":"Not found."}', 404);
+        }
+        trainingPlan = {...trainingPlan!, 'on': false};
+        return json(plan());
+      }
+      return http.Response('', 405);
     }
 
     if (path == '/api/v1/accounts/sso') {

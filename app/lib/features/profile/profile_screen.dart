@@ -36,6 +36,8 @@ import '../accounts/heart_rate_source_text.dart';
 import '../bikes/bikes_view_models.dart';
 import '../supporter/supporter_badge.dart';
 import '../supporter/supporter_view_model.dart';
+import '../training/auto_training_note.dart';
+import '../training/training_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
@@ -466,6 +468,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     onDone: onDone,
   );
 
+  /// Turning auto training off is confirmed first: this week and later go, the past sessions stay.
+  Future<void> _turnOffAutoTraining() async {
+    final l10n = context.l10n;
+    final sure = await confirmDestructive(
+      context,
+      title: l10n.autoTrainingOffTitle,
+      body: l10n.autoTrainingOffBody,
+      action: l10n.autoTrainingOffAction,
+      key: const Key('profile-auto-training-off-confirm'),
+    );
+    if (!sure || !mounted) return;
+    await ref.read(trainingViewModelProvider.notifier).turnOff();
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(profileViewModelProvider);
@@ -739,6 +755,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             subtitle: l10n.privacyRidePrivacyHelp,
             onTap: widget.onOpenPrivacy,
           ),
+          // The operator's switch decides whether the setting exists at all; the member's plan is the value.
+          if (ref
+                  .watch(sessionViewModelProvider)
+                  .serverInfo
+                  ?.autoTrainingEnabled ??
+              false)
+            SwitchListTile(
+              key: const Key('profile-auto-training'),
+              contentPadding: EdgeInsets.zero,
+              value: ref.watch(trainingViewModelProvider).on,
+              title: Text(l10n.autoTrainingTitle),
+              subtitle: const AutoTrainingNote(),
+              onChanged: (on) =>
+                  on ? context.push('/training/setup') : _turnOffAutoTraining(),
+            ),
         ],
       ),
       SectionCard(
