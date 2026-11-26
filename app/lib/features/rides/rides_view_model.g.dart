@@ -47,7 +47,7 @@ final class RidesViewModelProvider
   }
 }
 
-String _$ridesViewModelHash() => r'378f96b578f01d3356c2c3203b51c633eff2e90c';
+String _$ridesViewModelHash() => r'6e30b4f8064a6698e5b4c3b8d1e48ea50c74baad';
 
 /// The member's rides: filtering, paging, uploading, and following an upload
 /// until the server has read it.

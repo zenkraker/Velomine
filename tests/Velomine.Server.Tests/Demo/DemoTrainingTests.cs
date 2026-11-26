@@ -205,6 +205,9 @@ public sealed class DemoTrainingTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.OK, (await rider.PostAsync($"/api/v1/training/sessions/{today.Id}/easy", null, Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await rider.PostAsJsonAsync(
             $"/api/v1/training/sessions/{today.Id}/skip", new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.Tired }, Ct)).StatusCode);
+        // The days a session can move to are read again: skipping one changes which sessions may still move, and the
+        // week read before the skip offers days for a session that is now skipped, which the server refuses.
+        weeks = (await rider.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!;
         var mover = weeks.Weeks[0].Sessions.FirstOrDefault(s => s.Move.Any(m => m.Allowed));
         if (mover is not null)
         {
