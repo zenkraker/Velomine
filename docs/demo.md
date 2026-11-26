@@ -57,6 +57,7 @@ A new page is a directory with an `index.html`, like the others: add its canonic
 2. `sudo git clone <repository> /opt/velomine-dev`, check out the `v…-dev.N` tag to run, and write `/opt/velomine-dev/.env` (`chmod 600`) with:
    - `COMPOSE_FILE=docker-compose.yml:compose.hosted.yaml`, `VELOMINE_VERSION`, `VELOMINE_ENV=dev` and `VELOMINE_HOST=dev.velomine.eu`
    - `VELOMINE__PUBLICURL=https://dev.velomine.eu`
+   - `VELOMINE__ACCOUNTS__CLOUD=true`, because dev stands in for the cloud service: a new member verifies their own email (SMTP needed) and no admin approves them. Without it dev behaves like a self-hosted server and the sign-up page says an administrator must approve the account.
    - `POSTGRES_PASSWORD`, `VELOMINE__ADMIN__EMAIL` and `VELOMINE__ADMIN__PASSWORD`, different from the demo's
    - no `VELOMINE__DEMO__ENABLED`: the demo remakes its data every night, dev keeps yours
    - `VELOMINE__TELEMETRY__ENABLED=true` and `VELOMINE__TELEMETRY__ENVIRONMENT=dev`, with the same error DSN as the demo if you like
