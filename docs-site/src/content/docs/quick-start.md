@@ -8,10 +8,10 @@ You need [Docker](https://docs.docker.com/get-started/get-docker/) with Compose 
 ```sh
 git clone https://github.com/zenkraker/Velomine.git
 cd Velomine
-VELOMINE_VERSION=0.1.22 docker compose up --no-build
+VELOMINE_VERSION=0.2.0 docker compose up --no-build
 ```
 
-Use the newest version from [Releases](https://github.com/zenkraker/Velomine/releases/latest) in place of `0.1.22`.
+Use the newest version from [Releases](https://github.com/zenkraker/Velomine/releases/latest) in place of `0.2.0`.
 
 Open **http://localhost:8080**, press *Sign in*, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`.
 
