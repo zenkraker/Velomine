@@ -19,6 +19,7 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
     private static async Task<(TestApi Api, FakeEmailSender Mail)> StartAsync(
         PostgresFixture postgres,
         bool smtp = true,
+        bool cloud = true,
         Action<IWebHostBuilder>? configure = null)
     {
         var mail = new FakeEmailSender();
@@ -30,6 +31,7 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
                 b.UseSetting("Velomine:Smtp:From", "velomine@club.example");
             }
 
+            b.UseSetting("Velomine:Accounts:Cloud", cloud ? "true" : "false");
             b.ConfigureTestServices(s => s.AddSingleton<IEmailSender>(mail));
             configure?.Invoke(b);
         });
@@ -117,6 +119,70 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
         Assert.Empty(mail.Sent);
         gate.SetResult(true);
         await WaitForMailAsync(mail);
+    }
+
+    [Fact]
+    public async Task Register_ShouldNotifyAdminAndSendNoVerification_WhenSelfHostedWithApproval()
+    {
+        var (api, mail) = await StartAsync(postgres, cloud: false, configure: b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "true"));
+        await using var _ = api;
+        var email = TestApi.NewEmail();
+
+        // The first run only marks when emailing started; notifications from before it are never sent.
+        await api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct);
+
+        var registered = await api.RegisterAsync(email);
+        var body = (await registered.Content.ReadFromJsonAsync<RegisterResponse>(Ct))!;
+        Assert.False(body.IsApproved);
+        Assert.False(body.EmailConfirmationRequired);
+
+        var refused = await api.LoginAsync(email, TestApi.MemberPassword);
+        Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
+        Assert.Equal("not_approved", (await refused.Content.ReadFromJsonAsync<ErrorBody>(Ct))!.Error);
+        Assert.Equal((HttpStatusCode)503, (await ResendAsync(api, email)).StatusCode);
+
+        Assert.Equal(1, await api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct));
+        var sent = Assert.Single(mail.Sent);
+        Assert.Equal(TestApi.AdminEmail, sent.To);
+        Assert.Contains(email, sent.Body);
+
+        var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+        Assert.Equal(HttpStatusCode.NoContent, (await admin.PostAsync($"/api/v1/accounts/users/{body.Id}/approve", null, Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await api.LoginAsync(email, TestApi.MemberPassword)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_ShouldSkipAdminApprovalAndNotifyNoAdmin_WhenCloud()
+    {
+        var (api, mail) = await StartAsync(postgres, configure: b => b.UseSetting("Velomine:Accounts:RequireAdminApproval", "true"));
+        await using var _ = api;
+        var email = TestApi.NewEmail();
+
+        var body = (await (await api.RegisterAsync(email)).Content.ReadFromJsonAsync<RegisterResponse>(Ct))!;
+        Assert.True(body.IsApproved);
+        Assert.True(body.EmailConfirmationRequired);
+
+        var sent = await WaitForMailAsync(mail);
+        Assert.Equal(email, sent.To);
+        Assert.Equal(0, await api.Services.GetRequiredService<NotificationEmailService>().RunOnceAsync(Ct));
+        Assert.Single(mail.Sent);
+
+        var (linkEmail, token) = FromEmail(sent);
+        Assert.Equal(HttpStatusCode.NoContent, (await VerifyAsync(api, linkEmail, token)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await api.LoginAsync(email, TestApi.MemberPassword)).StatusCode);
+    }
+
+    [Fact]
+    public async Task ResendVerification_ShouldSendNothing_WhenSelfHosted()
+    {
+        var (api, mail) = await StartAsync(postgres, cloud: false);
+        await using var _ = api;
+        var email = TestApi.NewEmail();
+        (await api.RegisterAsync(email)).EnsureSuccessStatusCode();
+
+        Assert.Equal((HttpStatusCode)503, (await ResendAsync(api, email)).StatusCode);
+        await Task.Delay(200, Ct);
+        Assert.Empty(mail.Sent);
     }
 
     [Fact]

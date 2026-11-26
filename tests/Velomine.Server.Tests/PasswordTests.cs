@@ -30,6 +30,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
             if (smtp)
             {
                 b.UseSetting("Velomine:Smtp:Host", "smtp.club.example");
+                b.UseSetting("Velomine:Accounts:Cloud", "true");
                 b.UseSetting("Velomine:Smtp:From", "velomine@club.example");
             }
 

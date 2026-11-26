@@ -28,6 +28,7 @@ public sealed class VerifyEmail(
     UserManager<User> users,
     IOptions<SmtpOptions> smtp,
     IOptions<DemoOptions> demo,
+    IOptions<AccountsOptions> accounts,
     PasswordResetThrottle throttle) : Endpoint<VerifyEmailRequest>
 {
     public override void Configure()
@@ -47,7 +48,7 @@ public sealed class VerifyEmail(
             return;
         }
 
-        if (!EmailVerification.Required(smtp, demo))
+        if (!EmailVerification.Required(smtp, demo, accounts))
         {
             await Send.ResponseAsync(new { error = "email_not_configured" }, 503, ct);
             return;

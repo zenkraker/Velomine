@@ -28,9 +28,9 @@ public sealed class RegisterValidator : Validator<RegisterRequest>
 }
 
 /// <summary>
-/// Creates an account and starts its solo trial. When email is configured, the address must be confirmed before the
-/// member can sign in, and the verification message is sent after the answer; without SMTP there is no message and
-/// no gate.
+/// Creates an account and starts its solo trial. On the cloud service with email configured, the address must be confirmed before the
+/// member can sign in, and the verification message is sent after the answer. Self-hosted, there is no message and
+/// no gate: the admins are told instead when approval is required.
 /// </summary>
 public sealed class Register(
     UserManager<User> users,
@@ -41,6 +41,7 @@ public sealed class Register(
     IEmailSender sender,
     IOptions<SmtpOptions> smtp,
     IOptions<DemoOptions> demo,
+    IOptions<AccountsOptions> accounts,
     ILogger<Register> logger) : Endpoint<RegisterRequest, RegisterResponse>
 {
     public override void Configure()
@@ -81,7 +82,7 @@ public sealed class Register(
         await Notify.SignUpWaitingAsync(db, users, clock, user);
 
         // Prepare the link before answering (it writes the security stamp), but never wait for SMTP.
-        var verify = EmailVerification.Required(smtp, demo);
+        var verify = EmailVerification.Required(smtp, demo, accounts);
         if (verify) SendVerificationInBackground(await links.CreateAsync(user), user);
 
         await Send.ResponseAsync(new RegisterResponse(user.Id, user.IsApproved, verify), 201, ct);

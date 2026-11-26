@@ -33,13 +33,15 @@ public sealed class SoloTrialTests
     }
 
     [Fact]
-    public void EmailVerification_ShouldBeRequired_WhenSmtpIsConfigured()
+    public void EmailVerification_ShouldBeRequired_WhenCloudAndSmtpIsConfigured()
     {
+        var cloud = Options.Create(new AccountsOptions { Cloud = true });
         var smtp = Options.Create(new SmtpOptions { Host = "smtp.club.example", From = "velomine@club.example" });
         var off = Options.Create(new DemoOptions());
-        Assert.True(EmailVerification.Required(smtp, off));
-        Assert.False(EmailVerification.Required(Options.Create(new SmtpOptions()), off));
-        Assert.False(EmailVerification.Required(smtp, Options.Create(new DemoOptions { Enabled = true })));
+        Assert.True(EmailVerification.Required(smtp, off, cloud));
+        Assert.False(EmailVerification.Required(smtp, off, Options.Create(new AccountsOptions())));
+        Assert.False(EmailVerification.Required(Options.Create(new SmtpOptions()), off, cloud));
+        Assert.False(EmailVerification.Required(smtp, Options.Create(new DemoOptions { Enabled = true }), cloud));
     }
 
     [Fact]

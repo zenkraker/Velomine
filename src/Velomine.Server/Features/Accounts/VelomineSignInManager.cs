@@ -19,16 +19,17 @@ public sealed class VelomineSignInManager(
     IAuthenticationSchemeProvider schemes,
     IUserConfirmation<User> confirmation,
     IOptions<SmtpOptions> smtp,
-    IOptions<DemoOptions> demo)
+    IOptions<DemoOptions> demo,
+    IOptions<AccountsOptions> accounts)
     : SignInManager<User>(userManager, contextAccessor, claimsFactory, optionsAccessor, logger, schemes, confirmation)
 {
     /// <summary>
-    /// Approval is the server's setting; the email must be confirmed only when email is configured, because without
-    /// SMTP there is no message to open. <see cref="IdentityOptions.SignIn.RequireConfirmedEmail"/> stays off so the
+    /// Approval is the server's setting; the email must be confirmed only on the cloud service with email configured,
+    /// because a self-hosted club sends no verification message. <see cref="IdentityOptions.SignIn.RequireConfirmedEmail"/> stays off so the
     /// rule lives here and the app can tell the two refusals apart.
     /// </summary>
     public override async Task<bool> CanSignInAsync(User user) =>
         user.IsApproved
-        && (!EmailVerification.Required(smtp, demo) || user.EmailConfirmed)
+        && (!EmailVerification.Required(smtp, demo, accounts) || user.EmailConfirmed)
         && await base.CanSignInAsync(user);
 }
