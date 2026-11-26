@@ -48,10 +48,10 @@ public sealed class SoloTrialTests
     public void EmailVerificationEmail_ShouldUseItsItalianWording_WhenTheMemberSpeaksItalian()
     {
         using var _ = EmailLanguage.Use("it");
-        var content = EmailVerificationEmail.Confirmation("https://club.example/verify-email#token=t");
+        var content = EmailVerificationEmail.Confirmation("https://club.example/verify-email?token=t");
 
         Assert.Equal("Conferma la tua email per Velomine", content.Subject);
-        Assert.Contains("https://club.example/verify-email#token=t", content.Text);
+        Assert.Contains("https://club.example/verify-email?token=t", content.Text);
         Assert.Contains("Conferma la mia email", content.Html);
     }
 }

@@ -82,8 +82,8 @@ public sealed class PasswordTests(PostgresFixture postgres)
         Assert.True((await users.ConfirmEmailAsync(user, await users.GenerateEmailConfirmationTokenAsync(user))).Succeeded);
     }
 
-    private static Dictionary<string, string> Fragment(string link) =>
-        new Uri(link).Fragment.TrimStart('#')
+    private static Dictionary<string, string> QueryOf(string link) =>
+        new Uri(link).Query.TrimStart('?')
             .Split('&', StringSplitOptions.RemoveEmptyEntries)
             .Select(part => part.Split('=', 2))
             .ToDictionary(part => part[0], part => Uri.UnescapeDataString(part[1]));
@@ -91,7 +91,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
     private static (string Email, string Token) FromEmail(FakeEmailSender mail)
     {
         var link = Regex.Match(TheMail(mail).Body, @"https?://\S+").Value;
-        var query = Fragment(link);
+        var query = QueryOf(link);
         return (query["email"], query["token"]);
     }
 
@@ -148,7 +148,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         Assert.Equal("Reset your Velomine password", sent.Subject);
         Assert.NotNull(sent.HtmlBody);
         Assert.StartsWith("<!doctype html>", sent.HtmlBody);
-        Assert.Contains("reset-password#", sent.HtmlBody);
+        Assert.Contains("reset-password?", sent.HtmlBody);
         var (linkEmail, token) = FromEmail(mail);
         Assert.Equal(email, linkEmail);
         Assert.False(string.IsNullOrEmpty(token));
@@ -173,7 +173,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         await WaitForMailAsync(mail);
         var link = Regex.Match(TheMail(mail).Body, @"https?://\S+").Value;
-        Assert.StartsWith("https://club.example/reset-password#", link);
+        Assert.StartsWith("https://club.example/reset-password?", link);
         Assert.DoesNotContain("evil.example", link);
     }
 
@@ -411,7 +411,7 @@ public sealed class PasswordTests(PostgresFixture postgres)
         var linkResponse = await admin.PostAsync($"/api/v1/admin/users/{account!.Id}/password-reset-link", null, Ct);
         Assert.Equal(HttpStatusCode.OK, linkResponse.StatusCode);
         var link = await linkResponse.Content.ReadFromJsonAsync<PasswordResetLinkResponse>(Ct);
-        var query = Fragment(link!.Link);
+        var query = QueryOf(link!.Link);
 
         var reset = await ResetAsync(api, query["email"], query["token"], "New-password-1");
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);

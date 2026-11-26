@@ -18,8 +18,8 @@ String resetProblemText(AppLocalizations l10n, ResetProblem problem) =>
       ResetProblem.failed => l10n.passwordChangeFailed,
     };
 
-/// The page the one-time email link opens. The token and email come from the URL fragment, so the browser never
-/// sends them to the server; the reset call carries them in its body instead.
+/// The page the one-time email link opens. The token and email come from the link's query string, which Flutter web
+/// keeps (it drops a `#fragment`); the reset call carries them in its body.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({
     super.key,

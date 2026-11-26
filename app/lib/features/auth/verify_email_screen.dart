@@ -7,8 +7,8 @@ import '../../core/widgets/loading_state.dart';
 import 'auth_page.dart';
 import 'verify_email_view_model.dart';
 
-/// Opens the link from the confirmation email: the token is in the URL fragment, so it never reaches the server in
-/// an address line. The screen says what happened and sends a person to sign in either way.
+/// Opens the link from the confirmation email: the token is in the link's query string, which Flutter web keeps
+/// (it drops a `#fragment`). The screen says what happened and sends a person to sign in either way.
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key, this.email, this.token});
 

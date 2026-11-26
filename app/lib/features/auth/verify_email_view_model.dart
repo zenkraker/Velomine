@@ -41,7 +41,8 @@ class VerifyEmailViewModel extends _$VerifyEmailViewModel {
   VerifyEmailState build() => const VerifyEmailState();
 
   Future<void> verify({String? email, String? token}) async {
-    if (state.command.running) return;
+    // A link works once: a second call (the screen built again) would turn "confirmed" into "invalid".
+    if (state.command.running || state.confirmed == true) return;
     if (email == null || email.isEmpty || token == null || token.isEmpty) {
       state = state.copyWith(confirmed: false);
       return;

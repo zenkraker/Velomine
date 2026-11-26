@@ -16,7 +16,7 @@ public sealed class EmailTextTests
     {
         using var _ = EmailLanguage.Use(language);
 
-        var reset = PasswordResetEmail.Reset("https://club.example/reset-password#email=a&token=b");
+        var reset = PasswordResetEmail.Reset("https://club.example/reset-password?email=a&token=b");
         var notification = NotificationText.Write(
             [new Notification { Type = NotificationTypes.RideReady, Subject = "morning.fit" }]);
 
@@ -32,7 +32,7 @@ public sealed class EmailTextTests
         {
             using var _ = EmailLanguage.Use(language);
 
-            var reset = PasswordResetEmail.Reset("https://club.example/reset-password#email=a&token=b");
+            var reset = PasswordResetEmail.Reset("https://club.example/reset-password?email=a&token=b");
             var sso = PasswordResetEmail.Sso("Example SSO");
             var notifications = NotificationText.Write(
             [
@@ -68,7 +68,7 @@ public sealed class EmailTextTests
     public void EmailVerificationEmail_ShouldRenderBrandedHtmlWith16pxTextAndEncodedLink_WhenConfirmationIsBuilt()
     {
         using var _ = EmailLanguage.Use("en");
-        const string link = "https://club.example/verify-email#token=a&email=<b>x</b>\"";
+        const string link = "https://club.example/verify-email?token=a&email=<b>x</b>\"";
 
         var html = EmailVerificationEmail.Confirmation(link).Html;
 

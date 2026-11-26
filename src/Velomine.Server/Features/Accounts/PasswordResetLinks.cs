@@ -4,8 +4,8 @@ using Microsoft.Extensions.Options;
 namespace Velomine.Server.Features.Accounts;
 
 /// <summary>
-/// Builds the one-time link a member opens to choose a new password. The token is in the URL fragment, so a browser
-/// never sends it to the server in an address line or a Referer header. The link uses the configured public address,
+/// Builds the one-time link a member opens to choose a new password. The token is in the query string, because Flutter web drops a URL
+/// fragment; the page sends no Referer and the server logs route templates, never query strings. The link uses the configured public address,
 /// never the incoming Host, so a forged Host cannot point it at another site.
 /// </summary>
 public sealed class PasswordResetLinks(UserManager<User> users, TimeProvider clock, IOptions<PublicUrlOptions> publicUrl)
@@ -19,6 +19,6 @@ public sealed class PasswordResetLinks(UserManager<User> users, TimeProvider clo
     {
         var token = await users.GeneratePasswordResetTokenAsync(user);
         var baseUrl = publicUrl.Value.PublicUrl.TrimEnd('/');
-        return $"{baseUrl}/reset-password#token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
+        return $"{baseUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
     }
 }

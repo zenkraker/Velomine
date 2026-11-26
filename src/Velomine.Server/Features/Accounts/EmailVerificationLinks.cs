@@ -17,8 +17,8 @@ public static class EmailVerification
 }
 
 /// <summary>
-/// Builds the link that confirms a member's address. The token is in the URL fragment, so a browser never sends it
-/// to the server in an address line or a Referer header. The address comes from configuration, never the incoming
+/// Builds the link that confirms a member's address. The token is in the query string, because Flutter web drops a URL
+/// fragment; the page sends no Referer and the server logs route templates, never query strings. The address comes from configuration, never the incoming
 /// Host, so a forged Host cannot point the link at another site.
 /// </summary>
 public sealed class EmailVerificationLinks(UserManager<User> users, IOptions<PublicUrlOptions> publicUrl, IOptions<SmtpOptions> smtp, IOptions<DemoOptions> demo, IOptions<AccountsOptions> accounts)
@@ -32,6 +32,6 @@ public sealed class EmailVerificationLinks(UserManager<User> users, IOptions<Pub
         if (!EmailVerification.Required(smtp, demo, accounts)) return null;
         var token = await users.GenerateEmailConfirmationTokenAsync(user);
         var baseUrl = publicUrl.Value.PublicUrl.TrimEnd('/');
-        return $"{baseUrl}/verify-email#token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
+        return $"{baseUrl}/verify-email?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
     }
 }

@@ -247,12 +247,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       GoRoute(
         path: '/verify-email',
         builder: (context, state) {
-          final fragment = state.uri.fragment.isNotEmpty
-              ? state.uri.fragment
-              : Uri.base.fragment;
-          final params = fragment.isNotEmpty
-              ? Uri.splitQueryString(fragment)
-              : state.uri.queryParameters;
+          final params = state.uri.queryParameters;
           return BackGuard(
             location: state.uri.path,
             child: VerifyEmailScreen(
@@ -265,12 +260,7 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       GoRoute(
         path: '/reset-password',
         builder: (context, state) {
-          final fragment = state.uri.fragment.isNotEmpty
-              ? state.uri.fragment
-              : Uri.base.fragment;
-          final params = fragment.isNotEmpty
-              ? Uri.splitQueryString(fragment)
-              : state.uri.queryParameters;
+          final params = state.uri.queryParameters;
           return BackGuard(
             location: state.uri.path,
             child: ResetPasswordScreen(

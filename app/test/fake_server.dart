@@ -2489,7 +2489,7 @@ extension on FakeServer {
       if (target.password.isEmpty) return http.Response('', 409);
       passwordResetTokens.add('good');
       return json({
-        'link': 'http://server/reset-password#token=good&email=${target.email}',
+        'link': 'http://server/reset-password?token=good&email=${target.email}',
         'expiresAt': '2026-11-09T12:30:00Z',
       });
     }

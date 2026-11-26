@@ -48,11 +48,11 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
     private static (string Email, string Token) FromEmail(OutgoingEmail mail)
     {
         var link = Regex.Match(mail.Body, @"https?://\S+").Value;
-        var fragment = new Uri(link).Fragment.TrimStart('#')
+        var query = new Uri(link).Query.TrimStart('?')
             .Split('&', StringSplitOptions.RemoveEmptyEntries)
             .Select(part => part.Split('=', 2))
             .ToDictionary(part => part[0], part => Uri.UnescapeDataString(part[1]));
-        return (fragment["email"], fragment["token"]);
+        return (query["email"], query["token"]);
     }
 
     private static Task<HttpResponseMessage> VerifyAsync(TestApi api, string email, string token) =>
@@ -99,7 +99,7 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
         var sent = await WaitForMailAsync(mail);
         Assert.Equal(email, sent.To);
         Assert.Equal("Confirm your email for Velomine", sent.Subject);
-        Assert.Contains("verify-email#", sent.Body);
+        Assert.Contains("verify-email?", sent.Body);
         var (linkEmail, token) = FromEmail(sent);
         Assert.Equal(email, linkEmail);
         Assert.False(string.IsNullOrEmpty(token));
@@ -310,7 +310,7 @@ public sealed class EmailVerificationTests(PostgresFixture postgres)
 
         var sent = await WaitForMailAsync(mail);
         var link = Regex.Match(sent.Body, @"https?://\S+").Value;
-        Assert.StartsWith("https://club.example/verify-email#", link);
+        Assert.StartsWith("https://club.example/verify-email?", link);
         Assert.DoesNotContain("evil.example", link);
     }
 
