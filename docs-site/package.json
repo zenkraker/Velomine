@@ -1,0 +1,14 @@
+{
+  "name": "velomine-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tokens": "node scripts/tokens.mjs",
+    "dev": "npm run tokens && astro dev",
+    "build": "npm run tokens && astro build"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.43.2",
+    "astro": "7.4.13"
+  }
+}

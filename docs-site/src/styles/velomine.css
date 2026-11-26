@@ -1,0 +1,88 @@
+/* Maps the design tokens (tokens.css, generated from docs/design/tokens.json) onto Starlight's variables. Fonts are the presentation site's own, so no third-party request. */
+@import './tokens.css';
+
+@font-face {
+  font-family: 'Geist';
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/static/fonts/geist-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/instrument-serif-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/instrument-serif-italic-latin.woff2') format('woff2');
+}
+
+:root,
+:root[data-theme='light'] {
+  --sl-font: var(--vm-font-sans);
+  --sl-text-base: var(--vm-body-size);
+  --sl-line-height: calc(var(--vm-body-line) / var(--vm-body-size));
+
+  --sl-color-bg: var(--vm-canvas);
+  --sl-color-bg-nav: var(--vm-card);
+  --sl-color-bg-sidebar: var(--vm-card);
+  --sl-color-bg-inline-code: var(--vm-card-raised);
+  --sl-color-bg-accent: var(--vm-accent);
+  --sl-color-hairline: var(--vm-hairline);
+  --sl-color-hairline-light: var(--vm-hairline);
+  --sl-color-hairline-shade: var(--vm-hairline);
+
+  /* Starlight's grey ramp, text to ground: ink, ink-muted, hairline, track, card-raised, card. */
+  --sl-color-white: var(--vm-ink);
+  --sl-color-gray-1: var(--vm-ink);
+  --sl-color-gray-2: var(--vm-ink);
+  --sl-color-gray-3: var(--vm-ink-muted);
+  --sl-color-gray-4: var(--vm-ink-muted);
+  --sl-color-gray-5: var(--vm-hairline);
+  --sl-color-gray-6: var(--vm-card-raised);
+  --sl-color-gray-7: var(--vm-card);
+  --sl-color-black: var(--vm-canvas);
+
+  /* Accent: the fill (buttons) is Volt; links and marks use accent-strong, which darkens to olive by day. */
+  --sl-color-accent-low: var(--vm-accent-soft);
+  --sl-color-accent: var(--vm-accent);
+  --sl-color-accent-high: var(--vm-accent-strong);
+  --sl-color-text-accent: var(--vm-accent-strong);
+  --sl-color-text-invert: var(--vm-on-accent);
+
+  --sl-color-orange: var(--vm-signal);
+  --sl-color-orange-low: var(--vm-signal-soft);
+  --sl-color-orange-high: var(--vm-signal);
+  --sl-color-red: var(--vm-danger);
+  --sl-color-red-high: var(--vm-danger);
+}
+
+h1, h2, .site-title {
+  font-family: var(--vm-font-display);
+  font-weight: 400;
+}
+h1 {
+  font-size: var(--vm-page-title-size);
+  line-height: var(--vm-page-title-line);
+}
+.site-title { font-size: var(--vm-brand-size); }
+h3, h4 {
+  font-size: var(--vm-card-title-size);
+  line-height: var(--vm-card-title-line);
+  font-weight: var(--vm-card-title-weight);
+}
+small, figcaption { font-size: var(--vm-caption-size); }
+
+/* Cards stand out by fill alone: no border, no shadow (tokens.json). */
+.sl-markdown-content :not(a, strong, em, del, span, input, code, br) + :is(table, pre, aside),
+.sl-markdown-content aside,
+.expressive-code .frame { border-radius: var(--vm-radius-md); }
+.sl-markdown-content aside { border-width: 0 0 0 4px; background: var(--vm-card); }
+
+.sl-link-button { border-radius: var(--vm-radius-pill); font-weight: var(--vm-button-label-weight); }
+.sl-link-button.primary { background: var(--vm-accent); color: var(--vm-on-accent); border-color: var(--vm-accent); }
+header.header, .sidebar-pane { border-color: var(--vm-hairline); }

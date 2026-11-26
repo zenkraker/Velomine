@@ -17,3 +17,9 @@ src/Velomine.Server/wwwroot/
 
 # Claude Code's personal settings (approved MCP servers, permissions); never shared
 .claude/settings.local.json
+
+# The docs section is built from docs-site/ by the Pages workflow
+site/docs/
+docs-site/node_modules/
+docs-site/.astro/
+docs-site/src/styles/tokens.css
