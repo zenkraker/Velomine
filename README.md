@@ -20,7 +20,7 @@ cd Velomine
 VELOMINE_VERSION=0.1.22 docker compose up --no-build
 ```
 
-Open **http://localhost:8080**, press *Sign in*, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`. Use the newest version from [Releases](https://github.com/zenkraker/Velomine/releases/latest) in place of `0.1.22`. These defaults are for trying it on your own machine; [Run it on a server](#run-it-on-a-server) sets it up properly, and [Try it from source](#try-it-on-your-computer-from-source) builds it yourself.
+Open **http://localhost:8080**, press *Sign in*, and sign in as `admin@velomine.local` with the password `Velomine-dev-1`. Use the newest version from [Releases](https://github.com/zenkraker/Velomine/releases/latest) in place of `0.1.22`. These defaults are for trying it on your own machine; [Self-hosting](https://velomine.eu/docs/self-hosting/) sets it up properly, and [Try it from source](https://velomine.eu/docs/self-hosting/#try-it-from-source) builds it yourself.
 
 The Android app is on the same [Releases](https://github.com/zenkraker/Velomine/releases/latest) page as an APK: install it and type your server's address when it asks.
 
@@ -64,88 +64,9 @@ It is early: the interface is rough in places, and there are bugs. The iOS recor
 
 ## Self-hosting
 
-Self-hosting is free for riders and clubs, with every feature and no member limit. Everything runs with Docker: the server, the web app and PostgreSQL. A self-hosted server serves only the app; the presentation site at [velomine.eu](https://velomine.eu) is published separately, to GitHub Pages. An optional [supporter licence](https://velomine.eu/pricing/#supporter) funds the project and unlocks nothing.
+Self-hosting is free for riders and clubs, with every feature and no member limit. Everything runs with Docker: the server, the web app and PostgreSQL. The setup, settings, email, backups, upgrades and troubleshooting are in the [documentation](https://velomine.eu/docs/self-hosting/); its source is [docs-site/](docs-site/). An optional [supporter licence](https://velomine.eu/pricing/#supporter) funds the project and unlocks nothing.
 
-### Try it on your computer, from source
-
-The [quick start](#quick-start) above runs the published images. This builds the whole stack from source instead, with one command: the server, the web app and PostgreSQL. You do not need .NET, Flutter or PostgreSQL installed.
-
-#### What to install
-
-| Install | Why | Notes |
-|---------|-----|-------|
-| **Docker** with Compose 2.24 or newer | Builds and runs everything | Windows and macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows with the WSL 2 backend). Linux: Docker Engine plus the Compose plugin. The command must work as `docker compose` (with a space), not the old `docker-compose`. |
-| **Git** | To get the code | Any recent version. |
-| **Chrome, Edge or Firefox** | To open the web app | Safari is untested. |
-
-#### Start it
-
-```
-git clone https://github.com/zenkraker/Velomine.git
-cd Velomine
-docker compose up --build
-```
-
-The first run takes roughly 5 to 10 minutes (later starts take seconds). It is ready when the log shows `Now listening on: http://0.0.0.0:8080`. Then open **http://localhost:8080** and sign in as `admin@velomine.local` with the password `Velomine-dev-1`.
-
-Stop it with Ctrl+C. `docker compose down` removes the containers and keeps your data; `docker compose down -v` also deletes the data (database, uploaded files and keys), for a fresh start.
-
-**Trying single sign-on.** `compose.development.yaml` adds Dex, a small test sign-in provider:
-
-```
-docker compose -f docker-compose.yml -f compose.development.yaml up --build
-```
-
-Sign in with *Dex (local test)* as `rider@sso.test` / `password`. It also needs port 5556, and Chrome, Edge or Firefox, which send `dex.localhost` to your own machine. Dex is for trying it out only; never run it on a shared server.
-
-### Run it on a server
-
-A server runs the same `docker-compose.yml`, from the images CI publishes instead of a build, behind HTTPS.
-
-1. Clone the repository on the server, or copy `docker-compose.yml` there.
-2. Copy `.env.example` to `.env` next to them and set at least `VELOMINE_VERSION`, `POSTGRES_PASSWORD`, `VELOMINE__PUBLICURL` and the first admin. See [Settings you can change](#settings-you-can-change).
-3. Put HTTPS in front with your own reverse proxy, forwarding to the web container's port (`VELOMINE_PORT`, default 8080). Do not expose that port to the internet directly: it is plain HTTP.
-4. Start it: `docker compose pull && docker compose up -d --wait`. To upgrade or roll back, change `VELOMINE_VERSION` and run the same command. `--wait` fails unless the server and the web app answer.
-
-### Backups and upgrades
-
-Back up the database (`docker compose exec postgres pg_dump -Fc -U velomine velomine > velomine.dump`) and the `velomine-files` and `velomine-keys` volumes, together. Without the keys, every member is signed out and old links stop working.
-
-To upgrade, set the new `VELOMINE_VERSION` in `.env` and run `docker compose pull && docker compose up -d --wait`. Database changes are applied on start and stay compatible with the previous release, so going back one version is safe. The [Releases](https://github.com/zenkraker/Velomine/releases) page lists every version.
-
-### What your server talks to
-
-Nothing is sent to the Velomine project by default.
-
-| What | Default | Setting |
-|------|---------|---------|
-| Map tiles, loaded by each member's browser or phone | OpenStreetMap | `VELOMINE__MAP__TILEURL` |
-| Error reports, traces and logs | Off | `VELOMINE__TELEMETRY__*` and the standard `OTEL_EXPORTER_OTLP_*` |
-| Email (password reset, notifications) | Off | `VELOMINE__SMTP__*` |
-| Shared parts catalogue: fetch a list, send back new parts | Off; the server keeps its own bundled list | `VELOMINE__CATALOGUE__*` |
-| Anonymous feedback form and early-access list on the public site: answers and sign-ups emailed to this address | Off | `VELOMINE__FEEDBACK__ADDRESS` (needs email); `VELOMINE__FEEDBACK__SITEURL` when the site is on another host |
-| Single sign-on | Off | `VELOMINE__SSO__*` |
-
-### Settings you can change
-
-Every setting an operator can change, with its default and what it does, is in [`.env.example`](.env.example). Copy it to `.env` next to `docker-compose.yml` and change what you need; every variable in `.env` reaches the server. Names are upper case, with `__` for a nested setting (`VELOMINE__SMTP__HOST` is the server's `Velomine:Smtp:Host`).
-
-The sign-up, approval and club creation switches can also be changed by an admin in the app (*Admin*, *Settings*); a value saved there wins over the environment.
-
-The defaults are for trying it out on your own machine only. Do not expose them to the internet: set the passwords and the public address first.
-
-### If something goes wrong
-
-| Problem | What to do |
-|---------|-----------|
-| `port is already allocated` | Something else uses 8080 (or 5556, with Dex). Stop it, or set `VELOMINE_PORT` (see [Settings you can change](#settings-you-can-change)). |
-| The build fails while downloading | Run it again; it keeps what it already downloaded. Check your internet or proxy settings. |
-| The *Continue with Dex* page cannot be found | Use Chrome, Edge or Firefox. They resolve `dex.localhost` themselves; some other browsers and some tools do not. |
-| The sign-in provider says the redirect address is wrong | You changed `VELOMINE_PORT` without editing `deploy/dex/config.yaml`. |
-| You still see the old app after pulling new code | Run `docker compose up --build` again. |
-| The web container is unhealthy, or every page answers 502 | The server is not running. `docker compose logs server` says why; `Could not create the admin: Passwords must ...` means `VELOMINE__ADMIN__PASSWORD` breaks the rules above. |
-| You forgot the admin password | The setting only applies while no admin exists. Run `docker compose down -v` to start over (this deletes the data). |
-| Something else | `docker compose logs -f server` shows the server's log; add `web`, `postgres` or `dex` for those. |
+Every setting an operator can change, with its default and what it does, is in [`.env.example`](.env.example).
 
 ## Develop Velomine
 

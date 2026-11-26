@@ -26,7 +26,12 @@ export default defineConfig({
         {
           label: 'Run it',
           translations: { it: 'Installazione' },
-          items: ['self-hosting', 'configuration'],
+          items: ['self-hosting', 'configuration', 'email', 'backups-and-upgrades'],
+        },
+        {
+          label: 'Use it',
+          translations: { it: 'Uso' },
+          items: ['getting-rides-in', 'privacy-and-sharing', 'clubs-and-coaches', 'training-and-bikes'],
         },
       ],
     }),
