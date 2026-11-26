@@ -72,4 +72,24 @@ void main() {
       expect(find.byKey(const Key('location-error')), findsNothing);
     },
   );
+
+  testWidgets(
+    'LocationPickerScreen_ShouldReadTheNewPoint_WhenTheMapIsDragged',
+    (tester) async {
+      await openPicker(tester, (latitude: 46.0, longitude: 11.0));
+      final before = tester.widget<Text>(
+        find.byKey(const Key('location-readout')),
+      );
+
+      await tester.drag(
+        find.byKey(const Key('location-map')),
+        const Offset(150, 0),
+      );
+      await tester.pumpAndSettle();
+      final after = tester.widget<Text>(
+        find.byKey(const Key('location-readout')),
+      );
+      expect(after.data, isNot(before.data));
+    },
+  );
 }

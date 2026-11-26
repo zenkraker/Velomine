@@ -2,11 +2,9 @@ import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:velomine_api/api.dart';
 
-import '../../core/map_defaults.dart';
 import '../../core/tokens.dart';
-import '../../core/widgets/chart_chrome.dart';
+import '../../core/widgets/app_map.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../rides/detail/geo.dart';
 
 String ridePaceName(AppLocalizations l10n, String pace) => switch (pace) {
   'easy' => l10n.ridePaceEasy,
@@ -80,65 +78,28 @@ class MeetingMap extends StatelessWidget {
   final String? attribution;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.medium),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final size = Size(box.maxWidth, box.maxHeight);
-            final view = MapView.centered(
-              center: (lat: latitude, lon: longitude),
-              size: size,
-              zoom: 15,
-            );
-            return ColoredBox(
-              color: scheme.surfaceContainerHighest,
-              child: Stack(
-                children: [
-                  if (tileUrl != null)
-                    for (final tile in view.tiles(tileUrl!))
-                      Positioned(
-                        left: tile.left,
-                        top: tile.top,
-                        width: view.tilePixels,
-                        height: view.tilePixels,
-                        child: Image.network(
-                          tile.url,
-                          key: Key('meeting-tile-${tile.url}'),
-                          headers: mapTileHeaders,
-                          fit: BoxFit.fill,
-                          webHtmlElementStrategy:
-                              WebHtmlElementStrategy.fallback,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                        ),
-                      ),
-                  Center(
-                    child: Icon(
-                      Icons.place,
-                      key: const Key('meeting-pin'),
-                      size: AppIconSize.large,
-                      color: scheme.error,
-                    ),
-                  ),
-                  if (tileUrl != null &&
-                      attribution != null &&
-                      attribution!.isNotEmpty)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: MapAttribution(text: attribution!),
-                    ),
-                ],
-              ),
-            );
-          },
-        ),
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(AppRadius.medium),
+    child: AspectRatio(
+      aspectRatio: 16 / 9,
+      child: AppMap(
+        tileUrl: tileUrl,
+        attribution: attribution,
+        center: (lat: latitude, lon: longitude),
+        zoom: 15,
+        overlay: [
+          Center(
+            child: Icon(
+              Icons.place,
+              key: const Key('meeting-pin'),
+              size: AppIconSize.large,
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// The line under a ride's title: where it meets and at what pace, with the route it follows. No-drop and the places

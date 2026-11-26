@@ -4,7 +4,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../../core/format.dart';
 import '../../../core/units.dart';
-import 'geo.dart';
+import '../../../core/geo.dart';
 
 /// One signal of a ride, ready to draw: a value per sample, null where the file had none.
 class Series {

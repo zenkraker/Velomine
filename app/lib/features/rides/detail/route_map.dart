@@ -1,15 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/l10n.dart';
-import '../../../core/map_defaults.dart';
-import '../../../core/widgets/chart_chrome.dart';
+import '../../../core/widgets/app_map.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_card.dart';
 import 'full_route_map.dart';
-import 'geo.dart';
 import 'lap_range.dart';
 import 'ride_series.dart';
-import 'route_painter.dart';
+import 'route_lines.dart';
 import '../../../core/tokens.dart';
 
 /// The route on a map. With a tile address the map has a background of map tiles; without one the route is drawn
@@ -66,6 +64,12 @@ class _RouteMapState extends State<RouteMap> {
     final colors = VelomineColors.of(context);
     final heartRate = _heartRateOf(widget.data);
     final showHeartRate = heartRate != null && _showHeartRate;
+    final lines = routeLines(
+      widget.data,
+      colors,
+      heartRate: heartRate,
+      showHeartRate: showHeartRate,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -94,131 +98,96 @@ class _RouteMapState extends State<RouteMap> {
               borderRadius: BorderRadius.circular(AppRadius.small),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: LayoutBuilder(
-                  builder: (context, box) {
-                    final size = Size(box.maxWidth, box.maxHeight);
-                    final view = MapView.fit(widget.data.route, size);
-                    return ColoredBox(
-                      color: scheme.surfaceContainerHighest,
-                      child: Stack(
-                        children: [
-                          if (widget._tileUrl != null)
-                            // The map is dimmed and desaturated so the route is the brightest thing on it.
-                            Positioned.fill(
-                              child: ColorFiltered(
-                                colorFilter: ColorFilter.matrix(
-                                  _dimTiles(
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark,
-                                  ),
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([
+                    widget.selected,
+                    widget.selectedLap,
+                  ]),
+                  builder: (context, _) => ColoredBox(
+                    color: scheme.surfaceContainerHighest,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: AppMap(
+                            key: const Key('route-map'),
+                            tileUrl: widget._tileUrl,
+                            attribution: widget.attribution,
+                            attributionAlignment: Alignment.topLeft,
+                            fit: widget.data.route,
+                            dimTiles: true,
+                            lines: [
+                              ...lines,
+                              ...lapLines(
+                                widget.data,
+                                colors,
+                                widget.selectedLap.value,
+                              ),
+                            ],
+                            dots: [
+                              ...routeEnds(widget.data, colors),
+                              ...selectedDot(
+                                widget.data,
+                                colors,
+                                widget.selected.value,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (widget.title case final title?)
+                          Positioned(
+                            left: AppSpacing.lg,
+                            right: AppSpacing.lg,
+                            bottom: AppSpacing.lg,
+                            // The card is part of the map's own tap: it carries no buttons.
+                            child: IgnorePointer(
+                              child: GlassCard(
+                                key: const Key('map-facts'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.xl,
+                                  vertical: AppSpacing.lg,
                                 ),
-                                child: Stack(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: AppSpacing.xs,
                                   children: [
-                                    for (final tile in view.tiles(
-                                      widget._tileUrl!,
-                                    ))
-                                      Positioned(
-                                        left: tile.left,
-                                        top: tile.top,
-                                        width: view.tilePixels,
-                                        height: view.tilePixels,
-                                        child: Image.network(
-                                          tile.url,
-                                          key: Key('tile-${tile.url}'),
-                                          headers: mapTileHeaders,
-                                          fit: BoxFit.fill,
-                                          webHtmlElementStrategy:
-                                              WebHtmlElementStrategy.fallback,
-                                          errorBuilder: (_, _, _) =>
-                                              const SizedBox.shrink(),
-                                        ),
+                                    Text(
+                                      title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                    if (widget.date case final date?)
+                                      Text(
+                                        date,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    if (widget.facts.isNotEmpty)
+                                      Wrap(
+                                        spacing: AppSpacing.lg,
+                                        runSpacing: AppSpacing.xs,
+                                        children: [
+                                          for (final fact in widget.facts)
+                                            Text(
+                                              '${fact.label} ${fact.value}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall,
+                                            ),
+                                        ],
                                       ),
                                   ],
                                 ),
                               ),
                             ),
-                          Positioned.fill(
-                            child: CustomPaint(
-                              key: const Key('route-map'),
-                              painter: RoutePainter(
-                                view: view,
-                                data: widget.data,
-                                selected: widget.selected,
-                                selectedLap: widget.selectedLap,
-                                colors: colors,
-                                heartRate: heartRate,
-                                showHeartRate: showHeartRate,
-                              ),
-                            ),
                           ),
-                          if (widget._tileUrl != null &&
-                              widget.attribution != null &&
-                              widget.attribution!.isNotEmpty)
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              child: MapAttribution(
-                                key: const Key('map-attribution'),
-                                text: widget.attribution!,
-                              ),
-                            ),
-                          if (widget.title case final title?)
-                            Positioned(
-                              left: AppSpacing.lg,
-                              right: AppSpacing.lg,
-                              bottom: AppSpacing.lg,
-                              // The card is part of the map's own tap: it carries no buttons.
-                              child: IgnorePointer(
-                                child: GlassCard(
-                                  key: const Key('map-facts'),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.xl,
-                                    vertical: AppSpacing.lg,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    spacing: AppSpacing.xs,
-                                    children: [
-                                      Text(
-                                        title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium,
-                                      ),
-                                      if (widget.date case final date?)
-                                        Text(
-                                          date,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
-                                        ),
-                                      if (widget.facts.isNotEmpty)
-                                        Wrap(
-                                          spacing: AppSpacing.lg,
-                                          runSpacing: AppSpacing.xs,
-                                          children: [
-                                            for (final fact in widget.facts)
-                                              Text(
-                                                '${fact.label} ${fact.value}',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall,
-                                              ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -262,41 +231,6 @@ class _RouteMapState extends State<RouteMap> {
       ),
     );
   }
-}
-
-/// Lowers a map tile's saturation and brightness, so a route drawn over it stays the loudest thing.
-/// A dark theme dims harder: its tiles are already dark.
-List<double> _dimTiles(bool dark) {
-  const saturation = 0.45;
-  final brightness = dark ? 0.55 : 0.85;
-  const r = 0.2126, g = 0.7152, b = 0.0722;
-  final matrix = <double>[
-    (1 - saturation) * r + saturation,
-    (1 - saturation) * g,
-    (1 - saturation) * b,
-    0,
-    0,
-    (1 - saturation) * r,
-    (1 - saturation) * g + saturation,
-    (1 - saturation) * b,
-    0,
-    0,
-    (1 - saturation) * r,
-    (1 - saturation) * g,
-    (1 - saturation) * b + saturation,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ];
-  // Darken the three colour rows; the alpha row stays exactly as it was.
-  return [
-    for (var i = 0; i < matrix.length; i++)
-      i ~/ 5 < 3 ? matrix[i] * brightness : matrix[i].toDouble(),
-  ];
 }
 
 Series? _heartRateOf(RideSeries data) {

@@ -15,6 +15,7 @@ dependencies:
   flutter_appauth: ^13.0.0
   flutter_localizations:
     sdk: flutter
+  flutter_map: 8.3.2
   flutter_riverpod: ^3.5.0
   flutter_web_plugins:
     sdk: flutter
@@ -22,6 +23,7 @@ dependencies:
   go_router: ^18.1.4
   http: ^1.6.0
   intl: ^0.20.3
+  latlong2: 0.10.1
   material_ui: ^1.11.0
   riverpod_annotation: ^4.0.8
   sentry_flutter: ^10.4.0

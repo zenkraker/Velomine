@@ -14,4 +14,4 @@ A ride's route on a dimmed map, drawn as a glowing line, with the ride's facts o
 - Colour the route by speed or heart rate on overview cards; that belongs to the ride page.
 - Put buttons on the map card; the whole card opens the ride.
 
-**Flutter:** the tiles are drawn with a `ColorFilter.matrix` that lowers saturation and brightness; the glow is a `Paint` with `MaskFilter.blur(BlurStyle.normal, 6)` under the line (`features/rides/detail/route_painter.dart`).
+**Flutter:** the tiles are drawn with a `ColorFilter.matrix` that lowers saturation and brightness; the glow is a wide `route-glow` line under the halo line, without blur (`flutter_map` draws no blur); the route is `PolylineLayer` lines built in `features/rides/detail/route_lines.dart`, drawn by `AppMap` (`lib/core/widgets/app_map.dart`).

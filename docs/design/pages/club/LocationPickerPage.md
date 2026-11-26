@@ -20,4 +20,4 @@ Pick a point: a club's place, or the rider's saved location for finding clubs. `
 
 **Open question for the owner:** the code draws the pin in the theme's error colour, and the design's map pin is `signal`; one of the two changes.
 
-**Flutter:** `features/club/location_picker.dart`; the map is `features/rides/detail/geo.dart` (`MapView.centered`) over plain tiles, the same drawing as [RouteMap](../maps/RouteMap.html).
+**Flutter:** `features/club/location_picker.dart`; the map is `AppMap` (`lib/core/widgets/app_map.dart`, `flutter_map` over raster tiles), the same widget as [RouteMap](../maps/RouteMap.html).

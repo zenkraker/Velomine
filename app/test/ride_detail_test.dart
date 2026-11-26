@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine/core/hooks.dart';
@@ -823,26 +824,14 @@ void main() {
 
   group('map tiles', () {
     testWidgets(
-      'RouteMap_ShouldLayOutTilesAndShowCredit_WhenServerOffersAnAddress',
+      'RouteMap_ShouldAskForTilesAndShowCredit_WhenServerOffersAnAddress',
       (tester) async {
         await open(tester);
 
         expect(find.byKey(const Key('map-attribution')), findsOneWidget);
         expect(find.text('© Test Maps'), findsOneWidget);
-        final tiles = find.byWidgetPredicate(
-          (w) =>
-              w.key is ValueKey<String> &&
-              (w.key! as ValueKey<String>).value.startsWith(
-                'tile-https://tiles.example/',
-              ),
-        );
-        expect(tiles, findsWidgets);
-        expect(
-          tester.widgetList(tiles).length,
-          lessThan(30),
-        ); // a screenful, not the world
-        final image = tester.widget<Image>(tiles.first).image as NetworkImage;
-        expect(image.headers?['User-Agent'], contains('Velomine'));
+        final layer = tester.widget<TileLayer>(find.byType(TileLayer));
+        expect(layer.urlTemplate, startsWith('https://tiles.example/'));
       },
     );
   });
@@ -859,12 +848,7 @@ void main() {
       expect(find.byKey(const Key('route-map')), findsOneWidget);
       expect(find.byKey(const Key('map-virtual-caption')), findsOneWidget);
       expect(find.byKey(const Key('map-attribution')), findsNothing);
-      final tiles = find.byWidgetPredicate(
-        (w) =>
-            w.key is ValueKey<String> &&
-            (w.key! as ValueKey<String>).value.startsWith('tile-'),
-      );
-      expect(tiles, findsNothing);
+      expect(find.byType(TileLayer), findsNothing);
     },
   );
 
@@ -1195,6 +1179,115 @@ void main() {
       );
     },
   );
+
+  testWidgets('RideDetailScreen_ShouldShowTheRouteMap_WhenTheRideIsShort', (
+    tester,
+  ) async {
+    // A 28-sample, 99 m ride (synthetic copy of a short real recording): the map must still be there.
+    server.streams['r1'] = {
+      'time': [
+        0.0,
+        1.0,
+        2.0,
+        64.0,
+        65.0,
+        66.0,
+        67.0,
+        68.0,
+        69.0,
+        80.0,
+        81.0,
+        83.0,
+        84.0,
+        85.0,
+        86.0,
+        102.0,
+        103.0,
+        104.0,
+        105.0,
+        106.0,
+        107.0,
+        108.0,
+        109.0,
+        110.0,
+        111.0,
+        112.0,
+        113.0,
+        114.0,
+      ],
+      'latitude': [
+        46.0,
+        46.000225,
+        46.0002433,
+        46.000545,
+        46.00054,
+        46.0005333,
+        46.0005317,
+        46.00053,
+        46.0005283,
+        46.0004416,
+        46.00045,
+        46.0004534,
+        46.0004566,
+        46.00047,
+        46.0004883,
+        46.00048,
+        46.000475,
+        46.000475,
+        46.0004733,
+        46.0004716,
+        46.00047,
+        46.0004733,
+        46.000475,
+        46.0004733,
+        46.000475,
+        46.0004733,
+        46.00047,
+        46.00047,
+      ],
+      'longitude': [
+        11.0,
+        11.0002233,
+        11.0002883,
+        11.0004333,
+        11.0004433,
+        11.00046,
+        11.000475,
+        11.00049,
+        11.0005017,
+        11.0005167,
+        11.000525,
+        11.00053,
+        11.0005366,
+        11.0005383,
+        11.00054,
+        11.000545,
+        11.0005366,
+        11.00053,
+        11.0005183,
+        11.0005083,
+        11.0005017,
+        11.0004933,
+        11.0004867,
+        11.0004867,
+        11.0004883,
+        11.0004867,
+        11.0004883,
+        11.0004883,
+      ],
+      'altitude': null,
+      'speed': null,
+      'distance': null,
+      'heartRate': null,
+      'power': null,
+      'cadence': null,
+      'temperature': null,
+      'wPrimeBalanceJ': null,
+    };
+    await open(tester);
+
+    expect(find.byKey(const Key('route-map')), findsOneWidget);
+  });
 
   testWidgets(
     'RideDetailScreen_ShouldHideTheRoute_WhenTheCallerHasNoRouteGrant',
