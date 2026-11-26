@@ -168,7 +168,7 @@ Not needed to run it.
 - [Development environment](docs/development.md)
 - [Running the demo](docs/demo.md)
 - [Architecture](docs/architecture.md)
-- [Code, API and app rules](AGENTS.md)
+- [Code, API and app rules](AGENTS.md) and the [full rules](docs/rules/)
 - [Product values and scope](docs/design/values.md)
 - [Design: the visual language and every screen](docs/design/pages/README.md)
 
@@ -180,7 +180,7 @@ Velomine is built by one developer, with AI coding agents writing much of the co
 
 Feedback is the most useful contribution right now: [tell what worked and what broke](https://velomine.eu/feedback/). For a security problem, see the [security page](https://velomine.eu/security/) instead of opening an issue.
 
-For code, read [AGENTS.md](AGENTS.md) first: it holds the rules for code, the API, the app and dependencies, and the approved libraries. Run `just check` before every commit. Claude Code reads the same file through `CLAUDE.md`.
+For code, read [AGENTS.md](AGENTS.md) first: it holds the invariants and links to the full rules in `docs/rules/` and the approved libraries in `docs/dependencies/approved.md`. Run `just check` before every commit.
 
 ## Licence
 

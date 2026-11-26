@@ -86,7 +86,7 @@ For Android, connect the phone once by USB on the host, run `adb tcpip 5555`, th
 
 ## Agents
 
-**Claude Code** is installed by `post-create.sh` into the volume, never on the host, and it never updates itself. It reads the project rules through `CLAUDE.md`, the MCP servers from `.mcp.json` and its own settings from `.claude/settings.json`. Non-secret settings for both agents are in `.devcontainer/config/`; `post-create.sh` copies them into the volume and never overwrites a file already there. Never put credentials there (see its `README.md`).
+**Claude Code** is installed by `post-create.sh` into the volume, never on the host, and it never updates itself. It reads the project rules from `AGENTS.md` directly (there is no `CLAUDE.md`: a `CLAUDE.md` anywhere above the working directory would make it skip `AGENTS.md`), the MCP servers from `.mcp.json` and its own settings from `.claude/settings.json`. Non-secret settings for both agents are in `.devcontainer/config/`; `post-create.sh` copies them into the volume and never overwrites a file already there. Never put credentials there (see its `README.md`).
 
 The **ponytail** plugin is mandatory (see [AGENTS.md](../AGENTS.md)). Accept its marketplace and plugin when Claude Code asks; the status line shows `[PONYTAIL NOT INSTALLED]` until it is set up. To install it by hand:
 
@@ -99,7 +99,7 @@ Ponytail keeps changes small (smallest complete change, YAGNI, stdlib first). It
 
 **CodeGraph** indexes the code into a local symbol graph and gives the agent one MCP tool, `codegraph_explore`, which returns the source of the relevant symbols with their call paths (`codegraph explore "..."` does the same in a shell). `.mcp.json` starts its server and `.claude/settings.json` runs its prompt hook.
 
-**Pi** comes from the [Pendant](https://marketplace.visualstudio.com/items?itemName=cdervis.vscode-pi) extension in `devcontainer.json`, which bundles its own. It reads `AGENTS.md` directly, its packages (ponytail, `pi-claude-tether`, `pi-advisor-flow`) from `.pi/settings.json` and its MCP servers from `.pi/mcp.json`, and it loads the project skills through `pendant.extraSkills`. Its subagent profiles are VS Code settings in `customizations.vscode.settings`.
+**Pi** comes from the [Pendant](https://marketplace.visualstudio.com/items?itemName=cdervis.vscode-pi) extension in `devcontainer.json`, which bundles its own. It reads `AGENTS.md` directly, its packages (ponytail and `pi-claude-tether`) from `.pi/settings.json` and its MCP servers from `.pi/mcp.json`. Its subagent profiles are VS Code settings in `customizations.vscode.settings`.
 
 **The Dart MCP server** is the one bundled with the pinned SDK. Do not install a separate global copy:
 
@@ -115,7 +115,7 @@ claude plugin marketplace add flutter/agent-plugins
 claude plugin install dart-flutter@dart-flutter
 ```
 
-**Project skills.** The skills in `.claude/skills/` (dotnet, flutter, postgres, software-architecture) are loaded into every session of both agents: `CLAUDE.md` imports them for Claude Code, and `pendant.extraSkills` in `.devcontainer/devcontainer.json` lists them for Pi. When you add a skill, add it to both. `AGENTS.md` wins where a skill disagrees with it.
+**Skills.** The skills are in `.agents/skills/` (the official Dart and Flutter ones); Pi discovers that folder itself. The project has no skills of its own: its rules are `AGENTS.md` and `docs/rules/`. `AGENTS.md` wins where a skill disagrees with it.
 
 **Sentry MCP** is available in two forms, both read-only (`inspect,triage`). Claude Code uses the hosted server in `.mcp.json` and signs in through `/mcp`. Pi starts the local `@sentry/mcp-server` that `post-create.sh` installs, with the same skills from the `env` of `.pi/mcp.json`. Without an LLM provider the local server's AI-powered search tools are unavailable, but project/DSN discovery and the other tools work. To add `project-management` for a setup task, add it to that `env` and re-authorize; never commit a token.
 
@@ -131,9 +131,7 @@ Never use the account key, and never commit a key. Changes to the infrastructure
 
 **Two roles on top of the agents.** The project manager turns an idea into stories in `docs/stories/` and keeps
 the milestones; the software architect guards `AGENTS.md` and `docs/architecture.md` §10. Both are defined in
-`docs/roles/`, and both agents read those same documents, so the roles cannot drift apart: Pi gets them as
-project prompt templates (`/pm`, `/architect` in `.pi/prompts/`), Claude Code as project subagents in
-`.claude/agents/`. Run `/reload` in Pi after changing a template. `docs/business.md` is the CEO's: the project
+`docs/roles/`, and every agent reads those same documents, so the roles cannot drift apart. `docs/business.md` is the CEO's: the project
 manager quotes it and asks, rather than filling it in.
 
 ## Telemetry
@@ -158,6 +156,16 @@ Run `just` on its own to list every command.
 | `just codegen` | Regenerates the Riverpod providers (`build_runner`). Run it after changing a `@riverpod` provider; the generated `.g.dart` files are committed. |
 | `just check` | Runs every check before a commit: .NET format check, server tests, Riverpod codegen, Dart format, analyzer, Flutter tests and the Android unit tests |
 | `just check-server` | The server half of `just check`: .NET format check and server tests. Enough for a change that touches no file under `app/` |
+
+### Screenshots of the app
+
+A change that alters what a page looks like is checked with screenshots taken in this run, never claimed from reading code. `just up` puts the app on http://localhost:8080, and only there does the session cookie work, so do not use `flutter run -d chrome`:
+
+```
+dart run tools/screenshots.dart --routes /rides,/progress/fitness --widths 390,600,820,1300
+```
+
+It drives one headless Chrome, signs in as the dev account (`admin.local` / `Velomine-dev-1`), sets each width, waits for the frame to settle and writes `.dev/screens/<screen>-<width>.png`. `--theme day` renders the Day theme; Night is the default. Compare each shot with the page's mock-up in `docs/design/pages/<area>/<Page>.html` at 390 and 1300, and at 600 and 820 when the page changes structure there. A missing Chrome or script means the check failed, not passed; a blank, unstyled or sign-in screenshot is a harness failure to fix and retake. Every changed page also gets a width test with fake data (`<Screen>_ShouldNotOverflow_WhenWidthIs<N>` at 390, 600, 820 and 1300), and a "RenderFlex overflowed" error is fixed in the layout, not hidden with `ClipRect`.
 
 `just emu` runs the app on an Android emulator and is meant for a machine where one is installed: the dev container has no emulator or system image, so use `just phone` there.
 
