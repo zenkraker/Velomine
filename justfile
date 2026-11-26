@@ -80,63 +80,13 @@ android-test:
     cd app/android && ./gradlew :app:testDebugUnitTest -x compileFlutterBuildDebug
 
 # count the duplicated UI patterns the shared-widget rule keeps down; lower is better
+# `tools/ui-dupes.sh` holds the patterns, so this recipe and the CI job count the same ones.
 ui-dupes:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd app/lib
-    count() { printf '%-22s %s\n' "$1" "$(grep -rn "$2" features core --include=*.dart | wc -l)"; }
-    count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
-    count "Card(" '\(^\|[^A-Za-z_]\)Card('
-    count "TextField(" '\(^\|[^A-Za-z_]\)TextField(\|TextFormField('
-    count "showSnackBar" 'showSnackBar'
-    count "SegmentedButton" 'SegmentedButton'
-    count "TextStyle(" 'TextStyle('
-    count "Color(0x" 'Color(0x'
-    count "EdgeInsets.all(n)" 'EdgeInsets.all([0-9]'
-    count "SizedBox(height: n)" 'SizedBox(height: [0-9]'
-    count "SizedBox(width: n)" 'SizedBox(width: [0-9]'
-    count "spacing: n" 'spacing: [0-9]'
+    tools/ui-dupes.sh --write
 
 # the duplicate counts as a budget: a count may fall, never rise (`docs/design/audit-2026-11-25.md`, S4/S8)
 ui-dupes-check:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd app/lib
-    baseline=../../tools/ui-dupes.baseline
-    [ -f "$baseline" ] || { echo "missing $baseline: run 'just ui-dupes > tools/ui-dupes.baseline'"; exit 1; }
-    fail=0
-    lower=0
-    count() {
-      local name="$1" now
-      # A pattern the code no longer has makes grep exit 1; under `pipefail` that would abort the script.
-      now=$(grep -rn "$2" features core --include=*.dart | wc -l || true)
-      local was
-      # The name may hold spaces and brackets, so compare it as text, not as a pattern.
-      was=$(awk -v n="$name" '{ line=$0; value=$NF; sub(/[ \t]+[0-9]+$/, "", line); sub(/[ \t]+$/, "", line); if (line == n) print value }' "$baseline")
-      [ -n "$was" ] || { echo "  $name: not in the baseline"; fail=1; return; }
-      if [ "$now" -gt "$was" ]; then
-        echo "  $name: $was -> $now  (raised)"; fail=1
-      elif [ "$now" -lt "$was" ]; then
-        echo "  $name: $was -> $now  (lower: take the new number into the baseline)"; lower=1
-      fi
-    }
-    count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
-    count "Card(" '\(^\|[^A-Za-z_]\)Card('
-    count "TextField(" '\(^\|[^A-Za-z_]\)TextField(\|TextFormField('
-    count "showSnackBar" 'showSnackBar'
-    count "SegmentedButton" 'SegmentedButton'
-    count "TextStyle(" 'TextStyle('
-    count "Color(0x" 'Color(0x'
-    count "EdgeInsets.all(n)" 'EdgeInsets.all([0-9]'
-    count "SizedBox(height: n)" 'SizedBox(height: [0-9]'
-    count "SizedBox(width: n)" 'SizedBox(width: [0-9]'
-    count "spacing: n" 'spacing: [0-9]'
-    if [ "$fail" = 1 ]; then
-      echo "ui-dupes: a duplicate pattern grew. Use the shared widget instead."
-      exit 1
-    fi
-    if [ "$lower" = 1 ]; then echo "ui-dupes: no pattern grew, and one fell."; fi
-    exit 0
+    tools/ui-dupes.sh
 
 # every check to run before a commit
 check:
