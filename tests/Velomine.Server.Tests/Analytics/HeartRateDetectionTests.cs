@@ -32,10 +32,13 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
     /// <summary>The estimate when no age is known and no maximum is set: 89 % is the threshold, 208 the maximum's own.</summary>
     private const int MaxCandidate = 200;
 
-    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
+    /// <summary>The export test passes a clock that follows the wall clock: its link is a two-minute data-protection token
+    /// whose expiry uses the system clock, so a clock frozen at class start makes the link expired once the class has run
+    /// for two minutes.</summary>
+    private Task<TestApi> StartAsync(TimeProvider? clock = null) => TestApi.StartAsync(postgres, b =>
     {
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(Now)));
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(clock ?? new FixedTime(Now)));
     });
 
     private static Task<HttpResponseMessage> SetAsync(HttpClient client, string kind, int bpm) =>
@@ -683,7 +686,7 @@ public sealed class HeartRateDetectionTests(PostgresFixture postgres)
     [Fact]
     public async Task AccountExport_ShouldContainHeartRateSuggestions_WhenTheMemberHasThem()
     {
-        await using var api = await StartAsync();
+        await using var api = await StartAsync(new OffsetTime(DateTimeOffset.UtcNow));
         var me = await api.NewMemberAsync("Ada");
         var other = await api.NewMemberAsync("Grace");
         (await SetAsync(me.Client, "max", 185)).EnsureSuccessStatusCode();

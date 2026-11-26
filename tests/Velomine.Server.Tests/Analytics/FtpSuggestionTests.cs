@@ -22,18 +22,21 @@ namespace Velomine.Server.Tests.Analytics;
 /// A ride that shows a higher FTP is noticed once, when it is first read: from its best 20 or 60 minutes, for
 /// one member's one open suggestion, which they accept in one tap. A coach never sees it.
 /// </summary>
-public sealed class FtpSuggestionTests(PostgresFixture postgres)
+public sealed class FtpSuggestionTests(PostgresFixture postgres, FtpSuggestionHost host) : IClassFixture<FtpSuggestionHost>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     /// <summary>A fixed clock, so "42 days ago" is a day and not two. The export link's own expiry follows the
     /// system clock, so the fixed instant stays close to today.</summary>
-    private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
+    internal static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
 
-    private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
+    /// <summary>The export test passes a clock that follows the wall clock: its link is a two-minute data-protection token
+    /// whose expiry uses the system clock, so a clock frozen at class start makes the link expired once the class has run
+    /// for two minutes.</summary>
+    private Task<TestApi> StartAsync(TimeProvider? clock = null) => TestApi.StartAsync(postgres, b =>
     {
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(Now)));
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(clock ?? new FixedTime(Now)));
     });
 
     private static Task<HttpResponseMessage> SetFtpAsync(HttpClient client, int watts) =>
@@ -132,7 +135,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldBeCreated_WhenTwentyMinutesAt280WAndFtpIs250()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
@@ -149,29 +152,14 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
         Assert.Equal(266, ride.FtpSuggestionW);
         Assert.Equal(FtpSuggestionMethods.TwentyMinutes, ride.FtpSuggestionMethod);
         Assert.Equal(suggestion.Id, ride.FtpSuggestionId);
-    }
-
-    [Fact]
-    public async Task GetRide_ShouldNameTheSuggestionsEffort_WhenTheRideSuggestsAnFtp()
-    {
-        await using var api = await StartAsync();
-        var member = await api.NewMemberAsync();
-        await SetFtpAsync(member.Client, 250);
-        await UploadAsync(member.Client, 24, (1500, 280));
-
-        var suggestion = await SuggestionAsync(member.Client);
-        var ride = await member.Client.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/rides/{suggestion!.RideId}", Ct);
-
         // The card says "95 % of your best 20 minutes (280 W)", so the ride carries the effort itself.
-        Assert.Equal(suggestion.EffortWatts, ride!.FtpSuggestionEffortW);
         Assert.Equal(280, ride.FtpSuggestionEffortW);
     }
 
     [Fact]
     public async Task FtpSuggestion_ShouldNotBeCreated_WhenTheCandidateIsLessThanThreePercentAbove()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 260);
 
@@ -185,7 +173,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldUseTheHour_WhenSixtyMinutesIsHigher()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
@@ -203,7 +191,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldUseTheTwentyMinuteBest_WhenTheRideHasNoHour()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
@@ -219,7 +207,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldBeCreated_WhenTheRiderHasNoFtp()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
 
         await UploadAsync(member.Client, 24, (1500, 280));
@@ -232,7 +220,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldReplaceTheOpenOne_WhenAHigherRideArrives()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         await UploadAsync(member.Client, 48, (1500, 280));
@@ -255,7 +243,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldKeepIt_WhenALowerRideArrives()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         var strong = await UploadAsync(member.Client, 48, (3600, 290));
@@ -273,7 +261,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldBeSkipped_WhenTheRideIsAnEbike()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         await UploadAsync(member.Client, 24, (1500, 280));
@@ -309,7 +297,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldBeSkipped_WhenTheRideIsOlderThan42Days()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
@@ -324,7 +312,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldBeSkipped_WhenTheRideIsReadAgain()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         await UploadAsync(member.Client, 24, (1500, 280));
@@ -356,7 +344,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldNotNotify_WhenTheRideIsQuiet()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
@@ -379,7 +367,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestion_ShouldNotify_WhenTheRideIsRead()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
 
@@ -395,7 +383,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task Profile_ShouldSayMeasured_WhenTheFtpSuggestionIsAccepted()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 150);
         // Half an hour of 200 W at 150 bpm: a 190 W FTP suggestion, and the ride measures the maximum.
@@ -416,7 +404,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task AcceptFtpSuggestion_ShouldSetFtpAndWriteATestHistoryRow_WhenOpen()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         var ride = await UploadAsync(member.Client, 24, (1500, 280));
@@ -439,7 +427,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task DismissFtpSuggestion_ShouldHideIt_WhenOpen()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         await UploadAsync(member.Client, 24, (1500, 280));
@@ -458,7 +446,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task AcceptFtpSuggestion_ShouldReturn404_WhenItBelongsToAnotherRider()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var owner = await api.NewMemberAsync("Ada");
         await SetFtpAsync(owner.Client, 250);
         await UploadAsync(owner.Client, 24, (1500, 280));
@@ -491,34 +479,9 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task CoachRide_ShouldNotShowTheFtpSuggestion_WhenACoachReadsTheRide()
-    {
-        await using var api = await StartAsync();
-        var ownerEmail = TestApi.NewEmail();
-        (await api.RegisterAsync(ownerEmail, name: "Coach Rina")).EnsureSuccessStatusCode();
-        var coach = await api.SignedInClientAsync(ownerEmail, TestApi.MemberPassword);
-        var club = await TestClubs.CreateAsync(api, ownerEmail);
-        var athlete = await api.NewMemberAsync("Athlete Luca");
-        await TestClubs.JoinAsync(athlete, club);
-        (await athlete.Client.PutAsJsonAsync("/api/v1/sharing",
-            new UpdateSharingRequest { Rides = "coaches", Analytics = "coaches", Routes = "none", Wellbeing = "none" }, Ct))
-            .EnsureSuccessStatusCode();
-        await SetFtpAsync(athlete.Client, 250);
-        var ride = await UploadAsync(athlete.Client, 24, (1500, 280));
-
-        var shared = await coach.GetFromJsonAsync<RideResponse>(
-            $"/api/v1/clubs/{club.Id}/athletes/{athlete.Id}/rides/{ride.Id}", Ct);
-
-        Assert.NotNull(shared);
-        Assert.Null(shared.FtpSuggestionW);
-        Assert.Null(shared.FtpSuggestionEffortW);
-        Assert.Null(shared.FtpSuggestionMethod);
-    }
-
-    [Fact]
     public async Task AccountExport_ShouldContainFtpSuggestions_WhenTheMemberHasThem()
     {
-        await using var api = await StartAsync();
+        await using var api = await StartAsync(new OffsetTime(DateTimeOffset.UtcNow));
         var me = await api.NewMemberAsync("Ada");
         var other = await api.NewMemberAsync("Grace");
         await SetFtpAsync(me.Client, 250);
@@ -547,7 +510,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task AccountDeletion_ShouldRemoveFtpSuggestions_WhenTheAccountIsDeleted()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var me = await api.NewMemberAsync();
         await SetFtpAsync(me.Client, 250);
         await UploadAsync(me.Client, 24, (1500, 280));
@@ -564,7 +527,7 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     [Fact]
     public async Task FtpSuggestions_ShouldGoWithTheRide_WhenTheRideIsDeleted()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await api.NewMemberAsync();
         await SetFtpAsync(member.Client, 250);
         var ride = await UploadAsync(member.Client, 24, (1500, 280));
@@ -580,4 +543,20 @@ public sealed class FtpSuggestionTests(PostgresFixture postgres)
     /// <summary>Reads every stored ride again, as a parser version bump does.</summary>
     private static Task ReadAgainAsync(TestApi api) =>
         api.Services.GetRequiredService<RideReparseService>().RunAsync(Ct);
+}
+
+/// <summary>One server for the class: every test makes its own member and only reads or changes that member's data.</summary>
+public sealed class FtpSuggestionHost(PostgresFixture postgres) : IAsyncLifetime
+{
+    public TestApi Api { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync() => Api = await TestApi.StartAsync(postgres, b =>
+    {
+        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+        // Tests sign members in from the same address; one server per test gave each a fresh budget.
+        b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "100000");
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FixedTime(FtpSuggestionTests.Now)));
+    });
+
+    public ValueTask DisposeAsync() => Api.DisposeAsync();
 }

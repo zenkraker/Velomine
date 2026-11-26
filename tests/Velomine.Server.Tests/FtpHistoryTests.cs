@@ -17,15 +17,14 @@ public sealed class FtpHistoryTests(PostgresFixture postgres)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    // Close to the real clock: a data-protection token's own expiry uses the system clock, so a clock far in the past
-    // would make the export link look expired the moment it was made.
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
 
-    /// <summary>A server whose clock keeps moving, so a second write is later than the first and the export link works.</summary>
+    /// <summary>A server whose clock starts at the real time of the server's own start and keeps moving, so a second write is later
+    /// than the first and the export link (a two-minute token checked against the system clock) works however long the class has run.</summary>
     private Task<TestApi> StartAsync() => TestApi.StartAsync(postgres, b =>
     {
         b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
-        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new OffsetTime(Now)));
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new OffsetTime(DateTimeOffset.UtcNow)));
     });
 
     private static Task<HttpResponseMessage> SetFtpAsync(HttpClient client, int watts, string? source = null) =>

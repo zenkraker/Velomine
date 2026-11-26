@@ -21,12 +21,12 @@ namespace Velomine.Server.Tests.Training;
 /// hard day easy and moves the hard work when the week can hold it; the rider can do the same by hand, move a session to
 /// another day, or skip it. Every change says why, once, in a notification the owner alone reads.
 /// </summary>
-public sealed class TrainingAdaptTests(PostgresFixture postgres)
+public sealed class TrainingAdaptTests(PostgresFixture postgres, TrainingAdaptHost host) : IClassFixture<TrainingAdaptHost>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     /// <summary>Tuesday 24 November 2026 at midday UTC, in a week that starts on Monday.</summary>
-    private static readonly DateTimeOffset Now = new(2026, 11, 24, 12, 0, 0, TimeSpan.Zero);
+    internal static readonly DateTimeOffset Now = new(2026, 11, 24, 12, 0, 0, TimeSpan.Zero);
 
     private static readonly DateOnly Monday = new(2026, 11, 23);
     private static readonly DateOnly Tuesday = Monday.AddDays(1);
@@ -236,7 +236,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task SaveCheckIn_ShouldMakeTodaysHardSessionEndurance_WhenSleepIsTheWorstAnswer()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60), (Sunday, "R03", 180));
         await ConsentAsync(member);
 
@@ -256,12 +256,19 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
         var moved = Assert.Single(week.Sessions, s => s.LocalDate == Thursday);
         Assert.Equal(TrainingSessionStates.Planned, moved.State);
         Assert.True(Recipes.ByCode(moved.Recipe).IsQuality);
+
+        // The notice the rider reads names the session the sentence is about, in both languages.
+        var notice = Assert.Single(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingEasy).Notice!;
+        Assert.Equal(Thursday, notice.EasyMovedTo);
+        Assert.Equal(TrainingEasyReasons.SleptPoorly, notice.EasyReason);
+        Assert.Equal("Easy ride", notice.EnglishName);
+        Assert.NotEqual("", notice.ItalianName);
     }
 
     [Fact]
     public async Task SaveCheckIn_ShouldAnnounceTheEasyDay_WhenItChangesToday()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         await ConsentAsync(member);
 
@@ -278,7 +285,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task SaveCheckIn_ShouldKeepTheLongRideLong_WhenItIsMadeEasy()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R03", 180));
         await ConsentAsync(member);
 
@@ -296,7 +303,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     {
         // One very heavy ride leaves the form far below zero, so the readiness of the day is in F2's rest band even
         // though every answer of the check-in is an ordinary one.
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         await ConsentAsync(member);
         await AddRideAsync(api, member.Id, Tuesday, tss: 800);
@@ -311,7 +318,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task SaveCheckIn_ShouldLeaveTheSession_WhenTheAnswersAreSound()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         await ConsentAsync(member);
 
@@ -327,7 +334,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task SaveCheckIn_ShouldChangeNothing_WhenTheRiderTurnedAutoTrainingOff()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         await ConsentAsync(member);
         await using (var scope = api.Services.CreateAsyncScope())
@@ -351,7 +358,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     {
         // Weeks of riding, then one very heavy day: L2's form is below −30, and with no check-in to explain it the night
         // makes the next hard day an easy one.
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         // A thousand of load a week is the rider's normal, so the week's cap holds a heavy day without shrinking it.
         await WithRidingHistoryAsync(api, member.Id, tss: 200);
@@ -376,7 +383,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task TrainingPlanSweeper_ShouldLeaveTheHardDay_WhenTheFormIsAboveTheFloor()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await NewMemberAsync(api);
         await WithRidingHistoryAsync(api, member.Id);
         (await member.Client.PutAsJsonAsync("/api/v1/training/plan",
@@ -391,7 +398,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task MakeSessionEasy_ShouldMakeTodaysSessionEasy_WhenTheRiderAsks()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60), (Thursday, "R06", 60));
         var today = await TodayAsync(member);
 
@@ -415,7 +422,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task BackToTrainingPlan_ShouldRestoreTheHardSession_WhenItIsTheSameDay()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         var today = await TodayAsync(member);
         (await member.Client.PostAsync($"/api/v1/training/sessions/{today.Id}/easy", null, Ct)).EnsureSuccessStatusCode();
@@ -434,7 +441,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task BackToTrainingPlan_ShouldBringTheMovedHardSessionBack_WhenACheckInMovedIt()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         await ConsentAsync(member);
         (await CheckInAsync(member, fatigue: 2, soreness: 2, sleep: 1)).EnsureSuccessStatusCode();
@@ -454,7 +461,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     public async Task MoveTrainingSession_ShouldMoveToADayTheRiderDoesNotRide_WhenTheSessionIsEasy()
     {
         // Tuesday and Thursday are the rider's days; a moved session may still go on Wednesday, which is neither.
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R02", 60));
         var session = await TodayAsync(member);
 
@@ -473,7 +480,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     {
         // Friday carries the week's other hard day, so Thursday is refused back to back with it. Wednesday is the
         // nearest day that works, and the refusal names it.
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60), (Friday, "R06", 60));
         var session = await TodayAsync(member);
 
@@ -492,7 +499,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     public async Task MoveTrainingSession_ShouldRefuseTheDayBesideTheLongRide_WhenTheSessionIsHard()
     {
         // Saturday sits next to Sunday's long ride; Friday, two days away from it, is the nearest day that works.
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60), (Sunday, "R03", 180));
         var session = await TodayAsync(member);
 
@@ -508,7 +515,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task TrainingPlanSweeper_ShouldNeverRewriteATickedSession_WhenTheNightWritesTheWeekAgain()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         // The row a stale page leaves behind: still planned, and already carrying the ride that was that day.
         Guid sessionId;
@@ -567,7 +574,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task SkipTrainingSession_ShouldKeepItOnItsOwnDay_WhenTheRiderSkipsIt()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60), (Thursday, "R06", 60));
         var session = await TodayAsync(member);
 
@@ -588,7 +595,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task SkipTrainingSession_ShouldSkipTheRestOfTheWeek_WhenTheSecondSkipAsksForIt()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Monday, "R05", 60), (Tuesday, "R06", 60), (Thursday, "R02", 60),
             (Sunday, "R03", 180));
         var sessions = await WeekAsync(member);
@@ -614,7 +621,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [Fact]
     public async Task GetTrainingWeek_ShouldOfferTheDaysASessionCanMoveTo_WhenItIsStillToBeRidden()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60), (Sunday, "R03", 180));
 
         var today = await TodayAsync(member);
@@ -631,7 +638,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     {
         // The week says why in the four words the owner approved and nothing more: nobody, the owner included, reads
         // the check-in back through the plan.
-        await using var api = await StartAsync();
+        var api = host.Api;
         var member = await RiderAsync(api, (Tuesday, "R05", 60));
         await ConsentAsync(member);
         (await CheckInAsync(member, fatigue: 5, soreness: 5, sleep: 1, mood: 1, stress: 5, motivation: 1))
@@ -692,7 +699,7 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
     [InlineData("back")]
     public async Task TrainingSessionActions_ShouldAnswer404_WhenAnotherMemberAsks(string action)
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var rider = await RiderAsync(api, (Tuesday, "R05", 60));
         var other = await NewMemberAsync(api, "Someone Else");
         var session = await TodayAsync(rider);
@@ -711,22 +718,20 @@ public sealed class TrainingAdaptTests(PostgresFixture postgres)
         // The other member's ask changed nothing.
         Assert.Equal(TrainingSessionStates.Planned, Assert.Single(await SessionsAsync(api, rider.Id)).State);
     }
+}
 
-    [Fact]
-    public async Task Notifications_ShouldCarryTheSessionTheirSentenceIsAbout_WhenTheDayWasMadeEasy()
+/// <summary>One server for the class: every test makes its own member and only reads or changes that member's data.</summary>
+public sealed class TrainingAdaptHost(PostgresFixture postgres) : IAsyncLifetime
+{
+    public TestApi Api { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync() => Api = await TestApi.StartAsync(postgres, b =>
     {
-        await using var api = await StartAsync();
-        var member = await RiderAsync(api, (Tuesday, "R05", 60), (Sunday, "R03", 180));
-        await ConsentAsync(member);
-        (await CheckInAsync(member, fatigue: 2, soreness: 2, sleep: 1)).EnsureSuccessStatusCode();
+        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+        // Tests sign members in from the same address; one server per test gave each a fresh budget.
+        b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "100000");
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FakeTime { Now = TrainingAdaptTests.Now }));
+    });
 
-        var notification = Assert.Single(await NotificationsAsync(member), n => n.Type == NotificationTypes.TrainingEasy);
-        var notice = notification.Notice!;
-
-        Assert.Equal(Thursday, notice.EasyMovedTo);
-        Assert.Equal(TrainingEasyReasons.SleptPoorly, notice.EasyReason);
-        Assert.Equal("Easy ride", notice.EnglishName);
-        Assert.NotEqual("", notice.ItalianName);
-        Assert.Equal(JsonValueKind.Object, JsonDocument.Parse(JsonSerializer.Serialize(notice)).RootElement.ValueKind);
-    }
+    public ValueTask DisposeAsync() => Api.DisposeAsync();
 }

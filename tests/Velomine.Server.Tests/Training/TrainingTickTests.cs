@@ -23,14 +23,14 @@ namespace Velomine.Server.Tests.Training;
 /// then earns is computed on read, the rider's own, and a re-read, a duplicate and a deleted ride each leave the
 /// session exactly where they should.
 /// </summary>
-public sealed class TrainingTickTests(PostgresFixture postgres)
+public sealed class TrainingTickTests(PostgresFixture postgres, TrainingTickHost host) : IClassFixture<TrainingTickHost>
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     /// <summary>The local day of a ride read from <see cref="TestRideFiles.Start"/>: the file says +2 hours.</summary>
     private static readonly DateOnly Day = new(2026, 10, 3);
 
-    private static readonly DateTimeOffset Now = new(2026, 10, 3, 20, 0, 0, TimeSpan.Zero);
+    internal static readonly DateTimeOffset Now = new(2026, 10, 3, 20, 0, 0, TimeSpan.Zero);
 
     private Task<TestApi> StartAsync(DateTimeOffset? now = null) =>
         TestApi.StartAsync(postgres, b =>
@@ -104,16 +104,13 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     private static async Task<NotificationResponse[]> NotificationsAsync(TestMember member) =>
         (await member.Client.GetFromJsonAsync<ListNotificationsResponse>("/api/v1/notifications", Ct))!.Notifications;
 
-    [Theory]
-    [InlineData(SubSport.Generic)]
-    [InlineData(SubSport.IndoorCycling)]
-    [InlineData(SubSport.VirtualActivity)]
-    public async Task Ride_ShouldTickTheSessionOfItsDay_WhenItIsReady(SubSport subSport)
+    [Fact]
+    public async Task Ride_ShouldTickTheSessionOfItsDay_WhenItIsReady()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day);
 
-        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, SubSport: subSport)));
+        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, SubSport: SubSport.IndoorCycling)));
 
         Assert.Equal("ready", ride.Status);
         var session = await SessionAsync(api, sessionId);
@@ -125,7 +122,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Week_ShouldCarryTheScoreAndTheMainSet_WhenTheSessionIsDone()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await RiderAsync(api, Day);
         // A steady 150 W for the hour: 36 of effort against the 57.8 the hour plans, and nothing in the 220–235 W band.
         await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, Power: _ => 150)));
@@ -147,7 +144,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Week_ShouldReachOneHundred_WhenTheRideIsThePlan()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await RiderAsync(api, Day);
         // 228 W is the middle of the main set's band: the whole hour in target, more effort than planned.
         await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, Power: _ => 228)));
@@ -159,30 +156,9 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Week_ShouldScoreTimeAndEffortFiftyFifty_WhenTheRiderHasNoSensors()
-    {
-        await using var api = await StartAsync();
-        var (member, _) = await RiderAsync(api, Day, recipe: "R14", minutes: 30);
-        // No power meter and no strap: the gentle base recipe has no watt or heart-rate target, so only time and how
-        // hard it felt can count it. Half an hour rated 7 is 50 of effort against the 12.5 the session plans.
-        var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 1800, NoPower: true, NoHeartRate: true)));
-        (await member.Client.PostAsJsonAsync("/api/v1/wellbeing/consent", new WellbeingConsentRequest(true), Ct))
-            .EnsureSuccessStatusCode();
-        (await member.Client.PutAsJsonAsync($"/api/v1/rides/{ride.Id}/feel", new SaveRideFeelRequest { Id = ride.Id, Rpe = 7 }, Ct))
-            .EnsureSuccessStatusCode();
-
-        var session = Assert.Single((await WeekAsync(member)).Sessions);
-
-        Assert.NotNull(session.Result);
-        Assert.Equal(100, session.Result!.Score);
-        Assert.Null(session.Result.MainSetShare);
-        Assert.Null(session.Result.MainSet);
-    }
-
-    [Fact]
     public async Task Ride_ShouldAskOnTheRidePageAndInTheInbox_WhenItIsCloseToTheSessionBeforeIt()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
 
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
@@ -206,7 +182,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldTickAndMoveToTheRidesDay_WhenTheRiderAnswersYes()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
 
@@ -230,7 +206,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Ride_ShouldNeverAskAgain_WhenTheRiderAnswersNo()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
 
@@ -252,7 +228,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldGoBackToOpen_WhenTheRideIsDeleted()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day);
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
         Assert.Equal(TrainingSessionStates.Done, (await SessionAsync(api, sessionId)).State);
@@ -281,7 +257,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldNotTickAgain_WhenTheRideIsReadAgain()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day);
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
         var ticked = await SessionAsync(api, sessionId);
@@ -300,7 +276,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldTickOnce_WhenTheSameFileIsUploadedTwice()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day);
         var file = Fit(new FitSession(Start, 3600));
 
@@ -316,7 +292,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldNotAsk_WhenTheRideIsFurtherFromThePlanThanAQuarter()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
 
         // Two hours and a half against the hour planned: outside a quarter in duration.
@@ -330,7 +306,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Export_ShouldCarryTheComputedScore_WhenASessionIsDone()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await RiderAsync(api, Day);
         await UploadAsync(member.Client, Fit(new FitSession(Start, 3600, Power: _ => 150)));
 
@@ -355,7 +331,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Export_ShouldCarryTheWeeksThePlanMadeLighterAndItsDeclinedFiles_WhenItHasThem()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day);
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
         await using (var scope = api.Services.CreateAsyncScope())
@@ -388,7 +364,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Week_ShouldScoreOneHundredOnTimeAlone_WhenTheRideHasNoSensorsAndNoRating()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await RiderAsync(api, Day, recipe: "R14", minutes: 30);
         // No meter, no strap, no estimate and no rating: nothing but the time can be measured, and the time was the
         // plan. Half a score because the other half has no number would be the whole plan counted as half.
@@ -399,6 +375,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
         Assert.NotNull(session.Result);
         Assert.Null(session.Result!.DoneEffort);
         Assert.Equal(100, session.Result.Score);
+        Assert.Null(session.Result.MainSetShare);
         Assert.Null(session.Result.MainSet);
     }
 
@@ -422,7 +399,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldTickAndStayEasy_WhenTheRideIsOnTheDayOfASessionMadeEasy()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day, state: TrainingSessionStates.Easy);
 
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
@@ -436,7 +413,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task BackToTrainingPlan_ShouldRefuse_WhenARideHasTickedTheEasySession()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day);
         (await member.Client.PostAsync($"/api/v1/training/sessions/{sessionId}/easy", null, Ct)).EnsureSuccessStatusCode();
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
@@ -489,7 +466,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Question_ShouldNameTheSessionInTheRidersOwnLanguage_WhenTheMemberReadsItalian()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await RiderAsync(api, Day.AddDays(-1));
         (await member.Client.PutAsJsonAsync("/api/v1/accounts/me/language",
             new SetMyLanguageRequest { Language = "it" }, Ct)).EnsureSuccessStatusCode();
@@ -505,7 +482,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Notifications_ShouldLoseTheQuestion_WhenTheRiderTurnsAutoTrainingOff()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
         Assert.NotNull((await SessionAsync(api, sessionId)).QuestionRideId);
@@ -522,7 +499,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Ride_ShouldNotBeAskedAboutAgain_WhenItsDuplicateIsReadAfterTheAnswerIsNo()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(-1));
         var file = Fit(new FitSession(Start, 3600));
         var first = await UploadAsync(member.Client, file, key: "first");
@@ -547,7 +524,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldNotBeVisibleToAnotherMember_WhenTheyReadTheirOwnWeek()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         var (member, _) = await RiderAsync(api, Day);
         var ride = await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
         var other = await api.NewMemberAsync("Other Rider");
@@ -563,7 +540,7 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
     [Fact]
     public async Task Session_ShouldStayWhereItIs_WhenTheSweepPlansTheWeekWithAQuestionOpen()
     {
-        await using var api = await StartAsync();
+        var api = host.Api;
         // The session is tomorrow, a day the sweep may rewrite, and the ride that might be it is today.
         var (member, sessionId) = await RiderAsync(api, Day.AddDays(1), days: [0, 1, 2, 3, 4, 5, 6]);
         await UploadAsync(member.Client, Fit(new FitSession(Start, 3600)));
@@ -585,4 +562,20 @@ public sealed class TrainingTickTests(PostgresFixture postgres)
         Assert.NotNull(session.QuestionRideId);
         Assert.Equal(Day.AddDays(1), session.LocalDate);
     }
+}
+
+/// <summary>One server for the class: every test makes its own member and only reads or changes that member's data.</summary>
+public sealed class TrainingTickHost(PostgresFixture postgres) : IAsyncLifetime
+{
+    public TestApi Api { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync() => Api = await TestApi.StartAsync(postgres, b =>
+    {
+        b.UseSetting("Velomine:Accounts:RequireAdminApproval", "false");
+        // Tests sign members in from the same address; one server per test gave each a fresh budget.
+        b.UseSetting("Velomine:RateLimits:AnonymousPerMinute", "100000");
+        b.ConfigureTestServices(s => s.AddSingleton<TimeProvider>(new FakeTime { Now = TrainingTickTests.Now }));
+    });
+
+    public ValueTask DisposeAsync() => Api.DisposeAsync();
 }

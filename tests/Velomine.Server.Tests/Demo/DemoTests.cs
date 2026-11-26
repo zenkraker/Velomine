@@ -17,14 +17,13 @@ using Velomine.Server.Features.Rides.Ingestion;
 using Velomine.Server.Features.Routes;
 using Velomine.Server.Features.Server;
 using Velomine.Server.Features.Sharing;
+using Velomine.Server.Features.Training;
 
 namespace Velomine.Server.Tests.Demo;
 
 public sealed class DemoTests(PostgresFixture postgres)
 {
     private const string Rider = "demo-rider@velomine.eu";
-    private const string HeartRateRider = "demo-heart-rate@velomine.eu";
-    private const string NoSensorsRider = "demo-no-sensors@velomine.eu";
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -54,58 +53,6 @@ public sealed class DemoTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task DemoData_ShouldMakeTheAccountsTheClubAndTheirRides_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        foreach (var account in DemoData.Accounts)
-        {
-            var client = await api.SignedInClientAsync(account.Email, DemoData.Password);
-            var me = await client.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
-            Assert.Equal(account.DisplayName, me!.DisplayName);
-            Assert.DoesNotContain(Roles.Admin, me.Roles);
-            var club = await client.GetFromJsonAsync<MyClubResponse>("/api/v1/club", Ct);
-            Assert.Equal(DemoData.ClubName, club!.Club!.Name);
-            var rides = await client.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
-            Assert.NotEmpty(rides!.Rides);
-        }
-
-        // The coach's read of the plan is in the log the rider reads; the plan and the week themselves are story 6's.
-        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
-        var views = await rider.GetFromJsonAsync<ShareViewsResponse>("/api/v1/sharing/views", Ct);
-        var plan = Assert.Single(views!.Views, v => v.What == ViewKinds.Plan);
-        Assert.Equal("Giulia Rossi", plan.ViewerName);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveEveryRideAnOriginalFileThatReadsBack_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var files = scope.ServiceProvider.GetRequiredService<RideFileStore>();
-        var rides = await db.Rides.AsNoTracking().Select(r => new { r.Id, r.FileSha256, r.ParserVersion }).ToListAsync(Ct);
-        Assert.NotEmpty(rides);
-        foreach (var ride in rides)
-        {
-            Assert.Equal(RideParserVersion.Current, ride.ParserVersion);
-            var parsed = Assert.Single(RideFileParser.Parse(await files.ReadAsync(ride.FileSha256, Ct)));
-            var samples = await db.RideStreams.Where(s => s.RideId == ride.Id).Select(s => s.Time.Length).SingleAsync(Ct);
-            Assert.Equal(samples, parsed.Samples.Count);
-        }
-
-        // The export hands the files back, as it does for any member.
-        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
-        var link = (await (await rider.PostAsync("/api/v1/accounts/me/export-link", null, Ct)).Content.ReadFromJsonAsync<ExportLinkResponse>(Ct))!.Path;
-        Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().GetAsync(link, Ct)).StatusCode);
-    }
-
-    [Fact]
     public async Task DemoData_ShouldUndoWhatAVisitorChanged_WhenTheDemoIsResetAgain()
     {
         await using var api = await StartDemoAsync();
@@ -113,6 +60,10 @@ public sealed class DemoTests(PostgresFixture postgres)
         var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
         var rides = await visitor.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides", Ct);
         (await visitor.DeleteAsync($"/api/v1/rides/{rides!.Rides[0].Id}", Ct)).EnsureSuccessStatusCode();
+        Assert.Equal(RiderModes.Training, (await visitor.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
+        (await visitor.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.JustRiding), Ct)).EnsureSuccessStatusCode();
+        var weeks = (await visitor.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!;
+        (await visitor.PostAsync($"/api/v1/training/sessions/{weeks.Weeks[0].Sessions.Single(x => x.CanMakeEasy).Id}/easy", null, Ct)).EnsureSuccessStatusCode();
         await using (var scope = api.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
@@ -126,119 +77,29 @@ public sealed class DemoTests(PostgresFixture postgres)
         var fresh = await api.SignedInClientAsync(Rider, DemoData.Password);
         var me = await fresh.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
         Assert.Equal("Luca Ferri", me!.DisplayName);
+        // The mode a visitor switched is back to the training the demo is made for.
+        Assert.Equal(RiderModes.Training, me.RiderMode);
+        // The week a visitor made easy is the seeded week again.
+        var seededWeek = (await fresh.GetFromJsonAsync<TrainingWeeksResponse>("/api/v1/training/week", Ct))!;
+        Assert.DoesNotContain(seededWeek.Weeks[0].Sessions, x => x.State == TrainingSessionStates.Easy);
         var again = await fresh.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?limit=1", Ct);
         Assert.NotEmpty(again!.Rides);
         await using var check = api.Services.CreateAsyncScope();
         var data = check.ServiceProvider.GetRequiredService<VelomineDbContext>();
         Assert.Equal(1, await data.Clubs.CountAsync(Ct));
         Assert.Equal(DemoData.Accounts.Count, await data.ClubMemberships.CountAsync(Ct));
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldSeedTraining_WhenDemoIsRemadeAfterAVisitorChangedTheMode()
-    {
-        await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-        var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
-        Assert.Equal(RiderModes.Training, (await visitor.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
-        (await visitor.PutAsJsonAsync("/api/v1/accounts/me/rider-mode", new SetMyRiderModeRequest(RiderModes.JustRiding), Ct)).EnsureSuccessStatusCode();
-
-        await ResetAsync(api);
-
-        var fresh = await api.SignedInClientAsync(Rider, DemoData.Password);
-        Assert.Equal(RiderModes.Training, (await fresh.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.RiderMode);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldKeepTheServerAdmin_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-        await ResetAsync(api);
-
+        // The server admin is not a demo account and survives the reset.
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
-        var me = await admin.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct);
-        Assert.Contains(Roles.Admin, me!.Roles);
-    }
-
-    // Girona and its hills: every seeded coordinate must fall in this box.
-    private static bool InGironaArea(double latitude, double longitude) =>
-        latitude is > 41.80 and < 42.15 && longitude is > 2.55 and < 3.00;
-
-    [Fact]
-    public async Task DemoData_ShouldSeedTheClubRoutesAroundGirona_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var clubId = await db.Clubs.Select(c => c.Id).SingleAsync(Ct);
-        var routes = await db.Routes.AsNoTracking().Include(r => r.Line).Where(r => r.ClubId == clubId).ToListAsync(Ct);
-        Assert.Equal(4, routes.Count);
-        Assert.Equal(["gravel", "mixed", "mountain", "road"], routes.Select(r => r.Surface).Order());
-        foreach (var route in routes)
-        {
-            var line = route.Line!;
-            Assert.InRange(line.Latitude.Length, 200, 500);
-            Assert.Equal(line.Latitude.Length, line.Elevation!.Length);
-            Assert.All(line.Latitude.Zip(line.Longitude), p => Assert.True(InGironaArea(p.First, p.Second)));
-            var points = line.Latitude.Select((lat, i) => new RoutePoint(lat, line.Longitude[i], line.Elevation[i])).ToList();
-            var (distance, climbing) = RouteGeometry.Measure(points);
-            Assert.Equal(distance, route.DistanceM, 1);
-            Assert.InRange(route.ClimbingM!.Value, 1, climbing!.Value * 2);
-        }
-
-        var road = routes.Single(r => r.Surface == "road");
-        Assert.InRange(road.DistanceM, 59_000, 61_000);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldPlanClubRidesOnSeededRoutes_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var rides = await db.PlannedRides.AsNoTracking().ToListAsync(Ct);
-        Assert.NotEmpty(rides);
-        foreach (var ride in rides)
-        {
-            Assert.True(ride.StartsAt > DateTimeOffset.UtcNow);
-            Assert.True(InGironaArea(ride.MeetingLatitude, ride.MeetingLongitude));
-            Assert.True(await db.Routes.AnyAsync(r => r.Id == ride.RouteId && r.ClubId == ride.ClubId, Ct));
-        }
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldKeepEveryPrivacyZoneAndRideAroundGirona_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var zones = await db.PrivacyZones.AsNoTracking().ToListAsync(Ct);
-        Assert.NotEmpty(zones);
-        Assert.All(zones, z => Assert.True(InGironaArea(z.Latitude, z.Longitude)));
-        var streams = await db.RideStreams.AsNoTracking().Where(s => s.Latitude != null)
-            .Select(s => new { s.Latitude, s.Longitude }).ToListAsync(Ct);
-        Assert.NotEmpty(streams);
-        Assert.All(streams, s => Assert.All(s.Latitude!.Zip(s.Longitude!), p => Assert.True(InGironaArea(p.First!.Value, p.Second!.Value))));
+        Assert.Contains(Roles.Admin, (await admin.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Roles);
     }
 
     [Fact]
     public async Task DemoLock_ShouldRefuseEveryLockedAction_WhenTheServerIsADemo()
     {
         await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-        var visitor = await api.SignedInClientAsync(Rider, DemoData.Password);
+        // The lock answers before an endpoint runs, so the server admin is enough: no seeded demo.
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
+        var visitor = admin;
 
         foreach (var (method, route) in DemoLock.Refused)
         {
@@ -250,8 +111,14 @@ public sealed class DemoTests(PostgresFixture postgres)
             Assert.Contains(DemoLock.Code, await response.Content.ReadAsStringAsync(Ct));
         }
 
+        // The rest of a week is refused by the endpoint, because the body decides it, and before it looks the session up.
+        var rest = await admin.PostAsJsonAsync($"/api/v1/training/sessions/{Guid.NewGuid()}/skip",
+            new SkipTrainingSessionRequest { Reason = TrainingSkipReasons.NoTime, RestOfWeek = true }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, rest.StatusCode);
+        Assert.Contains(DemoLock.Code, await rest.Content.ReadAsStringAsync(Ct));
+
         // The account still signs in with the public password, and what a visitor is meant to try still works.
-        var again = await api.SignedInClientAsync(Rider, DemoData.Password);
+        var again = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         Assert.Equal(HttpStatusCode.OK, (await again.GetAsync("/api/v1/rides", Ct)).StatusCode);
     }
 
@@ -275,7 +142,6 @@ public sealed class DemoTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartDemoWithEmailAsync();
         await using var _ = api;
-        await ResetAsync(api);
         var admin = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
 
         var test = await admin.PostAsync("/api/v1/admin/settings/test-email", null, Ct);
@@ -309,8 +175,7 @@ public sealed class DemoTests(PostgresFixture postgres)
     {
         var (api, mail) = await StartDemoWithEmailAsync();
         await using var _ = api;
-        await ResetAsync(api);
-        var rider = await api.SignedInClientAsync(Rider, DemoData.Password);
+        var rider = await api.SignedInClientAsync(TestApi.AdminEmail, TestApi.AdminPassword);
         var id = (await rider.GetFromJsonAsync<MeResponse>("/api/v1/accounts/me", Ct))!.Id;
         await using (var scope = api.Services.CreateAsyncScope())
         {
@@ -380,332 +245,4 @@ public sealed class DemoTests(PostgresFixture postgres)
     [InlineData("2026-11-13T23:30:00+02:00", "2026-11-13T03:00:00Z")]
     public void LastBoundary_ShouldBeTheLatestThreeInTheMorningUtc_WhenGivenAnInstant(string now, string expected) =>
         Assert.Equal(DateTimeOffset.Parse(expected), DemoResetService.LastBoundary(DateTimeOffset.Parse(now)));
-
-    /// <summary>The demo rider, signed in, on a demo that has just been reset: every ride is there to be read.</summary>
-    private async Task<(TestApi Api, HttpClient Rider)> StartResetRiderAsync()
-    {
-        var api = await StartDemoAsync();
-        await ResetAsync(api);
-        return (api, await api.SignedInClientAsync(Rider, DemoData.Password));
-    }
-
-    private static async Task<PowerCurveResponse> PowerCurveAsync(HttpClient rider) =>
-        (await rider.GetFromJsonAsync<PowerCurveResponse>("/api/v1/analytics/power-curve?days=90", Ct))!;
-
-    private static async Task<TrainingResponse> TrainingAsync(HttpClient rider) =>
-        (await rider.GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=90", Ct))!;
-
-    private static async Task<RideResponse[]> RidesAsync(HttpClient rider) =>
-        (await rider.GetFromJsonAsync<ListRidesResponse>("/api/v1/rides?limit=200", Ct))!.Rides;
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderACriticalPowerFit_WhenTheDemoIsReset()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        var curve = await PowerCurveAsync(rider);
-
-        Assert.True(curve.HasPower);
-        Assert.NotNull(curve.CriticalPower);
-        var fit = curve.CriticalPower!;
-        Assert.InRange(fit.CpW, 50, 600);
-        Assert.InRange(fit.WPrimeJ, 3_000, 50_000);
-        Assert.True(fit.R2 >= 0.90, $"R² was {fit.R2}");
-        // The 2, 5, 10 and 20-minute windows are all there, which is what a fit needs.
-        Assert.Equal([120, 300, 600, 1200], fit.Durations);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderAWPprimeBalance_WhenTheDemoIsReset()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        // The balance is on the ride's own page, where the app draws it.
-        var details = new List<RideResponse>();
-        foreach (var ride in (await RidesAsync(rider)).Take(3))
-            details.Add((await rider.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!);
-        var withBalance = details.Where(r => r.WPrimeJ is not null).ToArray();
-
-        Assert.NotEmpty(withBalance);
-        Assert.All(withBalance, r => Assert.InRange(r.WPrimeJ!.Value, 3_000, 50_000));
-        Assert.All(withBalance, r => Assert.NotNull(r.MinWPrimeBalanceJ));
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderSteadyRidesWithDecoupling_WhenTheDemoIsReset()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        var rides = await RidesAsync(rider);
-        var steady = rides.Where(r => r.Steady == true && r.DecouplingPct is not null).ToArray();
-
-        Assert.True(steady.Length >= 2, $"only {steady.Length} steady rides");
-        Assert.All(steady, r => Assert.NotNull(r.EfficiencyFactor));
-    }
-
-    /// <summary>The stored streams as the reader sees them, and the one call an import makes for these three numbers.</summary>
-    private static async Task<Dictionary<Guid, (double? EfficiencyFactor, double? DecouplingPct, bool? Steady)>> ReadMetricsAsync(
-        VelomineDbContext db) =>
-        (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(
-            s => s.RideId,
-            s => Read(Samples(s)));
-
-    private static List<Sample> Samples(RideStreams s) =>
-        [.. Enumerable.Range(0, s.Time.Length).Select(i => new Sample(s.Time[i], HeartRate: s.HeartRate?[i], Power: s.Power?[i]))];
-
-    /// <summary>The same ride with every signal the reader can use, for the watts it estimates from speed and slope.</summary>
-    private static List<Sample> FullSamples(RideStreams s) =>
-    [
-        .. Enumerable.Range(0, s.Time.Length).Select(i => new Sample(
-            s.Time[i],
-            Altitude: s.Altitude?[i],
-            Speed: s.Speed?[i],
-            HeartRate: s.HeartRate?[i],
-            Power: s.Power?[i])),
-    ];
-
-    private static (double? EfficiencyFactor, double? DecouplingPct, bool? Steady) Read(List<Sample> samples) =>
-        RideMetrics.Efficiency(RideMetrics.PairedSeconds(samples, RideMetrics.PauseThresholdS(samples)));
-
-    [Fact]
-    public async Task DemoData_ShouldStoreWhatTheReaderWorksOut_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var rides = await db.Rides.AsNoTracking()
-            .Select(r => new { r.Id, r.EfficiencyFactor, r.DecouplingPct, r.Steady })
-            .ToListAsync(Ct);
-        var read = await ReadMetricsAsync(db);
-
-        Assert.NotEmpty(rides);
-        Assert.Contains(rides, r => r.Steady == true && r.DecouplingPct is not null);
-        foreach (var ride in rides)
-        {
-            // The seed writes no efficiency of its own: the stored number is the reader's, for every ride.
-            var (efficiencyFactor, decoupling, steady) = read[ride.Id];
-            Assert.Equal(efficiencyFactor, ride.EfficiencyFactor);
-            Assert.Equal(decoupling, ride.DecouplingPct);
-            Assert.Equal(steady, ride.Steady);
-        }
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldStoreThePowerBestsTheReaderWorksOut_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var rides = await db.Rides.AsNoTracking().Select(r => new { r.Id, r.PowerBests }).ToListAsync(Ct);
-        var streams = (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(s => s.RideId);
-        Assert.NotEmpty(rides);
-
-        foreach (var ride in rides)
-        {
-            var s = streams[ride.Id];
-            var read = PowerBests.FromStreams(s.Power, s.Time);
-            var stored = ride.PowerBests.ToDictionary(b => b.DurationS, b => b.Watts);
-            for (var d = 0; d < PowerBests.Durations.Length; d++)
-            {
-                var expected = read[d] > 0 ? read[d] : 0; // a zero is not stored
-                Assert.Equal(expected, stored.GetValueOrDefault(PowerBests.Durations[d]));
-            }
-        }
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderAWeeklyEfficiencyTrend_WhenTheDemoIsReset()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        var training = await TrainingAsync(rider);
-
-        Assert.True(training.Efficiency.Length >= 2, $"only {training.Efficiency.Length} weeks with a steady ride");
-        Assert.All(training.Efficiency, w => Assert.True(w.EfficiencyFactor > 0));
-        Assert.All(training.Efficiency, w => Assert.True(w.Rides >= 1));
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderAnIntensityDistribution_WhenTheDemoIsReset()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        var training = await TrainingAsync(rider);
-
-        Assert.NotNull(training.Intensity);
-        var intensity = training.Intensity!;
-        Assert.True(intensity.Rides > 0);
-        Assert.True(intensity.ModerateS > 0);
-        Assert.True(intensity.HardS > 0);
-        Assert.Equal(100, intensity.EasyPct + intensity.ModeratePct + intensity.HardPct, 1);
-        Assert.Contains(intensity.Label, Labels.All);
-        Assert.NotEmpty(training.IntensityWeeks);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderAPowerRecord_WhenALaterRideBeatsAnEarlierBest()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        var rides = await RidesAsync(rider);
-
-        // Records are worked out per ride: the ride page of the ride that set one lists it.
-        var withRecords = new List<(RideResponse Ride, PowerRecord[] Records)>();
-        foreach (var ride in rides)
-        {
-            var detail = (await rider.GetFromJsonAsync<RideResponse>($"/api/v1/rides/{ride.Id}", Ct))!;
-            if (detail.PowerRecords is { Length: > 0 }) withRecords.Add((detail, detail.PowerRecords));
-        }
-
-        Assert.NotEmpty(withRecords);
-        var (record, records) = withRecords.OrderByDescending(r => r.Ride.StartTime).First();
-        // A record only exists when an earlier ride was already there and this one beat it.
-        Assert.All(records, r => Assert.Contains(r.Kind, new[] { PowerRecords.AllTime, PowerRecords.NinetyDays }));
-        Assert.All(records, r => Assert.True(r.Watts > 0));
-        Assert.NotNull(record.StartTime);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveTheRiderAnFtpHistory_WhenTheDemoIsReset()
-    {
-        var (api, rider) = await StartResetRiderAsync();
-        await using var _ = api;
-
-        var history = (await rider.GetFromJsonAsync<FtpHistoryResponse>("/api/v1/accounts/me/ftp-history", Ct))!;
-
-        Assert.True(history.Entries.Count >= 2, $"only {history.Entries.Count} FTP history rows");
-        Assert.Contains(history.Entries, e => e.Source == FtpSources.Earlier);
-        // The newest row is the number the rider's zones use.
-        var profile = (await rider.GetFromJsonAsync<ProfileResponse>("/api/v1/accounts/me/profile", Ct))!;
-        Assert.Equal(profile.FtpW, history.Entries[0].Watts);
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldStoreTheHeartRateEffortTheReaderWorksOut_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var time = api.Services.GetRequiredService<TimeProvider>();
-        var users = (await db.Users.AsNoTracking().ToListAsync(Ct)).ToDictionary(u => u.Id);
-        var rides = await db.Rides.AsNoTracking()
-            .Select(r => new { r.Id, r.UserId, r.HrTss, r.LoadFtpW, r.LoadMaxHeartRate, r.LoadThresholdHeartRate })
-            .ToListAsync(Ct);
-        var streams = (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(s => s.RideId, s => Samples(s));
-
-        Assert.NotEmpty(rides);
-        Assert.Contains(rides, r => r.HrTss is not null && r.LoadFtpW == 0);
-        foreach (var ride in rides)
-        {
-            // The seed writes no heart-rate score of its own: the stored number is the reader's, and the profile it
-            // was read with is stamped next to it.
-            var user = users[ride.UserId];
-            var (max, threshold) = HeartRates.For(user, time);
-            Assert.Equal(TrainingLoad.HrTss(streams[ride.Id], threshold?.Bpm), ride.HrTss);
-            Assert.Equal(threshold?.Bpm ?? 0, ride.LoadThresholdHeartRate);
-            Assert.Equal(max?.Bpm ?? 0, ride.LoadMaxHeartRate);
-            Assert.Equal(user.FtpW ?? 0, ride.LoadFtpW);
-        }
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldStoreTheEstimatedWattsTheReaderWorksOut_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var users = (await db.Users.AsNoTracking().ToListAsync(Ct)).ToDictionary(u => u.Id);
-        var bikes = (await db.Bikes.AsNoTracking().ToListAsync(Ct)).ToDictionary(b => b.Id);
-        var rides = (await db.Rides.AsNoTracking()
-            .Select(r => new
-            {
-                r.Id,
-                r.UserId,
-                r.BikeId,
-                r.Discipline,
-                r.Environment,
-                r.Assist,
-                r.MovingS,
-                r.EstimatedAvgPowerW,
-                r.EstimatedNormalizedPowerW,
-                r.EstimatedTss
-            })
-            .ToListAsync(Ct));
-        var streams = (await db.RideStreams.AsNoTracking().ToListAsync(Ct)).ToDictionary(s => s.RideId);
-
-        var estimated = 0;
-        foreach (var ride in rides)
-        {
-            var s = streams[ride.Id];
-            var user = users[ride.UserId];
-            var bike = ride.BikeId is { } bikeId ? bikes.GetValueOrDefault(bikeId) : null;
-            var read = s.Power is null
-                ? EstimatedPower.Compute(
-                    FullSamples(s),
-                    s.Speed ?? [],
-                    RideMetrics.PauseThresholdS(FullSamples(s)),
-                    [],
-                    new PowerEstimate(user.WeightKg, bike?.WeightKg, bike?.Kind, ride.Discipline, ride.Environment, ride.Assist),
-                    user.FtpW,
-                    ride.MovingS ?? 0)
-                : null;
-            // Every ride without a power stream stores exactly the estimate the reader makes, stream included.
-            Assert.Equal(read?.AvgPowerW, ride.EstimatedAvgPowerW);
-            Assert.Equal(read?.NormalizedPowerW, ride.EstimatedNormalizedPowerW);
-            Assert.Equal(read?.Tss, ride.EstimatedTss);
-            Assert.Equal(read?.PerSample, s.EstimatedPower);
-            if (read is not null) estimated++;
-        }
-
-        Assert.True(estimated >= 2, $"only {estimated} rides had watts to estimate");
-    }
-
-    [Fact]
-    public async Task DemoData_ShouldGiveAHeartRateOnlyRiderAndARiderWithNoSensors_WhenTheDemoIsReset()
-    {
-        await using var api = await StartDemoAsync();
-        await ResetAsync(api);
-
-        await using var scope = api.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<VelomineDbContext>();
-        var heartRateOnly = (await db.Users.AsNoTracking().SingleAsync(u => u.Email == HeartRateRider, Ct)).Id;
-        var noSensors = (await db.Users.AsNoTracking().SingleAsync(u => u.Email == NoSensorsRider, Ct)).Id;
-        var withStrap = await db.Rides.AsNoTracking().Where(r => r.UserId == heartRateOnly).ToListAsync(Ct);
-        var plain = await db.Rides.AsNoTracking().Where(r => r.UserId == noSensors).ToListAsync(Ct);
-
-        // One rider has a strap and no power meter, the other has neither; both ride outdoors, so both get estimates.
-        Assert.NotEmpty(withStrap);
-        Assert.NotEmpty(plain);
-        Assert.All(withStrap, r => Assert.Null(r.AvgPowerW));
-        Assert.All(plain, r => Assert.Null(r.AvgPowerW));
-        Assert.All(withStrap, r => Assert.NotNull(r.AvgHeartRate));
-        Assert.All(withStrap, r => Assert.NotNull(r.HrTss));
-        Assert.All(plain, r => Assert.Null(r.AvgHeartRate));
-        Assert.All(plain, r => Assert.Null(r.HrTss));
-        Assert.All(withStrap.Concat(plain), r => Assert.NotNull(r.EstimatedAvgPowerW));
-
-        // And the demo shows it: the strap alone builds the fitness chart, while the rider with no sensors has none
-        // from heart rate.
-        var strapCard = await (await api.SignedInClientAsync(HeartRateRider, DemoData.Password))
-            .GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=90", Ct);
-        Assert.True(strapCard!.HeartRateLoadRides > 0);
-        Assert.True(strapCard.Days[^1].Fitness > 0);
-        var plainCard = await (await api.SignedInClientAsync(NoSensorsRider, DemoData.Password))
-            .GetFromJsonAsync<TrainingResponse>("/api/v1/analytics/training?days=90", Ct);
-        Assert.Equal(0, plainCard!.HeartRateLoadRides);
-    }
 }

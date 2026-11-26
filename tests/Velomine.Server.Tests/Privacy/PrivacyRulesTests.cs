@@ -160,6 +160,9 @@ public sealed class PrivacyRulesTests
             HeartRateMaxNote = HeartRateNotes.MaxMeasured,
             HeartRateThresholdNote = HeartRateNotes.ThresholdMeasured,
             FtpSuggestionId = Guid.NewGuid(),
+            FtpSuggestionW = 266,
+            FtpSuggestionEffortW = 280,
+            FtpSuggestionMethod = "20min",
         };
 
         var hidden = PrivacyRules.ForViewer(ride);
@@ -168,6 +171,9 @@ public sealed class PrivacyRulesTests
         Assert.Null(hidden.HeartRateMaxNote);
         Assert.Null(hidden.HeartRateThresholdNote);
         Assert.Null(hidden.FtpSuggestionId);
+        Assert.Null(hidden.FtpSuggestionW);
+        Assert.Null(hidden.FtpSuggestionEffortW);
+        Assert.Null(hidden.FtpSuggestionMethod);
     }
 
     [Fact]
