@@ -3,7 +3,7 @@
 # is in the web image (app/Dockerfile), which forwards /api, /health and /openapi here.
 
 # Build stage: restore from lock files first so the layer is cached until packages change.
-FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0@sha256:2794448a07118a6eaf00f29ab5d2bf44928517ce5ff86505a63a69230374f599 AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props ./
 COPY src/Velomine.Server/Velomine.Server.csproj src/Velomine.Server/packages.lock.json src/Velomine.Server/
@@ -21,7 +21,7 @@ RUN dotnet publish src/Velomine.Server/Velomine.Server.csproj \
 
 # Alpine runtime: smaller than the Debian image, with the ICU data and time
 # zones the app needs for Italian/English formatting and member time zones.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine@sha256:486297ae006e95ee2ee3112a2c03e3d26e41fbbc64b7a29e28e7a18cc36b12bb AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-alpine@sha256:d39b72ad1534fa0faf52b488bffb0762df7ba269d120f0338713d4dda2a41bf5 AS runtime
 ARG VERSION=0.0.0
 ARG REVISION=unknown
 WORKDIR /app
