@@ -138,7 +138,8 @@ public sealed class DemoData(
     /// </summary>
     private async Task SeedTrainingAsync(CancellationToken ct)
     {
-        var rider = await db.Users.FirstAsync(u => u.Email == Accounts[2].Email, ct);
+        // Untracked: the script has just set the time zone in the database, and the tracked copy from account creation predates it.
+        var rider = await db.Users.AsNoTracking().FirstAsync(u => u.Email == Accounts[2].Email, ct);
         var clock = MemberClock.For(rider.TimeZone, rider.FirstDayOfWeek, time);
         var today = clock.Today;
         // The goal is the one the rider's own rides suggest, so the reason the Training page shows is that goal's.
