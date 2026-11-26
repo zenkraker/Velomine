@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.RegularExpressions;
 using Velomine.Server.Features.Accounts;
 using Velomine.Server.Features.Notifications;
 using Velomine.Server.Features.Notifications.Email;
@@ -60,5 +62,22 @@ public sealed class EmailTextTests
 
         Assert.Contains("&lt;b&gt;Eve&lt;/b&gt;", content.Html);
         Assert.DoesNotContain("<b>Eve</b>", content.Html);
+    }
+
+    [Fact]
+    public void EmailVerificationEmail_ShouldRenderBrandedHtmlWith16pxTextAndEncodedLink_WhenConfirmationIsBuilt()
+    {
+        using var _ = EmailLanguage.Use("en");
+        const string link = "https://club.example/verify-email#token=a&email=<b>x</b>\"";
+
+        var html = EmailVerificationEmail.Confirmation(link).Html;
+
+        var href = Regex.Match(html, "href=\"([^\"]+)\"").Groups[1].Value;
+        Assert.Equal(link, WebUtility.HtmlDecode(href));
+        Assert.DoesNotContain("<b>x</b>", html);
+        Assert.Contains("<h1", html);
+        var sizes = Regex.Matches(html, @"font-size:\s*(\d+)px").Select(m => int.Parse(m.Groups[1].Value)).ToList();
+        Assert.NotEmpty(sizes);
+        Assert.All(sizes, size => Assert.True(size >= 16, $"font-size {size}px is below 16px"));
     }
 }

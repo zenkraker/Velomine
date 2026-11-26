@@ -19,7 +19,8 @@ public static class EmailVerificationEmail
         var html = EmailLayout.Render(
             subject,
             intro,
-            EmailLayout.Paragraph(intro)
+            EmailLayout.Heading(subject)
+            + EmailLayout.Paragraph(intro)
             + EmailLayout.Button(link, EmailStrings.Get("VerifyAction"))
             + EmailLayout.Muted(link)
             + EmailLayout.Paragraph(expiry));
