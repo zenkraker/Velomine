@@ -91,12 +91,10 @@ class AuthPage extends StatelessWidget {
                 'Velomine',
                 semanticsLabel: title == null ? 'Velomine' : null,
                 style: VelomineText.of(context).wordmark,
-                textAlign: TextAlign.center,
               ),
               if (caption case final caption?)
                 Text(
                   caption,
-                  textAlign: TextAlign.center,
                   style: text.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -104,11 +102,7 @@ class AuthPage extends StatelessWidget {
               if (title case final title?)
                 Semantics(
                   header: true,
-                  child: Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: text.headlineLarge,
-                  ),
+                  child: Text(title, style: text.headlineLarge),
                 ),
               if (help case final help?)
                 Text(

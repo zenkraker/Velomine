@@ -39,14 +39,14 @@ class ProgressFilterSheet extends ConsumerWidget {
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.xs,
           children: [
-            ChoiceChip(
+            FilterChip(
               key: const Key('progress-filter-all'),
               label: Text(l10n.rideFilterAll),
               selected: filters.discipline == null,
               onSelected: (_) => notifier.setDiscipline(null),
             ),
             for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-              ChoiceChip(
+              FilterChip(
                 key: Key('progress-filter-$discipline'),
                 label: Text(disciplineName(l10n, discipline)),
                 selected: filters.discipline == discipline,

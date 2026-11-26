@@ -10,6 +10,7 @@ import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/user_message_text.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/card_link.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/form_sheet.dart';
@@ -75,7 +76,6 @@ class SessionScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
     final provider = sessionViewModelProvider(id);
     final state = ref.watch(provider);
     final session = state.session;
@@ -103,7 +103,7 @@ class SessionScreen extends ConsumerWidget {
         parent: l10n.navTraining,
         children: state.week.idle || state.week.running
             ? const [LoadingState.rows()]
-            : [Text(l10n.trainingSessionMissing)],
+            : [EmptyState(message: l10n.trainingSessionMissing)],
       );
     }
 
@@ -118,7 +118,7 @@ class SessionScreen extends ConsumerWidget {
       parent: l10n.navTraining,
       title: sessionName(l10n, session),
       subtitle: [
-        DateFormat('EEEE d MMM', locale).format(session.localDate),
+        dayWithWeekday(l10n, session.localDate),
         sessionLength(session.minutes),
         // The score leads the card below; the header says only where the day stands.
         sessionStateWord(l10n, session.state).toLowerCase(),
@@ -397,7 +397,6 @@ class _MoveSheet extends StatelessWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
     final days = session.move;
     final nearest = days.where((day) => day.allowed).firstOrNull;
     final refused = days.any((day) => !day.allowed);
@@ -408,9 +407,7 @@ class _MoveSheet extends StatelessWidget {
               key: const Key('move-nearest'),
               onPressed: () => Navigator.pop(context, nearest.localDate),
               child: Text(
-                l10n.trainingMoveNearest(
-                  DateFormat('EEEE', locale).format(nearest.localDate),
-                ),
+                l10n.trainingMoveNearest(weekdayLong(l10n, nearest.localDate)),
               ),
             )
           : null,
@@ -426,7 +423,7 @@ class _MoveSheet extends StatelessWidget {
             ),
             contentPadding: EdgeInsets.zero,
             enabled: day.allowed,
-            title: Text(DateFormat('EEEE d MMM', locale).format(day.localDate)),
+            title: Text(dayWithWeekday(l10n, day.localDate)),
             subtitle: day.reason == null
                 ? null
                 : Text(moveRefusalText(l10n, day.reason!)),

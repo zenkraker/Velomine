@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failure.dart';
 import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/user_message_text.dart';
 import 'two_factor_view_model.dart';
 import '../../core/tokens.dart';
@@ -105,18 +106,24 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                   controller: _password,
                   label: l10n.twoFactorPassword,
                 ),
-                OutlinedButton(
-                  key: const Key('two-factor-regenerate'),
-                  onPressed: state.regenerate.running
-                      ? null
-                      : () => notifier.regenerate(_password.text),
-                  child: Text(l10n.twoFactorRegenerate),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton(
+                    key: const Key('two-factor-regenerate'),
+                    onPressed: state.regenerate.running
+                        ? null
+                        : () => notifier.regenerate(_password.text),
+                    child: Text(l10n.twoFactorRegenerate),
+                  ),
                 ),
               ] else if (setup == null)
-                OutlinedButton(
-                  key: const Key('two-factor-start'),
-                  onPressed: state.start.running ? null : notifier.start,
-                  child: Text(l10n.twoFactorStartSetup),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton(
+                    key: const Key('two-factor-start'),
+                    onPressed: state.start.running ? null : notifier.start,
+                    child: Text(l10n.twoFactorStartSetup),
+                  ),
                 )
               else ...[
                 // The key the member types into the app, with the copy the mock-up draws at its end.
@@ -172,7 +179,7 @@ class _TwoFactorScreenState extends ConsumerState<TwoFactorScreen> {
                   SelectableText(
                     code,
                     key: Key('recovery-$code'),
-                    style: const TextStyle(fontFamily: 'monospace'),
+                    style: VelomineText.of(context).code,
                   ),
               ],
             ),

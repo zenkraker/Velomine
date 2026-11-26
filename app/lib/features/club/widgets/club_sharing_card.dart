@@ -110,7 +110,10 @@ class ClubSharingCard extends StatelessWidget {
             'share-routes',
             (v) => onChoose(routes: v),
             enabled: state.rides != 'none',
-            helper: state.rides == 'none' ? l10n.routesNeedRides : null,
+            // The design's caption; rides off is why the switch is turned off, so that explains it instead.
+            helper: state.rides == 'none'
+                ? l10n.routesNeedRides
+                : l10n.shareRoutesHelper,
           ),
           choice(
             l10n.shareWellbeing,

@@ -56,7 +56,7 @@ class LiveRideBanner extends ConsumerWidget {
                       paused
                           ? Icons.pause_circle_outline
                           : Icons.fiber_manual_record,
-                      size: 20,
+                      size: AppIconSize.medium,
                       color: paused
                           ? scheme.onSecondaryContainer
                           : scheme.error,

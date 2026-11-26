@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/chip_row.dart';
 import '../../core/widgets/page_scaffold.dart';
 import 'accounts_tab.dart';
 import 'clubs_tab.dart';
@@ -56,21 +57,18 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       children: [
         // Chips in one row that scrolls sideways, as the admin pages draw them (`.vm-chips`): a
         // segmented track stretched across the whole window instead of sitting in its corner.
-        SingleChildScrollView(
-          key: const Key('admin-tabs'),
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            spacing: AppSpacing.sm,
-            children: [
-              for (final (i, tab) in tabs.indexed)
-                ChoiceChip(
-                  key: tab.key,
-                  label: Text(tab.label),
-                  selected: _tab == i,
-                  onSelected: (_) => setState(() => _tab = i),
-                ),
-            ],
-          ),
+        ChipRow(
+          rowKey: const Key('admin-tabs'),
+          selected: _tab,
+          chips: [
+            for (final (i, tab) in tabs.indexed)
+              ChoiceChip(
+                key: tab.key,
+                label: Text(tab.label),
+                selected: _tab == i,
+                onSelected: (_) => setState(() => _tab = i),
+              ),
+          ],
         ),
         switch (_tab) {
           1 => const AccountsTab(),

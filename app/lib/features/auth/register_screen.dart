@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
+import '../../core/widgets/app_text_field.dart';
 import 'auth_state.dart';
 import 'auth_view_models.dart';
 import 'password_field.dart';
@@ -65,6 +66,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return AuthPage(
       title: l10n.createAccount,
       caption: l10n.registerCaption,
+      // The mock-up draws one sentence on what an account is for, between the title and the form.
+      help: l10n.registerHelp,
       primaryLabel: created ? l10n.backToSignIn : l10n.createAccountAction,
       primaryKey: created ? null : const Key('register'),
       onPrimary: created ? () => context.go('/sign-in') : _register,
@@ -96,24 +99,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 onDisposeAction: AutofillContextAction.cancel,
                 child: Column(
                   children: [
-                    TextField(
-                      key: const Key('name'),
+                    AppTextField(
+                      fieldKey: const Key('name'),
                       controller: _name,
+                      label: l10n.name,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.name],
-                      decoration: InputDecoration(labelText: l10n.name),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      key: const Key('email'),
+                    AppTextField(
+                      fieldKey: const Key('email'),
                       controller: _email,
+                      label: l10n.email,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [
                         AutofillHints.email,
                         AutofillHints.username,
                       ],
-                      decoration: InputDecoration(labelText: l10n.email),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     PasswordField(
@@ -122,7 +125,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _password,
                       label: l10n.password,
                       helperText: l10n.passwordHint,
-                      helperMaxLines: 3, // the hint is long and must not be cut off on a narrow screen
                       // A new password, so the manager offers to generate a strong one.
                       autofillHints: const [AutofillHints.newPassword],
                       textInputAction: TextInputAction.done,

@@ -15,7 +15,7 @@ import '../../core/tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/stat_card.dart';
+import '../../core/widgets/fact_grid.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/badge.dart';
 import '../../core/widgets/card_grid.dart';
@@ -168,14 +168,7 @@ class _BikeCard extends ConsumerWidget {
                 ],
               ),
             const SizedBox(height: AppSpacing.xs),
-            Wrap(
-              spacing: AppSpacing.xl,
-              runSpacing: AppSpacing.sm,
-              children: [
-                for (final (label, value) in facts)
-                  StatFigure(label: label, value: value),
-              ],
-            ),
+            FactGrid(facts: facts),
           ],
         ),
       ),

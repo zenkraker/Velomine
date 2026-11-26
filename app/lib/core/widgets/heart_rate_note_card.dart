@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'app_card.dart';
+
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 
@@ -51,39 +53,34 @@ class HeartRateNoteCard extends StatelessWidget {
               ? l10n.heartRateMaxMeasuredOnly(bpm)
               : l10n.heartRateMaxMeasured(bpm)
         : l10n.heartRateThresholdMeasured(bpm);
-    return Card(
+    return AppCard(
       key: Key('heart-rate-note-$kind'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(body, style: text.titleMedium),
-            if (suggestionId case final id?) ...[
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  if (onAccept != null)
-                    FilledButton(
-                      key: const Key('heart-rate-note-use'),
-                      onPressed: busy ? null : () => onAccept!(id),
-                      child: Text(l10n.heartRateSuggestionUse(bpm)),
-                    ),
-                  TextButton(
-                    key: const Key('heart-rate-note-keep'),
-                    onPressed: busy ? null : () => onDismiss?.call(id),
-                    child: Text(
-                      l10n.heartRateSuggestionKeep(currentBpm ?? bpm),
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(body, style: text.titleMedium),
+          if (suggestionId case final id?) ...[
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (onAccept != null)
+                  FilledButton(
+                    key: const Key('heart-rate-note-use'),
+                    onPressed: busy ? null : () => onAccept!(id),
+                    child: Text(l10n.heartRateSuggestionUse(bpm)),
                   ),
-                ],
-              ),
-            ],
+                TextButton(
+                  key: const Key('heart-rate-note-keep'),
+                  onPressed: busy ? null : () => onDismiss?.call(id),
+                  child: Text(l10n.heartRateSuggestionKeep(currentBpm ?? bpm)),
+                ),
+              ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -56,7 +56,7 @@ class _ClubMembersCardState extends State<ClubMembersCard> {
           if (members.isEmpty)
             EmptyState(
               key: const Key('club-members-empty'),
-              message: l10n.clubMemberCount(0),
+              message: l10n.clubMembersEmpty,
               framed: false,
             )
           else
@@ -105,8 +105,7 @@ class _ClubMembersCardState extends State<ClubMembersCard> {
                 child: TextButton(
                   key: const Key('show-all-members'),
                   onPressed: () => setState(() => _expanded = true),
-                  // Needs the count: "Show all 24" (l10n key clubMembersShowAll).
-                  child: Text(l10n.moreDetailsAll),
+                  child: Text(l10n.clubMembersShowAll(members.length)),
                 ),
               ),
             ),

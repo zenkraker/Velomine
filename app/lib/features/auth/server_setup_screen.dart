@@ -6,7 +6,7 @@ import 'package:velomine_api/api.dart';
 import '../../core/l10n.dart';
 import 'auth_page.dart';
 import '../../core/server_config.dart';
-import '../../core/tokens.dart';
+import '../../core/widgets/app_text_field.dart';
 
 part 'server_setup_screen.g.dart';
 
@@ -128,25 +128,22 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       onPrimary: _save,
       primaryBusy: s.busy,
       children: [
-        TextField(
-          key: const Key('server-url'),
+        AppTextField(
+          fieldKey: const Key('server-url'),
           controller: _url,
+          label: l10n.setupServerAddress,
+          hint: l10n.setupServerHint,
           keyboardType: TextInputType.url,
           autocorrect: false,
           enableSuggestions: false,
           textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            labelText: l10n.setupServerAddress,
-            hintText: l10n.setupServerHint,
-          ),
           onChanged: (_) => setState(() {}),
-          onSubmitted: (_) {
+          onDone: (_) {
             if (!s.busy) _save();
           },
         ),
         // Said as soon as the address is written as http, before the rest of it is typed.
         if (isInsecureAddress(_url.text)) ...[
-          const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.setupInsecure,
             key: const Key('server-insecure'),
@@ -154,7 +151,6 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
           ),
         ],
         if (error != null) ...[
-          const SizedBox(height: AppSpacing.md),
           AuthFailure(keyName: 'server-error', message: error),
         ],
       ],

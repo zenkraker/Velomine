@@ -501,7 +501,8 @@ void main() {
       await tester.pumpAndSettle();
 
       final card = find.byKey(const Key('coach-wellbeing'));
-      for (final head in ['Fatigue', 'Soreness', 'Mood']) {
+      // The mock-up's five headings: the day, the three scores and the ride's RPE.
+      for (final head in ['Day', 'Fatigue', 'Soreness', 'Mood', 'RPE']) {
         expect(
           find.descendant(of: card, matching: find.text(head)),
           findsOneWidget,
@@ -559,6 +560,8 @@ void main() {
         await openAthletes(tester);
 
         expect(find.byKey(Key('athlete-${athlete.id}')), findsOneWidget);
+        // The name keeps the row's width: the share badges sit under it and do not push it into a column.
+        expect(tester.getSize(find.text('Athlete Luca')).height, lessThan(24));
         expect(tester.takeException(), isNull);
       },
     );

@@ -82,6 +82,9 @@ void main() {
 
     expect(find.byKey(const Key('total-0')), findsOneWidget);
 
+    // The row now keeps the chosen chip in view, so the one to its left is off the edge: scroll back to it.
+    await tester.ensureVisible(find.byKey(const Key('progress-tab-fitness')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('progress-tab-fitness')));
     await tester.pumpAndSettle();
 

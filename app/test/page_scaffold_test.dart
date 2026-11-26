@@ -45,6 +45,37 @@ Future<void> pumpPage(
   );
 }
 
+/// A page whose last child asks to reach the bottom of the window.
+Future<void> pumpFillLast(
+  WidgetTester tester, {
+  required Size size,
+  required double lastHeight,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: dayTheme(),
+      home: Scaffold(
+        body: PageScaffold(
+          title: 'Progress',
+          subtitle: 'How am I today?',
+          fillLast: true,
+          children: [
+            const SizedBox(height: 80, child: Text('above')),
+            SizedBox(
+              key: const Key('last'),
+              height: lastHeight,
+              child: const Text('chart'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 void main() {
   testWidgets('PageScaffold_ShouldCollapseTitle_WhenContentScrolls', (
     tester,
@@ -182,4 +213,110 @@ void main() {
       },
     );
   }
+
+  for (final size in [const Size(390, 600), const Size(1300, 500)]) {
+    testWidgets(
+      'PageScaffold_ShouldGrowTheLastChildToTheWindowBottom_WhenFillLastIsSetAt${size.width.toInt()}x${size.height.toInt()}',
+      (tester) async {
+        await pumpFillLast(tester, size: size, lastHeight: 40);
+
+        expect(tester.takeException(), isNull);
+        // The short card takes the room left over, and ends above the bottom padding.
+        final last = tester.getRect(find.byKey(const Key('last')));
+        expect(last.height, greaterThan(40));
+        expect(last.bottom, closeTo(size.height - AppSpacing.xl, 1));
+      },
+    );
+
+    testWidgets(
+      'PageScaffold_ShouldScrollInsteadOfOverflowing_WhenTheLastChildIsTallerThanTheWindowAt${size.width.toInt()}x${size.height.toInt()}',
+      (tester) async {
+        await pumpFillLast(tester, size: size, lastHeight: 2000);
+
+        expect(tester.takeException(), isNull);
+        // The tall card keeps its own height, and the page scrolls over it.
+        expect(
+          tester.getRect(find.byKey(const Key('last'))).height,
+          greaterThan(size.height),
+        );
+      },
+    );
+  }
+
+  testWidgets(
+    'PageScaffold_ShouldWrapTheWholeSubtitle_WhenItIsLongerThanTwoLines',
+    (tester) async {
+      const long =
+          'A sentence long enough that it needs four lines on a phone, which the header has to make room '
+          'for instead of cutting it off with an ellipsis after the second line, as it used to do.';
+      tester.view.physicalSize = const Size(390, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: dayTheme(),
+          home: PageHeaderScope(
+            showOnPhone: true,
+            child: Scaffold(
+              body: PageScaffold(
+                title: 'Garage',
+                subtitle: long,
+                children: const [SizedBox(height: 80, child: Text('row'))],
+              ),
+            ),
+          ),
+        ),
+      );
+      final text = tester.widget<Text>(find.text(long));
+      expect(text.overflow, isNot(TextOverflow.ellipsis));
+      expect(text.maxLines, isNull);
+      expect(tester.getSize(find.text(long)).height, greaterThan(3 * 20));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'PageScaffold_ShouldKeepTheMainActionFullSize_WhenThePhoneHeaderHoldsFourControls',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: dayTheme(),
+          home: PageHeaderScope(
+            showOnPhone: true,
+            trailing: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.notifications),
+              ),
+              IconButton(onPressed: () {}, icon: const Icon(Icons.person)),
+            ],
+            child: Scaffold(
+              body: PageScaffold(
+                title: 'Rides',
+                primaryAction: FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Upload ride'),
+                ),
+                menu: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.more_vert),
+                ),
+                children: const [SizedBox(height: 80, child: Text('row'))],
+              ),
+            ),
+          ),
+        ),
+      );
+      // The button's own minimum is 52 dp tall; half that means the cluster was scaled down.
+      expect(
+        tester.getSize(find.byType(FilledButton)).height,
+        greaterThanOrEqualTo(52),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

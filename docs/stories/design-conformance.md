@@ -21,7 +21,7 @@ An audit of all 45 routes over 44 screen classes, the 55 pages under `docs/desig
 **A · The owner's three decisions, written before the code that follows them**
 
 - [x] **One body size, 15, everywhere**: the design's `body` is 15 and there is no 14; both body slots carry it, and a test fails if either drifts. *Landed:* `docs/design/pages/README.md` (Type), `docs/design/tokens.json`, `app/lib/core/theme.dart`, `app/test/design_tokens_test.dart`.
-- [x] **The page menu is never centred**: the page's main action and its ⋯ sit at the end of the title row, level with the title, at every width; the scaffold owns the placement and a test holds it at 390 and 1300 dp. *Landed:* `docs/design/pages/README.md` (Navigation), `.pi/skills/ui-build/SKILL.md`, `app/lib/core/widgets/page_scaffold.dart`, `app/test/page_scaffold_test.dart`.
+- [x] **The page menu is never centred**: the page's main action and its ⋯ sit at the end of the title row, level with the title, at every width; the scaffold owns the placement and a test holds it at 390 and 1300 dp. *Landed:* `docs/design/pages/README.md` (Navigation), `docs/rules/app.md`, `app/lib/core/widgets/page_scaffold.dart`, `app/test/page_scaffold_test.dart`.
 - [x] **Charts are drawn by `fl_chart`, not by hand.** Approved by the owner on 25 Nov because it is free (MIT); it lives behind our own chart widgets, and every colour, label and tick still comes from the design tokens. *Landed:* the `AGENTS.md` row, `app/pubspec.yaml`, `app/lib/core/widgets/bar_chart.dart`; the per-file work list is
 [`docs/design/audit-2026-11-25.md` §6b](../design/audit-2026-11-25.md).
 - [ ] Nothing else in this story starts until each of those three is written down — in the design page, the dependency doc or this file — and not after the code.
@@ -31,14 +31,14 @@ An audit of all 45 routes over 44 screen classes, the 55 pages under `docs/desig
 - [x] `dart run tools/screenshots.dart --routes … --widths 390,600,820,1300` signs in once to `http://localhost:8080` from `just up` and writes one non-blank PNG per route and width into `.dev/screens/` — **added and run against the dev stack in this change**.
 - [x] `--theme day|night` renders that theme; without it the browser's own scheme decides. **Done.**
 - [x] A route that redirects (a destination whose setting is off, such as `/training` with auto training off) is reported as such, never passed off as that page. **In the tool; keep it.**
-- [ ] Chrome is in the dev container at a pinned version, named in `AGENTS.md`'s dependency table with its reason, and `docs/development.md` says how to take screenshots and which dev account they use.
-- [ ] `.pi/skills/ui-build/SKILL.md` step 2 names that command, and a missing Chrome or script is reported as a failed check, never as a pass.
+- [ ] Chrome is in the dev container at a pinned version, named in `docs/dependencies/approved.md` with its reason, and `docs/development.md` says how to take screenshots and which dev account they use.
+- [ ] `docs/development.md` (*Screenshots of the app*) names that command, and a missing Chrome or script is reported as a failed check, never as a pass.
 
 **1 · The four root causes**
 
 - [ ] In a grid, the cards of one row are the same height and a row is full; 600–1199 dp shows the two columns the size classes name. **Blocked, not skipped:** `IntrinsicHeight` overflowed by 10 px on the Club page at 1300 dp, and a one-row `Table` broke hit testing (a tap on `open-athletes` missed; 61 tests). Two causes were suspected and **neither reproduces on Flutter 3.50** (probes with a `Wrap` of chips, a `ListTile` with a trailing `Wrap`, and a `LinearProgressIndicator` inside `IntrinsicHeight`): the 10 px is still undiagnosed, so the next attempt bisects the Club grid's cards before choosing a mechanism. The framework's own note still holds — *"the child will get less height than it otherwise would"* — and `Table`'s doc still says a single row is a `Row`, which the hit-test failure bore out. The column change cannot ship alone either — at 600 dp half-width rows crash `ListTile` ("trailing widget consumes the entire tile width", club members) — so it lands with the Phase 4 row rework, and the next attempt starts from those two dead ends.
 - [x] Every number a rider reads is formatted for the language (`69,7 km` in Italian, `69.7 km` in English) from one shared helper. **Done:** `decimal()` is public in `core/format.dart`, the 24 display sites use it, `format_test.dart` holds the Italian comma; text-field values that are parsed back keep `toStringAsFixed`.
-- [ ] No feature builds its own card, labelled field or badge where `AppCard`, `AppTextField` or `AppBadge` exists.
+- [x] No feature builds its own card, labelled field or badge where `AppCard`, `AppTextField` or `AppBadge` exists. **Done 26 Nov:** no bare `Card(` or `TextField(` is left in `features/`.
 - [ ] `just ui-dupes` reports zero for `Card(`, `TextField(`, `TextStyle(`, `Color(0x`, `EdgeInsets.all(n)` and `spacing: n` outside `core/widgets/`.
 
 **1b · Every chart drawn by `fl_chart`**
@@ -54,9 +54,9 @@ An audit of all 45 routes over 44 screen classes, the 55 pages under `docs/desig
 **2 · The chrome every screen shares**
 
 - [x] The nav pill and the sidebar label destinations at `nav-label` 15 px and never shrink them. **Done:** `navLabel` in `VelomineText` (15/500, asserted in `design_tokens_test`), the pill's `FittedBox` removed, the sidebar's sections, destinations and collapsed rail switched over, and the rail widened 88 → 104 so "Progress"/"Progressi" fits on one line (seen at 820 dp).
-- [ ] The sidebar's foot ends on the privacy note, Profile and Settings; the theme control is not there.
+- [x] The sidebar's foot ends on the privacy note, Profile and the theme, notifications and account controls; there is no Settings entry, because no page answers it (`Sidebar.md` records the choice).
 - [x] Every Progress sub-page carries the "Progress" caption at every width. **Done:** fitness, power, totals and wellbeing; seen on the 390 dp screenshot.
-- [ ] A page's sub-line wraps instead of ending in an ellipsis.
+- [x] A page's sub-line wraps instead of ending in an ellipsis. **Done:** the header measures the line count at the width it is drawn in (`page_scaffold.dart`, test `PageScaffold_ShouldWrapTheWholeSubtitle_WhenItIsLongerThanTwoLines`).
 - [ ] Every data widget's first load is `LoadingState`, and every empty list, table or chart is `EmptyState` — no skeletons with literal sizes, no `LinearProgressIndicator`, no blank page, no header-only table. *Started:* events (LoadingState), Progress's chart skeleton (tokens), the service log's nested empty state (`framed: false`). Remaining: fitness, power, totals, wellbeing, notifications, calendar feed, admin accounts and clubs, supporter, bike templates, header-only table.
 
 **3 · The latest feature: auto training**
@@ -70,7 +70,7 @@ An audit of all 45 routes over 44 screen classes, the 55 pages under `docs/desig
 **3b · The rule sweep, so the whole tree is covered at once**
 
 The sweep in [`audit-2026-11-25.md` §10](../design/audit-2026-11-25.md) crawls all 288 files against
-every rule of `.pi/skills/ui-build/SKILL.md` and lists what it found beyond the page debts below:
+every design rule (`docs/design/pages/README.md`, `docs/rules/app.md`) and lists what it found beyond the page debts below:
 admin's literal 720/640 widths, three `fontSize` literals, the map chip's `Colors.white`, 8 `ChoiceChip`
 controls, 5 strings missing from the `.arb` files, 13 hand-rolled `DateFormat`s, `BarChart.currentIndex`
 never passed, 4 in-page spinners, 20 screens without a state and 6 without a width test. Work them with
@@ -270,7 +270,7 @@ This replaces the coarse file grouping. **One row per audit point** (`docs/desig
 
 | # | Point | Files to edit | Test |
 |---|---|---|---|
-| Z1 ✅ | screenshot harness | `tools/screenshots.dart`, `.pi/skills/ui-build/SKILL.md` | run against `just up` |
+| Z1 ✅ | screenshot harness | `tools/screenshots.dart`, `docs/development.md` | run against `just up` |
 | Z2 ⬜ | Chrome is not pinned in the image | `.devcontainer/Dockerfile` (pinned, checksummed), `docs/development.md:45` | `tools/check-versions.sh` |
 | Z3 ⬜ | `just ui-dupes` is not a gate | `justfile`, `.github/workflows/ci.yml` | CI run |
 

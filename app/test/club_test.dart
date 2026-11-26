@@ -8,6 +8,7 @@ import 'package:velomine/core/widgets/avatar.dart';
 import 'package:velomine/core/widgets/bottom_action_bar.dart';
 import 'package:velomine/core/widgets/page_scaffold.dart';
 import 'package:velomine/features/club/widgets/club_hero_card.dart';
+import 'package:velomine/features/club/widgets/club_members_card.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 
 import 'fake_server.dart';
@@ -52,9 +53,9 @@ void main() {
 
     await tester.tap(find.text('Club'));
     await tester.pumpAndSettle();
-    // The club's name names the page and heads its hero card; a rider sees no roster, only the owner and
+    // The club's name is written once, on its hero card; a rider sees no roster, only the owner and
     // coaches do.
-    expect(find.text('Test Club'), findsNWidgets(2));
+    expect(find.text('Test Club'), findsOneWidget);
     expect(find.byKey(const Key('club-members-card')), findsNothing);
     expect(find.byKey(const Key('join-code-value')), findsNothing);
 
@@ -886,4 +887,108 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'ClubScreen_ShouldQuoteTheNoteInTheLanguagesMarks_WhenTheOwnerReadsARequest',
+    (tester) async {
+      final owner = server.add('owner@example.com', clubRole: 'owner');
+      final asker = server.add('asker@example.com', clubRole: null);
+      server.joinRequests.add({
+        'id': 'join-1',
+        'clubId': 'club-1',
+        'userId': asker.id,
+        'displayName': asker.name,
+        'note': 'May I join?',
+        'createdAt': '2026-11-09T10:00:00Z',
+      });
+      server.signInBrowser(owner);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      // The note is quoted in English's marks here and in the Italian "« »" there, never hardcoded.
+      expect(find.text('\u201cMay I join?\u201d'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ClubMembersCard_ShouldSayThereAreNoMembers_WhenTheRosterIsEmpty',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ClubMembersCard(
+              members: const [],
+              owner: false,
+              onSetRole: (_, _) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('club-members-empty')), findsOneWidget);
+      expect(find.text('No members yet.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'ClubMembersCard_ShouldSayShowAllWithTheCount_WhenTheRosterIsLongerThanThePreview',
+    (tester) async {
+      final coach = server.add(
+        'coach@example.com',
+        name: 'Coach Marco',
+        clubRole: 'coach',
+      );
+      for (final name in [
+        'Rider Luca',
+        'Giulia Ferri',
+        'Anna Greco',
+        'Sara Bianchi',
+        'Paolo Neri',
+      ]) {
+        server.add(
+          '${name.split(' ').last.toLowerCase()}@example.com',
+          name: name,
+        );
+      }
+      server.signInBrowser(coach);
+      tester.view.physicalSize = const Size(1000, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(tester, server.session(useCookies: true));
+      await goTo(tester, '/club');
+
+      // Six in the club, four drawn: the button says how many the rest are.
+      await tester.ensureVisible(find.byKey(const Key('show-all-members')));
+      await tester.pumpAndSettle();
+      expect(find.text('Show all 6'), findsOneWidget);
+    },
+  );
+
+  testWidgets('NoClubPage_ShouldSayCreationIsOff_WhenTheOperatorTurnedItOff', (
+    tester,
+  ) async {
+    server.adminSettings['clubCreationEnabled'] = false;
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await goTo(tester, '/club');
+
+    // The third way stays as a peer with its button off, and the card says why.
+    final start = tester.widget<OutlinedButton>(
+      find.byKey(const Key('go-start-club')),
+    );
+    expect(start.onPressed, isNull);
+    expect(
+      find.text('Club creation is turned off on this server.'),
+      findsOneWidget,
+    );
+  });
 }

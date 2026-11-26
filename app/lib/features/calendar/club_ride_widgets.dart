@@ -119,7 +119,7 @@ class MeetingMap extends StatelessWidget {
                     child: Icon(
                       Icons.place,
                       key: const Key('meeting-pin'),
-                      size: 40,
+                      size: AppIconSize.large,
                       color: scheme.error,
                     ),
                   ),

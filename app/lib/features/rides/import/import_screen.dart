@@ -32,10 +32,13 @@ class ImportScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final state = ref.watch(importViewModelProvider(id));
     final status = state.load.value;
+    final running = status?.status == 'processing';
 
     return PageScaffold(
       parent: l10n.navRides,
       title: l10n.importTitle,
+      // The sub-line says what is happening while it happens, under the page's own title.
+      subtitle: running ? l10n.importRunning : null,
       maxWidth: AppLayout.contentNarrow,
       children: [
         if (state.load.failure case final failure?)
@@ -86,7 +89,7 @@ class _Status extends StatelessWidget {
         SectionCard(
           key: const Key('import-status'),
           // The card's own title, not the page's: it says what is happening, as the mock-up has it.
-          title: processing ? l10n.importRunning : l10n.importFinished,
+          title: processing ? l10n.importReadingArchive : l10n.importFinished,
           children: [
             if (status.total > 0)
               // The count read of the total is the card's number, its unit under it.

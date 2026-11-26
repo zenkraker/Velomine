@@ -330,6 +330,23 @@ void main() {
     );
   }
 
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'SupporterCelebrationScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        licence();
+        await openProfile(tester, size: Size(width, 2000));
+        // The celebration opens from its own address, as the replay and a returning visitor do.
+        router!.go('/profile/supporter/activated');
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SupporterCelebrationScreen), findsOneWidget);
+        expect(find.byKey(const Key('supporter-continue')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'SupporterCelebrationScreen_ShouldGoToTheProfile_WhenThereIsNoLicence',
     (tester) async {

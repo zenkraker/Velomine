@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/card_grid.dart';
+import '../../core/widgets/card_link.dart';
 import '../../core/widgets/line_chart.dart';
 import '../../core/widgets/range_selector.dart';
 import '../../core/widgets/source_note.dart';
@@ -25,6 +26,7 @@ class PowerSummary extends StatelessWidget {
     this.ftpNote,
     this.ftpRideId,
     this.onOpenRide,
+    this.onAllDurations,
     this.readOnly = false,
   });
 
@@ -43,6 +45,10 @@ class PowerSummary extends StatelessWidget {
 
   /// Opens a ride by its id, for a note that can be read back.
   final void Function(String rideId)? onOpenRide;
+
+  /// Opens every duration Velomine has bests for: the rider card's own sheet. Null while that card has
+  /// not arrived, and the link goes with it.
+  final VoidCallback? onAllDurations;
   final bool readOnly;
 
   @override
@@ -260,11 +266,20 @@ class PowerSummary extends StatelessWidget {
                   Text(l10n.powerBestEfforts, style: text.titleMedium),
                   if (!curve.hasPower)
                     Text(l10n.powerCurveEmpty, style: text.bodySmall)
-                  else
+                  else ...[
                     _BestEffortsTable(
                       points: curve.points,
                       weightKg: curve.weightKg,
                     ),
+                    // The design's "All durations →" has no key of its own: the whole rider card is
+                    // the only place every best duration is listed, so it carries the link.
+                    if (onAllDurations case final open?)
+                      CardLink(
+                        l10n.riderCardWhole,
+                        key: const Key('power-all-durations'),
+                        onPressed: open,
+                      ),
+                  ],
                 ],
               ),
             ),

@@ -5069,7 +5069,7 @@ abstract class AppLocalizations {
   /// No description provided for @readinessNotMedical.
   ///
   /// In en, this message translates to:
-  /// **'A training guide, not a medical measure.'**
+  /// **'A guide for training, not a medical measure.'**
   String get readinessNotMedical;
 
   /// No description provided for @readinessFactorForm.
@@ -5345,7 +5345,7 @@ abstract class AppLocalizations {
   /// No description provided for @powerCurveEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No power data in this range. Upload a ride with a power meter.'**
+  /// **'Record rides with a power meter to see your curve.'**
   String get powerCurveEmpty;
 
   /// No description provided for @powerBestEfforts.
@@ -5411,7 +5411,7 @@ abstract class AppLocalizations {
   /// No description provided for @ftpCurrent.
   ///
   /// In en, this message translates to:
-  /// **'Current FTP'**
+  /// **'FTP'**
   String get ftpCurrent;
 
   /// No description provided for @ftpMethod20.
@@ -9811,6 +9811,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'asked {count} d ago'**
   String askedDaysAgo(int count);
+
+  /// No description provided for @registerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride, track your form and keep your data.'**
+  String get registerHelp;
+
+  /// No description provided for @passwordShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get passwordShow;
+
+  /// No description provided for @passwordHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get passwordHide;
+
+  /// No description provided for @recordingScreenOff.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride keeps recording with the screen off. A banner above the navigation brings you back here from any page.'**
+  String get recordingScreenOff;
+
+  /// No description provided for @addRouteSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where does it come from?'**
+  String get addRouteSourceTitle;
+
+  /// No description provided for @addRouteChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen'**
+  String get addRouteChosen;
+
+  /// No description provided for @wellbeingDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get wellbeingDay;
+
+  /// No description provided for @wellbeingRpeColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'RPE'**
+  String get wellbeingRpeColumn;
+
+  /// No description provided for @importReadingArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the archive'**
+  String get importReadingArchive;
+
+  /// No description provided for @clubMembersShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count}'**
+  String clubMembersShowAll(int count);
+
+  /// No description provided for @clubMembersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No members yet.'**
+  String get clubMembersEmpty;
+
+  /// No description provided for @shareRoutesHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Your routes, so a shared ride shows its map.'**
+  String get shareRoutesHelper;
+
+  /// No description provided for @clubStartUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Club creation is turned off on this server.'**
+  String get clubStartUnavailable;
+
+  /// No description provided for @twoFactorStateOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is off.'**
+  String get twoFactorStateOff;
+
+  /// No description provided for @sessionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 device} other{{count} devices}}'**
+  String sessionsCount(int count);
+
+  /// No description provided for @privacyZoneRadiusLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius {distance}'**
+  String privacyZoneRadiusLine(String distance);
+
+  /// No description provided for @intensityEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get intensityEasy;
+
+  /// No description provided for @intensityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get intensityModerate;
+
+  /// No description provided for @intensityHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get intensityHard;
 }
 
 class _AppLocalizationsDelegate

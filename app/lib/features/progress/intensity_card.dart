@@ -4,8 +4,10 @@ import 'package:velomine_api/api.dart';
 import '../../core/format.dart';
 import '../../core/heart_rate_zones.dart';
 import '../../core/l10n.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/bar_chart.dart';
 import '../../core/widgets/source_note.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -29,16 +31,46 @@ class IntensityCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final small = text.bodySmall ?? const TextStyle();
     final scheme = Theme.of(context).colorScheme;
+    final palette = VelomineColors.of(context);
+    // The design draws the three shares as rows in ink-muted, bar-muted and accent-strong, not as the
+    // scheme's primary/tertiary/error.
     final colors = (
-      easy: scheme.primary,
-      moderate: scheme.tertiary,
-      hard: scheme.error,
+      easy: scheme.onSurfaceVariant,
+      moderate: palette.barMuted,
+      hard: palette.accentStrong,
     );
     final label = intensityLabel(l10n, intensity.label);
     final shares = l10n.intensityShares(
       '${intensity.easyPct}',
       '${intensity.moderatePct}',
       '${intensity.hardPct}',
+    );
+    final rows = [
+      (label: l10n.intensityEasy, share: intensity.easyPct, color: colors.easy),
+      (
+        label: l10n.intensityModerate,
+        share: intensity.moderatePct,
+        color: colors.moderate,
+      ),
+      (label: l10n.intensityHard, share: intensity.hardPct, color: colors.hard),
+    ];
+    // One share as the design draws it: its name and its percentage on one line, the bar under them.
+    Widget shareRow(String label, double share, Color color) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.xs,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(label, style: small)),
+            Text(
+              // `goalPercent` takes a whole percent; the bar under the name carries the rest.
+              l10n.goalPercent(share.round()),
+              style: small.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+        ShareBar(share: share, color: color),
+      ],
     );
 
     return AppCard(
@@ -53,18 +85,12 @@ class IntensityCard extends StatelessWidget {
             label: label == null ? shares : '$label. $shares',
             child: ExcludeSemantics(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: AppSpacing.xs,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpacing.md,
                 children: [
                   if (label != null) Text(label, style: text.bodyMedium),
-                  _Bar(
-                    easyPct: intensity.easyPct,
-                    moderatePct: intensity.moderatePct,
-                    hardPct: intensity.hardPct,
-                    colors: colors,
-                    height: AppSpacing.sm,
-                  ),
-                  Text(shares, style: text.bodySmall),
+                  for (final row in rows)
+                    shareRow(row.label, row.share, row.color),
                 ],
               ),
             ),
@@ -154,7 +180,10 @@ class _WeekBar extends StatelessWidget {
       children: [
         SizedBox(
           width: AppProgress.dateWidth,
-          child: Text(dateOnly(week.weekStart), style: style),
+          child: Text(
+            '${dayNumber(week.weekStart)} ${monthShort(week.weekStart)}',
+            style: style,
+          ),
         ),
         Expanded(
           child: _Bar(

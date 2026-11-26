@@ -4,6 +4,7 @@ import 'package:velomine_api/api.dart';
 import '../../../core/l10n.dart';
 import '../../../core/tokens.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_text_field.dart';
 
 /// How hard the ride felt and an optional note. Owner-only; coaches see the RPE but never the note.
 class RideFeelCard extends StatefulWidget {
@@ -80,7 +81,6 @@ class _RideFeelCardState extends State<RideFeelCard> {
     if (feel.consentRequired) {
       return AppCard(
         key: const Key('ride-feel-card'),
-        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Text(l10n.wellbeingConsentNeeded, style: text.bodySmall),
       );
     }
@@ -88,7 +88,6 @@ class _RideFeelCardState extends State<RideFeelCard> {
     final showForm = _editing || feel.rpe == null;
     return AppCard(
       key: const Key('ride-feel-card'),
-      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -133,12 +132,12 @@ class _RideFeelCardState extends State<RideFeelCard> {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            TextField(
-              key: const Key('ride-feel-notes'),
+            AppTextField(
+              fieldKey: const Key('ride-feel-notes'),
               controller: _notes,
               maxLength: 500,
               maxLines: 2,
-              decoration: InputDecoration(labelText: l10n.wellbeingNotes),
+              label: l10n.wellbeingNotes,
             ),
             const SizedBox(height: AppSpacing.sm),
             Row(

@@ -5,7 +5,9 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/tokens.dart';
 import '../../core/units.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/section_card.dart';
@@ -154,17 +156,15 @@ class _EventFormSheetState extends ConsumerState<EventFormSheet> {
       saveKey: const Key('event-save'),
       onSave: _submit,
       children: [
-        TextField(
-          key: const Key('event-name'),
+        AppTextField(
+          fieldKey: const Key('event-name'),
           controller: _name,
           autofocus: !editing,
           textCapitalization: TextCapitalization.sentences,
           maxLength: 100,
-          decoration: InputDecoration(
-            labelText: l10n.eventName,
-            errorText: _badName ? l10n.errorEventName : null,
-          ),
-          onSubmitted: (_) => _submit(),
+          label: l10n.eventName,
+          errorText: _badName ? l10n.errorEventName : null,
+          onDone: (_) => _submit(),
         ),
         DropdownButtonFormField<String>(
           key: const Key('event-kind'),
@@ -186,7 +186,7 @@ class _EventFormSheetState extends ConsumerState<EventFormSheet> {
           label: Text(dateOnly(_date)),
         ),
         Row(
-          spacing: 12,
+          spacing: AppSpacing.md,
           children: [
             Expanded(
               child: _number(
@@ -206,13 +206,13 @@ class _EventFormSheetState extends ConsumerState<EventFormSheet> {
             ),
           ],
         ),
-        TextField(
-          key: const Key('event-notes'),
+        AppTextField(
+          fieldKey: const Key('event-notes'),
           controller: _notes,
           maxLength: 500,
           minLines: 2,
           maxLines: 4,
-          decoration: InputDecoration(labelText: l10n.eventNotes),
+          label: l10n.eventNotes,
         ),
       ],
     );
@@ -223,12 +223,13 @@ class _EventFormSheetState extends ConsumerState<EventFormSheet> {
     required TextEditingController controller,
     required String label,
     required String unit,
-  }) => TextField(
-    key: key,
+  }) => AppTextField(
+    fieldKey: key,
     controller: controller,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-    decoration: InputDecoration(labelText: label, suffixText: unit),
+    label: label,
+    suffix: unit,
   );
 }
 

@@ -132,6 +132,10 @@ class PowerScreen extends ConsumerWidget {
             ),
             ftpRideId: power.history.firstOrNull?.rideId,
             onOpenRide: (id) => context.push('/rides/$id'),
+            onAllDurations: switch (riderCard.load.value) {
+              final card? => () => showRiderCard(context, card),
+              null => null,
+            },
           ),
       ],
     );

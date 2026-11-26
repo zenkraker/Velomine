@@ -7,6 +7,7 @@ import '../auth/auth_page.dart';
 import 'club_view_model.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 
@@ -81,15 +82,15 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextField(
-                  key: const Key('join-code'),
+                AppTextField(
+                  fieldKey: const Key('join-code'),
                   controller: _code,
+                  label: l10n.joinCode,
                   textCapitalization: TextCapitalization.characters,
                   autocorrect: false,
                   enableSuggestions: false,
                   textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(labelText: l10n.joinCode),
-                  onSubmitted: (_) => _join(),
+                  onDone: (_) => _join(),
                 ),
                 if (message != null) ...[
                   const SizedBox(height: AppSpacing.md),

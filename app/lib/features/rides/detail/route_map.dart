@@ -327,7 +327,7 @@ class _HeartRateLegend extends StatelessWidget {
         Expanded(
           child: Container(
             key: const Key('heart-rate-legend'),
-            height: 6,
+            height: AppChart.legendBar,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppSpacing.xs),
               gradient: LinearGradient(

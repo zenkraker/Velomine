@@ -133,6 +133,27 @@ void main() {
     expect(text.titleMedium!.fontSize, 17);
     expect(text.titleMedium!.fontWeight, FontWeight.w600);
     expect(text.titleMedium!.height, closeTo(24 / 17, 0.001));
+    // Material's titleSmall is 14 and the scale has no 14: the slot carries body-strong (15/600), so a
+    // row's main line or a chart's title never renders off-scale.
+    expect(text.titleSmall!.fontSize, 15);
+    expect(text.titleSmall!.fontWeight, FontWeight.w600);
+    // Every slot a screen reaches for is a size the scale names: no Material 22, 14 or 11 in the app.
+    const scale = {40, 24, 17, 15, 13, 12};
+    for (final (name, style) in [
+      ('headlineLarge', text.headlineLarge),
+      ('headlineSmall', text.headlineSmall),
+      ('titleLarge', text.titleLarge),
+      ('titleMedium', text.titleMedium),
+      ('titleSmall', text.titleSmall),
+      ('bodyLarge', text.bodyLarge),
+      ('bodyMedium', text.bodyMedium),
+      ('bodySmall', text.bodySmall),
+      ('labelLarge', text.labelLarge),
+      ('labelMedium', text.labelMedium),
+      ('labelSmall', text.labelSmall),
+    ]) {
+      expect(scale, contains(style!.fontSize!.round()), reason: name);
+    }
     expect(text.bodyLarge!.fontSize, 15);
     // The design has one body size, so the default body slot carries it too:
     // a widget that reaches for bodyMedium must never render an off-scale 14.
@@ -156,6 +177,7 @@ void main() {
         text.bodySmall,
         text.labelSmall,
         text.titleMedium,
+        text.titleSmall,
       ]) {
         expect(
           style!.fontFeatures,

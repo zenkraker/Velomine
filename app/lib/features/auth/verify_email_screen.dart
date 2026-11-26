@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
-import '../../core/tokens.dart';
 import '../../core/widgets/loading_state.dart';
 import 'auth_page.dart';
 import 'verify_email_view_model.dart';
@@ -53,7 +52,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           if (!s.confirmed! && canResend) ...[
-            const SizedBox(height: AppSpacing.md),
             if (s.resent)
               Text(l10n.verifyEmailResent, key: const Key('verify-resent'))
             else

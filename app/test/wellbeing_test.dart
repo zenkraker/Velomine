@@ -119,7 +119,7 @@ void main() {
     expect(find.byKey(const Key('readiness-why')), findsOneWidget);
     expect(find.text('How you feel'), findsWidgets);
     expect(
-      find.text('A training guide, not a medical measure.'),
+      find.text('A guide for training, not a medical measure.'),
       findsOneWidget,
     );
   });

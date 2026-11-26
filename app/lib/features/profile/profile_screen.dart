@@ -43,7 +43,9 @@ import '../training/training_view_model.dart';
 
 import 'profile_state.dart';
 import 'profile_view_model.dart';
+import 'sessions_view_model.dart';
 import 'solo_trial_badge.dart';
+import 'two_factor_view_model.dart';
 import 'zones_card.dart';
 import '../../core/tokens.dart';
 
@@ -506,6 +508,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     };
     final failure = s.load.failure;
     final bikes = ref.watch(bikesSummaryProvider);
+    // The account rows say what they are about. Both answers come from their own view models, so the
+    // row is drawn without its line until they arrive, never with a spinner.
+    final twoFactor = ref.watch(twoFactorViewModelProvider).load.value;
+    final sessions = ref.watch(sessionsViewModelProvider).load.value;
     // Where the athlete's numbers came from, each a line under its own field.
     final athlete = s.profile;
     final ftpNote = athlete == null
@@ -921,13 +927,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             rowKey: const Key('two-factor-settings'),
             icon: Icons.verified_user,
             title: l10n.twoFactorTitle,
-            subtitle: l10n.twoFactorIntro,
+            subtitle: twoFactor == null
+                ? null
+                : twoFactor.enabled
+                ? l10n.twoFactorStateOn
+                : l10n.twoFactorStateOff,
             onTap: () => context.push('/profile/two-factor'),
           ),
           _SettingsRow(
             rowKey: const Key('sessions'),
             icon: Icons.devices,
             title: l10n.sessionsTitle,
+            subtitle: sessions == null
+                ? null
+                : l10n.sessionsCount(sessions.length),
             onTap: () => context.push('/profile/sessions'),
           ),
         ],
@@ -1138,16 +1151,12 @@ class _DeleteAccountSheetState extends State<_DeleteAccountSheet> {
       onSave: () => Navigator.pop(context, _answer.text),
       children: [
         Text(l10n.deleteAccountBody),
-        TextField(
-          key: const Key('delete-confirm'),
+        AppTextField(
+          fieldKey: const Key('delete-confirm'),
           controller: _answer,
           obscureText: widget.hasPassword,
           autofocus: true,
-          decoration: InputDecoration(
-            labelText: widget.hasPassword
-                ? l10n.yourPassword
-                : l10n.confirmEmail,
-          ),
+          label: widget.hasPassword ? l10n.yourPassword : l10n.confirmEmail,
         ),
       ],
     );

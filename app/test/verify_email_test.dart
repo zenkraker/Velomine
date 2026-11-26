@@ -85,6 +85,32 @@ void main() {
     },
   );
 
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'VerifyEmailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        server.smtpConfigured = true;
+        server.add('new@example.com', approved: true);
+        tester.view.physicalSize = Size(width, 1200);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(
+          tester,
+          server.session(useCookies: false),
+          onRouter: (created) => router = created,
+        );
+
+        // A spent link, so the screen shows the result and the way to a new one, its longest state.
+        await open('/verify-email#token=spent-token&email=new%40example.com');
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('verify-result')), findsOneWidget);
+        expect(find.byKey(const Key('verify-send-again')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'VerifyEmailScreen_ShouldOfferGoToSignInWithoutABackArrow_WhenTheLinkWorks',
     (tester) async {

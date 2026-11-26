@@ -61,8 +61,13 @@ class TrainingScreen extends ConsumerWidget {
     final plan = state.plan;
     final goal = plan?.goal ?? plan?.suggestedGoal ?? 'fitter';
     // The server sends one reason, the one it picked the suggested goal with: it explains the goal in force
-    // only while that goal is the suggested one.
-    final reason = goal == plan?.suggestedGoal ? plan?.suggestionReason : null;
+    // only while that goal is the suggested one. Any other goal says what it means.
+    final suggestion = goal == plan?.suggestedGoal
+        ? plan?.suggestionReason
+        : null;
+    final goalLine = suggestion == null
+        ? trainingGoalLine(l10n, goal)
+        : trainingSuggestionReason(l10n, suggestion);
     final failure = state.load.failure ?? state.week.failure;
     final firstLoad =
         state.weeks.isEmpty &&
@@ -84,14 +89,12 @@ class TrainingScreen extends ConsumerWidget {
           trainingGoalName(l10n, goal),
           style: VelomineText.of(context).stat,
         ),
-        if (reason != null)
-          Text(
-            trainingSuggestionReason(l10n, reason),
-            key: const Key('training-goal-reason'),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+        Text(
+          goalLine,
+          key: const Key('training-goal-reason'),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
       ],
     );
     return PageScaffold(
@@ -164,7 +167,6 @@ class _TodayCard extends ConsumerWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).toLanguageTag();
     final today = DateUtils.dateOnly(DateTime.now());
     final session = week?.sessions
         .where((session) => DateUtils.isSameDay(session.localDate, today))
@@ -263,7 +265,7 @@ class _TodayCard extends ConsumerWidget {
         spacing: AppSpacing.sm,
         children: [
           Text(
-            l10n.trainingTodayCaption(DateFormat.EEEE(locale).format(today)),
+            l10n.trainingTodayCaption(weekdayLong(l10n, today)),
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           content,

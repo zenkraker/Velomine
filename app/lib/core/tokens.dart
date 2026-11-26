@@ -69,15 +69,9 @@ abstract final class AppHeader {
   static const double titleLineHeight = 1.4;
   static const double textLineHeight = 1.4;
 
-  /// How many lines of subtitle the large block reserves room for.
-  static const int subtitleLines = 2;
-
   /// The most the toolbar's buttons grow with the text scale: the row is one fixed height, so a button
   /// that grew with it would not fit beside the title.
   static const double maxToolbarTextScale = 1.3;
-
-  /// A subtitle longer than this many characters may wrap, so the block reserves [subtitleLines].
-  static const int longSubtitle = 60;
 }
 
 abstract final class AppMotion {
@@ -206,6 +200,15 @@ abstract final class AppProgress {
 
   /// The column of a zone's label ("Z2") before its range and its bar.
   static const double zoneLabelWidth = 30;
+
+  /// A ride's zone row, as its mock-up draws it: the zone's name and word, its range, its bar and its time.
+  static const double zoneNameWidth = 120;
+  static const double zoneRangeWidth = 92;
+  static const double zoneBarHeight = 8;
+  static const double zoneTimeWidth = 56;
+
+  /// The easy/moderate/hard bar of the Fitness page, as its mock-up's `zone-bar` draws it.
+  static const double intensityBarHeight = 10;
 }
 
 /// The training screens: the shape strip of a session, and the date block of a week's row.
@@ -230,9 +233,11 @@ abstract final class AppChart {
   /// The room left of the plot for the y-axis labels.
   static const double gutterLeft = 34;
 
-  /// The room above a bar for its value, and under a bar for its date.
+  /// The room above a bar for its value, and under a bar for its date: a 12 px label is 16 dp tall and
+  /// sits [AppSpacing.sm] under the plot, clear of the lowest value label that is centred on the plot's
+  /// edge, so the strip has to hold both or the date is cut off.
   static const double valueLabelHeight = 16;
-  static const double dateLabelHeight = 16;
+  static const double dateLabelHeight = 24;
 
   /// The dot on an area chart's latest point, and the width of its line.
   static const double dotRadius = 6;
@@ -247,6 +252,10 @@ abstract final class AppChart {
 
   /// The colour dot before a legend's label.
   static const double legendDot = 10;
+  static const double legendDotSmall = 9;
+
+  /// The thin colour bar of a legend, such as the heart-rate scale under a map.
+  static const double legendBar = 6;
 }
 
 /// The sizes inside a stat card.
@@ -284,4 +293,18 @@ abstract final class AppAuth {
 abstract final class AppAvatar {
   /// The circle's size, as the mock-up's `vm-avatar` draws it.
   static const double size = 40;
+}
+
+/// The grid of named numbers on a list card (`.vm-facts` in the mock-ups): as many columns as fit at
+/// least [minColumn] wide, a caption over a body-weight number.
+abstract final class AppFacts {
+  static const double minColumn = 110;
+}
+
+/// The glyph sizes the screens draw outside a button: a row's leading icon, a banner's, an empty drop area's.
+abstract final class AppIconSize {
+  static const double small = 16;
+  static const double medium = 20;
+  static const double large = 40;
+  static const double xlarge = 48;
 }

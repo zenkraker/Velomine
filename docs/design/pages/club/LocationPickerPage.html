@@ -1,0 +1,15 @@
+<!doctype html>
+<!-- LocationPickerPage: Pick a point for a club or a saved location. Guideline: LocationPickerPage.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Pick a point</title>
+<style>
+  .picker { height: 420px; aspect-ratio: auto; }
+  .picker .locate { position: absolute; top: var(--space-sm); right: var(--space-sm); }
+  .picker .readout { position: absolute; left: var(--space-sm); bottom: var(--space-sm); }
+</style>
+</head>
+<body>
+<main class="vm-page narrow"><div class="vm-head"><div><h1 class="page-title">Pick a point</h1><p class="sub body">Drag the map until the pin is on the place.</p></div></div><div class="vm-mapbox picker" role="img" aria-label="Map with the pin at the centre"><svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path class="water" d="M640 0 L640 120 C600 140 560 110 520 70 C490 40 470 20 470 0 Z"/><path class="road" stroke-width="6" d="M0 240 C120 230 220 260 320 250 S520 210 640 230"/><path class="road" stroke-width="4" d="M150 0 C160 90 130 180 170 360"/><path class="road" stroke-width="4" d="M380 0 C360 100 420 200 400 360"/><path class="road" stroke-width="3" d="M0 90 C100 110 250 80 380 120 S560 160 640 150"/><path class="road" stroke-width="2" d="M240 360 C260 300 300 280 290 200 S250 100 270 0"/><circle class="pin" cx="320" cy="180" r="9"/></svg><span class="locate"><button class="vm-btn button-label small" type="button" aria-label="Use my current location"><svg class="vm-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button></span><span class="readout"><span class="vm-card" style="padding:var(--space-xs) var(--space-md)"><span class="vm-mono">45.46420, 9.19000</span></span></span><span class="attr">© OpenStreetMap</span></div><button class="vm-btn button-label block" type="button">Use this point</button></main>
+</body>
+</html>

@@ -85,12 +85,26 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 
 - Four main destinations, in this order everywhere: Rides, Progress, Goals, Club. A rider who turned auto training on gets a fifth, Training, after Rides: Rides, Training, Progress, Goals, Club.
 - Phone: a floating `glass` pill with the destinations; the selected one sits on `accent-soft`. Sub-pages of a destination are tabs at the top of its page.
-- From 1200 dp: the sidebar on `card`, with the `brand` wordmark, destinations that expand (Rides ▾, Progress ▾, Club ▾; Training and Goals are one page each), and the account, settings and privacy note at the bottom. The current page is `accent-soft`.
+- From 1200 dp: the sidebar on `card`, with the `brand` wordmark, destinations that expand (Rides ▾, Progress ▾, Club ▾; Training and Goals are one page each), and the privacy note, Profile and the account's controls at the bottom — there is no Settings entry, because no page answers it. The current page is `accent-soft`.
 - Progress has one overview and four sub-pages, each built around one main chart: Overview ("How am I today and this week?"), Fitness (fitness, fatigue and form), Power (power curve and FTP), Totals (weeks, months, years) and Wellbeing (readiness and check-ins).
 - A sub-page's title row carries the parent's name as a `caption` above the `page-title`.
 - An overview page fits in about one screen. When it grows past that, a card moves to its own sub-page, not further down the page.
 - One main action per screen, as a filled pill in the page header. Rare and destructive actions go in the header's `⋯` menu, destructive last, in `danger`.
 - The action and the `⋯` menu sit at the **end of the title row, level with the title**. They are never centred, never float over the content and never get a row of their own: a page whose buttons sit halfway across the header is a bug in the page scaffold, not a layout choice.
+
+### The page frame
+
+Every page is built the same way, so moving between pages never moves the furniture.
+
+- **One scaffold.** Every routed screen is a `PageScaffold`: the title row (back arrow, the one main action, `⋯`), the caption of its parent, the `page-title`, a one-sentence sub-line, then cards. A page inside the shell and a page pushed over it use the same frame. The sub-line is never cut short: it wraps to as many lines as it needs at the width it is drawn in.
+- **Two measures.** A page that is a dashboard or a grid of cards reads at the full measure, 1160 px (`AppLayout.contentMax`): Rides, Progress and its sub-pages, Goals, Training, Club, club rides, routes, athletes, bikes and a bike, ride detail. A page that is one form or one short list reads at the narrow measure, 720 px (`AppLayout.contentNarrow`), centred in the content area: sign-in's family at 440 px, import, profile, privacy, devices, two-factor, supporter, notifications, calendar feed, join, start and nearby clubs, plan a ride, a route and its forms, a club ride, the training setup, and the admin's Clubs and Settings. A page never picks any other width.
+- **Cards are one padding.** Every card has the card padding (`space-xl`, 24 px). A card that draws its own rows (a list card) sets its padding to zero and gives the rows the same inset; no card is padded 16.
+- **Named numbers.** A card in a list reads as a table of facts: a `caption` name over a body-weight number, in columns at least 110 px wide that fill the card (`FactGrid`). A number a page leads with is bigger (`StatCard`, `StatFigure`). A figure is never wrapped onto two lines: the columns reflow instead.
+- **Rows of chips** scroll sideways when they are wider than the window and keep the chosen chip in view (`ChipRow`): a page never opens with its own chip cut off at the edge.
+- **Buttons take their own width.** A button in a card sits at the start of its row at its natural width; only the pinned action at the foot of a form (`BottomActionBar`) spans the measure. An empty state may repeat the page's main action as one button; it never adds a second kind of action.
+- **Sign-in's family** is left-aligned inside its 440 px column, as `.vm-auth` draws it: wordmark, caption, title, sentence, fields, then the pinned action.
+- **Pages outside the shell** are the ones that must not show a destination: the sign-in family, and a full-screen map. Every other page, including "Clubs near you", lives inside the shell, so the sidebar or the pill is always where the rider left it.
+- **Type is the scale.** Every text slot a screen reaches for is a size the scale names (40, 24, 17, 15, 13, 12); `titleLarge` is the card-title, `labelLarge` the body-strong, and the theme test fails on any other size.
 
 ### Motion
 
@@ -111,11 +125,18 @@ Velomine is a cycling app for riders and their clubs: rides, progress, bikes and
 
 ## Rides
 
+- [BulkUploadCard](rides/BulkUploadCard.html) ([guideline](rides/BulkUploadCard.md)): Adding rides from files: the drop area on the Rides page, the target a drag shows over any page, and the one card that reports the run. Web only, `features/rides/bulk/`.
 - [ImportPage](rides/ImportPage.html) ([guideline](rides/ImportPage.md)): Import from Strava: the progress of reading a Strava export ZIP on the server. Route `/rides/import/:id`, `features/rides/import/import_screen.dart`.
+- [LiveRideBanner](rides/LiveRideBanner.html) ([guideline](rides/LiveRideBanner.md)): A ride in progress, one tap from every screen but the recorder. Phone only, `features/recording/live_ride_banner.dart`.
+- [RecorderSettingsSheet](rides/RecorderSettingsSheet.html) ([guideline](rides/RecorderSettingsSheet.md)): Recording settings: the recorder's own switch, in a sheet from the Record page's menu. Phone only, `features/recording/recording_screen.dart`.
 - [RecordPhone](rides/RecordPhone.html) ([guideline](rides/RecordPhone.md)): Record: start a ride on the phone, and the rides saved on it. Route `/record`, `features/recording/recording_screen.dart`. Phone only; the web has no recorder.
 - [RecordingLivePhone](rides/RecordingLivePhone.html) ([guideline](rides/RecordingLivePhone.md)): Recording, live: the same Record page while a ride is in progress. `features/recording/recording_screen.dart` (`_LiveCard`).
 - [RideDetailPage](rides/RideDetailPage.html) ([guideline](rides/RideDetailPage.md)): Ride: one ride with everything read from its file. Route `/rides/:id`, `features/rides/detail/ride_detail_screen.dart`.
+- [RideTextSheet](rides/RideTextSheet.html) ([guideline](rides/RideTextSheet.md)): Name this ride: the member's own title and description, in a sheet from the ride's menu. `features/rides/ride_text_sheet.dart`.
+- [RideTypeSheet](rides/RideTypeSheet.html) ([guideline](rides/RideTypeSheet.md)): Ride details: surface, e-bike, where and commute, in a sheet from the ride's menu. `features/rides/ride_type_sheet.dart`.
 - [RidesPage](rides/RidesPage.html) ([guideline](rides/RidesPage.md)): Rides: the rider's list of rides, newest first. Route `/rides`, `features/rides/rides_screen.dart`.
+- [SoloClubBanner](rides/SoloClubBanner.html) ([guideline](rides/SoloClubBanner.md)): Ride at your own pace: one line at the top of the Rides list for a rider in no club. `features/rides/rides_screen.dart`.
+- [StrapPairingSheet](rides/StrapPairingSheet.html) ([guideline](rides/StrapPairingSheet.md)): Pair a heart-rate strap: the straps around the phone, in a sheet on the Record page. Phone only, `features/recording/recording_screen.dart`.
 
 ## Progress
 
@@ -141,7 +162,7 @@ Shown only to a rider who turned auto training on.
 
 ## Club
 
-- [AddRoutePage](club/AddRoutePage.html) ([guideline](club/AddRoutePage.md)): Add a route: a full-page form. Routes `/club/routes/new` and `/club/routes/:id/edit`, `features/routes/route_forms.dart`.
+- [AddRoutePage](club/AddRoutePage.html) ([guideline](club/AddRoutePage.md)): Add a route: a full-page form. Route `/club/routes/new`, `features/routes/route_forms.dart`. Editing it afterwards is [EditRoutePage](routes/EditRoutePage.html).
 - [AthletePage](club/AthletePage.html) ([guideline](club/AthletePage.md)): Athlete: what one athlete shares with their coach. Route `/club/athletes/:id`, `features/coach/coach_athlete_screen.dart`.
 - [AthletesPage](club/AthletesPage.html) ([guideline](club/AthletesPage.md)): Athletes: for a coach, the members who share with them. Route `/club/athletes`, `features/coach/coach_athletes_screen.dart`.
 - [CalendarFeedPage](club/CalendarFeedPage.html) ([guideline](club/CalendarFeedPage.md)): Calendar subscription: a private iCalendar address for the club's rides. Route `/club/calendar`, `features/calendar/calendar_feed_screen.dart`.
@@ -149,7 +170,9 @@ Shown only to a rider who turned auto training on.
 - [ClubRideDetailPage](club/ClubRideDetailPage.html) ([guideline](club/ClubRideDetailPage.md)): Club ride: one planned ride. Route `/club/rides/:id`, `features/calendar/club_ride_detail_screen.dart`.
 - [ClubRidesPage](club/ClubRidesPage.html) ([guideline](club/ClubRidesPage.md)): Club rides: the club calendar. Route `/club/rides`, `features/calendar/club_rides_screen.dart`.
 - [CoachRidePage](club/CoachRidePage.html) ([guideline](club/CoachRidePage.md)): Shared ride: one ride an athlete shared, as their coach sees it. Route `/club/athletes/:id/rides/:rideId`, `features/coach/coach_ride_screen.dart`.
+- [EditRoutePage](routes/EditRoutePage.html) ([guideline](routes/EditRoutePage.md)): Edit the route: its name, description and surface; the line is not editable. Route `/club/routes/:id/edit`, `features/routes/route_forms.dart`.
 - [JoinClubPage](club/JoinClubPage.html) ([guideline](club/JoinClubPage.md)): Join a club: with the code the owner shared. Route `/join`, `features/club/join_club_screen.dart`.
+- [LocationPickerPage](club/LocationPickerPage.html) ([guideline](club/LocationPickerPage.md)): Pick a point: a club's place, a privacy zone's centre, a ride's meeting point or the rider's saved location. Pushed over the shell, `features/club/location_picker.dart`.
 - [NearbyClubsPage](club/NearbyClubsPage.html) ([guideline](club/NearbyClubsPage.md)): Clubs near you: discoverable clubs on this server, nearest first. Route `/clubs`, `features/club/nearby_clubs_screen.dart`.
 - [NoClubPage](club/NoClubPage.html) ([guideline](club/NoClubPage.md)): Club, without a club: the same route `/club` for a rider who is in none. `features/club/club_screen.dart`.
 - [PlanRidePage](club/PlanRidePage.html) ([guideline](club/PlanRidePage.md)): Plan a ride: a full-page form. Routes `/club/rides/new` and `/club/rides/:id/edit`, `features/calendar/plan_ride_screen.dart`.
@@ -212,4 +235,4 @@ Shown only to a rider who turned auto training on.
 ## Navigation
 
 - [NavPill](navigation/NavPill.html) ([guideline](navigation/NavPill.md)): The phone's main navigation: a floating glass pill with Rides, Progress, Goals and Club, above the content and the safe area.
-- [Sidebar](navigation/Sidebar.html) ([guideline](navigation/Sidebar.md)): The navigation from 1200 dp: the wordmark, the main destinations, and the privacy note, profile and settings at the bottom.
+- [Sidebar](navigation/Sidebar.html) ([guideline](navigation/Sidebar.md)): The navigation from 1200 dp: the wordmark, the main destinations, and the privacy note, Profile and the theme, notifications and account controls at the bottom. There is no Settings entry.

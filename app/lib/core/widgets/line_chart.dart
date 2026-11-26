@@ -11,7 +11,7 @@ import 'empty_state.dart';
 import 'nice_ticks.dart';
 
 // The line charts the screens draw with fl_chart, kept in core/widgets/ so no feature imports the
-// library (`AGENTS.md`, *App*). Every colour, label and style the design fixes is passed in, because
+// library (`docs/rules/app.md`). Every colour, label and style the design fixes is passed in, because
 // fl_chart's own theme is Flutter-Material's fallback and not Velomine's.
 
 /// Fitness as a line with a fading area, fatigue as a dashed line, and form as bars round a zero line.
@@ -144,7 +144,7 @@ class FitnessChart extends StatelessWidget {
                         return const SizedBox.shrink();
                       }
                       return Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
                         child: Text(labels[index], style: axis),
                       );
                     },
@@ -248,6 +248,9 @@ class FitnessChart extends StatelessWidget {
 
 /// The mean-max power curve on a log time axis, with a dot on every best effort and the FTP in use as
 /// a dashed line the curve is read against.
+///
+/// The curve is `accent-strong`, as `docs/design/pages/progress/PowerPage.md` draws it: it is a mark on
+/// this page, not one of the ride page's signals, which keep their own `series-*` colour.
 class PowerCurveChart extends StatelessWidget {
   const PowerCurveChart({
     super.key,
@@ -293,7 +296,7 @@ class PowerCurveChart extends StatelessWidget {
     }
     final scheme = Theme.of(context).colorScheme;
     final colors = VelomineColors.of(context);
-    final line = colors.series['power']!;
+    final line = colors.accentStrong;
     final axis = chartLabelStyle(context);
     final ticks = niceTicks(0, watts.reduce(math.max));
     final top = ticks.last;
@@ -313,6 +316,7 @@ class PowerCurveChart extends StatelessWidget {
             1.0,
           );
           return Stack(
+            clipBehavior: Clip.none,
             children: [
               Positioned(
                 left: 0,
@@ -371,7 +375,7 @@ class PowerCurveChart extends StatelessWidget {
                               show: ftpLabel != null,
                               alignment: Alignment.topLeft,
                               padding: const EdgeInsets.only(
-                                top: AppSpacing.xs,
+                                top: AppSpacing.sm,
                                 left: AppSpacing.sm,
                               ),
                               style: axis,
@@ -425,7 +429,8 @@ class PowerCurveChart extends StatelessWidget {
                     plot,
                   ),
                   width: AppChart.minLabelWidth,
-                  top: chartHeight,
+                  // Clear of the lowest value label, which is centred on the plot's bottom edge.
+                  top: chartHeight + AppSpacing.sm,
                   height: AppChart.dateLabelHeight,
                   child: Text(
                     mark.label,
@@ -543,6 +548,7 @@ class SeriesLineChart extends StatelessWidget {
             1.0,
           );
           return Stack(
+            clipBehavior: Clip.none,
             children: [
               Positioned(
                 left: 0,
@@ -690,7 +696,8 @@ class SeriesLineChart extends StatelessWidget {
                     plot,
                   ),
                   width: AppChart.minLabelWidth,
-                  top: chartHeight,
+                  // Clear of the lowest value label, which is centred on the plot's bottom edge.
+                  top: chartHeight + AppSpacing.sm,
                   height: AppChart.dateLabelHeight,
                   child: Text(
                     mark.label,

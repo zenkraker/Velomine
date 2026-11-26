@@ -314,26 +314,34 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
   TextStyle? tabular(TextStyle? style) =>
       style?.copyWith(fontFeatures: tabularFigures);
   // Numbers line up in columns in every stat, table and clock. Sizes follow the type scale in tokens.json:
-  // card-title 17, body 15, caption 13, axis 12.
+  // card-title 17, body 15, caption 13, axis 12. titleSmall is Material's 14, a size the scale has no slot
+  // for, so it carries `body-strong` (15/600): the weight a row's main line and a chart's title read at.
   final text = baseText.copyWith(
     displayLarge: tabular(baseText.displayLarge),
     displayMedium: tabular(baseText.displayMedium),
     displaySmall: tabular(baseText.displaySmall),
     headlineLarge: tabular(baseText.headlineLarge),
     headlineMedium: tabular(baseText.headlineMedium),
-    headlineSmall: tabular(baseText.headlineSmall),
-    titleLarge: tabular(baseText.titleLarge),
+    headlineSmall: tabular(baseText.headlineSmall)
+        ?.copyWith(fontSize: 24, height: 28 / 24, fontWeight: FontWeight.w500),
+    // Material's titleLarge is 22 and labelLarge 14 and labelMedium 12: the scale has no slot for the first
+    // two, so they carry card-title and body-strong, and labelMedium the axis weight.
+    titleLarge: tabular(baseText.titleLarge)
+        ?.copyWith(fontSize: 17, height: 24 / 17, fontWeight: FontWeight.w600),
     titleMedium: tabular(baseText.titleMedium)
         ?.copyWith(fontSize: 17, height: 24 / 17, fontWeight: FontWeight.w600),
-    titleSmall: tabular(baseText.titleSmall),
+    titleSmall: tabular(baseText.titleSmall)
+        ?.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600),
     bodyLarge: tabular(baseText.bodyLarge)
         ?.copyWith(fontSize: 15, height: 22 / 15),
     bodyMedium: tabular(baseText.bodyMedium)
         ?.copyWith(fontSize: 15, height: 22 / 15),
     bodySmall: tabular(baseText.bodySmall)
         ?.copyWith(fontSize: 13, height: 18 / 13),
-    labelLarge: tabular(baseText.labelLarge),
-    labelMedium: tabular(baseText.labelMedium),
+    labelLarge: tabular(baseText.labelLarge)
+        ?.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600),
+    labelMedium: tabular(baseText.labelMedium)
+        ?.copyWith(fontSize: 12, height: 16 / 12, fontWeight: FontWeight.w500),
     labelSmall: tabular(baseText.labelSmall)
         ?.copyWith(fontSize: 12, height: 16 / 12, fontWeight: FontWeight.w500),
   );
@@ -411,7 +419,7 @@ ThemeData _theme(ColorScheme scheme, VelomineColors colors) {
       displaySmall: displayStyle(text.displaySmall).copyWith(fontSize: 44),
       headlineLarge: displayStyle(text.headlineLarge).copyWith(fontSize: 40),
       headlineMedium: text.headlineMedium?.copyWith(fontSize: 34),
-      headlineSmall: text.headlineSmall?.copyWith(fontSize: 28),
+      headlineSmall: text.headlineSmall?.copyWith(fontSize: 24),
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: scheme.surface,

@@ -179,6 +179,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'PowerScreen_ShouldOpenEveryDuration_WhenTheAllDurationsLinkIsChosen',
+    (tester) async {
+      await openPower(tester);
+
+      // PowerPage.md: "Best efforts as a table ... with a link to all durations".
+      await reveal(tester, find.byKey(const Key('best-efforts-card')));
+      final link = find.byKey(const Key('power-all-durations'));
+      expect(link, findsOneWidget);
+      // The page's own card shows only four facts; every duration is listed in the sheet.
+      expect(find.byKey(const Key('rider-card-row-bests')), findsNothing);
+
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('rider-card-row-bests')), findsOneWidget);
+    },
+  );
+
   testWidgets('PowerScreen_ShouldShowTheCardsAboveTheCurve_WhenOpened', (
     tester,
   ) async {

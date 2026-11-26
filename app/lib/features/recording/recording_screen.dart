@@ -17,14 +17,15 @@ import 'recording_view_model.dart';
 import 'upload_queue.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
+import '../../core/widgets/page_scaffold.dart';
+import '../../core/widgets/section_card.dart';
 import '../../core/units.dart';
 import '../../core/confirm.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/page_menu.dart';
-import '../../core/widgets/section_heading.dart';
-import '../../core/widgets/page_scaffold.dart';
 import '../../core/widgets/stat_card.dart';
 
 String recorderErrorText(AppLocalizations l10n, String? code) => switch (code) {
@@ -109,30 +110,36 @@ class RecordingScreen extends ConsumerWidget {
             recorderErrorText(context.l10n, s.errorCode),
             key: const Key('record-error'),
           ),
-        SectionHeading(title: context.l10n.onThisPhone),
-        if (s.loading)
-          const LoadingState.rows(key: Key('local-rides-loading'), count: 2)
-        else if (s.recordedRides.isEmpty)
-          EmptyState(
-            key: const Key('no-local-rides'),
-            icon: Icons.directions_bike_outlined,
-            message: context.l10n.noLocalRides,
-          )
-        else
-          for (final ride in s.recordedRides)
-            _LocalRideCard(
-              ride: ride,
-              upload: s.uploads[ride.id],
-              busy: s.command.running,
-              onFinalize: () => notifier.finalizeRide(ride.id),
-              onDelete: () => notifier.deleteRide(ride.id),
-              onUpload: uploadsEnabled
-                  ? () => notifier.uploadRide(ride.id)
-                  : null,
-              onRetryUpload: uploadsEnabled
-                  ? () => notifier.retryUpload(ride.id)
-                  : null,
-            ),
+        SectionCard(
+          key: const Key('local-rides'),
+          title: context.l10n.onThisPhone,
+          children: [
+            if (s.loading)
+              const LoadingState.rows(key: Key('local-rides-loading'), count: 2)
+            else if (s.recordedRides.isEmpty)
+              EmptyState(
+                key: const Key('no-local-rides'),
+                icon: Icons.directions_bike_outlined,
+                message: context.l10n.noLocalRides,
+                framed: false,
+              )
+            else
+              for (final ride in s.recordedRides)
+                _LocalRideRow(
+                  ride: ride,
+                  upload: s.uploads[ride.id],
+                  busy: s.command.running,
+                  onFinalize: () => notifier.finalizeRide(ride.id),
+                  onDelete: () => notifier.deleteRide(ride.id),
+                  onUpload: uploadsEnabled
+                      ? () => notifier.uploadRide(ride.id)
+                      : null,
+                  onRetryUpload: uploadsEnabled
+                      ? () => notifier.retryUpload(ride.id)
+                      : null,
+                ),
+          ],
+        ),
       ],
     );
   }
@@ -391,7 +398,7 @@ class _LiveCard extends ConsumerWidget {
         AppCard(
           padding: EdgeInsets.zero,
           child: DefaultTextStyle.merge(
-            style: TextStyle(color: scheme.onSurface),
+            style: theme.textTheme.bodyMedium,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
@@ -489,7 +496,7 @@ class _LiveCard extends ConsumerWidget {
                           state.sensorConnected
                               ? Icons.favorite
                               : Icons.monitor_heart_outlined,
-                          size: 16,
+                          size: AppIconSize.small,
                           color: state.sensorConnected
                               ? Theme.of(context).colorScheme.error
                               : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -542,7 +549,7 @@ class _LiveCard extends ConsumerWidget {
         ),
         // Said under the card, as the design draws it (docs/design/pages/rides/RecordingLivePhone.html).
         Text(
-          l10n.recordPermissionHelp,
+          l10n.recordingScreenOff,
           key: const Key('record-screen-off'),
           textAlign: TextAlign.center,
           style: muted,
@@ -552,8 +559,8 @@ class _LiveCard extends ConsumerWidget {
   }
 }
 
-class _LocalRideCard extends ConsumerWidget {
-  const _LocalRideCard({
+class _LocalRideRow extends ConsumerWidget {
+  const _LocalRideRow({
     required this.ride,
     required this.upload,
     required this.busy,
@@ -623,80 +630,77 @@ class _LocalRideCard extends ConsumerWidget {
         (upload?.isBusy ?? false);
     final canUpload =
         ride.isReady && !_uploaded && !uploading && onUpload != null;
-    return AppCard(
+    // What the row is: the kind of ride, then when it happened and how far, then how its upload stands.
+    return ListTile(
       key: Key('local-ride-${ride.id}'),
-      padding: EdgeInsets.zero,
-      child: Column(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.directions_bike_outlined),
+      title: Text(_rideTypeName(l10n, ride.rideType ?? 'road')),
+      subtitle: Text(
+        '${dayNumber(ride.startedAt)} ${monthShort(ride.startedAt)} · '
+        '${km(units, ride.distanceM)}'
+        '${error == null ? '' : '\n$error'}',
+      ),
+      isThreeLine: error != null,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpacing.sm,
         children: [
-          ListTile(
-            title: Text(dateTime(ride.startedAt)),
-            subtitle: Text(
-              '${_stateText(l10n)} · ${km(units, ride.distanceM)} · ${stopwatch(ride.movingS)}'
-              '${error == null ? '' : '\n$error'}',
+          if (ride.isInterrupted && upload == null)
+            TextButton(
+              key: Key('finalize-${ride.id}'),
+              onPressed: busy ? null : onFinalize,
+              child: Text(l10n.finish),
             ),
-            isThreeLine: error != null,
-            leading: Icon(
-              _uploaded
-                  ? Icons.cloud_done_outlined
-                  : ride.isFailed || _failed
-                  ? Icons.error_outline
-                  : ride.isReady
-                  ? Icons.check_circle_outline
-                  : Icons.timer_outlined,
+          // The upload stands as a badge of its own, coloured by what it says.
+          Flexible(
+            child: AppBadge(
+              _stateText(l10n),
+              key: Key('local-ride-state-${ride.id}'),
+              tone: _uploaded
+                  ? AppBadgeTone.good
+                  : _failed || ride.isFailed
+                  ? AppBadgeTone.bad
+                  : AppBadgeTone.neutral,
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (ride.isInterrupted && upload == null)
-                  TextButton(
-                    key: Key('finalize-${ride.id}'),
-                    onPressed: busy ? null : onFinalize,
-                    child: Text(l10n.finish),
+          ),
+          PageMenu(
+            buttonKey: Key('ride-actions-${ride.id}'),
+            entries: [
+              // What the row can do about its upload, then the one way out of the phone.
+              if (canUpload)
+                PageMenuEntry(
+                  key: Key(
+                    _failed ? 'retry-upload-${ride.id}' : 'upload-${ride.id}',
                   ),
-                PageMenu(
-                  buttonKey: Key('ride-actions-${ride.id}'),
-                  entries: [
-                    // What the row can do about its upload, then the one way out of the phone.
-                    if (canUpload)
-                      PageMenuEntry(
-                        key: Key(
-                          _failed
-                              ? 'retry-upload-${ride.id}'
-                              : 'upload-${ride.id}',
-                        ),
-                        icon: _failed
-                            ? Icons.refresh
-                            : Icons.cloud_upload_outlined,
-                        label: _failed ? l10n.retry : l10n.upload,
-                        onSelected: busy
-                            ? () {}
-                            : (_failed ? onRetryUpload : onUpload) ?? () {},
-                      ),
-                    PageMenuEntry(
-                      key: Key('delete-${ride.id}'),
-                      icon: Icons.delete_outline,
-                      label: l10n.deleteFromPhone,
-                      destructive: true,
-                      onSelected: busy
-                          ? () {}
-                          : () => scheduleMicrotask(() async {
-                              if (!context.mounted) return;
-                              final sure = await confirmDestructive(
-                                context,
-                                title: l10n.deleteLocalRideTitle,
-                                body: _uploaded
-                                    ? l10n.deleteLocalRideBodyUploaded
-                                    : l10n.deleteLocalRideBodyNotUploaded,
-                                action: l10n.delete,
-                                key: const Key('confirm-delete-local-ride'),
-                              );
-                              if (sure) onDelete();
-                            }),
-                    ),
-                  ],
+                  icon: _failed ? Icons.refresh : Icons.cloud_upload_outlined,
+                  label: _failed ? l10n.retry : l10n.upload,
+                  onSelected: busy
+                      ? () {}
+                      : (_failed ? onRetryUpload : onUpload) ?? () {},
                 ),
-              ],
-            ),
+              PageMenuEntry(
+                key: Key('delete-${ride.id}'),
+                icon: Icons.delete_outline,
+                label: l10n.deleteFromPhone,
+                destructive: true,
+                onSelected: busy
+                    ? () {}
+                    : () => scheduleMicrotask(() async {
+                        if (!context.mounted) return;
+                        final sure = await confirmDestructive(
+                          context,
+                          title: l10n.deleteLocalRideTitle,
+                          body: _uploaded
+                              ? l10n.deleteLocalRideBodyUploaded
+                              : l10n.deleteLocalRideBodyNotUploaded,
+                          action: l10n.delete,
+                          key: const Key('confirm-delete-local-ride'),
+                        );
+                        if (sure) onDelete();
+                      }),
+              ),
+            ],
           ),
         ],
       ),

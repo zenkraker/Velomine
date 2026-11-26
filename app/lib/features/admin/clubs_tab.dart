@@ -11,6 +11,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/badge.dart';
 import '../../core/widgets/form_sheet.dart';
 import '../../core/widgets/page_menu.dart';
@@ -305,22 +306,19 @@ class _CreateClubSheetState extends State<_CreateClubSheet> {
         Navigator.pop(context, (name: name, ownerEmail: email));
       },
       children: [
-        TextField(
-          key: const Key('club-name'),
+        AppTextField(
+          fieldKey: const Key('club-name'),
           controller: _name,
+          label: l10n.adminClubName,
           onChanged: (_) => setState(() => _showProblem = false),
-          decoration: InputDecoration(labelText: l10n.adminClubName),
         ),
-        TextField(
-          key: const Key('club-owner-email'),
+        AppTextField(
+          fieldKey: const Key('club-owner-email'),
           controller: _owner,
+          label: l10n.adminClubOwnerEmail,
+          helper: l10n.adminClubOwnerHelp,
           keyboardType: TextInputType.emailAddress,
           onChanged: (_) => setState(() => _showProblem = false),
-          decoration: InputDecoration(
-            labelText: l10n.adminClubOwnerEmail,
-            helperText: l10n.adminClubOwnerHelp,
-            helperMaxLines: 3,
-          ),
         ),
         if (problem != null)
           InlineError(problem, key: const Key('create-club-error')),

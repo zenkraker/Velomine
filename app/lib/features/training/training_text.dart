@@ -1,6 +1,7 @@
 import 'package:velomine_api/api.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
+import '../../core/format.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// The words of the training screens. The server sends every rider-facing session and goal text in English and
@@ -145,12 +146,21 @@ String easyReasonText(AppLocalizations l10n, String reason) => switch (reason) {
 String easyLine(AppLocalizations l10n, String reason, {DateTime? movedTo}) {
   final line = l10n.trainingEasyLine(easyReasonText(l10n, reason));
   if (movedTo == null) return line;
-  return '$line ${l10n.trainingEasyMoved(_weekday(l10n, movedTo))}';
+  return '$line ${l10n.trainingEasyMoved(weekdayLong(l10n, movedTo))}';
 }
 
 /// A day as a line names it: "Thursday", "giovedì".
-String _weekday(AppLocalizations l10n, DateTime date) =>
+///
+/// shortcut: `core/format.dart` starts its weekday helpers at `weekdayShort` ("Thu"), so the full
+/// weekday the session page's sub-line and the easy-today line need is spelled here; move it to
+/// `format.dart` when that file grows one.
+String weekdayLong(AppLocalizations l10n, DateTime date) =>
     DateFormat('EEEE', l10n.localeName).format(date);
+
+/// A day with its weekday, as the session page's sub-line and its move sheet name it:
+/// "Thursday 27 Nov".
+String dayWithWeekday(AppLocalizations l10n, DateTime date) =>
+    '${weekdayLong(l10n, date)} ${dayNumber(date)} ${monthShort(date)}';
 
 /// Why a day cannot take a session, as the move sheet says it under the day.
 String moveRefusalText(AppLocalizations l10n, String reason) =>

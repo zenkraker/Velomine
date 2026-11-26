@@ -87,10 +87,12 @@ class ChartHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
         ],
-        Expanded(child: Text(title, style: text.titleSmall)),
+        // The title takes what it needs and the readout the rest, flush with the end: a Flexible next to an
+        // Expanded would split the row in half and leave the readout floating at its middle.
+        Text(title, style: text.titleSmall),
         if (readout != null) ...[
           const SizedBox(width: AppSpacing.sm),
-          Flexible(
+          Expanded(
             child: Text(
               readout!,
               key: readoutKey,

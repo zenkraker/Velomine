@@ -8,7 +8,7 @@ packages/       velomine_api, the generated API client: never edit it, run tools
 test/           widget tests; a fake server answers the generated client's calls
 ```
 
-Run `just check` from the repository root before committing; it runs code generation, `dart format`, `flutter analyze` and `flutter test` with the server checks. The rules for app code are in [AGENTS.md](../AGENTS.md) (*App*).
+Run `just check` from the repository root before committing; it runs code generation, `dart format`, `flutter analyze` and `flutter test` with the server checks. The rules for app code are in [docs/rules/app.md](../docs/rules/app.md).
 
 On Android, Start ride on the Rides page records GPS rides in a foreground service, saves the raw samples and a FIT file on the phone, uploads finished rides to the server with a retryable queue, and lists them locally. Uploads also run through a WorkManager worker while the app is closed. The recorder auto-pauses after three seconds at or below 0.1 km/h and resumes above it; the switch above the Start button turns that off.
 

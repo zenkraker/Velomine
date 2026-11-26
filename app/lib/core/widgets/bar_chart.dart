@@ -139,7 +139,7 @@ class BarChart extends StatelessWidget {
                             return const SizedBox.shrink();
                           }
                           return Padding(
-                            padding: const EdgeInsets.only(top: AppSpacing.xs),
+                            padding: const EdgeInsets.only(top: AppSpacing.sm),
                             child: Text(labels[index], style: axis),
                           );
                         },
@@ -229,4 +229,36 @@ class BarChart extends StatelessWidget {
   /// A tick as it reads: whole numbers where it can, so 40 is "40" and not "40.0".
   static String _plain(double value) =>
       value == value.roundToDouble() ? value.round().toString() : '$value';
+}
+
+/// One share of a whole as a horizontal bar, as `docs/design/pages/progress/FitnessPage.html` draws the
+/// easy, moderate and hard rows: a 10 px pill filled to [share] percent of the room it is given, in the
+/// caller's colour. It carries no axis: a row names its own share beside it.
+class ShareBar extends StatelessWidget {
+  const ShareBar({
+    super.key,
+    required this.share,
+    required this.color,
+    this.height = AppProgress.intensityBarHeight,
+  });
+
+  /// The part of the whole this bar stands for, from 0 to 100.
+  final double share;
+  final Color color;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: height,
+    child: FractionallySizedBox(
+      alignment: AlignmentDirectional.centerStart,
+      widthFactor: (share / 100).clamp(0.0, 1.0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+      ),
+    ),
+  );
 }

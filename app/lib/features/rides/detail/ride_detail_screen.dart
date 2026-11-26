@@ -302,9 +302,8 @@ class RideDetailScreen extends ConsumerWidget {
         Row(
           spacing: AppSpacing.sm,
           children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
+            const SizedBox.square(
+              dimension: AppLoading.inlineIndicator,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             Text(l10n.readingFile, key: const Key('processing')),
@@ -889,15 +888,14 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
                 children: [
                   SizedBox(
                     // The design's 120 px label column: the number and its word.
-                    // shortcut: 4 × zoneLabelWidth until tokens.dart grows a named width for it.
-                    width: AppProgress.zoneLabelWidth * 4,
+                    width: AppProgress.zoneNameWidth,
                     child: Text(
                       l10n.zoneName('${zone.zone}'),
                       style: text.labelMedium,
                     ),
                   ),
                   SizedBox(
-                    width: 92,
+                    width: AppProgress.zoneRangeWidth,
                     child: Text(
                       _range(l10n, zone, kind),
                       style: text.labelSmall,
@@ -908,7 +906,7 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
                       borderRadius: BorderRadius.circular(AppSpacing.xs),
                       child: LinearProgressIndicator(
                         value: maxSeconds <= 0 ? 0 : zone.seconds / maxSeconds,
-                        minHeight: 8,
+                        minHeight: AppProgress.zoneBarHeight,
                         backgroundColor: Theme.of(context)
                             .colorScheme
                             .surfaceContainerHighest,
@@ -922,7 +920,7 @@ class _ZonesSwitcherState extends State<_ZonesSwitcher> {
                     ),
                   ),
                   SizedBox(
-                    width: 56,
+                    width: AppProgress.zoneTimeWidth,
                     child: Text(
                       duration(zone.seconds),
                       textAlign: TextAlign.right,

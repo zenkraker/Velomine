@@ -2909,7 +2909,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get readinessNotMedical => 'A training guide, not a medical measure.';
+  String get readinessNotMedical =>
+      'A guide for training, not a medical measure.';
 
   @override
   String get readinessFactorForm => 'Form';
@@ -3056,7 +3057,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get powerCurveEmpty =>
-      'No power data in this range. Upload a ride with a power meter.';
+      'Record rides with a power meter to see your curve.';
 
   @override
   String get powerBestEfforts => 'Best efforts';
@@ -3098,7 +3099,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ftpCurrent => 'Current FTP';
+  String get ftpCurrent => 'FTP';
 
   @override
   String get ftpMethod20 => '95 % of your best 20-minute power';
@@ -5728,4 +5729,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String askedDaysAgo(int count) {
     return 'asked $count d ago';
   }
+
+  @override
+  String get registerHelp => 'Ride, track your form and keep your data.';
+
+  @override
+  String get passwordShow => 'Show';
+
+  @override
+  String get passwordHide => 'Hide';
+
+  @override
+  String get recordingScreenOff =>
+      'The ride keeps recording with the screen off. A banner above the navigation brings you back here from any page.';
+
+  @override
+  String get addRouteSourceTitle => 'Where does it come from?';
+
+  @override
+  String get addRouteChosen => 'Chosen';
+
+  @override
+  String get wellbeingDay => 'Day';
+
+  @override
+  String get wellbeingRpeColumn => 'RPE';
+
+  @override
+  String get importReadingArchive => 'Reading the archive';
+
+  @override
+  String clubMembersShowAll(int count) {
+    return 'Show all $count';
+  }
+
+  @override
+  String get clubMembersEmpty => 'No members yet.';
+
+  @override
+  String get shareRoutesHelper =>
+      'Your routes, so a shared ride shows its map.';
+
+  @override
+  String get clubStartUnavailable =>
+      'Club creation is turned off on this server.';
+
+  @override
+  String get twoFactorStateOff => 'Two-factor sign-in is off.';
+
+  @override
+  String sessionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count devices',
+      one: '1 device',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String privacyZoneRadiusLine(String distance) {
+    return 'Radius $distance';
+  }
+
+  @override
+  String get intensityEasy => 'Easy';
+
+  @override
+  String get intensityModerate => 'Moderate';
+
+  @override
+  String get intensityHard => 'Hard';
 }

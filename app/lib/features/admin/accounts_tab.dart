@@ -13,6 +13,7 @@ import '../../core/user_message_text.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'admin_view_models.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/avatar.dart';
 import '../../core/widgets/badge.dart';
 import '../../core/widgets/empty_state.dart';
@@ -147,25 +148,23 @@ class _AccountsTabState extends ConsumerState<AccountsTab> {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.lg),
       children: [
-        TextField(
-          key: const Key('account-search'),
+        AppTextField(
+          fieldKey: const Key('account-search'),
           controller: _search,
-          decoration: InputDecoration(
-            labelText: l10n.accountSearch,
-            hintText: l10n.accountSearchHint,
-            // The glyph closes the field, as the mock-up draws it, and turns into the way to clear it
-            // once there is something to clear.
-            suffixIcon: _query.isEmpty
-                ? const Icon(Icons.search)
-                : IconButton(
-                    tooltip: l10n.clearSearch,
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      _search.clear();
-                      setState(() => _query = '');
-                    },
-                  ),
-          ),
+          label: l10n.accountSearch,
+          hint: l10n.accountSearchHint,
+          // The glyph closes the field, as the mock-up draws it, and turns into the way to clear it
+          // once there is something to clear.
+          suffixIcon: _query.isEmpty
+              ? const Icon(Icons.search)
+              : IconButton(
+                  tooltip: l10n.clearSearch,
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    _search.clear();
+                    setState(() => _query = '');
+                  },
+                ),
           onChanged: (value) => setState(() => _query = value),
         ),
         const SizedBox(height: AppSpacing.lg),

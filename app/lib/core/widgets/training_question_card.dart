@@ -1,4 +1,7 @@
 import 'package:material_ui/material_ui.dart';
+
+import 'app_card.dart';
+
 import 'package:velomine_api/api.dart' show TrainingRideMatch;
 
 import '../../features/training/training_goals.dart';
@@ -46,52 +49,49 @@ class TrainingQuestionCard extends StatelessWidget {
       english: match.englishName,
       italian: match.italianName,
     );
-    return Card(
+    return AppCard(
       key: const Key('training-question'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(
+            _asks
+                ? trainingQuestion(l10n, match.localDate, name)
+                : trainingLinked(l10n, match.localDate, name),
+            style: text.titleMedium,
+          ),
+          if (_asks && rideStartedAt != null)
             Text(
-              _asks
-                  ? trainingQuestion(l10n, match.localDate, name)
-                  : trainingLinked(l10n, match.localDate, name),
-              style: text.titleMedium,
+              trainingQuestionLine(l10n, match.localDate, rideStartedAt!),
+              style: text.bodyMedium,
             ),
-            if (_asks && rideStartedAt != null)
-              Text(
-                trainingQuestionLine(l10n, match.localDate, rideStartedAt!),
-                style: text.bodyMedium,
-              ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: _asks
-                  ? [
-                      FilledButton(
-                        key: const Key('training-question-yes'),
-                        onPressed: busy ? null : onYes,
-                        child: Text(l10n.yes),
-                      ),
-                      TextButton(
-                        key: const Key('training-question-no'),
-                        onPressed: busy ? null : onNo,
-                        child: Text(l10n.no),
-                      ),
-                    ]
-                  : [
-                      TextButton(
-                        key: const Key('training-not-this-session'),
-                        onPressed: busy ? null : onNotThisSession,
-                        child: Text(l10n.trainingNotThisSession),
-                      ),
-                    ],
-            ),
-          ],
-        ),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: _asks
+                ? [
+                    FilledButton(
+                      key: const Key('training-question-yes'),
+                      onPressed: busy ? null : onYes,
+                      child: Text(l10n.yes),
+                    ),
+                    TextButton(
+                      key: const Key('training-question-no'),
+                      onPressed: busy ? null : onNo,
+                      child: Text(l10n.no),
+                    ),
+                  ]
+                : [
+                    TextButton(
+                      key: const Key('training-not-this-session'),
+                      onPressed: busy ? null : onNotThisSession,
+                      child: Text(l10n.trainingNotThisSession),
+                    ),
+                  ],
+          ),
+        ],
       ),
     );
   }

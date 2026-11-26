@@ -1,8 +1,6 @@
 import '../../core/widgets/loading_state.dart';
 import '../../core/widgets/inline_error.dart';
 
-import 'dart:math' as math;
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +16,7 @@ import '../../core/user_message_text.dart';
 import '../../core/widgets/card_grid.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/page_scaffold.dart';
-import '../../core/widgets/section_card.dart';
-import '../../core/widgets/stat_card.dart';
+import '../../core/widgets/fact_grid.dart';
 import '../../core/widgets/toolbar_row.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'bulk/bulk_upload_card.dart';
@@ -145,25 +142,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
         ),
       ],
     ];
-    final filterActive =
-        s.query.isNotEmpty || s.dateRange != null || s.disciplineFilter != null;
-    void chooseDiscipline(String? value) => notifier.setDisciplineFilter(value);
-
-    final disciplineChips = <Widget>[
-      FilterChip(
-        key: const Key('filter-all'),
-        label: Text(l10n.rideFilterAll),
-        selected: s.disciplineFilter == null,
-        onSelected: (_) => chooseDiscipline(null),
-      ),
-      for (final discipline in ['road', 'gravel', 'mountain', 'track'])
-        FilterChip(
-          key: Key('filter-$discipline'),
-          label: Text(disciplineName(l10n, discipline)),
-          selected: s.disciplineFilter == discipline,
-          onSelected: (_) => chooseDiscipline(discipline),
-        ),
-    ];
+    final disciplineChips = _rideFilterChips(context, ref);
 
     // Uploading is the page's one action at every width; where the phone can record, Start ride is the
     // first entry of the menu.
@@ -176,7 +155,7 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
     );
     final menu = PageMenu(
       buttonKey: const Key('rides-actions'),
-      badge: filterActive,
+      badge: s.filtered,
       entries: [
         if (hasRecorder)
           PageMenuEntry(
@@ -259,30 +238,6 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
               message: l10n.noRides,
               icon: Icons.directions_bike,
             ),
-        if (s.rides.isEmpty && !s.load.running && !s.filtered && bulkSupported)
-          SectionCard(
-            title: l10n.zwiftTitle,
-            description: l10n.zwiftHint,
-            children: [
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  OutlinedButton.icon(
-                    key: const Key('zwift-folder'),
-                    onPressed: bulkBusy ? null : bulk.chooseFolder,
-                    icon: const Icon(Icons.folder_open_outlined),
-                    label: Text(l10n.bulkChooseFolder),
-                  ),
-                  TextButton(
-                    key: const Key('zwift-files'),
-                    onPressed: bulkBusy ? null : bulk.chooseFiles,
-                    child: Text(l10n.bulkChooseFiles),
-                  ),
-                ],
-              ),
-            ],
-          ),
         CardGrid(
           children: [
             for (final ride in s.rides)
@@ -315,8 +270,8 @@ class _RidesScreenState extends ConsumerState<RidesScreen> {
   }
 }
 
-/// A phone's filters in one sheet: the search, the dates and the discipline, all applied as they are
-/// chosen, so the list behind the sheet has already changed when it closes.
+/// A phone's filters in one sheet: the search, the dates and the chips, all applied as they are chosen,
+/// so the list behind the sheet has already changed when it closes.
 class _RidesFilterSheet extends ConsumerWidget {
   const _RidesFilterSheet();
 
@@ -325,13 +280,6 @@ class _RidesFilterSheet extends ConsumerWidget {
     final s = ref.watch(ridesViewModelProvider);
     final notifier = ref.read(ridesViewModelProvider.notifier);
     final l10n = context.l10n;
-    Widget discipline(String key, String label, String? value, bool selected) =>
-        FilterChip(
-          key: Key(key),
-          label: Text(label),
-          selected: selected,
-          onSelected: (_) => notifier.setDisciplineFilter(value),
-        );
     return SheetFrame(
       title: l10n.rideFilterTitle,
       children: [
@@ -344,25 +292,58 @@ class _RidesFilterSheet extends ConsumerWidget {
         Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.xs,
-          children: [
-            discipline(
-              'filter-all',
-              l10n.rideFilterAll,
-              null,
-              s.disciplineFilter == null,
-            ),
-            for (final name in ['road', 'gravel', 'mountain', 'track'])
-              discipline(
-                'filter-$name',
-                disciplineName(l10n, name),
-                name,
-                s.disciplineFilter == name,
-              ),
-          ],
+          children: _rideFilterChips(context, ref),
         ),
       ],
     );
   }
+}
+
+/// The one row of filters the design draws: a surface, the trainer (Indoor) or the commutes, never two
+/// at once, because a commute can also be a gravel ride.
+List<Widget> _rideFilterChips(BuildContext context, WidgetRef ref) {
+  final s = ref.watch(ridesViewModelProvider);
+  final notifier = ref.read(ridesViewModelProvider.notifier);
+  final l10n = context.l10n;
+  Widget chip(
+    String key,
+    String label,
+    bool selected,
+    VoidCallback onSelected,
+  ) => FilterChip(
+    key: Key(key),
+    label: Text(label),
+    selected: selected,
+    onSelected: (_) => onSelected(),
+  );
+  final none =
+      s.disciplineFilter == null &&
+      s.environmentFilter == null &&
+      s.commuteFilter == null;
+  return [
+    chip('filter-all', l10n.rideFilterAll, none, () {
+      notifier.setDisciplineFilter(null);
+    }),
+    for (final discipline in ['road', 'gravel', 'mountain', 'track'])
+      chip(
+        'filter-$discipline',
+        disciplineName(l10n, discipline),
+        s.disciplineFilter == discipline,
+        () => notifier.setDisciplineFilter(discipline),
+      ),
+    chip(
+      'filter-indoor',
+      l10n.rideTypeIndoor,
+      s.environmentFilter == 'indoor',
+      () => notifier.setEnvironmentFilter('indoor'),
+    ),
+    chip(
+      'filter-commute',
+      l10n.rideTypeCommute,
+      s.commuteFilter == true,
+      () => notifier.setCommuteFilter(true),
+    ),
+  ];
 }
 
 /// A quiet line at the top of the list for a rider without a club, not a card competing with the rides.
@@ -377,51 +358,48 @@ class _SoloBanner extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    return Card(
+    return AppCard(
       key: const Key('solo-club-card'),
-      color: scheme.surfaceContainerLow,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.xs,
-          0,
-          AppSpacing.xs,
-        ),
-        child: Row(
-          spacing: AppSpacing.sm,
-          children: [
-            Icon(
-              Icons.explore_outlined,
-              color: scheme.onSurfaceVariant,
-              size: 20,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.soloHintTitle, style: text.titleSmall),
-                  Text(
-                    l10n.soloHintBody,
-                    style: text.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xs,
+        0,
+        AppSpacing.xs,
+      ),
+      child: Row(
+        spacing: AppSpacing.sm,
+        children: [
+          Icon(
+            Icons.explore_outlined,
+            color: scheme.onSurfaceVariant,
+            size: AppIconSize.medium,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.soloHintTitle, style: text.titleSmall),
+                Text(
+                  l10n.soloHintBody,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            TextButton(
-              key: const Key('open-nearby-from-rides'),
-              onPressed: onSee,
-              child: Text(l10n.soloHintSee),
-            ),
-            IconButton(
-              key: const Key('dismiss-solo-card'),
-              tooltip: l10n.soloHintDismiss,
-              onPressed: onDismiss,
-              icon: const Icon(Icons.close),
-            ),
-          ],
-        ),
+          ),
+          TextButton(
+            key: const Key('open-nearby-from-rides'),
+            onPressed: onSee,
+            child: Text(l10n.soloHintSee),
+          ),
+          IconButton(
+            key: const Key('dismiss-solo-card'),
+            tooltip: l10n.soloHintDismiss,
+            onPressed: onDismiss,
+            icon: const Icon(Icons.close),
+          ),
+        ],
       ),
     );
   }
@@ -534,9 +512,8 @@ class RideCard extends ConsumerWidget {
           if (ride.status == 'processing')
             Row(
               children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
+                const SizedBox.square(
+                  dimension: AppLoading.inlineIndicator,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -555,25 +532,8 @@ class RideCard extends ConsumerWidget {
               style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             )
           else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                // A few columns of numbers under the title, so the card reads as a table.
-                const gap = AppSpacing.md;
-                const columns = 3;
-                final width =
-                    (constraints.maxWidth - gap * (columns - 1)) / columns;
-                return Wrap(
-                  spacing: gap,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    for (final (_, label, value) in facts)
-                      SizedBox(
-                        width: math.max(width, 62),
-                        child: StatFigure(label: label, value: value),
-                      ),
-                  ],
-                );
-              },
+            FactGrid(
+              facts: [for (final (_, label, value) in facts) (label, value)],
             ),
         ],
       ),

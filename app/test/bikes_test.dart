@@ -766,6 +766,43 @@ void main() {
     });
   }
 
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets(
+      'BikeDetailScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        server.bikes.add(_bike());
+        server.parts['bike-1'] = [_part()];
+        server.reminders['bike-1'] = [
+          {
+            'id': 'r1',
+            'name': 'Lube the chain',
+            'intervalDistanceM': 300000.0,
+            'lastDoneOn': '2026-10-01',
+            'usedDistanceM': 312000.0,
+            'percent': 104,
+            'status': 'due',
+          },
+        ];
+        server.serviceLog['bike-1'] = [
+          {
+            'id': 'e1',
+            'date': '2026-10-05',
+            'title': 'Full service',
+            'bikeDistanceM': 1200000.0,
+          },
+        ];
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(tester, server.session(useCookies: true));
+        await goTo(tester, '/bikes/bike-1');
+
+        expect(find.byKey(const Key('add-part')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('BikesScreen_ShouldNotOverflow_WhenTextIsTwiceItsSize', (
     tester,
   ) async {

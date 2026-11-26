@@ -87,7 +87,7 @@ ui-dupes:
     count() { printf '%-22s %s\n' "$1" "$(grep -rn "$2" features core --include=*.dart | wc -l)"; }
     count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
     count "Card(" '\(^\|[^A-Za-z_]\)Card('
-    count "TextField(" 'TextField(\|TextFormField('
+    count "TextField(" '\(^\|[^A-Za-z_]\)TextField(\|TextFormField('
     count "showSnackBar" 'showSnackBar'
     count "SegmentedButton" 'SegmentedButton'
     count "TextStyle(" 'TextStyle('
@@ -122,7 +122,7 @@ ui-dupes-check:
     }
     count "private widgets" 'class _.*extends \(Stateless\|Stateful\)Widget'
     count "Card(" '\(^\|[^A-Za-z_]\)Card('
-    count "TextField(" 'TextField(\|TextFormField('
+    count "TextField(" '\(^\|[^A-Za-z_]\)TextField(\|TextFormField('
     count "showSnackBar" 'showSnackBar'
     count "SegmentedButton" 'SegmentedButton'
     count "TextStyle(" 'TextStyle('

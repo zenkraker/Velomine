@@ -6,7 +6,7 @@ import 'package:velomine/core/rider_mode.dart';
 import 'package:velomine/core/l10n.dart';
 import 'package:velomine/core/widgets/more_details.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
-import 'package:velomine/core/widgets/stat_card.dart';
+import 'package:velomine/core/widgets/fact_grid.dart';
 import 'package:velomine/features/profile/rider_mode_view_model.dart';
 import 'package:velomine/features/rides/detail/effort_word.dart';
 import 'package:velomine/features/rides/detail/series_chart.dart';
@@ -734,8 +734,12 @@ void main() {
         final card = find.byKey(const Key('ride-r1'));
 
         expect(
-          find.descendant(of: card, matching: find.byType(StatFigure)),
-          findsNWidgets(2),
+          tester
+              .widget<FactGrid>(
+                find.descendant(of: card, matching: find.byType(FactGrid)),
+              )
+              .facts,
+          hasLength(2),
         );
         // The heart rate is not on this card.
         expect(
@@ -752,8 +756,12 @@ void main() {
       final card = find.byKey(const Key('ride-r1'));
 
       expect(
-        find.descendant(of: card, matching: find.byType(StatFigure)),
-        findsNWidgets(3),
+        tester
+            .widget<FactGrid>(
+              find.descendant(of: card, matching: find.byType(FactGrid)),
+            )
+            .facts,
+        hasLength(3),
       );
       expect(
         find.descendant(of: card, matching: find.text('148 bpm')),

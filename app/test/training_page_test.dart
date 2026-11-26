@@ -273,7 +273,7 @@ void main() {
   );
 
   testWidgets(
-    'TrainingScreen_ShouldSayNothingAboutTheSuggestion_WhenTheGoalChosenIsAnother',
+    'TrainingScreen_ShouldSayTheGoalsOwnLine_WhenTheGoalChosenIsAnother',
     (tester) async {
       // The rider picked faster riding; the reason the server sends belongs to the goal it suggested.
       server.trainingPlan = {...server.trainingPlan!, 'goal': 'faster'};
@@ -282,7 +282,12 @@ void main() {
       await openTraining(tester, sessions: [session()]);
 
       expect(find.text('Get faster'), findsOneWidget);
-      expect(find.byKey(const Key('training-goal-reason')), findsNothing);
+      // TrainingPage.md: the goal card is "the goal's name, its one-line reason".
+      expect(
+        find.text('On climbs and on the flat'),
+        findsOneWidget,
+        reason: 'the chosen goal says what it means',
+      );
       expect(find.textContaining('Regular riding comes before'), findsNothing);
     },
   );

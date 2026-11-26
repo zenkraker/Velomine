@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-/// Takes the screenshots the ui-build skill asks for: one Chrome session on the
+/// Takes the screenshots the design checks ask for: one Chrome session on the
 /// web UI, signed in, at each width a page is tested at.
 ///
 /// The app is served by the web image at http://localhost:8080 after `just up`,
@@ -19,8 +19,8 @@ import 'dart:io';
 /// signed-out or blank screenshot is the harness's fault, not a pass.
 Future<void> main(List<String> args) async {
   final options = _Options.parse(args);
-  final cookies = await _signIn(options);
-  await _prepare(options, cookies);
+  final cookies = options.signedOut ? <_Cookie>[] : await _signIn(options);
+  if (!options.signedOut) await _prepare(options, cookies);
   final chrome = await _Chrome.start(options.chrome);
   try {
     await chrome.send('Network.enable');
@@ -57,9 +57,20 @@ Future<void> main(List<String> args) async {
       for (final route in options.routes) {
         final url = '${options.base}$route';
         await chrome.send('Page.navigate', {'url': url});
-        final ready = await _settle(chrome);
-        final path = await chrome.evaluate('location.pathname');
-        if (!ready || path.toString().startsWith('/sign-in')) {
+        final bool ready;
+        final Object? path;
+        try {
+          ready = await _settle(chrome);
+          path = await chrome.evaluate('location.pathname');
+        } on TimeoutException {
+          // One page that never settles must not end the run for the pages after it.
+          stderr.writeln('timed out: $url');
+          failures++;
+          continue;
+        }
+        final signInIsFailure = !options.signedOut;
+        if (!ready ||
+            (signInIsFailure && path.toString().startsWith('/sign-in'))) {
           stderr.writeln('not signed in or not drawn: $url');
           failures++;
           continue;
@@ -71,6 +82,27 @@ Future<void> main(List<String> args) async {
         final bytes = base64Decode(data['data'] as String);
         final file = File('${options.out.path}/${_slug(route)}-$width.png');
         file.writeAsBytesSync(bytes);
+        // A long page scrolls inside Flutter, so further shots follow the page down.
+        var previous = bytes;
+        for (var step = 1; step <= options.scrolls; step++) {
+          await chrome.send('Input.dispatchMouseEvent', {
+            'type': 'mouseWheel',
+            'x': width ~/ 2,
+            'y': height ~/ 2,
+            'deltaX': 0,
+            'deltaY': height * 0.85,
+          });
+          await Future<void>.delayed(const Duration(milliseconds: 700));
+          final more = await chrome.send('Page.captureScreenshot', {
+            'format': 'png',
+            'fromSurface': true,
+          });
+          final next = base64Decode(more['data'] as String);
+          if (next.length == previous.length) break;
+          previous = next;
+          File('${options.out.path}/${_slug(route)}-$width-s$step.png')
+              .writeAsBytesSync(next);
+        }
         // A page that sends the route elsewhere (a destination that needs a
         // setting the account lacks) still gets a shot, but say so.
         if (path.toString() != route) {
@@ -314,6 +346,8 @@ class _Options {
     required this.password,
     required this.chrome,
     required this.scheme,
+    required this.signedOut,
+    required this.scrolls,
   });
 
   final List<String> routes;
@@ -327,10 +361,15 @@ class _Options {
   /// The colour scheme to emulate: `light`, `dark`, or null for the browser's.
   final String? scheme;
 
+  /// Take the shots without signing in, for the pages a signed-out visitor sees.
+  final bool signedOut;
+
+  /// How many times to scroll down and shoot again, for pages longer than the window.
+  final int scrolls;
+
   static const _devEmail = 'admin@velomine.local';
   static const _devPassword = 'Velomine-dev-1';
-  static const _chromeDefault =
-      '/opt/chrome-headless-shell/chrome-headless-shell-linux64/chrome-headless-shell';
+  static const _chromeDefault = 'chrome-headless-shell'; // on PATH: .devcontainer/Dockerfile links it from /opt
 
   /// The admin the stack seeds, from the `.env` that `just up` read, so this
   /// works whatever password the operator chose. The documented dev defaults
@@ -371,7 +410,7 @@ class _Options {
       stderr.writeln(
         'Usage: dart run tools/screenshots.dart --routes /rides,/progress '
         '[--widths 390,600,820,1300] [--out .dev/screens] '
-        '[--base http://localhost:8080] [--theme day|night|system]',
+        '[--base http://localhost:8080] [--theme day|night|system] [--signed-out] [--scrolls N]',
       );
       exit(64);
     }
@@ -404,6 +443,8 @@ class _Options {
         'night' || 'dark' => 'dark',
         _ => null,
       },
+      signedOut: args.contains('--signed-out'),
+      scrolls: int.tryParse(value('scrolls') ?? '') ?? 0,
     );
   }
 }

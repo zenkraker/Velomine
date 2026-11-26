@@ -3,6 +3,7 @@ import 'package:velomine_api/api.dart';
 
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_card.dart';
 import '../../core/widgets/form_sheet.dart';
 
 /// The FTP may be out of date, and here is the way out: adopt the estimate, read how to test it, or be
@@ -45,44 +46,41 @@ class FtpReminderCard extends StatelessWidget {
       _ => l10n.ftpReminderMissingBody('${estimate ?? '–'}'),
     };
 
-    return Card(
+    return AppCard(
       key: const Key('ftp-reminder'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(title, style: text.titleMedium),
-            Text(body, style: text.bodyMedium),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                if (estimate != null && onUseEstimate != null)
-                  FilledButton(
-                    key: const Key('ftp-reminder-use'),
-                    onPressed: busy ? null : () => onUseEstimate!(estimate),
-                    child: Text(l10n.ftpUse(estimate)),
-                  ),
-                TextButton(
-                  key: const Key('ftp-reminder-how'),
-                  onPressed: () => showSheet<void>(
-                    context,
-                    builder: (_) => const _HowToTestSheet(),
-                  ),
-                  child: Text(l10n.ftpReminderHow),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(title, style: text.titleMedium),
+          Text(body, style: text.bodyMedium),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (estimate != null && onUseEstimate != null)
+                FilledButton(
+                  key: const Key('ftp-reminder-use'),
+                  onPressed: busy ? null : () => onUseEstimate!(estimate),
+                  child: Text(l10n.ftpUse(estimate)),
                 ),
-                TextButton(
-                  key: const Key('ftp-reminder-not-now'),
-                  onPressed: busy ? null : onSnooze,
-                  child: Text(l10n.ftpReminderNotNow),
+              TextButton(
+                key: const Key('ftp-reminder-how'),
+                onPressed: () => showSheet<void>(
+                  context,
+                  builder: (_) => const _HowToTestSheet(),
                 ),
-              ],
-            ),
-          ],
-        ),
+                child: Text(l10n.ftpReminderHow),
+              ),
+              TextButton(
+                key: const Key('ftp-reminder-not-now'),
+                onPressed: busy ? null : onSnooze,
+                child: Text(l10n.ftpReminderNotNow),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

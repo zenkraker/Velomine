@@ -149,7 +149,7 @@ class AreaChart extends StatelessWidget {
                                 }
                                 return Padding(
                                   padding: const EdgeInsets.only(
-                                    top: AppSpacing.xs,
+                                    top: AppSpacing.sm,
                                   ),
                                   child: Text(labels[index], style: axis),
                                 );

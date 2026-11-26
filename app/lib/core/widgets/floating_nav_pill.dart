@@ -57,17 +57,28 @@ class FloatingNavPill extends StatelessWidget {
           : glass.withValues(alpha: AppNav.pillOpacityNoBlur),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xs),
-        child: Row(
-          children: [
-            for (final (i, item) in items.indexed)
-              Expanded(
-                child: _PillItem(
-                  item: item,
-                  selected: i == selected,
-                  onTap: () => onSelected(i),
-                ),
+        // Each slot is as wide as its label, spread evenly, so five labels stay at `nav-label` size
+        // ("Allenamento" is wider than a fifth of a phone); only a window too narrow for them all
+        // scales the row down rather than overflowing.
+        child: LayoutBuilder(
+          builder: (context, constraints) => FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  for (final (i, item) in items.indexed)
+                    _PillItem(
+                      item: item,
+                      selected: i == selected,
+                      onTap: () => onSelected(i),
+                    ),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
       ),
     );

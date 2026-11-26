@@ -162,6 +162,47 @@ void main() {
     expect(find.text('Android app'), findsOneWidget);
   });
 
+  /// Opens the profile page in the app, where the account rows live.
+  Future<void> openProfile(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await startApp(tester, server.session(useCookies: true));
+    await openAccount(tester, 'profile');
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('ProfileScreen_ShouldSayTwoFactorIsOff_WhenTheAccountHasNone', (
+    tester,
+  ) async {
+    server.signInBrowser(server.add('rider@example.com'));
+    await openProfile(tester);
+
+    expect(find.text('Two-factor sign-in is off.'), findsOneWidget);
+    // The device count is the session list's own length, said in words.
+    expect(find.text('1 device'), findsOneWidget);
+  });
+
+  testWidgets(
+    'ProfileScreen_ShouldSayTwoFactorIsOnAndCountTheDevices_WhenTheyAreSet',
+    (tester) async {
+      final account = server.add('rider@example.com');
+      account.twoFactorEnabled = true;
+      server.signInBrowser(account);
+      server.sessions.add({
+        'id': 's-other',
+        'label': 'Web app',
+        'createdAt': '2026-11-01T10:00:00Z',
+        'lastUsedAt': '2026-11-09T10:00:00Z',
+        'current': false,
+      });
+      await openProfile(tester);
+
+      expect(find.text('Two-factor sign-in is on.'), findsOneWidget);
+      expect(find.text('2 devices'), findsOneWidget);
+    },
+  );
+
   testWidgets('TwoFactorScreen_ShouldShowTheKey_WhenTheMemberStartsSetup', (
     tester,
   ) async {

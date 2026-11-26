@@ -381,7 +381,7 @@ void main() {
     });
 
     testWidgets(
-      'RidesScreen_ShouldExplainZwiftAndReadTheFolder_WhenThereAreNoRidesYet',
+      'RidesScreen_ShouldReadTheFolder_WhenTheFolderIsChosenFromTheDropArea',
       (tester) async {
         tester.view.physicalSize = const Size(1000, 2000);
         tester.view.devicePixelRatio = 1;
@@ -406,13 +406,10 @@ void main() {
           ],
         );
 
-        expect(find.text('From Zwift'), findsOneWidget);
-        expect(
-          find.textContaining('Documents/Zwift/Activities'),
-          findsOneWidget,
-        );
+        // The drop area is the page's own way in (RidesPage.html); nothing repeats its buttons.
+        expect(find.text('From Zwift'), findsNothing);
 
-        await tester.tap(find.byKey(const Key('zwift-folder')));
+        await tester.tap(find.byKey(const Key('drop-folder')));
         for (var i = 0; i < 30; i++) {
           await tester.pump(const Duration(milliseconds: 20));
         }

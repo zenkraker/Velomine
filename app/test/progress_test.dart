@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:velomine/core/tokens.dart';
 import 'package:velomine/core/widgets/card_link.dart';
 
 import 'fake_server.dart';
@@ -122,6 +123,38 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'ProgressScreen_ShouldGrowTheChartCardToTheWindowBottom_WhenWidthIs1300',
+    (tester) async {
+      await openProgress(tester, size: const Size(1300, 1000));
+
+      // ProgressDesktop.md: "It grows to the bottom of the window, so the content ends level with the
+      // sidebar." The card's link sits at its foot, well below the short chart.
+      final link = find.byKey(const Key('progress-totals-link'));
+      expect(link, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getRect(link).bottom,
+        greaterThan(1000 - 4 * AppSpacing.xxl),
+        reason: 'the card ends at the window bottom',
+      );
+    },
+  );
+
+  testWidgets(
+    'ProgressScreen_ShouldNotOverflow_WhenTheWindowIsShortAndFillLastIsOn',
+    (tester) async {
+      // A 500 dp window at the sidebar width: the card is taller than the room left, so the page
+      // scrolls rather than overflowing.
+      await openProgress(tester, size: const Size(1300, 500));
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('progress-totals-link')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('ProgressScreen_ShouldAskMonthlyTotals_WhenSwitchingToMonths', (
     tester,

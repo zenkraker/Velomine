@@ -8,6 +8,7 @@ import '../../core/l10n.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/goal_gauge.dart';
 import '../../core/widgets/page_menu.dart';
 import '../../core/widgets/form_sheet.dart';
@@ -174,20 +175,18 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
               ? null
               : (v) => setState(() => _metric = v ?? _metric),
         ),
-        TextField(
-          key: const Key('goal-target'),
+        AppTextField(
+          fieldKey: const Key('goal-target'),
           controller: _target,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
           ],
-          decoration: InputDecoration(
-            labelText: l10n.goalTarget,
-            suffixText: goalUnit(l10n, units, _metric),
-            errorText: _badTarget ? l10n.errorGoalTarget : null,
-          ),
-          onSubmitted: (_) => _submit(units),
+          label: l10n.goalTarget,
+          suffix: goalUnit(l10n, units, _metric),
+          errorText: _badTarget ? l10n.errorGoalTarget : null,
+          onDone: (_) => _submit(units),
         ),
       ],
     );

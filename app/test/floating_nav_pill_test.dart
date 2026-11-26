@@ -190,4 +190,54 @@ void main() {
       expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
     },
   );
+
+  for (final labels in [
+    ['Rides', 'Training', 'Progress', 'Goals', 'Club'],
+    ['Giri', 'Allenamento', 'Progressi', 'Obiettivi', 'Club'],
+  ]) {
+    testWidgets(
+      'FloatingNavPill_ShouldKeepEveryLabelWhole_WhenFiveDestinationsShowAt390Wide(${labels.first})',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: nightTheme(),
+            home: Scaffold(
+              body: Stack(
+                children: [
+                  FloatingNavPill(
+                    items: [
+                      for (final label in labels)
+                        (
+                          key: null,
+                          icon: const Icon(Icons.home_outlined),
+                          selectedIcon: const Icon(Icons.home),
+                          label: label,
+                        ),
+                    ],
+                    selected: 2,
+                    onSelected: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        final pill = tester.getRect(find.byType(FloatingNavPill));
+        final texts = [
+          for (final label in labels) tester.getRect(find.text(label)),
+        ];
+        for (final (i, rect) in texts.indexed) {
+          expect(rect.left, greaterThanOrEqualTo(pill.left));
+          expect(rect.right, lessThanOrEqualTo(pill.right));
+          if (i > 0) {
+            expect(rect.left, greaterThanOrEqualTo(texts[i - 1].right));
+          }
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

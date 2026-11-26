@@ -203,8 +203,8 @@ void main() {
 
     expect(server.clubRoles[rider.email], 'owner');
     expect(server.clubName, 'Friday Riders');
-    // The page's title and the hero card both name it.
-    expect(find.text('Friday Riders'), findsNWidgets(2));
+    // Only the hero card names it: the page's title is "Club".
+    expect(find.text('Friday Riders'), findsOneWidget);
     expect(find.byKey(const Key('club-plan-card')), findsOneWidget);
     expect(find.text('1 of 25 members'), findsOneWidget);
     expect(find.byKey(const Key('go-start-club')), findsNothing);
@@ -337,4 +337,22 @@ void main() {
     expect(notificationText(it, note('club_plan_ending')), contains('2027'));
     Intl.defaultLocale = null;
   });
+
+  testWidgets(
+    'ClubScreen_ShouldShowTheMemberCountOnce_WhenThePlanHasNoMemberLimit',
+    (tester) async {
+      widen(tester);
+      final owner = server.add('owner@example.com', clubRole: 'owner');
+      server.clubPaidUntil = '2099-03-31';
+      server.signInBrowser(owner);
+
+      await openClub(tester);
+
+      // The plan card is drawn for the paid-until day alone; the count is the hero card's, once.
+      expect(find.byKey(const Key('club-plan-card')), findsOneWidget);
+      expect(find.byKey(const Key('club-plan-members')), findsNothing);
+      expect(find.text('1 member'), findsOneWidget);
+      expect(find.textContaining('Paid until'), findsOneWidget);
+    },
+  );
 }

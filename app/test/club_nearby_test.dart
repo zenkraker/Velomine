@@ -356,4 +356,38 @@ void main() {
       },
     );
   }
+
+  testWidgets('NearbyClubsScreen_ShouldOfferTheRadiusAsOneChoice_WhenItOpens', (
+    tester,
+  ) async {
+    // A phone width: the four radii are one control that fits there, with no chip filter.
+    tester.view.physicalSize = const Size(390, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    server.clubLatitude = 45.4642;
+    server.clubLongitude = 9.19;
+    server.clubDiscoverable = true;
+    final rider = server.add('rider@example.com', clubRole: null);
+    server.signInBrowser(rider);
+    await startApp(
+      tester,
+      server.session(useCookies: true),
+      locationService: FakeLocationService((
+        latitude: 45.4642,
+        longitude: 9.19,
+      )),
+    );
+    await goTo(tester, '/clubs');
+
+    // One radius at a time is one choice, so it is the app's segmented control and not a chip filter.
+    final control = find.byKey(const Key('nearby-radius'));
+    expect(control, findsOneWidget);
+    expect(tester.widget<SegmentedButton<int>>(control).selected, {50});
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byKey(const Key('radius-100')));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<SegmentedButton<int>>(control).selected, {100});
+  });
 }

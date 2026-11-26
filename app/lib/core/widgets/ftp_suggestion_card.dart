@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'app_card.dart';
+
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -40,41 +42,38 @@ class FtpSuggestionCard extends StatelessWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final shown = '$watts';
-    return Card(
+    return AppCard(
       key: const Key('ftp-suggestion'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(l10n.ftpSuggestionTitle(shown), style: text.titleMedium),
-            Text(
-              ftpSuggestionSourceText(l10n, method, effortWatts),
-              style: text.bodyMedium,
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                if (suggestionId case final id?) ...[
-                  if (onAccept != null)
-                    FilledButton(
-                      key: const Key('ftp-suggestion-use'),
-                      onPressed: busy ? null : () => onAccept!(id),
-                      child: Text(l10n.ftpSuggestionUse(shown)),
-                    ),
-                  TextButton(
-                    key: const Key('ftp-suggestion-dismiss'),
-                    onPressed: busy ? null : () => onDismiss?.call(id),
-                    child: Text(l10n.ftpSuggestionDismiss),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(l10n.ftpSuggestionTitle(shown), style: text.titleMedium),
+          Text(
+            ftpSuggestionSourceText(l10n, method, effortWatts),
+            style: text.bodyMedium,
+          ),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (suggestionId case final id?) ...[
+                if (onAccept != null)
+                  FilledButton(
+                    key: const Key('ftp-suggestion-use'),
+                    onPressed: busy ? null : () => onAccept!(id),
+                    child: Text(l10n.ftpSuggestionUse(shown)),
                   ),
-                ],
+                TextButton(
+                  key: const Key('ftp-suggestion-dismiss'),
+                  onPressed: busy ? null : () => onDismiss?.call(id),
+                  child: Text(l10n.ftpSuggestionDismiss),
+                ),
               ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

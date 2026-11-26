@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
-import '../../core/tokens.dart';
+import '../../core/widgets/chip_row.dart';
 
 /// One Progress page as the tabs show it: its route, its name and the key a test finds it by.
 typedef ProgressTab = ({String path, String label, Key key});
@@ -49,12 +49,12 @@ class ProgressTabs extends StatelessWidget {
   final String location;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: Row(
-      spacing: AppSpacing.sm,
-      children: [
-        for (final tab in progressTabs(context))
+  Widget build(BuildContext context) {
+    final tabs = progressTabs(context);
+    return ChipRow(
+      selected: tabs.indexWhere((tab) => tab.path == location),
+      chips: [
+        for (final tab in tabs)
           ChoiceChip(
             key: tab.key,
             label: Text(tab.label),
@@ -64,6 +64,6 @@ class ProgressTabs extends StatelessWidget {
             },
           ),
       ],
-    ),
-  );
+    );
+  }
 }

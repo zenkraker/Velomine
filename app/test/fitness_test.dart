@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine/core/theme.dart';
+import 'package:velomine/core/widgets/bar_chart.dart';
 
 import 'fake_server.dart';
 
@@ -134,10 +136,35 @@ void main() {
         find.text('Pyramidal: most easy, less moderate, least hard'),
         findsOneWidget,
       );
+      // Three labelled rows, each with its own share, as the design draws them.
+      void row(String label, String share) {
+        final card = find.byKey(const Key('intensity-card'));
+        expect(
+          find.descendant(of: card, matching: find.text(label)),
+          findsOneWidget,
+          reason: label,
+        );
+        expect(
+          find.descendant(of: card, matching: find.text(share)),
+          findsOneWidget,
+          reason: share,
+        );
+      }
+
+      row('Easy', '60 %');
+      row('Moderate', '30 %');
+      row('Hard', '10 %');
+      // Each bar is the shared one, in the design's three colours.
+      final colors = VelomineColors.of(
+        tester.element(find.byKey(const Key('intensity-card'))),
+      );
+      final ink = Theme.of(
+        tester.element(find.byKey(const Key('intensity-card'))),
+      ).colorScheme.onSurfaceVariant;
+      final bars = tester.widgetList<ShareBar>(find.byType(ShareBar)).toList();
       expect(
-        find.textContaining('60.0 % easy'),
-        findsOneWidget,
-        reason: 'the three shares, one decimal each',
+        [for (final bar in bars) bar.color],
+        [ink, colors.barMuted, colors.accentStrong],
       );
       expect(
         find.text('From power where you have it, otherwise heart rate.'),

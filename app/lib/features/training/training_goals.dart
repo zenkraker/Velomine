@@ -26,6 +26,15 @@ String trainingGoalName(AppLocalizations l10n, String? goal) => switch (goal) {
   _ => l10n.goalFitter,
 };
 
+/// The one line a goal means, as the goal card writes it: "On climbs and on the flat".
+String trainingGoalLine(AppLocalizations l10n, String? goal) => switch (goal) {
+  'aerobic' => l10n.goalLineAerobic,
+  'faster' => l10n.goalFasterLine,
+  'event' => l10n.goalLineEvent,
+  'keep' => l10n.goalLineKeep,
+  _ => l10n.goalLineFitter,
+};
+
 /// The one-line reason the setup shows under the suggested goal, from the code the server picked it with.
 String trainingSuggestionReason(AppLocalizations l10n, String reason) =>
     switch (reason) {
@@ -61,17 +70,11 @@ List<String> orderedDays(Iterable<String> days) =>
 /// The session a ride might be, in the words the mock-up gives: "Was this your Thursday strong and steady?" A session
 /// name is lowercase inside the sentence, as every name in TrainingNames.md reads there.
 String trainingQuestion(AppLocalizations l10n, DateTime day, String name) =>
-    l10n.trainingQuestionTitle(
-      DateFormat.EEEE(l10n.localeName).format(day),
-      lowerFirst(name),
-    );
+    l10n.trainingQuestionTitle(weekdayLong(l10n, day), lowerFirst(name));
 
 /// The same session once the rider said the ride was it: "This was your Thursday strong and steady."
 String trainingLinked(AppLocalizations l10n, DateTime day, String name) =>
-    l10n.trainingLinkedTitle(
-      DateFormat.EEEE(l10n.localeName).format(day),
-      lowerFirst(name),
-    );
+    l10n.trainingLinkedTitle(weekdayLong(l10n, day), lowerFirst(name));
 
 /// "This ride looks like the session planned for yesterday", or tomorrow: the question only ever asks about the day
 /// before or after.

@@ -169,7 +169,7 @@ class _DropTarget extends StatelessWidget {
               children: [
                 Icon(
                   Icons.file_download_outlined,
-                  size: 48,
+                  size: AppIconSize.xlarge,
                   color: scheme.primary,
                 ),
                 Text(

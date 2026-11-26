@@ -63,6 +63,9 @@ class ProgressScreen extends ConsumerWidget {
     final events = ref.watch(eventsViewModelProvider);
     final units = ref.watch(unitsChoiceViewModelProvider);
     final wide = MediaQuery.sizeOf(context).width >= AppBreakpoint.compactWidth;
+    // The overview's last card grows to the bottom of the window, as `ProgressDesktop.md` draws it.
+    final fill =
+        MediaQuery.sizeOf(context).width >= AppBreakpoint.expandedWidth;
 
     // Every card on the page says so when its own number did not arrive.
     final failures = [
@@ -213,6 +216,7 @@ class ProgressScreen extends ConsumerWidget {
     return PageScaffold(
       title: l10n.navProgress,
       subtitle: l10n.progressSubtitle,
+      fillLast: fill,
       // No `⋯` menu: its one entry was the sport filter, which the chips below and the phone's title
       // chip already draw.
       // A phone chooses the sport from one chip in the title row; a wide window has the chips below.
@@ -315,22 +319,30 @@ class ProgressScreen extends ConsumerWidget {
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.sm,
+              // The card reaches the window's bottom, so its link sits at the foot of it, as the mock-up
+              // draws it with a spacer above the link.
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: AppSpacing.sm,
                   children: [
-                    Text(switch (data.period) {
-                      'week' => l10n.totalsTitleWeekly,
-                      'month' => l10n.totalsTitleMonthly,
-                      _ => l10n.totalsTitleYearly,
-                    }, style: Theme.of(context).textTheme.titleMedium),
-                    periods,
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.sm,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(switch (data.period) {
+                          'week' => l10n.totalsTitleWeekly,
+                          'month' => l10n.totalsTitleMonthly,
+                          _ => l10n.totalsTitleYearly,
+                        }, style: Theme.of(context).textTheme.titleMedium),
+                        periods,
+                      ],
+                    ),
+                    TotalsChart(period: data.period, totals: data.totals),
                   ],
                 ),
-                TotalsChart(period: data.period, totals: data.totals),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: CardLink(

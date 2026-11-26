@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:velomine_api/api.dart';
@@ -238,107 +240,112 @@ class _TotalsTable extends ConsumerWidget {
     return AppCard(
       key: const Key('totals-table'),
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SizedBox(
-          width: _tableWidth,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.xs,
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: _periodWidth,
-                      child: Text(switch (totals.period) {
-                        // The design's column heading is the period in the singular.
-                        'week' => l10n.totalsColumnWeek,
-                        'month' => l10n.totalsColumnMonth,
-                        _ => l10n.totalsColumnYear,
-                      }, style: text.labelSmall),
-                    ),
-                    cell(l10n.navRides, _ridesWidth),
-                    cell(l10n.statDistance, _numberWidth),
-                    cell(l10n.statMovingTime, _numberWidth),
-                    cell(l10n.statClimbing, _numberWidth),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: _tableWidth,
-                height: 1,
-                child: ColoredBox(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-              for (final (i, t) in shown.indexed)
-                Container(
-                  key: Key('total-$i'),
-                  color: i == 0 ? colors.accentSoft : null,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
-                    vertical: AppSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: _periodWidth,
-                        child: Text(
-                          i == 0
-                              ? switch (totals.period) {
-                                  'week' => l10n.thisWeek,
-                                  'month' => l10n.thisMonth,
-                                  _ => l10n.thisYear,
-                                }
-                              : periodTitle(totals.period, t.start, t.end),
-                          style: i == 0 ? currentStyle : text.bodySmall,
-                        ),
-                      ),
-                      cell(
-                        '${t.rides}',
-                        _ridesWidth,
-                        style: i == 0 ? currentStyle : null,
-                      ),
-                      cell(
-                        km(units, t.distanceM),
-                        _numberWidth,
-                        style: i == 0 ? currentStyle : null,
-                      ),
-                      cell(
-                        duration(t.movingS),
-                        _numberWidth,
-                        style: i == 0 ? currentStyle : null,
-                      ),
-                      cell(
-                        elevation(units, t.elevationGainM),
-                        _numberWidth,
-                        style: i == 0 ? currentStyle : null,
-                      ),
-                    ],
-                  ),
-                ),
-              if (rows.length > shown.length)
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Padding(
+      // The table is as wide as the card when the card is wider than its columns: the period takes the
+      // slack, so the numbers sit at the card's far edge instead of bunched on the left.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tableWidth = math.max(_tableWidth, constraints.maxWidth);
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: tableWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xl,
                       vertical: AppSpacing.xs,
                     ),
-                    child: TextButton(
-                      key: const Key('totals-more'),
-                      onPressed: onShowEarlier,
-                      child: Text(l10n.totalsShowEarlier),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(switch (totals.period) {
+                            // The design's column heading is the period in the singular.
+                            'week' => l10n.totalsColumnWeek,
+                            'month' => l10n.totalsColumnMonth,
+                            _ => l10n.totalsColumnYear,
+                          }, style: text.labelSmall),
+                        ),
+                        cell(l10n.navRides, _ridesWidth),
+                        cell(l10n.statDistance, _numberWidth),
+                        cell(l10n.statMovingTime, _numberWidth),
+                        cell(l10n.statClimbing, _numberWidth),
+                      ],
                     ),
                   ),
-                ),
-            ],
-          ),
-        ),
+                  SizedBox(
+                    width: tableWidth,
+                    height: 1,
+                    child: ColoredBox(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  for (final (i, t) in shown.indexed)
+                    Container(
+                      key: Key('total-$i'),
+                      color: i == 0 ? colors.accentSoft : null,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xl,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              i == 0
+                                  ? switch (totals.period) {
+                                      'week' => l10n.thisWeek,
+                                      'month' => l10n.thisMonth,
+                                      _ => l10n.thisYear,
+                                    }
+                                  : periodTitle(totals.period, t.start, t.end),
+                              style: i == 0 ? currentStyle : text.bodySmall,
+                            ),
+                          ),
+                          cell(
+                            '${t.rides}',
+                            _ridesWidth,
+                            style: i == 0 ? currentStyle : null,
+                          ),
+                          cell(
+                            km(units, t.distanceM),
+                            _numberWidth,
+                            style: i == 0 ? currentStyle : null,
+                          ),
+                          cell(
+                            duration(t.movingS),
+                            _numberWidth,
+                            style: i == 0 ? currentStyle : null,
+                          ),
+                          cell(
+                            elevation(units, t.elevationGainM),
+                            _numberWidth,
+                            style: i == 0 ? currentStyle : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (rows.length > shown.length)
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.xs,
+                        ),
+                        child: TextButton(
+                          key: const Key('totals-more'),
+                          onPressed: onShowEarlier,
+                          child: Text(l10n.totalsShowEarlier),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

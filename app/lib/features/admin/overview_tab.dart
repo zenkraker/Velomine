@@ -5,6 +5,7 @@ import '../../core/failure.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import 'admin_view_models.dart';
+import '../../core/theme.dart';
 import '../../core/tokens.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/loading_state.dart';
@@ -37,7 +38,7 @@ class OverviewTab extends ConsumerWidget {
       key: Key(key),
       contentPadding: EdgeInsets.zero,
       title: Text(label),
-      trailing: Text(value, style: Theme.of(context).textTheme.titleLarge),
+      trailing: Text(value, style: VelomineText.of(context).stat),
     );
     return ListView(
       shrinkWrap: true,

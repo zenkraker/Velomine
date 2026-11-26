@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n.dart';
+import '../../core/widgets/app_text_field.dart';
 import 'auth_page.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'auth_state.dart';
 import 'auth_view_models.dart';
-import '../../core/tokens.dart';
 
 String forgotProblemText(AppLocalizations l10n, ForgotProblem problem) =>
     switch (problem) {
@@ -53,19 +53,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       onPrimary: _send,
       primaryBusy: s.command.running,
       children: [
-        TextField(
-          key: const Key('forgot-email'),
+        AppTextField(
+          fieldKey: const Key('forgot-email'),
           controller: _email,
+          label: l10n.email,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
-          decoration: InputDecoration(labelText: l10n.email),
-          onSubmitted: (_) => _send(),
+          onDone: (_) => _send(),
         ),
         if (s.sent) ...[
-          const SizedBox(height: AppSpacing.lg),
           Text(l10n.forgotPasswordSent, key: const Key('forgot-sent')),
         ] else if (s.problem != null) ...[
-          const SizedBox(height: AppSpacing.md),
           AuthFailure(
             keyName: 'forgot-error',
             message: forgotProblemText(l10n, s.problem!),

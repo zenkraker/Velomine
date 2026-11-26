@@ -307,9 +307,8 @@ class ClubScreen extends ConsumerWidget {
         CardGrid(columns: 2, children: children);
 
     return PageScaffold(
-      // The club's own name names the page; "Club" is the crumb above it.
-      title: club.name,
-      parent: l10n.navClub,
+      // Club is a destination, so its own name is the title; the club's name is the first card's (ClubPage.md).
+      title: l10n.navClub,
       subtitle: l10n.clubSubtitle,
       // Leaving ends the member's place in the club; a new code ends the old one for good. Both are in the menu,
       // last and red. The owner cannot leave, and a rider cannot make a code.
@@ -421,7 +420,7 @@ class ClubScreen extends ConsumerWidget {
             title: l10n.nearbyPendingTitle(request.clubName),
             description: l10n.nearbyPendingBody,
             children: [
-              if (request.note != null) Text(request.note!),
+              if (request.note != null) Text(l10n.noteQuoted(request.note!)),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -470,6 +469,11 @@ class ClubScreen extends ConsumerWidget {
                 title: l10n.startClubButton,
                 body: l10n.clubStartBody,
                 icon: Icons.group_add_outlined,
+                // The button is simply off when the operator turned clubs off, so the card says why. A failed
+                // load leaves the flag false too, and then the error above is the reason, not this.
+                note: clubState.loaded && !clubState.canStartClub
+                    ? l10n.clubStartUnavailable
+                    : null,
                 action: OutlinedButton(
                   key: const Key('go-start-club'),
                   onPressed: clubState.canStartClub ? onStartClub : null,
@@ -586,6 +590,7 @@ class _ClubWayCard extends StatelessWidget {
     required this.body,
     required this.icon,
     required this.action,
+    this.note,
   });
 
   final Key cardKey;
@@ -593,6 +598,9 @@ class _ClubWayCard extends StatelessWidget {
   final String body;
   final IconData icon;
   final Widget action;
+
+  /// Why the action cannot be taken, under it, for the one way an operator can turn off.
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -607,6 +615,14 @@ class _ClubWayCard extends StatelessWidget {
           Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
           Text(body),
           action,
+          if (note case final note?)
+            Text(
+              note,
+              key: const Key('club-way-start-note'),
+              style: text.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
         ],
       ),
     );

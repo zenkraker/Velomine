@@ -248,8 +248,12 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                             leading: const Icon(Icons.place_outlined),
                             title: Text(zone.name),
                             subtitle: Text(
-                              '${l10n.privacyZoneRadius} '
-                              '${length(ref.watch(unitsChoiceViewModelProvider), zone.radiusM.toDouble())}',
+                              l10n.privacyZoneRadiusLine(
+                                length(
+                                  ref.watch(unitsChoiceViewModelProvider),
+                                  zone.radiusM.toDouble(),
+                                ),
+                              ),
                             ),
                             trailing: PageMenu(
                               buttonKey: Key('privacy-zone-actions-${zone.id}'),

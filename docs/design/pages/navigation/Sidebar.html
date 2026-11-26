@@ -7,6 +7,9 @@
   .stage { padding: var(--space-xl); display: flex; }
   .vm-nav { min-height: 720px; }
   svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .footrow { display: flex; align-items: center; gap: var(--space-xs); padding: 0 var(--space-md); }
+  .footrow .vm-spacer { flex: 1; }
+  .footrow .vm-avatar { width: 32px; height: 32px; }
 </style>
 </head>
 <body>
@@ -30,7 +33,12 @@
   <div class="foot">
     <div class="note"><strong>Your data is yours.</strong>Private until you share it.</div>
     <a class="nav-label" href="#"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Profile</a>
-    <a class="nav-label" href="#"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Settings</a>
+    <div class="footrow">
+      <button class="vm-icon-btn" type="button" aria-label="Theme"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 12h9"/></svg></button>
+      <button class="vm-icon-btn" type="button" aria-label="Notifications, 3 unread"><svg class="i" viewBox="0 0 24 24"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 3h16z"/><path d="M10 22h4"/></svg></button>
+      <span class="vm-spacer"></span>
+      <span class="vm-avatar" role="img" aria-label="Account and sign out">A</span>
+    </div>
   </div>
 </nav>
 </div>

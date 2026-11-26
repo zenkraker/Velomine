@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- BulkUploadCard: Rides -> adding a folder of rides: drop area, drag target, progress and summary (web). Guideline: BulkUploadCard.md -->
+<html lang="en">
+<head>
+<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../bundle.css"><meta charset="utf-8"><title>Adding rides from files</title>
+<style>
+  .stage { padding: var(--space-xl); display: flex; flex-direction: column; gap: var(--space-lg); max-width: 900px; }
+  .lbl { color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="lbl caption">The drop area, on the Rides page</div>
+  <article class="vm-card"><div class="vm-drop" style="padding:0;background:transparent"><span class="vm-glyph"><svg class="vm-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 13h5M10 17h5"/></svg></span><div class="grow"><span class="t body">Drop to add your rides</span><span class="d">Files or a whole folder: .fit, .gpx and .tcx files are read, also zipped (.gz).</span></div><span class="vm-acts"><button class="vm-btn text button-label small" type="button">Choose files</button><button class="vm-btn text button-label small" type="button">Choose a folder</button></span></div></article>
+
+  <div class="lbl caption">While files are dragged over any page</div>
+  <div class="vm-glass" style="border-radius:var(--radius-md);padding:var(--space-xxl);display:flex;flex-direction:column;align-items:center;gap:var(--space-sm);text-align:center"><svg class="vm-ic" viewBox="0 0 24 24" aria-hidden="true" style="width:40px;height:40px;stroke:var(--accent-strong)"><path d="M12 3v11M7 10l5 5 5-5M5 20h14"/></svg><span class="card-title">Drop to add your rides</span><span class="body vm-muted">Files or a whole folder: .fit, .gpx and .tcx files are read, also zipped (.gz).</span></div>
+
+  <div class="lbl caption">Running</div>
+  <article class="vm-card"><div class="vm-card-head"><h3 class="vm-card-title card-title">Adding rides from files</h3></div><p class="vm-sentence body">Reading 12 of 40</p><div class="vm-bar"><span style="width:30%"></span></div><p class="vm-sentence caption">Waiting a moment, the server is busy…</p><div class="vm-acts" style="justify-content:flex-end"><button class="vm-btn text button-label small" type="button">Cancel</button></div></article>
+
+  <div class="lbl caption">Done</div>
+  <article class="vm-card"><div class="vm-card-head"><h3 class="vm-card-title card-title">Adding rides from files</h3></div><p class="vm-sentence body">All files read</p><p class="body">12 new rides</p><p class="body">3 rides were already here</p><p class="body">2 files could not be read</p><p class="caption vm-muted">colle-ride.fit: this file could not be read<br>weekend.tcx: this file could not be read</p><p class="body">1 file skipped: not a ride file</p><div class="vm-acts" style="justify-content:flex-end"><button class="vm-btn button-label small" type="button">Close</button></div></article>
+</div>
+</body>
+</html>

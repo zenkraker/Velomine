@@ -223,6 +223,29 @@ void main() {
     }
   });
 
+  testWidgets('PowerCurveChart_ShouldDrawInAccentStrong_WhenItDrawsTheCurve', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      page(
+        const PowerCurveChart(
+          seconds: [5, 60, 300, 1200],
+          watts: [900, 500, 350, 280],
+          marks: [(seconds: 1, label: '1s'), (seconds: 3600, label: '1h')],
+          emptyMessage: 'No power data in this range.',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // PowerPage.md draws the curve as a mark on this page, in `accent-strong`, not as one of the
+    // ride's signals in `series-power`.
+    final chart = tester.widget<LineChart>(find.byType(LineChart));
+    final colors = VelomineColors.of(tester.element(find.byType(LineChart)));
+    expect(chart.data.lineBarsData.single.color, colors.accentStrong);
+    expect(chart.data.lineBarsData.single.color, isNot(colors.series['power']));
+  });
+
   testWidgets(
     'SeriesLineChart_ShouldNotOverflow_WhenAValueIsMissingInTheMiddle',
     (tester) async {

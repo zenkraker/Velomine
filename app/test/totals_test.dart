@@ -68,6 +68,20 @@ void main() {
     }
   });
 
+  testWidgets(
+    'TotalsScreen_ShouldSpreadTheTableOverTheCard_WhenTheWindowIsWide',
+    (tester) async {
+      await openTotals(tester, size: const Size(1300, 2400));
+      final table = find.byKey(const Key('totals-table'));
+      final card = tester.getRect(table);
+      final climbing = tester.getRect(
+        find.descendant(of: table, matching: find.text('Climbing')),
+      );
+      // The last column ends at the card's padding, not a third of the way across.
+      expect(climbing.right, greaterThan(card.right - 80));
+    },
+  );
+
   testWidgets('TotalsScreen_ShouldShowThisWeekFirst_WhenShowingTotals', (
     tester,
   ) async {

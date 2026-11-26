@@ -47,6 +47,11 @@ class SegmentedControl<T> extends StatelessWidget {
           side: const WidgetStatePropertyAll(BorderSide.none),
           shape: const WidgetStatePropertyAll(StadiumBorder()),
           minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+          // Material's 12 dp each side leaves "Mountain" 46 dp on a phone with five segments, so it broke
+          // in the middle of the word; 4 dp keeps whole words on a line.
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          ),
           textStyle: WidgetStatePropertyAll(
             text.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),

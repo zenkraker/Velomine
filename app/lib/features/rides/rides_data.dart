@@ -28,9 +28,12 @@ class RidesData {
   final RidesApi _api;
 
   /// [query] matches the title and description; [from] and [to] are calendar days, both included.
+  /// [environment] is where the ride happened (`indoor`); [commute] asks for the commutes only.
   Future<Result<RidesPage>> page({
     String? cursor,
     String? discipline,
+    String? environment,
+    bool? commute,
     String? query,
     DateTime? from,
     DateTime? to,
@@ -39,6 +42,8 @@ class RidesData {
               .listRides(
                 cursor: cursor,
                 discipline: discipline,
+                environment: environment,
+                commute: commute,
                 q: query == null || query.trim().isEmpty ? null : query.trim(),
                 from: from == null ? null : calendarDay(from),
                 to: to == null ? null : calendarDay(to),

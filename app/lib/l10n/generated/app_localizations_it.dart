@@ -3080,7 +3080,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get powerCurveEmpty =>
-      'Nessun dato di potenza in questo periodo. Carica un giro con un misuratore di potenza.';
+      'Registra giri con un misuratore di potenza per vedere la curva.';
 
   @override
   String get powerBestEfforts => 'Migliori sforzi';
@@ -3122,7 +3122,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get ftpCurrent => 'FTP attuale';
+  String get ftpCurrent => 'FTP';
 
   @override
   String get ftpMethod20 => '95 % della tua migliore potenza sui 20 minuti';
@@ -5768,4 +5768,76 @@ class AppLocalizationsIt extends AppLocalizations {
   String askedDaysAgo(int count) {
     return 'richiesta $count g fa';
   }
+
+  @override
+  String get registerHelp => 'Pedala, segui la tua forma e tieni i tuoi dati.';
+
+  @override
+  String get passwordShow => 'Mostra';
+
+  @override
+  String get passwordHide => 'Nascondi';
+
+  @override
+  String get recordingScreenOff =>
+      'La registrazione continua anche con lo schermo spento. Un banner sopra la navigazione ti riporta qui da ogni pagina.';
+
+  @override
+  String get addRouteSourceTitle => 'Da dove viene?';
+
+  @override
+  String get addRouteChosen => 'Scelto';
+
+  @override
+  String get wellbeingDay => 'Giorno';
+
+  @override
+  String get wellbeingRpeColumn => 'RPE';
+
+  @override
+  String get importReadingArchive => 'Lettura dell\'archivio';
+
+  @override
+  String clubMembersShowAll(int count) {
+    return 'Mostra tutti ($count)';
+  }
+
+  @override
+  String get clubMembersEmpty => 'Ancora nessun membro.';
+
+  @override
+  String get shareRoutesHelper =>
+      'I tuoi percorsi, così un giro condiviso mostra la mappa.';
+
+  @override
+  String get clubStartUnavailable =>
+      'La creazione dei club è disattivata su questo server.';
+
+  @override
+  String get twoFactorStateOff => 'L\'accesso a due fattori è disattivato.';
+
+  @override
+  String sessionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dispositivi',
+      one: '1 dispositivo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String privacyZoneRadiusLine(String distance) {
+    return 'Raggio $distance';
+  }
+
+  @override
+  String get intensityEasy => 'Facile';
+
+  @override
+  String get intensityModerate => 'Moderato';
+
+  @override
+  String get intensityHard => 'Intenso';
 }

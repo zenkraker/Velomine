@@ -73,6 +73,12 @@ void main() {
 
       // Still reading: the outcome row is there already, with the bar, as the mock-up draws it.
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      // The page's sub-line says what is happening; the card is titled for the archive itself.
+      expect(
+        find.text('Reading your archive. This can take a few minutes.'),
+        findsOneWidget,
+      );
+      expect(find.text('Reading the archive'), findsOneWidget);
       expect(find.byKey(const Key('import-imported')), findsOneWidget);
       expect(find.text('1 ride imported'), findsOneWidget);
       expect(find.byKey(const Key('import-back')), findsNothing);
@@ -85,6 +91,35 @@ void main() {
       expect(find.byKey(const Key('import-back')), findsOneWidget);
     },
   );
+
+  // The reading page is the same shape at every width, so the card and its number never overflow.
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
+    testWidgets('ImportScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        pickFile: () async => XFile.fromData(
+          Uint8List.fromList([1, 2, 3]),
+          name: 'export_166520172.zip',
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('rides-actions')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('import-strava')));
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.byKey(const Key('import-status')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('RidesScreen_ShouldImportNothing_WhenThePickerIsCancelled', (
     tester,

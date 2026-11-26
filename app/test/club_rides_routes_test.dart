@@ -969,6 +969,61 @@ void main() {
     expect(find.byIcon(Icons.radio_button_checked), findsNothing);
   });
 
+  testWidgets('AddRouteScreen_ShouldTitleTheSourceCard_WhenItOpens', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.rides.add(rideJson('ride-1', 'ready', distanceM: 48000));
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('add-route-from-club'));
+
+    // The card is titled as the mock-up titles it, and holds the source choice under the title.
+    expect(
+      find.descendant(
+        of: find.byType(SectionCard),
+        matching: find.text('Where does it come from?'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('route-source')), findsOneWidget);
+  });
+
+  testWidgets('AddRouteScreen_ShouldBadgeTheChosenRide_WhenARideIsChosen', (
+    tester,
+  ) async {
+    wide(tester);
+    final rider = server.add('rider@example.com');
+    server.rides.add(rideJson('ride-1', 'ready', distanceM: 48000));
+    server.rides.add(rideJson('ride-2', 'ready', distanceM: 62000));
+    server.signInBrowser(rider);
+    await startApp(tester, server.session(useCookies: true));
+
+    await openClub(tester);
+    await tapVisible(tester, const Key('add-route-from-club'));
+
+    // Nothing is chosen yet, so no row carries the design's badge.
+    expect(find.text('Chosen'), findsNothing);
+
+    await tapVisible(tester, const Key('route-ride-ride-1'));
+
+    final row = find.byKey(const Key('route-ride-ride-1'));
+    expect(
+      find.descendant(of: row, matching: find.text('Chosen')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('route-ride-ride-2')),
+        matching: find.text('Chosen'),
+      ),
+      findsNothing,
+    );
+  });
+
   testWidgets('AddRouteScreen_ShouldSayTheLoadFailed_WhenTheRidesDoNotArrive', (
     tester,
   ) async {
@@ -1093,7 +1148,7 @@ void main() {
     },
   );
 
-  for (final width in [390.0, 1300.0]) {
+  for (final width in [390.0, 600.0, 820.0, 1300.0]) {
     testWidgets(
       'ClubRidesScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
       (tester) async {
@@ -1193,6 +1248,31 @@ void main() {
         await goTo(tester, '/club/routes/route-1');
 
         expect(find.byKey(const Key('route-title')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'EditRouteScreen_ShouldNotOverflow_WhenWidthIs${width.toInt()}',
+      (tester) async {
+        final rider = server.add('rider@example.com');
+        server.routeLibrary.add(
+          routeSeed(
+            id: 'route-1',
+            name: 'Lake loop',
+            ownerId: rider.id,
+            ownerName: rider.name,
+          ),
+        );
+        server.signInBrowser(rider);
+        tester.view.physicalSize = Size(width, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await startApp(tester, server.session(useCookies: true));
+
+        await goTo(tester, '/club/routes/route-1/edit');
+
+        expect(find.byKey(const Key('edit-route-name')), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );

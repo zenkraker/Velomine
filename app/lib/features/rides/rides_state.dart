@@ -13,6 +13,8 @@ class RidesState {
     this.rides = const [],
     this.next,
     this.disciplineFilter,
+    this.environmentFilter,
+    this.commuteFilter,
     this.query = '',
     this.dateRange,
     this.load = const CommandState.idle(),
@@ -29,6 +31,12 @@ class RidesState {
   /// The surface on show, or null for every ride.
   final String? disciplineFilter;
 
+  /// Where the ride happened on show (a trainer, `indoor`), or null for everywhere.
+  final String? environmentFilter;
+
+  /// The commutes only when true; every ride when null.
+  final bool? commuteFilter;
+
   /// Words the title or description must contain; empty for every ride.
   final String query;
 
@@ -37,7 +45,11 @@ class RidesState {
 
   /// Whether any filter narrows the list.
   bool get filtered =>
-      disciplineFilter != null || query.trim().isNotEmpty || dateRange != null;
+      disciplineFilter != null ||
+      environmentFilter != null ||
+      commuteFilter != null ||
+      query.trim().isNotEmpty ||
+      dateRange != null;
 
   final CommandState<RidesPage> load;
   final VoidCommand upload;
@@ -57,6 +69,10 @@ class RidesState {
     bool clearNext = false,
     String? disciplineFilter,
     bool clearDisciplineFilter = false,
+    String? environmentFilter,
+    bool clearEnvironmentFilter = false,
+    bool? commuteFilter,
+    bool clearCommuteFilter = false,
     String? query,
     DateSpan? dateRange,
     bool clearDateRange = false,
@@ -70,6 +86,12 @@ class RidesState {
     disciplineFilter: clearDisciplineFilter
         ? null
         : (disciplineFilter ?? this.disciplineFilter),
+    environmentFilter: clearEnvironmentFilter
+        ? null
+        : (environmentFilter ?? this.environmentFilter),
+    commuteFilter: clearCommuteFilter
+        ? null
+        : (commuteFilter ?? this.commuteFilter),
     query: query ?? this.query,
     dateRange: clearDateRange ? null : (dateRange ?? this.dateRange),
     load: load ?? this.load,

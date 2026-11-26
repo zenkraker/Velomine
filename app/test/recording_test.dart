@@ -11,6 +11,7 @@ import 'package:velomine/features/recording/recording_providers.dart';
 import 'package:velomine/features/recording/recording_screen.dart';
 import 'package:velomine/l10n/generated/app_localizations.dart';
 import 'package:velomine/core/l10n.dart';
+import 'package:velomine/core/widgets/badge.dart';
 import 'package:velomine/core/widgets/loading_state.dart';
 
 final testAccountProvider = NotifierProvider<_TestAccount, String?>(
@@ -184,6 +185,7 @@ class FakeRecorder implements Recorder {
         state: 'ready',
         distanceM: 500,
         movingS: 60,
+        rideType: lastRideType,
         accountId: lastAccountId,
       ),
     );
@@ -218,6 +220,7 @@ class FakeRecorder implements Recorder {
           state: ride.state,
           distanceM: ride.distanceM,
           movingS: ride.movingS,
+          rideType: ride.rideType,
           accountId: accountId,
           error: ride.error,
           uploadState: ride.uploadState,
@@ -248,6 +251,7 @@ class FakeRecorder implements Recorder {
       state: 'ready',
       distanceM: rides[index].distanceM,
       movingS: rides[index].movingS,
+      rideType: rides[index].rideType,
       accountId: rides[index].accountId,
     );
     return rides[index];
@@ -424,6 +428,48 @@ void main() {
     expect(find.byKey(const Key('local-ride-ride-live')), findsOneWidget);
     expect(find.textContaining('Ready to upload'), findsOneWidget);
   });
+
+  testWidgets(
+    'RecordingScreen_ShouldShowTheRideAndItsUploadBadge_WhenARideIsOnThePhone',
+    (tester) async {
+      final recorder = FakeRecorder();
+      await pump(tester, recorder);
+      await tester.tap(find.byKey(const Key('record-start')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('record-stop')));
+      await tester.pumpAndSettle();
+
+      // One card holds every ride on the phone, and its own title says what the rows are.
+      final card = find.byKey(const Key('local-rides'));
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('local-ride-ride-live')),
+        ),
+        findsOneWidget,
+      );
+
+      // The row's line is the ride, its caption when and how far, and its upload a badge of its own.
+      expect(
+        find.descendant(of: card, matching: find.text('Road')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.textContaining('0.5 km')),
+        findsOneWidget,
+      );
+      final badge = tester.widget<AppBadge>(
+        find.byKey(const Key('local-ride-state-ride-live')),
+      );
+      expect(badge.label, 'Ready to upload');
+
+      // A phone is the width this row lives at: the title, the badge and the menu share it.
+      tester.view.physicalSize = const Size(390, 1400);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'RecordingScreen_ShouldDefaultAutoPauseOnAndRememberOff_WhenToggled',

@@ -231,13 +231,15 @@ void main() {
         tester.widget<TextField>(find.byKey(const Key('password')));
 
     // The design words the control, it does not draw an eye over it.
-    expect(find.text('Show password'), findsOneWidget);
+    expect(find.text('Show'), findsOneWidget);
+    expect(find.byTooltip('Show password'), findsOneWidget);
     expect(password().obscureText, isTrue);
     await tester.enterText(find.byKey(const Key('password')), 'secret-1');
     await tester.tap(find.byKey(const Key('password-visibility')));
     await tester.pump();
     expect(password().obscureText, isFalse);
-    expect(find.text('Hide password'), findsOneWidget);
+    expect(find.text('Hide'), findsOneWidget);
+    expect(find.byTooltip('Hide password'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('password-visibility')));
     await tester.pump();

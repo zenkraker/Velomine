@@ -8,7 +8,6 @@ import '../../l10n/generated/app_localizations.dart';
 import 'auth_state.dart';
 import 'auth_view_models.dart';
 import 'password_field.dart';
-import '../../core/tokens.dart';
 
 String resetProblemText(AppLocalizations l10n, ResetProblem problem) =>
     switch (problem) {
@@ -80,7 +79,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             label: l10n.newPassword,
             autofillHints: const [AutofillHints.newPassword],
           ),
-          const SizedBox(height: AppSpacing.md),
           PasswordField(
             fieldKey: const Key('reset-confirm'),
             visibilityKey: const Key('reset-confirm-visibility'),
@@ -90,7 +88,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             onSubmitted: (_) => _reset(),
           ),
           if (s.problem != null) ...[
-            const SizedBox(height: AppSpacing.md),
             AuthFailure(
               keyName: 'reset-error',
               message: resetProblemText(l10n, s.problem!),

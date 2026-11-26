@@ -1,7 +1,12 @@
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:velomine_api/api.dart';
 
+import 'package:velomine/core/result.dart';
 import 'package:velomine/core/widgets/app_card.dart';
+import 'package:velomine/features/rides/rides_data.dart';
 import 'package:velomine/features/rides/rides_screen.dart';
 import 'package:velomine/features/rides/rides_view_model.dart';
 
@@ -701,4 +706,104 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  test('RidesData_ShouldSendTheEnvironmentAndTheCommute_WhenThoseFiltersAreChosen', () async {
+    late http.Request sent;
+    final client = ApiClient(basePath: 'https://example.test')
+      ..client = MockClient((request) async {
+        sent = request;
+        return http.Response('{"rides":[],"next":null}', 200);
+      });
+
+    await RidesData(RidesApi(client))
+        .page(environment: 'indoor', commute: true);
+
+    expect(sent.url.path, '/api/v1/rides');
+    expect(sent.url.queryParameters, containsPair('environment', 'indoor'));
+    expect(sent.url.queryParameters, containsPair('commute', 'true'));
+    // Indoor is a place, never a discipline: the server would reject it there.
+    expect(sent.url.queryParameters.containsKey('discipline'), isFalse);
+  });
+
+  testWidgets(
+    'RidesScreen_ShouldAskForTheIndoorRides_WhenTheIndoorChipIsChosen',
+    (tester) async {
+      final data = _SpyRidesData();
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        overrides: [ridesDataProvider.overrideWithValue(data)],
+      );
+
+      await tester.tap(find.byKey(const Key('filter-indoor')));
+      await tester.pumpAndSettle();
+
+      expect(data.calls.last, (
+        discipline: null,
+        environment: 'indoor',
+        commute: null,
+      ));
+    },
+  );
+
+  testWidgets(
+    'RidesScreen_ShouldAskForTheCommutesOnly_WhenTheCommuteChipFollowsTheIndoorOne',
+    (tester) async {
+      final data = _SpyRidesData();
+      await startApp(
+        tester,
+        server.session(useCookies: true),
+        overrides: [ridesDataProvider.overrideWithValue(data)],
+      );
+
+      await tester.tap(find.byKey(const Key('filter-indoor')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('filter-commute')));
+      await tester.pumpAndSettle();
+
+      // The chips are one choice: the place the rider left is not asked for any more.
+      expect(data.calls.last, (
+        discipline: null,
+        environment: null,
+        commute: true,
+      ));
+      expect(
+        tester
+            .widget<FilterChip>(find.byKey(const Key('filter-indoor')))
+            .selected,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<FilterChip>(find.byKey(const Key('filter-commute')))
+            .selected,
+        isTrue,
+      );
+    },
+  );
+}
+
+/// The ride list's data source, with the request the view model made written down instead of sent.
+class _SpyRidesData extends RidesData {
+  _SpyRidesData() : super(RidesApi());
+
+  final calls = <({String? discipline, String? environment, bool? commute})>[];
+
+  @override
+  Future<Result<RidesPage>> page({
+    String? cursor,
+    String? discipline,
+    String? environment,
+    bool? commute,
+    String? query,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    calls.add((
+      discipline: discipline,
+      environment: environment,
+      commute: commute,
+    ));
+    return const Ok<RidesPage>((rides: <RideResponse>[], next: null));
+  }
 }

@@ -13,7 +13,7 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/page_scaffold.dart';
 import '../../core/user_message_text.dart';
-import '../../core/widgets/app_card.dart';
+import '../../core/widgets/badge.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/inline_error.dart';
@@ -103,96 +103,98 @@ class _AddRouteScreenState extends ConsumerState<AddRouteScreen> {
                     },
             ),
       children: [
-        // The card holds the source control and, under it, what that source offers.
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpacing.md,
-            children: [
-              SegmentedControl<String>(
-                buttonKey: const Key('route-source'),
-                segments: [
-                  ButtonSegment(
-                    value: 'ride',
-                    label: Text(l10n.addRouteFromRide),
-                  ),
-                  ButtonSegment(
-                    value: 'file',
-                    label: Text(l10n.addRouteFromFile),
-                  ),
-                ],
-                selected: _source,
-                onChanged: (value) => setState(() => _source = value),
-              ),
-              if (_source == 'file')
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: OutlinedButton.icon(
-                    key: const Key('pick-gpx-file'),
-                    onPressed: s.draftLoad.running
-                        ? null
-                        : () async {
-                            final file = await ref.read(
-                              gpxFilePickerProvider,
-                            )();
-                            if (file != null) {
-                              await notifier.fromFile(file);
-                            }
-                          },
-                    icon: const Icon(Icons.file_open_outlined),
-                    label: Text(l10n.addRouteChooseFile),
-                  ),
+        // The card is titled as the mock-up titles it, and holds the source control with what that source
+        // offers under it.
+        SectionCard(
+          title: l10n.addRouteSourceTitle,
+          children: [
+            SegmentedControl<String>(
+              buttonKey: const Key('route-source'),
+              segments: [
+                ButtonSegment(
+                  value: 'ride',
+                  label: Text(l10n.addRouteFromRide),
                 ),
-              if (_source == 'ride') ...[
-                if (s.ridesLoad.running && s.rides.isEmpty)
-                  const LoadingState()
-                // A load that failed is not an account without rides: say what happened and offer the retry.
-                else if (s.ridesLoad.failure case final failure?)
-                  ErrorState(
-                    message: failureText(l10n, failure),
-                    actionKey: const Key('add-route-rides-error'),
-                    onRetry: notifier.loadRides,
-                  )
-                else if (s.rides.isEmpty)
-                  EmptyState(
-                    key: const Key('no-rides-for-route'),
-                    message: l10n.addRouteNoRides,
-                    icon: Icons.directions_bike,
-                    framed: false,
-                  )
-                else
-                  for (final ride in s.rides)
-                    ListTile(
-                      key: Key('route-ride-${ride.id}'),
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.directions_bike),
-                      // The ride's own name, as the mock-up draws the row; the day and its distance are the detail.
-                      title: Text(
-                        rideTitle(l10n, ride),
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        [
-                          dateOnly(ride.startTime ?? ride.uploadedAt),
-                          km(
-                            ref.watch(unitsChoiceViewModelProvider),
-                            ride.distanceM,
-                          ),
-                        ].join(' · '),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      // The chosen row is the raised one; the mock-up draws no radio and no badge here.
-                      selected: s.draftForRideId == ride.id,
-                      enabled: !s.draftLoad.running,
-                      onTap: () => notifier.fromRide(ride.id),
-                    ),
+                ButtonSegment(
+                  value: 'file',
+                  label: Text(l10n.addRouteFromFile),
+                ),
               ],
-              if (s.draftLoad.running) const LoadingState(),
+              selected: _source,
+              onChanged: (value) => setState(() => _source = value),
+            ),
+            if (_source == 'file')
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  key: const Key('pick-gpx-file'),
+                  onPressed: s.draftLoad.running
+                      ? null
+                      : () async {
+                          final file = await ref.read(gpxFilePickerProvider)();
+                          if (file != null) {
+                            await notifier.fromFile(file);
+                          }
+                        },
+                  icon: const Icon(Icons.file_open_outlined),
+                  label: Text(l10n.addRouteChooseFile),
+                ),
+              ),
+            if (_source == 'ride') ...[
+              if (s.ridesLoad.running && s.rides.isEmpty)
+                const LoadingState()
+              // A load that failed is not an account without rides: say what happened and offer the retry.
+              else if (s.ridesLoad.failure case final failure?)
+                ErrorState(
+                  message: failureText(l10n, failure),
+                  actionKey: const Key('add-route-rides-error'),
+                  onRetry: notifier.loadRides,
+                )
+              else if (s.rides.isEmpty)
+                EmptyState(
+                  key: const Key('no-rides-for-route'),
+                  message: l10n.addRouteNoRides,
+                  icon: Icons.directions_bike,
+                  framed: false,
+                )
+              else
+                for (final ride in s.rides)
+                  ListTile(
+                    key: Key('route-ride-${ride.id}'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.directions_bike),
+                    // The ride's own name, as the mock-up draws the row; the day and its distance are the detail.
+                    title: Text(
+                      rideTitle(l10n, ride),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      [
+                        dateOnly(ride.startTime ?? ride.uploadedAt),
+                        km(
+                          ref.watch(unitsChoiceViewModelProvider),
+                          ride.distanceM,
+                        ),
+                      ].join(' · '),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    // The chosen row is the raised one and carries the mock-up's badge: no radio.
+                    selected: s.draftForRideId == ride.id,
+                    trailing: s.draftForRideId == ride.id
+                        ? AppBadge(
+                            l10n.addRouteChosen,
+                            key: Key('route-chosen-${ride.id}'),
+                            tone: AppBadgeTone.good,
+                          )
+                        : null,
+                    enabled: !s.draftLoad.running,
+                    onTap: () => notifier.fromRide(ride.id),
+                  ),
             ],
-          ),
+          ],
         ),
         if (draft != null) ...[
           SectionCard(

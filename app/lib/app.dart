@@ -9,6 +9,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:velomine_api/api.dart';
 
+import 'core/widgets/loading_state.dart';
+import 'core/widgets/page_scaffold.dart';
 import 'core/back_guard.dart';
 import 'core/hooks.dart';
 import 'core/language_choice.dart';
@@ -186,7 +188,10 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
       if (session.pendingJoinCode != null && club.loaded && club.club == null) {
         return path == '/join' ? null : '/join';
       }
-      if (path.startsWith('/club/athletes') && club.club == null) {
+      // Only once the club has loaded: a page opened by its address starts without one.
+      if (path.startsWith('/club/athletes') &&
+          club.loaded &&
+          club.club == null) {
         return '/club';
       }
       if (path == '/clubs' && club.loaded && club.club != null) {
@@ -231,21 +236,6 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
         path: '/register',
         builder: (context, state) =>
             BackGuard(location: state.uri.path, child: const RegisterScreen()),
-      ),
-      GoRoute(
-        path: '/clubs',
-        builder: (context, state) => BackGuard(
-          location: state.uri.path,
-          child: NearbyClubsScreen(
-            onBack: () => context.go('/club'),
-            tileUrl:
-                ref.read(sessionProvider).serverInfo?.mapTileUrl ??
-                defaultMapTileUrl,
-            attribution:
-                ref.read(sessionProvider).serverInfo?.mapAttribution ??
-                defaultMapAttribution,
-          ),
-        ),
       ),
       GoRoute(
         path: '/forgot-password',
@@ -537,31 +527,49 @@ class _VelomineAppState extends ConsumerState<VelomineApp> {
           ),
           GoRoute(
             path: '/club/athletes',
-            builder: (context, _) => CoachAthletesScreen(
-              clubId: ref.read(clubViewModelProvider).club!.id,
-              onOpen: (id) => context.push('/club/athletes/$id'),
+            builder: (context, _) => _withClub(
+              (clubId) => CoachAthletesScreen(
+                clubId: clubId,
+                onOpen: (id) => context.push('/club/athletes/$id'),
+              ),
             ),
           ),
           GoRoute(
             path: '/club/athletes/:id',
-            builder: (context, state) => CoachAthleteScreen(
-              key: ValueKey(state.pathParameters['id']),
-              clubId: ref.read(clubViewModelProvider).club!.id,
-              userId: state.pathParameters['id']!,
-              onOpenRide: (rideId) => context.push(
-                '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
+            builder: (context, state) => _withClub(
+              (clubId) => CoachAthleteScreen(
+                key: ValueKey(state.pathParameters['id']),
+                clubId: clubId,
+                userId: state.pathParameters['id']!,
+                onOpenRide: (rideId) => context.push(
+                  '/club/athletes/${state.pathParameters['id']}/rides/$rideId',
+                ),
               ),
             ),
           ),
           GoRoute(
             path: '/club/athletes/:id/rides/:rideId',
-            builder: (context, state) => CoachRideScreen(
-              key: ValueKey(
-                '${state.pathParameters['id']}-${state.pathParameters['rideId']}',
+            builder: (context, state) => _withClub(
+              (clubId) => CoachRideScreen(
+                key: ValueKey(
+                  '${state.pathParameters['id']}-${state.pathParameters['rideId']}',
+                ),
+                clubId: clubId,
+                userId: state.pathParameters['id']!,
+                rideId: state.pathParameters['rideId']!,
+                tileUrl:
+                    ref.read(sessionProvider).serverInfo?.mapTileUrl ??
+                    defaultMapTileUrl,
+                attribution:
+                    ref.read(sessionProvider).serverInfo?.mapAttribution ??
+                    defaultMapAttribution,
               ),
-              clubId: ref.read(clubViewModelProvider).club!.id,
-              userId: state.pathParameters['id']!,
-              rideId: state.pathParameters['rideId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/clubs',
+            builder: (context, state) => NearbyClubsScreen(
+              onBack: () => context.go('/club'),
               tileUrl:
                   ref.read(sessionProvider).serverInfo?.mapTileUrl ??
                   defaultMapTileUrl,
@@ -744,3 +752,14 @@ void _backOrGo(BuildContext context, String fallback) {
     context.go(fallback);
   }
 }
+
+/// A page of the club's coach views, drawn once the club is known: opened by its address, the page
+/// starts before the club has loaded, and a missing club would otherwise throw.
+Widget _withClub(Widget Function(String clubId) build) => Consumer(
+  builder: (context, ref, _) {
+    final club = ref.watch(clubViewModelProvider).club;
+    return club == null
+        ? const PageScaffold(children: [LoadingState.rows()])
+        : build(club.id);
+  },
+);

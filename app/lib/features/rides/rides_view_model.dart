@@ -76,11 +76,34 @@ class RidesViewModel extends _$RidesViewModel {
   }
 
   /// Shows only one surface, or every ride when [value] is null.
-  Future<void> setDisciplineFilter(String? value) async {
-    if (state.disciplineFilter == value) return;
+  Future<void> setDisciplineFilter(String? value) => _narrow(discipline: value);
+
+  /// Shows only the trainer rides, or every ride when [value] is null.
+  Future<void> setEnvironmentFilter(String? value) =>
+      _narrow(environment: value);
+
+  /// Shows only the commutes, or every ride when [value] is null.
+  Future<void> setCommuteFilter(bool? value) => _narrow(commute: value);
+
+  /// The chips are one row and one choice: picking a dimension puts the other two back, so a ride that
+  /// is both a gravel ride and a commute is found by whichever the rider asks for.
+  Future<void> _narrow({
+    String? discipline,
+    String? environment,
+    bool? commute,
+  }) async {
+    if (state.disciplineFilter == discipline &&
+        state.environmentFilter == environment &&
+        state.commuteFilter == commute) {
+      return;
+    }
     state = state.copyWith(
-      disciplineFilter: value,
-      clearDisciplineFilter: value == null,
+      disciplineFilter: discipline,
+      clearDisciplineFilter: discipline == null,
+      environmentFilter: environment,
+      clearEnvironmentFilter: environment == null,
+      commuteFilter: commute,
+      clearCommuteFilter: commute == null,
       clearNext: true,
     );
     await refresh();
@@ -112,6 +135,8 @@ class RidesViewModel extends _$RidesViewModel {
       query: '',
       clearDateRange: true,
       clearDisciplineFilter: true,
+      clearEnvironmentFilter: true,
+      clearCommuteFilter: true,
       clearNext: true,
     );
     await refresh();
@@ -122,6 +147,8 @@ class RidesViewModel extends _$RidesViewModel {
       .page(
         cursor: cursor,
         discipline: state.disciplineFilter,
+        environment: state.environmentFilter,
+        commute: state.commuteFilter,
         query: state.query,
         from: state.dateRange?.from,
         to: state.dateRange?.to,

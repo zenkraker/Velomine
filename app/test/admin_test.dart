@@ -557,6 +557,28 @@ void main() {
     expect(find.byKey(Key('user-menu-${waiting.id}')), findsOneWidget);
   });
 
+  testWidgets('AccountsTab_ShouldSayHowLongAgo_WhenTheAccountIsWaiting', (
+    tester,
+  ) async {
+    final waiting = server.add(
+      'new@example.com',
+      approved: false,
+      name: 'Newcomer',
+    );
+    await openAdmin(tester);
+
+    String subtitle(String id) {
+      final tile = tester.widget<ListTile>(find.byKey(Key('user-$id')));
+      return (tile.subtitle! as Text).data!;
+    }
+
+    // A waiting account says when it asked (hours, days, then the day alone); an approved one shows
+    // the moment itself. Neither is a clock time on the waiting row, whichever way its age falls.
+    expect(subtitle(waiting.id), contains('new@example.com'));
+    expect(subtitle(waiting.id), isNot(contains(':')));
+    expect(subtitle(admin.id), contains(':'));
+  });
+
   testWidgets('ClubsTab_ShouldShowOneCaption_WhenTheClubIsListed', (
     tester,
   ) async {

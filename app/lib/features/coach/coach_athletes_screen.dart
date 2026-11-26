@@ -75,21 +75,32 @@ class CoachAthletesScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: Text(
-                      _loadLine(l10n, athlete),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    trailing: Wrap(
+                    // What they share sits under the name, so a phone's narrow row keeps its width for the
+                    // name instead of giving it to the badges.
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xs,
                       children: [
-                        if (athlete.sharesRides) AppBadge(l10n.sharesRides),
-                        if (athlete.sharesAnalytics)
-                          AppBadge(l10n.sharesTraining),
-                        if (athlete.sharesWellbeing)
-                          AppBadge(l10n.sharesWellbeing),
+                        Text(
+                          _loadLine(l10n, athlete),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                        Wrap(
+                          spacing: AppSpacing.xs,
+                          runSpacing: AppSpacing.xs,
+                          children: [
+                            if (athlete.sharesRides) AppBadge(l10n.sharesRides),
+                            if (athlete.sharesAnalytics)
+                              AppBadge(l10n.sharesTraining),
+                            if (athlete.sharesWellbeing)
+                              AppBadge(l10n.sharesWellbeing),
+                          ],
+                        ),
                       ],
                     ),
                     onTap: () => onOpen(athlete.userId),

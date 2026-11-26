@@ -276,11 +276,11 @@ class _CoachWellbeingCard extends StatelessWidget {
     );
     final locale = Localizations.localeOf(context).toLanguageTag();
     final heads = [
-      l10n.dayUnit,
+      l10n.wellbeingDay,
       l10n.wellbeingFatigue,
       l10n.wellbeingSoreness,
       l10n.wellbeingMood,
-      l10n.readinessFactorRpe,
+      l10n.wellbeingRpeColumn,
     ];
     final rpeByDay = {
       for (final ride in wellbeing.rides) _dayOf(ride.date): ride.rpe,

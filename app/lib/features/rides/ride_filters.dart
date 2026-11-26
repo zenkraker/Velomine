@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/tokens.dart';
+import '../../core/widgets/app_text_field.dart';
 import 'rides_state.dart';
 
 /// The search field and the date range button above the ride list. The text stays in this widget while
@@ -98,25 +99,23 @@ class _RideFiltersState extends State<RideFilters> {
           spacing: AppSpacing.sm,
           children: [
             Expanded(
-              child: TextField(
-                key: const Key('ride-search'),
+              child: AppTextField(
+                fieldKey: const Key('ride-search'),
                 controller: _controller,
                 textInputAction: TextInputAction.search,
                 onChanged: _typed,
-                onSubmitted: _submitted,
-                decoration: InputDecoration(
-                  labelText: l10n.rideFilterSearch,
-                  hintText: l10n.rideFilterSearchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _controller.text.isEmpty
-                      ? null
-                      : IconButton(
-                          key: const Key('ride-search-clear'),
-                          tooltip: l10n.rideFilterClearSearch,
-                          onPressed: _clear,
-                          icon: const Icon(Icons.close),
-                        ),
-                ),
+                onDone: _submitted,
+                label: l10n.rideFilterSearch,
+                hint: l10n.rideFilterSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _controller.text.isEmpty
+                    ? null
+                    : IconButton(
+                        key: const Key('ride-search-clear'),
+                        tooltip: l10n.rideFilterClearSearch,
+                        onPressed: _clear,
+                        icon: const Icon(Icons.close),
+                      ),
               ),
             ),
             IconButton.filledTonal(
