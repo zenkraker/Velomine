@@ -1,4 +1,0 @@
-{
-  "advisor": "pi-claude-tether/claude-opus-5-5",
-  "executor": "anthropic/claude-sonnet-5-5"
-}

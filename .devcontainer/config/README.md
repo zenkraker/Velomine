@@ -5,7 +5,7 @@ Files here are copied into the `velomine-state` volume when the container is cre
 | Folder | Lands in | Used by |
 |--------|----------|---------|
 | `claude/` | `~/.state/claude` (`CLAUDE_CONFIG_DIR`) | Claude Code: `settings.json`, `CLAUDE.md`, ... |
-| `pi/` | `~/.state/pi` (`PI_CODING_AGENT_DIR`) | Pi, also the Pi inside Pendant: `settings.json`, `models.json`, `advisor.json`, ... Never `auth.json` (credentials) |
+| `pi/` | `~/.state/pi` (`PI_CODING_AGENT_DIR`) | Pi, also the Pi inside Pendant: `settings.json`, `models.json`, ... Never `auth.json` (credentials) |
 
 Pendant's own profiles (subagents) and its other settings are not files here: they are VS Code settings, in `customizations.vscode.settings` of `devcontainer.json`.
 
